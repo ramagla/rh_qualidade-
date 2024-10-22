@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro de Cargos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastro de Cargos</h2>
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+        
+        <div class="col-md-6">
+            <label for="nome" class="form-label">Nome:</label>
+            {{ form.nome }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="cbo" class="form-label">CBO:</label>
+            {{ form.cbo }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="descricao_arquivo" class="form-label">Descrição do Cargo (PDF ou Word):</label>
+            {{ form.descricao_arquivo }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="numero_revisao" class="form-label">Número da Revisão:</label>
+            {{ form.numero_revisao }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="data_ultima_atualizacao" class="form-label">Data da Última Atualização:</label>
+            {{ form.data_ultima_atualizacao }}
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary w-100 mt-3">Cadastrar Cargo</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

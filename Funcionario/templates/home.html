@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Células em operação</h5>
+                <p class="card-text">Status das células em operação.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Células ociosas</h5>
+                <p class="card-text">Status das células ociosas.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Gráfico Produção</h5>
+                <p class="card-text">Gráfico de produção por célula.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% block title %}Funcionários Cadastrados{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Funcionários Cadastrados</h2>
+
+    <!-- Botão de Adicionar Funcionário -->
+    <div class="mb-3 text-end">
+        <a href="{% url 'cadastrar_funcionario' %}" class="btn btn-primary">Adicionar Funcionário</a>
+    </div>
+
+    <!-- Lista de Funcionários -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Cargo Inicial</th>
+                <th>Cargo Atual</th>
+                <th>Data de Admissão</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for funcionario in funcionarios %}
+            <tr>
+                <td>{{ funcionario.nome }}</td>
+                <td>{{ funcionario.cargo_inicial }}</td>
+                <td>{{ funcionario.cargo_atual }}</td>
+                <td>{{ funcionario.data_admissao }}</td>
+                <td>
+                    <a href="{% url 'editar_funcionario' funcionario.id %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{% url 'excluir_funcionario' funcionario.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">Nenhum funcionário cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

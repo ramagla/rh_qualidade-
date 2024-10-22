@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center mb-4">Lista de Cargos</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nome do Cargo</th>
+                <th>CBO</th>
+                <th>Revisão</th>
+                <th>Última Atualização</th>
+                <th>Descrição</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cargo in cargos %}
+            <tr>
+                <td>{{ cargo.nome }}</td>
+                <td>{{ cargo.cbo }}</td>
+                <td>{{ cargo.numero_revisao }}</td>
+                <td>{{ cargo.data_ultima_atualizacao }}</td>
+                <td>
+                    {% if cargo.descricao_arquivo %}
+                    <a href="{{ cargo.descricao_arquivo.url }}" download>Baixar</a>
+                    {% else %}
+                    Sem descrição
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm">Histórico</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'cadastrar_cargo' %}" class="btn btn-success">Adicionar Cargo</a>
+</div>
+{% endblock %}

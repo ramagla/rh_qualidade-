@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Funcionário{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastrar Funcionário</h2>
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-md-6">
+            <label for="nome" class="form-label">Nome:</label>
+            {{ form.nome }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="data_admissao" class="form-label">Data admissão:</label>
+            {{ form.data_admissao }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="cargo_inicial" class="form-label">Cargo Inicial:</label>
+            {{ form.cargo_inicial }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="cargo_atual" class="form-label">Cargo Atual:</label>
+            {{ form.cargo_atual }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="numero_registro" class="form-label">Número de Registro:</label>
+            {{ form.numero_registro }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="local_trabalho" class="form-label">Local de Trabalho:</label>
+            {{ form.local_trabalho }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="data_integracao" class="form-label">Data de Integração:</label>
+            {{ form.data_integracao }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="escolaridade" class="form-label">Escolaridade:</label>
+            {{ form.escolaridade }}
+        </div>
+
+        <!-- Responsável -->
+<div class="col-md-6">
+    <label for="responsavel" class="form-label">
+        <i class="fas fa-user-tie"></i> Responsável:
+    </label>
+    {{ form.responsavel|add_class:"form-select" }}
+</div>
+
+<!-- Cargo do Responsável -->
+<div class="col-md-6">
+    <label for="cargo_responsavel" class="form-label">
+        <i class="fas fa-user-tie"></i> Cargo do responsável:
+    </label>
+    {{ form.cargo_atual }}    
+</div>
+
+
+<!-- Script para AJAX ao selecionar o funcionário -->
+<script>
+    document.getElementById('id_responsavel').addEventListener('change', function() {
+        var funcionarioId = this.value;
+        if (funcionarioId) {
+            // Faz a requisição para buscar os cargos do funcionário selecionado
+            fetch(`/funcionarios/${funcionarioId}/cargos/`)
+            .then(response => response.json())
+            .then(data => {
+                // Atualiza o campo "cargo_responsavel" com os dados recebidos
+                document.getElementById('cargo_responsavel').value = `${data.cargo_inicial} (Inicial) / ${data.cargo_atual} (Atual)`;
+            })
+            .catch(error => console.error('Erro ao buscar cargos:', error));
+        } else {
+            document.getElementById('cargo_responsavel').value = '';
+        }
+    });
+</script>
+
+{% endblock %}
