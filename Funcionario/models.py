@@ -71,3 +71,24 @@ class Treinamento(models.Model):
     def __str__(self):
         return self.nome_curso
 
+class ListaPresenca(models.Model):
+    TIPO_CHOICES = [
+        ('Treinamento', 'Treinamento'),
+        ('Curso', 'Curso'),
+        ('Divulgacao', 'Divulgação')
+    ]
+    
+    treinamento = models.CharField(max_length=255, choices=TIPO_CHOICES)
+    data_realizacao = models.DateField(default='2024-01-01')
+    horario_inicio = models.TimeField()
+    horario_fim = models.TimeField()
+    instrutor = models.CharField(max_length=255)
+    duracao = models.DecimalField(max_digits=5, decimal_places=2)
+    necessita_avaliacao = models.BooleanField(default=False)
+    lista_presenca = models.FileField(upload_to='listas_presenca/', null=True, blank=True)
+    participantes = models.ManyToManyField('Funcionario', related_name='participantes')
+    assunto = models.CharField(max_length=255, null=True, blank=True)  # Permite valores nulos
+    descricao = models.TextField()  # Novo campo
+
+    def __str__(self):
+        return f"Lista de Presença - {self.treinamento} ({self.data_realizacao})"

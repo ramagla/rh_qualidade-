@@ -1,5 +1,5 @@
 from django import forms
-from .models import Funcionario, Cargo, Revisao, Treinamento
+from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca
 
 class FuncionarioForm(forms.ModelForm):
     ESCOLARIDADE_CHOICES = [
@@ -70,4 +70,18 @@ class TreinamentoForm(forms.ModelForm):
             'data_fim': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'carga_horaria': forms.TextInput(attrs={'class': 'form-control'}),
             'anexo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+class ListaPresencaForm(forms.ModelForm):
+    class Meta:
+        model = ListaPresenca
+        fields = ['treinamento', 'data_realizacao', 'horario_inicio', 'horario_fim', 'instrutor', 'duracao', 'necessita_avaliacao', 'lista_presenca', 'participantes', 'assunto', 'descricao']
+        widgets = {
+            'participantes': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'horario_inicio': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'horario_fim': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'duracao': forms.TextInput(attrs={'class': 'form-control'}),
+            'instrutor': forms.TextInput(attrs={'class': 'form-control'}),
+            'assunto': forms.TextInput(attrs={'class': 'form-control'}),  # Novo campo
+            'descricao': forms.Textarea(attrs={'class': 'form-control'}),  # Novo campo
         }

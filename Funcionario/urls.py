@@ -26,6 +26,13 @@ urlpatterns = [
     path('treinamentos/imprimir_f003/<int:funcionario_id>/', views.imprimir_f003, name='imprimir_f003'),
     path('gerar_relatorio_f003/', views.gerar_relatorio_f003, name='gerar_relatorio_f003'), 
     path('relatorio/<int:funcionario_id>/pdf/', gerar_pdf, name='gerar_pdf'),   
+    path('lista-presenca/', views.lista_presenca, name='lista_presenca'),
+    
+    path('lista-presenca/', views.lista_presenca, name='lista_presenca'),
+    path('lista-presenca/cadastrar/', views.cadastrar_lista_presenca, name='cadastrar_lista_presenca'),
+    path('lista-presenca/editar/<int:id>/', views.editar_lista_presenca, name='editar_lista_presenca'),
+    path('lista-presenca/excluir/<int:id>/', views.excluir_lista_presenca, name='excluir_lista_presenca'),
+
 
 ]
 

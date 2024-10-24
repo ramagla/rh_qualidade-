@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Lista de Presença{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">{{ form.instance.id|default:"Cadastrar" }} Lista de Presença</h2>
+
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Erro!</strong> Por favor, corrija os seguintes erros:
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Tipo (Caixa de Seleção Estilizada com Bootstrap) -->
+        <div class="col-md-6">
+            <label for="treinamento" class="form-label">Tipo:</label>
+            {{ form.treinamento|add_class:"form-select" }}
+        </div>
+
+        <!-- Data de Realização (Input de Data) -->
+        <div class="col-md-6">
+            <label for="data_realizacao" class="form-label">Data de Realização:</label>
+            {{ form.data_realizacao|add_class:"form-control" }}
+        </div>
+
+        <!-- Horário de Início -->
+        <div class="col-md-3">
+            <label for="horario_inicio" class="form-label">Horário Início:</label>
+            {{ form.horario_inicio|add_class:"form-control" }}
+        </div>
+
+        <!-- Horário de Fim -->
+        <div class="col-md-3">
+            <label for="horario_fim" class="form-label">Horário Fim:</label>
+            {{ form.horario_fim|add_class:"form-control" }}
+        </div>
+
+        <!-- Duração (Calculada automaticamente) -->
+        <div class="col-md-6">
+            <label for="duracao" class="form-label">Duração (em horas):</label>
+            <input type="text" id="duracao" name="duracao" class="form-control" value="{{ form.instance.duracao }}" readonly>
+        </div>
+
+        <!-- Assunto do Treinamento -->
+        <div class="col-md-6">
+            <label for="assunto" class="form-label">Assunto:</label>
+            {{ form.assunto|add_class:"form-control" }}
+        </div>
+
+        <!-- Descrição do Treinamento -->
+        <div class="col-md-12">
+            <label for="descricao" class="form-label">Descrição:</label>
+            <textarea id="descricao" name="descricao" class="form-control" rows="3" required>{{ form.descricao.value }}</textarea>
+        </div>
+
+        <!-- Instrutor (Campo de seleção) -->
+        <div class="col-md-6">
+            <label for="instrutor" class="form-label">Instrutor:</label>
+            {{ form.instrutor|add_class:"form-control" }}
+        </div>
+
+        <!-- Necessita Avaliação de Eficácia? (Botões Sim/Não) -->
+        <div class="col-md-6">
+            <label class="form-label">Necessita Avaliação de Eficácia?</label>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="necessita_avaliacao" id="avaliacaoSim" value="True" {% if form.necessita_avaliacao.value == 'True' %}checked{% endif %}>
+                <label class="form-check-label" for="avaliacaoSim">Sim</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="necessita_avaliacao" id="avaliacaoNao" value="False" {% if form.necessita_avaliacao.value == 'False' %}checked{% endif %}>
+                <label class="form-check-label" for="avaliacaoNao">Não</label>
+            </div>
+        </div>
+
+        <!-- Anexar Lista de Presença (PDF) -->
+        <div class="col-md-6">
+            <label for="lista_presenca" class="form-label">Anexar Lista de Presença (PDF):</label>
+            {{ form.lista_presenca|add_class:"form-control" }}
+        </div>
+
+        <!-- Filtro por Local de Trabalho -->
+        <div class="col-md-12">
+            <label for="filtro_local_trabalho" class="form-label">Filtrar por Local de Trabalho:</label>
+            <select id="filtro_local_trabalho" class="form-select">
+                <option value="">Selecione o Local de Trabalho</option>
+                {% for local in locais_trabalho %}
+                    <option value="{{ local.local_trabalho }}">{{ local.local_trabalho }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Listagem de Funcionários com Checkbox -->
+        <div class="col-md-12">
+            <label class="form-label">Funcionários Participantes:</label>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Selecionar</th>
+                        <th>Funcionário</th>
+                        <th>Local de Trabalho</th>
+                    </tr>
+                </thead>
+                <tbody id="lista_funcionarios">
+                    {% for funcionario in funcionarios %}
+                    <tr data-local-trabalho="{{ funcionario.local_trabalho }}">
+                        <td><input type="checkbox" name="participantes" value="{{ funcionario.id }}" {% if funcionario in form.instance.participantes.all %}checked{% endif %}></td>
+                        <td>{{ funcionario.nome }}</td>
+                        <td>{{ funcionario.local_trabalho }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Botão de Cadastrar -->
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary">{{ form.instance.id|default:"Cadastrar" }}</button>
+        </div>
+    </form>
+</div>
+
+<!-- Script para Filtro de Funcionários por Local de Trabalho -->
+<script>
+document.getElementById('filtro_local_trabalho').addEventListener('change', function() {
+    var localTrabalho = this.value;
+    var funcionarios = document.querySelectorAll('#lista_funcionarios tr');
+
+    funcionarios.forEach(function(row) {
+        if (localTrabalho === "" || row.getAttribute('data-local-trabalho') === localTrabalho) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+});
+
+// Script para calcular a duração com base no horário de início e fim
+document.getElementById('id_horario_fim').addEventListener('change', calcularDuracao);
+document.getElementById('id_horario_inicio').addEventListener('change', calcularDuracao);
+
+function calcularDuracao() {
+    var inicio = document.getElementById('id_horario_inicio').value;
+    var fim = document.getElementById('id_horario_fim').value;
+
+    if (inicio && fim) {
+        var inicioDate = new Date('1970-01-01T' + inicio + 'Z');
+        var fimDate = new Date('1970-01-01T' + fim + 'Z');
+        var diff = (fimDate - inicioDate) / (1000 * 60 * 60); // diferença em horas
+
+        if (diff >= 0) {
+            document.getElementById('duracao').value = diff.toFixed(2);
+        } else {
+            alert('Horário de fim deve ser posterior ao horário de início.');
+            document.getElementById('duracao').value = '';
+        }
+    }
+}
+</script>
+
+{% endblock %}
