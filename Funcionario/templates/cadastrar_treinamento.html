@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro de Treinamentos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastro de Treinamentos</h2>
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+        
+        <div class="col-md-6">
+            <label for="funcionario" class="form-label">Funcionário:</label>
+            {{ form.funcionario }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="tipo" class="form-label">Tipo de Treinamento:</label>
+            {{ form.tipo }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="categoria" class="form-label">Categoria:</label>
+            {{ form.categoria }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="nome_curso" class="form-label">Nome do Curso:</label>
+            {{ form.nome_curso }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="instituicao_ensino" class="form-label">Instituição de Ensino:</label>
+            {{ form.instituicao_ensino }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="status" class="form-label">Status:</label>
+            {{ form.status }}  <!-- Lista suspensa de status -->
+        </div>
+
+        <div class="col-md-6">
+            <label for="data_inicio" class="form-label">Data de Início:</label>
+            {{ form.data_inicio }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="data_fim" class="form-label">Data de Término:</label>
+            {{ form.data_fim }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="carga_horaria" class="form-label">Carga Horária:</label>
+            {{ form.carga_horaria }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="anexo" class="form-label">Anexo de Certificado ou Lista de Presença:</label>
+            {{ form.anexo }}
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary w-100 mt-3">Cadastrar Treinamento</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

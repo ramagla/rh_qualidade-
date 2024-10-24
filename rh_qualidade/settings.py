@@ -12,6 +12,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
+# URL para redirecionar após o login
+LOGIN_REDIRECT_URL = '/home/'
+
+# URL para redirecionar após o logout
+LOGOUT_REDIRECT_URL = '/login/'
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -37,7 +43,17 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "Funcionario",
+    'widget_tweaks',
+    'crispy_forms',  
+    'xhtml2pdf',
+    
+    
+
 ]
+
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -74,11 +90,21 @@ WSGI_APPLICATION = "rh_qualidade.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'rh_qualidade',          # Substitua 'nome_do_banco' pelo nome real do seu banco de dados.
+        'USER': 'postgres',               # O usuário padrão do PostgreSQL é 'postgres'.
+        'PASSWORD': 'gr212015',           # A senha que você mencionou.
+        'HOST': 'localhost',              # Banco de dados está rodando localmente.
+        'PORT': '5432',                   # Porta padrão do PostgreSQL.
     }
 }
+
+# Configurações de Mídia
+MEDIA_ROOT = BASE_DIR  # Define a raiz do projeto como o local para arquivos de mídia
+MEDIA_URL = '/media/'
+
+
 
 
 # Password validation
@@ -103,11 +129,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = "UTC"
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
+
+USE_L10N = True  # Ativa o uso de formatações locais (datas, números, etc.)
 
 USE_TZ = True
 
@@ -115,7 +143,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

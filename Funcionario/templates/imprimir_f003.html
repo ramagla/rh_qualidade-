@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatório F003 - {{ funcionario.nome }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Relatório F003</h2>
+    <h4>Funcionário: {{ funcionario.nome }}</h4>
+
+    <h5>Treinamentos:</h5>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nome do Curso</th>
+                <th>Tipo</th>
+                <th>Categoria</th>
+                <th>Status</th>
+                <th>Carga Horária</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for treinamento in treinamentos %}
+            <tr>
+                <td>{{ treinamento.nome_curso }}</td>
+                <td>{{ treinamento.tipo }}</td>
+                <td>{{ treinamento.categoria }}</td>
+                <td>{{ treinamento.status }}</td>
+                <td>{{ treinamento.carga_horaria }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

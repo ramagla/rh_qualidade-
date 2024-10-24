@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center">Histórico de Revisões - {{ cargo.nome }}</h2>
+    <table class="table table-centered">
+        <thead>
+            <tr>
+                <th>Número da Revisão</th>
+                <th>Data da Revisão</th>
+                <th>Descrição da Mudança</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for revisao in revisoes %}
+            <tr>
+                <td>{{ revisao.numero_revisao }}</td>
+                <td>{{ revisao.data_revisao }}</td>
+                <td>{{ revisao.descricao_mudanca }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'adicionar_revisao' cargo.id %}" class="btn btn-primary">Adicionar Revisão</a>
+</div>
+{% endblock %}

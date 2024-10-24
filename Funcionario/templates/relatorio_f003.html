@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório F003 - Mapeamento de Treinamento</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            width: 210mm; /* Largura A4 */
+            height: auto; /* Altura automática para múltiplas páginas */
+            padding: 20mm; /* Margens do relatório */
+            border: 1px solid black; /* Borda em volta do documento */
+            box-sizing: border-box; /* Incluir a borda no cálculo do tamanho */
+            font-size: 12px; /* Tamanho da fonte */
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .header img {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            width: 80px; /* Ajuste o tamanho conforme necessário */
+        }
+        .header h2 {
+            margin-top: 0;
+        }
+        .header .date {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .content {
+            margin-bottom: 60px; /* Espaço para footer */
+        }
+        .footer {
+            position: relative;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: right;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .info-table th, .info-table td {
+            border: none; /* Remover bordas */
+            padding: 2px; /* Diminuir o espaço entre títulos e campos */
+            vertical-align: top; /* Alinhar o texto na parte superior */
+            white-space: nowrap; /* Impedir quebra de linha nos campos */
+        }
+        .info-table h4, .info-table h3 {
+            margin: 0;
+            font-size: 14px; /* Tamanho uniforme para todos os títulos */
+            text-decoration: underline; /* Substituir por uma linha embaixo */
+            text-align: center; /* Centralizar o título */
+        }
+        .info-table .title {
+            font-weight: bold; /* Negrito para o título */
+            text-align: left; /* Alinhamento à esquerda */
+        }
+    </style>
+</head>
+<body>
+
+    {% load static %}
+
+    <div class="header">
+    <img src="{% static 'logo.png' %}" alt="Logo BRAS - MOL">
+        <h2>Mapeamento de Treinamento</h2>
+        <p class="date">Última Atualização: {{ ultima_atualizacao|date:"d/m/Y" }}</p>
+    </div>
+
+    <table class="info-table">
+    <tr>
+        <td class="title">Nome:</td>
+        <td colspan="3">{{ funcionario.nome }} {{ funcionario.sobrenome }}</td>
+        <td class="title">Cargo Atual:</td>
+        <td>{{ funcionario.cargo_atual.nome }}</td>
+    </tr>
+    <tr>
+        <td class="title">Data de Admissão:</td>
+        <td>{{ funcionario.data_admissao|date:"d/m/Y" }}</td>
+        <td class="title">Integração realizada em:</td>
+        <td>{{ funcionario.data_integracao|date:"d/m/Y" }}</td>
+        <td class="title">Nº do Registro:</td>
+        <td>{{ funcionario.numero_registro }}</td>
+    </tr>
+    <tr>
+        <td class="title">Cargo Inicial:</td>
+        <td>{{ funcionario.cargo_inicial.nome }}</td>
+        <td class="title">Local de Trabalho:</td>
+        <td>{{ funcionario.local_trabalho }}</td>
+        <td class="title">Responsável:</td>
+        <td>{{ funcionario.responsavel }}</td> <!-- Acesso direto ao campo responsavel -->
+    </tr>
+    <tr>
+        <td class="title">Cargo do Responsável:</td>
+        <td colspan="5">{{ funcionario.responsavel_cargo }}</td> <!-- Se você tem outro campo para cargo do responsável, coloque aqui -->
+    </tr>
+</table>
+
+        <h3>Instrução Básica (Anexar Certificado)</h3>
+        <p>A Direção deverá aprovar a declaração de ciência nos casos onde o colaborador não atender ao critério de educação mínima.</p>
+
+        <h3>Escolaridade</h3>
+        <p>{{ funcionario.escolaridade }}</p> <!-- Mostrando apenas o nível de escolaridade -->
+
+        <h3>Experiência Profissional</h3>
+        <p>O colaborador possui a experiência profissional comprovada, conforme definido na descrição de cargo.</p>
+        <div class="form-check">
+            <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" id="experiencia_sim" name="experiencia_profissional" value="sim" {% if funcionario.experiencia_profissional_sim %}checked{% endif %}>
+                <label class="form-check-label" for="experiencia_sim">Sim</label>
+                <span>(Anexar Currículum ou cópia da Carteira Profissional no prontuário)</span>
+            </div>
+            <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" id="experiencia_nao" name="experiencia_profissional" value="nao" {% if funcionario.experiencia_profissional_nao %}checked{% endif %}>
+                <label class="form-check-label" for="experiencia_nao">Não</label>
+                <span>(Justificar através da Avaliação Prática da Atividade, devidamente assinada em {{ funcionario.data_avaliacao|date:"d/m/Y" }})</span>
+            </div>
+        </div>
+
+        <h3>Treinamentos Realizados</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th style="font-size: 12px; text-align: center;">Nome do Curso</th>
+                    <th style="font-size: 12px; text-align: center;">Instituição</th>
+                    <th style="font-size: 12px; text-align: center;">Data de Início</th>
+                    <th style="font-size: 12px; text-align: center;">Data de Conclusão</th>
+                    <th style="font-size: 12px; text-align: center;">Carga Horária</th>
+                    <th style="font-size: 12px; text-align: center;">Tipo</th>
+                    <th style="font-size: 12px; text-align: center;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for treinamento in treinamentos %}
+                <tr>
+                    <td style="font-size: 12px;">{{ treinamento.nome_curso }}</td>
+                    <td style="font-size: 12px;">{{ treinamento.instituicao_ensino }}</td>
+                    <td style="font-size: 12px;">{{ treinamento.data_inicio|date:"d/m/Y" }}</td>
+                    <td style="font-size: 12px;">{{ treinamento.data_fim|date:"d/m/Y" }}</td>
+                    <td style="font-size: 12px;">{{ treinamento.carga_horaria }}</td>
+                    <td style="font-size: 12px;">{{ treinamento.tipo }}</td> <!-- Coluna Tipo -->
+                    <td style="font-size: 12px; text-align: center; color: {% if treinamento.status == 'concluido' %}green{% elif treinamento.status == 'cursando' %}orange{% else %}red{% endif %};">
+                        {{ treinamento.get_status_display }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer" style="position: relative; margin-top: 20px;">
+        <div style="text-align: center;">
+            <p>Data da Impressão: {{ "now"|date:"d/m/Y" }}</p> <!-- Data da impressão -->
+        </div>
+        <div style="position: absolute; right: 0; bottom: 0;">
+            <p>Número do Formulário: F003 Rev. 03</p> <!-- Número do formulário -->
+        </div>
+    </div>
+
+</body>
+</html>

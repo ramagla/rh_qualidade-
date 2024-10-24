@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Adicionar Revisão para {{ cargo.nome }}</h2>
+
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary w-100 mt-3">Adicionar Revisão</button>
+    </form>
+</div>
+{% endblock %}

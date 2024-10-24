@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Funcionários Cadastrados{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Funcionários Cadastrados</h2>
+
+    <!-- Botão de Cadastrar Funcionário -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_funcionario' %}" class="btn btn-success">Cadastrar Funcionário</a>
+    </div>
+
+    <!-- Formulário de filtro -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <!-- Filtro por Local de Trabalho -->
+            <div class="col-md-4">
+                <label for="local_trabalho" class="form-label">Local de Trabalho:</label>
+                <select name="local_trabalho" id="local_trabalho" class="form-select">
+                    <option value="">Selecione</option>
+                    {% for local in locais_trabalho %}
+                        <option value="{{ local }}">{{ local }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Responsável -->
+            <div class="col-md-4">
+                <label for="responsavel" class="form-label">Responsável:</label>
+                <select name="responsavel" id="responsavel" class="form-select">
+                    <option value="">Selecione</option>
+                    {% for resp in responsaveis %}
+                        <option value="{{ resp.id }}">{{ resp.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Escolaridade -->
+            <div class="col-md-4">
+                <label for="escolaridade" class="form-label">Escolaridade:</label>
+                <select name="escolaridade" id="escolaridade" class="form-select">
+                    <option value="">Selecione</option>
+                    {% for nivel in niveis_escolaridade %}
+                        <option value="{{ nivel }}">{{ nivel }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+
+    <!-- Lista de Funcionários -->
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                <th>Foto</th>  <!-- Nova coluna para a foto -->
+                <th>Nome</th>
+                <th>Cargo Inicial</th>
+                <th>Cargo Atual</th>
+                <th>Data de Admissão</th>
+                <th>Responsável</th>  <!-- Coluna para o Responsável -->
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for funcionario in funcionarios %}
+            <tr>
+                <td>
+                    {% if funcionario.foto %}
+                        <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" 
+                            style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid black;">
+                    {% else %}
+                        <span>Sem Foto</span>
+                    {% endif %}
+                </td>
+                <td>{{ funcionario.nome }}</td>
+                <td>{{ funcionario.cargo_inicial }}</td>
+                <td>{{ funcionario.cargo_atual }}</td>
+                <td>{{ funcionario.data_admissao }}</td>
+                <td>{{ funcionario.responsavel }}</td>  <!-- Exibe o Responsável -->
+                <td>
+                    <a href="{% url 'editar_funcionario' funcionario.id %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{% url 'excluir_funcionario' funcionario.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</a>
+                    {% if funcionario.curriculo %}
+                        <a href="{{ funcionario.curriculo.url }}" class="btn btn-sm btn-info" download>Baixar Currículo</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">Nenhum funcionário cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

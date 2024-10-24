@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Funcionário{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastrar Funcionário</h2>
+
+    <form method="post" enctype="multipart/form-data" class="row g-3" id="funcionarioForm">
+        {% csrf_token %}
+
+        <!-- Foto e Currículo lado a lado -->
+        <div class="col-md-6 text-center">
+            <label for="foto" class="form-label">Foto:</label>
+            {% if funcionario.foto %}
+                <div class="mt-2">
+                    <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" style="width: 250px; height: 300px; object-fit: cover;">
+                </div>
+            {% endif %}
+            <div class="mt-3">
+                <a href="javascript:void(0);" onclick="editarFoto()" class="btn btn-secondary"><i class="fas fa-edit"></i> Editar Foto</a>
+                <input type="file" id="fotoInput" name="foto" style="display: none;">
+            </div>
+        </div>
+
+        <!-- Currículo ao lado da Foto -->
+        <div class="col-md-6 text-center align-self-center">
+            <label for="curriculo" class="form-label">Currículo:</label>
+            {% if funcionario.curriculo %}
+                <a href="{{ funcionario.curriculo.url }}" class="btn btn-info" download>Baixar Currículo</a>
+                <p>Atualmente: {{ funcionario.curriculo.name }}</p>
+            {% else %}
+                <p>Nenhum currículo anexado.</p>
+            {% endif %}
+            <div class="mt-3">
+                <a href="javascript:void(0);" onclick="editarCurriculo()" class="btn btn-secondary"><i class="fas fa-edit"></i> Anexar Currículo</a>
+                <input type="file" id="curriculoInput" name="curriculo" style="display: none;">
+            </div>
+        </div>
+
+        <!-- Dados do Funcionário -->
+        <div class="col-md-6">
+            <label for="nome" class="form-label">Nome:</label>
+            {{ form.nome }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="data_admissao" class="form-label">Data de Admissão:</label>
+            <input type="text" name="data_admissao" class="form-control" value="{{ form.data_admissao.value }}" placeholder="dd/mm/aaaa">
+        </div>
+
+        <div class="col-md-6">
+            <label for="cargo_inicial" class="form-label">Cargo Inicial:</label>
+            {{ form.cargo_inicial }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="cargo_atual" class="form-label">Cargo Atual:</label>
+            {{ form.cargo_atual }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="numero_registro" class="form-label">Número de Registro:</label>
+            {{ form.numero_registro }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="local_trabalho" class="form-label">Local de Trabalho:</label>
+            {{ form.local_trabalho }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="data_integracao" class="form-label">Data de Integração:</label>
+            <input type="text" name="data_integracao" class="form-control" value="{{ form.data_integracao.value }}" placeholder="dd/mm/aaaa">
+        </div>
+
+        <div class="col-md-6">
+            <label for="escolaridade" class="form-label">Escolaridade:</label>
+            {{ form.escolaridade }}
+        </div>
+
+        <!-- Responsável -->
+        <div class="col-md-6">
+            <label for="responsavel" class="form-label">Responsável:</label>
+            {{ form.responsavel|add_class:"form-select" }}
+            <div class="invalid-feedback" id="responsavelError" style="display: none;">
+                O campo Responsável é obrigatório.
+            </div>
+        </div>
+
+        <!-- Cargo do Responsável -->
+        <div class="col-md-6">
+            <label for="cargo_responsavel" class="form-label">Cargo do Responsável:</label>
+            <input type="text" class="form-control" id="cargo_responsavel" disabled>
+        </div>
+
+        <!-- Botão para salvar -->
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary" onclick="validarFormulario(event)">Salvar</button>
+        </div>
+    </form>
+
+    <!-- Script para edição -->
+    <script>
+        // Função para editar a foto
+        function editarFoto() {
+            document.getElementById('fotoInput').click();
+        }
+
+        // Função para editar o currículo
+        function editarCurriculo() {
+            document.getElementById('curriculoInput').click();
+        }
+
+        // Preenche o campo de cargo do responsável automaticamente quando a página é carregada
+        document.addEventListener("DOMContentLoaded", function() {
+            var responsavelId = document.getElementById('id_responsavel').value;
+            if (responsavelId) {
+                fetch(`/funcionarios/${responsavelId}/cargos/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Preenche o campo de cargo com o valor retornado
+                    document.getElementById('cargo_responsavel').value = data.cargo_atual;
+                })
+                .catch(error => console.error('Erro ao buscar cargo do responsável:', error));
+            }
+        });
+
+        // Atualiza o campo de cargo do responsável ao selecionar um novo responsável
+        document.getElementById('id_responsavel').addEventListener('change', function() {
+            var funcionarioId = this.value;
+            if (funcionarioId) {
+                fetch(`/funcionarios/${funcionarioId}/cargos/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Preenche o campo de cargo com o valor retornado
+                    document.getElementById('cargo_responsavel').value = data.cargo_atual;
+                })
+                .catch(error => console.error('Erro ao buscar cargo do responsável:', error));
+            } else {
+                // Limpa o campo de cargo se nenhum responsável for selecionado
+                document.getElementById('cargo_responsavel').value = '';
+            }
+        });
+
+        // Validação do formulário para o campo responsável
+        function validarFormulario(event) {
+            var responsavel = document.getElementById('id_responsavel');
+            if (responsavel.value === '') {
+                event.preventDefault();  // Impede o envio do formulário
+                document.getElementById('responsavelError').style.display = 'block';  // Exibe o erro
+                responsavel.classList.add('is-invalid');  // Adiciona a classe de erro
+            } else {
+                document.getElementById('responsavelError').style.display = 'none';  // Esconde o erro se estiver preenchido
+                responsavel.classList.remove('is-invalid');  // Remove a classe de erro
+            }
+        }
+    </script>
+</div>
+{% endblock %}
