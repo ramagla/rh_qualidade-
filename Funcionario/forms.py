@@ -1,5 +1,5 @@
 from django import forms
-from .models import Funcionario, Cargo, Revisao
+from .models import Funcionario, Cargo, Revisao, Treinamento
 
 class FuncionarioForm(forms.ModelForm):
     ESCOLARIDADE_CHOICES = [
@@ -19,31 +19,32 @@ class FuncionarioForm(forms.ModelForm):
     data_admissao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Data de Admissão")
     data_integracao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Data de Integração")
     escolaridade = forms.ChoiceField(choices=ESCOLARIDADE_CHOICES, label="Escolaridade", widget=forms.Select(attrs={'class': 'form-select'}))
-    
-    responsavel = forms.ModelChoiceField(queryset=Funcionario.objects.all(), label="Responsável", required=False, widget=forms.Select(attrs={'class': 'form-select'}))
+    responsavel = forms.ModelChoiceField(queryset=Funcionario.objects.all(), required=False, widget=forms.Select(attrs={'class': 'form-select'}))
 
+    foto = forms.ImageField(required=False, label="Foto")  # Novo campo para foto
+    curriculo = forms.FileField(required=False, label="Currículo")  # Novo campo para currículo
 
     class Meta:
         model = Funcionario
-        fields = ['nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro', 'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel']
+        fields = ['nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro', 'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto', 'curriculo']  # Inclua os novos campos
 
     def __init__(self, *args, **kwargs):
         super(FuncionarioForm, self).__init__(*args, **kwargs)
         for field in self.fields:
+            self.fields['responsavel'].queryset = Funcionario.objects.all()
+
             self.fields[field].widget.attrs.update({'class': 'form-control'})
-            
+
 class CargoForm(forms.ModelForm):
     class Meta:
         model = Cargo
-        fields = ['nome', 'cbo', 'descricao_arquivo', 'numero_revisao', 'data_ultima_atualizacao']
+        fields = ['nome', 'cbo', 'descricao_arquivo', 'departamento']  # Adiciona o campo 'departamento'
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'cbo': forms.TextInput(attrs={'class': 'form-control'}),
             'descricao_arquivo': forms.FileInput(attrs={'class': 'form-control'}),
-            'numero_revisao': forms.TextInput(attrs={'class': 'form-control'}),
-            'data_ultima_atualizacao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'departamento': forms.TextInput(attrs={'class': 'form-control'}),  # Widget para 'departamento'
         }
-
 class RevisaoForm(forms.ModelForm):
     class Meta:
         model = Revisao
@@ -52,4 +53,21 @@ class RevisaoForm(forms.ModelForm):
             'numero_revisao': forms.TextInput(attrs={'class': 'form-control'}),
             'data_revisao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'descricao_mudanca': forms.Textarea(attrs={'class': 'form-control'}),
+        }
+
+class TreinamentoForm(forms.ModelForm):
+    class Meta:
+        model = Treinamento
+        fields = ['funcionario', 'tipo', 'categoria', 'nome_curso', 'instituicao_ensino', 'status', 'data_inicio', 'data_fim', 'carga_horaria', 'anexo']
+        widgets = {
+            'funcionario': forms.Select(attrs={'class': 'form-select'}),
+            'tipo': forms.Select(choices=Treinamento.TIPO_TREINAMENTO_CHOICES, attrs={'class': 'form-select'}),
+            'categoria': forms.Select(choices=Treinamento.CATEGORIA_CHOICES, attrs={'class': 'form-select'}),
+            'nome_curso': forms.TextInput(attrs={'class': 'form-control'}),
+            'instituicao_ensino': forms.TextInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(choices=Treinamento.STATUS_CHOICES, attrs={'class': 'form-select'}),
+            'data_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'data_fim': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'carga_horaria': forms.TextInput(attrs={'class': 'form-control'}),
+            'anexo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }

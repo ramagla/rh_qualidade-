@@ -7,7 +7,7 @@
     <h2 class="text-center mb-4">Cadastro de Cargos</h2>
     <form method="post" enctype="multipart/form-data" class="row g-3">
         {% csrf_token %}
-        
+
         <div class="col-md-6">
             <label for="nome" class="form-label">Nome:</label>
             {{ form.nome }}
@@ -19,18 +19,13 @@
         </div>
 
         <div class="col-md-6">
+            <label for="departamento" class="form-label">Departamento:</label>
+            {{ form.departamento }}
+        </div>
+
+        <div class="col-md-6">
             <label for="descricao_arquivo" class="form-label">Descrição do Cargo (PDF ou Word):</label>
             {{ form.descricao_arquivo }}
-        </div>
-
-        <div class="col-md-6">
-            <label for="numero_revisao" class="form-label">Número da Revisão:</label>
-            {{ form.numero_revisao }}
-        </div>
-
-        <div class="col-md-6">
-            <label for="data_ultima_atualizacao" class="form-label">Data da Última Atualização:</label>
-            {{ form.data_ultima_atualizacao }}
         </div>
 
         <div class="col-12">
@@ -38,4 +33,15 @@
         </div>
     </form>
 </div>
+
+<!-- Incluindo jQuery e jQuery Mask Plugin -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
+<!-- Aplicando a máscara ao campo CBO -->
+<script>
+    $(document).ready(function(){
+        $('#id_cbo').mask('0000-00');  // Aplicando a máscara no formato 0000-00
+    });
+</script>
 {% endblock %}

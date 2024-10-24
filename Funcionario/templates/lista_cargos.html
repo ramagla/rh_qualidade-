@@ -3,14 +3,47 @@
 {% block content %}
 <div class="container">
     <h2 class="text-center mb-4">Lista de Cargos</h2>
-    <table class="table table-bordered">
+
+    <!-- Formulário de filtro -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="departamento" class="form-label">Filtrar por Departamento:</label>
+                <select name="departamento" id="departamento" class="form-select">
+                    <option value="">Todos</option>
+                    {% for dept in departamentos %}
+                        <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>
+                            {{ dept }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="cargo" class="form-label">Filtrar por Cargo:</label>
+                <select name="cargo" id="cargo" class="form-select">
+                    <option value="">Todos</option>
+                    {% for cargo in todos_cargos %}
+                        <option value="{{ cargo.nome }}" {% if request.GET.cargo == cargo.nome %}selected{% endif %}>
+                            {{ cargo.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+
+    <!-- Tabela de cargos -->
+    <table class="table table-bordered text-center">
         <thead>
             <tr>
                 <th>Nome do Cargo</th>
                 <th>CBO</th>
-                <th>Revisão</th>
+                <th>Departamento</th>
+                <th>Última Revisão</th>
                 <th>Última Atualização</th>
-                <th>Descrição</th>
                 <th>Ações</th>
             </tr>
         </thead>
@@ -19,17 +52,29 @@
             <tr>
                 <td>{{ cargo.nome }}</td>
                 <td>{{ cargo.cbo }}</td>
-                <td>{{ cargo.numero_revisao }}</td>
-                <td>{{ cargo.data_ultima_atualizacao }}</td>
+                <td>{{ cargo.departamento }}</td>
                 <td>
-                    {% if cargo.descricao_arquivo %}
-                    <a href="{{ cargo.descricao_arquivo.url }}" download>Baixar</a>
+                    {% if cargo.ultima_revisao %}
+                        {{ cargo.ultima_revisao.numero_revisao }}
                     {% else %}
-                    Sem descrição
+                        Sem revisão
                     {% endif %}
                 </td>
                 <td>
+                    {% if cargo.ultima_revisao %}
+                        {{ cargo.ultima_revisao.data_revisao|date:"d/m/Y" }}
+                    {% else %}
+                        Sem data
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'editar_cargo' cargo.id %}" class="btn btn-warning btn-sm">Editar</a>
                     <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm">Histórico</a>
+                    
+                    <!-- Verifica se o arquivo de descrição está presente -->
+                    {% if cargo.descricao_arquivo %}
+                        <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-secondary btn-sm" download>Baixar Descrição</a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
