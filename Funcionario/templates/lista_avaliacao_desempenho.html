@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Avaliações de Desempenho{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Avaliações de Desempenho</h2>
+
+    <!-- Botões de Cadastrar Avaliações -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_avaliacao_experiencia' %}" class="btn btn-primary me-2">Cadastrar Avaliação de Experiência</a>
+        <a href="{% url 'cadastrar_avaliacao_anual' %}" class="btn btn-secondary">Cadastrar Avaliação Anual</a>
+    </div>
+
+   <!-- Formulário de filtro -->
+        <form method="get" class="mb-4">
+            <div class="row">
+                <!-- Filtro por Funcionário -->
+                <div class="col-md-4">
+                    <label for="funcionario" class="form-label">Funcionário:</label>
+                    <select name="funcionario" id="funcionario" class="form-select">
+                        <option value="">Selecione</option>
+                        {% for funcionario in funcionarios %}
+                            <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtro por Data de Avaliação -->
+                <div class="col-md-4">
+                    <label for="data_avaliacao" class="form-label">Período de Avaliação:</label>
+                    <input type="date" name="data_inicio" class="form-control" placeholder="Data Início">
+                    <input type="date" name="data_fim" class="form-control mt-2" placeholder="Data Fim">
+                </div>
+
+                <!-- Filtro por Tipo -->
+                <div class="col-md-4">
+                    <label for="tipo" class="form-label">Tipo de Avaliação:</label>
+                    <select name="tipo" id="tipo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="ANUAL" {% if request.GET.tipo == "ANUAL" %}selected{% endif %}>Anual</option>
+                        <option value="EXPERIENCIA" {% if request.GET.tipo == "EXPERIENCIA" %}selected{% endif %}>Experiência</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="text-end mt-3">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+            </div>
+        </form>
+
+    <!-- Lista de Avaliações -->
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                <th>Funcionário</th>
+                <th>Data de Avaliação</th>
+                <th>Avaliador</th>
+                <th>Tipo</th>
+                <th>Status da Avaliação</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+      <tbody>
+    {% for avaliacao in avaliacoes %}
+    <tr>
+        <td>{{ avaliacao.funcionario.nome }}</td>
+        <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+        <td>{{ avaliacao.avaliador.nome }}</td>
+
+        <!-- Coluna de Tipo da Avaliação -->
+        <td>{{ avaliacao.get_tipo_display }}</td>
+
+        <!-- Coluna de Status da Avaliação -->
+        <td>
+            {% if avaliacao.tipo == 'ANUAL' %}
+                {% if avaliacao.orientacao == 'Efetivar' %}
+                    Muito Eficaz
+                {% else %}
+                    Pouco Eficaz
+                {% endif %}
+            {% elif avaliacao.tipo == 'EXPERIENCIA' %}
+                {% if avaliacao.orientacao == 'Efetivar' %}
+                    😃 Efetivar
+                {% elif avaliacao.orientacao == 'Encaminhar p/ Treinamento' %}
+                    😊 Treinamento
+                {% elif avaliacao.orientacao == 'Desligar' %}
+                    😕 Desligar
+                {% else %}
+                    Indeterminado
+                {% endif %}
+            {% else %}
+                Indeterminado
+            {% endif %}
+        </td>
+
+        <td>
+            <a href="{% url 'editar_avaliacao_desempenho' avaliacao.id %}" class="btn btn-warning">Editar</a>
+            <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}">Excluir</a>
+        </td>
+    </tr>
+
+    <!-- Modal para confirmação de exclusão -->
+    <div class="modal fade" id="confirmDeleteModal{{ avaliacao.id }}" tabindex="-1" aria-labelledby="confirmDeleteModalLabel{{ avaliacao.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel{{ avaliacao.id }}">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza de que deseja excluir a avaliação de <strong>{{ avaliacao.funcionario.nome }}</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <form method="post" action="{% url 'excluir_avaliacao_desempenho' avaliacao.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% empty %}
+    <tr>
+        <td colspan="6" class="text-center">Nenhuma avaliação cadastrada.</td>
+    </tr>
+    {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

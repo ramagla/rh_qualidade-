@@ -11,6 +11,8 @@ from .views import (
     gerar_pdf,
     lista_avaliacoes,    
     cadastrar_avaliacao,
+    cadastrar_avaliacao_anual,
+    cadastrar_avaliacao_experiencia,
 )
 
 urlpatterns = [
@@ -55,7 +57,20 @@ urlpatterns = [
     path('avaliacoes/excluir/<int:id>/', views.excluir_avaliacao, name='excluir_avaliacao'),
     path('get-cargo/<int:funcionario_id>/', views.get_cargo, name='get_cargo'),
 
+    # Avaliação de Desempenho
+    path('avaliacoes-desempenho/cadastrar/experiencia/', views.cadastrar_avaliacao_experiencia, name='cadastrar_avaliacao_experiencia'),
+    path('avaliacoes-desempenho/cadastrar/anual/', views.cadastrar_avaliacao_anual, name='cadastrar_avaliacao_anual'),
+    path('avaliacoes-desempenho/editar/<int:id>/', views.editar_avaliacao_desempenho, name='editar_avaliacao_desempenho'),  # Adicione esta linha
+    path('avaliacoes-desempenho/', views.lista_avaliacao_desempenho, name='lista_avaliacao_desempenho'),
+    path('avaliacoes-desempenho/excluir/<int:id>/', views.excluir_avaliacao_desempenho, name='excluir_avaliacao_desempenho'),
+
+
+
 ]
+    
+
+
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

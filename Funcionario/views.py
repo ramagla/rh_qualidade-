@@ -7,8 +7,8 @@ from weasyprint import HTML
 from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
-from .models import Cargo, Revisao, Funcionario,Treinamento, ListaPresenca,AvaliacaoTreinamento
-from .forms import FuncionarioForm, CargoForm, RevisaoForm,TreinamentoForm, ListaPresencaForm,AvaliacaoTreinamentoForm,AvaliacaoForm
+from .models import Cargo, Revisao, Funcionario,Treinamento, ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho
+from .forms import FuncionarioForm, CargoForm, RevisaoForm,TreinamentoForm, ListaPresencaForm,AvaliacaoTreinamentoForm,AvaliacaoForm,AvaliacaoAnualForm,AvaliacaoExperienciaForm
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 
@@ -457,32 +457,55 @@ def get_resultados_label(i):
 
 
 def lista_avaliacoes(request):
-    avaliacoes = AvaliacaoTreinamento.objects.all()
-    listas_presenca = ListaPresenca.objects.all()  # Carregar listas de presença
+    # Carregar todas as avaliações de treinamento e desempenho
+    avaliacoes_treinamento = AvaliacaoTreinamento.objects.all()
+    avaliacoes_desempenho = AvaliacaoDesempenho.objects.all()
 
+    # Aplicar filtros de funcionário e datas
+    funcionario_id = request.GET.get('funcionario')
+    if funcionario_id:
+        avaliacoes_treinamento = avaliacoes_treinamento.filter(funcionario_id=funcionario_id)
+        avaliacoes_desempenho = avaliacoes_desempenho.filter(funcionario_id=funcionario_id)
 
-    # Calculando o status da avaliação e do prazo
-    for avaliacao in avaliacoes:
-        # Status da Avaliação baseado na pontuação geral
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    if data_inicio and data_fim:
+        avaliacoes_treinamento = avaliacoes_treinamento.filter(data_avaliacao__range=[data_inicio, data_fim])
+        avaliacoes_desempenho = avaliacoes_desempenho.filter(data_avaliacao__range=[data_inicio, data_fim])
+
+    # Aplicar filtro por tipo de avaliação
+    tipo = request.GET.get('tipo')
+    if tipo:
+        avaliacoes_desempenho = avaliacoes_desempenho.filter(tipo=tipo)
+
+    # Processar status de avaliação e prazo para avaliações de treinamento
+    for avaliacao in avaliacoes_treinamento:
         if avaliacao.avaliacao_geral <= 2:
             avaliacao.status_avaliacao = "Pouco Eficaz"
         elif 3 <= avaliacao.avaliacao_geral <= 4:
             avaliacao.status_avaliacao = "Eficaz"
         else:
             avaliacao.status_avaliacao = "Muito Eficaz"
-
-        # Calculando o status do prazo
+        
+        # Prazo de Avaliação
         prazo_avaliacao = avaliacao.data_avaliacao + timezone.timedelta(days=avaliacao.periodo_avaliacao)
-        if timezone.now().date() <= prazo_avaliacao:
-            avaliacao.status_prazo = "Dentro do Prazo"
+        avaliacao.status_prazo = "Dentro do Prazo" if timezone.now().date() <= prazo_avaliacao else "Fora do Prazo"
+    
+    # Processar o tipo para avaliações de desempenho
+    for avaliacao in avaliacoes_desempenho:
+        if avaliacao.tipo == 'ANUAL':
+            avaliacao.tipo_descricao = "Anual"
+        elif avaliacao.tipo == 'EXPERIENCIA':
+            avaliacao.tipo_descricao = "Experiência"
         else:
-            avaliacao.status_prazo = "Fora do Prazo"
-
+            avaliacao.tipo_descricao = "Indefinido"
+    
     context = {
-        'avaliacoes': avaliacoes,
+        'avaliacoes_treinamento': avaliacoes_treinamento,
+        'avaliacoes_desempenho': avaliacoes_desempenho,
         'treinamentos': Treinamento.objects.all(),
         'funcionarios': Funcionario.objects.all(),
-        'listas_presenca': listas_presenca,
+        'listas_presenca': ListaPresenca.objects.all(),
     }
 
     return render(request, 'lista_avaliacao.html', context)
@@ -616,6 +639,90 @@ def excluir_avaliacao(request, id):
 def get_cargo(request, funcionario_id):
     try:
         funcionario = Funcionario.objects.get(id=funcionario_id)
-        return JsonResponse({'cargo': funcionario.cargo_atual.nome})
+        data = {
+            'cargo': funcionario.cargo_atual.nome if funcionario.cargo_atual else 'Cargo não encontrado',
+            'departamento': funcionario.local_trabalho or 'Departamento não encontrado',
+            'responsavel': funcionario.responsavel or 'Responsável não encontrado'
+        }
+        return JsonResponse(data)
     except Funcionario.DoesNotExist:
-        return JsonResponse({'cargo': 'Não encontrado'}, status=404)
+        return JsonResponse({
+            'cargo': 'Não encontrado', 
+            'departamento': 'Não encontrado',
+            'responsavel': 'Não encontrado'
+        }, status=404)
+
+
+def lista_avaliacao_desempenho(request):
+    # Recupera todas as avaliações, tanto do tipo 'ANUAL' quanto 'EXPERIENCIA'
+    avaliacoes = AvaliacaoDesempenho.objects.all()  # Isso recupera todas as avaliações
+
+    # Se você precisar filtrar por funcionário ou data, adicione lógica aqui
+    funcionario_id = request.GET.get('funcionario')
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+
+    if funcionario_id:
+        avaliacoes = avaliacoes.filter(funcionario_id=funcionario_id)
+    if data_inicio and data_fim:
+        avaliacoes = avaliacoes.filter(data_avaliacao__range=[data_inicio, data_fim])
+
+    return render(request, 'lista_avaliacao_desempenho.html', {
+        'avaliacoes': avaliacoes,
+        'funcionarios': Funcionario.objects.all(),  # Para o filtro
+    })
+
+
+def cadastrar_avaliacao_experiencia(request):
+    funcionarios = Funcionario.objects.all()  # Busca todos os funcionários
+
+    if request.method == 'POST':
+        form = AvaliacaoExperienciaForm(request.POST)
+        if form.is_valid():
+            form.save()  # Salva a avaliação
+            return redirect('lista_avaliacao_desempenho')  # Redireciona para a lista após salvar
+        else:
+            print(form.errors)  # Adicione esta linha para verificar erros no console
+
+    else:
+        form = AvaliacaoExperienciaForm()
+
+    return render(request, 'cadastrar_avaliacao_experiencia.html', {'form': form, 'funcionarios': funcionarios})
+
+def cadastrar_avaliacao_anual(request):
+    if request.method == 'POST':
+        form = AvaliacaoAnualForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_avaliacao_desempenho')  # Redireciona para a lista após salvar
+    else:
+        form = AvaliacaoAnualForm()
+
+    funcionarios = Funcionario.objects.all()  # Pegar todos os funcionários
+
+    return render(request, 'cadastrar_avaliacao_anual.html', {
+        'form': form,
+        'funcionarios': funcionarios
+    })
+
+
+def editar_avaliacao_desempenho(request, id):
+    avaliacao = get_object_or_404(AvaliacaoDesempenho, id=id)
+    
+    if request.method == 'POST':
+        form = AvaliacaoForm(request.POST, instance=avaliacao)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_avaliacao_desempenho')  # Redireciona para a lista após edição
+    else:
+        form = AvaliacaoForm(instance=avaliacao)
+    
+    return render(request, 'editar_avaliacao_desempenho.html', {'form': form, 'avaliacao': avaliacao})
+
+def excluir_avaliacao_desempenho(request, id):
+    avaliacao = get_object_or_404(AvaliacaoDesempenho, id=id)
+    if request.method == "POST":
+        avaliacao.delete()
+        return redirect('lista_avaliacao_desempenho')  # Redireciona para a lista após a exclusão
+    return redirect('lista_avaliacao_desempenho')
+

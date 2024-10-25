@@ -1,5 +1,5 @@
 from django import forms
-from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento
+from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho
 
 class FuncionarioForm(forms.ModelForm):
     ESCOLARIDADE_CHOICES = [
@@ -147,3 +147,32 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
             self.fields['responsavel_1_cargo'].initial = self.instance.funcionario.cargo_atual
             self.fields['responsavel_2_cargo'].initial = self.instance.funcionario.cargo_atual
             self.fields['responsavel_3_cargo'].initial = self.instance.funcionario.cargo_atual
+
+class AvaliacaoExperienciaForm(forms.ModelForm):
+    class Meta:
+        model = AvaliacaoDesempenho
+        fields = [
+            'data_avaliacao', 'funcionario', 'gerencia', 
+            'adaptacao_trabalho', 'interesse', 'relacionamento_social', 
+            'capacidade_aprendizagem', 'avaliado', 'avaliador', 'observacoes'
+        ]
+        widgets = {
+            'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+
+class AvaliacaoAnualForm(forms.ModelForm):
+    class Meta:
+        model = AvaliacaoDesempenho
+        fields = [
+            'data_avaliacao', 'funcionario', 'centro_custo', 
+            'gerencia', 'avaliador', 'avaliado',
+            'postura_seg_trabalho', 'qualidade_produtividade', 
+            'trabalho_em_equipe', 'comprometimento',
+            'disponibilidade_para_mudancas', 'disciplina', 
+            'rendimento_sob_pressao', 'proatividade',
+            'comunicacao', 'assiduidade', 'observacoes'
+        ]
+        widgets = {
+            'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
+        }

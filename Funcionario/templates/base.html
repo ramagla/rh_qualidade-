@@ -50,7 +50,7 @@
                 <h4 class="text-white">CARGA MÁQUINA</h4>
             </div>
             <a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-    
+
             <!-- Dropdown Menu for Cadastros -->
             <div class="dropdown">
                 <a href="{% url 'lista_funcionarios' %}"><i class="fas fa-user"></i> Funcionários</a>
@@ -59,7 +59,8 @@
                 <a href="{% url 'lista_presenca' %}"><i class="fas fa-list"></i> Listas de Presença</a>
                 <a href="{% url 'lista_avaliacoes' %}"><i class="fas fa-clipboard-check"></i> Avaliações de Treinamentos</a>
 
-
+                <!-- Novo menu para Avaliação de Desempenho -->
+                <a href="{% url 'lista_avaliacao_desempenho' %}"><i class="fas fa-chart-line"></i> Avaliações de Desempenho</a>
             </div>
 
             <a href="#"><i class="fas fa-cogs"></i> Operações</a>
@@ -112,6 +113,5 @@
         .catch(error => console.warn('Erro ao carregar conteúdo:', error));
     }
     </script>
-
 </body>
 </html>
