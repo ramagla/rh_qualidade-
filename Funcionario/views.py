@@ -7,8 +7,8 @@ from weasyprint import HTML
 from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
-from .models import Cargo, Revisao, Funcionario,Treinamento, ListaPresenca
-from .forms import FuncionarioForm, CargoForm, RevisaoForm,TreinamentoForm, ListaPresencaForm
+from .models import Cargo, Revisao, Funcionario,Treinamento, ListaPresenca,AvaliacaoTreinamento
+from .forms import FuncionarioForm, CargoForm, RevisaoForm,TreinamentoForm, ListaPresencaForm,AvaliacaoTreinamentoForm,AvaliacaoForm
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 
@@ -225,7 +225,7 @@ def lista_treinamentos(request):
     tipos_treinamento = Treinamento.TIPO_TREINAMENTO_CHOICES
 
     context = {
-        'treinamentos': treinamentos,
+        'treinamentos': Treinamento.objects.all(),
         'funcionarios': funcionarios,
         'categorias': [cat[0] for cat in categorias],
         'tipos_treinamento': [tipo[0] for tipo in tipos_treinamento],
@@ -410,3 +410,212 @@ def excluir_lista_presenca(request, id):
     lista = get_object_or_404(ListaPresenca, id=id)
     lista.delete()  # Remove a lista de presença do banco de dados
     return redirect('lista_presenca')  # Redireciona para a lista de presenças
+
+
+
+def avaliar_treinamento(request):
+    if request.method == 'POST':
+        form = AvaliacaoTreinamentoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_avaliacoes')  # Redirecionar para a lista de avaliações
+    else:
+        form = AvaliacaoTreinamentoForm()
+    
+    return render(request, 'avaliar_treinamento.html', {'form': form})
+
+def get_conhecimento_label(i):
+    labels = {
+        1: "Baixo",
+        2: "Médio-Baixo",
+        3: "Médio",
+        4: "Médio-Alto",
+        5: "Alto"
+    }
+    return labels.get(i, "Indefinido")
+
+def get_aplicacao_label(i):
+    labels = {
+        1: "Baixo",
+        2: "Médio-Baixo",
+        3: "Médio",
+        4: "Médio-Alto",
+        5: "Alto"
+    }
+    return labels.get(i, "Indefinido")
+
+def get_resultados_label(i):
+    labels = {
+        1: "Insatisfatório",
+        2: "Regular",
+        3: "Bom",
+        4: "Muito Bom",
+        5: "Excelente"
+    }
+    return labels.get(i, "Indefinido")
+
+
+
+def lista_avaliacoes(request):
+    avaliacoes = AvaliacaoTreinamento.objects.all()
+    listas_presenca = ListaPresenca.objects.all()  # Carregar listas de presença
+
+
+    # Calculando o status da avaliação e do prazo
+    for avaliacao in avaliacoes:
+        # Status da Avaliação baseado na pontuação geral
+        if avaliacao.avaliacao_geral <= 2:
+            avaliacao.status_avaliacao = "Pouco Eficaz"
+        elif 3 <= avaliacao.avaliacao_geral <= 4:
+            avaliacao.status_avaliacao = "Eficaz"
+        else:
+            avaliacao.status_avaliacao = "Muito Eficaz"
+
+        # Calculando o status do prazo
+        prazo_avaliacao = avaliacao.data_avaliacao + timezone.timedelta(days=avaliacao.periodo_avaliacao)
+        if timezone.now().date() <= prazo_avaliacao:
+            avaliacao.status_prazo = "Dentro do Prazo"
+        else:
+            avaliacao.status_prazo = "Fora do Prazo"
+
+    context = {
+        'avaliacoes': avaliacoes,
+        'treinamentos': Treinamento.objects.all(),
+        'funcionarios': Funcionario.objects.all(),
+        'listas_presenca': listas_presenca,
+    }
+
+    return render(request, 'lista_avaliacao.html', context)
+
+
+# Funções para pegar os labels das opções
+def get_conhecimento_label(value):
+    labels = {
+        1: 'Não possui conhecimento mínimo da metodologia para sua aplicação.',
+        2: 'Apresenta deficiências nos conceitos, o que compromete a aplicação.',
+        3: 'Possui noções básicas, mas necessita de acompanhamento e suporte na aplicação.',
+        4: 'Possui domínio necessário da metodologia e a utiliza adequadamente.',
+        5: 'Possui completo domínio e utiliza a metodologia com excelência.',
+    }
+    return labels.get(value, '')
+
+def get_aplicacao_label(value):
+    labels = {
+        1: 'Está muito abaixo do esperado.',
+        2: 'Aplicação está abaixo do esperado.',
+        3: 'Aplicação é razoável, mas não dentro do esperado.',
+        4: 'Aplicação está adequada e corresponde às expectativas.',
+        5: 'Aplicação excede as expectativas.',
+    }
+    return labels.get(value, '')
+
+def get_resultados_label(value):
+    labels = {
+        1: 'Nenhum resultado foi obtido efetivamente até o momento.',
+        2: 'As melhorias obtidas estão muito abaixo do esperado.',
+        3: 'As melhorias obtidas são consideráveis, mas não dentro do esperado.',
+        4: 'As melhorias obtidas são boas e estão dentro do esperado.',
+        5: 'As melhorias obtidas excederam as expectativas.',
+    }
+    return labels.get(value, '')
+
+# Função de cadastro da avaliação
+def cadastrar_avaliacao(request):
+    funcionarios = Funcionario.objects.all()
+    listas_presenca = ListaPresenca.objects.all()
+
+    opcoes_conhecimento = AvaliacaoTreinamento.OPCOES_CONHECIMENTO
+    opcoes_aplicacao = AvaliacaoTreinamento.OPCOES_APLICACAO
+    opcoes_resultados = AvaliacaoTreinamento.OPCOES_RESULTADOS
+
+    if request.method == 'POST':
+        # Processar os dados do formulário
+        funcionario_id = request.POST.get('funcionario')
+        lista_presenca_id = request.POST.get('treinamento')
+        data_avaliacao = request.POST.get('data_avaliacao')
+        periodo_avaliacao = request.POST.get('periodo_avaliacao')
+        conhecimento = request.POST.get('conhecimento')
+        aplicacao = request.POST.get('aplicacao')
+        resultados = request.POST.get('resultados')
+        responsavel_1 = request.POST.get('responsavel1')
+        cargo_1 = request.POST.get('cargo1')
+        responsavel_2 = request.POST.get('responsavel2')
+        cargo_2 = request.POST.get('cargo2')
+        responsavel_3 = request.POST.get('responsavel3')
+        cargo_3 = request.POST.get('cargo3')
+        descricao_melhorias = request.POST.get('melhorias')
+
+        funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+        lista_presenca = get_object_or_404(ListaPresenca, id=lista_presenca_id)
+
+        # Cálculo da avaliação geral
+        total_pontos = int(conhecimento) + int(aplicacao) + int(resultados)
+        if 3 <= total_pontos <= 7:
+            avaliacao_geral = 1  # Pouco eficaz
+        elif 8 <= total_pontos <= 11:
+            avaliacao_geral = 3  # Eficaz
+        else:
+            avaliacao_geral = 5  # Muito eficaz
+
+        # Criação da nova avaliação com dados completos
+        AvaliacaoTreinamento.objects.create(
+            funcionario=funcionario,
+            treinamento=lista_presenca,
+            data_avaliacao=data_avaliacao,
+            periodo_avaliacao=periodo_avaliacao,
+            pergunta_1=conhecimento,
+            pergunta_2=aplicacao,
+            pergunta_3=resultados,
+            responsavel_1_nome=responsavel_1,
+            responsavel_1_cargo=cargo_1,
+            responsavel_2_nome=responsavel_2,
+            responsavel_2_cargo=cargo_2,
+            responsavel_3_nome=responsavel_3,
+            responsavel_3_cargo=cargo_3,
+            descricao_melhorias=descricao_melhorias,
+            avaliacao_geral=avaliacao_geral
+        )
+
+        # Redireciona para a página de lista
+        return redirect('lista_avaliacoes')
+
+    context = {
+        'funcionarios': funcionarios,
+        'listas_presenca': listas_presenca,
+        'opcoes_conhecimento': opcoes_conhecimento,
+        'opcoes_aplicacao': opcoes_aplicacao,
+        'opcoes_resultados': opcoes_resultados,
+    }
+    return render(request, 'cadastrar_avaliacao.html', context)
+
+
+
+
+
+def editar_avaliacao(request, id):
+    avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)
+    
+    if request.method == 'POST':
+        form = AvaliacaoTreinamentoForm(request.POST, instance=avaliacao)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_avaliacoes')  # Redirecione para a lista de avaliações após a edição
+    else:
+        form = AvaliacaoTreinamentoForm(instance=avaliacao)
+    
+    return render(request, 'editar_avaliacao.html', {'form': form, 'avaliacao': avaliacao})
+
+def excluir_avaliacao(request, id):
+    avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)
+    if request.method == "POST":
+        avaliacao.delete()
+        return redirect('lista_avaliacoes')  # Redireciona para a lista de avaliações após excluir
+    return redirect('lista_avaliacoes')  # Redireciona caso não seja POST
+
+
+def get_cargo(request, funcionario_id):
+    try:
+        funcionario = Funcionario.objects.get(id=funcionario_id)
+        return JsonResponse({'cargo': funcionario.cargo_atual.nome})
+    except Funcionario.DoesNotExist:
+        return JsonResponse({'cargo': 'Não encontrado'}, status=404)

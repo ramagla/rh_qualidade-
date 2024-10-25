@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Avaliações de Treinamentos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Avaliações de Treinamentos</h2>
+
+    <!-- Botão de Cadastrar Avaliação -->
+    <div class="text-end mb-4">
+        <a href="{% url 'avaliacao_create' %}" class="btn btn-success">Cadastrar Avaliação</a>
+    </div>
+
+    <!-- Formulário de filtro -->
+        <form method="get" class="mb-4">
+            <div class="row">
+                <!-- Filtro por Treinamento -->
+                <div class="col-md-6">
+                    <label for="treinamento" class="form-label">Treinamento/Curso:</label>
+                    <select name="treinamento" id="treinamento" class="form-select">
+                        <option value="">Selecione</option>
+                        {% for presenca in listas_presenca %}
+                            <option value="{{ presenca.id }}">{{ presenca.assunto }} - {{ presenca.data_realizacao }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtro por Data de Avaliação -->
+                <div class="col-md-6">
+                    <label for="data_avaliacao" class="form-label">Período de Avaliação:</label>
+                    <input type="date" name="data_inicio" class="form-control" placeholder="Data Início">
+                    <input type="date" name="data_fim" class="form-control mt-2" placeholder="Data Fim">
+                </div>
+            </div>
+            <div class="text-end mt-3">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+            </div>
+        </form>
+
+    <!-- Lista de Avaliações -->
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                <th>Funcionário</th>
+                <th>Treinamento</th>
+                <th>Data da Avaliação</th>
+                <th>Status da Avaliação</th>
+                <th>Status do Prazo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for avaliacao in avaliacoes %}
+            <tr>
+                <td>{{ avaliacao.funcionario.nome }}</td>
+                <td>
+                    {% if avaliacao.treinamento %}
+                        {{ avaliacao.treinamento.treinamento }} - {{ avaliacao.treinamento.data_realizacao }}
+                    {% else %}
+                        Não definido
+                    {% endif %}
+                </td>
+                <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+                <td>
+                    {% if avaliacao.status_avaliacao == "Pouco Eficaz" %}
+                        <span class="badge bg-danger">😕 Pouco Eficaz</span>
+                    {% elif avaliacao.status_avaliacao == "Eficaz" %}
+                        <span class="badge bg-warning">😊 Eficaz</span>
+                    {% elif avaliacao.status_avaliacao == "Muito Eficaz" %}
+                        <span class="badge bg-success">😃 Muito Eficaz</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if avaliacao.status_prazo == "Dentro do Prazo" %}
+                        <span class="badge bg-success">🟢 Dentro do Prazo</span>
+                    {% else %}
+                        <span class="badge bg-danger">🔴 Fora do Prazo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'editar_avaliacao' avaliacao.id %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}">
+                        Excluir
+                    </a>
+                </td>
+            </tr>
+
+            <!-- Modal para confirmação de exclusão -->
+            <div class="modal fade" id="confirmDeleteModal{{ avaliacao.id }}" tabindex="-1" aria-labelledby="confirmDeleteModalLabel{{ avaliacao.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmDeleteModalLabel{{ avaliacao.id }}">Confirmar Exclusão</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem certeza de que deseja excluir a avaliação de <strong>{{ avaliacao.funcionario.nome }}</strong> para o treinamento <strong>{{ avaliacao.treinamento.treinamento }}</strong>?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <form method="post" action="{% url 'excluir_avaliacao' avaliacao.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                            </form>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">Nenhuma avaliação cadastrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

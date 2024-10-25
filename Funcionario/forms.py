@@ -1,5 +1,5 @@
 from django import forms
-from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca
+from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento
 
 class FuncionarioForm(forms.ModelForm):
     ESCOLARIDADE_CHOICES = [
@@ -85,3 +85,65 @@ class ListaPresencaForm(forms.ModelForm):
             'assunto': forms.TextInput(attrs={'class': 'form-control'}),  # Novo campo
             'descricao': forms.Textarea(attrs={'class': 'form-control'}),  # Novo campo
         }
+
+class AvaliacaoForm(forms.ModelForm):
+    class Meta:
+        model = AvaliacaoTreinamento
+        fields = ['funcionario', 'treinamento', 'data_avaliacao', 'responsavel_1_nome', 'responsavel_1_cargo', 
+                  'responsavel_2_nome', 'responsavel_2_cargo', 'responsavel_3_nome', 'responsavel_3_cargo', 
+                  'pergunta_1', 'pergunta_2', 'pergunta_3', 'descricao_melhorias', 'avaliacao_geral']
+
+
+from django import forms
+from .models import AvaliacaoTreinamento, Funcionario, ListaPresenca
+
+class AvaliacaoTreinamentoForm(forms.ModelForm):
+    class Meta:
+        model = AvaliacaoTreinamento
+        fields = '__all__'
+
+        # Adicionando classes diretamente aos widgets
+        widgets = {
+            'responsavel_1_nome': forms.Select(attrs={'class': 'responsavel-nome'}),
+            'responsavel_1_cargo': forms.TextInput(attrs={'class': 'responsavel-cargo', 'readonly': 'readonly'}),
+            'responsavel_2_nome': forms.Select(attrs={'class': 'responsavel-nome'}),
+            'responsavel_2_cargo': forms.TextInput(attrs={'class': 'responsavel-cargo', 'readonly': 'readonly'}),
+            'responsavel_3_nome': forms.Select(attrs={'class': 'responsavel-nome'}),
+            'responsavel_3_cargo': forms.TextInput(attrs={'class': 'responsavel-cargo', 'readonly': 'readonly'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(AvaliacaoTreinamentoForm, self).__init__(*args, **kwargs)
+
+        # Alterando o campo treinamento para pegar da ListaPresenca
+        self.fields['treinamento'].queryset = ListaPresenca.objects.all()
+        self.fields['treinamento'].label = 'Treinamento/Curso'
+
+        # Preenchendo o campo de responsáveis com os funcionários (Select)
+        self.fields['responsavel_1_nome'].queryset = Funcionario.objects.all()
+        self.fields['responsavel_2_nome'].queryset = Funcionario.objects.all()
+        self.fields['responsavel_3_nome'].queryset = Funcionario.objects.all()
+
+        # Deixar os campos de responsáveis não obrigatórios
+        self.fields['responsavel_1_nome'].required = False
+        self.fields['responsavel_2_nome'].required = False
+        self.fields['responsavel_3_nome'].required = False
+        self.fields['responsavel_1_cargo'].required = False
+        self.fields['responsavel_2_cargo'].required = False
+        self.fields['responsavel_3_cargo'].required = False
+
+        # Preenchimento automático dos cargos (feito no front-end via AJAX)
+        if 'funcionario' in self.data:
+            funcionario_id = self.data.get('funcionario')
+            try:
+                funcionario = Funcionario.objects.get(id=funcionario_id)
+                self.fields['responsavel_1_cargo'].initial = funcionario.cargo_atual
+                self.fields['responsavel_2_cargo'].initial = funcionario.cargo_atual
+                self.fields['responsavel_3_cargo'].initial = funcionario.cargo_atual
+            except (ValueError, Funcionario.DoesNotExist):
+                pass
+        elif self.instance.pk:
+            # Para edições de uma avaliação existente
+            self.fields['responsavel_1_cargo'].initial = self.instance.funcionario.cargo_atual
+            self.fields['responsavel_2_cargo'].initial = self.instance.funcionario.cargo_atual
+            self.fields['responsavel_3_cargo'].initial = self.instance.funcionario.cargo_atual
