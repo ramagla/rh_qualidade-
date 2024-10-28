@@ -8,19 +8,51 @@
             <tr>
                 <th>Número da Revisão</th>
                 <th>Data da Revisão</th>
-                <th>Descrição da Mudança</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for revisao in revisoes %}
             <tr>
                 <td>{{ revisao.numero_revisao }}</td>
-                <td>{{ revisao.data_revisao }}</td>
-                <td>{{ revisao.descricao_mudanca }}</td>
+                <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
+                <td>
+                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ revisao.id }}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <a href="{% url 'excluir_revisao' revisao.id %}" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta revisão?')">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
             </tr>
+
+            <!-- Modal -->
+            <div class="modal fade" id="modalDescricao{{ revisao.id }}" tabindex="-1" aria-labelledby="modalDescricaoLabel{{ revisao.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalDescricaoLabel{{ revisao.id }}">Descrição da Mudança</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            {{ revisao.descricao_mudanca }}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {% endfor %}
         </tbody>
     </table>
-    <a href="{% url 'adicionar_revisao' cargo.id %}" class="btn btn-primary">Adicionar Revisão</a>
+    <div class="text-end mb-4">
+        <a href="{% url 'adicionar_revisao' cargo.id %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Adicionar Revisão
+        </a>
+        <a href="{% url 'lista_cargos' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retornar
+        </a>
+    </div>
 </div>
 {% endblock %}

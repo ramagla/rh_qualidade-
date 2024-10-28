@@ -13,6 +13,10 @@ from .views import (
     cadastrar_avaliacao,
     cadastrar_avaliacao_anual,
     cadastrar_avaliacao_experiencia,
+    excluir_revisao,
+    excluir_lista_presenca,
+    visualizar_lista_presenca,
+    visualizar_avaliacao
 )
 
 urlpatterns = [
@@ -24,6 +28,8 @@ urlpatterns = [
     path('funcionarios/editar/<int:funcionario_id>/', views.editar_funcionario, name='editar_funcionario'),
     path('funcionarios/excluir/<int:funcionario_id>/', views.excluir_funcionario, name='excluir_funcionario'),
     path('funcionarios/<int:funcionario_id>/cargos/', get_cargo, name='get_cargo'),
+    path('funcionarios/<int:funcionario_id>/visualizar/', views.visualizar_funcionario, name='visualizar_funcionario'),
+
     
     # Cargos
     path('cargos/', views.lista_cargos, name='lista_cargos'),
@@ -31,6 +37,8 @@ urlpatterns = [
     path('cargos/<int:cargo_id>/revisoes/', views.historico_revisoes, name='historico_revisoes'),
     path('cargos/<int:cargo_id>/revisoes/adicionar/', views.adicionar_revisao, name='adicionar_revisao'),
     path('cargos/editar/<int:cargo_id>/', views.editar_cargo, name='editar_cargo'),
+    path('revisao/excluir/<int:revisao_id>/', excluir_revisao, name='excluir_revisao'),
+
 
     # Sucesso
     path('sucesso/', sucesso_view, name='url_sucesso'),
@@ -43,12 +51,16 @@ urlpatterns = [
     path('treinamentos/imprimir_f003/<int:funcionario_id>/', views.imprimir_f003, name='imprimir_f003'),
     path('gerar_relatorio_f003/', views.gerar_relatorio_f003, name='gerar_relatorio_f003'),
     path('relatorio/<int:funcionario_id>/pdf/', gerar_pdf, name='gerar_pdf'),
+    path('treinamentos/<int:treinamento_id>/visualizar/', views.visualizar_treinamento, name='visualizar_treinamento'),
+
 
     # Lista de Presença
     path('lista-presenca/', views.lista_presenca, name='lista_presenca'),
     path('lista-presenca/cadastrar/', views.cadastrar_lista_presenca, name='cadastrar_lista_presenca'),
     path('lista-presenca/editar/<int:id>/', views.editar_lista_presenca, name='editar_lista_presenca'),
     path('lista-presenca/excluir/<int:id>/', views.excluir_lista_presenca, name='excluir_lista_presenca'),
+    path('listas-presenca/<int:lista_id>/visualizar/', visualizar_lista_presenca, name='visualizar_lista_presenca'),
+
 
     # Avaliação de Treinamentos
     path('avaliacoes/', lista_avaliacoes, name='lista_avaliacoes'),
@@ -56,6 +68,8 @@ urlpatterns = [
     path('avaliacoes/editar/<int:id>/', views.editar_avaliacao, name='editar_avaliacao'),
     path('avaliacoes/excluir/<int:id>/', views.excluir_avaliacao, name='excluir_avaliacao'),
     path('get-cargo/<int:funcionario_id>/', views.get_cargo, name='get_cargo'),
+    path('avaliacoes/<int:id>/visualizar/', visualizar_avaliacao, name='visualizar_avaliacao'),
+
 
     # Avaliação de Desempenho
     path('avaliacoes-desempenho/cadastrar/experiencia/', views.cadastrar_avaliacao_experiencia, name='cadastrar_avaliacao_experiencia'),

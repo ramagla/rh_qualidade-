@@ -95,6 +95,22 @@
             <input type="text" class="form-control" id="cargo_responsavel" disabled>
         </div>
 
+        <!-- Status -->
+        <div class="col-md-6">
+            <label for="status" class="form-label">Status:</label>
+            {{ form.status|add_class:"form-select" }}
+        </div>
+
+        <!-- Formulário F146 -->
+        <div class="col-md-6">
+            <label for="formulario_f146" class="form-label">Formulário F146:</label>
+            <div class="input-group mb-3">
+                <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_formulario_f146').click();">Selecionar Arquivo</button>
+                <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="formulario_f146_filename" readonly>
+            </div>
+            <input type="file" id="id_formulario_f146" name="formulario_f146" style="display: none;" onchange="document.getElementById('formulario_f146_filename').value = this.files[0].name;">
+        </div>
+
         <!-- Botão para salvar -->
         <div class="col-12 text-center">
             <button type="submit" class="btn btn-primary" onclick="validarFormulario(event)">Salvar</button>
@@ -102,60 +118,74 @@
     </form>
 
     <!-- Script para edição -->
-    <script>
-        // Função para editar a foto
-        function editarFoto() {
-            document.getElementById('fotoInput').click();
-        }
+    <!-- Script para edição -->
+<script>
+    // Função para editar a foto
+    function editarFoto() {
+        document.getElementById('fotoInput').click();
+    }
 
-        // Função para editar o currículo
-        function editarCurriculo() {
-            document.getElementById('curriculoInput').click();
-        }
+    // Função para editar o currículo
+    function editarCurriculo() {
+        document.getElementById('curriculoInput').click();
+    }
 
-        // Preenche o campo de cargo do responsável automaticamente quando a página é carregada
-        document.addEventListener("DOMContentLoaded", function() {
-            var responsavelId = document.getElementById('id_responsavel').value;
-            if (responsavelId) {
-                fetch(`/funcionarios/${responsavelId}/cargos/`)
-                .then(response => response.json())
-                .then(data => {
-                    // Preenche o campo de cargo com o valor retornado
-                    document.getElementById('cargo_responsavel').value = data.cargo_atual;
-                })
-                .catch(error => console.error('Erro ao buscar cargo do responsável:', error));
-            }
-        });
+    // Função para preencher o campo de cargo do responsável automaticamente quando a página é carregada
+    function preencherCargo() {
+        const responsavelSelect = document.getElementById('id_responsavel');
+        const cargoInput = document.getElementById('cargo_responsavel');
 
-        // Atualiza o campo de cargo do responsável ao selecionar um novo responsável
-        document.getElementById('id_responsavel').addEventListener('change', function() {
-            var funcionarioId = this.value;
+        responsavelSelect.addEventListener('change', function () {
+            const funcionarioId = responsavelSelect.value;
+
             if (funcionarioId) {
-                fetch(`/funcionarios/${funcionarioId}/cargos/`)
-                .then(response => response.json())
-                .then(data => {
-                    // Preenche o campo de cargo com o valor retornado
-                    document.getElementById('cargo_responsavel').value = data.cargo_atual;
-                })
-                .catch(error => console.error('Erro ao buscar cargo do responsável:', error));
+                fetch(`/get-cargo/${funcionarioId}/`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erro na resposta do servidor');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        cargoInput.value = data.cargo || 'Cargo não encontrado';
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar o cargo:', error);
+                        cargoInput.value = 'Erro ao carregar o cargo';
+                    });
             } else {
-                // Limpa o campo de cargo se nenhum responsável for selecionado
-                document.getElementById('cargo_responsavel').value = '';
+                cargoInput.value = '';
             }
         });
+    }
 
-        // Validação do formulário para o campo responsável
-        function validarFormulario(event) {
-            var responsavel = document.getElementById('id_responsavel');
-            if (responsavel.value === '') {
-                event.preventDefault();  // Impede o envio do formulário
-                document.getElementById('responsavelError').style.display = 'block';  // Exibe o erro
-                responsavel.classList.add('is-invalid');  // Adiciona a classe de erro
-            } else {
-                document.getElementById('responsavelError').style.display = 'none';  // Esconde o erro se estiver preenchido
-                responsavel.classList.remove('is-invalid');  // Remove a classe de erro
-            }
+    // Inicializa o preenchimento do cargo no carregamento da página
+    document.addEventListener("DOMContentLoaded", function() {
+        preencherCargo();
+        const funcionarioId = document.getElementById('id_responsavel').value;
+        if (funcionarioId) {
+            fetch(`/get-cargo/${funcionarioId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('cargo_responsavel').value = data.cargo || 'Cargo não encontrado';
+                })
+                .catch(error => console.error('Erro ao buscar cargo do responsável:', error));
         }
-    </script>
+    });
+
+    // Validação do formulário para o campo responsável
+    function validarFormulario(event) {
+        var responsavel = document.getElementById('id_responsavel');
+        if (responsavel.value === '') {
+            event.preventDefault();  // Impede o envio do formulário
+            document.getElementById('responsavelError').style.display = 'block';  // Exibe o erro
+            responsavel.classList.add('is-invalid');  // Adiciona a classe de erro
+        } else {
+            document.getElementById('responsavelError').style.display = 'none';  // Esconde o erro se estiver preenchido
+            responsavel.classList.remove('is-invalid');  // Remove a classe de erro
+        }
+    }
+</script>
+
 </div>
 {% endblock %}

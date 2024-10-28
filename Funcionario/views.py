@@ -5,9 +5,11 @@ from io import BytesIO
 from xhtml2pdf import pisa
 from weasyprint import HTML
 from datetime import datetime, timedelta
+from django.contrib import messages
+
 
 from django.contrib.auth.decorators import login_required
-from .models import Cargo, Revisao, Funcionario,Treinamento, ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho
+from .models import AvaliacaoAnual, AvaliacaoExperiencia, Cargo, Revisao, Funcionario,Treinamento, ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho
 from .forms import FuncionarioForm, CargoForm, RevisaoForm,TreinamentoForm, ListaPresencaForm,AvaliacaoTreinamentoForm,AvaliacaoForm,AvaliacaoAnualForm,AvaliacaoExperienciaForm
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
@@ -27,26 +29,44 @@ def lista_funcionarios(request):
         funcionarios = funcionarios.filter(local_trabalho=local_trabalho)
     
     # Aplicar filtro por Responsável
-    responsavel_id = request.GET.get('responsavel')
-    if responsavel_id:
-        funcionarios = funcionarios.filter(responsavel=responsavel_id)
+    responsavel = request.GET.get('responsavel')
+    if responsavel:
+        funcionarios = funcionarios.filter(responsavel=responsavel)
     
     # Aplicar filtro por Escolaridade
     escolaridade = request.GET.get('escolaridade')
     if escolaridade:
         funcionarios = funcionarios.filter(escolaridade=escolaridade)
 
-    # Obter todos os locais de trabalho, responsáveis e níveis de escolaridade para o formulário de filtro
+    # Aplicar filtro por Status
+    status = request.GET.get('status')
+    if status:
+        funcionarios = funcionarios.filter(status=status)
+
+    # Obter todos os locais de trabalho, responsáveis, níveis de escolaridade e status para o formulário de filtro
     locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
-    responsaveis = Funcionario.objects.filter(responsavel__isnull=False).distinct()
+    responsaveis = Funcionario.objects.values('responsavel').distinct()
     niveis_escolaridade = Funcionario.objects.values_list('escolaridade', flat=True).distinct()
+    status_opcoes = ['Ativo', 'Inativo']
 
     return render(request, 'lista_funcionarios.html', {
         'funcionarios': funcionarios,
         'locais_trabalho': locais_trabalho,
         'responsaveis': responsaveis,
         'niveis_escolaridade': niveis_escolaridade,
+        'status_opcoes': status_opcoes,
     })
+
+def visualizar_funcionario(request, funcionario_id):
+    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+    form = FuncionarioForm(instance=funcionario)  # Carrega o formulário com os dados do funcionário
+
+    # Torna os campos do formulário somente leitura
+    for field in form.fields.values():
+        field.widget.attrs['disabled'] = True
+
+    return render(request, 'cadastrar_funcionario.html', {'form': form, 'visualizacao': True})
+
 
 # Função para cadastrar funcionário
 def cadastrar_funcionario(request):
@@ -69,9 +89,12 @@ def editar_funcionario(request, funcionario_id):
         form = FuncionarioForm(request.POST, request.FILES, instance=funcionario)
         if form.is_valid():
             form.save()
+            messages.success(request, f'Funcionário {funcionario.nome} atualizado com sucesso!')
             return redirect('lista_funcionarios')
+        else:
+            messages.error(request, 'Erro ao atualizar o funcionário. Verifique os campos.')
     else:
-        # Criar um dicionário com os dados formatados
+        # Carrega os dados iniciais do formulário, incluindo o responsável
         initial_data = {
             'nome': funcionario.nome,
             'data_admissao': funcionario.data_admissao.strftime('%d/%m/%Y'),  # Formato Brasileiro
@@ -81,20 +104,49 @@ def editar_funcionario(request, funcionario_id):
             'local_trabalho': funcionario.local_trabalho,
             'data_integracao': funcionario.data_integracao.strftime('%d/%m/%Y'),  # Formato Brasileiro
             'escolaridade': funcionario.escolaridade,
-            'responsavel': funcionario.responsavel,
-            'foto': funcionario.foto,  # Incluir a foto existente no formulário
-            'curriculo': funcionario.curriculo  # Incluir o currículo existente no formulário
+            'responsavel': funcionario.responsavel,  # Certifique-se de que este campo é corretamente referenciado
+            'foto': funcionario.foto,  # Inclui a foto existente no formulário
+            'curriculo': funcionario.curriculo  # Inclui o currículo existente no formulário
         }
         form = FuncionarioForm(initial=initial_data, instance=funcionario)
 
     return render(request, 'cadastrar_funcionario.html', {'form': form, 'funcionario': funcionario})
 
 
+
 # Função para excluir funcionário
 def excluir_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+
+    # Lista para armazenar os nomes das relações ativas
+    relacionamentos = []
+
+    # Verifica relações nas tabelas relacionadas
+    if Treinamento.objects.filter(funcionario=funcionario).exists():
+        relacionamentos.append("Treinamento")
+    if ListaPresenca.objects.filter(participantes=funcionario).exists():
+        relacionamentos.append("Lista de Presença")
+    if AvaliacaoTreinamento.objects.filter(funcionario=funcionario).exists():
+        relacionamentos.append("Avaliação de Treinamento")
+    if AvaliacaoExperiencia.objects.filter(funcionario=funcionario).exists():
+        relacionamentos.append("Avaliação de Experiência")
+    if AvaliacaoAnual.objects.filter(funcionario=funcionario).exists():
+        relacionamentos.append("Avaliação Anual")
+
+    # Se houver relacionamentos, exibe a mensagem de erro e impede a exclusão
+    if relacionamentos:
+        mensagem_relacionamentos = ', '.join(relacionamentos)
+        messages.error(
+            request,
+            f"Não é possível excluir o funcionário, pois ele está associado aos seguintes registros: {mensagem_relacionamentos}."
+        )
+        return redirect('lista_funcionarios')  # Redireciona para a lista de funcionários
+
+    # Se não houver relações, exclui o funcionário
     funcionario.delete()
+    messages.success(request, 'Funcionário excluído com sucesso.')
     return redirect('lista_funcionarios')
+
 
 def lista_cargos(request):
     cargos = Cargo.objects.all()
@@ -151,6 +203,13 @@ def adicionar_revisao(request, cargo_id):
     else:
         form = RevisaoForm()
     return render(request, 'adicionar_revisao.html', {'form': form, 'cargo': cargo})
+
+def excluir_revisao(request, revisao_id):
+    revisao = get_object_or_404(Revisao, id=revisao_id)
+    cargo_id = revisao.cargo.id  # Salva o ID do cargo antes da exclusão
+    revisao.delete()
+    messages.success(request, 'Revisão excluída com sucesso.')
+    return redirect('historico_revisoes', cargo_id=cargo_id)
 
 def obter_cargos(request, funcionario_id):
     try:
@@ -463,18 +522,21 @@ def lista_avaliacoes(request):
 
     # Aplicar filtros de funcionário e datas
     funcionario_id = request.GET.get('funcionario')
+    print(f'Funcionario ID: {funcionario_id}')
     if funcionario_id:
         avaliacoes_treinamento = avaliacoes_treinamento.filter(funcionario_id=funcionario_id)
         avaliacoes_desempenho = avaliacoes_desempenho.filter(funcionario_id=funcionario_id)
 
     data_inicio = request.GET.get('data_inicio')
     data_fim = request.GET.get('data_fim')
+    print(f'Datas: {data_inicio} - {data_fim}')
     if data_inicio and data_fim:
         avaliacoes_treinamento = avaliacoes_treinamento.filter(data_avaliacao__range=[data_inicio, data_fim])
         avaliacoes_desempenho = avaliacoes_desempenho.filter(data_avaliacao__range=[data_inicio, data_fim])
 
     # Aplicar filtro por tipo de avaliação
     tipo = request.GET.get('tipo')
+    print(f'Tipo recebido: {tipo}')  # Debugging
     if tipo:
         avaliacoes_desempenho = avaliacoes_desempenho.filter(tipo=tipo)
 
@@ -542,6 +604,8 @@ def get_resultados_label(value):
     }
     return labels.get(value, '')
 
+from django.contrib import messages
+
 # Função de cadastro da avaliação
 def cadastrar_avaliacao(request):
     funcionarios = Funcionario.objects.all()
@@ -561,13 +625,42 @@ def cadastrar_avaliacao(request):
         aplicacao = request.POST.get('aplicacao')
         resultados = request.POST.get('resultados')
         responsavel_1 = request.POST.get('responsavel1')
-        cargo_1 = request.POST.get('cargo1')
         responsavel_2 = request.POST.get('responsavel2')
-        cargo_2 = request.POST.get('cargo2')
         responsavel_3 = request.POST.get('responsavel3')
-        cargo_3 = request.POST.get('cargo3')
         descricao_melhorias = request.POST.get('melhorias')
 
+        # Validações
+        if lista_presenca_id == 'Selecione o treinamento':
+            messages.error(request, "Por favor, selecione um treinamento válido.")
+            return render(request, 'cadastrar_avaliacao.html', {
+                'funcionarios': funcionarios,
+                'listas_presenca': listas_presenca,
+                'opcoes_conhecimento': opcoes_conhecimento,
+                'opcoes_aplicacao': opcoes_aplicacao,
+                'opcoes_resultados': opcoes_resultados,
+            })
+
+        if not funcionario_id:
+            messages.error(request, "O funcionário deve ser selecionado.")
+            return render(request, 'cadastrar_avaliacao.html', {
+                'funcionarios': funcionarios,
+                'listas_presenca': listas_presenca,
+                'opcoes_conhecimento': opcoes_conhecimento,
+                'opcoes_aplicacao': opcoes_aplicacao,
+                'opcoes_resultados': opcoes_resultados,
+            })
+
+        if not data_avaliacao:
+            messages.error(request, "A data da avaliação deve ser informada.")
+            return render(request, 'cadastrar_avaliacao.html', {
+                'funcionarios': funcionarios,
+                'listas_presenca': listas_presenca,
+                'opcoes_conhecimento': opcoes_conhecimento,
+                'opcoes_aplicacao': opcoes_aplicacao,
+                'opcoes_resultados': opcoes_resultados,
+            })
+
+        # Obtendo as instâncias
         funcionario = get_object_or_404(Funcionario, id=funcionario_id)
         lista_presenca = get_object_or_404(ListaPresenca, id=lista_presenca_id)
 
@@ -580,7 +673,7 @@ def cadastrar_avaliacao(request):
         else:
             avaliacao_geral = 5  # Muito eficaz
 
-        # Criação da nova avaliação com dados completos
+        # Criação da nova avaliação
         AvaliacaoTreinamento.objects.create(
             funcionario=funcionario,
             treinamento=lista_presenca,
@@ -590,16 +683,14 @@ def cadastrar_avaliacao(request):
             pergunta_2=aplicacao,
             pergunta_3=resultados,
             responsavel_1_nome=responsavel_1,
-            responsavel_1_cargo=cargo_1,
             responsavel_2_nome=responsavel_2,
-            responsavel_2_cargo=cargo_2,
             responsavel_3_nome=responsavel_3,
-            responsavel_3_cargo=cargo_3,
             descricao_melhorias=descricao_melhorias,
             avaliacao_geral=avaliacao_geral
         )
 
-        # Redireciona para a página de lista
+        # Mensagem de sucesso
+        messages.success(request, "Avaliação cadastrada com sucesso!")
         return redirect('lista_avaliacoes')
 
     context = {
@@ -630,11 +721,15 @@ def editar_avaliacao(request, id):
 
 def excluir_avaliacao(request, id):
     avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)
-    if request.method == "POST":
+    
+    if request.method == 'POST':
+        # Exclui a avaliação
         avaliacao.delete()
-        return redirect('lista_avaliacoes')  # Redireciona para a lista de avaliações após excluir
-    return redirect('lista_avaliacoes')  # Redireciona caso não seja POST
-
+        messages.success(request, "Avaliação excluída com sucesso!")  # Mensagem de sucesso
+        return redirect('lista_avaliacoes')  # Redireciona para a lista de avaliações
+    
+    messages.error(request, "Erro ao excluir a avaliação.")  # Mensagem de erro se a exclusão falhar
+    return redirect('lista_avaliacoes')  # Redireciona para a lista de avaliações
 
 def get_cargo(request, funcionario_id):
     try:
@@ -667,10 +762,14 @@ def lista_avaliacao_desempenho(request):
     if data_inicio and data_fim:
         avaliacoes = avaliacoes.filter(data_avaliacao__range=[data_inicio, data_fim])
 
+    # Log para verificar quantas avaliações estão sendo passadas
+    print(f"Número de avaliações encontradas: {avaliacoes.count()}")
+
     return render(request, 'lista_avaliacao_desempenho.html', {
         'avaliacoes': avaliacoes,
         'funcionarios': Funcionario.objects.all(),  # Para o filtro
     })
+
 
 
 def cadastrar_avaliacao_experiencia(request):
@@ -726,3 +825,56 @@ def excluir_avaliacao_desempenho(request, id):
         return redirect('lista_avaliacao_desempenho')  # Redireciona para a lista após a exclusão
     return redirect('lista_avaliacao_desempenho')
 
+def visualizar_treinamento(request, treinamento_id):
+    treinamento = get_object_or_404(Treinamento, id=treinamento_id)
+    return render(request, 'visualizar_treinamento.html', {'treinamento': treinamento})
+
+def visualizar_lista_presenca(request, lista_id):
+    lista = get_object_or_404(ListaPresenca, id=lista_id)
+    return render(request, 'visualizar_lista_presenca.html', {'lista': lista})
+
+def listar_listas_presenca(request):
+    listas_presenca = ListaPresenca.objects.all()
+    for lista in listas_presenca:
+        horas = int(lista.duracao)
+        minutos = int((lista.duracao - horas) * 60)
+        lista.duracao_formatada = f"{horas:02}:{minutos:02}"
+    return render(request, 'listas_presenca.html', {'listas_presenca': listas_presenca})
+
+from django.shortcuts import get_object_or_404, render
+
+def visualizar_avaliacao(request, id):
+    avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)
+
+    # Coletando os responsáveis como um dicionário
+    responsaveis = [
+        {
+            'nome': avaliacao.responsavel_1_nome,
+            'cargo': avaliacao.responsavel_1_cargo,
+        },
+        {
+            'nome': avaliacao.responsavel_2_nome,
+            'cargo': avaliacao.responsavel_2_cargo,
+        },
+        {
+            'nome': avaliacao.responsavel_3_nome,
+            'cargo': avaliacao.responsavel_3_cargo,
+        }
+    ]
+
+    # Coletando as respostas das perguntas
+    grau_conhecimento = avaliacao.pergunta_1  # Supondo que seja um campo de resposta
+    aplicacao_conceitos = avaliacao.pergunta_2  # Supondo que seja um campo de resposta
+    resultados_obtidos = avaliacao.pergunta_3  # Supondo que seja um campo de resposta
+    melhorias = avaliacao.descricao_melhorias
+    avaliacao_geral = avaliacao.avaliacao_geral
+
+    return render(request, 'visualizar_avaliacao.html', {
+        'avaliacao': avaliacao,
+        'responsaveis': responsaveis,
+        'grau_conhecimento': grau_conhecimento,
+        'aplicacao_conceitos': aplicacao_conceitos,
+        'resultados_obtidos': resultados_obtidos,
+        'melhorias': melhorias,
+        'avaliacao_geral': avaliacao_geral,
+    })

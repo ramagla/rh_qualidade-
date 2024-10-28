@@ -47,8 +47,10 @@
 <body>
     <div class="d-flex justify-content-center align-items-center vh-100">
         <div class="login-container">
-            <img src="/static/images/logo.png" alt="Logo" class="login-logo"> <!-- Insira a URL do logo correto -->
-            <h2 class="login-title">CARGA MÁQUINA</h2>
+            {% load static %}
+
+            <img src="{% static 'logo.png' %}" alt="Logo" class="login-logo"> <!-- Insira a URL do logo correto -->
+            {% comment %} <h2 class="login-title">BRAS-MOLA</h2> {% endcomment %}
             <form method="post">
                 {% csrf_token %}
                 <div class="mb-3">
@@ -62,7 +64,7 @@
                 <button type="submit" class="btn login-btn w-100">Entrar</button>
             </form>
             <footer>
-                © 2024 GSYS (24.337.038)
+                © 2024 BM (1.0.0)
             </footer>
         </div>
     </div>

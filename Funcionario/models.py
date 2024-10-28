@@ -4,7 +4,7 @@ from django.utils import timezone
 
 class Cargo(models.Model):
     nome = models.CharField(max_length=100)
-    cbo = models.CharField(max_length=20)
+    numero_dc = models.CharField(max_length=20)  # Substitui 'cbo' por 'numero_dc'
     descricao_arquivo = models.FileField(upload_to='cargos/', blank=True, null=True)
     departamento = models.CharField(max_length=100, verbose_name='Departamento')  # Novo campo de departamento
 
@@ -12,6 +12,11 @@ class Cargo(models.Model):
         return self.nome
 
 class Funcionario(models.Model):
+    STATUS_CHOICES = [
+        ('Ativo', 'Ativo'),
+        ('Inativo', 'Inativo'),
+    ]
+    
     nome = models.CharField(max_length=100)
     data_admissao = models.DateField()
     cargo_inicial = models.ForeignKey(Cargo, related_name='cargo_inicial_funcionarios', on_delete=models.CASCADE)
@@ -23,8 +28,10 @@ class Funcionario(models.Model):
     cargo_responsavel = models.CharField(max_length=100)
     escolaridade = models.CharField(max_length=100)
     updated_at = models.DateTimeField(auto_now=True)
-    foto = models.ImageField(upload_to='fotos_funcionarios/', blank=True, null=True)  # Novo campo para foto
-    curriculo = models.FileField(upload_to='curriculos_funcionarios/', blank=True, null=True)  # Novo campo para currículo
+    foto = models.ImageField(upload_to='fotos_funcionarios/', blank=True, null=True)
+    curriculo = models.FileField(upload_to='curriculos_funcionarios/', blank=True, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo')  # Novo campo de status
+    formulario_f146 = models.FileField(upload_to='formularios_f146/', blank=True, null=True)  # Novo campo de upload para o formulário F146
 
     def __str__(self):
         return self.nome
@@ -57,7 +64,7 @@ class Treinamento(models.Model):
         ('cursando', 'Cursando'),
     ]
     
-    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name='treinamentos')
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.PROTECT, related_name='treinamentos')
     tipo = models.CharField(max_length=50, choices=TIPO_TREINAMENTO_CHOICES)
     categoria = models.CharField(max_length=100, choices=CATEGORIA_CHOICES)
     nome_curso = models.CharField(max_length=255)
@@ -150,6 +157,7 @@ class AvaliacaoDesempenho(models.Model):
         ('EXPERIENCIA', 'Experiência'),
         ('ANUAL', 'Anual'),
     ]
+    
     tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
     data_avaliacao = models.DateField()
     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
@@ -179,9 +187,14 @@ class AvaliacaoDesempenho(models.Model):
     # Observações e orientação
     observacoes = models.TextField(blank=True, null=True)
     orientacao = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Novo campo para avaliação geral
+    avaliacao_geral = models.IntegerField(
+        choices=[(1, 'Pouco eficaz'), (2, '2'), (3, '3'), (4, '4'), (5, 'Muito eficaz')],
+        default=3
+    )
 
     def calcular_classificacao(self):
-        # Usa o método get para garantir que, se o campo for None, um valor padrão de 0 seja utilizado
         postura = self.postura_seg_trabalho or 0
         qualidade = self.qualidade_produtividade or 0
         trabalho = self.trabalho_em_equipe or 0
@@ -215,28 +228,24 @@ class AvaliacaoDesempenho(models.Model):
         else:
             return 'Indeterminado'
 
-def get_status_avaliacao(self):
-    # Avaliação Anual
-    if self.tipo == 'ANUAL':
-        if self.avaliacao_geral <= 2:
-            return "Pouco Eficaz"
-        elif 3 <= self.avaliacao_geral <= 4:
-            return "Eficaz"
-        else:
-            return "Muito Eficaz"
-
-    # Avaliação de Experiência
-    elif self.tipo == 'EXPERIENCIA':
-        if self.orientacao == "Efetivar":
-            return "😃 Efetivar"
-        elif self.orientacao == "Encaminhar p/ Treinamento":
-            return "😊 Treinamento"
-        elif self.orientacao == "Desligar":
-            return "😕 Desligar"
-        else:
-            return "Indefinido"
-        
-    return "Indeterminado"  # Caso nenhum tipo corresponda
+    def get_status_avaliacao(self):
+        if self.tipo == 'ANUAL':
+            if self.avaliacao_geral <= 2:
+                return "Pouco Eficaz"
+            elif 3 <= self.avaliacao_geral <= 4:
+                return "Eficaz"
+            else:
+                return "Muito Eficaz"
+        elif self.tipo == 'EXPERIENCIA':
+            if self.orientacao == "Efetivar":
+                return "😃 Efetivar"
+            elif self.orientacao == "Encaminhar p/ Treinamento":
+                return "😊 Treinamento"
+            elif self.orientacao == "Desligar":
+                return "😕 Desligar"
+            else:
+                return "Indefinido"
+        return "Indeterminado"
 
 
 
@@ -375,3 +384,52 @@ class AvaliacaoAnual(models.Model):
 
     def __str__(self):
         return f"Avaliação Anual para {self.funcionario.nome} em {self.data_avaliacao}"
+    
+
+
+class JobRotationEvaluation(models.Model):
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name="job_rotation_evaluations")
+    area_atual = models.CharField(max_length=100)
+    cargo_atual = models.ForeignKey(Cargo, related_name='cargo_atual_funcionarios', on_delete=models.CASCADE)
+    competencias = models.TextField()
+    ultima_avaliacao = models.DateField(null=True, blank=True)
+    status_avaliacao = models.CharField(max_length=50, null=True, blank=True)
+
+    # Campos para CURSOS/TREINAMENTOS
+    cursos_realizados = models.JSONField(default=list)  # Listagem dos últimos 10 cursos (como JSON)
+
+    # Campos para Escolaridade/Formação
+    escolaridade = models.CharField(max_length=100)
+
+    # Campos para Job Rotation
+    area = models.CharField(max_length=100)  # Campo de inserção manual
+    nova_funcao = models.ForeignKey(Cargo, related_name='nova_funcao', on_delete=models.SET_NULL, null=True)
+    data_inicio = models.DateField()
+    termino_previsto = models.DateField()
+    gestor_responsavel = models.ForeignKey(Funcionario, related_name='gestor_responsavel', on_delete=models.SET_NULL, null=True)
+
+    # Competências selecionadas
+    descricao_cargo = models.TextField()  # Exemplo de campo para armazenar as descrições de cargo selecionadas
+
+    # Treinamentos Requeridos (Campo Manual)
+    treinamentos_requeridos = models.TextField(blank=True)
+    treinamentos_propostos = models.TextField(blank=True)
+
+    # Avaliações
+    avaliacao_gestor = models.TextField(blank=True)
+    avaliacao_funcionario = models.TextField(blank=True)
+    avaliacao_rh = models.CharField(
+        max_length=20,
+        choices=[
+            ('Apto', 'Apto'),
+            ('Inapto', 'Inapto'),
+            ('Prorrogar TN', 'Prorrogar TN')
+        ]
+    )
+    dias_prorrogacao = models.IntegerField(default=0)
+
+    # Disponibilidade de Vaga
+    disponibilidade_vaga = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Avaliação de Job Rotation - {self.funcionario.nome}"

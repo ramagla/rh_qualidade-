@@ -14,8 +14,8 @@
         </div>
 
         <div class="col-md-6">
-            <label for="cbo" class="form-label">CBO:</label>
-            {{ form.cbo }}
+            <label for="numero_dc" class="form-label">Número da DC:</label>
+            {{ form.numero_dc }}
         </div>
 
         <div class="col-md-6">
@@ -38,10 +38,5 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
-<!-- Aplicando a máscara ao campo CBO -->
-<script>
-    $(document).ready(function(){
-        $('#id_cbo').mask('0000-00');  // Aplicando a máscara no formato 0000-00
-    });
-</script>
+
 {% endblock %}

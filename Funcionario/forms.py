@@ -20,28 +20,28 @@ class FuncionarioForm(forms.ModelForm):
     data_integracao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Data de Integração")
     escolaridade = forms.ChoiceField(choices=ESCOLARIDADE_CHOICES, label="Escolaridade", widget=forms.Select(attrs={'class': 'form-select'}))
     responsavel = forms.ModelChoiceField(queryset=Funcionario.objects.all(), required=False, widget=forms.Select(attrs={'class': 'form-select'}))
-
-    foto = forms.ImageField(required=False, label="Foto")  # Novo campo para foto
-    curriculo = forms.FileField(required=False, label="Currículo")  # Novo campo para currículo
+    
+    foto = forms.ImageField(required=False, label="Foto")
+    curriculo = forms.FileField(required=False, label="Currículo")
+    status = forms.ChoiceField(choices=Funcionario.STATUS_CHOICES, label="Status", widget=forms.Select(attrs={'class': 'form-select'}))  # Novo campo de status
+    formulario_f146 = forms.FileField(required=False, label="Formulário F146")  # Novo campo para upload do formulário F146
 
     class Meta:
         model = Funcionario
-        fields = ['nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro', 'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto', 'curriculo']  # Inclua os novos campos
+        fields = ['nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro', 'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto', 'curriculo', 'status', 'formulario_f146']
 
     def __init__(self, *args, **kwargs):
         super(FuncionarioForm, self).__init__(*args, **kwargs)
         for field in self.fields:
-            self.fields['responsavel'].queryset = Funcionario.objects.all()
-
             self.fields[field].widget.attrs.update({'class': 'form-control'})
 
 class CargoForm(forms.ModelForm):
     class Meta:
         model = Cargo
-        fields = ['nome', 'cbo', 'descricao_arquivo', 'departamento']  # Adiciona o campo 'departamento'
+        fields = ['nome', 'numero_dc', 'descricao_arquivo', 'departamento']  # Campo 'numero_dc' no lugar de 'cbo'
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'cbo': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero_dc': forms.TextInput(attrs={'class': 'form-control'}),  # Atualizado para 'numero_dc'
             'descricao_arquivo': forms.FileInput(attrs={'class': 'form-control'}),
             'departamento': forms.TextInput(attrs={'class': 'form-control'}),  # Widget para 'departamento'
         }

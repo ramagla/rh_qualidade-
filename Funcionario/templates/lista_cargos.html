@@ -1,8 +1,45 @@
 {% extends 'base.html' %}
 
+{% block title %}Lista de Cargos{% endblock %}
+
 {% block content %}
-<div class="container">
+<div class="container mt-5">
     <h2 class="text-center mb-4">Lista de Cargos</h2>
+
+    <!-- Botão de Adicionar Cargo -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_cargo' %}" class="btn btn-success">Adicionar Cargo</a>
+    </div>
+
+    <!-- Toast container para mensagens de alerta no canto inferior direito -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                    <div class="toast align-items-center border-0" 
+                         style="background-color: #f8d7da; color: #842029;" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <h4 class="alert-heading">Atenção!</h4>
+                                <p>{{ message }}</p>
+                                <p class="mb-0">Certifique-se de resolver os vínculos antes de tentar excluir novamente.</p>
+                            </div>
+                        </div>
+                    </div>
+                {% elif message.tags == "success" %}
+                    <div class="toast align-items-center border-0" 
+                         style="background-color: #d1e7dd; color: #0f5132;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <h4 class="alert-heading">Sucesso!</h4>
+                                <p>{{ message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
 
     <!-- Formulário de filtro -->
     <form method="get" class="mb-4">
@@ -40,7 +77,7 @@
         <thead>
             <tr>
                 <th>Nome do Cargo</th>
-                <th>CBO</th>
+                <th>Número da DC</th>  <!-- Substituído CBO por Número da DC -->
                 <th>Departamento</th>
                 <th>Última Revisão</th>
                 <th>Última Atualização</th>
@@ -51,7 +88,7 @@
             {% for cargo in cargos %}
             <tr>
                 <td>{{ cargo.nome }}</td>
-                <td>{{ cargo.cbo }}</td>
+                <td>{{ cargo.numero_dc }}</td>  <!-- Atualizado para exibir Número da DC -->
                 <td>{{ cargo.departamento }}</td>
                 <td>
                     {% if cargo.ultima_revisao %}
@@ -68,18 +105,33 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'editar_cargo' cargo.id %}" class="btn btn-warning btn-sm">Editar</a>
-                    <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm">Histórico</a>
-                    
+                    <a href="{% url 'editar_cargo' cargo.id %}" class="btn btn-warning btn-sm" title="Editar">
+                        <i class="bi bi-pencil-square"></i>  <!-- Ícone de Editar -->
+                    </a>
+                    <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm" title="Histórico">
+                        <i class="bi bi-clock-history"></i>  <!-- Ícone de Histórico -->
+                    </a>
                     <!-- Verifica se o arquivo de descrição está presente -->
                     {% if cargo.descricao_arquivo %}
-                        <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-secondary btn-sm" download>Baixar Descrição</a>
+                        <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-secondary btn-sm" download title="Baixar Descrição">
+                            <i class="bi bi-file-earmark-word"></i>  <!-- Ícone de Word -->
+                        </a>
                     {% endif %}
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <a href="{% url 'cadastrar_cargo' %}" class="btn btn-success">Adicionar Cargo</a>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const bootstrapToast = new bootstrap.Toast(toast);
+            bootstrapToast.show();
+        });
+    });
+</script>
+
 {% endblock %}

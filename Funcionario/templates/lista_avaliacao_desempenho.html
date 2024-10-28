@@ -7,31 +7,63 @@
 <div class="container mt-5">
     <h2 class="text-center mb-4">Avaliações de Desempenho</h2>
 
-    <!-- Botões de Cadastrar Avaliações -->
-    <div class="text-end mb-4">
-        <a href="{% url 'cadastrar_avaliacao_experiencia' %}" class="btn btn-primary me-2">Cadastrar Avaliação de Experiência</a>
-        <a href="{% url 'cadastrar_avaliacao_anual' %}" class="btn btn-secondary">Cadastrar Avaliação Anual</a>
+    <!-- Toast container para mensagens de alerta -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                    <div class="toast align-items-center border-0" style="background-color: #f8d7da; color: #842029;">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <h4 class="alert-heading">Atenção!</h4>
+                                <p>{{ message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% elif message.tags == "success" %}
+                    <div class="toast align-items-center border-0" style="background-color: #d1e7dd; color: #0f5132;" data-bs-delay="10000">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <h4 class="alert-heading">Sucesso!</h4>
+                                <p>{{ message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     </div>
 
-   <!-- Formulário de filtro -->
-        <form method="get" class="mb-4">
-            <div class="row">
-                <!-- Filtro por Funcionário -->
-                <div class="col-md-4">
-                    <label for="funcionario" class="form-label">Funcionário:</label>
-                    <select name="funcionario" id="funcionario" class="form-select">
-                        <option value="">Selecione</option>
-                        {% for funcionario in funcionarios %}
-                            <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+    <!-- Botões de Cadastrar Avaliações -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_avaliacao_experiencia' %}" class="btn btn-primary me-2">
+            <i class="bi bi-plus-circle"></i> Cadastrar Avaliação de Experiência
+        </a>
+        <a href="{% url 'cadastrar_avaliacao_anual' %}" class="btn btn-secondary">
+            <i class="bi bi-plus-circle"></i> Cadastrar Avaliação Anual
+        </a>
+    </div>
+
+    <!-- Formulário de filtro -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <!-- Filtro por Funcionário -->
+            <div class="col-md-4">
+                <label for="funcionario" class="form-label">Funcionário:</label>
+                <select name="funcionario" id="funcionario" class="form-select">
+                    <option value="">Selecione</option>
+                    {% for funcionario in funcionarios %}
+                        <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>{{ funcionario.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
 
                 <!-- Filtro por Data de Avaliação -->
                 <div class="col-md-4">
                     <label for="data_avaliacao" class="form-label">Período de Avaliação:</label>
-                    <input type="date" name="data_inicio" class="form-control" placeholder="Data Início">
-                    <input type="date" name="data_fim" class="form-control mt-2" placeholder="Data Fim">
+                    <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+                    <input type="date" name="data_fim" class="form-control mt-2" value="{{ request.GET.data_fim }}">
                 </div>
 
                 <!-- Filtro por Tipo -->
@@ -43,92 +75,97 @@
                         <option value="EXPERIENCIA" {% if request.GET.tipo == "EXPERIENCIA" %}selected{% endif %}>Experiência</option>
                     </select>
                 </div>
-            </div>
 
-            <div class="text-end mt-3">
-                <button type="submit" class="btn btn-primary">Filtrar</button>
-            </div>
-        </form>
+
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
 
     <!-- Lista de Avaliações -->
     <table class="table table-bordered text-center">
         <thead>
             <tr>
-                <th>Funcionário</th>
-                <th>Data de Avaliação</th>
-                <th>Avaliador</th>
-                <th>Tipo</th>
-                <th>Status da Avaliação</th>
-                <th>Ações</th>
+                <th class="align-middle">Funcionário</th>
+                <th class="align-middle">Data de Avaliação</th>
+                <th class="align-middle">Avaliador</th>
+                <th class="align-middle">Tipo</th>
+                <th class="align-middle">Status da Avaliação</th>
+                <th class="align-middle">Ações</th>
             </tr>
         </thead>
-      <tbody>
-    {% for avaliacao in avaliacoes %}
-    <tr>
-        <td>{{ avaliacao.funcionario.nome }}</td>
-        <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
-        <td>{{ avaliacao.avaliador.nome }}</td>
+        <tbody>
+            {% for avaliacao in avaliacoes %}
+                <tr>
+                    <td class="align-middle">{{ avaliacao.funcionario.nome }}</td>
+                    <td class="align-middle">{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+                    <td class="align-middle">{{ avaliacao.avaliador.nome }}</td>
+                    <td class="align-middle">{{ avaliacao.get_tipo_display }}</td>
+                    <td class="align-middle">
+                        {% if avaliacao.tipo == 'ANUAL' %}
+                            {% if avaliacao.get_status_avaliacao == "Pouco Eficaz" %}
+                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Pouco Eficaz</span>
+                            {% elif avaliacao.get_status_avaliacao == "Eficaz" %}
+                                <span class="badge bg-warning"><i class="bi bi-check-circle"></i> Eficaz</span>
+                            {% elif avaliacao.get_status_avaliacao == "Muito Eficaz" %}
+                                <span class="badge bg-success"><i class="bi bi-star-fill"></i> Muito Eficaz</span>
+                            {% else %}
+                                <span class="badge bg-secondary"><i class="bi bi-question-circle"></i> Indefinido</span>
+                            {% endif %}
+                        {% else %}
+                            {{ avaliacao.get_status_avaliacao }}
+                        {% endif %}
+                    </td>
 
-        <!-- Coluna de Tipo da Avaliação -->
-        <td>{{ avaliacao.get_tipo_display }}</td>
+                    <td class="align-middle">
+                        <a href="{% url 'editar_avaliacao_desempenho' avaliacao.id %}" class="btn btn-light">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
 
-        <!-- Coluna de Status da Avaliação -->
-        <td>
-            {% if avaliacao.tipo == 'ANUAL' %}
-                {% if avaliacao.orientacao == 'Efetivar' %}
-                    Muito Eficaz
-                {% else %}
-                    Pouco Eficaz
-                {% endif %}
-            {% elif avaliacao.tipo == 'EXPERIENCIA' %}
-                {% if avaliacao.orientacao == 'Efetivar' %}
-                    😃 Efetivar
-                {% elif avaliacao.orientacao == 'Encaminhar p/ Treinamento' %}
-                    😊 Treinamento
-                {% elif avaliacao.orientacao == 'Desligar' %}
-                    😕 Desligar
-                {% else %}
-                    Indeterminado
-                {% endif %}
-            {% else %}
-                Indeterminado
-            {% endif %}
-        </td>
-
-        <td>
-            <a href="{% url 'editar_avaliacao_desempenho' avaliacao.id %}" class="btn btn-warning">Editar</a>
-            <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}">Excluir</a>
-        </td>
-    </tr>
-
-    <!-- Modal para confirmação de exclusão -->
-    <div class="modal fade" id="confirmDeleteModal{{ avaliacao.id }}" tabindex="-1" aria-labelledby="confirmDeleteModalLabel{{ avaliacao.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmDeleteModalLabel{{ avaliacao.id }}">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <!-- Modal para confirmação de exclusão -->
+                <div class="modal fade" id="confirmDeleteModal{{ avaliacao.id }}" tabindex="-1" aria-labelledby="confirmDeleteModalLabel{{ avaliacao.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmDeleteModalLabel{{ avaliacao.id }}">Confirmar Exclusão</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Tem certeza de que deseja excluir a avaliação de <strong>{{ avaliacao.funcionario.nome }}</strong>?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <form method="post" action="{% url 'excluir_avaliacao_desempenho' avaliacao.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                                </form>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <p>Tem certeza de que deseja excluir a avaliação de <strong>{{ avaliacao.funcionario.nome }}</strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <form method="post" action="{% url 'excluir_avaliacao_desempenho' avaliacao.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
-                    </form>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    {% empty %}
-    <tr>
-        <td colspan="6" class="text-center">Nenhuma avaliação cadastrada.</td>
-    </tr>
-    {% endfor %}
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Nenhuma avaliação cadastrada.</td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const bootstrapToast = new bootstrap.Toast(toast);
+            bootstrapToast.show();
+        });
+    });
+</script>
+
 {% endblock %}

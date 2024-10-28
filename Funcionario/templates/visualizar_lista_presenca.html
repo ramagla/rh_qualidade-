@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load custom_filters %}  {# Carregando a biblioteca de filtros corretamente #}
+
+{% block title %}Visualizar Lista de Presença{% endblock %}
+
+{% block content %}
+
+{% load conversores %}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Visualizar Lista de Presença</h2>
+
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-md-6">
+            <label for="treinamento" class="form-label">Tipo:</label>
+            <input type="text" class="form-control" value="{{ lista.treinamento }}" readonly>
+        </div>
+
+        <div class="col-md-6">
+            <label for="data_realizacao" class="form-label">Data de Realização:</label>
+            <input type="text" class="form-control" value="{{ lista.data_realizacao|date:'d/m/Y' }}" readonly>
+        </div>
+
+        <div class="col-md-3">
+            <label for="horario_inicio" class="form-label">Horário Início:</label>
+            <input type="text" class="form-control" value="{{ lista.horario_inicio }}" readonly>
+        </div>
+
+        <div class="col-md-3">
+            <label for="horario_fim" class="form-label">Horário Fim:</label>
+            <input type="text" class="form-control" value="{{ lista.horario_fim }}" readonly>
+        </div>
+
+        <div class="col-md-6">
+            <label for="duracao" class="form-label">Duração (em horas):</label>
+            <input type="text" id="duracao" name="duracao" class="form-control" value="{{ lista.duracao|horas_formatadas }}" readonly>
+        </div>
+
+        <div class="col-md-6">
+            <label for="assunto" class="form-label">Assunto:</label>
+            <input type="text" class="form-control" value="{{ lista.assunto }}" readonly>
+        </div>
+
+        <div class="col-md-12">
+            <label for="descricao" class="form-label">Descrição:</label>
+            <textarea id="descricao" name="descricao" class="form-control" rows="3" readonly>{{ lista.descricao }}</textarea>
+        </div>
+
+        <div class="col-md-6">
+            <label for="instrutor" class="form-label">Instrutor:</label>
+            <input type="text" class="form-control" value="{{ lista.instrutor }}" readonly>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Necessita Avaliação de Eficácia?</label>
+            <input type="text" class="form-control" value="{% if lista.necessita_avaliacao %}Sim{% else %}Não{% endif %}" readonly>
+        </div>
+
+        <div class="col-md-6">
+            <label for="lista_presenca" class="form-label">Anexar Lista de Presença (PDF):</label>
+            <input type="text" class="form-control" value="{% if lista.lista_presenca %}{{ lista.lista_presenca.url }}{% else %}Nenhum anexo{% endif %}" readonly>
+        </div>
+
+        <div class="col-md-12">
+            <label class="form-label">Funcionários Participantes:</label>
+            <ul class="list-group">
+                {% for participante in lista.participantes.all %}
+                    <li class="list-group-item">{{ participante.nome }} - {{ participante.local_trabalho }}</li>
+                {% empty %}
+                    <li class="list-group-item">Nenhum participante encontrado.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="col-12 text-center mt-4">
+            <a href="{% url 'lista_presenca' %}" class="btn btn-secondary">Voltar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
