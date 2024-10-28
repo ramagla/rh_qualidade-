@@ -1,5 +1,5 @@
 from django import forms
-from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho
+from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho,JobRotationEvaluation
 
 class FuncionarioForm(forms.ModelForm):
     ESCOLARIDADE_CHOICES = [
@@ -176,3 +176,15 @@ class AvaliacaoAnualForm(forms.ModelForm):
         widgets = {
             'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
         }
+
+
+class JobRotationEvaluationForm(forms.ModelForm):
+    class Meta:
+        model = JobRotationEvaluation
+        fields = [
+            'funcionario', 'area_atual', 'cargo_atual', 'competencias', 'ultima_avaliacao', 
+            'status_avaliacao', 'cursos_realizados', 'escolaridade', 'area', 'nova_funcao', 
+            'data_inicio', 'termino_previsto', 'gestor_responsavel', 'descricao_cargo', 
+            'treinamentos_requeridos', 'treinamentos_propostos', 'avaliacao_gestor', 
+            'avaliacao_funcionario', 'avaliacao_rh', 'dias_prorrogacao', 'disponibilidade_vaga'
+        ]
