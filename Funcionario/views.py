@@ -9,8 +9,8 @@ from django.contrib import messages
 
 
 from django.contrib.auth.decorators import login_required
-from .models import AvaliacaoAnual, AvaliacaoExperiencia, Cargo, Revisao, Funcionario,Treinamento, ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho
-from .forms import FuncionarioForm, CargoForm, RevisaoForm,TreinamentoForm, ListaPresencaForm,AvaliacaoTreinamentoForm,AvaliacaoForm,AvaliacaoAnualForm,AvaliacaoExperienciaForm
+from .models import AvaliacaoAnual, AvaliacaoExperiencia, Cargo, Revisao, Funcionario,Treinamento, ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho,JobRotationEvaluation
+from .forms import FuncionarioForm, CargoForm, RevisaoForm,TreinamentoForm, ListaPresencaForm,AvaliacaoTreinamentoForm,AvaliacaoForm,AvaliacaoAnualForm,AvaliacaoExperienciaForm,JobRotationEvaluationForm
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 
@@ -878,3 +878,37 @@ def visualizar_avaliacao(request, id):
         'melhorias': melhorias,
         'avaliacao_geral': avaliacao_geral,
     })
+
+
+
+
+def lista_jobrotation_evaluation(request):
+    evaluations = JobRotationEvaluation.objects.all()
+    return render(request, 'lista_jobrotation_evaluation.html', {'evaluations': evaluations})
+
+def cadastrar_jobrotation_evaluation(request):
+    if request.method == 'POST':
+        form = JobRotationEvaluationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Avaliação de Job Rotation cadastrada com sucesso!')
+            return redirect('lista_jobrotation_evaluation')
+    else:
+        form = JobRotationEvaluationForm()
+    return render(request, 'cadastrar_jobrotation_evaluation.html', {'form': form})
+
+def visualizar_jobrotation_evaluation(request, id):
+    evaluation = get_object_or_404(JobRotationEvaluation, id=id)
+    return render(request, 'visualizar_jobrotation_evaluation.html', {'evaluation': evaluation})
+
+def editar_jobrotation_evaluation(request, id):
+    evaluation = get_object_or_404(JobRotationEvaluation, id=id)
+    if request.method == 'POST':
+        form = JobRotationEvaluationForm(request.POST, instance=evaluation)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Avaliação de Job Rotation atualizada com sucesso!')
+            return redirect('lista_jobrotation_evaluation')
+    else:
+        form = JobRotationEvaluationForm(instance=evaluation)
+    return render(request, 'editar_jobrotation_evaluation.html', {'form': form})
