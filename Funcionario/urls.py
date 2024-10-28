@@ -78,7 +78,11 @@ urlpatterns = [
     path('avaliacoes-desempenho/', views.lista_avaliacao_desempenho, name='lista_avaliacao_desempenho'),
     path('avaliacoes-desempenho/excluir/<int:id>/', views.excluir_avaliacao_desempenho, name='excluir_avaliacao_desempenho'),
 
-
+    #JobRotation
+    path('jobrotation_evaluation/', views.lista_jobrotation_evaluation, name='lista_jobrotation_evaluation'),
+    path('jobrotation_evaluation/cadastrar/', views.cadastrar_jobrotation_evaluation, name='cadastrar_jobrotation_evaluation'),
+    path('jobrotation_evaluation/<int:id>/', views.visualizar_jobrotation_evaluation, name='visualizar_jobrotation_evaluation'),
+    path('jobrotation_evaluation/<int:id>/editar/', views.editar_jobrotation_evaluation, name='editar_jobrotation_evaluation'),
 
 ]
     
