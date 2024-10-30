@@ -20,23 +20,52 @@
             position: fixed;
             top: 0;
             left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            transition: width 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 60px;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .sidebar.collapsed .logo-container img {
+            max-width: 40px;
         }
         .sidebar a {
             color: white;
-            display: block;
-            padding: 10px;
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
             text-decoration: none;
+            transition: all 0.3s;
         }
-        .sidebar a:hover {
-            background-color: #575757;
+        .sidebar.collapsed a {
+            justify-content: center;
+            padding: 10px 0;
         }
-        .sidebar .dropdown a {
-            padding-left: 30px;
+        .sidebar i {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        .sidebar.collapsed i {
+            margin-right: 0;
+        }
+        .sidebar .sidebar-text {
+            font-size: 1em;
         }
         .content {
             margin-left: 220px;
             padding: 20px;
             width: calc(100% - 220px);
+            transition: margin-left 0.3s, width 0.3s;
+        }
+        .content.collapsed {
+            margin-left: 60px;
+            width: calc(100% - 60px);
         }
         .navbar-brand {
             color: white;
@@ -44,55 +73,108 @@
         .logo-container {
             display: flex;
             justify-content: center;
+            align-items: center;
+            flex-direction: column;
             padding: 15px;
+            cursor: pointer;
         }
         .logo-container img {
-            max-width: 150px;
+            max-width: 100px;
             height: auto;
+            transition: max-width 0.3s;
+        }
+        .sidebar-footer {
+            padding: 10px;
+            background-color: #1f1f1f;
+            font-size: 12px;
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .calendar-button {
+            color: #FFD700;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .version-section {
+            font-size: 14px;
+        }
+        .settings-link {
+            color: #FFD700;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        .settings-link:hover {
+            color: #FFF;
+        }
+        .logout-btn {
+            color: #FF4500;
+            font-size: 1.2em;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        .logout-btn:hover {
+            color: #D54A0C;
         }
     </style>
 </head>
 <body>
     <div class="d-flex">
         <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="logo-container">
-                {% load static %}
-                <img src="{% static 'logo_branco.png' %}" alt="Logo"> <!-- Caminho atualizado para o logo -->
+        <div class="sidebar" id="sidebar">
+            <div>
+                <div class="logo-container" onclick="toggleSidebar()"> <!-- Remove o link, adiciona apenas a função de clique -->
+                    {% load static %}
+                    <img src="{% static 'logo_branco.png' %}" alt="Logo">
+                </div>
+                <a href="{% url 'home' %}"><i class="fas fa-tachometer-alt"></i> <span class="sidebar-text">Dashboard</span></a>
+                <!-- Dropdown Menu for Cadastros -->
+                <div class="dropdown">                
+                    <a href="{% url 'lista_cargos' %}"><i class="fas fa-briefcase"></i> <span class="sidebar-text">Cargos</span></a>
+                    <a href="{% url 'lista_funcionarios' %}"><i class="fas fa-user"></i> <span class="sidebar-text">Funcionários</span></a>
+                    <a href="{% url 'lista_treinamentos' %}"><i class="fas fa-graduation-cap"></i> <span class="sidebar-text">Treinamentos</span></a>
+                    <a href="{% url 'lista_presenca' %}"><i class="fas fa-list"></i> <span class="sidebar-text">Listas de Presença</span></a>
+                    <a href="{% url 'lista_avaliacoes' %}"><i class="fas fa-clipboard-check"></i> <span class="sidebar-text">Avaliações de Treinamentos</span></a>
+                    <a href="{% url 'lista_avaliacao_desempenho' %}"><i class="fas fa-chart-line"></i> <span class="sidebar-text">Avaliações de Desempenho</span></a>
+                    <a href="{% url 'lista_jobrotation_evaluation' %}"><i class="fas fa-sync-alt"></i> <span class="sidebar-text">Job Rotation</span></a>
+                </div>
             </div>
-            <a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
 
-            <!-- Dropdown Menu for Cadastros -->
-            <div class="dropdown">                
-                <a href="{% url 'lista_cargos' %}"><i class="fas fa-briefcase"></i> Cargos</a>
-                <a href="{% url 'lista_funcionarios' %}"><i class="fas fa-user"></i> Funcionários</a>
-                <a href="{% url 'lista_treinamentos' %}"><i class="fas fa-graduation-cap"></i> Treinamentos</a>
-                <a href="{% url 'lista_presenca' %}"><i class="fas fa-list"></i> Listas de Presença</a>
-                <a href="{% url 'lista_avaliacoes' %}"><i class="fas fa-clipboard-check"></i> Avaliações de Treinamentos</a>
-                <a href="{% url 'lista_avaliacao_desempenho' %}"><i class="fas fa-chart-line"></i> Avaliações de Desempenho</a>
-                <a href="{% url 'lista_jobrotation_evaluation' %}"><i class="fas fa-sync-alt"></i> Job Rotation</a>
-            </div>
+            <!-- Sidebar Footer -->
+                <div class="sidebar-footer">
+                    <!-- Botão para abrir a Modal de Feriados -->
+                    <span class="calendar-button" data-bs-toggle="modal" data-bs-target="#feriadosModal">
+                        <i class="fas fa-calendar-alt"></i> <span class="sidebar-text"></span>
+                    </span>
 
-            <a href="#"><i class="fas fa-cogs"></i> Operações</a>
-            <a href="#"><i class="fas fa-eye"></i> Monitoramento</a>
-            <a href="#"><i class="fas fa-chart-bar"></i> Relatórios</a>
-            <a href="#"><i class="fas fa-chart-line"></i> Análises</a>
-            <a href="#"><i class="fas fa-sync-alt"></i> Integração</a>
+                    <!-- Versão do Sistema com Ícone -->
+                    <span class="version-section">
+                        <i class="fas fa-info-circle"></i> <span class="sidebar-text">@Bras-mol - v1.0.0</span>
+                    </span>
+                </div>
         </div>
         
         <!-- Main Content -->
-        <div class="content w-100">
+        <div class="content w-100" id="content">
             <!-- Navbar -->
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <div class="container-fluid">
-                    <a class="navbar-brand">Sistema RH</a>
+                    <a class="navbar-brand" href="{% url 'home' %}">Sistema de Gestão de Recursos Humanos</a>
                     <div class="d-flex align-items-center">
                         <span class="me-3">{{ user.username }}</span>
-                        <!-- Logout form -->
-                        <form method="POST" action="{% url 'logout' %}">
+                        <!-- Botão de Logout com Ícone -->
+                        <form method="POST" action="{% url 'logout' %}" class="d-inline me-2">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger">Logout</button>
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-power-off"></i>
+                            </button>
                         </form>
+                        <!-- Botão de Configurações com Ícone -->
+                        <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-cog"></i>
+                        </a>
                     </div>
                 </div>
             </nav>
@@ -106,22 +188,41 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS (necessário para dropdown e outros componentes) -->
+    <!-- Modal de Feriados -->
+    <div class="modal fade" id="feriadosModal" tabindex="-1" aria-labelledby="feriadosModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="feriadosModalLabel">Feriados Nacionais e Estaduais</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group">
+                        {% for feriado in feriados %}
+                            <li class="list-group-item">
+                                <strong>{{ feriado.date }}</strong> - {{ feriado.name }}
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">Sem feriados disponíveis</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (necessário para dropdown e modal) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    function loadContent(url) {
-        // Usamos AJAX para carregar o conteúdo dentro da div 'content'
-        fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('content').innerHTML = html;
-        })
-        .catch(error => console.warn('Erro ao carregar conteúdo:', error));
-    }
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            sidebar.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
+        }
     </script>
 </body>
-</html>
+</html>  

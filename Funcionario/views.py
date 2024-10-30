@@ -7,6 +7,8 @@ from weasyprint import HTML
 from datetime import datetime, timedelta
 from django.contrib import messages
 import logging
+import requests
+
 
 
 from django.contrib.auth.decorators import login_required
@@ -43,6 +45,22 @@ logger = logging.getLogger(__name__)
 @login_required
 def home(request):
     return render(request, 'home.html')
+
+def home(request):
+    url = 'https://brasilapi.com.br/api/feriados/v1/2025'
+    feriados = []
+
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            feriados = response.json()  # A resposta é uma lista de dicionários com os feriados
+        else:
+            print("Erro ao obter feriados:", response.status_code)
+    except Exception as e:
+        print("Exceção ao chamar a API:", e)
+
+    # Passa os feriados para o template
+    return render(request, 'home.html', {'feriados': feriados})
 
 # Função para listar funcionários
 def lista_funcionarios(request):
@@ -999,6 +1017,7 @@ def visualizar_jobrotation_evaluation(request, id):
     }
 
     return render(request, 'visualizar_jobrotation_evaluation.html', context)
+
 def editar_jobrotation(request, id):
     job_rotation = get_object_or_404(JobRotationEvaluation, id=id)
     if request.method == 'POST':

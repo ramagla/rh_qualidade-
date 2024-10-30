@@ -3,28 +3,23 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
+
+
+<div class="row mt-4">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Células em operação</h5>
-                <p class="card-text">Status das células em operação.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Células ociosas</h5>
-                <p class="card-text">Status das células ociosas.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Gráfico Produção</h5>
-                <p class="card-text">Gráfico de produção por célula.</p>
+                <h5 class="card-title">Próximas Atualizações do Sistema</h5>
+                <ul class="list-group">
+                    {% for atualizacao in proximas_atualizacoes %}
+                        <li class="list-group-item">
+                            <strong>{{ atualizacao.titulo }}</strong> - {{ atualizacao.descricao }} <br>
+                            <small class="text-muted">Previsão: {{ atualizacao.previsao|date:"d/m/Y" }}</small>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">Nenhuma atualização prevista no momento.</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
     </div>
