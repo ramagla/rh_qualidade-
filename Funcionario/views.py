@@ -191,102 +191,6 @@ def excluir_funcionario(request, funcionario_id):
     return redirect('lista_funcionarios')
 
 
-def lista_cargos(request):
-    cargos = Cargo.objects.all()
-
-    # Aplicar filtro de departamento
-    departamento = request.GET.get('departamento')
-    if departamento:
-        cargos = cargos.filter(departamento=departamento)
-
-    # Aplicar filtro de cargo
-    cargo_nome = request.GET.get('cargo')
-    if cargo_nome:
-        cargos = cargos.filter(nome=cargo_nome)
-
-    # Adicionar a última revisão para cada cargo
-    for cargo in cargos:
-        cargo.ultima_revisao = cargo.revisoes.order_by('-data_revisao').first()
-
-    # Obter todos os departamentos e cargos para o formulário de filtro
-    todos_departamentos = Cargo.objects.values_list('departamento', flat=True).distinct()
-    todos_cargos = Cargo.objects.all()
-
-    return render(request, 'lista_cargos.html', {
-        'cargos': cargos,
-        'departamentos': todos_departamentos,
-        'todos_cargos': todos_cargos,
-    })
-
-
-def cadastrar_cargo(request):
-    if request.method == 'POST':
-        form = CargoForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_cargos')
-    else:
-        form = CargoForm()
-    return render(request, 'cadastrar_cargo.html', {'form': form})
-
-def historico_revisoes(request, cargo_id):
-    cargo = get_object_or_404(Cargo, id=cargo_id)
-    revisoes = cargo.revisoes.all()
-    return render(request, 'historico_revisoes.html', {'cargo': cargo, 'revisoes': revisoes})
-
-def adicionar_revisao(request, cargo_id):
-    cargo = get_object_or_404(Cargo, id=cargo_id)
-    if request.method == 'POST':
-        form = RevisaoForm(request.POST)
-        if form.is_valid():
-            revisao = form.save(commit=False)
-            revisao.cargo = cargo
-            revisao.save()
-            return redirect('historico_revisoes', cargo_id=cargo_id)
-    else:
-        form = RevisaoForm()
-    return render(request, 'adicionar_revisao.html', {'form': form, 'cargo': cargo})
-
-def excluir_revisao(request, revisao_id):
-    revisao = get_object_or_404(Revisao, id=revisao_id)
-    cargo_id = revisao.cargo.id  # Salva o ID do cargo antes da exclusão
-    revisao.delete()
-    messages.success(request, 'Revisão excluída com sucesso.')
-    return redirect('historico_revisoes', cargo_id=cargo_id)
-
-def obter_cargos(request, funcionario_id):
-    try:
-        funcionario = Funcionario.objects.get(pk=funcionario_id)
-        cargos = {
-            'cargo_inicial': funcionario.cargo_inicial,
-            'cargo_atual': funcionario.cargo_atual
-        }
-        return JsonResponse(cargos)
-    except Funcionario.DoesNotExist:
-        return JsonResponse({'error': 'Funcionário não encontrado'}, status=404)
-
-    
-def buscar_cargos(request, funcionario_id):
-    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-    data = {
-        'cargo_inicial': funcionario.cargo_inicial.nome,
-        'cargo_atual': funcionario.cargo_atual.nome
-    }
-    return JsonResponse(data)
-
-def sucesso_view(request):
-    return render(request, 'sucesso.html')
-
-def editar_cargo(request, cargo_id):
-    cargo = get_object_or_404(Cargo, id=cargo_id)
-    if request.method == 'POST':
-        form = CargoForm(request.POST, request.FILES, instance=cargo)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_cargos')  # Redireciona para a lista de cargos após a edição
-    else:
-        form = CargoForm(instance=cargo)
-    return render(request, 'editar_cargo.html', {'form': form})
 
 
 def cadastrar_treinamento(request):
@@ -379,19 +283,7 @@ def gerar_relatorio_f003(request):
         }
         return render(request, 'relatorio_f003.html', context)
     
-def imprimir_f003(request, funcionario_id):
-    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-    treinamentos = Treinamento.objects.filter(funcionario=funcionario)
 
-    # Obtendo a data da última atualização
-    ultima_atualizacao = treinamentos.order_by('-data_fim').first().data_fim if treinamentos.exists() else None
-
-    return render(request, 'relatorio_f003.html', {
-        'funcionario': funcionario,
-        'treinamentos': treinamentos,
-        'current_date': timezone.now(),
-        'ultima_atualizacao': ultima_atualizacao,
-    })
 
     # Renderiza uma página com os dados do funcionário e seus treinamentos
     return render(request, 'imprimir_f003.html', {
@@ -400,26 +292,7 @@ def imprimir_f003(request, funcionario_id):
         
     })
 
-def gerar_pdf(request, funcionario_id):
-    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-    treinamentos = Treinamento.objects.filter(funcionario=funcionario)
 
-    template = get_template('relatorio_f003.html')
-    html = template.render({
-        'funcionario': funcionario,
-        'treinamentos': treinamentos,
-        'ultima_atualizacao': funcionario.updated_at,
-        'is_pdf': True  # Adicionando esta variável para controle no template
-    })
-
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="F003 - {funcionario.nome}.pdf"'
-
-    pdf = pisa.pisaDocument(BytesIO(html.encode('UTF-8')), response)
-    if pdf.err:
-        return HttpResponse('Erro ao gerar o PDF', status=500)
-
-    return response
 
 # Função lista_presenca
 def lista_presenca(request):
@@ -774,21 +647,6 @@ def excluir_avaliacao(request, id):
     messages.error(request, "Erro ao excluir a avaliação.")  # Mensagem de erro se a exclusão falhar
     return redirect('lista_avaliacoes')  # Redireciona para a lista de avaliações
 
-def get_cargo(request, funcionario_id):
-    try:
-        funcionario = Funcionario.objects.get(id=funcionario_id)
-        data = {
-            'cargo': funcionario.cargo_atual.nome if funcionario.cargo_atual else 'Cargo não encontrado',
-            'departamento': funcionario.local_trabalho or 'Departamento não encontrado',
-            'responsavel': funcionario.responsavel or 'Responsável não encontrado'
-        }
-        return JsonResponse(data)
-    except Funcionario.DoesNotExist:
-        return JsonResponse({
-            'cargo': 'Não encontrado', 
-            'departamento': 'Não encontrado',
-            'responsavel': 'Não encontrado'
-        }, status=404)
 
 
 def lista_avaliacao_desempenho(request):
@@ -1129,26 +987,4 @@ def get_treinamentos(request, funcionario_id):
 
 
 
-def get_competencias(request):
-    try:
-        competencias = Cargo.objects.all()
-        competencias_data = []
-
-        for competencia in competencias:
-            # Tente buscar a última revisão; se não houver, registre um valor padrão
-            ultima_revisao = competencia.revisoes.order_by('-data_revisao').first()
-            competencias_data.append({
-                "id": competencia.id,
-                "numero_dc": competencia.numero_dc,
-                "nome": competencia.nome,
-                "numero_revisao": ultima_revisao.numero_revisao if ultima_revisao else "Sem revisão",
-                "data_revisao": ultima_revisao.data_revisao.strftime("%d/%m/%Y") if ultima_revisao else "Sem data"
-            })
-
-        return JsonResponse(competencias_data, safe=False)
-
-    except Exception as e:
-        # Log detalhado para análise de erro
-        print(f"Erro ao carregar competências: {e}")
-        return JsonResponse({"error": f"Erro ao carregar as competências: {e}"}, status=500)
 
