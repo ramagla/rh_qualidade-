@@ -6,13 +6,38 @@ from xhtml2pdf import pisa
 from weasyprint import HTML
 from datetime import datetime, timedelta
 from django.contrib import messages
+import logging
 
 
 from django.contrib.auth.decorators import login_required
-from .models import AvaliacaoAnual, AvaliacaoExperiencia, Cargo, Revisao, Funcionario,Treinamento, ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho,JobRotationEvaluation
-from .forms import FuncionarioForm, CargoForm, RevisaoForm,TreinamentoForm, ListaPresencaForm,AvaliacaoTreinamentoForm,AvaliacaoForm,AvaliacaoAnualForm,AvaliacaoExperienciaForm,JobRotationEvaluationForm
+from .models import (
+    Funcionario,
+    Treinamento,
+    ListaPresenca,
+    AvaliacaoTreinamento,
+    AvaliacaoDesempenho,
+    JobRotationEvaluation,
+    Cargo,
+    Revisao,
+    AvaliacaoAnual,
+    AvaliacaoExperiencia
+)
+from .forms import (
+    FuncionarioForm,
+    CargoForm,
+    RevisaoForm,
+    TreinamentoForm,
+    ListaPresencaForm,
+    AvaliacaoTreinamentoForm,
+    AvaliacaoForm,
+    AvaliacaoAnualForm,
+    AvaliacaoExperienciaForm,
+    JobRotationEvaluationForm
+)
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -883,23 +908,108 @@ def visualizar_avaliacao(request, id):
 
 
 def lista_jobrotation_evaluation(request):
+    logger.error("==> Teste de log ERROR dentro da view lista_jobrotation_evaluation.")
+    logger.info("==> Teste de log INFO dentro da view lista_jobrotation_evaluation.")
+    logger.debug("==> Teste de log DEBUG dentro da view lista_jobrotation_evaluation.")
+    
     evaluations = JobRotationEvaluation.objects.all()
+    logger.info(f"Total de avaliações encontradas: {evaluations.count()}")
+    
     return render(request, 'lista_jobrotation_evaluation.html', {'evaluations': evaluations})
+
+
+
 
 def cadastrar_jobrotation_evaluation(request):
     if request.method == 'POST':
         form = JobRotationEvaluationForm(request.POST)
         if form.is_valid():
-            form.save()
+            job_rotation = form.save(commit=False)
+
+            # Buscar o funcionário selecionado e associar o cargo e área
+            funcionario = get_object_or_404(Funcionario, pk=job_rotation.funcionario.id)
+            
+            # Obter o cargo atual e o departamento
+            if funcionario.cargo_atual:
+                job_rotation.cargo_atual = funcionario.cargo_atual
+                job_rotation.area_atual = funcionario.cargo_atual.departamento or "Departamento não definido"
+            
+            # Definir data_ultima_avaliacao e status_ultima_avaliacao com base na última avaliação de desempenho
+            ultima_avaliacao_desempenho = AvaliacaoDesempenho.objects.filter(funcionario=funcionario).order_by('-data_avaliacao').first()
+            if ultima_avaliacao_desempenho:
+                job_rotation.data_ultima_avaliacao = ultima_avaliacao_desempenho.data_avaliacao
+                job_rotation.status_ultima_avaliacao = ultima_avaliacao_desempenho.get_status_avaliacao()
+            else:
+                job_rotation.status_ultima_avaliacao = "Nenhuma avaliação encontrada"
+            
+            # Definir cursos_realizados com dados de treinamentos
+            treinamentos = Treinamento.objects.filter(funcionario=funcionario)
+            job_rotation.cursos_realizados = [
+                {
+                    "tipo": treinamento.tipo,
+                    "nome_curso": treinamento.nome_curso,
+                    "categoria": treinamento.categoria,
+                    "status": treinamento.status,
+                    "data_fim": treinamento.data_fim.strftime('%d/%m/%Y') if treinamento.data_fim else None
+                }
+                for treinamento in treinamentos
+            ]
+            
+            # Definir descricao_cargo
+            if funcionario.cargo_atual:
+                cargo_atual = funcionario.cargo_atual
+                job_rotation.descricao_cargo = f"Descrição de cargo N° {cargo_atual.numero_dc} - Nome: {cargo_atual.nome}"
+            
+            # Calcular o término previsto
+            if job_rotation.data_inicio:
+                job_rotation.termino_previsto = job_rotation.data_inicio + timedelta(days=90)
+
+            # Salvar o objeto no banco de dados
+            job_rotation.save()
             messages.success(request, 'Avaliação de Job Rotation cadastrada com sucesso!')
             return redirect('lista_jobrotation_evaluation')
+        else:
+            print("Erros no formulário:", form.errors)
+            messages.error(request, 'Por favor, corrija os erros no formulário.')
     else:
         form = JobRotationEvaluationForm()
-    return render(request, 'cadastrar_jobrotation_evaluation.html', {'form': form})
+
+    funcionarios = Funcionario.objects.all()
+    lista_cargos = Cargo.objects.all()
+
+    return render(request, 'cadastrar_jobrotation_evaluation.html', {
+        'form': form,
+        'funcionarios': funcionarios,
+        'lista_cargos': lista_cargos
+    })
+
 
 def visualizar_jobrotation_evaluation(request, id):
-    evaluation = get_object_or_404(JobRotationEvaluation, id=id)
-    return render(request, 'visualizar_jobrotation_evaluation.html', {'evaluation': evaluation})
+    job_rotation = get_object_or_404(JobRotationEvaluation, id=id)
+    cursos_realizados = job_rotation.cursos_realizados if job_rotation.cursos_realizados else []
+
+    context = {
+        'job_rotation': job_rotation,
+        'cursos_realizados': cursos_realizados,
+        'competencias': job_rotation.competencias or "Nenhuma competência informada",
+        'data_ultima_avaliacao': job_rotation.data_ultima_avaliacao,
+        'status_ultima_avaliacao': job_rotation.status_ultima_avaliacao or "Nenhum status encontrado",
+        'nova_funcao': job_rotation.nova_funcao.nome if job_rotation.nova_funcao else "N/A",
+        'data_geracao': timezone.now(),  # Adiciona a data atual
+    }
+
+    return render(request, 'visualizar_jobrotation_evaluation.html', context)
+def editar_jobrotation(request, id):
+    job_rotation = get_object_or_404(JobRotationEvaluation, id=id)
+    if request.method == 'POST':
+        form = JobRotationEvaluationForm(request.POST, instance=job_rotation)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Avaliação de Job Rotation atualizada com sucesso!')
+            return redirect('lista_jobrotation_evaluation')
+    else:
+        form = JobRotationEvaluationForm(instance=job_rotation)
+    return render(request, 'editar_jobrotation.html', {'form': form, 'job_rotation': job_rotation})
 
 def editar_jobrotation_evaluation(request, id):
     evaluation = get_object_or_404(JobRotationEvaluation, id=id)
@@ -908,7 +1018,118 @@ def editar_jobrotation_evaluation(request, id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Avaliação de Job Rotation atualizada com sucesso!')
-            return redirect('lista_jobrotation_evaluation')
+            return redirect('lista_jobrotation_evaluation')  # Redireciona para a lista após a edição
     else:
         form = JobRotationEvaluationForm(instance=evaluation)
-    return render(request, 'editar_jobrotation_evaluation.html', {'form': form})
+    return render(request, 'editar_jobrotation_evaluation.html', {'form': form, 'evaluation': evaluation})
+
+
+
+def excluir_jobrotation(request, id):
+    # Buscar o registro de Job Rotation no banco de dados
+    job_rotation = get_object_or_404(JobRotationEvaluation, id=id)
+
+    # Verificar se o método da requisição é POST
+    if request.method == 'POST':
+        # Excluir o registro
+        job_rotation.delete()
+        # Exibir uma mensagem de sucesso
+        messages.success(request, 'Registro de Job Rotation excluído com sucesso!')
+        # Redirecionar para a lista de avaliações de Job Rotation
+        return redirect('lista_jobrotation_evaluation')
+
+    # Se a requisição não for POST, redirecionar para a lista sem realizar a exclusão
+    messages.error(request, 'Operação inválida. Tente novamente.')
+    return redirect('lista_jobrotation_evaluation')
+
+def job_rotation(request):
+    # Lógica para a página de Job Rotation
+    return render(request, 'lista_jobrotation_evaluation.html')
+
+
+
+
+
+def get_funcionario_info(request, id):
+    try:
+        # Obter o funcionário
+        funcionario = Funcionario.objects.get(id=id)
+        
+        # Obter dados do cargo atual
+        cargo_atual = funcionario.cargo_atual
+        descricao_cargo = ""
+        if cargo_atual:
+            descricao_cargo = f"Descrição de cargo N° {cargo_atual.numero_dc} - Nome: {cargo_atual.nome}"
+
+        # Obter a última revisão do cargo
+        ultima_revisao = Revisao.objects.filter(cargo=cargo_atual).order_by('-data_revisao').first()
+        numero_revisao = ultima_revisao.numero_revisao if ultima_revisao else "Nenhuma revisão encontrada"
+        
+        # Obter a última avaliação de desempenho do funcionário
+        ultima_avaliacao_desempenho = AvaliacaoDesempenho.objects.filter(funcionario=funcionario).order_by('-data_avaliacao').first()
+
+        # Processar a data e o status da última avaliação de desempenho
+        ultima_avaliacao_data = ultima_avaliacao_desempenho.data_avaliacao.strftime('%d/%m/%Y') if ultima_avaliacao_desempenho else "Data não encontrada"
+        ultima_avaliacao_status = (
+            ultima_avaliacao_desempenho.get_status_avaliacao() if ultima_avaliacao_desempenho else "Status não encontrado"
+        )
+
+        # Formatar as informações para resposta JSON
+        data = {
+            'nome': funcionario.nome,
+            'local_trabalho': funcionario.local_trabalho,
+            'cargo_atual': cargo_atual.nome if cargo_atual else '',
+            'escolaridade': funcionario.escolaridade,
+            'competencias': f"{descricao_cargo}, Última Revisão N° {numero_revisao}",
+            'data_ultima_avaliacao': ultima_avaliacao_data,
+            'status_ultima_avaliacao': ultima_avaliacao_status
+        }
+        return JsonResponse(data)
+    
+    except Funcionario.DoesNotExist:
+        return JsonResponse({'error': 'Funcionário não encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
+
+
+
+
+def get_treinamentos(request, funcionario_id):
+    try:
+        # Filtra os treinamentos pelo ID do funcionário
+        treinamentos = Treinamento.objects.filter(funcionario_id=funcionario_id).values('tipo', 'nome_curso', 'categoria', 'status', 'data_fim')
+        return JsonResponse(list(treinamentos), safe=False)  # Retorna a lista de treinamentos em formato JSON
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)  # Retorna um erro se houver algum problema
+    
+
+
+
+
+
+def get_competencias(request):
+    try:
+        competencias = Cargo.objects.all()
+        competencias_data = []
+
+        for competencia in competencias:
+            # Tente buscar a última revisão; se não houver, registre um valor padrão
+            ultima_revisao = competencia.revisoes.order_by('-data_revisao').first()
+            competencias_data.append({
+                "id": competencia.id,
+                "numero_dc": competencia.numero_dc,
+                "nome": competencia.nome,
+                "numero_revisao": ultima_revisao.numero_revisao if ultima_revisao else "Sem revisão",
+                "data_revisao": ultima_revisao.data_revisao.strftime("%d/%m/%Y") if ultima_revisao else "Sem data"
+            })
+
+        return JsonResponse(competencias_data, safe=False)
+
+    except Exception as e:
+        # Log detalhado para análise de erro
+        print(f"Erro ao carregar competências: {e}")
+        return JsonResponse({"error": f"Erro ao carregar as competências: {e}"}, status=500)
+

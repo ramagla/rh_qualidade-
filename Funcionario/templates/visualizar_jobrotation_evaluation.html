@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+
+{% block title %}Visualizar Avaliação de Job Rotation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    {% include 'header.html' %} <!-- Cabeçalho com logotipo e data -->
+
+    <!-- Botões de ação -->
+    <div class="text-end mb-4">
+        <a href="{% url 'lista_jobrotation_evaluation' %}" class="btn btn-secondary">Voltar</a>
+        <button class="btn btn-primary" onclick="printReport()">Imprimir Relatório</button>
+    </div>
+
+    <!-- Conteúdo do Relatório -->
+    <div id="report-content" class="p-4 border rounded bg-light">
+        <h4>Funcionário</h4>
+        <p><strong>Nome:</strong> {{ job_rotation.funcionario.nome }}</p>
+        <p><strong>Área Atual:</strong> {{ job_rotation.area_atual|default:"N/A" }}</p>
+        <p><strong>Cargo Atual:</strong> {{ job_rotation.cargo_atual.nome|default:"N/A" }}</p>
+
+        <hr>
+        <h4>Nova Função e Área</h4>
+        <p><strong>Nova Área:</strong> {{ job_rotation.area|default:"N/A" }}</p>
+        <p><strong>Nova Função:</strong> {{ nova_funcao }}</p>
+
+        <hr>
+        <h4>Período de Job Rotation</h4>
+        <p><strong>Data de Início:</strong> {{ job_rotation.data_inicio|date:"d/m/Y" }}</p>
+        <p><strong>Término Previsto:</strong> {{ job_rotation.termino_previsto|date:"d/m/Y" }}</p>
+
+        <h4>Treinamentos</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Nome do Curso</th>
+                    <th>Categoria</th>
+                    <th>Status</th>
+                    <th>Data de Conclusão</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for curso in cursos_realizados %}
+                    <tr>
+                        <td>{{ curso.tipo }}</td>
+                        <td>{{ curso.nome_curso }}</td>
+                        <td>{{ curso.categoria }}</td>
+                        <td>{{ curso.status }}</td>
+                        <td>{{ curso.data_fim }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5">Nenhum treinamento encontrado para este funcionário.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h4>Avaliações</h4>
+        <p><strong>Avaliação do Gestor:</strong> {{ job_rotation.avaliacao_gestor|default:"Nenhuma avaliação" }}</p>
+        <p><strong>Avaliação do Funcionário:</strong> {{ job_rotation.avaliacao_funcionario|default:"Nenhuma avaliação" }}</p>
+    </div>
+
+    {% include 'footer.html' %} <!-- Rodapé com informações da empresa -->
+</div>
+
+<script>
+    function printReport() {
+        // Captura o conteúdo do cabeçalho, relatório e rodapé
+        const headerContent = document.querySelector('.header').outerHTML;
+        const reportContent = document.getElementById('report-content').innerHTML;
+        const footerContent = document.querySelector('.footer').outerHTML;
+
+        // Abre uma nova janela de impressão e escreve o conteúdo com o cabeçalho, corpo e rodapé
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Relatório de Job Rotation</title>
+                    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+                </head>
+                <body onload="window.print(); window.close();">
+                    ${headerContent}
+                    <div>${reportContent}</div>
+                    ${footerContent}
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+</script>
+{% endblock %}

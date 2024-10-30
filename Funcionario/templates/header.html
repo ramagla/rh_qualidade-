@@ -1,0 +1,8 @@
+{% load static %}
+<!-- header.html -->
+<div class="header text-center mb-4">
+    <img src="{% static 'logo.png' %}" alt="Logotipo" style="width: 100px;">
+    <h2>Relatório de Avaliação de Job Rotation</h2>
+    <p>Data: {{ data_geracao|date:"d/m/Y" }}</p>
+    <hr>
+</div>

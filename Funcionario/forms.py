@@ -181,10 +181,5 @@ class AvaliacaoAnualForm(forms.ModelForm):
 class JobRotationEvaluationForm(forms.ModelForm):
     class Meta:
         model = JobRotationEvaluation
-        fields = [
-            'funcionario', 'area_atual', 'cargo_atual', 'competencias', 'ultima_avaliacao', 
-            'status_avaliacao', 'cursos_realizados', 'escolaridade', 'area', 'nova_funcao', 
-            'data_inicio', 'termino_previsto', 'gestor_responsavel', 'descricao_cargo', 
-            'treinamentos_requeridos', 'treinamentos_propostos', 'avaliacao_gestor', 
-            'avaliacao_funcionario', 'avaliacao_rh', 'dias_prorrogacao', 'disponibilidade_vaga'
-        ]
+        fields = '__all__' 
+

@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Avaliação de Job Rotation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastrar Avaliação de Job Rotation</h2>
+    <form method="POST" action="{% url 'cadastrar_jobrotation_evaluation' %}" class="row g-3" id="jobRotationForm">
+        {% csrf_token %}
+
+        <!-- Seleção do Nome do Funcionário -->
+        <div class="col-md-6">
+            <label for="funcionario-select" class="form-label">Nome:</label>
+            <select name="funcionario" class="form-control {% if form.funcionario.errors %}is-invalid{% endif %}" id="funcionario-select">
+                <option value="">Selecione um Funcionário</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+            {% if form.funcionario.errors %}
+            <div class="invalid-feedback">
+                {% for error in form.funcionario.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Área Atual do Funcionário -->
+        <div class="col-md-6">
+            <label for="local-trabalho" class="form-label">Área Atual:</label>
+            <input type="text" id="local-trabalho" name="local_trabalho" class="form-control" readonly>
+        </div>
+
+        <!-- Cargo Atual do Funcionário -->
+        <div class="col-md-6">
+            <label for="cargo-atual" class="form-label">Cargo Atual:</label>
+            <input type="text" id="cargo-atual" class="form-control" readonly>
+        </div> 
+
+        <!-- Competências do Funcionário -->
+        <div class="col-md-6">
+            <label for="competencias" class="form-label">Competências:</label>
+            <textarea id="competencias" name="competencias" class="form-control" readonly></textarea>
+        </div>
+
+        <!-- Data da Última Avaliação de Desempenho -->
+            <div class="col-md-6">
+                <label for="data-ultima-avaliacao" class="form-label">Data da Última Avaliação de Desempenho:</label>
+                <input type="text" id="data-ultima-avaliacao" class="form-control" readonly value="{{ data_ultima_avaliacao|date:'d/m/Y' }}">
+            </div>
+
+            <!-- Status da Última Avaliação de Desempenho -->
+            <div class="col-md-6">
+                <label for="status-ultima-avaliacao" class="form-label">Status da Última Avaliação de Desempenho:</label>
+                <input type="text" id="status-ultima-avaliacao" class="form-control" readonly value="{{ status_ultima_avaliacao }}">
+            </div>
+
+        <!-- Cursos / Treinamentos -->
+        <h3 class="mt-4 mb-3">Cursos / Treinamentos</h3>
+        <div class="col-12">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Nome do Curso</th>
+                        <th>Categoria</th>
+                        <th>Status</th>
+                        <th>Data de Conclusão</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for treinamento in ultimos_treinamentos %}
+                    <tr>
+                        <td>{{ treinamento.tipo }}</td>
+                        <td>{{ treinamento.nome_curso }}</td>
+                        <td>{{ treinamento.categoria }}</td>
+                        <td>{{ treinamento.status }}</td>
+                        <td>{{ treinamento.data_fim }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not ultimos_treinamentos %}
+                    <tr>
+                        <td colspan="5">Nenhum treinamento encontrado para este funcionário.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Escolaridade / Formação -->
+        <div class="col-md-6">
+            <label for="escolaridade" class="form-label">Escolaridade:</label>
+            <input type="text" id="escolaridade" name="escolaridade" class="form-control" readonly>
+        </div>
+
+        <!-- Campos para Job Rotation -->
+        <h3 class="mt-4 mb-3">Job Rotation</h3>
+        <div class="col-md-6">
+            <label for="area" class="form-label">Área:</label>
+            <input type="text" name="area" class="form-control" placeholder="Insira a área para o Job Rotation">
+        </div>
+        <div class="col-md-6">
+            <label for="nova_funcao" class="form-label">Função:</label>
+            <select name="nova_funcao" class="form-select">
+                {% for cargo in lista_cargos %}
+                <option value="{{ cargo.id }}">{{ cargo.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="data_inicio" class="form-label">Data de Início:</label>
+            <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
+        </div>
+
+        <!-- Término Previsto -->
+        <div class="col-md-6">
+            <label for="termino_previsto" class="form-label">Término Previsto:</label>
+            <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-6">
+            <label for="gestor_responsavel" class="form-label">Gestor Responsável:</label>
+            <select name="gestor_responsavel" class="form-select">
+                {% for funcionario in funcionarios %}
+                <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Treinamentos Requeridos e Propostos -->
+        <h3 class="mt-4 mb-3">Treinamentos Requeridos e Propostos</h3>
+        <div class="col-md-6">
+            <label for="treinamentos_requeridos" class="form-label">Treinamentos Requeridos:</label>
+            <textarea name="treinamentos_requeridos" class="form-control" placeholder="Insira os treinamentos requeridos para o cargo"></textarea>
+        </div>
+        <div class="col-md-6">
+            <label for="treinamentos_propostos" class="form-label">Treinamentos Propostos:</label>
+            <textarea name="treinamentos_propostos" class="form-control" placeholder="Insira os treinamentos propostos para o Job Rotation"></textarea>
+        </div>
+
+        <!-- Avaliações -->
+        <h3 class="mt-4 mb-3">Avaliações</h3>
+        <div class="col-md-6">
+            <label for="avaliacao_gestor" class="form-label">Avaliação do Gestor:</label>
+            <textarea name="avaliacao_gestor" class="form-control"></textarea>
+        </div>
+        <div class="col-md-6">
+            <label for="avaliacao_funcionario" class="form-label">Avaliação do Funcionário:</label>
+            <textarea name="avaliacao_funcionario" class="form-control"></textarea>
+        </div>
+        <div class="col-md-6">
+            <label for="avaliacao_rh" class="form-label">Avaliação do RH:</label>
+            <select name="avaliacao_rh" class="form-select" onchange="toggleDiasProrrogacao()">
+                <option value="Apto">Apto</option>
+                <option value="Inapto">Inapto</option>
+                <option value="Prorrogar">Prorrogar</option>
+            </select>
+        </div>
+        <div class="col-md-6" id="dias_prorrogacao" style="display:none;">
+            <label for="dias_prorrogacao" class="form-label">Dias de Prorrogação:</label>
+            <input type="number" name="dias_prorrogacao" class="form-control" max="180">
+        </div>
+
+        <!-- Disponibilidade de Vaga -->
+        <h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
+        <div class="col-md-6">
+            <label for="disponibilidade_vaga" class="form-label">Disponibilidade de Vaga no Quadro:</label>
+            <input type="checkbox" name="disponibilidade_vaga"> Sim
+        </div>
+
+        <!-- Botão para salvar -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+    </form>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Função para exibir o campo "Dias de Prorrogação" apenas quando "Prorrogar" for selecionado
+    function toggleDiasProrrogacao() {
+        const select = document.querySelector('select[name="avaliacao_rh"]');
+        const diasProrrogacaoDiv = document.getElementById('dias_prorrogacao');
+        
+        if (select.value === "Prorrogar") {
+            diasProrrogacaoDiv.style.display = "block";
+        } else {
+            diasProrrogacaoDiv.style.display = "none";
+        }
+    }
+
+    // Função para carregar informações do funcionário
+    document.getElementById('funcionario-select').addEventListener('change', function() {
+        const funcionarioId = this.value;
+
+        if (funcionarioId) {
+            fetch(`/get_funcionario_info/${funcionarioId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Preenche os campos automáticos com as informações retornadas pela API
+                    document.getElementById('local-trabalho').value = data.local_trabalho || '';
+                    document.getElementById('cargo-atual').value = data.cargo_atual || '';
+                    document.getElementById('competencias').value = data.competencias || '';
+                    
+                    // Separar os campos de última avaliação
+                    document.getElementById('data-ultima-avaliacao').value = data.data_ultima_avaliacao || 'Não disponível';
+                    document.getElementById('status-ultima-avaliacao').value = data.status_ultima_avaliacao || 'Nenhum status encontrado';
+                    
+                    document.getElementById('escolaridade').value = data.escolaridade || '';
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar informações do funcionário:', error);
+                    alert('Erro ao buscar informações. Por favor, tente novamente.');
+                });
+
+            // Carregar treinamentos do funcionário
+            fetch(`/get_treinamentos/${funcionarioId}/`)
+                .then(response => response.json())
+                .then(treinamentos => {
+                    const tbody = document.querySelector('table tbody');
+                    tbody.innerHTML = '';  // Limpa a tabela antes de preencher com os dados
+
+                    if (treinamentos.length > 0) {
+                        treinamentos.forEach(treinamento => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${treinamento.tipo}</td>
+                                <td>${treinamento.nome_curso}</td>
+                                <td>${treinamento.categoria}</td>
+                                <td>${treinamento.status}</td>
+                                <td>${treinamento.data_fim}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td colspan="5">Nenhum treinamento encontrado para este funcionário.</td>`;
+                        tbody.appendChild(row);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar treinamentos do funcionário:', error);
+                    alert('Erro ao carregar treinamentos. Por favor, tente novamente.');
+                });
+        }
+    });
+
+    // Função para calcular término previsto
+    document.getElementById('data_inicio').addEventListener('change', function() {
+        const dataInicioInput = this.value;
+        const terminoPrevistoInput = document.getElementById('termino_previsto');
+
+        if (dataInicioInput) {
+            const dataInicio = new Date(dataInicioInput);
+            const terminoPrevisto = new Date(dataInicio);
+            terminoPrevisto.setDate(dataInicio.getDate() + 90);
+
+            const dia = String(terminoPrevisto.getDate()).padStart(2, '0');
+            const mes = String(terminoPrevisto.getMonth() + 1).padStart(2, '0');
+            const ano = terminoPrevisto.getFullYear();
+
+            terminoPrevistoInput.value = `${ano}-${mes}-${dia}`;
+        } else {
+            terminoPrevistoInput.value = '';
+        }
+    });
+});
+
+
+
+</script>
+
+
+
+
+
+
+{% endblock %}

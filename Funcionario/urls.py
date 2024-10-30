@@ -16,7 +16,9 @@ from .views import (
     excluir_revisao,
     excluir_lista_presenca,
     visualizar_lista_presenca,
-    visualizar_avaliacao
+    visualizar_avaliacao,
+    visualizar_jobrotation_evaluation,
+
 )
 
 urlpatterns = [
@@ -78,11 +80,23 @@ urlpatterns = [
     path('avaliacoes-desempenho/', views.lista_avaliacao_desempenho, name='lista_avaliacao_desempenho'),
     path('avaliacoes-desempenho/excluir/<int:id>/', views.excluir_avaliacao_desempenho, name='excluir_avaliacao_desempenho'),
 
-    #JobRotation
+   # URLs relacionadas ao Job Rotation
+    path('job_rotation/', views.job_rotation, name='lista_jobrotation_evaluation'),
+    path('jobrotation/<int:id>/editar/', views.editar_jobrotation, name='editar_jobrotation'),
+    path('jobrotation/<int:id>/excluir/', views.excluir_jobrotation, name='excluir_jobrotation'),
+
+
+    # Avaliação de Job Rotation
     path('jobrotation_evaluation/', views.lista_jobrotation_evaluation, name='lista_jobrotation_evaluation'),
     path('jobrotation_evaluation/cadastrar/', views.cadastrar_jobrotation_evaluation, name='cadastrar_jobrotation_evaluation'),
-    path('jobrotation_evaluation/<int:id>/', views.visualizar_jobrotation_evaluation, name='visualizar_jobrotation_evaluation'),
+    path('jobrotation_evaluation/<int:id>/', visualizar_jobrotation_evaluation, name='visualizar_jobrotation_evaluation'),
     path('jobrotation_evaluation/<int:id>/editar/', views.editar_jobrotation_evaluation, name='editar_jobrotation_evaluation'),
+
+    path('get_funcionario_info/<int:id>/', views.get_funcionario_info, name='get_funcionario_info'),
+
+    # Adicione o endpoint para buscar os treinamentos
+    path('get_treinamentos/<int:funcionario_id>/', views.get_treinamentos, name='get_treinamentos'),
+    path('api/competencias/', views.get_competencias, name='get_competencias'),
 
 ]
     

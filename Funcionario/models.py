@@ -305,7 +305,7 @@ class AvaliacaoAnual(models.Model):
     centro_custo = models.CharField(max_length=100, blank=True, null=True)
     gerencia = models.CharField(max_length=100, blank=True, null=True)
     avaliador = models.ForeignKey(Funcionario, related_name='avaliador', on_delete=models.CASCADE)
-    avaliado = models.ForeignKey(Funcionario, related_name='avaliado', on_delete=models.CASCADE)
+    avaliado = models.ForeignKey(Funcionario, related_name='avaliacoes_desempenho', on_delete=models.CASCADE)
 
     postura_seg_trabalho = models.IntegerField()
     qualidade_produtividade = models.IntegerField()
@@ -387,31 +387,28 @@ class AvaliacaoAnual(models.Model):
     
 
 
+
 class JobRotationEvaluation(models.Model):
     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name="job_rotation_evaluations")
-    area_atual = models.CharField(max_length=100)
-    cargo_atual = models.ForeignKey(Cargo, related_name='cargo_atual_funcionarios', on_delete=models.CASCADE)
-    competencias = models.TextField()
-    ultima_avaliacao = models.DateField(null=True, blank=True)
-    status_avaliacao = models.CharField(max_length=50, null=True, blank=True)
-
-    # Campos para CURSOS/TREINAMENTOS
-    cursos_realizados = models.JSONField(default=list)  # Listagem dos últimos 10 cursos (como JSON)
-
-    # Campos para Escolaridade/Formação
-    escolaridade = models.CharField(max_length=100)
+    area_atual = models.CharField(max_length=100, null=True, blank=True)  # Campo opcional
+    cargo_atual = models.ForeignKey(Cargo, related_name='job_rotation_evaluations_cargo', on_delete=models.CASCADE, null=True, blank=True)  # Campo opcional
+    competencias = models.TextField(null=True, blank=True)  # Campo opcional
+    data_ultima_avaliacao = models.DateField(null=True, blank=True)  # Novo campo para data da última avaliação
+    status_ultima_avaliacao = models.CharField(max_length=50, null=True, blank=True, help_text="Status da última avaliação de desempenho")  # Novo campo para status da última avaliação
+    cursos_realizados = models.JSONField(default=list, null=True, blank=True)
+    escolaridade = models.CharField(max_length=100, null=True, blank=True)
 
     # Campos para Job Rotation
-    area = models.CharField(max_length=100)  # Campo de inserção manual
-    nova_funcao = models.ForeignKey(Cargo, related_name='nova_funcao', on_delete=models.SET_NULL, null=True)
+    area = models.CharField(max_length=100)
+    nova_funcao = models.ForeignKey(Cargo, related_name='nova_funcao', on_delete=models.SET_NULL, null=True, blank=True)
     data_inicio = models.DateField()
-    termino_previsto = models.DateField()
+    termino_previsto = models.DateField(editable=False, null=True, blank=True)
     gestor_responsavel = models.ForeignKey(Funcionario, related_name='gestor_responsavel', on_delete=models.SET_NULL, null=True)
 
     # Competências selecionadas
-    descricao_cargo = models.TextField()  # Exemplo de campo para armazenar as descrições de cargo selecionadas
+    descricao_cargo = models.TextField(null=True, blank=True)
 
-    # Treinamentos Requeridos (Campo Manual)
+    # Treinamentos Requeridos
     treinamentos_requeridos = models.TextField(blank=True)
     treinamentos_propostos = models.TextField(blank=True)
 
@@ -420,15 +417,9 @@ class JobRotationEvaluation(models.Model):
     avaliacao_funcionario = models.TextField(blank=True)
     avaliacao_rh = models.CharField(
         max_length=20,
-        choices=[
-            ('Apto', 'Apto'),
-            ('Inapto', 'Inapto'),
-            ('Prorrogar TN', 'Prorrogar TN')
-        ]
+        choices=[('Apto', 'Apto'), ('Inapto', 'Inapto'), ('Prorrogar TN', 'Prorrogar TN')]
     )
-    dias_prorrogacao = models.IntegerField(default=0)
-
-    # Disponibilidade de Vaga
+    dias_prorrogacao = models.IntegerField(default=0, null=True, blank=True)
     disponibilidade_vaga = models.BooleanField(default=False)
 
     def __str__(self):

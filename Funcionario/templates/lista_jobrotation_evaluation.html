@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}Avaliações de Job Rotation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Avaliações de Job Rotation</h2>
+
+    <!-- Toast container para mensagens de alerta no canto inferior direito -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: {% if message.tags == 'success' %}#d1e7dd; color: #0f5132{% else %}#f8d7da; color: #842029{% endif %}">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <h4 class="alert-heading">{% if message.tags == 'success' %}Sucesso!{% else %}Atenção!{% endif %}</h4>
+                            <p>{{ message }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Botão para cadastrar avaliação -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_jobrotation_evaluation' %}" class="btn btn-success">Cadastrar Avaliação</a>
+    </div>
+
+    <!-- Formulário de filtro -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <div class="col-md-3">
+                <label for="funcionario" class="form-label">Funcionário:</label>
+                <select name="funcionario" id="funcionario" class="form-select">
+                    <option value="">Selecione</option>
+                    {% for func in funcionarios %}
+                        <option value="{{ func.id }}" {% if request.GET.funcionario == func.id %}selected{% endif %}>{{ func.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+
+    <!-- Lista de Avaliações -->
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                <th class="align-middle">Funcionário</th>
+                <th class="align-middle">Cargo e Área Atual</th>
+                <th class="align-middle">Nova Função e Área</th>
+                <th class="align-middle">Data de Início</th>
+                <th class="align-middle">Término Previsto</th>
+                <th class="align-middle">Status da Avaliação</th>
+                <th class="align-middle">Treinamentos Requeridos</th>
+                <th class="align-middle">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for evaluation in evaluations %}
+            <tr>
+                <!-- Nome do Funcionário -->
+                <td class="align-middle">{{ evaluation.funcionario.nome }}</td>
+
+                <!-- Cargo e Área Atual com Modal -->
+                <td class="align-middle">
+                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#cargoAreaModal{{ evaluation.id }}">
+                        <i class="bi bi-eye"></i> Ver
+                    </button>
+                    <!-- Modal para exibir detalhes de Cargo e Área Atual -->
+                    <div class="modal fade" id="cargoAreaModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="cargoAreaModalLabel{{ evaluation.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="cargoAreaModalLabel{{ evaluation.id }}">Cargo e Área Atual</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Cargo Atual:</strong> {{ evaluation.cargo_atual.nome|default:"N/A" }}</p>
+                                    <p><strong>Área Atual:</strong> {{ evaluation.area_atual|default:"N/A" }}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+                <!-- Nova Função e Área com Modal -->
+                <td class="align-middle">
+                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#novaFuncaoModal{{ evaluation.id }}">
+                        <i class="bi bi-eye"></i> Ver
+                    </button>
+                    <!-- Modal para exibir detalhes da Nova Função e Área -->
+                    <div class="modal fade" id="novaFuncaoModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="novaFuncaoModalLabel{{ evaluation.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="novaFuncaoModalLabel{{ evaluation.id }}">Nova Função e Área</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Nova Função:</strong> {{ evaluation.nova_funcao.nome|default:"N/A" }}</p>
+                                    <p><strong>Área:</strong> {{ evaluation.area|default:"N/A" }}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+                <!-- Datas de Início e Término Previsto -->
+                <td class="align-middle">{{ evaluation.data_inicio|date:"d/m/Y" }}</td>
+                <td class="align-middle">{{ evaluation.termino_previsto|date:"d/m/Y" }}</td>
+
+                <!-- Status da Avaliação -->
+                <td class="align-middle">
+                    {% if evaluation.avaliacao_rh == 'Apto' %}
+                        <span class="badge bg-success">Apto</span>
+                    {% elif evaluation.avaliacao_rh == 'Inapto' %}
+                        <span class="badge bg-danger">Inapto</span>
+                    {% elif evaluation.avaliacao_rh == 'Prorrogar TN' %}
+                        <span class="badge bg-warning text-dark">Prorrogar TN</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Indefinido</span>
+                    {% endif %}
+                </td>
+
+                <!-- Treinamentos Requeridos com Modal -->
+                <td class="align-middle">
+                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#treinamentoModal{{ evaluation.id }}">
+                        <i class="bi bi-eye"></i> Ver
+                    </button>
+                    <!-- Modal de Treinamentos Requeridos e Propostos -->
+                    <div class="modal fade" id="treinamentoModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="treinamentoModalLabel{{ evaluation.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="treinamentoModalLabel{{ evaluation.id }}">Treinamentos</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <h6>Treinamentos Requeridos:</h6>
+                                    <p>{{ evaluation.treinamentos_requeridos|default:"Nenhum treinamento requerido informado." }}</p>
+                                    <hr>
+                                    <h6>Treinamentos Propostos:</h6>
+                                    <p>{{ evaluation.treinamentos_propostos|default:"Nenhum treinamento proposto informado." }}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+                <!-- Ações -->
+                    <td class="align-middle">
+                        <!-- Botão de Visualizar -->
+                        <a href="{% url 'visualizar_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        
+                        <!-- Botão de Editar -->
+                        <a href="{% url 'editar_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-light" title="Editar">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        
+                        <!-- Formulário para Exclusão -->
+                        <form action="{% url 'excluir_jobrotation' evaluation.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-light" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center align-middle">Nenhuma avaliação de Job Rotation encontrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const bootstrapToast = new bootstrap.Toast(toast);
+            bootstrapToast.show();
+        });
+    });
+</script>
+
+{% endblock %}
