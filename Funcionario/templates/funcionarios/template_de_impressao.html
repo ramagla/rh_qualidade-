@@ -1,0 +1,529 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'header.html' %}
+
+<div class="container mt-5">
+    <!-- Título Centralizado -->
+    <div class="text-center mb-4">        
+            <!-- Botão de impressão com ícone -->
+            <button onclick="imprimir({{ funcionario.id }})" class="btn btn-primary">
+                <i class="fas fa-print"></i>
+            </button><br>
+
+    <!-- Cartão de Informações do Funcionário -->
+    <div class="row mb-4 p-4 shadow-lg rounded" style="background-color: #f9f9f9; border-radius: 10px;">
+        <div class="col-md-6">
+            <h5 class="mb-3" style="color: #555;">
+                <strong>Nome:</strong> {{ funcionario.nome }}
+            </h5>
+            <h5 class="mb-3" style="color: #555;">
+                <strong>Cargo Atual:</strong> {{ funcionario.cargo_atual }}
+            </h5>
+            <h5 class="mb-3" style="color: #555;">
+                <strong>Departamento:</strong> {{ funcionario.local_trabalho }}
+            </h5>            
+            <h5 class="mb-3" style="color: #555;">
+                <strong>Data de Admissão:</strong> {{ funcionario.data_admissao|date:"d/m/Y" }}
+            </h5>
+            <h5 class="mb-3" style="color: #555;">
+                <strong>Data de Integração:</strong> {{ funcionario.data_integracao|date:"d/m/Y" }}
+            </h5>
+            <h5 class="mb-3" style="color: #555;">
+                <strong>Status:</strong> 
+                {% if funcionario.status == "Inativo" %}
+                    <span style="color: red; font-weight: bold;">{{ funcionario.status }}</span>
+                {% elif funcionario.status == "Ativo" %}
+                    <span style="color: green; font-weight: bold;">{{ funcionario.status }}</span>
+                {% else %}
+                    {{ funcionario.status }}
+                {% endif %}
+            </h5>
+            <h5 class="mb-3" style="color: #555;">
+                <strong>Responsável:</strong> {{ funcionario.responsavel }}
+            </h5>
+        </div>
+        
+       <!-- Foto do Funcionário -->
+          <div class="col-md-6 d-flex align-items-center justify-content-center">
+            {% if funcionario.foto %}
+                <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" 
+                    style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 3px solid #007bff; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            {% else %}
+                <div style="width: 200px; height: 200px; border-radius: 50%; background-color: #ddd; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #666; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    Sem Foto
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+  <!-- Seção de Treinamentos -->
+<div class="container mt-5">
+    <!-- Título Centralizado -->
+    <div class="text-center mb-4">
+        <h2 style="font-weight: bold; color: #333;">Treinamentos</h2>
+        <hr style="width: 50px; border: 2px solid #007bff; margin: 0 auto;">
+    </div>
+
+    <!-- Cartão de Treinamentos -->
+    <div class="p-4 shadow-lg rounded" style="background-color: #f9f9f9; border-radius: 10px;">
+        {% if funcionario.treinamentos.all %}
+            <table class="table table-bordered text-center" style="background-color: #ffffff; border-radius: 10px;">
+                <thead class="table-light" style="background-color: #e9ecef;">
+                    <tr>
+                        <th>Nome do Curso</th>
+                        <th>Tipo de Treinamento</th>
+                        <th>Categoria</th>
+                        <th>Instituição de Ensino</th>                        
+                        <th>Status</th>
+                        <th>Carga Horária</th>                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for treinamento in funcionario.treinamentos.all %}
+                        <tr>
+                            <td>{{ treinamento.nome_curso }}</td>
+                            <td>{{ treinamento.get_tipo_display }}</td>
+                            <td>{{ treinamento.get_categoria_display }}</td>
+                            <td>{{ treinamento.instituicao_ensino }}</td>                           
+                            <td>
+                                {% if treinamento.status == 'concluido' %}
+                                    <span style="color: green; font-weight: bold;">{{ treinamento.get_status_display }}</span>
+                                {% elif treinamento.status == 'trancado' %}
+                                    <span style="color: red; font-weight: bold;">{{ treinamento.get_status_display }}</span>
+                                {% else %}
+                                    <span style="color: blue; font-weight: bold;">{{ treinamento.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ treinamento.carga_horaria }}</td>                            
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-center" style="color: #555;">Nenhum treinamento cadastrado.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Seção de Lista de Presença -->
+<div class="container mt-5">
+    <!-- Título Centralizado -->
+    <div class="text-center mb-4">
+        <h2 style="font-weight: bold; color: #333;">Lista de Presença</h2>
+        <hr style="width: 50px; border: 2px solid #007bff; margin: 0 auto;">
+    </div>
+
+    <!-- Cartão de Lista de Presença -->
+    <div class="p-4 shadow-lg rounded" style="background-color: #f9f9f9; border-radius: 10px;">
+        {% if funcionario.participantes.all %}
+            <table class="table table-bordered text-center" style="background-color: #ffffff; border-radius: 10px;">
+                <thead class="table-light" style="background-color: #e9ecef;">
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Data</th>                        
+                        <th>Instrutor</th>
+                        <th>Duração</th>                       
+                        <th>Assunto</th>                     
+                       
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lista in funcionario.participantes.all %}
+                        <tr>
+                            <td>{{ lista.get_treinamento_display }}</td>
+                            <td>{{ lista.data_realizacao|date:"d/m/Y" }}</td>                            
+                            <td>{{ lista.instrutor }}</td>
+                            <td>{{ lista.duracao_formatada }}</td> 
+                            <td>{{ lista.assunto }}</td>                                                 
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-center" style="color: #555;">Nenhuma lista de presença cadastrada.</p>
+        {% endif %}
+    </div>
+</div>
+
+
+<!-- Seção de Avaliação de Treinamento -->
+<div class="container mt-5">
+    <!-- Título Centralizado -->
+    <div class="text-center mb-4">
+        <h2 style="font-weight: bold; color: #333;">Avaliação de Treinamento</h2>
+        <hr style="width: 50px; border: 2px solid #007bff; margin: 0 auto;">
+    </div>
+
+    <!-- Cartão de Avaliação de Treinamento -->
+    <div class="p-4 shadow-lg rounded" style="background-color: #f9f9f9; border-radius: 10px;">
+        {% if funcionario.avaliacoes.all %}
+            <table class="table table-bordered text-center" style="background-color: #ffffff; border-radius: 10px;">
+                <thead class="table-light" style="background-color: #e9ecef;">
+                    <tr>
+                        <th>Data da Avaliação</th>
+                        <th>Período da Avaliação</th>
+                        <th>Status do Prazo</th>
+                        <th>Treinamento/Curso</th>
+                        <th>Avaliação Geral do Treinamento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for avaliacao in funcionario.avaliacoes.all %}
+                        <tr>
+                            <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+                            <td>{{ avaliacao.periodo_avaliacao }} dias</td>
+                            <td>
+                                {% if avaliacao.periodo_avaliacao < 30 %}
+                                    <span style="color: red; font-weight: bold;">Em Atraso</span>
+                                {% else %}
+                                    <span style="color: green; font-weight: bold;">Dentro do Prazo</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ avaliacao.treinamento }}</td>
+                            <td>{{ avaliacao.get_avaliacao_geral_display }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-center" style="color: #555;">Nenhuma avaliação de treinamento cadastrada.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Seção de Avaliação de Desempenho -->
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h2 style="font-weight: bold; color: #333;">Avaliação de Desempenho</h2>
+        <hr style="width: 50px; border: 2px solid #007bff; margin: 0 auto;">
+    </div>
+
+    <div class="p-4 shadow-lg rounded" style="background-color: #f9f9f9; border-radius: 10px;">
+        {% if avaliacoes_desempenho %}
+            <table class="table table-bordered text-center" style="background-color: #ffffff; border-radius: 10px;">
+                <thead class="table-light" style="background-color: #e9ecef;">
+                    <tr>
+                        <th>Data da Avaliação</th>
+                        <th>Tipo</th>
+                        <th>Período da Avaliação</th>
+                        <th>Status do Prazo</th>
+                        <th>Avaliação Geral</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for avaliacao in avaliacoes_desempenho %}
+                        <tr>
+                            <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+                            <td>{{ avaliacao.tipo }}</td>
+                            <td>{{ avaliacao.calcular_classificacao }}</td>
+                            <td>
+                                <span 
+                                    style="color: 
+                                        {% if avaliacao.get_status_prazo == 'Dentro do Prazo' %} green 
+                                        {% else %} red 
+                                        {% endif %}; font-weight: bold;">
+                                    {{ avaliacao.get_status_prazo }}
+                                </span>
+                            </td>
+                            <td>{{ avaliacao.calcular_classificacao }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-center" style="color: #555;">Nenhuma avaliação de desempenho cadastrada.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Seção de Avaliação de Job Rotation -->
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h2 style="font-weight: bold; color: #333;">Avaliação de Job Rotation</h2>
+        <hr style="width: 50px; border: 2px solid #007bff; margin: 0 auto;">
+    </div>
+
+    <div class="p-4 shadow-lg rounded" style="background-color: #f9f9f9; border-radius: 10px;">
+        {% if funcionario.job_rotation_evaluations.all %}
+            <table class="table table-bordered text-center" style="background-color: #ffffff; border-radius: 10px;">
+                <thead class="table-light" style="background-color: #e9ecef;">
+                    <tr>
+                        <th>Área Atual</th>
+                        <th>Cargo Atual</th>                        
+                        <th>Status Última Avaliação</th>
+                        <th>Nova Função</th>
+                        <th>Data de Início</th>
+                        <th>Termino Previsto</th>
+                        <th>Avaliação RH</th>
+                        <th>Prorrogação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rotation in funcionario.job_rotation_evaluations.all %}
+                        <tr>
+                            <td>{{ rotation.area_atual }}</td>
+                            <td>
+                                {% if rotation.cargo_atual %}
+                                    {{ rotation.cargo_atual.nome }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>                           
+                            <td>{{ rotation.status_ultima_avaliacao }}</td>
+                            <td>
+                                {% if rotation.nova_funcao %}
+                                    {{ rotation.nova_funcao.id }}
+                                    {{ rotation.nova_funcao.nome }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ rotation.data_inicio|date:"d/m/Y" }}</td>
+                            <td>{{ rotation.termino_previsto|date:"d/m/Y" }}</td>
+                            <td>{{ rotation.get_avaliacao_rh_display }}</td>
+                            <td>{{ rotation.dias_prorrogacao }} dias</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-center" style="color: #555;">Nenhuma avaliação de Job Rotation cadastrada.</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    @media print {
+        /* Estilo geral */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .sidebar {
+            display: none !important;
+        }
+
+        /* Ocultar elementos não necessários para a impressão */
+        button, .navbar, .footer {
+            display: none !important;
+        }
+
+        /* Configuração para redimensionar a imagem do funcionário */
+        .col-md-6 img {
+            width: 150px !important;
+            height: 150px !important;
+            object-fit: cover;
+            border-radius: 50%;
+        }        
+
+        h2, .section-title {
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        h2::after, .section-title::after {
+            content: "";
+            display: block;
+            width: 50px;
+            border-bottom: 2px solid #007bff;
+            margin: 5px auto;
+        }
+
+        .col-md-6 {
+            width: 50%;
+            float: left;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 10px;
+            margin: auto;
+        }
+
+        .p-4 {
+            padding: 20px !important;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .mt-5 {
+            margin-top: 20px !important;
+        }
+
+        .text-center {
+            text-align: center !important;
+        }
+
+        .shadow-lg {
+            box-shadow: none !important;
+        }
+
+        .rounded {
+            border-radius: 0 !important;
+        }
+
+        .row.mb-4.p-4.shadow-lg.rounded {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        h5 {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+       
+    }
+</style>
+
+
+
+<script>
+function imprimir(funcionarioId) {
+    // Captura apenas o conteúdo da ficha do funcionário, excluindo o cabeçalho
+    var conteudo = document.querySelector('.container').innerHTML;
+    
+    // Obtém a data e hora atuais
+    var now = new Date();
+    var formattedDate = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <title>Imprimir Ficha do Funcionário</title>
+                <style>
+                    @media print {
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 20px;
+                        }
+                        .header {
+                            display: flex;
+                            align-items: center;
+                            font-family: Arial, sans-serif;
+                            margin-bottom: 20px;
+                        }
+                        .left-section img {
+                            width: 80px;
+                            height: auto;
+                        }
+                        .center-section {
+                            font-size: 12px;
+                            color: #4a4a4a;
+                            margin-left: 15px;
+                        }
+                        .center-section strong {
+                            font-size: 14px;
+                            color: #333;
+                        }
+                        .right-section {
+                            font-size: 12px;
+                            color: #4a4a4a;
+                            margin-left: auto;
+                            text-align: right;
+                        }
+                        h2 {
+                            text-align: center;
+                            color: #333;
+                        }
+                        .section-title {
+                            text-align: center;
+                            font-weight: bold;
+                            color: #333;
+                            margin-top: 40px;
+                        }
+                        .section-title hr {
+                            width: 50px;
+                            border: 2px solid #007bff;
+                            margin: 0 auto;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                        }
+                        th, td {
+                            padding: 8px;
+                            border: 1px solid #ddd;
+                            text-align: center;
+                        }
+                        th {
+                            background-color: #f2f2f2;
+                        }
+                        .col-md-6 {
+                            width: 50%;
+                            float: left;
+                        }
+                        button { display: none; }
+                        .footer {
+                            display: block;
+                            text-align: center;
+                            font-size: 12px;
+                            color: #333;
+                            margin-top: 20px;
+                        }
+                        .footer hr {
+                            border: 0;
+                            border-top: 1px solid #333;
+                            margin: 10px 0;
+                        }
+                    }
+                </style>
+            </head>
+            <body>               
+                <div class="container">
+                    <h2>Ficha do Funcionário</h2>
+                    ${conteudo}
+                </div>
+                <div class="footer text-center mt-5">
+                    <hr>
+                    <p>Data de Impressão: ${formattedDate}</p>
+                </div>
+            </body>
+        </html>
+    `);
+    novaJanela.document.close();
+    novaJanela.print();
+    novaJanela.close();
+}
+</script>
+
+
+
+
+
+   
+{% endblock %}

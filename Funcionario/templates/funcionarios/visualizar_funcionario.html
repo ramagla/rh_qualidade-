@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Visualizar Funcionário{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Visualizar Funcionário: {{ funcionario.nome }}</h2>
+
+    <div class="row">
+        <div class="col-md-6 text-center">
+            <label class="form-label">Foto:</label>
+            {% if funcionario.foto %}
+                <div class="mt-2">
+                    <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" style="width: 250px; height: 300px; object-fit: cover;">
+                </div>
+            {% else %}
+                <p>Nenhuma foto disponível.</p>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6 text-center align-self-center">
+            <label class="form-label">Currículo:</label>
+            {% if funcionario.curriculo %}
+                <a href="{{ funcionario.curriculo.url }}" class="btn btn-info" download>Baixar Currículo</a>
+                <p>Atualmente: {{ funcionario.curriculo.name }}</p>
+            {% else %}
+                <p>Nenhum currículo anexado.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h5>Dados Pessoais</h5>
+        <ul class="list-group">
+            <li class="list-group-item"><strong>Nome:</strong> {{ funcionario.nome }}</li>
+            <li class="list-group-item"><strong>Data de Admissão:</strong> {{ funcionario.data_admissao|date:"d/m/Y" }}</li>
+            <li class="list-group-item"><strong>Cargo Inicial:</strong> {{ funcionario.cargo_inicial }}</li>
+            <li class="list-group-item"><strong>Cargo Atual:</strong> {{ funcionario.cargo_atual }}</li>
+            <li class="list-group-item"><strong>Número de Registro:</strong> {{ funcionario.numero_registro }}</li>
+            <li class="list-group-item"><strong>Local de Trabalho:</strong> {{ funcionario.local_trabalho }}</li>
+            <li class="list-group-item"><strong>Data de Integração:</strong> {{ funcionario.data_integracao|date:"d/m/Y" }}</li>
+            <li class="list-group-item"><strong>Escolaridade:</strong> {{ funcionario.escolaridade }}</li>
+            <li class="list-group-item"><strong>Experiência Profissional:</strong> {{ funcionario.experiencia_profissional }}</li> <!-- Novo campo -->
+            <li class="list-group-item"><strong>Status:</strong> {{ funcionario.status }}</li>
+            <li class="list-group-item"><strong>Responsável:</strong> {{ funcionario.responsavel }}</li>
+            <li class="list-group-item"><strong>Cargo do Responsável:</strong> {{ cargo_responsavel }}</li> <!-- Se você passar essa variável no contexto -->
+        </ul>
+    </div>
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'lista_funcionarios' %}" class="btn btn-primary">Voltar para a Lista de Funcionários</a>
+    </div>
+</div>
+{% endblock %}

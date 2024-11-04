@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from datetime import timedelta
+from django.utils import timezone
 
 from Funcionario.models import Treinamento
 from Funcionario.models import AvaliacaoTreinamento, AvaliacaoDesempenho, Funcionario, ListaPresenca
@@ -8,6 +10,13 @@ from Funcionario.forms import AvaliacaoTreinamentoForm, AvaliacaoForm,AvaliacaoA
 def lista_avaliacoes(request):
     avaliacoes_treinamento = AvaliacaoTreinamento.objects.all()
     avaliacoes_desempenho = AvaliacaoDesempenho.objects.all()
+    today = timezone.now().date()
+
+    for avaliacao in avaliacao:
+        dias_prazo = 30 if avaliacao.tipo == 'EXPERIENCIA' else 365
+        avaliacao.status_prazo = "Dentro do Prazo" if (avaliacao.data_avaliacao + timedelta(days=dias_prazo)) >= today else "Em Atraso"
+
+    
     context = {
         'avaliacoes_treinamento': avaliacoes_treinamento,
         'avaliacoes_desempenho': avaliacoes_desempenho,

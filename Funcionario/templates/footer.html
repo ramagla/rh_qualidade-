@@ -1,7 +1,21 @@
-<!-- footer.html -->
 <div class="footer text-center mt-5">
     <hr>
-    <p>Bras-Mol Molas e Estampados Ltda.</p>
-    <p>Endereço: Rua Exemplo, 123, Itaquaquecetuba, SP</p>
-    <p>Email: contato@bras_mol.com.br | Telefone: (11) 1234-5678</p>
+    <p>Data de Impressão: <span id="data-impressao"></span></p>
+    <p>Página <span class="page-number"></span></p>
 </div>
+
+
+
+<script>
+    // Script para exibir a data atual no campo de data de impressão
+    document.addEventListener("DOMContentLoaded", function() {
+        const dataImpressao = document.getElementById('data-impressao');
+        if (dataImpressao) {
+            dataImpressao.textContent = new Date().toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+    });
+</script>

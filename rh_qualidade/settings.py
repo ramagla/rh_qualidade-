@@ -113,9 +113,7 @@ DATABASES = {
 #     )
 # }
 
-# Configurações de Mídia
-MEDIA_ROOT = BASE_DIR  # Define a raiz do projeto como o local para arquivos de mídia
-MEDIA_URL = '/media/'
+
 
 
 
@@ -147,7 +145,6 @@ LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
-
 USE_L10N = True  
 USE_TZ = True
 
@@ -157,6 +154,9 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# Configurações de Mídia
+MEDIA_ROOT = BASE_DIR
+MEDIA_URL = '/media/'
 
 
 # Default primary key field type

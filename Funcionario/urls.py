@@ -12,13 +12,13 @@ from .views.funcionario_views import (
     editar_funcionario,
     excluir_funcionario,
     visualizar_funcionario,
+    ImprimirFichaView,
 )
 from .views.cargos_views import (
     lista_cargos,
     cadastrar_cargo,
     editar_cargo,
-    excluir_cargo,
-    get_competencias,
+    excluir_cargo,   
     historico_revisoes,
 )
 from .views.treinamento_views import (
@@ -50,7 +50,7 @@ from .views.job_rotation_views import (
     editar_jobrotation_evaluation,
     excluir_jobrotation,
 )
-from .views.api_views import get_funcionario_info, get_treinamentos
+from .views.api_views import get_funcionario_info, get_treinamentos, get_competencias, get_cargo,get_funcionario_ficha
 
 from .views.lista_presenca_views import (
     lista_presenca,
@@ -71,19 +71,21 @@ urlpatterns = [
     path('funcionarios/cadastrar/', cadastrar_funcionario, name='cadastrar_funcionario'),
     path('funcionarios/editar/<int:funcionario_id>/', editar_funcionario, name='editar_funcionario'),
     path('funcionarios/excluir/<int:funcionario_id>/', excluir_funcionario, name='excluir_funcionario'),
+
+    # Imprimir ficha
+    path('imprimir-ficha/', ImprimirFichaView.as_view(), name='imprimir_ficha'),
+    path('imprimir-ficha/<int:funcionario_id>/', ImprimirFichaView.as_view(), name='imprimir_ficha'),
+
+
     
     # Cargos
     path('cargos/', lista_cargos, name='lista_cargos'),
     path('cargos/cadastrar/', cadastrar_cargo, name='cadastrar_cargo'),
     path('cargos/<int:cargo_id>/editar/', editar_cargo, name='editar_cargo'),
     path('cargos/<int:cargo_id>/excluir/', excluir_cargo, name='excluir_cargo'),
-    path('cargos/<int:cargo_id>/historico-revisoes/', views.historico_revisoes, name='historico_revisoes'),
+    path('cargos/<int:cargo_id>/historico-revisoes/', historico_revisoes, name='historico_revisoes'),
     path('revisoes/<int:revisao_id>/excluir/', views.excluir_revisao, name='excluir_revisao'),
     path('cargos/<int:cargo_id>/adicionar-revisao/', views.adicionar_revisao, name='adicionar_revisao'),
-
-
-
-    path('api/competencias/', get_competencias, name='get_competencias'),
 
     # Treinamentos
     path('treinamentos/', lista_treinamentos, name='lista_treinamentos'),
@@ -119,6 +121,10 @@ urlpatterns = [
     # APIs auxiliares
     path('get_funcionario_info/<int:id>/', get_funcionario_info, name='get_funcionario_info'),
     path('get_treinamentos/<int:funcionario_id>/', get_treinamentos, name='get_treinamentos'),
+    path('api/competencias/', get_competencias, name='get_competencias'),
+    path('get-cargo/<int:funcionario_id>/', get_cargo, name='get_cargo'),
+    path('api/funcionario/ficha/<int:id>/', get_funcionario_ficha, name='funcionario-ficha'),
+
 
     # Lista de Presença
     path('lista-presenca/', lista_presenca, name='lista_presenca'),

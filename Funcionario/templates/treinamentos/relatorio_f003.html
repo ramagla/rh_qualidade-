@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'header.html' %}
+
+<div class="container mt-5">
+    <!-- Título Centralizado -->
+    <div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <!-- Cartão de Informações do Funcionário -->
+    <div class="info-card">
+        <div class="info-column">
+            <h5><strong>Nome:</strong> {{ funcionario.nome }}</h5>
+            <h5><strong>N° do Registro:</strong> {{ funcionario.numero_registro }}</h5>
+            <h5><strong>Data de Admissão:</strong> {{ funcionario.data_admissao|date:"d/m/Y" }}</h5>
+            <h5><strong>Cargo Inicial:</strong> {{ funcionario.cargo_inicial }}</h5>
+            <h5><strong>Cargo Atual:</strong> {{ funcionario.cargo_atual }}</h5>
+        </div>
+        <div class="info-column">
+            <h5><strong>Departamento:</strong> {{ funcionario.local_trabalho }}</h5>
+            <h5><strong>Data de Integração:</strong> {{ funcionario.data_integracao|date:"d/m/Y" }}</h5>
+            <h5><strong>Status:</strong> 
+                {% if funcionario.status == "Inativo" %}
+                    <span style="color: red; font-weight: bold;">{{ funcionario.status }}</span>
+                {% elif funcionario.status == "Ativo" %}
+                    <span style="color: green; font-weight: bold;">{{ funcionario.status }}</span>
+                {% else %}
+                    {{ funcionario.status }}
+                {% endif %}
+            </h5>
+            <h5><strong>Responsável:</strong> {{ funcionario.responsavel }}</h5>
+            <h5><strong>Cargo:</strong> {{ funcionario.cargo_responsavel }}</h5>
+        </div>
+    </div>
+
+     <!-- Escolaridade -->
+    <div class="escolaridade mt-4 text-center">
+        <h5><strong>Nível de Escolaridade:</strong> {{ funcionario.escolaridade }}</h5>
+    </div>
+
+    <!-- Seção de Experiência Profissional -->
+    <div class="experiencia-profissional mt-4">
+        <h2 class="section-title">Experiência Profissional</h2>
+        <p >O colaborador possui a experiência profissional comprovada, conforme definido na descrição de cargo ?</p>
+        <p><strong>{{ funcionario.experiencia_profissional }}</strong> 
+            {% if funcionario.experiencia_profissional == "Sim" %}
+                (Anexar Curriculum ou cópia da Carteira Profissional no prontuário)
+            {% else %}
+                (Justificar através da Avaliação Prática da Atividade, devidamente assinada em {{ funcionario.data_avaliacao|date:"d/m/Y" }})
+            {% endif %}
+        </p>
+    </div>
+   
+
+    <!-- Seção de Treinamentos -->
+    <div class="treinamentos-section mt-5">
+    <h2 class="section-title">Treinamentos</h2>
+    <hr style="width: 50px; border: 2px solid #007bff; margin: 0 auto;">
+    <div class="p-4 shadow-lg rounded">
+        {% if funcionario.treinamentos.all %}
+            <table class="custom-table text-center">
+                <thead>
+                    <tr>
+                        <th>Nome do Curso</th>
+                        <th>Tipo de Treinamento</th>
+                        <th>Categoria</th>
+                        <th>Instituição de Ensino</th>                        
+                        <th>Status</th>
+                        <th>Carga Horária</th>                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for treinamento in funcionario.treinamentos.all %}
+                        <tr>
+                            <td>{{ treinamento.nome_curso }}</td>
+                            <td>{{ treinamento.get_tipo_display }}</td>
+                            <td>{{ treinamento.get_categoria_display }}</td>
+                            <td>{{ treinamento.instituicao_ensino }}</td>                           
+                            <td>
+                                {% if treinamento.status == 'concluido' %}
+                                    <span style="color: green; font-weight: bold;">{{ treinamento.get_status_display }}</span>
+                                {% elif treinamento.status == 'trancado' %}
+                                    <span style="color: red; font-weight: bold;">{{ treinamento.get_status_display }}</span>
+                                {% else %}
+                                    <span style="color: blue; font-weight: bold;">{{ treinamento.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ treinamento.carga_horaria }}</td>                            
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-center">Nenhum treinamento cadastrado.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Número do Formulário (visível apenas na impressão) -->
+<div class="numero-formulario d-none d-print-block">
+    F003 Rev.04
+</div>
+
+<style>
+    /* Ajuste geral de layout */
+    .info-card {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .info-column {
+        width: 48%; /* Divide em duas colunas */
+    }
+
+      /* Estilos personalizados da tabela sem interferência do Bootstrap */
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .custom-table th, .custom-table td {
+        padding: 4px;
+        border: 1px solid #ddd;
+        font-size: 10px;
+        text-align: center;
+    }
+    .custom-table th {
+        background-color: #e7f1ff;
+        color: #333;
+        font-weight: bold;
+    }
+    .custom-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    /* Estilo de impressão */
+    @media print {
+        /* Estilo de fonte menor para impressão */
+        body {
+            font-size: 10px; /* Ajuste o tamanho da fonte conforme necessário */
+        }
+
+          .header {
+            display: flex;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin-bottom: 20px;
+            page-break-after: avoid;
+        }
+
+         /* Reduz o tamanho do logotipo para impressão */
+        .left-section img {
+            width: 50px; /* Reduzido para impressão */
+            height: auto;
+            margin-right: 10px;
+        }
+
+        /* Define o texto do cabeçalho em 10px */
+        .center-section {
+            font-size: 10px;
+            color: #4a4a4a;
+            margin-left: 10px;
+        }
+
+        /* Reduz o texto principal da empresa para 10px */
+        .center-section strong {
+            font-size: 10px;
+            color: #333;
+        }
+
+        /* Ajusta a seção da data de impressão */
+        .right-section {
+            font-size: 10px;
+            color: #4a4a4a;
+            margin-left: auto;
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        
+        /* Número do Formulário no canto inferior direito */
+        .numero-formulario {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px; /* Ajuste o tamanho da fonte conforme necessário */
+            color: #333;
+        }
+
+        /* Remover bordas internas */
+        .info-card {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Estilos gerais */
+        .custom-table th, .custom-table td {
+        padding: 4px;
+        border: 1px solid #ddd;
+        font-size: 10px;
+        text-align: center;
+    }
+
+    .custom-table th {
+        background-color: #e7f1ff;
+        color: #333;
+        font-weight: bold;
+    }
+
+    .custom-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+
+        .section-title, h2 {
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        /* Ocultar o botão imprimir */
+        .d-print-none { display: none !important; }
+    }
+</style>
+
+<script>
+function imprimir() {
+    var conteudo = document.querySelector('.container').innerHTML;
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
+    
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <title>Mapeamento de Treinamento</title>
+                <style>
+                    /* Estilos gerais */
+                    body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }
+                    .info-card { display: flex; gap: 20px; flex-wrap: wrap; }
+                    .info-column { width: 48%; }
+                    .numero-formulario { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #333; }
+                    
+                    /* Estilos da tabela */
+                     /* Estilos da tabela */
+                    th, td {
+                        padding: 4px; /* Compacta o preenchimento */
+                        border: 1px solid #ddd; /* Borda leve */
+                        font-size: 10px; /* Tamanho da fonte */
+                        text-align: center; /* Centraliza o texto */
+                    }
+                    th {
+                        background-color: #e7f1ff; /* Azul claro para o cabeçalho */
+                        color: #333; /* Texto escuro no cabeçalho */
+                        font-weight: bold; /* Negrito no cabeçalho */
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9f9f9; /* Fundo cinza claro nas linhas pares */
+                    }
+                    
+                    /* Estilos específicos para impressão */
+                    @media print {
+                        /* Ocultar botão de impressão */
+                        .d-print-none { display: none !important; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h2>Mapeamento de Treinamento</h2>
+                ${conteudo}
+                <div class="numero-formulario">F003 Rev.04</div>
+            </body>
+        </html>
+    `);
+
+    novaJanela.document.close();
+    novaJanela.print();
+    novaJanela.close();
+}
+</script>
+
+
+
+
+
+{% endblock %}

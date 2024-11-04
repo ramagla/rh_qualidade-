@@ -1,12 +1,14 @@
 from django.db import models
 from django.utils import timezone
+from datetime import timedelta
+
 
 
 class Cargo(models.Model):
     nome = models.CharField(max_length=100)
-    numero_dc = models.CharField(max_length=20)  # Substitui 'cbo' por 'numero_dc'
+    numero_dc = models.CharField(max_length=4)
     descricao_arquivo = models.FileField(upload_to='cargos/', blank=True, null=True)
-    departamento = models.CharField(max_length=100, verbose_name='Departamento')  # Novo campo de departamento
+    departamento = models.CharField(max_length=100, verbose_name='Departamento')
 
     def __str__(self):
         return self.nome
@@ -15,6 +17,11 @@ class Funcionario(models.Model):
     STATUS_CHOICES = [
         ('Ativo', 'Ativo'),
         ('Inativo', 'Inativo'),
+    ]
+
+    EXPERIENCIA_CHOICES = [
+        ('Sim', 'Sim, (Anexar Curriculum ou cópia da Carteira Profissional no prontuário)'),
+        ('Não', 'Não, (Justificar através da Avaliação Prática da Atividade, devidamente assinada)'),
     ]
     
     nome = models.CharField(max_length=100)
@@ -26,15 +33,45 @@ class Funcionario(models.Model):
     data_integracao = models.DateField()
     responsavel = models.CharField(max_length=100)    
     cargo_responsavel = models.CharField(max_length=100)
-    escolaridade = models.CharField(max_length=100)
+    escolaridade = models.CharField(max_length=100, blank=True, null=True)
+    experiencia_profissional = models.CharField(max_length=3, choices=EXPERIENCIA_CHOICES, default='Sim')
     updated_at = models.DateTimeField(auto_now=True)
     foto = models.ImageField(upload_to='fotos_funcionarios/', blank=True, null=True)
     curriculo = models.FileField(upload_to='curriculos_funcionarios/', blank=True, null=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo')  # Novo campo de status
-    formulario_f146 = models.FileField(upload_to='formularios_f146/', blank=True, null=True)  # Novo campo de upload para o formulário F146
-
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo')
+    formulario_f146 = models.FileField(upload_to='formularios_f146/', blank=True, null=True)
+   
     def __str__(self):
         return self.nome
+    
+    def atualizar_escolaridade(self):
+        # Define a hierarquia das formações
+        hierarchy = {
+            'tecnico': 1,
+            'graduacao': 2,
+            'pos-graduacao': 3,
+            'mestrado': 4,
+            'doutorado': 5,
+        }
+
+        # Filtra os treinamentos concluídos e que não são de capacitação, ordena pela hierarquia
+        treinamentos_concluidos = self.treinamentos.filter(status='concluido').exclude(categoria='capacitacao')
+        treinamento_mais_alto = None
+        maior_nivel = 0
+
+        for treinamento in treinamentos_concluidos:
+            nivel = hierarchy.get(treinamento.categoria, 0)
+            if nivel > maior_nivel:
+                maior_nivel = nivel
+                treinamento_mais_alto = treinamento
+
+        # Atualiza o campo escolaridade com a descrição da formação mais alta
+        if treinamento_mais_alto:
+            self.escolaridade = treinamento_mais_alto.get_categoria_display()
+            self.save()
+        else:
+            self.escolaridade = None
+            self.save()
 
 
 class Revisao(models.Model):
@@ -68,7 +105,7 @@ class Treinamento(models.Model):
     tipo = models.CharField(max_length=50, choices=TIPO_TREINAMENTO_CHOICES)
     categoria = models.CharField(max_length=100, choices=CATEGORIA_CHOICES)
     nome_curso = models.CharField(max_length=255)
-    instituicao_ensino = models.CharField(max_length=255, default="Não Informada")
+    instituicao_ensino = models.CharField(max_length=255)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='cursando')  # Campo de status
     data_inicio = models.DateField()
     data_fim = models.DateField()
@@ -96,6 +133,12 @@ class ListaPresenca(models.Model):
     participantes = models.ManyToManyField('Funcionario', related_name='participantes')
     assunto = models.CharField(max_length=255, null=True, blank=True)  # Permite valores nulos
     descricao = models.TextField()  # Novo campo
+
+    def duracao_formatada(self):
+        total_minutes = int(self.duracao * 60)  # Converte horas para minutos
+        hours = total_minutes // 60  # Divide por 60 para obter as horas inteiras
+        minutes = total_minutes % 60  # Resto da divisão para obter os minutos
+        return f"{hours}h {minutes}m"
 
     def __str__(self):
         return f"Lista de Presença - {self.treinamento} ({self.data_realizacao})"
@@ -149,8 +192,6 @@ class AvaliacaoTreinamento(models.Model):
 
     descricao_melhorias = models.TextField(default="Nenhuma melhoria descrita")
     avaliacao_geral = models.IntegerField(choices=[(1, 'Pouco eficaz'), (2, '2'), (3, '3'), (4, '4'), (5, 'Muito eficaz')], default=3)
-
-from django.db import models
 
 class AvaliacaoDesempenho(models.Model):
     TIPO_CHOICES = [
@@ -245,10 +286,14 @@ class AvaliacaoDesempenho(models.Model):
                 return "😕 Desligar"
             else:
                 return "Indefinido"
-        return "Indeterminado"
+        return "Indeterminado"    
 
-
-
+    def get_status_prazo(self):
+        """Retorna o status do prazo como 'Dentro do Prazo' ou 'Em Atraso'."""
+        hoje = timezone.now().date()
+        dias_prazo = 30 if self.tipo == 'EXPERIENCIA' else 365
+        data_limite = self.data_avaliacao + timedelta(days=dias_prazo)
+        return "Dentro do Prazo" if data_limite >= hoje else "Em Atraso"
 
 
 
@@ -299,66 +344,66 @@ def calcular_classificacao(self):
         return 'Indeterminado'
 
 
-class AvaliacaoAnual(models.Model):
-    data_avaliacao = models.DateField()
-    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
-    centro_custo = models.CharField(max_length=100, blank=True, null=True)
-    gerencia = models.CharField(max_length=100, blank=True, null=True)
-    avaliador = models.ForeignKey(Funcionario, related_name='avaliador', on_delete=models.CASCADE)
-    avaliado = models.ForeignKey(Funcionario, related_name='avaliacoes_desempenho', on_delete=models.CASCADE)
+# class AvaliacaoAnual(models.Model):
+#     data_avaliacao = models.DateField()
+#     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
+#     centro_custo = models.CharField(max_length=100, blank=True, null=True)
+#     gerencia = models.CharField(max_length=100, blank=True, null=True)
+#     avaliador = models.ForeignKey(Funcionario, related_name='avaliador', on_delete=models.CASCADE)
+#     avaliado = models.ForeignKey(Funcionario, related_name='avaliacoes_desempenho', on_delete=models.CASCADE)
 
-    postura_seg_trabalho = models.IntegerField()
-    qualidade_produtividade = models.IntegerField()
-    trabalho_em_equipe = models.IntegerField()
-    comprometimento = models.IntegerField()
-    disponibilidade_para_mudancas = models.IntegerField()
-    disciplina = models.IntegerField()
-    rendimento_sob_pressao = models.IntegerField()
-    proatividade = models.IntegerField()
-    comunicacao = models.IntegerField()
-    assiduidade = models.IntegerField()
-    observacoes = models.TextField(blank=True, null=True)
+#     postura_seg_trabalho = models.IntegerField()
+#     qualidade_produtividade = models.IntegerField()
+#     trabalho_em_equipe = models.IntegerField()
+#     comprometimento = models.IntegerField()
+#     disponibilidade_para_mudancas = models.IntegerField()
+#     disciplina = models.IntegerField()
+#     rendimento_sob_pressao = models.IntegerField()
+#     proatividade = models.IntegerField()
+#     comunicacao = models.IntegerField()
+#     assiduidade = models.IntegerField()
+#     observacoes = models.TextField(blank=True, null=True)
 
-    def calcular_classificacao(self):
-        postura = self.postura_seg_trabalho or 0
-        qualidade = self.qualidade_produtividade or 0
-        trabalho = self.trabalho_em_equipe or 0
-        comprometimento = self.comprometimento or 0
-        disponibilidade = self.disponibilidade_para_mudancas or 0
-        disciplina = self.disciplina or 0
-        rendimento = self.rendimento_sob_pressao or 0
-        proatividade = self.proatividade or 0
-        comunicacao = self.comunicacao or 0
-        assiduidade = self.assiduidade or 0
+#     def calcular_classificacao(self):
+#         postura = self.postura_seg_trabalho or 0
+#         qualidade = self.qualidade_produtividade or 0
+#         trabalho = self.trabalho_em_equipe or 0
+#         comprometimento = self.comprometimento or 0
+#         disponibilidade = self.disponibilidade_para_mudancas or 0
+#         disciplina = self.disciplina or 0
+#         rendimento = self.rendimento_sob_pressao or 0
+#         proatividade = self.proatividade or 0
+#         comunicacao = self.comunicacao or 0
+#         assiduidade = self.assiduidade or 0
 
-        total_pontos = (
-            postura +
-            qualidade +
-            trabalho +
-            comprometimento +
-            disponibilidade +
-            disciplina +
-            rendimento +
-            proatividade +
-            comunicacao +
-            assiduidade
-        )
+#         total_pontos = (
+#             postura +
+#             qualidade +
+#             trabalho +
+#             comprometimento +
+#             disponibilidade +
+#             disciplina +
+#             rendimento +
+#             proatividade +
+#             comunicacao +
+#             assiduidade
+#         )
 
-        if total_pontos == 0:
-            return 'Indeterminado'
+#         if total_pontos == 0:
+#             return 'Indeterminado'
 
-        percentual = (total_pontos / 40) * 100  # Ajuste o divisor conforme necessário
+#         percentual = (total_pontos / 40) * 100  # Ajuste o divisor conforme necessário
 
-        if 25 <= percentual <= 45:
-            return 'Ruim'
-        elif 46 <= percentual <= 65:
-            return 'Regular'
-        elif 66 <= percentual <= 84:
-            return 'Bom'
-        elif 85 <= percentual <= 100:
-            return 'Ótimo'
-        else:
-            return 'Indeterminado'
+#         if 25 <= percentual <= 45:
+#             return 'Ruim'
+#         elif 46 <= percentual <= 65:
+#             return 'Regular'
+#         elif 66 <= percentual <= 84:
+#             return 'Bom'
+#         elif 85 <= percentual <= 100:
+#             return 'Ótimo'
+#         else:
+#             return 'Indeterminado'
 
 class AvaliacaoAnual(models.Model):
     data_avaliacao = models.DateField()

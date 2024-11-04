@@ -13,7 +13,7 @@ class FuncionarioForm(forms.ModelForm):
         ('Mestrado', 'Mestrado'),
         ('Doutorado', 'Doutorado'),
     ]
-    
+
     cargo_inicial = forms.ModelChoiceField(queryset=Cargo.objects.all(), label="Cargo Inicial", widget=forms.Select(attrs={'class': 'form-select'}))
     cargo_atual = forms.ModelChoiceField(queryset=Cargo.objects.all(), label="Cargo Atual", widget=forms.Select(attrs={'class': 'form-select'}))
     data_admissao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Data de Admissão")
@@ -23,17 +23,29 @@ class FuncionarioForm(forms.ModelForm):
     
     foto = forms.ImageField(required=False, label="Foto")
     curriculo = forms.FileField(required=False, label="Currículo")
-    status = forms.ChoiceField(choices=Funcionario.STATUS_CHOICES, label="Status", widget=forms.Select(attrs={'class': 'form-select'}))  # Novo campo de status
-    formulario_f146 = forms.FileField(required=False, label="Formulário F146")  # Novo campo para upload do formulário F146
+    status = forms.ChoiceField(choices=Funcionario.STATUS_CHOICES, label="Status", widget=forms.Select(attrs={'class': 'form-select'}))
+    formulario_f146 = forms.FileField(required=False, label="Formulário F146")
+    
+    # Novo campo Experiência Profissional
+    experiencia_profissional = forms.ChoiceField(
+        choices=Funcionario.EXPERIENCIA_CHOICES, 
+        label="Experiência Profissional", 
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
 
     class Meta:
         model = Funcionario
-        fields = ['nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro', 'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto', 'curriculo', 'status', 'formulario_f146']
+        fields = [
+            'nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro', 
+            'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto', 
+            'curriculo', 'status', 'formulario_f146', 'experiencia_profissional'  # Inclua o novo campo aqui
+        ]
 
     def __init__(self, *args, **kwargs):
         super(FuncionarioForm, self).__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control'})
+
 
 class CargoForm(forms.ModelForm):
     class Meta:
@@ -58,7 +70,7 @@ class RevisaoForm(forms.ModelForm):
 class TreinamentoForm(forms.ModelForm):
     class Meta:
         model = Treinamento
-        fields = ['funcionario', 'tipo', 'categoria', 'nome_curso', 'instituicao_ensino', 'status', 'data_inicio', 'data_fim', 'carga_horaria', 'anexo']
+        fields = '__all__'
         widgets = {
             'funcionario': forms.Select(attrs={'class': 'form-select'}),
             'tipo': forms.Select(choices=Treinamento.TIPO_TREINAMENTO_CHOICES, attrs={'class': 'form-select'}),

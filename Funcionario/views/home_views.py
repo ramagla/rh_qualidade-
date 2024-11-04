@@ -15,3 +15,4 @@ def home(request):
 
 def sucesso_view(request):
     return render(request, 'sucesso.html') 
+

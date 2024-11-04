@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Visualizar Treinamento{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Visualizar Treinamento: {{ treinamento.nome_curso }}</h2>
+
+    <div class="row">
+        <div class="col-md-6 text-center">
+            <label class="form-label">Certificado:</label>
+            {% if treinamento.anexo %}
+                <div class="mt-2">
+                    <a href="{{ treinamento.anexo.url }}" class="btn btn-info" target="_blank" download>Baixar Certificado</a>
+                    <p>Arquivo: {{ treinamento.anexo.name }}</p>
+                </div>
+            {% else %}
+                <p>Nenhum certificado disponível.</p>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6 text-center align-self-center">
+            <label class="form-label">Funcionário:</label>
+            <p class="mt-2"><strong>{{ treinamento.funcionario.nome }}</strong></p>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h5>Detalhes do Treinamento</h5>
+        <ul class="list-group">
+            <li class="list-group-item"><strong>Nome do Curso:</strong> {{ treinamento.nome_curso }}</li>
+            <li class="list-group-item"><strong>Instituição de Ensino:</strong> {{ treinamento.instituicao_ensino }}</li>
+            <li class="list-group-item"><strong>Tipo de Treinamento:</strong> {{ treinamento.get_tipo_display }}</li>
+            <li class="list-group-item"><strong>Categoria:</strong> {{ treinamento.get_categoria_display }}</li>
+            <li class="list-group-item"><strong>Status:</strong> {{ treinamento.get_status_display }}</li>
+            <li class="list-group-item"><strong>Data de Início:</strong> {{ treinamento.data_inicio|date:"d/m/Y" }}</li>
+            <li class="list-group-item"><strong>Data de Término:</strong> {{ treinamento.data_fim|date:"d/m/Y" }}</li>
+            <li class="list-group-item"><strong>Carga Horária:</strong> {{ treinamento.carga_horaria }}</li>
+        </ul>
+    </div>
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'lista_treinamentos' %}" class="btn btn-primary">Voltar para a Lista de Treinamentos</a>
+    </div>
+</div>
+{% endblock %}

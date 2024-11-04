@@ -35,11 +35,11 @@
 
     <!-- Botão de Cadastrar Treinamento e Imprimir F003 -->
     <div class="text-end mb-4">
-        <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success">Cadastrar Treinamento</a>
+        <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success"><i class="bi bi-person-plus"></i> Cadastrar Treinamento</a>
         
         <!-- Botão para abrir a modal de Imprimir F003 -->
         <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
-            Imprimir F003
+            <i class="bi bi-printer"></i> F003
         </button>
     </div>
 
@@ -91,8 +91,39 @@
     <!-- Formulário de filtro e lista de treinamentos -->
     <form method="get" class="mb-4">
         <div class="row">
-            <!-- Adicione os filtros de Funcionário, Categoria e Status aqui -->
-            <!-- Código dos filtros mantido igual ao seu template original -->
+
+            <!-- Filtro de Funcionário -->
+            <div class="col-md-4">
+                <label for="funcionario" class="form-label">Funcionário</label>
+                <select name="funcionario" id="funcionario" class="form-select">
+                    <option value="">Todos</option>
+                    {% for func in funcionarios %}
+                        <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro de Tipo de Treinamento -->
+            <div class="col-md-4">
+                <label for="tipo" class="form-label">Tipo de Treinamento</label>
+                <select name="tipo" id="tipo" class="form-select">
+                    <option value="">Todos</option>
+                    {% for tipo_choice in tipos_treinamento %}
+                        <option value="{{ tipo_choice.0 }}" {% if request.GET.tipo == tipo_choice.0 %}selected{% endif %}>{{ tipo_choice.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro de Status -->
+            <div class="col-md-4">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="cursando" {% if request.GET.status == "cursando" %}selected{% endif %}>Cursando</option>
+                    <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
+                    <option value="trancado" {% if request.GET.status == "trancado" %}selected{% endif %}>Trancado</option>
+                </select>
+            </div>
         </div>
         <div class="text-end mt-3">
             <button type="submit" class="btn btn-primary">Filtrar</button>
@@ -102,34 +133,24 @@
     <!-- Lista de Treinamentos -->
     <table class="table table-bordered text-center">
     <thead>
-        <tr>
-            <th class="align-middle">Foto</th>
+        <tr>            
             <th class="align-middle">Funcionário</th>
             <th class="align-middle">Nome do Curso</th>
-            <th class="align-middle">Tipo</th>
-            <th class="align-middle">Categoria</th>
+            <th class="align-middle">Tipo</th>            
             <th class="align-middle">Data de Conclusão</th>
             <th class="align-middle">Carga Horária</th>
             <th class="align-middle">Status</th>
-            <th class="align-middle">Anexos</th>
+            <th class="align-middle">Certificado</th>
             <th class="align-middle">Ações</th>
         </tr>
     </thead>
-         <tbody>
+    <tbody>
         {% for treinamento in treinamentos %}
-        <tr>
-            <td class="align-middle">
-                {% if treinamento.funcionario.foto %}
-                    <img src="/media/{{ treinamento.funcionario.foto.name }}" alt="{{ treinamento.funcionario.nome }}" 
-                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid black;">
-                {% else %}
-                    <span>Sem Foto</span>
-                {% endif %}
-            </td>
+        <tr>            
             <td class="align-middle">{{ treinamento.funcionario.nome }}</td>
             <td class="align-middle">{{ treinamento.nome_curso }}</td>
             <td class="align-middle">{{ treinamento.tipo|title }}</td>
-            <td class="align-middle">{{ treinamento.categoria|title }}</td>
+            
             <td class="align-middle">
                 {% if treinamento.data_fim %}
                     {{ treinamento.data_fim|date:"d/m/Y" }}
@@ -149,13 +170,14 @@
                     <span class="badge bg-secondary">Indefinido</span>
                 {% endif %}
             </td>
-            <td class="align-middle">
-                {% if treinamento.anexo %}
-                    <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Certificado">
-                        <i class="bi bi-file-earmark-arrow-down"></i>
-                    </a>
-                {% endif %}
-            </td>
+          <td class="align-middle">
+            {% if treinamento.anexo %}
+                <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Certificado">
+                    <i class="bi bi-patch-check"></i>
+                </a>
+            {% endif %}
+        </td>
+
             <td class="align-middle">
                 <a href="{% url 'visualizar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Visualizar">
                     <i class="bi bi-eye"></i>
@@ -170,11 +192,11 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="10" class="text-center align-middle">Nenhum treinamento cadastrado.</td>
+            <td colspan="8" class="text-center align-middle">Nenhum treinamento cadastrado.</td>
         </tr>
         {% endfor %}
     </tbody>
-</table>
+    </table>
 </div>
 
 <script>

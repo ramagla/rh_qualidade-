@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Cadastrar Funcionário{% endblock %}
+{% block title %}Editar Funcionário{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Cadastrar Funcionário</h2>
+    <h2 class="text-center mb-4">Editar Funcionário</h2>
 
     <form method="post" enctype="multipart/form-data" class="row g-3" id="funcionarioForm">
         {% csrf_token %}
@@ -47,7 +47,7 @@
 
         <div class="col-md-6">
             <label for="data_admissao" class="form-label">Data de Admissão:</label>
-            <input type="text" name="data_admissao" class="form-control" value="{{ form.data_admissao.value }}" placeholder="dd/mm/aaaa">
+            <input type="date" name="data_admissao" class="form-control" value="{{ form.data_admissao.value|date:'Y-m-d' }}">
         </div>
 
         <div class="col-md-6">
@@ -72,28 +72,38 @@
 
         <div class="col-md-6">
             <label for="data_integracao" class="form-label">Data de Integração:</label>
-            <input type="text" name="data_integracao" class="form-control" value="{{ form.data_integracao.value }}" placeholder="dd/mm/aaaa">
+            <input type="date" name="data_integracao" class="form-control" value="{{ form.data_integracao.value|date:'Y-m-d' }}">
         </div>
 
         <div class="col-md-6">
             <label for="escolaridade" class="form-label">Escolaridade:</label>
             {{ form.escolaridade }}
         </div>
-
-        <!-- Responsável -->
         <div class="col-md-6">
-            <label for="responsavel" class="form-label">Responsável:</label>
-            {{ form.responsavel|add_class:"form-select" }}
-            <div class="invalid-feedback" id="responsavelError" style="display: none;">
-                O campo Responsável é obrigatório.
+            <label for="experiencia_profissional" class="form-label">Experiência Profissional:</label>
+            {{ form.experiencia_profissional }}
+        </div>
+
+
+       <!-- Responsável -->
+            <div class="col-md-6">
+                <label for="responsavel" class="form-label">Responsável:</label>
+                <select id="id_responsavel" name="responsavel" class="form-select">
+                    <option value="" disabled {% if not funcionario.responsavel %}selected{% endif %}>Selecione</option>
+                    {% for resp in responsaveis %}
+                        <option value="{{ resp.id }}" {% if resp.nome == funcionario.responsavel %}selected{% endif %}>{{ resp.nome }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback" id="responsavelError" style="display: none;">
+                    O campo Responsável é obrigatório.
+                </div>
             </div>
-        </div>
 
-        <!-- Cargo do Responsável -->
-        <div class="col-md-6">
-            <label for="cargo_responsavel" class="form-label">Cargo do Responsável:</label>
-            <input type="text" class="form-control" id="cargo_responsavel" disabled>
-        </div>
+      <!-- Cargo do Responsável -->
+            <div class="col-md-6">
+                <label for="cargo_responsavel" class="form-label">Cargo do Responsável:</label>
+                <input type="text" class="form-control" id="cargo_responsavel" value="{{ cargo_responsavel }}" disabled>
+            </div>
 
         <!-- Status -->
         <div class="col-md-6">
@@ -113,44 +123,39 @@
 
         <!-- Botão para salvar -->
         <div class="col-12 text-center">
-            <button type="submit" class="btn btn-primary" onclick="validarFormulario(event)">Salvar</button>
+            <button type="submit" class="btn btn-primary" onclick="validarFormulario(event)">Atualizar</button>
         </div>
     </form>
 
-    <!-- Script para edição -->
-    <!-- Script para edição -->
 <script>
-    // Função para editar a foto
     function editarFoto() {
         document.getElementById('fotoInput').click();
     }
 
-    // Função para editar o currículo
     function editarCurriculo() {
         document.getElementById('curriculoInput').click();
     }
 
-    // Função para preencher o campo de cargo do responsável automaticamente quando a página é carregada
     function preencherCargo() {
         const responsavelSelect = document.getElementById('id_responsavel');
         const cargoInput = document.getElementById('cargo_responsavel');
-
         responsavelSelect.addEventListener('change', function () {
             const funcionarioId = responsavelSelect.value;
-
             if (funcionarioId) {
                 fetch(`/get-cargo/${funcionarioId}/`)
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Erro na resposta do servidor');
+                            throw new Error('Erro na requisição');
                         }
                         return response.json();
                     })
                     .then(data => {
                         cargoInput.value = data.cargo || 'Cargo não encontrado';
+                        // Se você quiser exibir o departamento, você pode fazer o seguinte:
+                        // document.getElementById('departamento_responsavel').value = data.departamento || 'Departamento não encontrado';
                     })
                     .catch(error => {
-                        console.error('Erro ao buscar o cargo:', error);
+                        console.error('Erro:', error);
                         cargoInput.value = 'Erro ao carregar o cargo';
                     });
             } else {
@@ -159,33 +164,23 @@
         });
     }
 
-    // Inicializa o preenchimento do cargo no carregamento da página
     document.addEventListener("DOMContentLoaded", function() {
         preencherCargo();
-        const funcionarioId = document.getElementById('id_responsavel').value;
-        if (funcionarioId) {
-            fetch(`/get-cargo/${funcionarioId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('cargo_responsavel').value = data.cargo || 'Cargo não encontrado';
-                })
-                .catch(error => console.error('Erro ao buscar cargo do responsável:', error));
-        }
     });
 
-    // Validação do formulário para o campo responsável
     function validarFormulario(event) {
         var responsavel = document.getElementById('id_responsavel');
         if (responsavel.value === '') {
-            event.preventDefault();  // Impede o envio do formulário
-            document.getElementById('responsavelError').style.display = 'block';  // Exibe o erro
-            responsavel.classList.add('is-invalid');  // Adiciona a classe de erro
+            event.preventDefault();
+            document.getElementById('responsavelError').style.display = 'block';
+            responsavel.classList.add('is-invalid');
         } else {
-            document.getElementById('responsavelError').style.display = 'none';  // Esconde o erro se estiver preenchido
-            responsavel.classList.remove('is-invalid');  // Remove a classe de erro
+            document.getElementById('responsavelError').style.display = 'none';
+            responsavel.classList.remove('is-invalid');
         }
     }
 </script>
+
 
 </div>
 {% endblock %}

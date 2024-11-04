@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Cadastro de Treinamentos{% endblock %}
+{% block title %}Editar Treinamento{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Cadastro de Treinamentos</h2>
+    <h2 class="text-center mb-4">Editar Treinamento</h2>
     <form method="post" enctype="multipart/form-data" class="row g-3">
         {% csrf_token %}
         
@@ -35,7 +35,7 @@
 
         <div class="col-md-6">
             <label for="status" class="form-label">Status:</label>
-            {{ form.status }}  <!-- Lista suspensa de status -->
+            {{ form.status }}
         </div>
 
         <div class="col-md-6">
@@ -59,8 +59,24 @@
         </div>
 
         <div class="col-12">
-            <button type="submit" class="btn btn-primary w-100 mt-3">Cadastrar Treinamento</button>
+            <button type="submit" class="btn btn-primary w-100 mt-3">Salvar Alterações</button>
         </div>
     </form>
 </div>
+
+<!-- Script para aplicar máscara de horas -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var cargaHorariaInput = document.querySelector('#id_carga_horaria');
+        
+        if (cargaHorariaInput) {
+            cargaHorariaInput.addEventListener('blur', function () {
+                // Adiciona "h" ao final do valor, se ainda não estiver presente
+                if (cargaHorariaInput.value && !cargaHorariaInput.value.endsWith('h')) {
+                    cargaHorariaInput.value += 'h';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
