@@ -1,5 +1,6 @@
 from django import forms
 from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho,JobRotationEvaluation
+from django_ckeditor_5.widgets import CKEditor5Widget
 
 class FuncionarioForm(forms.ModelForm):
     ESCOLARIDADE_CHOICES = [
@@ -85,17 +86,23 @@ class TreinamentoForm(forms.ModelForm):
         }
 
 class ListaPresencaForm(forms.ModelForm):
+    descricao = forms.CharField(widget=CKEditor5Widget(config_name='default'))
+
     class Meta:
         model = ListaPresenca
-        fields = ['treinamento', 'data_realizacao', 'horario_inicio', 'horario_fim', 'instrutor', 'duracao', 'necessita_avaliacao', 'lista_presenca', 'participantes', 'assunto', 'descricao']
+        fields = [
+            'treinamento', 'data_realizacao', 'horario_inicio', 'horario_fim', 
+            'instrutor', 'duracao', 'necessita_avaliacao', 'lista_presenca', 
+            'participantes', 'assunto', 'descricao'
+        ]
         widgets = {
+            'data_realizacao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'participantes': forms.SelectMultiple(attrs={'class': 'form-select'}),
             'horario_inicio': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'horario_fim': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'duracao': forms.TextInput(attrs={'class': 'form-control'}),
             'instrutor': forms.TextInput(attrs={'class': 'form-control'}),
-            'assunto': forms.TextInput(attrs={'class': 'form-control'}),  # Novo campo
-            'descricao': forms.Textarea(attrs={'class': 'form-control'}),  # Novo campo
+            'assunto': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class AvaliacaoForm(forms.ModelForm):

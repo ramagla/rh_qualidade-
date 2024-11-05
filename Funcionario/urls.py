@@ -32,17 +32,20 @@ from .views.treinamento_views import (
     gerar_relatorio_f003,
 )
 from .views.avaliacao_views import (
+    cadastrar_avaliacao_experiencia,
+    cadastrar_avaliacao_anual,
+    editar_avaliacao_desempenho,
+    excluir_avaliacao_desempenho,
+    lista_avaliacao_desempenho,
+)
+from .views.avaliacao_treinamentos_views import (
     lista_avaliacoes,
     cadastrar_avaliacao,
     editar_avaliacao,
     excluir_avaliacao,
     visualizar_avaliacao,
-    cadastrar_avaliacao_experiencia,
-    cadastrar_avaliacao_anual,
-    lista_avaliacao_desempenho,
-    editar_avaliacao_desempenho,
-    excluir_avaliacao_desempenho,
 )
+
 from .views.job_rotation_views import (
     lista_jobrotation_evaluation,
     cadastrar_jobrotation_evaluation,
@@ -57,8 +60,10 @@ from .views.lista_presenca_views import (
     cadastrar_lista_presenca,
     editar_lista_presenca,
     excluir_lista_presenca,
-    visualizar_lista_presenca
+    visualizar_lista_presenca,
+    imprimir_lista_presenca
 )
+
 
 # Definição das `urlpatterns`
 urlpatterns = [
@@ -132,6 +137,9 @@ urlpatterns = [
     path('lista-presenca/editar/<int:id>/', editar_lista_presenca, name='editar_lista_presenca'),
     path('lista-presenca/excluir/<int:id>/', excluir_lista_presenca, name='excluir_lista_presenca'),
     path('listas-presenca/<int:lista_id>/visualizar/', visualizar_lista_presenca, name='visualizar_lista_presenca'),
+    path('lista-presenca/imprimir/<int:lista_id>/', imprimir_lista_presenca, name='imprimir_lista_presenca'),
+  
+
 ]
 
 # Adiciona URLs para servir arquivos de mídia durante o desenvolvimento

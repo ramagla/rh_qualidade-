@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Visualizar Lista de Presença{% endblock %}
+
+{% block content %}
+
+<head>
+    {{ form.media }}  
+</head>
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Visualizar Lista de Presença: {{ lista.treinamento }}</h2>
+
+    <div class="row">
+        <!-- Certificado de Presença -->
+        <div class="col-md-6 text-center">
+            <label class="form-label">Lista de Presença (PDF):</label>
+            {% if lista.lista_presenca %}
+                <div class="mt-2">
+                    <a href="{{ lista.lista_presenca.url }}" class="btn btn-info" target="_blank" download>Baixar Lista de Presença</a>
+                    <p>Arquivo: {{ lista.lista_presenca.name }}</p>
+                </div>
+            {% else %}
+                <p>Nenhum arquivo disponível.</p>
+            {% endif %}
+        </div>
+
+        <!-- Instrutor -->
+        <div class="col-md-6 text-center align-self-center">
+            <label class="form-label">Instrutor:</label>
+            <p class="mt-2"><strong>{{ lista.instrutor }}</strong></p>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h5>Detalhes da Lista de Presença</h5>
+        <ul class="list-group">
+            <li class="list-group-item"><strong>Treinamento:</strong> {{ lista.treinamento }}</li>
+            <li class="list-group-item"><strong>Data de Realização:</strong> {{ lista.data_realizacao|date:"d/m/Y" }}</li>
+            <li class="list-group-item"><strong>Horário de Início:</strong> {{ lista.horario_inicio }}</li>
+            <li class="list-group-item"><strong>Horário de Fim:</strong> {{ lista.horario_fim }}</li>
+            <li class="list-group-item"><strong>Duração:</strong> {{ lista.duracao }} horas</li>
+            <li class="list-group-item"><strong>Assunto:</strong> {{ lista.assunto }}</li>
+            <li class="list-group-item"><strong>Descrição:</strong> {{ lista.descricao|safe }}</li>
+            <li class="list-group-item"><strong>Necessita Avaliação de Eficácia?:</strong> {{ lista.get_necessita_avaliacao_display }}</li>
+        </ul>
+    </div>
+
+    <div class="mt-4">
+        <h5>Funcionários Participantes</h5>
+        <ul class="list-group">
+            {% for participante in lista.participantes.all %}
+                <li class="list-group-item">
+                    <strong>Nome:</strong> {{ participante.nome }} - <strong>Local de Trabalho:</strong> {{ participante.local_trabalho }}
+                </li>
+            {% empty %}
+                <li class="list-group-item">Nenhum participante registrado.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'lista_presenca' %}" class="btn btn-primary">Voltar para a Lista de Presença</a>
+    </div>
+</div>
+{% endblock %}

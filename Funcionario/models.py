@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from django_ckeditor_5.fields import CKEditor5Field
 
 
 
@@ -132,7 +133,7 @@ class ListaPresenca(models.Model):
     lista_presenca = models.FileField(upload_to='listas_presenca/', null=True, blank=True)
     participantes = models.ManyToManyField('Funcionario', related_name='participantes')
     assunto = models.CharField(max_length=255, null=True, blank=True)  # Permite valores nulos
-    descricao = models.TextField()  # Novo campo
+    descricao = CKEditor5Field(config_name='default')
 
     def duracao_formatada(self):
         total_minutes = int(self.duracao * 60)  # Converte horas para minutos

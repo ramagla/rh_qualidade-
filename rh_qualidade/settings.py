@@ -55,11 +55,37 @@ INSTALLED_APPS = [
     "Funcionario",
     'widget_tweaks',
     'crispy_forms',  
-    'xhtml2pdf',   
-    
+    'xhtml2pdf', 
+    'django_ckeditor_5' 
+   
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': [
+            'heading', '|', 'bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', '|',
+            'alignment:left', 'alignment:center', 'alignment:right', 'alignment:justify', '|',
+            'bulletedList', 'numberedList', 'outdent', 'indent', '|',
+            'link', 'blockQuote', 'imageUpload', 'insertTable', 'mediaEmbed', '|',
+            'undo', 'redo'
+        ],
+        'height': '300px',
+        'width': '100%',
+        'alignment': {
+            'options': ['left', 'center', 'right', 'justify']
+        },
+        'image': {
+            'toolbar': ['imageTextAlternative', 'imageStyle:full', 'imageStyle:side']
+        },
+        'table': {
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells']
+        },
+    },
+}
+
+
 
 
 MIDDLEWARE = [
@@ -155,7 +181,9 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Configurações de Mídia
-MEDIA_ROOT = BASE_DIR
+# MEDIA_ROOT = BASE_DIR
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+
 MEDIA_URL = '/media/'
 
 
