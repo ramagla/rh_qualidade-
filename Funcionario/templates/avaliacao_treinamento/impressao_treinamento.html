@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<head>
+    {{ form.media }}
+</head>
+
+<div class="print-container container mt-5">
+    {% include 'header.html' %} <!-- Inclui o cabeçalho -->
+
+    <!-- Botão de Imprimir -->
+    <div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <!-- Informações da Avaliação -->
+<div class="info-section mt-4">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <td style="padding: 8px; text-align: left; width: 50%;">
+                <strong>Nome do Funcionário:</strong> {{ avaliacao.funcionario.nome }}
+            </td>
+            <td style="padding: 8px; text-align: left; width: 50%;">
+                <strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao|date:"d/m/Y" }}
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; text-align: left;">
+                <strong>Treinamento/Curso:</strong> {{ avaliacao.treinamento.assunto }}
+            </td>
+            <td style="padding: 8px; text-align: left;">
+                <strong>Período da Avaliação:</strong> {{ avaliacao.periodo_avaliacao }} dias
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+   <!-- Responsável(is) pela Avaliação em coluna -->
+<div class="mt-4">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <td colspan="2" style="padding: 8px; text-align: center;">
+                <strong>Responsáveis pela Avaliação</strong>
+            </td>
+        </tr>
+        {% if avaliacao.responsavel_1 %}
+        <tr>
+            <td colspan="2" style="padding: 8px;">
+                <strong>Responsável 1:</strong> {{ avaliacao.responsavel_1.nome }} - {{ avaliacao.responsavel_1.cargo_atual.nome }}
+            </td>
+        </tr>
+        {% endif %}
+        {% if avaliacao.responsavel_2 %}
+        <tr>
+            <td colspan="2" style="padding: 8px;">
+                <strong>Responsável 2:</strong> {{ avaliacao.responsavel_2.nome }} - {{ avaliacao.responsavel_2.cargo_atual.nome }}
+            </td>
+        </tr>
+        {% endif %}
+        {% if avaliacao.responsavel_3 %}
+        <tr>
+            <td colspan="2" style="padding: 8px;">
+                <strong>Responsável 3:</strong> {{ avaliacao.responsavel_3.nome }} - {{ avaliacao.responsavel_3.cargo_atual.nome }}
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+
+<!-- Perguntas e Respostas em uma única coluna -->
+<div class="mt-4">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <td colspan="1" style="padding: 8px; text-align: center;">
+                <strong>Questionário</strong>
+            </td>
+        </tr>
+        
+        <!-- Pergunta 1 - Grau de Conhecimento -->
+        <tr>
+            <td style="padding: 8px;">
+                <strong>I- Com relação ao grau de conhecimento atual dos participantes da metodologia provida pelo treinamento?</strong><br>
+                {% for valor, descricao in opcoes_conhecimento %}
+                    <div class="{% if avaliacao.pergunta_1 == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
+                        <strong>{{ valor }} -</strong> {{ descricao }}
+                    </div>
+                {% endfor %}
+            </td>
+        </tr>
+
+        <!-- Pergunta 2 - Aplicação dos Conceitos -->
+        <tr>
+            <td style="padding: 8px;">
+                <strong>II- Com relação à aplicação pelos participantes, quando necessário, dos conceitos da metodologia:</strong><br>
+                {% for valor, descricao in opcoes_aplicacao %}
+                    <div class="{% if avaliacao.pergunta_2 == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
+                        <strong>{{ valor }} -</strong> {{ descricao }}
+                    </div>
+                {% endfor %}
+            </td>
+        </tr>
+
+        <!-- Pergunta 3 - Resultados Obtidos -->
+        <tr>
+            <td style="padding: 8px;">
+                <strong>III- Com relação aos resultados obtidos com a aplicação da metodologia na melhoria das atividades, processos, serviços ou produtos da área ou empresa:</strong><br>
+                {% for valor, descricao in opcoes_resultados %}
+                    <div class="{% if avaliacao.pergunta_3 == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
+                        <strong>{{ valor }} -</strong> {{ descricao }}
+                    </div>
+                {% endfor %}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- CSS para estilizar a resposta selecionada -->
+<style>
+    .selected-response {
+        border: 1px dashed #4CAF50; /* Borda tracejada verde */
+        background-color: #e8f5e9; /* Fundo verde claro */
+        padding: 5px;
+        border-radius: 5px;
+    }
+</style>
+
+
+    <!-- Descrição das Melhorias -->
+<div class="mt-4">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <td style="padding: 8px;">
+                <strong>Descreva as melhorias obtidas/resultados:</strong>
+                <p>{{ avaliacao.descricao_melhorias }}</p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<!-- Status Geral da Avaliação em coluna -->
+<div class="mt-4">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <td style="padding: 8px;">
+                <strong>IV- De forma geral, como você avaliaria a eficácia do treinamento?</strong>
+                <span class="badge"
+                      {% if avaliacao.avaliacao_geral == 1 %}
+                          style="background-color: #f8d7da; color: #842029; font-size: 1rem; padding: 8px;">😞 Pouco Eficaz
+                      {% elif avaliacao.avaliacao_geral == 2 %}
+                          style="background-color: #cfe2ff; color: #084298; font-size: 1rem; padding: 8px;">🙂 Eficaz
+                      {% elif avaliacao.avaliacao_geral == 5 %}
+                          style="background-color: #d1e7dd; color: #0f5132; font-size: 1rem; padding: 8px;">🌟 Muito Eficaz
+                      {% else %}
+                          style="background-color: #fdfd96; color: #856404; font-size: 1rem; padding: 8px;">🤔 Indeterminado
+                      {% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+
+<!-- Campos de Assinatura -->
+<div class="mt-5">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <!-- Assinatura do Funcionário -->
+            <td style="padding: 8px; text-align: center; width: 50%;">
+                <p><strong>Assinatura do Funcionário</strong></p>
+                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                    {{ avaliacao.funcionario.nome }}
+                </div>
+            </td>
+
+            <!-- Assinatura da Chefia -->
+            <td style="padding: 8px; text-align: center; width: 50%;">
+                <p><strong>Assinatura da Chefia</strong></p>
+                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                    {{ responsavel_funcionario }}
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+
+    <!-- Número do Formulário (visível apenas na impressão) -->
+    <div class="numero-formulario d-none d-print-block" style="text-align: right; margin-top: 20px;">
+        F148 Rev.01
+    </div>
+</div>
+
+<!-- Estilos personalizados e de impressão -->
+<style>
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .custom-table th, .custom-table td {
+        padding: 4px;
+        border: 1px solid #ddd;
+        font-size: 10px;
+        text-align: left;
+    }
+    @media print {
+        .d-print-none { display: none !important; }
+        .print-container { width: 100%; max-width: 800px; margin: 0 auto; padding: 20px; }
+    }
+</style>
+
+<!-- Script para impressão -->
+<script>
+function imprimir() {
+    var conteudo = document.querySelector('.print-container').innerHTML;
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
+    
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <title>Avaliação de Treinamento</title>
+                <style>
+                    body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }
+                    .numero-formulario { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #333; }
+                    .custom-table { width: 100%; border-collapse: collapse; }
+                    th, td { padding: 4px; border: 1px solid #ddd; font-size: 10px; text-align: left; }
+                    th { background-color: #e7f1ff; color: #333; font-weight: bold; }
+                    tr:nth-child(even) { background-color: #f9f9f9; }
+                    h2 { text-align: center; font-size: 14px; margin-top: 0; }
+                    @media print { .d-print-none { display: none !important; } }
+                </style>
+            </head>
+            <body>
+                <h2>Avaliação de Eficácia de Treinamento</h2>
+                ${conteudo}
+                <div class="numero-formulario">F148 Rev.01</div>
+            </body>
+        </html>
+    `);
+
+    novaJanela.document.close();
+    novaJanela.onload = function () {
+        novaJanela.print();
+        novaJanela.close();
+    };
+}
+</script>
+
+{% endblock %}

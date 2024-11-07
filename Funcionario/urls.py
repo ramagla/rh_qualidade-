@@ -38,12 +38,16 @@ from .views.avaliacao_views import (
     excluir_avaliacao_desempenho,
     lista_avaliacao_desempenho,
 )
+
 from .views.avaliacao_treinamentos_views import (
     lista_avaliacoes,
     cadastrar_avaliacao,
     editar_avaliacao,
-    excluir_avaliacao,
-    visualizar_avaliacao,
+    excluir_avaliacao,    
+    get_treinamentos_por_funcionario,
+    lista_avaliacoes,
+    imprimir_treinamento,
+    visualizar_avaliacao
 )
 
 from .views.job_rotation_views import (
@@ -108,6 +112,10 @@ urlpatterns = [
     path('avaliacoes/editar/<int:id>/', editar_avaliacao, name='editar_avaliacao'),
     path('avaliacoes/excluir/<int:id>/', excluir_avaliacao, name='excluir_avaliacao'),
     path('avaliacoes/<int:id>/visualizar/', visualizar_avaliacao, name='visualizar_avaliacao'),
+    path('get-treinamentos/<int:funcionario_id>/', get_treinamentos_por_funcionario, name='get_treinamentos_por_funcionario'),
+    path('imprimir_treinamento/<int:treinamento_id>/', imprimir_treinamento, name='imprimir_treinamento'),
+
+
 
     # Avaliação de Desempenho
     path('avaliacoes-desempenho/cadastrar/experiencia/', cadastrar_avaliacao_experiencia, name='cadastrar_avaliacao_experiencia'),

@@ -3,66 +3,32 @@
 {% block title %}Visualização da Avaliação de Treinamentos{% endblock %}
 
 {% block content %}
-
-
-<!-- Toast container para mensagens de alerta -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="toast align-items-center border-0" style="background-color: {% if message.tags == 'error' %} #f8d7da; color: #842029; {% else %} #d1e7dd; color: #0f5132; {% endif %};" data-bs-delay="5000">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <h4 class="alert-heading">{{ message.tags|title }}</h4>
-                        <p>{{ message }}</p>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    {% endif %}
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toasts = document.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            const bsToast = new bootstrap.Toast(toast);
-            bsToast.show();
-        });
-    });
-</script>
-
 <div class="container mt-5">
     <h2 class="text-center mb-4">Visualização da Avaliação de Treinamentos</h2>
 
     <div class="row g-3">
-        {% csrf_token %}
-        
         <!-- Data da Avaliação -->
         <div class="col-md-6">
-            <label for="data_avaliacao" class="form-label">Data da Avaliação:</label>
-            <input type="date" class="form-control" id="data_avaliacao" name="data_avaliacao" value="{{ avaliacao.data_avaliacao|date:'Y-m-d' }}" readonly>
+            <label class="form-label">Data da Avaliação:</label>
+            <input type="date" class="form-control" value="{{ avaliacao.data_avaliacao|date:'Y-m-d' }}" readonly>
         </div>
 
-        <!-- Período da Avaliação em Dias -->
+        <!-- Período da Avaliação -->
         <div class="col-md-6">
-            <label for="periodo_avaliacao" class="form-label">Período da Avaliação (em dias):</label>
-            <input type="number" class="form-control" id="periodo_avaliacao" name="periodo_avaliacao" value="{{ avaliacao.periodo_avaliacao }}" readonly>
+            <label class="form-label">Período da Avaliação (em dias):</label>
+            <input type="number" class="form-control" value="{{ avaliacao.periodo_avaliacao }}" readonly>
         </div>
 
         <!-- Nome do Funcionário -->
         <div class="col-md-6">
-            <label for="funcionario" class="form-label">Nome do Funcionário:</label>
-            <select class="form-select" id="funcionario" name="funcionario" disabled>
-                <option selected>{{ avaliacao.funcionario.nome }}</option>
-            </select>
+            <label class="form-label">Nome do Funcionário:</label>
+            <input type="text" class="form-control" value="{{ avaliacao.funcionario.nome }}" readonly>
         </div>
 
         <!-- Treinamento/Curso -->
         <div class="col-md-6">
-            <label for="treinamento" class="form-label">Treinamento/Curso:</label>
-            <select class="form-select" id="treinamento" name="treinamento" disabled>
-                <option selected>{{ avaliacao.treinamento.assunto }} - {{ avaliacao.treinamento.data_realizacao }}</option>
-            </select>
+            <label class="form-label">Treinamento/Curso:</label>
+            <input type="text" class="form-control" value="{{ avaliacao.treinamento.assunto }} - {{ avaliacao.treinamento.data_realizacao }}" readonly>
         </div>
 
         <!-- Responsáveis pela Avaliação -->
@@ -70,20 +36,43 @@
             <label class="form-label">Responsáveis pela Avaliação:</label>
         </div>
 
-        {% for responsavel in responsaveis %}
+        <!-- Exibindo Responsável 1 -->
+        {% if avaliacao.responsavel_1 %}
         <div class="col-md-6">
-            <label for="responsavel{{ forloop.counter }}" class="form-label">Responsável {{ forloop.counter }}:</label>
-            <select class="form-select" id="responsavel{{ forloop.counter }}" name="responsavel{{ forloop.counter }}" disabled>
-                <option selected>{{ responsavel.nome }}</option>
-            </select>
+            <label class="form-label">Primeiro Responsável:</label>
+            <input type="text" class="form-control" value="{{ avaliacao.responsavel_1.nome }}" readonly>
         </div>
         <div class="col-md-6">
-            <label for="cargo{{ forloop.counter }}" class="form-label">Cargo:</label>
-            <input type="text" class="form-control" id="cargo{{ forloop.counter }}" name="cargo{{ forloop.counter }}" value="{{ responsavel.cargo }}" readonly>
+            <label class="form-label">Cargo:</label>
+            <input type="text" class="form-control" value="{{ avaliacao.responsavel_1.cargo_atual.nome }}" readonly>
         </div>
-        {% endfor %}
+        {% endif %}
 
-        <!-- Questionários -->
+        <!-- Exibindo Responsável 2 -->
+        {% if avaliacao.responsavel_2 %}
+        <div class="col-md-6">
+            <label class="form-label">Segundo Responsável:</label>
+            <input type="text" class="form-control" value="{{ avaliacao.responsavel_2.nome }}" readonly>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Cargo:</label>
+            <input type="text" class="form-control" value="{{ avaliacao.responsavel_2.cargo_atual.nome }}" readonly>
+        </div>
+        {% endif %}
+
+        <!-- Exibindo Responsável 3 -->
+        {% if avaliacao.responsavel_3 %}
+        <div class="col-md-6">
+            <label class="form-label">Terceiro Responsável:</label>
+            <input type="text" class="form-control" value="{{ avaliacao.responsavel_3.nome }}" readonly>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Cargo:</label>
+            <input type="text" class="form-control" value="{{ avaliacao.responsavel_3.cargo_atual.nome }}" readonly>
+        </div>
+        {% endif %}
+
+        <!-- Questionários com texto das respostas -->
         <div class="col-12">
             <label class="form-label">I - Grau de conhecimento atual dos participantes da metodologia:</label>
             <p>{{ grau_conhecimento }}</p>
@@ -99,19 +88,18 @@
             <p>{{ resultados_obtidos }}</p>
         </div>
 
-        <!-- Descrever Melhorias -->
+        <!-- Descrição de Melhorias -->
         <div class="col-12">
-            <label for="melhorias" class="form-label">Descreva as melhorias obtidas/resultados:</label>
+            <label class="form-label">Descreva as melhorias obtidas/resultados:</label>
             <div class="form-floating">
-                <textarea class="form-control" id="melhorias" name="melhorias" style="height: 100px" readonly>{{ melhorias }}</textarea>
-                <label for="melhorias">Comentários</label>
+                <textarea class="form-control" style="height: 100px" readonly>{{ melhorias }}</textarea>
             </div>
         </div>
 
         <!-- Avaliação Geral -->
         <div class="col-12 mt-3">
-            <label for="avaliacao_geral" class="form-label">Avaliação Geral do Treinamento:</label>
-            <div id="avaliacao_geral" class="alert {{ avaliacao.avaliacao_geral_class }}" role="alert">
+            <label class="form-label">Avaliação Geral do Treinamento:</label>
+            <div class="alert {{ avaliacao.avaliacao_geral_class }}" role="alert">
                 {{ avaliacao_geral }}
             </div>
         </div>

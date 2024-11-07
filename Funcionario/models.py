@@ -94,6 +94,7 @@ class Treinamento(models.Model):
         ('capacitacao', 'Capacitação'),
         ('tecnico', 'Técnico'),
         ('graduacao', 'Graduação'),
+        ('treinamento', 'Treinamento'),
     ]
     
     STATUS_CHOICES = [
@@ -173,27 +174,45 @@ class AvaliacaoTreinamento(models.Model):
 
 
     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
-    # treinamento = models.ForeignKey(Treinamento, on_delete=models.CASCADE, related_name="avaliacoes")
     treinamento = models.ForeignKey(ListaPresenca, on_delete=models.CASCADE, related_name="avaliacoes")
 
     data_avaliacao = models.DateField()
     periodo_avaliacao = models.IntegerField(default=60)  # Novo campo para o período em dias
 
+    def get_status_prazo(self):
+        # Calcula a data limite adicionando o período ao dia da avaliação
+        data_limite = self.data_avaliacao + timedelta(days=self.periodo_avaliacao)
+        
+        # Compara a data atual com a data limite
+        if timezone.now().date() <= data_limite:
+            return "Dentro do Prazo"
+        return "Em Atraso"
 
-    responsavel_1_nome = models.CharField(max_length=100)
-    responsavel_1_cargo = models.CharField(max_length=100)
-    responsavel_2_nome = models.CharField(max_length=100)
-    responsavel_2_cargo = models.CharField(max_length=100)
-    responsavel_3_nome = models.CharField(max_length=100)
-    responsavel_3_cargo = models.CharField(max_length=100)
+    # responsavel_1_nome = models.CharField(max_length=100, blank=True)
+    # responsavel_1_cargo = models.CharField(max_length=100, blank=True)
+    # responsavel_2_nome = models.CharField(max_length=100, blank=True)
+    # responsavel_2_cargo = models.CharField(max_length=100, blank=True)
+    # responsavel_3_nome = models.CharField(max_length=100, blank=True)
+    # responsavel_3_cargo = models.CharField(max_length=100, blank=True)
+
+    # Substituímos os campos de texto por ForeignKey relacionados ao modelo Funcionario
+    responsavel_1 = models.ForeignKey('Funcionario', on_delete=models.SET_NULL, null=True, blank=True, related_name='avaliacoes_responsavel_1')
+    responsavel_2 = models.ForeignKey('Funcionario', on_delete=models.SET_NULL, null=True, blank=True, related_name='avaliacoes_responsavel_2')
+    responsavel_3 = models.ForeignKey('Funcionario', on_delete=models.SET_NULL, null=True, blank=True, related_name='avaliacoes_responsavel_3')
 
     pergunta_1 = models.IntegerField(choices=OPCOES_CONHECIMENTO)
     pergunta_2 = models.IntegerField(choices=OPCOES_APLICACAO)
     pergunta_3 = models.IntegerField(choices=OPCOES_RESULTADOS)
 
     descricao_melhorias = models.TextField(default="Nenhuma melhoria descrita")
-    avaliacao_geral = models.IntegerField(choices=[(1, 'Pouco eficaz'), (2, '2'), (3, '3'), (4, '4'), (5, 'Muito eficaz')], default=3)
-
+    avaliacao_geral = models.IntegerField(choices=[
+        (1, 'Pouco eficaz'), 
+        (2, 'Eficaz'), 
+        (3, 'Razoável'), 
+        (4, 'Bom'), 
+        (5, 'Muito eficaz')
+    ])
+    
 class AvaliacaoDesempenho(models.Model):
     TIPO_CHOICES = [
         ('EXPERIENCIA', 'Experiência'),

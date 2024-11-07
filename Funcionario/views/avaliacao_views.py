@@ -8,7 +8,35 @@ from Funcionario.models import AvaliacaoTreinamento, AvaliacaoDesempenho, Funcio
 from Funcionario.forms import AvaliacaoTreinamentoForm, AvaliacaoForm,AvaliacaoAnualForm,AvaliacaoExperienciaForm
 
 
+def lista_avaliacoes(request):
+    avaliacoes_treinamento = AvaliacaoTreinamento.objects.all()
+    avaliacoes_desempenho = AvaliacaoDesempenho.objects.all()
+    today = timezone.now().date()
 
+    # Atualizando o status de prazo e o status da avaliação
+    for avaliacao in avaliacoes_treinamento:
+        # Verifique se o treinamento e o tipo estão definidos
+        if hasattr(avaliacao.treinamento, 'tipo'):
+            dias_prazo = 30 if avaliacao.treinamento.tipo == 'EXPERIENCIA' else 365
+            avaliacao.status_prazo = "Dentro do Prazo" if (avaliacao.data_avaliacao + timedelta(days=dias_prazo)) >= today else "Fora do Prazo"
+        else:
+            avaliacao.status_prazo = "Tipo não definido"
+
+        # Define o status da avaliação com base na avaliação geral
+        if avaliacao.avaliacao_geral <= 2:
+            avaliacao.status_avaliacao = "Pouco Eficaz"
+        elif 3 <= avaliacao.avaliacao_geral <= 4:
+            avaliacao.status_avaliacao = "Eficaz"
+        else:
+            avaliacao.status_avaliacao = "Muito Eficaz"
+
+    context = {
+        'avaliacoes_treinamento': avaliacoes_treinamento,
+        'avaliacoes_desempenho': avaliacoes_desempenho,
+        'treinamentos': Treinamento.objects.all(),
+        'funcionarios': Funcionario.objects.all(),
+    }
+    return render(request, 'avaliacao_treinamento/lista_avaliacao.html', context)
 
 def cadastrar_avaliacao_experiencia(request):
     funcionarios = Funcionario.objects.all()  # Busca todos os funcionários

@@ -8,24 +8,28 @@
 <div class="container mt-5">
     <h2 class="text-center mb-4">Cadastro de Avaliação de Treinamentos</h2>
 
-    <!-- Toast container para mensagens de alerta -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="toast align-items-center border-0" style="background-color: {% if message.tags == 'error' %}#f8d7da; color: #842029;{% else %}#d1e7dd; color: #0f5132;{% endif %};">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <h4 class="alert-heading">{% if message.tags == 'error' %}Atenção!{% else %}Sucesso!{% endif %}</h4>
-                            <p>{{ message }}</p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Validação de Erros do Formulário -->
+   {% if form.errors %}
+    <div class="alert alert-danger">
+        <strong>Erro!</strong> Por favor, corrija os seguintes erros:
+        <ul>
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <li>
+                        {{ field|capfirst }}: {{ error }}
+                    </li>
+                {% endfor %}
             {% endfor %}
-        {% endif %}
+        </ul>
     </div>
+{% endif %}
+
+    
 
     <form method="post" action="{% url 'avaliacao_create' %}" class="row g-3">
         {% csrf_token %}
+
+        
 
         <!-- Data da Avaliação -->
         <div class="col-md-6">
@@ -47,25 +51,20 @@
             </div>
         </div>
 
-        <!-- Nome do Funcionário -->
-        <div class="col-md-6">
-            <label for="funcionario" class="form-label">Nome do Funcionário:</label>
-            <select class="form-select" id="funcionario" name="funcionario" required>
-                <option selected>Selecione o funcionário</option>
-                {% for funcionario in funcionarios %}
+      <!-- Nome do Funcionário -->
+        <select class="form-select" id="funcionario" name="funcionario" required>
+            <option selected>Selecione o funcionário</option>
+            {% for funcionario in funcionarios %}
                 <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
+            {% endfor %}
+        </select>
 
         <!-- Treinamento/Curso -->
         <div class="col-md-6">
             <label for="treinamento" class="form-label">Treinamento/Curso:</label>
             <select class="form-select" id="treinamento" name="treinamento" required>
                 <option selected>Selecione o treinamento</option>
-                {% for presenca in listas_presenca %}
-                    <option value="{{ presenca.id }}">{{ presenca.treinamento }} - {{ presenca.data_realizacao }}</option>
-                {% endfor %}
+                <!-- opções de treinamento serão carregadas aqui via JavaScript -->
             </select>
         </div>
 
@@ -75,97 +74,77 @@
         </div>
 
         <!-- Primeiro Responsável -->
-        <div class="col-md-6">
-            <label for="responsavel1" class="form-label">Primeiro Responsável:</label>
-            <select class="form-select" id="responsavel1" name="responsavel1" onchange="preencherCargo(1)">
-                <option selected>Selecione o responsável</option>
-                {% for funcionario in funcionarios %}
-                <option value="{{ funcionario.id }}" data-cargo="{{ funcionario.cargo_atual.nome }}">{{ funcionario.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-6">
-            <label for="cargo1" class="form-label">Cargo:</label>
-            <input type="text" class="form-control" id="cargo1" name="cargo1" placeholder="Cargo" readonly>
-        </div>
+<div class="col-md-6">
+    <label for="responsavel_1" class="form-label">Primeiro Responsável:</label>
+    {{ form.responsavel_1 }}
+</div>
 
-        <!-- Segundo Responsável -->
-        <div class="col-md-6">
-            <label for="responsavel2" class="form-label">Segundo Responsável:</label>
-            <select class="form-select" id="responsavel2" name="responsavel2" onchange="preencherCargo(2)">
-                <option selected>Selecione o responsável</option>
-                {% for funcionario in funcionarios %}
-                <option value="{{ funcionario.id }}" data-cargo="{{ funcionario.cargo_atual.nome }}">{{ funcionario.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-6">
-            <label for="cargo2" class="form-label">Cargo:</label>
-            <input type="text" class="form-control" id="cargo2" name="cargo2" placeholder="Cargo" readonly>
-        </div>
+<!-- Segundo Responsável -->
+<div class="col-md-6">
+    <label for="responsavel_2" class="form-label">Segundo Responsável:</label>
+    {{ form.responsavel_2 }}
+</div>
 
-        <!-- Terceiro Responsável -->
-        <div class="col-md-6">
-            <label for="responsavel3" class="form-label">Terceiro Responsável:</label>
-            <select class="form-select" id="responsavel3" name="responsavel3" onchange="preencherCargo(3)">
-                <option selected>Selecione o responsável</option>
-                {% for funcionario in funcionarios %}
-                <option value="{{ funcionario.id }}" data-cargo="{{ funcionario.cargo_atual.nome }}">{{ funcionario.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-6">
-            <label for="cargo3" class="form-label">Cargo:</label>
-            <input type="text" class="form-control" id="cargo3" name="cargo3" placeholder="Cargo" readonly>
-        </div>
+<!-- Terceiro Responsável -->
+<div class="col-md-6">
+    <label for="responsavel_3" class="form-label">Terceiro Responsável:</label>
+    {{ form.responsavel_3 }}
+</div>
+
+
 
         <!-- Questionários -->
-        <div class="col-12">
-            <label class="form-label">I - Grau de conhecimento atual dos participantes da metodologia:</label>
-            {% for valor, label in opcoes_conhecimento %}
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="conhecimento" id="conhecimento{{ valor }}" value="{{ valor }}" required>
-                <label class="form-check-label" for="conhecimento{{ valor }}">{{ valor }} - {{ label }}</label>
-            </div>
-            {% endfor %}
+          <!-- Pergunta 1 -->
+    <div class="col-12">
+        <label class="form-label">I- Com relação ao grau de conhecimento atual dos participantes da metodologia provida pelo treinamento?:</label>
+        {% for valor, label in opcoes_conhecimento %}
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="pergunta_1" id="pergunta_1_{{ valor }}" value="{{ valor }}" required>
+            <label class="form-check-label" for="pergunta_1_{{ valor }}">{{ valor }} - {{ label }}</label>
         </div>
+        {% endfor %}
+    </div>
 
-        <div class="col-12">
-            <label class="form-label">II - Aplicação dos conceitos da metodologia:</label>
-            {% for valor, label in opcoes_aplicacao %}
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="aplicacao" id="aplicacao{{ valor }}" value="{{ valor }}" required>
-                <label class="form-check-label" for="aplicacao{{ valor }}">{{ valor }} - {{ label }}</label>
-            </div>
-            {% endfor %}
+    <!-- Pergunta 2 -->
+    <div class="col-12">
+        <label class="form-label">II- Com relação a aplicação pelos participantes, quando necessário, dos conceitos da metodologia:</label>
+        {% for valor, label in opcoes_aplicacao %}
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="pergunta_2" id="pergunta_2_{{ valor }}" value="{{ valor }}" required>
+            <label class="form-check-label" for="pergunta_2_{{ valor }}">{{ valor }} - {{ label }}</label>
         </div>
+        {% endfor %}
+    </div>
 
-        <div class="col-12">
-            <label class="form-label">III - Resultados obtidos com a aplicação da metodologia:</label>
-            {% for valor, label in opcoes_resultados %}
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="resultados" id="resultados{{ valor }}" value="{{ valor }}" required>
-                <label class="form-check-label" for="resultados{{ valor }}">{{ valor }} - {{ label }}</label>
-            </div>
-            {% endfor %}
+    <!-- Pergunta 3 -->
+    <div class="col-12">
+        <label class="form-label">III- Com relação aos resultados obtidos com a aplicação da metologia na melhoria das atividades, processos, serviços ou produtos da área ou empresa:</label>
+        {% for valor, label in opcoes_resultados %}
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="pergunta_3" id="pergunta_3_{{ valor }}" value="{{ valor }}" required>
+            <label class="form-check-label" for="pergunta_3_{{ valor }}">{{ valor }} - {{ label }}</label>
         </div>
+        {% endfor %}
+    </div>
 
-        <!-- Descrever Melhorias -->
-        <div class="col-12">
-            <label for="melhorias" class="form-label">Descreva as melhorias obtidas/resultados:</label>
-            <div class="form-floating">
-                <textarea class="form-control" id="melhorias" name="melhorias" style="height: 100px"></textarea>
-                <label for="melhorias">Comentários</label>
-            </div>
+    <!-- Descrição de Melhorias -->
+    <div class="col-12">
+        <label for="descricao_melhorias" class="form-label">Descreva as melhorias obtidas/resultados:</label>
+        <div class="form-floating">
+            <textarea class="form-control" id="descricao_melhorias" name="descricao_melhorias" style="height: 100px" required></textarea>
+            <label for="descricao_melhorias">Comentários</label>
         </div>
+    </div>
 
-        <!-- Avaliação Geral -->
-        <div class="col-12 mt-3">
-            <label for="avaliacao_geral" class="form-label">Avaliação Geral do Treinamento:</label>
-            <div id="avaliacao_geral" class="alert" role="alert">
-                <!-- O resultado da avaliação será exibido aqui -->
-            </div>
+      <!-- Campo oculto para Avaliação Geral -->
+    <input type="hidden"  name="avaliacao_geral" id="avaliacao_geral" value="12">
+
+        <!-- Campo visível para o Status da Avaliação -->
+        <div class="col-md-6">
+            <label for="avaliacao_status" class="form-label">Status da Avaliação:</label>
+            <span id="avaliacao_status" class="form-control-plaintext">Eficaz</span> <!-- Status inicial -->
         </div>
+            
 
         <!-- Botão de submissão -->
         <div class="col-12">
@@ -176,51 +155,59 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Função para calcular a avaliação geral
         function calcularAvaliacaoGeral() {
             let total = 0;
             let poucoEficaz = false;
 
+            // Calcula o total somando os valores das respostas e verifica se há alguma resposta "Pouco Eficaz"
             document.querySelectorAll('input[type="radio"]:checked').forEach(function (input) {
                 const valor = parseInt(input.value);
                 if (valor === 1) {
-                    poucoEficaz = true;
+                    poucoEficaz = true; // Define como pouco eficaz se qualquer resposta for 1
                 }
-                total += valor;
+                total += valor; // Soma os valores das respostas
             });
 
-            const avaliacaoGeralDiv = document.getElementById('avaliacao_geral');
-            let status = '';
-            let cor = '';
-            let emoji = '';
+            const avaliacaoGeralInput = document.getElementById('avaliacao_geral');
+            const avaliacaoStatus = document.getElementById('avaliacao_status'); // Certifique-se de que este elemento exista
 
+            let valorAvaliacao;
+            let statusAvaliacao;
+
+            // Define a pontuação e o status da avaliação com base no total acumulado
             if (poucoEficaz) {
-                status = 'Pouco Eficaz';
-                cor = 'alert-danger';
-                emoji = '😔';
-            } else if (total >= 8 && total <= 11) {
-                status = 'Eficaz';
-                cor = 'alert-warning';
-                emoji = '😊';
-            } else if (total >= 12 && total <= 15) {
-                status = 'Muito Eficaz';
-                cor = 'alert-success';
-                emoji = '😄';
+                valorAvaliacao = 1; // Pouco Eficaz
+                statusAvaliacao = 'Pouco Eficaz';
+            } else if (total < 15) {
+                valorAvaliacao = 2; // Eficaz
+                statusAvaliacao = 'Eficaz';
+            } else if (total === 15) {  // 5 + 5 + 5 para três respostas excelentes
+                valorAvaliacao = 5; // Muito Eficaz
+                statusAvaliacao = 'Muito Eficaz';
             } else {
-                status = 'Selecione todas as respostas';
-                cor = 'alert-secondary';
-                emoji = '❓';
+                valorAvaliacao = 0; // Valor padrão caso nenhuma condição seja atendida
+                statusAvaliacao = 'Indeterminado'; // Mensagem padrão
             }
 
-            avaliacaoGeralDiv.className = `alert ${cor}`;
-            avaliacaoGeralDiv.textContent = `${status} ${emoji}`;
+            // Atualiza o valor do campo de avaliação geral e o status no DOM
+            if (avaliacaoGeralInput) {
+                avaliacaoGeralInput.value = valorAvaliacao;
+            }
+            if (avaliacaoStatus) {
+                avaliacaoStatus.textContent = statusAvaliacao;
+            }
+
+            console.log("Avaliação geral:", valorAvaliacao, "Status:", statusAvaliacao);
         }
 
+        // Função para verificar o status do prazo
         function verificarPrazo() {
             const dataAvaliacao = document.getElementById('data_avaliacao').value;
             const periodoAvaliacao = parseInt(document.getElementById('periodo_avaliacao').value);
             const statusPrazoDiv = document.getElementById('status_prazo');
 
-            if (dataAvaliacao && periodoAvaliacao) {
+            if (dataAvaliacao && !isNaN(periodoAvaliacao)) {
                 const dataAvaliacaoDate = new Date(dataAvaliacao);
                 const dataLimite = new Date(dataAvaliacaoDate);
                 dataLimite.setDate(dataLimite.getDate() + periodoAvaliacao);
@@ -242,42 +229,51 @@
 
                 statusPrazoDiv.className = `alert ${cor}`;
                 statusPrazoDiv.textContent = `${status} ${emoji}`;
+                console.log("Status do prazo:", status);
             } else {
                 statusPrazoDiv.className = 'alert alert-secondary';
                 statusPrazoDiv.textContent = 'Defina a data de avaliação e o período.';
             }
         }
 
-        function preencherCargo(numeroResponsavel) {
-            const responsavelSelect = document.getElementById('responsavel' + numeroResponsavel);
-            const cargoInput = document.getElementById('cargo' + numeroResponsavel);
+       
+        // Adiciona o evento de mudança no funcionário para carregar os treinamentos
+        const funcionarioSelect = document.getElementById('funcionario');
+        const treinamentoSelect = document.getElementById('treinamento');
 
-            responsavelSelect.addEventListener('change', function () {
-                const funcionarioId = responsavelSelect.value;
+        if (funcionarioSelect && treinamentoSelect) {
+            funcionarioSelect.addEventListener('change', function () {
+                const funcionarioId = funcionarioSelect.value;
+                console.log("Funcionário selecionado para treinamentos:", funcionarioId);
+
+                treinamentoSelect.innerHTML = '<option selected>Selecione o treinamento</option>';
 
                 if (funcionarioId) {
-                    fetch(`/get-cargo/${funcionarioId}/`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Erro na resposta do servidor');
-                            }
-                            return response.json();
-                        })
+                    fetch(`/get-treinamentos/${funcionarioId}/`)
+                        .then(response => response.json())
                         .then(data => {
-                            cargoInput.value = data.cargo || 'Cargo não encontrado';
+                            data.forEach(treinamento => {
+                                const option = document.createElement('option');
+                                option.value = treinamento.id;
+
+                                const [year, month, day] = treinamento.data_realizacao.split('-');
+                                const formattedDate = `${day}/${month}/${year}`;
+
+                                option.textContent = ` ${formattedDate} - ${treinamento.assunto}`;
+                                treinamentoSelect.appendChild(option);
+                            });
+                            console.log("Treinamentos carregados para o funcionário:", data);
                         })
                         .catch(error => {
-                            console.error('Erro ao buscar o cargo:', error);
-                            cargoInput.value = 'Erro ao carregar o cargo';
+                            console.error('Erro:', error);
                         });
-                } else {
-                    cargoInput.value = '';
                 }
             });
+        } else {
+            console.error("Erro: Elementos 'funcionario' ou 'treinamento' não encontrados no DOM.");
         }
 
-        [1, 2, 3].forEach(preencherCargo);
-
+        // Adiciona os eventos necessários
         document.querySelectorAll('input[type="radio"]').forEach(function (input) {
             input.addEventListener('change', calcularAvaliacaoGeral);
         });
@@ -285,8 +281,21 @@
         document.getElementById('data_avaliacao').addEventListener('change', verificarPrazo);
         document.getElementById('periodo_avaliacao').addEventListener('input', verificarPrazo);
 
+        // Chamada inicial para verificar o status do prazo ao carregar a página
         verificarPrazo();
+
+        // Preenche os cargos ao carregar a página
+        for (let i = 1; i <= 3; i++) {
+            preencherCargo(i);
+        }
     });
 </script>
+
+
+
+
+
+
+
 
 {% endblock %}

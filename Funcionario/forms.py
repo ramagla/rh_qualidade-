@@ -108,64 +108,75 @@ class ListaPresencaForm(forms.ModelForm):
 class AvaliacaoForm(forms.ModelForm):
     class Meta:
         model = AvaliacaoTreinamento
-        fields = ['funcionario', 'treinamento', 'data_avaliacao', 'responsavel_1_nome', 'responsavel_1_cargo', 
-                  'responsavel_2_nome', 'responsavel_2_cargo', 'responsavel_3_nome', 'responsavel_3_cargo', 
-                  'pergunta_1', 'pergunta_2', 'pergunta_3', 'descricao_melhorias', 'avaliacao_geral']
+        fields = '__all__'
 
 
-from django import forms
-from .models import AvaliacaoTreinamento, Funcionario, ListaPresenca
+
 
 class AvaliacaoTreinamentoForm(forms.ModelForm):
+    # Campos do formulário
+    pergunta_1 = forms.ChoiceField(
+        choices=AvaliacaoTreinamento.OPCOES_CONHECIMENTO,
+        widget=forms.RadioSelect,
+        required=False,
+        label="Grau de conhecimento atual dos participantes da metodologia"
+    )
+    pergunta_2 = forms.ChoiceField(
+        choices=AvaliacaoTreinamento.OPCOES_APLICACAO,
+        widget=forms.RadioSelect,
+        required=False,
+        label="Aplicação dos conceitos da metodologia"
+    )
+    pergunta_3 = forms.ChoiceField(
+        choices=AvaliacaoTreinamento.OPCOES_RESULTADOS,
+        widget=forms.RadioSelect,
+        required=False,
+        label="Resultados obtidos com a aplicação da metodologia"
+    )
+    descricao_melhorias = forms.CharField(
+        widget=forms.Textarea(attrs={'style': 'height: 100px'}),
+        required=True,
+        label="Descreva as melhorias obtidas/resultados"
+    )
+    avaliacao_geral = forms.IntegerField(
+        widget=forms.HiddenInput(),  # Mude para IntegerField
+        required=False  # Ajuste se este campo não for obrigatório no formulário
+    )
+
     class Meta:
         model = AvaliacaoTreinamento
         fields = '__all__'
-
-        # Adicionando classes diretamente aos widgets
         widgets = {
-            'responsavel_1_nome': forms.Select(attrs={'class': 'responsavel-nome'}),
-            'responsavel_1_cargo': forms.TextInput(attrs={'class': 'responsavel-cargo', 'readonly': 'readonly'}),
-            'responsavel_2_nome': forms.Select(attrs={'class': 'responsavel-nome'}),
-            'responsavel_2_cargo': forms.TextInput(attrs={'class': 'responsavel-cargo', 'readonly': 'readonly'}),
-            'responsavel_3_nome': forms.Select(attrs={'class': 'responsavel-nome'}),
-            'responsavel_3_cargo': forms.TextInput(attrs={'class': 'responsavel-cargo', 'readonly': 'readonly'}),
+            'responsavel_1': forms.Select(attrs={'class': 'form-select'}),
+            'responsavel_2': forms.Select(attrs={'class': 'form-select'}),
+            'responsavel_3': forms.Select(attrs={'class': 'form-select'}),
+            'funcionario': forms.Select(attrs={'class': 'form-select'}),
+            'treinamento': forms.Select(attrs={'class': 'form-select'}),
         }
 
     def __init__(self, *args, **kwargs):
         super(AvaliacaoTreinamentoForm, self).__init__(*args, **kwargs)
 
-        # Alterando o campo treinamento para pegar da ListaPresenca
+        # Definindo o queryset para o campo 'treinamento'
         self.fields['treinamento'].queryset = ListaPresenca.objects.all()
         self.fields['treinamento'].label = 'Treinamento/Curso'
 
-        # Preenchendo o campo de responsáveis com os funcionários (Select)
-        self.fields['responsavel_1_nome'].queryset = Funcionario.objects.all()
-        self.fields['responsavel_2_nome'].queryset = Funcionario.objects.all()
-        self.fields['responsavel_3_nome'].queryset = Funcionario.objects.all()
+        # Configurando o queryset para campos de responsáveis
+        # Agora os responsáveis são ForeignKeys para o modelo Funcionario
+        self.fields['responsavel_1'].queryset = Funcionario.objects.filter(status="Ativo")
+        self.fields['responsavel_1'].required = False  # Definindo como opcional
 
-        # Deixar os campos de responsáveis não obrigatórios
-        self.fields['responsavel_1_nome'].required = False
-        self.fields['responsavel_2_nome'].required = False
-        self.fields['responsavel_3_nome'].required = False
-        self.fields['responsavel_1_cargo'].required = False
-        self.fields['responsavel_2_cargo'].required = False
-        self.fields['responsavel_3_cargo'].required = False
+        self.fields['responsavel_2'].queryset = Funcionario.objects.filter(status="Ativo")
+        self.fields['responsavel_2'].required = False  # Definindo como opcional
 
-        # Preenchimento automático dos cargos (feito no front-end via AJAX)
-        if 'funcionario' in self.data:
-            funcionario_id = self.data.get('funcionario')
-            try:
-                funcionario = Funcionario.objects.get(id=funcionario_id)
-                self.fields['responsavel_1_cargo'].initial = funcionario.cargo_atual
-                self.fields['responsavel_2_cargo'].initial = funcionario.cargo_atual
-                self.fields['responsavel_3_cargo'].initial = funcionario.cargo_atual
-            except (ValueError, Funcionario.DoesNotExist):
-                pass
-        elif self.instance.pk:
-            # Para edições de uma avaliação existente
-            self.fields['responsavel_1_cargo'].initial = self.instance.funcionario.cargo_atual
-            self.fields['responsavel_2_cargo'].initial = self.instance.funcionario.cargo_atual
-            self.fields['responsavel_3_cargo'].initial = self.instance.funcionario.cargo_atual
+        self.fields['responsavel_3'].queryset = Funcionario.objects.filter(status="Ativo")
+        self.fields['responsavel_3'].required = False  # Definindo como opcional
+
+        # Ajustando rótulos
+        self.fields['responsavel_1'].label = "Primeiro Responsável (opcional)"
+        self.fields['responsavel_2'].label = "Segundo Responsável (opcional)"
+        self.fields['responsavel_3'].label = "Terceiro Responsável (opcional)"
+
 
 class AvaliacaoExperienciaForm(forms.ModelForm):
     class Meta:
