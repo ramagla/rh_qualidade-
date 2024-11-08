@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="print-container container mt-5">
+    {% include 'header.html' %} <!-- Inclui o cabeçalho -->
+
+
+      <!-- Informações da Avaliação -->
+        <div class="info-section mt-4">
+            <table class="custom-table" style="width: 100%;">
+                <tr>
+                    <td><strong>Nome do Funcionário:</strong> {{ avaliacao.funcionario.nome }}</td>
+                    <td><strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Cargo Atual:</strong> {{ avaliacao.funcionario.cargo_atual.nome }}</td>
+                    <td><strong>Departamento:</strong> {{ avaliacao.funcionario.cargo_atual.departamento }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Superior Direto:</strong> {{ avaliacao.funcionario.responsavel }}</td>
+                    <td><strong>Gerência:</strong> {{ avaliacao.gerencia }}</td>
+                </tr>
+            </table>
+        </div>
+
+   
+
+    <!-- Botão de Imprimir (visível apenas fora da impressão) -->
+    <div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+ 
+ <!-- Título e Informações Importantes -->
+    <div class="intro-text mt-4 p-3" style="border: 1px solid #ccc; background-color: #f9f9f9; border-radius: 8px;">
+        <h3 style="text-align: center;"><strong>INFORMAÇÕES IMPORTANTES, LEIA ANTES DE PREENCHER</strong></h3>
+        <p>
+            Esta ficha constitui a <strong>primeira avaliação de desempenho</strong> do novo funcionário. A decisão de contratação ou desligamento do funcionário da Bras-Mol será baseada nesta avaliação.
+        </p>
+        <p>
+            Ao fornecer sua opinião, seja <strong>objetivo e imparcial</strong>, avaliando o desempenho do funcionário durante o período de experiência e suas chances de se integrar à Bras-Mol.
+        </p>
+        <p>
+            <strong>Se as descrições das avaliações não corresponderem exatamente</strong> ao desempenho do funcionário, escolha a alternativa mais próxima e explique melhor na seção de <strong>Observações</strong>.
+        </p>
+
+        <p style="margin-top: 20px;"><strong>Instruções:</strong></p>
+        <ul>
+            <li>Escolha apenas uma opção em cada item, indicando sua escolha com um "X".</li>
+            <li>Certifique-se de responder a todas as perguntas do questionário.</li>
+        </ul>
+    </div>
+
+
+
+
+<!-- Perguntas e Respostas com textos detalhados -->
+<div class="mt-4">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <td colspan="1" style="padding: 8px; text-align: center;">
+                <strong>Questionário da Avaliação</strong>
+            </td>
+        </tr>
+
+        <!-- Adaptação no Trabalho -->
+        <tr>
+            <td style="padding: 8px;">
+                <strong>Adaptação no Trabalho:</strong><br>
+                {% for valor, descricao in opcoes_adaptacao_trabalho.items %}
+                    <div class="{% if avaliacao.adaptacao_trabalho == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
+                        <strong>{{ valor }} -</strong> {{ descricao }}
+                    </div>
+                {% endfor %}
+            </td>
+        </tr>
+
+        <!-- Interesse -->
+        <tr>
+            <td style="padding: 8px;">
+                <strong>Interesse:</strong><br>
+                {% for valor, descricao in opcoes_interesse.items %}
+                    <div class="{% if avaliacao.interesse == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
+                        <strong>{{ valor }} -</strong> {{ descricao }}
+                    </div>
+                {% endfor %}
+            </td>
+        </tr>
+
+        <!-- Relacionamento Social -->
+        <tr>
+            <td style="padding: 8px;">
+                <strong>Relacionamento Social:</strong><br>
+                {% for valor, descricao in opcoes_relacionamento_social.items %}
+                    <div class="{% if avaliacao.relacionamento_social == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
+                        <strong>{{ valor }} -</strong> {{ descricao }}
+                    </div>
+                {% endfor %}
+            </td>
+        </tr>
+
+        <!-- Capacidade de Aprendizagem -->
+        <tr>
+            <td style="padding: 8px;">
+                <strong>Capacidade de Aprendizagem:</strong><br>
+                {% for valor, descricao in opcoes_capacidade_aprendizagem.items %}
+                    <div class="{% if avaliacao.capacidade_aprendizagem == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
+                        <strong>{{ valor }} -</strong> {{ descricao }}
+                    </div>
+                {% endfor %}
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<!-- CSS para estilizar a resposta selecionada -->
+<style>
+    .selected-response {
+        border: 1px dashed #4CAF50; /* Borda tracejada verde */
+        background-color: #e8f5e9; /* Fundo verde claro */
+        padding: 5px;
+        border-radius: 5px;
+    }
+</style>
+
+
+<!-- Legenda reduzida e Observações com espaçamento -->
+<div class="mt-4">
+    <table class="legend-table" style="width: 100%; margin-top: 10px;">
+        <tr>
+            <td style="text-align: center; font-size: 0.5rem;"><strong>Legenda:</strong></td>
+            <td style="text-align: center; font-size: 0.5rem;">4 - <strong>Ótimo</strong></td>
+            <td style="text-align: center; font-size: 0.5rem;">3 - <strong>Bom</strong></td>
+            <td style="text-align: center; font-size: 0.5rem;">2 - <strong>Regular</strong></td>
+            <td style="text-align: center; font-size: 0.5rem;">1 - <strong>Ruim</strong></td>
+        </tr>
+    </table>
+</div>
+
+<!-- Observações e Orientação com espaçamento entre eles -->
+<div class="mt-4">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <td><strong>Observações:</strong></td>
+        </tr>
+        <tr>
+            <td>{{ avaliacao.observacoes|default:"Sem observações registradas." }}</td>
+        </tr>
+    </table>
+</div>
+<div class="mt-2">
+    <table class="custom-table" style="width: 100%; margin-top: 5px;">
+        <tr>
+            <td><strong>Orientação:</strong></td>
+        </tr>
+        <tr>
+            <td class="align-middle">
+                {% if avaliacao.orientacao == "Bom - Efetivar" %}
+                    <span class="badge bg-success">😃 Efetivar</span>
+                {% elif avaliacao.orientacao == "Regular - Treinamento" %}
+                    <span class="badge bg-warning">😊 Encaminhar p/ Treinamento</span>
+                {% elif avaliacao.orientacao == "Ruim - Desligar" %}
+                    <span class="badge bg-danger">😕 Desligar</span>
+                {% else %}
+                    <span class="badge bg-secondary">🤔 Indeterminado</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- Campos de Assinatura (garantindo visibilidade e espaçamento adequado) -->
+<div class="mt-5">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <td style="padding: 8px; text-align: center; width: 50%;">
+                <p><strong>Assinatura do Funcionário</strong></p>
+                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                    {{ avaliacao.funcionario.nome }}
+                </div>
+            </td>
+            <td style="padding: 8px; text-align: center; width: 50%;">
+                <p><strong>Assinatura da Chefia</strong></p>
+                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                    {{ responsavel_funcionario }}
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+    <!-- Número do Formulário (visível apenas na impressão) -->
+    <div class="numero-formulario d-none d-print-block" style="text-align: right; margin-top: 20px;">
+        F176A Rev.05
+    </div>
+</div>
+
+<!-- Ajustes de estilo para impressão -->
+<style>
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .custom-table th, .custom-table td {
+        padding: 4px;
+        border: 1px solid #ddd;
+        font-size: 0.55rem;
+        text-align: left;
+    }
+    .custom-table th {
+        background-color: #e7f1ff;
+        font-weight: bold;
+    }
+    .intro-text p {
+        margin-bottom: 4px;
+        font-size: 0.5rem;
+    }
+
+    @media print {
+    .d-print-none { display: none !important; }
+    .print-container {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 5px;
+    }
+    .numero-formulario {
+        position: fixed;
+        bottom: 5px;
+        right: 5px;
+        font-size: 0.5rem;
+        color: #333;
+    }
+
+    /* Ajuste para exibir a seção de assinaturas */
+    .signature-section .custom-table td {
+        display: block !important;
+        display: table !important; /* Corrigido para mostrar como tabela */
+        padding: 2px;
+        font-size: 0.5rem;
+        text-align: center;
+    }
+}
+
+</style>
+
+
+
+
+
+
+
+
+<!-- Script de impressão -->
+<script>
+function imprimir() {
+    var conteudo = document.querySelector('.print-container').innerHTML;    
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
+    
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <title>AVALIAÇÃO DE DESEMPENHO DOS COLABORADORES (EXPERIÊNCIA)</title>
+                <style>
+                    body { font-family: Arial, sans-serif; color: #333; padding: 5px; font-size: 0.5rem; }
+                    .custom-table { width: 100%; border-collapse: collapse; }
+                    th, td { padding: 4px; border: 1px solid #ddd; font-size: 0.5rem; text-align: left; }
+                    th { background-color: #e7f1ff; font-weight: bold; }
+                    h2 { font-size: 0.8rem; text-align: center; }
+                    .numero-formulario { position: fixed; bottom: 5px; right: 5px; font-size: 0.5rem; color: #333; }
+                    @media print { .d-print-none { display: none !important; } }
+
+                </style>
+            </head>
+            <body>
+                <h2>AVALIAÇÃO DE DESEMPENHO DOS COLABORADORES (EXPERIÊNCIA)</h2>
+                ${conteudo}
+                <div class="numero-formulario">F176A Rev.05</div>
+            </body>
+        </html>
+    `);
+
+    novaJanela.document.close();
+    novaJanela.onload = function () {
+        novaJanela.print();
+        novaJanela.close();
+    };
+}
+
+</script>
+
+{% endblock %}

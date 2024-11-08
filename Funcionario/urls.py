@@ -31,13 +31,6 @@ from .views.treinamento_views import (
     gerar_pdf,
     gerar_relatorio_f003,
 )
-from .views.avaliacao_views import (
-    cadastrar_avaliacao_experiencia,
-    cadastrar_avaliacao_anual,
-    editar_avaliacao_desempenho,
-    excluir_avaliacao_desempenho,
-    lista_avaliacao_desempenho,
-)
 
 from .views.avaliacao_treinamentos_views import (
     lista_avaliacoes,
@@ -48,6 +41,21 @@ from .views.avaliacao_treinamentos_views import (
     lista_avaliacoes,
     imprimir_treinamento,
     visualizar_avaliacao
+)
+
+from Funcionario.views.avaliacao_anual_views import (
+    lista_avaliacao_anual,
+    cadastrar_avaliacao_anual,
+    editar_avaliacao_anual,
+    excluir_avaliacao_anual,
+)
+from Funcionario.views.avaliacao_experiencia_views import (
+    lista_avaliacao_experiencia,
+    cadastrar_avaliacao_experiencia,
+    editar_avaliacao_experiencia,
+    excluir_avaliacao_experiencia,
+    visualizar_avaliacao_experiencia,
+    imprimir_avaliacao_experiencia
 )
 
 from .views.job_rotation_views import (
@@ -117,12 +125,21 @@ urlpatterns = [
 
 
 
-    # Avaliação de Desempenho
-    path('avaliacoes-desempenho/cadastrar/experiencia/', cadastrar_avaliacao_experiencia, name='cadastrar_avaliacao_experiencia'),
-    path('avaliacoes-desempenho/cadastrar/anual/', cadastrar_avaliacao_anual, name='cadastrar_avaliacao_anual'),
-    path('avaliacoes-desempenho/editar/<int:id>/', editar_avaliacao_desempenho, name='editar_avaliacao_desempenho'),
-    path('avaliacoes-desempenho/', lista_avaliacao_desempenho, name='lista_avaliacao_desempenho'),
-    path('avaliacoes-desempenho/excluir/<int:id>/', excluir_avaliacao_desempenho, name='excluir_avaliacao_desempenho'),
+     # Avaliação de Desempenho Anual
+    path('avaliacoes-anual/', lista_avaliacao_anual, name='lista_avaliacao_anual'),
+    path('avaliacoes-anual/cadastrar/', cadastrar_avaliacao_anual, name='cadastrar_avaliacao_anual'),
+    path('avaliacoes-anual/editar/<int:id>/', editar_avaliacao_anual, name='editar_avaliacao_anual'),
+    path('avaliacoes-anual/excluir/<int:id>/', excluir_avaliacao_anual, name='excluir_avaliacao_anual'),
+
+    # Avaliação de Desempenho de Experiência
+    path('avaliacoes-experiencia/', lista_avaliacao_experiencia, name='lista_avaliacao_experiencia'),
+    path('avaliacoes-experiencia/cadastrar/', cadastrar_avaliacao_experiencia, name='cadastrar_avaliacao_experiencia'),
+    path('avaliacoes-experiencia/editar/<int:id>/', editar_avaliacao_experiencia, name='editar_avaliacao_experiencia'),
+    path('avaliacoes-experiencia/excluir/<int:id>/', excluir_avaliacao_experiencia, name='excluir_avaliacao_experiencia'),
+    path('avaliacoes-experiencia/<int:id>/', visualizar_avaliacao_experiencia, name='visualizar_avaliacao_experiencia'),
+    path('avaliacao_experiencia/imprimir/<int:avaliacao_id>/', imprimir_avaliacao_experiencia, name='imprimir_avaliacao_experiencia'),
+
+
 
     # Job Rotation
     path('jobrotation/', lista_jobrotation_evaluation, name='lista_jobrotation_evaluation'),

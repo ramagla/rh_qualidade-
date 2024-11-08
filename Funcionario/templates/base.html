@@ -163,24 +163,39 @@
 <body>
     <div class="d-flex">
         <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <div>
-                <div class="logo-container" onclick="toggleSidebar()"> <!-- Remove o link, adiciona apenas a função de clique -->
-                    {% load static %}
-                    <img src="{% static 'logo_branco.png' %}" alt="Logo">
-                </div>
-                <a href="{% url 'home' %}"><i class="fas fa-tachometer-alt"></i> <span class="sidebar-text">Dashboard</span></a>
-                <!-- Dropdown Menu for Cadastros -->
-                <div class="dropdown">                
-                    <a href="{% url 'lista_cargos' %}"><i class="fas fa-briefcase"></i> <span class="sidebar-text">Cargos</span></a>
-                    <a href="{% url 'lista_funcionarios' %}"><i class="fas fa-user"></i> <span class="sidebar-text">Funcionários</span></a>
-                    <a href="{% url 'lista_treinamentos' %}"><i class="fas fa-graduation-cap"></i> <span class="sidebar-text">Treinamentos</span></a>
-                    <a href="{% url 'lista_presenca' %}"><i class="fas fa-list"></i> <span class="sidebar-text">Listas de Presença</span></a>
-                    <a href="{% url 'lista_avaliacoes' %}"><i class="fas fa-clipboard-check"></i> <span class="sidebar-text">Avaliações de Treinamentos</span></a>
-                    <a href="{% url 'lista_avaliacao_desempenho' %}"><i class="fas fa-chart-line"></i> <span class="sidebar-text">Avaliações de Desempenho</span></a>
-                    <a href="{% url 'lista_jobrotation_evaluation' %}"><i class="fas fa-sync-alt"></i> <span class="sidebar-text">Job Rotation</span></a>
-                </div>
+<div class="sidebar" id="sidebar">
+    <div>
+        <div class="logo-container" onclick="toggleSidebar()"> <!-- Remove o link, adiciona apenas a função de clique -->
+            {% load static %}
+            <img src="{% static 'logo_branco.png' %}" alt="Logo">
+        </div>
+        <a href="{% url 'home' %}"><i class="fas fa-tachometer-alt"></i> <span class="sidebar-text">Dashboard</span></a>
+        
+        <!-- Dropdown Menu for Cadastros -->
+        <div class="dropdown">                
+            <a href="{% url 'lista_cargos' %}"><i class="fas fa-briefcase"></i> <span class="sidebar-text">Cargos</span></a>
+            <a href="{% url 'lista_funcionarios' %}"><i class="fas fa-user"></i> <span class="sidebar-text">Funcionários</span></a>
+            <a href="{% url 'lista_treinamentos' %}"><i class="fas fa-graduation-cap"></i> <span class="sidebar-text">Treinamentos</span></a>
+            <a href="{% url 'lista_presenca' %}"><i class="fas fa-list"></i> <span class="sidebar-text">Listas de Presença</span></a>
+            <a href="{% url 'lista_avaliacoes' %}"><i class="fas fa-clipboard-check"></i> <span class="sidebar-text">Avaliações de Treinamentos</span></a>
+            
+            <!-- Avaliações de Desempenho Dropdown -->
+            <div class="dropdown">
+                <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-chart-line"></i> <span class="sidebar-text">Desempenho</span>
+                </a>
+                <ul class="dropdown-menu" style="background-color: #343a40; color: white;">
+                    <li><a class="dropdown-item text-white" href="{% url 'lista_avaliacao_anual' %}">Anual</a></li>
+                    <li><a class="dropdown-item text-white" href="{% url 'lista_avaliacao_experiencia' %}">Experiência</a></li>
+                </ul>
             </div>
+            
+            <a href="{% url 'lista_jobrotation_evaluation' %}"><i class="fas fa-sync-alt"></i> <span class="sidebar-text">Job Rotation</span></a>
+        </div>
+    </div>
+</div>
+
+
 
             <!-- Sidebar Footer -->
                 <div class="sidebar-footer">

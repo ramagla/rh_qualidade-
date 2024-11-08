@@ -113,10 +113,10 @@
                 </select>
             </div>
 
-        <!-- Avaliação Global -->
+       <!-- Observações -->
         <div class="col-12">
-            <label for="avaliacao_global_avaliador" class="form-label">Observações</label>
-            <textarea class="form-control" id="avaliacao_global_avaliador" name="avaliacao_global_avaliador" style="height: 100px"></textarea>
+            <label for="observacoes" class="form-label">Observações</label>
+            <textarea class="form-control" id="observacoes" name="observacoes" style="height: 100px">{{ form.observacoes.value }}</textarea>
         </div>
 
         
@@ -189,31 +189,32 @@
 
     // Função para calcular o status da avaliação
     function calcularStatus() {
-        let totalPontos = 0;
+    let totalPontos = 0;
+    const itensAvaliados = document.querySelectorAll('#adaptacao_trabalho, #interesse, #relacionamento_social, #capacidade_aprendizagem');
+    
+    itensAvaliados.forEach(select => {
+        totalPontos += parseInt(select.value) || 0;
+    });
 
-        // Seleciona os campos de avaliação do questionário
-        const itensAvaliados = document.querySelectorAll('#adaptacao_trabalho, #interesse, #relacionamento_social, #capacidade_aprendizagem');
+    const porcentagem = (totalPontos / 16) * 100;
+    const statusInput = document.getElementById('status');
+    const orientacaoInput = document.getElementById('orientacao');  // Campo oculto para envio
 
-        // Soma os valores selecionados em cada campo
-        itensAvaliados.forEach(select => {
-            totalPontos += parseInt(select.value) || 0;
-        });
-
-        // Calcula a porcentagem com base na fórmula
-        const porcentagem = (totalPontos / 16) * 100;  // Máximo de pontos é 16 (4 perguntas com nota máxima de 4 cada)
-        const statusInput = document.getElementById('status');
-
-        // Define o status com base na porcentagem
-        if (porcentagem >= 85) {
-            statusInput.value = 'Ótimo - Efetivar';
-        } else if (porcentagem >= 66) {
-            statusInput.value = 'Bom - Efetivar';
-        } else if (porcentagem >= 46) {
-            statusInput.value = 'Regular - Treinamento';
-        } else {
-            statusInput.value = 'Ruim - Desligar';
-        }
+    if (porcentagem >= 85) {
+        statusInput.value = 'Ótimo - Efetivar';
+        orientacaoInput.value = 'Efetivar';
+    } else if (porcentagem >= 66) {
+        statusInput.value = 'Bom - Efetivar';
+        orientacaoInput.value = 'Efetivar';
+    } else if (porcentagem >= 46) {
+        statusInput.value = 'Regular - Treinamento';
+        orientacaoInput.value = 'Encaminhar p/ Treinamento';
+    } else {
+        statusInput.value = 'Ruim - Desligar';
+        orientacaoInput.value = 'Desligar';
     }
+}
+
 
     // Configura o cálculo automático ao alterar uma resposta no questionário
     document.addEventListener('DOMContentLoaded', function() {

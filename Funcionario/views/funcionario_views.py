@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from Funcionario.models import Funcionario, Treinamento,AvaliacaoDesempenho
+from Funcionario.models import Funcionario, Treinamento,AvaliacaoAnual, AvaliacaoExperiencia
 from Funcionario.forms import FuncionarioForm
 from django.views.generic import View
 from django.utils import timezone
@@ -123,24 +123,33 @@ def excluir_funcionario(request, funcionario_id):
 
 class ImprimirFichaView(View):
     def get(self, request, funcionario_id):
-        # Obtém o funcionário e todas as avaliações de desempenho associadas
+        # Obtém o funcionário e todas as avaliações associadas
         funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-        avaliacoes_desempenho = AvaliacaoDesempenho.objects.filter(funcionario=funcionario)
-
-        # Define o status do prazo para cada avaliação
+        
+        # Filtra as avaliações de experiência e anuais do funcionário
+        avaliacoes_experiencia = AvaliacaoExperiencia.objects.filter(funcionario=funcionario)
+        avaliacoes_anual = AvaliacaoAnual.objects.filter(funcionario=funcionario)
+        
+        # Define o status do prazo para cada avaliação de experiência
         today = timezone.now().date()
-        for avaliacao in avaliacoes_desempenho:
-            dias_prazo = 30 if avaliacao.tipo == 'EXPERIENCIA' else 365
-            data_limite = avaliacao.data_avaliacao + timedelta(days=dias_prazo)
+        
+        for avaliacao in avaliacoes_experiencia:
+            data_limite = avaliacao.data_avaliacao + timedelta(days=30)
             avaliacao.get_status_prazo = "Dentro do Prazo" if data_limite >= today else "Em Atraso"
 
+        for avaliacao in avaliacoes_anual:
+            data_limite = avaliacao.data_avaliacao + timedelta(days=365)
+            avaliacao.get_status_prazo = "Dentro do Prazo" if data_limite >= today else "Em Atraso"
+        
         context = {
             'funcionario': funcionario,
-            'avaliacoes_desempenho': avaliacoes_desempenho,
+            'avaliacoes_experiencia': avaliacoes_experiencia,
+            'avaliacoes_anual': avaliacoes_anual,
         }
+        
         return render(request, 'funcionarios/template_de_impressao.html', context)
 
     def post(self, request, funcionario_id):
         # A lógica de imprimir deve ser tratada aqui, se necessário.
-        # Para o momento, apenas redireciona para o método 
+        # Para o momento, apenas redireciona para o método GET
         return self.get(request, funcionario_id)

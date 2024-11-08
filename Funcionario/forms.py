@@ -1,5 +1,5 @@
 from django import forms
-from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,AvaliacaoDesempenho,JobRotationEvaluation
+from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,JobRotationEvaluation,AvaliacaoExperiencia, AvaliacaoAnual
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 class FuncionarioForm(forms.ModelForm):
@@ -180,12 +180,8 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
 
 class AvaliacaoExperienciaForm(forms.ModelForm):
     class Meta:
-        model = AvaliacaoDesempenho
-        fields = [
-            'data_avaliacao', 'funcionario', 'gerencia', 
-            'adaptacao_trabalho', 'interesse', 'relacionamento_social', 
-            'capacidade_aprendizagem', 'avaliado', 'avaliador', 'observacoes'
-        ]
+        model = AvaliacaoExperiencia
+        fields = '__all__' 
         widgets = {
             'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
         }
@@ -193,7 +189,7 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
 
 class AvaliacaoAnualForm(forms.ModelForm):
     class Meta:
-        model = AvaliacaoDesempenho
+        model = AvaliacaoAnual
         fields = [
             'data_avaliacao', 'funcionario', 'centro_custo', 
             'gerencia', 'avaliador', 'avaliado',
@@ -206,7 +202,6 @@ class AvaliacaoAnualForm(forms.ModelForm):
         widgets = {
             'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
         }
-
 
 class JobRotationEvaluationForm(forms.ModelForm):
     class Meta:

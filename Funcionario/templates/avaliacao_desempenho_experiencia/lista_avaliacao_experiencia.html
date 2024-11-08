@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}Avaliações de Experiência{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Avaliações de Experiência</h2>
+
+    <!-- Toast container para mensagens de alerta -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                    <div class="toast align-items-center border-0" style="background-color: #f8d7da; color: #842029;">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <h4 class="alert-heading">Atenção!</h4>
+                                <p>{{ message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% elif message.tags == "success" %}
+                    <div class="toast align-items-center border-0" style="background-color: #d1e7dd; color: #0f5132;" data-bs-delay="10000">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <h4 class="alert-heading">Sucesso!</h4>
+                                <p>{{ message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Botões de Cadastrar Avaliações e Imprimir -->
+     <div class="text-end mb-4">
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#imprimirModal">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a href="{% url 'cadastrar_avaliacao_experiencia' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Cadastrar Avaliação
+        </a>
+    </div>
+
+    <!-- Formulário de Filtro -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <!-- Filtro por Funcionário -->
+            <div class="col-md-3">
+                <label for="funcionario" class="form-label">Funcionário:</label>
+                <select name="funcionario" id="funcionario" class="form-select select2">
+                    <option value="">Selecione</option>
+                    {% for funcionario in funcionarios %}
+                        <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>{{ funcionario.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Data de Avaliação -->
+            <div class="col-md-4">
+                <label for="data_avaliacao" class="form-label">Período de Avaliação:</label>
+                <div class="row">
+                    <div class="col">
+                        <input type="date" name="data_inicio" class="form-control" placeholder="Data Início" value="{{ request.GET.data_inicio }}">
+                    </div>
+                    <div class="col">
+                        <input type="date" name="data_fim" class="form-control" placeholder="Data Fim" value="{{ request.GET.data_fim }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+
+
+    <!-- Modal para selecionar avaliação para impressão -->
+    <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imprimirModalLabel">Selecionar Avaliação para Imprimir</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="imprimirForm">
+                        <div class="mb-3">
+                            <label for="avaliacao_modal" class="form-label">Avaliação:</label>
+                            <select name="avaliacao" id="avaliacao_modal" class="form-select" required>
+                                <option value="">Selecione</option>
+                                {% for avaliacao in avaliacoes %}
+                                    <option value="{{ avaliacao.id }}">{{ avaliacao.funcionario.nome }} - {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="submitImprimirButton" class="btn btn-primary">Imprimir</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   <!-- Lista de Avaliações -->
+<table class="table table-bordered text-center">
+    <thead>
+        <tr>
+            <th class="align-middle">Funcionário</th>
+            <th class="align-middle">Data de Avaliação</th>
+            <th class="align-middle">Avaliador</th>
+            <th class="align-middle">Gerencia</th>
+            <th class="align-middle">Orientação</th> <!-- Coluna atualizada para exibir a orientação -->
+            <th class="align-middle">Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for avaliacao in avaliacoes %}
+            <tr>
+                <td class="align-middle">{{ avaliacao.funcionario.nome }}</td>
+                <td class="align-middle">{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+                <td class="align-middle">{{ avaliacao.avaliador.nome }}</td>
+                <td class="align-middle">{{ avaliacao.gerencia }}</td>
+                <td class="align-middle">
+                    {% if avaliacao.orientacao == "Bom - Efetivar" %}
+                        <span class="badge bg-success">😃 Efetivar</span>
+                    {% elif avaliacao.orientacao == "Regular - Treinamento" %}
+                        <span class="badge bg-warning">😊 Encaminha p/ Treinamento</span>
+                    {% elif avaliacao.orientacao == "Ruim - Desligar" %}
+                        <span class="badge bg-danger">😕 Desligar</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ avaliacao.orientacao|default:"Indeterminado" }}</span>
+                    {% endif %}
+                </td>                
+                <td class="align-middle">
+                    <a href="{% url 'visualizar_avaliacao_experiencia' avaliacao.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'editar_avaliacao_experiencia' avaliacao.id %}" class="btn btn-light">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>               
+
+            </tr>
+       
+
+                <!-- Modal para confirmação de exclusão -->
+                <div class="modal fade" id="confirmDeleteModal{{ avaliacao.id }}" tabindex="-1" aria-labelledby="confirmDeleteModalLabel{{ avaliacao.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmDeleteModalLabel{{ avaliacao.id }}">Confirmar Exclusão</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Tem certeza de que deseja excluir a avaliação de <strong>{{ avaliacao.funcionario.nome }}</strong>?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <form method="post" action="{% url 'excluir_avaliacao_experiencia' avaliacao.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                                </form>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Nenhuma avaliação de experiência cadastrada.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const bootstrapToast = new bootstrap.Toast(toast);
+            bootstrapToast.show();
+        });
+
+        // Inicializa o Select2
+        $('.select2').select2({
+            placeholder: "Selecione ou digite para buscar",
+            allowClear: true
+        });
+
+        // Manipula o botão de impressão no modal
+        document.getElementById('submitImprimirButton').addEventListener('click', function(event) {
+            event.preventDefault();
+            var avaliacaoId = document.getElementById('avaliacao_modal').value;
+
+            if (avaliacaoId) {
+                var url = "{% url 'imprimir_avaliacao_experiencia' 0 %}".replace('/0/', '/' + avaliacaoId + '/');
+                window.location.href = url;
+            } else {
+                alert("Por favor, selecione uma avaliação para imprimir.");
+            }
+        });
+    });
+</script>
+
+{% endblock %}

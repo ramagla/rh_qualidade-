@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Edição da Avaliação de Experiência{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Edição da Avaliação de Experiência</h2>
+
+    <!-- Formulário para Edição -->
+    <form method="post" action="{% url 'editar_avaliacao_experiencia' avaliacao.id %}" class="row g-3">
+        {% csrf_token %}
+
+        <!-- Exibição de Erros -->
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul>
+                    {% for field in form %}
+                        {% if field.errors %}
+                            <li>{{ field.label }}: {{ field.errors|join:", " }}</li>
+                        {% endif %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Data da Avaliação -->
+        <div class="col-md-6">
+            <label for="data_avaliacao" class="form-label">Data da Avaliação:</label>
+            <input type="date" class="form-control" id="data_avaliacao" name="data_avaliacao" value="{{ avaliacao.data_avaliacao|date:'Y-m-d' }}" required>
+        </div>
+
+        <!-- Funcionário, Cargo, Departamento e Superior Direto -->
+        <div class="col-md-6">
+            <label for="funcionario" class="form-label">Funcionário:</label>
+            <select class="form-select" id="funcionario" name="funcionario" required>
+                <option value="" disabled>Selecione o funcionário</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}" {% if funcionario == avaliacao.funcionario %}selected{% endif %}>{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+               
+        <div class="col-md-6">
+            <label for="gerencia" class="form-label">Gerência:</label>
+            <input type="text" class="form-control" id="gerencia" name="gerencia" value="{{ avaliacao.gerencia }}">
+        </div>
+
+        <!-- Questionário de Avaliação -->
+        <div class="col-12 mt-4">
+            <h4>Questionário da Avaliação</h4>
+        </div>
+
+        <div class="col-md-6">
+            <label for="adaptacao_trabalho" class="form-label">Adaptação no Trabalho:</label>
+            <select class="form-select" id="adaptacao_trabalho" name="adaptacao_trabalho">
+                <option value="1" {% if avaliacao.adaptacao_trabalho == 1 %}selected{% endif %}>Ruim (D)</option>
+                <option value="2" {% if avaliacao.adaptacao_trabalho == 2 %}selected{% endif %}>Regular (C)</option>
+                <option value="3" {% if avaliacao.adaptacao_trabalho == 3 %}selected{% endif %}>Bom (B)</option>
+                <option value="4" {% if avaliacao.adaptacao_trabalho == 4 %}selected{% endif %}>Ótimo (A)</option>
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label for="interesse" class="form-label">Interesse:</label>
+            <select class="form-select" id="interesse" name="interesse">
+                <option value="1" {% if avaliacao.interesse == 1 %}selected{% endif %}>Ruim (D)</option>
+                <option value="2" {% if avaliacao.interesse == 2 %}selected{% endif %}>Regular (C)</option>
+                <option value="3" {% if avaliacao.interesse == 3 %}selected{% endif %}>Bom (B)</option>
+                <option value="4" {% if avaliacao.interesse == 4 %}selected{% endif %}>Ótimo (A)</option>
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label for="relacionamento_social" class="form-label">Relacionamento Social:</label>
+            <select class="form-select" id="relacionamento_social" name="relacionamento_social">
+                <option value="1" {% if avaliacao.relacionamento_social == 1 %}selected{% endif %}>Ruim (D)</option>
+                <option value="2" {% if avaliacao.relacionamento_social == 2 %}selected{% endif %}>Regular (C)</option>
+                <option value="3" {% if avaliacao.relacionamento_social == 3 %}selected{% endif %}>Bom (B)</option>
+                <option value="4" {% if avaliacao.relacionamento_social == 4 %}selected{% endif %}>Ótimo (A)</option>
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label for="capacidade_aprendizagem" class="form-label">Capacidade de Aprendizagem:</label>
+            <select class="form-select" id="capacidade_aprendizagem" name="capacidade_aprendizagem">
+                <option value="1" {% if avaliacao.capacidade_aprendizagem == 1 %}selected{% endif %}>Ruim (D)</option>
+                <option value="2" {% if avaliacao.capacidade_aprendizagem == 2 %}selected{% endif %}>Regular (C)</option>
+                <option value="3" {% if avaliacao.capacidade_aprendizagem == 3 %}selected{% endif %}>Bom (B)</option>
+                <option value="4" {% if avaliacao.capacidade_aprendizagem == 4 %}selected{% endif %}>Ótimo (A)</option>
+            </select>
+        </div>
+
+        <!-- Observações -->
+<div class="col-12">
+    <label for="observacoes" class="form-label">Observações</label>
+    <textarea class="form-control" id="observacoes" name="observacoes" rows="3">{{ avaliacao.observacoes }}</textarea>
+</div>
+<p>{{ avaliacao.observacoes }}</p>
+
+
+        <!-- Avaliador e Orientação -->
+        <div class="col-md-6">
+            <label for="avaliador" class="form-label">Avaliador:</label>
+            <select class="form-select" id="avaliador" name="avaliador" required>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}" {% if funcionario == avaliacao.avaliador %}selected{% endif %}>{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label for="orientacao" class="form-label">Orientação:</label>
+            <select class="form-select" id="orientacao" name="orientacao" required>
+                <option value="Efetivar" {% if avaliacao.orientacao == "Efetivar" %}selected{% endif %}>Efetivar</option>
+                <option value="Encaminhar p/ Treinamento" {% if avaliacao.orientacao == "Encaminhar p/ Treinamento" %}selected{% endif %}>Encaminhar p/ Treinamento</option>
+                <option value="Desligar" {% if avaliacao.orientacao == "Desligar" %}selected{% endif %}>Desligar</option>
+            </select>
+        </div>
+
+        <!-- Botão de Salvar -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        preencherInfoFuncionario();
+    });
+</script>
+
+{% endblock %}

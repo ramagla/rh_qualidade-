@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Visualização da Avaliação de Experiência{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Visualização da Avaliação de Experiência</h2>
+
+    <div class="row g-3">
+        <!-- Data da Avaliação -->
+        <div class="col-md-6">
+            <label class="form-label">Data da Avaliação:</label>
+            <div class="form-control-plaintext">{{ avaliacao.data_avaliacao|date:'d/m/Y' }}</div>
+        </div>
+
+        <!-- Funcionário, Cargo, Departamento e Superior Direto -->
+        <div class="col-md-6">
+            <label class="form-label">Funcionário Avaliado:</label>
+            <div class="form-control-plaintext">{{ avaliacao.funcionario.nome }}</div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Cargo:</label>
+            <div class="form-control-plaintext">{{ avaliacao.funcionario.cargo }}</div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Departamento:</label>
+            <div class="form-control-plaintext">{{ avaliacao.funcionario.departamento }}</div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Superior Direto:</label>
+            <div class="form-control-plaintext">{{ avaliacao.funcionario.superior_direto }}</div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Gerência:</label>
+            <div class="form-control-plaintext">{{ avaliacao.gerencia }}</div>
+        </div>
+
+        <!-- Questionário de Avaliação -->
+        <div class="col-12 mt-4">
+            <h4>Questionário da Avaliação</h4>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Adaptação no Trabalho:</label>
+            <div class="form-control-plaintext">
+                É a reação do recém-admitido ao tipo de trabalho e características administrativas da Bras-Mol.
+                <br>
+                <strong>Resposta:</strong> 
+                {% if avaliacao.adaptacao_trabalho == 1 %} Ruim (D) - Mantém um comportamento oposto ao solicitado para seu cargo e demonstra dificuldades de aceitação.
+                {% elif avaliacao.adaptacao_trabalho == 2 %} Regular (C) - Precisa de muito esforço para se integrar ao trabalho e aos requisitos da Bras-Mol.
+                {% elif avaliacao.adaptacao_trabalho == 3 %} Bom (B) - Faz o possível para integrar-se ao trabalho e às características da Bras-Mol.
+                {% elif avaliacao.adaptacao_trabalho == 4 %} Ótimo (A) - Identifica-se plenamente com as atividades do cargo e normas da Bras-Mol.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Interesse:</label>
+            <div class="form-control-plaintext">
+                É o entusiasmo demonstrado frente ao trabalho.
+                <br>
+                <strong>Resposta:</strong> 
+                {% if avaliacao.interesse == 1 %} Ruim (D) - Apresenta falta de entusiasmo e vontade de trabalhar.
+                {% elif avaliacao.interesse == 2 %} Regular (C) - Necessitará de estímulo constante para se interessar pelo trabalho.
+                {% elif avaliacao.interesse == 3 %} Bom (B) - Apresenta entusiasmo adequado para o tempo na Bras-Mol.
+                {% elif avaliacao.interesse == 4 %} Ótimo (A) - Demonstra vivo interesse pelo novo trabalho.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Relacionamento Social:</label>
+            <div class="form-control-plaintext">
+                É a facilidade de integração ao grupo de trabalho.
+                <br>
+                <strong>Resposta:</strong> 
+                {% if avaliacao.relacionamento_social == 1 %} Ruim (D) - Sente-se perdido entre os colegas e parece não ter sido aceito.
+                {% elif avaliacao.relacionamento_social == 2 %} Regular (C) - Esforça-se para conseguir maior integração social com os colegas.
+                {% elif avaliacao.relacionamento_social == 3 %} Bom (B) - Entrosou-se bem e foi aceito sem resistência.
+                {% elif avaliacao.relacionamento_social == 4 %} Ótimo (A) - Demonstra grande habilidade em fazer amigos, sendo muito apreciado.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Capacidade de Aprendizagem:</label>
+            <div class="form-control-plaintext">
+                É a facilidade de perceber pontos importantes do que está sendo ensinado.
+                <br>
+                <strong>Resposta:</strong> 
+                {% if avaliacao.capacidade_aprendizagem == 1 %} Ruim (D) - Parece não ter capacidade mínima para o trabalho.
+                {% elif avaliacao.capacidade_aprendizagem == 2 %} Regular (C) - Necessita de muito esforço e repetição para compreender as tarefas.
+                {% elif avaliacao.capacidade_aprendizagem == 3 %} Bom (B) - Aprende suas tarefas sem dificuldades.
+                {% elif avaliacao.capacidade_aprendizagem == 4 %} Ótimo (A) - Habilitado para o cargo, executa sem falhas.
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Observações -->
+        <div class="col-12">
+            <label class="form-label">Observações</label>
+            <div class="form-control-plaintext">{{ avaliacao.observacoes }}</div>
+        </div>
+
+        <!-- Avaliador e Orientação -->
+        <div class="col-md-6">
+            <label class="form-label">Avaliador:</label>
+            <div class="form-control-plaintext">{{ avaliacao.avaliador.nome }}</div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Orientação:</label>
+            <div class="form-control-plaintext">{{ avaliacao.orientacao }}</div>
+        </div>
+
+        <!-- Botão de Voltar -->
+        <div class="col-12 text-center mt-4">
+            <a href="{% url 'lista_avaliacao_experiencia' %}" class="btn btn-secondary">Voltar</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

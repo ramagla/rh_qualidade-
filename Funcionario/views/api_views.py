@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from Funcionario.models import Cargo, Funcionario, Treinamento, ListaPresenca
+from Funcionario.models import Cargo, Funcionario, Treinamento
 
 def get_funcionario_info(request, id):
     try:
@@ -58,7 +58,7 @@ def get_cargo(request, funcionario_id):
 
 
 from django.http import JsonResponse
-from Funcionario.models import Funcionario, Treinamento, AvaliacaoTreinamento, AvaliacaoDesempenho, JobRotationEvaluation
+from Funcionario.models import Funcionario, Treinamento, AvaliacaoTreinamento, AvaliacaoExperiencia, AvaliacaoAnual, JobRotationEvaluation
 
 
 
