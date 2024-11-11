@@ -6,6 +6,22 @@
 <div class="container mt-5">
     <h2 class="text-center mb-4">Cadastro de Avaliação Anual</h2>
 
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        <ul>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+
     <form method="post" action="{% url 'cadastrar_avaliacao_anual' %}" class="row g-3">
         {% csrf_token %}
 
@@ -49,7 +65,8 @@
 <!-- Itens Avaliados Individuais -->
 <div class="col-md-6">
     <label for="postura_seg_trabalho" class="form-label">Postura em Segurança do Trabalho</label>
-    <select class="form-select" id="postura_seg_trabalho" name="postura_seg_trabalho">
+    <select class="form-select item-avaliado" id="postura_seg_trabalho" name="postura_seg_trabalho" required>
+        <option value="" disabled selected>Selecione uma opção</option>
         <option value="1">Ruim (1.0)</option>
         <option value="2">Regular (2.0)</option>
         <option value="3">Bom (3.0)</option>
@@ -59,7 +76,8 @@
 
 <div class="col-md-6">
     <label for="qualidade_produtividade" class="form-label">Qualidade e Produtividade</label>
-    <select class="form-select" id="qualidade_produtividade" name="qualidade_produtividade">
+    <select class="form-select item-avaliado" id="qualidade_produtividade" name="qualidade_produtividade" required>
+        <option value="" disabled selected>Selecione uma opção</option>
         <option value="1">Ruim (1.0)</option>
         <option value="2">Regular (2.0)</option>
         <option value="3">Bom (3.0)</option>
@@ -67,19 +85,21 @@
     </select>
 </div>
 
-<div class="col-md-6">
-    <label for="trabalho_equipe" class="form-label">Trabalho em Equipe</label>
-    <select class="form-select" id="trabalho_equipe" name="trabalho_equipe">
-        <option value="1">Ruim (1.0)</option>
-        <option value="2">Regular (2.0)</option>
-        <option value="3">Bom (3.0)</option>
-        <option value="4">Ótimo (4.0)</option>
-    </select>
-</div>
+ <div class="col-md-6">
+            <label for="trabalho_equipe" class="form-label">Trabalho em Equipe</label>
+            <select class="form-select item-avaliado" id="trabalho_equipe" name="trabalho_em_equipe" required>
+                <option value="" disabled selected>Selecione uma opção</option>
+                <option value="1">Ruim (1.0)</option>
+                <option value="2">Regular (2.0)</option>
+                <option value="3">Bom (3.0)</option>
+                <option value="4">Ótimo (4.0)</option>
+            </select>
+        </div>
 
 <div class="col-md-6">
     <label for="comprometimento" class="form-label">Comprometimento</label>
-    <select class="form-select" id="comprometimento" name="comprometimento">
+    <select class="form-select item-avaliado" id="comprometimento" name="comprometimento" required>
+        <option value="" disabled selected>Selecione uma opção</option>
         <option value="1">Ruim (1.0)</option>
         <option value="2">Regular (2.0)</option>
         <option value="3">Bom (3.0)</option>
@@ -87,19 +107,21 @@
     </select>
 </div>
 
-<div class="col-md-6">
-    <label for="disponibilidade_mudancas" class="form-label">Disponibilidade para Mudanças</label>
-    <select class="form-select" id="disponibilidade_mudancas" name="disponibilidade_mudancas">
-        <option value="1">Ruim (1.0)</option>
-        <option value="2">Regular (2.0)</option>
-        <option value="3">Bom (3.0)</option>
-        <option value="4">Ótimo (4.0)</option>
-    </select>
-</div>
+ <div class="col-md-6">
+            <label for="disponibilidade_mudancas" class="form-label">Disponibilidade para Mudanças</label>
+            <select class="form-select item-avaliado" id="disponibilidade_mudancas" name="disponibilidade_para_mudancas" required>
+                <option value="" disabled selected>Selecione uma opção</option>
+                <option value="1">Ruim (1.0)</option>
+                <option value="2">Regular (2.0)</option>
+                <option value="3">Bom (3.0)</option>
+                <option value="4">Ótimo (4.0)</option>
+            </select>
+        </div>
 
 <div class="col-md-6">
     <label for="disciplina" class="form-label">Disciplina</label>
-    <select class="form-select" id="disciplina" name="disciplina">
+    <select class="form-select item-avaliado" id="disciplina" name="disciplina" required>
+        <option value="" disabled selected>Selecione uma opção</option>
         <option value="1">Ruim (1.0)</option>
         <option value="2">Regular (2.0)</option>
         <option value="3">Bom (3.0)</option>
@@ -108,18 +130,20 @@
 </div>
 
 <div class="col-md-6">
-    <label for="rendimento_pressao" class="form-label">Rendimento sob Pressão</label>
-    <select class="form-select" id="rendimento_pressao" name="rendimento_pressao">
-        <option value="1">Ruim (1.0)</option>
-        <option value="2">Regular (2.0)</option>
-        <option value="3">Bom (3.0)</option>
-        <option value="4">Ótimo (4.0)</option>
-    </select>
-</div>
+            <label for="rendimento_pressao" class="form-label">Rendimento sob Pressão</label>
+            <select class="form-select item-avaliado" id="rendimento_pressao" name="rendimento_sob_pressao" required>
+                <option value="" disabled selected>Selecione uma opção</option>
+                <option value="1">Ruim (1.0)</option>
+                <option value="2">Regular (2.0)</option>
+                <option value="3">Bom (3.0)</option>
+                <option value="4">Ótimo (4.0)</option>
+            </select>
+        </div>
 
 <div class="col-md-6">
     <label for="proatividade" class="form-label">Proatividade</label>
-    <select class="form-select" id="proatividade" name="proatividade">
+    <select class="form-select item-avaliado" id="proatividade" name="proatividade" required>
+        <option value="" disabled selected>Selecione uma opção</option>
         <option value="1">Ruim (1.0)</option>
         <option value="2">Regular (2.0)</option>
         <option value="3">Bom (3.0)</option>
@@ -129,7 +153,8 @@
 
 <div class="col-md-6">
     <label for="comunicacao" class="form-label">Comunicação</label>
-    <select class="form-select" id="comunicacao" name="comunicacao">
+    <select class="form-select item-avaliado" id="comunicacao" name="comunicacao" required>
+        <option value="" disabled selected>Selecione uma opção</option>
         <option value="1">Ruim (1.0)</option>
         <option value="2">Regular (2.0)</option>
         <option value="3">Bom (3.0)</option>
@@ -139,7 +164,8 @@
 
 <div class="col-md-6">
     <label for="assiduidade" class="form-label">Assiduidade</label>
-    <select class="form-select" id="assiduidade" name="assiduidade">
+    <select class="form-select item-avaliado" id="assiduidade" name="assiduidade" required>
+        <option value="" disabled selected>Selecione uma opção</option>
         <option value="1">Ruim (1.0)</option>
         <option value="2">Regular (2.0)</option>
         <option value="3">Bom (3.0)</option>
@@ -148,51 +174,24 @@
 </div>
 
 
-        <!-- Mais campos similares até completar todos os itens -->
 
         <!-- Avaliação Global (Visão do Avaliador) -->
         <div class="col-12">
             <label for="avaliacao_global_avaliador" class="form-label">Avaliação Global (Visão do Avaliador)</label>
-            <textarea class="form-control" id="avaliacao_global_avaliador" name="avaliacao_global_avaliador" style="height: 100px"></textarea>
+            {{ form.avaliacao_global_avaliador }}
         </div>
 
         <!-- Avaliação Global (Visão do Avaliado) -->
         <div class="col-12">
             <label for="avaliacao_global_avaliado" class="form-label">Avaliação Global (Visão do Avaliado)</label>
-            <textarea class="form-control" id="avaliacao_global_avaliado" name="avaliacao_global_avaliado" style="height: 100px"></textarea>
+            {{ form.avaliacao_global_avaliado }}
         </div>
-
-       <!-- Avaliado -->
+       
+            <!-- Campo para exibir o Status da Avaliação -->
             <div class="col-md-6">
-                <label for="avaliado" class="form-label">Avaliado:</label>
-                <select class="form-select" id="avaliado" name="avaliado">
-                    <option selected>Selecione o avaliado</option>
-                    {% for funcionario in funcionarios %}
-                        <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
-                    {% endfor %}
-                </select>
+                <label for="status" class="form-label">Status da Avaliação:</label>
+                <input type="text" class="form-control" id="status" name="status" readonly>
             </div>
-
-            <!-- Avaliador -->
-            <div class="col-md-6">
-                <label for="avaliador" class="form-label">Avaliador:</label>
-                <select class="form-select" id="avaliador" name="avaliador">
-                    <option selected>Selecione o avaliador</option>
-                    {% for funcionario in funcionarios %}
-                        <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-<!-- Campo para exibir o Status da Avaliação -->
-<div class="col-md-6">
-    <label for="status" class="form-label">Status da Avaliação:</label>
-    <input type="text" class="form-control" id="status" name="status" readonly>
-</div>
-
-<!-- Botão para Calcular Status -->
-<div class="col-md-12 mt-3">
-    <button type="button" class="btn btn-primary" onclick="calcularStatus()">Calcular Status</button>
-</div>
 
 
         <!-- Botão de submissão -->
@@ -202,6 +201,7 @@
     </form>
 </div>
 <script>
+    // Função para preencher automaticamente o cargo e departamento com base no funcionário selecionado
     function preencherInfoFuncionario() {
         const funcionarioSelect = document.getElementById('funcionario');
         const cargoInput = document.getElementById('cargo');
@@ -234,13 +234,13 @@
         });
     }
 
-    // Função para calcular o status da avaliação
+    // Função para calcular o status da avaliação com base nos valores dos itens avaliados
     function calcularStatus() {
         let totalPontos = 0;
 
         // Seleciona todos os campos de itens avaliados
-        const itensAvaliados = document.querySelectorAll('.form-select');
-        
+        const itensAvaliados = document.querySelectorAll('.item-avaliado');
+
         // Soma os valores selecionados em cada campo
         itensAvaliados.forEach(select => {
             totalPontos += parseInt(select.value) || 0;
@@ -264,8 +264,18 @@
         }
     }
 
-    // Chama a função ao carregar a página
-    document.addEventListener('DOMContentLoaded', preencherInfoFuncionario);
+    // Inicializa as funções ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+        preencherInfoFuncionario();
+        
+        // Adiciona o evento 'change' para cada campo de avaliação para cálculo automático
+        const itensAvaliados = document.querySelectorAll('.item-avaliado');
+        itensAvaliados.forEach(select => {
+            select.addEventListener('change', calcularStatus);
+        });
+    });
 </script>
+
+
 
 {% endblock %}

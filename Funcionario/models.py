@@ -249,15 +249,8 @@ class AvaliacaoAnual(models.Model):
     data_avaliacao = models.DateField()
     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
     centro_custo = models.CharField(max_length=100, blank=True, null=True)
-    gerencia = models.CharField(max_length=100, blank=True, null=True)
-    avaliador = models.ForeignKey(
-        Funcionario,
-        related_name='avaliacoes_anual',
-        on_delete=models.CASCADE
-    )
-    avaliado = models.ForeignKey(Funcionario, related_name='avaliado_anual', on_delete=models.CASCADE)
-
-    # Campos específicos para o questionário de avaliação anual
+    
+    # Campos do questionário
     postura_seg_trabalho = models.IntegerField(blank=True, null=True)
     qualidade_produtividade = models.IntegerField(blank=True, null=True)
     trabalho_em_equipe = models.IntegerField(blank=True, null=True)
@@ -268,57 +261,44 @@ class AvaliacaoAnual(models.Model):
     proatividade = models.IntegerField(blank=True, null=True)
     comunicacao = models.IntegerField(blank=True, null=True)
     assiduidade = models.IntegerField(blank=True, null=True)
-
-    # Avaliação geral e observações
-    observacoes = models.TextField(blank=True, null=True)
-    avaliacao_geral = models.IntegerField(
-        choices=[(1, 'Pouco eficaz'), (2, '2'), (3, '3'), (4, '4'), (5, 'Muito eficaz')],
-        default=3
-    )
+    avaliacao_global_avaliador = models.TextField(blank=True, null=True)
+    avaliacao_global_avaliado = models.TextField(blank=True, null=True)
 
     def calcular_classificacao(self):
-        # Calcula a classificação com base nos pontos totais dos campos
         total_pontos = (
-            (self.postura_seg_trabalho or 0) + (self.qualidade_produtividade or 0) + 
-            (self.trabalho_em_equipe or 0) + (self.comprometimento or 0) +
-            (self.disponibilidade_para_mudancas or 0) + (self.disciplina or 0) + 
-            (self.rendimento_sob_pressao or 0) + (self.proatividade or 0) + 
-            (self.comunicacao or 0) + (self.assiduidade or 0)
+            (self.postura_seg_trabalho or 0) + 
+            (self.qualidade_produtividade or 0) + 
+            (self.trabalho_em_equipe or 0) + 
+            (self.comprometimento or 0) +
+            (self.disponibilidade_para_mudancas or 0) + 
+            (self.disciplina or 0) + 
+            (self.rendimento_sob_pressao or 0) + 
+            (self.proatividade or 0) + 
+            (self.comunicacao or 0) + 
+            (self.assiduidade or 0)
         )
 
         if total_pontos == 0:
-            return 'Indeterminado'
+            return {'percentual': 0, 'status': 'Indeterminado'}
 
-        percentual = (total_pontos / 40) * 100
+        percentual = (total_pontos / 40) * 100  # Assume que o total máximo de pontos é 40
+        status = ''
 
-        if 25 <= percentual <= 45:
-            return 'Ruim'
-        elif 46 <= percentual <= 65:
-            return 'Regular'
-        elif 66 <= percentual <= 84:
-            return 'Bom'
-        elif 85 <= percentual <= 100:
-            return 'Ótimo'
+        if percentual <= 25:
+            status = 'Ruim'
+        elif percentual <= 45:
+            status = 'Regular'
+        elif percentual <= 84:
+            status = 'Bom'
         else:
-            return 'Indeterminado'
+            status = 'Ótimo'
 
-    def get_status_avaliacao(self):
-        if self.avaliacao_geral <= 2:
-            return "Pouco Eficaz"
-        elif 3 <= self.avaliacao_geral <= 4:
-            return "Eficaz"
-        else:
-            return "Muito Eficaz"
-
-    def get_status_prazo(self):
-        hoje = timezone.now().date()
-        data_limite = self.data_avaliacao + timedelta(days=365)
-        return "Dentro do Prazo" if data_limite >= hoje else "Em Atraso"
-
-    def __str__(self):
-        return f"Avaliação Anual de {self.funcionario} em {self.data_avaliacao}"
+        return {'percentual': percentual, 'status': status}
 
 
+
+
+  
 class JobRotationEvaluation(models.Model):
     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name="job_rotation_evaluations")
     area_atual = models.CharField(max_length=100, null=True, blank=True)  # Campo opcional

@@ -48,6 +48,9 @@ from Funcionario.views.avaliacao_anual_views import (
     cadastrar_avaliacao_anual,
     editar_avaliacao_anual,
     excluir_avaliacao_anual,
+    imprimir_avaliacao,
+    visualizar_avaliacao_anual,
+    imprimir_simplificado
 )
 from Funcionario.views.avaliacao_experiencia_views import (
     lista_avaliacao_experiencia,
@@ -127,9 +130,15 @@ urlpatterns = [
 
      # Avaliação de Desempenho Anual
     path('avaliacoes-anual/', lista_avaliacao_anual, name='lista_avaliacao_anual'),
+    path('avaliacoes-anual/<int:id>/', visualizar_avaliacao_anual, name='visualizar_avaliacao_anual'),
+
     path('avaliacoes-anual/cadastrar/', cadastrar_avaliacao_anual, name='cadastrar_avaliacao_anual'),
     path('avaliacoes-anual/editar/<int:id>/', editar_avaliacao_anual, name='editar_avaliacao_anual'),
     path('avaliacoes-anual/excluir/<int:id>/', excluir_avaliacao_anual, name='excluir_avaliacao_anual'),
+    path('avaliacoes-anual/imprimir/<int:avaliacao_id>/', imprimir_avaliacao, name='imprimir_avaliacao_anual'),
+    path('avaliacoes-anual/imprimir-simplificado/<int:avaliacao_id>/', imprimir_simplificado, name='imprimir_simplificado'),
+
+
 
     # Avaliação de Desempenho de Experiência
     path('avaliacoes-experiencia/', lista_avaliacao_experiencia, name='lista_avaliacao_experiencia'),

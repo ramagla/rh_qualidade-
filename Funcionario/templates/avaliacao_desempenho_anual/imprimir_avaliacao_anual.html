@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="print-container container mt-5">
+    {% include 'header.html' %} <!-- Inclui o cabeçalho -->
+<div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>        
+    </div>
+
+
+
+    <!-- Informações da Avaliação -->
+    <div class="info-section mt-4">
+        <table class="custom-table" style="width: 100%;">
+            <tr>
+                <td><strong>Nome do Funcionário:</strong> {{ avaliacao.funcionario.nome }}</td>
+                <td><strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+                <td><strong>Cargo Atual:</strong> {{ avaliacao.funcionario.cargo_atual.nome }}</td>
+                <td><strong>Departamento:</strong> {{ avaliacao.funcionario.cargo_atual.departamento }}</td>
+            </tr>
+            <tr>
+                <td><strong>Superior Direto:</strong> {{ avaliacao.funcionario.responsavel }}</td>
+                <td><strong>Centro de Custo:</strong> {{ avaliacao.centro_custo }}</td>
+            </tr>
+        </table>
+    </div>
+
+<!-- Perguntas e Respostas -->
+<div class="mt-4">
+    <table class="custom-table" style="width: 100%;">
+        <thead>
+            <tr>
+                <th style="text-align: left;">Item Avaliado</th>
+                <th style="text-align: center;">Ruim (1.0)</th>
+                <th style="text-align: center;">Regular (2.0)</th>
+                <th style="text-align: center;">Bom (3.0)</th>
+                <th style="text-align: center;">Ótimo (4.0)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="text-align: left;">Postura em Segurança do Trabalho</td>
+                <td style="text-align: center;">{% if avaliacao.postura_seg_trabalho == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.postura_seg_trabalho == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.postura_seg_trabalho == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.postura_seg_trabalho == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Qualidade e Produtividade</td>
+                <td style="text-align: center;">{% if avaliacao.qualidade_produtividade == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.qualidade_produtividade == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.qualidade_produtividade == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.qualidade_produtividade == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Trabalho em Equipe</td>
+                <td style="text-align: center;">{% if avaliacao.trabalho_em_equipe == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.trabalho_em_equipe == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.trabalho_em_equipe == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.trabalho_em_equipe == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Comprometimento</td>
+                <td style="text-align: center;">{% if avaliacao.comprometimento == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.comprometimento == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.comprometimento == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.comprometimento == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Disponibilidade para Mudanças</td>
+                <td style="text-align: center;">{% if avaliacao.disponibilidade_para_mudancas == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.disponibilidade_para_mudancas == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.disponibilidade_para_mudancas == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.disponibilidade_para_mudancas == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Disciplina</td>
+                <td style="text-align: center;">{% if avaliacao.disciplina == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.disciplina == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.disciplina == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.disciplina == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Rendimento sob Pressão</td>
+                <td style="text-align: center;">{% if avaliacao.rendimento_sob_pressao == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.rendimento_sob_pressao == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.rendimento_sob_pressao == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.rendimento_sob_pressao == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Proatividade</td>
+                <td style="text-align: center;">{% if avaliacao.proatividade == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.proatividade == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.proatividade == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.proatividade == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Comunicação</td>
+                <td style="text-align: center;">{% if avaliacao.comunicacao == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.comunicacao == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.comunicacao == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.comunicacao == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Assiduidade</td>
+                <td style="text-align: center;">{% if avaliacao.assiduidade == 1 %}<i class="bi bi-x-circle" style="color:red;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.assiduidade == 2 %}<i class="bi bi-exclamation-circle" style="color:orange;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.assiduidade == 3 %}<i class="bi bi-check-circle" style="color:green;"></i>{% endif %}</td>
+                <td style="text-align: center;">{% if avaliacao.assiduidade == 4 %}<i class="bi bi-star-fill" style="color:gold;"></i>{% endif %}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+    <!-- Legenda com a classificação -->
+    <div class="mt-4">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">              
+               
+                <img src="{% static 'legenda_ano.jpg' %}" alt="Linha Tracejada" style="width: 200px; height: auto;">                 
+            </td>
+
+<td style="text-align: center; padding: 8px; border: 1px solid #ddd;">
+    <strong>Classificação =</strong> 
+    <span style="border-bottom: 1px dashed #333;">{{ percentual|floatformat:0 }} %</span><br>
+    <strong>Status =</strong> 
+    <span>
+        {% if status == 'Ruim' %}
+            😕 Ruim
+        {% elif status == 'Regular' %}
+            😊 Regular
+        {% elif status == 'Bom' %}
+            😃 Bom
+        {% elif status == 'Ótimo' %}
+            🌟 Ótimo
+        {% else %}
+            🤔 Indeterminado
+        {% endif %}
+    </span>
+</td>
+
+</tr>
+        </table>
+
+       <div style="margin-top: 10px;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="text-align: left; padding: 8px; border: 1px solid #ddd;">
+                <strong>Legenda:</strong>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd; display: flex; flex-wrap: wrap;">
+                <div style="margin-right: 20px;">Ruim = 25 a 45 %</div>
+                <div style="margin-right: 20px;">Regular = 46 a 65 %</div>
+                <div style="margin-right: 20px;">Bom = 66 a 84 %</div>
+                <div>Ótimo = 85 a 100 %</div>
+            </td>           
+        </tr>
+    </table>
+</div>
+ <br/>
+<div class="mt-4">
+    <table class="custom-table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Avaliação Global (Visão do Avaliador)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #ddd;">
+                    {{ avaliacao.avaliacao_global_avaliador|default:"Sem avaliação registrada." }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+ <br/>
+<div class="mt-4">
+    <table class="custom-table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Avaliação Global (Visão do Avaliado)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #ddd;">
+                    {{ avaliacao.avaliacao_global_avaliado|default:"Sem avaliação registrada." }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+ <br/>
+    <!-- Campos de Assinatura -->
+    <div class="mt-5">
+        <table class="custom-table" style="width: 100%;">
+            <tr>
+                <td style="padding: 8px; text-align: center; width: 50%;">
+                    <p><strong>Assinatura do Funcionário</strong></p>
+                    <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                        {{ avaliacao.funcionario.nome }}
+                    </div>
+                </td>
+                <td style="padding: 8px; text-align: center; width: 50%;">
+                    <p><strong>Assinatura da Chefia</strong></p>
+                    <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                        {{ avaliacao.funcionario.responsavel}}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+  
+
+    <!-- Ajustes de estilo para impressão -->
+    <style>
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .custom-table th, .custom-table td {
+            padding: 4px;
+            border: 1px solid #ddd;
+            font-size: 0.55rem;
+            text-align: left;
+        }
+        .custom-table th {
+            background-color: #e7f1ff;
+            font-weight: bold;
+        }
+
+        @media print {
+    .titulo-section {
+        margin-top: 20px; /* Ajuste conforme necessário */
+    }
+
+    .assinatura-section {
+        margin-top: 40px; /* Ajuste conforme necessário */
+    }
+
+    /* Outros estilos de impressão existentes */
+    .d-print-none { display: none !important; }
+    .print-container {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 5px;
+    }
+}
+
+    </style>
+
+
+
+<!-- Script de impressão -->
+<script>
+    function imprimir() {
+        var conteudo = document.querySelector('.print-container').innerHTML;    
+        var numeroFormulario = "F176B Rev.07"; // Adicione o número do formulário aqui
+        var novaJanela = window.open('', '_blank', 'width=800,height=600');
+
+        novaJanela.document.write(`
+            <html>
+                <head>
+                    <title>Avaliação de Desempenho de Funcionário</title>
+                    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css">
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+                    <style>
+                        body { font-family: Arial, sans-serif; color: #333; padding: 5px; font-size: 0.5rem; }
+                        .custom-table { width: 100%; border-collapse: collapse; }
+                        th, td { padding: 4px; border: 1px solid #ddd; font-size: 0.5rem; text-align: left; }
+                        th { background-color: #e7f1ff; font-weight: bold; }
+                        h2 { font-size: 0.8rem; text-align: center; }
+                        .d-print-none { display: none; } /* Esconder elementos com essa classe na impressão */
+                        .numero-formulario { position: fixed; bottom: 5px; right: 5px; font-size: 0.5rem; color: #333; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Avaliação de Desempenho de Funcionário</h2>
+                    ${conteudo}
+                    <div class="numero-formulario">${numeroFormulario}</div> <!-- Rodapé com o número do formulário -->
+                </body>
+            </html>
+        `);
+
+        novaJanela.document.close();
+        novaJanela.onload = function () {
+            novaJanela.print();
+            novaJanela.close();
+        };
+    }
+
+    function imprimirLegenda() {
+        window.open("{% static 'legenda.pdf' %}", '_blank'); // Abre o PDF da legenda em uma nova aba
+    }
+
+    function imprimirEmMassa() {
+        var novaJanela = window.open('', '_blank', 'width=800,height=600');
+        novaJanela.document.write(`
+            <html>
+                <head>
+                    <title>Impressão em Massa</title>
+                    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css">
+                </head>
+                <body>
+                    <h2>Impressão em Massa</h2>
+                    <!-- Aqui você pode carregar o conteúdo do template_simplificado.html, se necessário -->
+                    <p>Conteúdo da impressão em massa...</p>
+                </body>
+            </html>
+        `);
+        novaJanela.document.close();
+        novaJanela.onload = function () {
+            novaJanela.print();
+            novaJanela.close();
+        };
+    }
+    </script>
+</div>
+
+{% endblock %}

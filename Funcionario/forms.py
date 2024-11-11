@@ -188,17 +188,11 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
 
 
 class AvaliacaoAnualForm(forms.ModelForm):
+    avaliacao_global_avaliador = forms.CharField(widget=CKEditor5Widget(config_name='default'))
+    avaliacao_global_avaliado = forms.CharField(widget=CKEditor5Widget(config_name='default'))
     class Meta:
         model = AvaliacaoAnual
-        fields = [
-            'data_avaliacao', 'funcionario', 'centro_custo', 
-            'gerencia', 'avaliador', 'avaliado',
-            'postura_seg_trabalho', 'qualidade_produtividade', 
-            'trabalho_em_equipe', 'comprometimento',
-            'disponibilidade_para_mudancas', 'disciplina', 
-            'rendimento_sob_pressao', 'proatividade',
-            'comunicacao', 'assiduidade', 'observacoes'
-        ]
+        fields = '__all__' 
         widgets = {
             'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
         }

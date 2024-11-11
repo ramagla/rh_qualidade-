@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="print-container container mt-5">
+    {% include 'header.html' %} <!-- Inclui o cabeçalho -->
+
+   <!-- Informações da Avaliação -->
+    <div class="info-section mt-4">
+        <table class="custom-table" style="width: 100%;">
+            <tr>
+                <td><strong>Nome do Funcionário:</strong> {{ avaliacao.funcionario.nome }}</td>
+                <td><strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+                <td><strong>Cargo Atual:</strong> {{ avaliacao.funcionario.cargo_atual.nome }}</td>
+                <td><strong>Departamento:</strong> {{ avaliacao.funcionario.cargo_atual.departamento }}</td>
+            </tr>
+            <tr>
+                <td><strong>Superior Direto:</strong> {{ avaliacao.funcionario.responsavel }}</td>
+                <td><!-- Campo de Centro de Custo removido conforme solicitado --></td>
+            </tr>
+        </table>
+
+    <!-- Perguntas e Respostas -->
+    <div class="mt-4">
+        <table class="custom-table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th style="text-align: left;">Item Avaliado</th>
+                    <th style="text-align: center;">Ruim (1.0)</th>
+                    <th style="text-align: center;">Regular (2.0)</th>
+                    <th style="text-align: center;">Bom (3.0)</th>
+                    <th style="text-align: center;">Ótimo (4.0)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: left;">Postura em Segurança do Trabalho</td>
+                    <td style="text-align: center;"><input type="checkbox" name="postura_seg_trabalho" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="postura_seg_trabalho" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="postura_seg_trabalho" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="postura_seg_trabalho" value="4"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Qualidade e Produtividade</td>
+                    <td style="text-align: center;"><input type="checkbox" name="qualidade_produtividade" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="qualidade_produtividade" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="qualidade_produtividade" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="qualidade_produtividade" value="4"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Trabalho em Equipe</td>
+                    <td style="text-align: center;"><input type="checkbox" name="trabalho_em_equipe" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="trabalho_em_equipe" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="trabalho_em_equipe" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="trabalho_em_equipe" value="4"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Comprometimento</td>
+                    <td style="text-align: center;"><input type="checkbox" name="comprometimento" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="comprometimento" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="comprometimento" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="comprometimento" value="4"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Disponibilidade para Mudanças</td>
+                    <td style="text-align: center;"><input type="checkbox" name="disponibilidade_para_mudancas" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="disponibilidade_para_mudancas" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="disponibilidade_para_mudancas" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="disponibilidade_para_mudancas" value="4"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Disciplina</td>
+                    <td style="text-align: center;"><input type="checkbox" name="disciplina" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="disciplina" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="disciplina" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="disciplina" value="4"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Rendimento sob Pressão</td>
+                    <td style="text-align: center;"><input type="checkbox" name="rendimento_sob_pressao" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="rendimento_sob_pressao" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="rendimento_sob_pressao" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="rendimento_sob_pressao" value="4"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Proatividade</td>
+                    <td style="text-align: center;"><input type="checkbox" name="proatividade" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="proatividade" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="proatividade" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="proatividade" value="4"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Comunicação</td>
+                    <td style="text-align: center;"><input type="checkbox" name="comunicacao" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="comunicacao" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="comunicacao" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="comunicacao" value="4"></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Assiduidade</td>
+                    <td style="text-align: center;"><input type="checkbox" name="assiduidade" value="1"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="assiduidade" value="2"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="assiduidade" value="3"></td>
+                    <td style="text-align: center;"><input type="checkbox" name="assiduidade" value="4"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Avaliação Global (preenchimento manual) -->
+    <div class="mt-4">
+        <table class="custom-table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>Avaliação Global (Visão do Avaliador)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <textarea rows="4" style="width: 100%; border: 1px solid #ddd; padding: 5px;" placeholder="Preencha sua avaliação aqui..."></textarea>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4">
+        <table class="custom-table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>Avaliação Global (Visão do Avaliado)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <textarea rows="4" style="width: 100%; border: 1px solid #ddd; padding: 5px;" placeholder="Preencha sua avaliação aqui..."></textarea>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    
+</div>
+{% endblock %}
