@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<head>
+    {{ form.media }}
+</head>
+
+<div class="print-container container mt-5">
+    {% include 'header.html' %}
+
+    <!-- Botão de Imprimir -->
+    <div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <!-- Informações do Comunicado -->
+    <div class="info-section mt-4">
+        <table class="custom-table" style="width: 100%;">
+            <tr>
+                <td style="padding: 8px; text-align: left;">
+                    <strong>TIPO:</strong> {{ comunicado.tipo }}
+                </td>
+                <td style="padding: 8px; text-align: left;">
+                    <strong>DATA DO COMUNICADO:</strong> {{ comunicado.data|date:"d/m/Y" }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="padding: 8px; text-align: left;">
+                    <strong>ASSUNTO:</strong> {{ comunicado.assunto }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="padding: 8px; text-align: left;">
+                    <strong>DESCRIÇÃO:</strong> {{ comunicado.descricao|safe }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+   <!-- Lista de Participantes com estrutura alinhada -->
+<div class="participants-section mt-3">
+    <table class="custom-table" style="width: 100%;">
+        <tr>
+            <th style="width: 50%;">NOME</th>
+            <th>SETOR</th>
+            <th>VISTO</th>
+        </tr>
+        {% for participante in funcionarios_ativos %}
+            <tr>
+                <td>{{ participante.nome }}</td>
+                <td>{{ participante.local_trabalho }}</td>
+                <td>______________________</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="3" class="text-center">Nenhum participante registrado.</td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+
+    <!-- Número do Formulário (visível apenas na impressão) -->
+    <div class="numero-formulario d-none d-print-block" style="text-align: right; margin-top: 20px;">
+        F013 Rev.03
+    </div>
+</div>
+
+<!-- Estilos personalizados e de impressão -->
+<style>
+    /* Ajuste geral de layout */
+    .info-card {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .info-column {
+        width: 48%; /* Divide em duas colunas */
+    }
+
+    /* Estilos personalizados da tabela */
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .custom-table th, .custom-table td {
+        padding: 4px;
+        border: 1px solid #ddd;
+        font-size: 10px;
+        text-align: center;
+    }
+    .custom-table th {
+        background-color: #e7f1ff;
+        color: #333;
+        font-weight: bold;
+    }
+    .custom-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    /* Estilo de impressão */
+    @media print {
+        body {
+            font-size: 10px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin-bottom: 20px;
+            page-break-after: avoid;
+        }
+        .numero-formulario {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #333;
+        }
+        .numero-pagina {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            font-size: 10px;
+            color: #333;
+            content: "Página " counter(page);
+        }
+        .d-print-none, .sidebar, .navbar {
+            display: none !important;
+        }
+        .print-container {
+            width: 100%;
+            max-width: 800px; /* Centraliza o conteúdo */
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .custom-table th, .custom-table td {
+            padding: 4px;
+            border: 1px solid #ddd;
+            font-size: 10px;
+            text-align: center;
+        }
+    }
+</style>
+
+<!-- Script para impressão -->
+<script>
+function imprimir() {
+    var conteudo = document.querySelector('.print-container').innerHTML;
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
+    
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <title>Lista de Assinaturas</title>
+                <style>
+                    /* Estilos gerais */
+                    body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }
+                    .info-card { display: flex; gap: 20px; flex-wrap: wrap; }
+                    .info-column { width: 48%; }
+                    .numero-formulario { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #333; }
+                    .numero-pagina { position: fixed; bottom: 10px; left: 10px; font-size: 10px; color: #333; }
+
+                    .custom-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    th, td {
+                        padding: 4px;
+                        border: 1px solid #ddd;
+                        font-size: 10px;
+                        text-align: center;
+                    }
+                    th {
+                        background-color: #e7f1ff;
+                        color: #333;
+                        font-weight: bold;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9f9f9;
+                    }
+                    h2 {
+                        text-align: center; /* Centraliza o título */
+                        font-size: 14px;
+                        margin-top: 0;
+                    }
+                    @media print {
+                        .numero-pagina::after {
+                            content: "Página " counter(page);
+                        }
+                        .d-print-none { display: none !important; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h2>Lista de Assinaturas</h2>
+                ${conteudo}
+                <div class="numero-formulario">F013 Rev.03</div>
+                <div class="numero-pagina"></div> 
+            </body>
+        </html>
+    `);
+
+    novaJanela.document.close();
+    novaJanela.onload = function () {
+        novaJanela.print();
+        novaJanela.close();
+    };
+}
+</script>
+
+{% endblock %}

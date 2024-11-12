@@ -261,7 +261,8 @@ class ComunicadoForm(forms.ModelForm):
 
     class Meta:
         model = Comunicado
-        fields = ['data', 'assunto', 'descricao', 'tipo', 'departamento_responsavel']
+        fields = ['data', 'assunto', 'descricao', 'tipo', 'departamento_responsavel', 'lista_assinaturas']
+
         widgets = {
             'data': DateInput(attrs={'class': 'form-control', 'type': 'date', 'value': ''}),  # Aqui, adicionamos 'value' como vazio
             'assunto': forms.TextInput(attrs={'class': 'form-control'}),           

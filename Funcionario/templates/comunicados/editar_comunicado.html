@@ -33,6 +33,17 @@
             {{ form.departamento_responsavel }}
         </div>
 
+        <!-- Campo de Anexo da Lista de Assinaturas -->
+        <div class="col-md-12">
+            <label for="id_lista_assinaturas" class="form-label">Lista de Assinaturas:</label>
+            {{ form.lista_assinaturas }}
+            {% if comunicado.lista_assinaturas %}
+                <p class="mt-2">
+                    <a href="{{ comunicado.lista_assinaturas.url }}" target="_blank">Ver anexo atual</a>
+                </p>
+            {% endif %}
+        </div>
+
         <!-- Botão de Salvar -->
         <div class="col-12 text-center mt-4">
             <button type="submit" class="btn btn-primary">Salvar Alterações</button>

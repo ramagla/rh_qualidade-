@@ -15,7 +15,7 @@ def home(request):
         print("Exceção ao chamar a API:", e)
     
     # Consulta aos últimos comunicados
-    comunicados = Comunicado.objects.order_by('-data')[:5]
+    comunicados = Comunicado.objects.order_by('-data')[:4]
     
     # Dados fictícios para funcionários com avaliação baixa
     funcionarios_avaliacao_baixa = [
@@ -38,4 +38,4 @@ def home(request):
     return render(request, 'home.html', context)
 
 def sucesso_view(request):
-    return render(request, 'sucesso.html') 
+    return render(request, 'sucesso.html')

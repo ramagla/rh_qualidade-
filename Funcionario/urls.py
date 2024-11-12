@@ -87,6 +87,7 @@ from .views.comunicados_views import (
     editar_comunicado,
     excluir_comunicado,
     imprimir_comunicado,
+    imprimir_assinaturas
 )
 
 
@@ -192,6 +193,8 @@ urlpatterns = [
     path('comunicados/editar/<int:id>/', editar_comunicado, name='editar_comunicado'),
     path('comunicados/excluir/<int:id>/', excluir_comunicado, name='excluir_comunicado'),
     path('comunicados/imprimir/<int:id>/', imprimir_comunicado, name='imprimir_comunicado'),
+    path('comunicados/imprimir_assinaturas/<int:id>/', imprimir_assinaturas, name='imprimir_assinaturas'),
+
 
 
 ]
