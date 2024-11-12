@@ -301,36 +301,27 @@ class AvaliacaoAnual(models.Model):
   
 class JobRotationEvaluation(models.Model):
     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name="job_rotation_evaluations")
-    area_atual = models.CharField(max_length=100, null=True, blank=True)  # Campo opcional
-    cargo_atual = models.ForeignKey(Cargo, related_name='job_rotation_evaluations_cargo', on_delete=models.CASCADE, null=True, blank=True)  # Campo opcional
-    competencias = models.TextField(null=True, blank=True)  # Campo opcional
-    data_ultima_avaliacao = models.DateField(null=True, blank=True)  # Novo campo para data da última avaliação
-    status_ultima_avaliacao = models.CharField(max_length=50, null=True, blank=True, help_text="Status da última avaliação de desempenho")  # Novo campo para status da última avaliação
-    cursos_realizados = models.JSONField(default=list, null=True, blank=True)
+    local_trabalho = models.CharField(max_length=100, null=True, blank=True)
+    cargo_atual = models.ForeignKey(Cargo, related_name='job_rotation_evaluations_cargo', on_delete=models.CASCADE, null=True, blank=True)
+    competencias = models.TextField(null=True, blank=True)
+    data_ultima_avaliacao = models.DateField(null=True, blank=True)
+    status_ultima_avaliacao = models.CharField(max_length=50, null=True, blank=True)
+    cursos_realizados = models.JSONField(default=list, null=True, blank=True)  # Lista de cursos realizados
     escolaridade = models.CharField(max_length=100, null=True, blank=True)
-
-    # Campos para Job Rotation
     area = models.CharField(max_length=100)
     nova_funcao = models.ForeignKey(Cargo, related_name='nova_funcao', on_delete=models.SET_NULL, null=True, blank=True)
     data_inicio = models.DateField()
     termino_previsto = models.DateField(editable=False, null=True, blank=True)
     gestor_responsavel = models.ForeignKey(Funcionario, related_name='gestor_responsavel', on_delete=models.SET_NULL, null=True)
-
-    # Competências selecionadas
     descricao_cargo = models.TextField(null=True, blank=True)
-
-    # Treinamentos Requeridos
     treinamentos_requeridos = models.TextField(blank=True)
     treinamentos_propostos = models.TextField(blank=True)
-
-    # Avaliações
     avaliacao_gestor = models.TextField(blank=True)
     avaliacao_funcionario = models.TextField(blank=True)
     avaliacao_rh = models.CharField(
         max_length=20,
-        choices=[('Apto', 'Apto'), ('Inapto', 'Inapto'), ('Prorrogar TN', 'Prorrogar TN')]
+        choices=[('Apto', 'Apto'), ('Inapto', 'Inapto'), ('Prorrogar TN', 'Prorrogar TN'), ('EmProgresso', 'Em Progresso')],  # Adicionado "Em Progresso"
     )
-    dias_prorrogacao = models.IntegerField(default=0, null=True, blank=True)
     disponibilidade_vaga = models.BooleanField(default=False)
 
     def __str__(self):

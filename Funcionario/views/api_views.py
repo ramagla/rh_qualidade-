@@ -1,17 +1,52 @@
 from django.http import JsonResponse
-from Funcionario.models import Cargo, Funcionario, Treinamento
+import os
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+from Funcionario.models import Funcionario, Revisao, AvaliacaoAnual,Cargo
 
 def get_funcionario_info(request, id):
     try:
+        # Obter o funcionário
         funcionario = Funcionario.objects.get(id=id)
+        
+        # Obter dados do cargo atual
+        cargo_atual = funcionario.cargo_atual
+        descricao_cargo = ""
+        if cargo_atual:
+            descricao_cargo = f"Descrição de cargo N° {cargo_atual.numero_dc} - Nome: {cargo_atual.nome}"
+
+        # Obter a última revisão do cargo
+        ultima_revisao = Revisao.objects.filter(cargo=cargo_atual).order_by('-data_revisao').first()
+        numero_revisao = ultima_revisao.numero_revisao if ultima_revisao else "Nenhuma revisão encontrada"
+        
+        # Obter a última avaliação anual do funcionário
+        ultima_avaliacao_anual = AvaliacaoAnual.objects.filter(funcionario=funcionario).order_by('-data_avaliacao').first()
+
+        # Processar a data e o status da última avaliação de desempenho
+        ultima_avaliacao_data = ultima_avaliacao_anual.data_avaliacao.strftime('%d/%m/%Y') if ultima_avaliacao_anual else "Data não encontrada"
+        ultima_avaliacao_status = (
+            ultima_avaliacao_anual.calcular_classificacao()['status'] if ultima_avaliacao_anual else "Status não encontrado"
+        )
+
+        # Formatar as informações para resposta JSON
         data = {
             'nome': funcionario.nome,
             'local_trabalho': funcionario.local_trabalho,
-            'cargo_atual': funcionario.cargo_atual.nome if funcionario.cargo_atual else '',
+            'cargo_atual': cargo_atual.nome if cargo_atual else '',
+            'escolaridade': funcionario.escolaridade,
+            'competencias': f"{descricao_cargo}, Última Revisão N° {numero_revisao}",
+            'data_ultima_avaliacao': ultima_avaliacao_data,
+            'status_ultima_avaliacao': ultima_avaliacao_status
         }
         return JsonResponse(data)
+    
     except Funcionario.DoesNotExist:
         return JsonResponse({'error': 'Funcionário não encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+       
+
 
 def get_treinamentos(request, funcionario_id):
     treinamentos = Treinamento.objects.filter(funcionario_id=funcionario_id).values('tipo', 'nome_curso', 'categoria')
@@ -137,3 +172,25 @@ def get_funcionario_ficha(request, id):
 
     except Funcionario.DoesNotExist:
         return JsonResponse({'error': 'Funcionário não encontrado'}, status=404)
+
+
+@csrf_exempt
+def atualizar_cargo_funcionario(request, funcionario_id):
+    if request.method == 'POST':
+        try:
+            novo_cargo_id = request.POST.get("novo_cargo")
+            funcionario = Funcionario.objects.get(id=funcionario_id)
+            novo_cargo = Cargo.objects.get(id=novo_cargo_id)
+            
+            funcionario.cargo_atual = novo_cargo
+            funcionario.save()
+            
+            return JsonResponse({'status': 'success'}, status=200)
+        except Funcionario.DoesNotExist:
+            return JsonResponse({'error': 'Funcionário não encontrado'}, status=404)
+        except Cargo.DoesNotExist:
+            return JsonResponse({'error': 'Cargo não encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido'}, status=405)

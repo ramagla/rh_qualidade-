@@ -1,68 +1,155 @@
-from datetime import timezone
-from venv import logger
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
+from django.http import HttpResponse,Http404
+from weasyprint import HTML
+
 from django.contrib import messages
+from django.urls import reverse_lazy
+from datetime import timezone
 from Funcionario.models import JobRotationEvaluation, Funcionario, Cargo
 from Funcionario.forms import JobRotationEvaluationForm
 
+# Lista as avaliações de Job Rotation
 def lista_jobrotation_evaluation(request):
+    # Obtem todas as avaliações
     evaluations = JobRotationEvaluation.objects.all()
-    return render(request, 'lista_jobrotation_evaluation.html', {'evaluations': evaluations})
 
+    # Obtem todos os funcionários para o filtro e a modal
+    funcionarios = Funcionario.objects.all()
+
+    # Passa as avaliações e os funcionários para o template
+    return render(request, 'jobrotation/lista_jobrotation_evaluation.html', {
+        'evaluations': evaluations,
+        'funcionarios': funcionarios  # Adiciona a lista de funcionários ao contexto
+    })
+
+
+# Cadastra nova avaliação de Job Rotation
 def cadastrar_jobrotation_evaluation(request):
     if request.method == 'POST':
         form = JobRotationEvaluationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Avaliação de Job Rotation cadastrada com sucesso!')
+            job_rotation = form.save()
+
+            # Verifica se a avaliação do RH é "Prorrogar"
+            if form.cleaned_data['avaliacao_rh'] == 'Prorrogar':
+                dias_prorrogacao = form.cleaned_data.get('dias_prorrogacao', 0)
+                print("Dias de Prorrogação:", dias_prorrogacao)  # Log para verificar o valor
+
+                # Lógica para tratar prorrogação, caso haja necessidade de atualização
+                # Exemplo: Atualize o campo 'termino_previsto' com a prorrogação de dias
+                if dias_prorrogacao > 0:
+                    novo_termino = job_rotation.termino_previsto + timedelta(days=dias_prorrogacao)
+                    job_rotation.termino_previsto = novo_termino
+                    job_rotation.save()
+
+            # Verifica se a avaliação do RH é "Apto"
+            elif form.cleaned_data['avaliacao_rh'] == 'Apto':
+                funcionario_id = form.cleaned_data['funcionario'].id
+                novo_cargo_id = form.cleaned_data['nova_funcao'].id
+                Funcionario.objects.filter(id=funcionario_id).update(cargo_atual_id=novo_cargo_id)
+                messages.success(request, 'Cargo do funcionário atualizado com sucesso!')
+
+            # Caso a avaliação do RH seja 'EmAndamento' ou 'Inapto', outros tratamentos podem ser aplicados
+            # Se desejar adicionar outra lógica, como tratar datas, etc, também pode ser feito aqui
+
             return redirect('lista_jobrotation_evaluation')
+        else:
+            messages.error(request, 'Erro ao salvar a avaliação de Job Rotation.')
     else:
         form = JobRotationEvaluationForm()
-    return render(request, 'cadastrar_jobrotation_evaluation.html', {'form': form})
 
+    lista_cargos = Cargo.objects.all().order_by('nome')
+    funcionarios = Funcionario.objects.all().order_by('nome')
+
+    return render(request, 'jobrotation/cadastrar_jobrotation_evaluation.html', {
+        'form': form,
+        'lista_cargos': lista_cargos,
+        'funcionarios': funcionarios
+    })
+
+# Exclui uma avaliação de Job Rotation
 def excluir_jobrotation(request, id):
     job_rotation = get_object_or_404(JobRotationEvaluation, id=id)
     if request.method == 'POST':
         job_rotation.delete()
         messages.success(request, 'Registro de Job Rotation excluído com sucesso!')
-    return redirect('lista_jobrotation_evaluation')
+    return redirect(reverse_lazy('lista_jobrotation_evaluation'))
 
 def visualizar_jobrotation_evaluation(request, id):
-    job_rotation = get_object_or_404(JobRotationEvaluation, id=id)
-    cursos_realizados = job_rotation.cursos_realizados if job_rotation.cursos_realizados else []
-
-    context = {
-        'job_rotation': job_rotation,
-        'cursos_realizados': cursos_realizados,
-        'competencias': job_rotation.competencias or "Nenhuma competência informada",
-        'data_ultima_avaliacao': job_rotation.data_ultima_avaliacao,
-        'status_ultima_avaliacao': job_rotation.status_ultima_avaliacao or "Nenhum status encontrado",
-        'nova_funcao': job_rotation.nova_funcao.nome if job_rotation.nova_funcao else "N/A",
-        'data_geracao': timezone.now(),  # Adiciona a data atual
-    }
-
-    return render(request, 'visualizar_jobrotation_evaluation.html', context)
-
-
-def lista_jobrotation_evaluation(request):
-    logger.error("==> Teste de log ERROR dentro da view lista_jobrotation_evaluation.")
-    logger.info("==> Teste de log INFO dentro da view lista_jobrotation_evaluation.")
-    logger.debug("==> Teste de log DEBUG dentro da view lista_jobrotation_evaluation.")
-    
-    evaluations = JobRotationEvaluation.objects.all()
-    logger.info(f"Total de avaliações encontradas: {evaluations.count()}")
-    
-    return render(request, 'lista_jobrotation_evaluation.html', {'evaluations': evaluations})
-
+    evaluation = get_object_or_404(JobRotationEvaluation, id=id)
+    return render(request, 'jobrotation/visualizar_jobrotation_evaluation.html', {'evaluation': evaluation})
 
 def editar_jobrotation_evaluation(request, id):
+    # Carregar a avaliação de Job Rotation que será editada
     evaluation = get_object_or_404(JobRotationEvaluation, id=id)
+
     if request.method == 'POST':
         form = JobRotationEvaluationForm(request.POST, instance=evaluation)
+        
         if form.is_valid():
-            form.save()
+            form.save()  # Salva a avaliação atualizada
             messages.success(request, 'Avaliação de Job Rotation atualizada com sucesso!')
-            return redirect('lista_jobrotation_evaluation')  # Redireciona para a lista após a edição
+            return redirect('lista_jobrotation_evaluation')  # Redireciona para a lista de avaliações
+        else:
+            # Caso o formulário não seja válido, exibe uma mensagem de erro
+            messages.error(request, 'Erro ao atualizar a avaliação de Job Rotation.')
+            print(form.errors)  # Verifique os erros do formulário no terminal
+
     else:
+        # Se o método for GET, carregue a avaliação e o formulário correspondente
         form = JobRotationEvaluationForm(instance=evaluation)
-    return render(request, 'editar_jobrotation_evaluation.html', {'form': form, 'evaluation': evaluation})
+
+    # Carregar os dados adicionais para o template, como lista de cargos e funcionários
+    lista_cargos = Cargo.objects.all()
+    funcionarios = Funcionario.objects.all()
+
+    # Enviar os dados para o template de edição
+    return render(request, 'jobrotation/editar_jobrotation_evaluation.html', {
+        'form': form,
+        'evaluation': evaluation,
+        'lista_cargos': lista_cargos,
+        'funcionarios': funcionarios
+    })
+
+
+def imprimir_jobrotation_evaluation(request, id):
+    # Obtenha a avaliação de Job Rotation usando o ID
+    evaluation = get_object_or_404(JobRotationEvaluation, id=id)
+
+    # Obtenha a última revisão associada ao novo cargo (nova_funcao)
+    ultima_revisao = (
+        evaluation.nova_funcao.revisoes.order_by('-data_revisao').first()
+        if evaluation.nova_funcao else None
+    )
+
+    # Formatar a descrição conforme o formato solicitado
+    descricao_cargo = "Descrição de cargo não disponível"
+    if evaluation.nova_funcao and ultima_revisao:
+        numero_dc = evaluation.nova_funcao.numero_dc
+        nome_cargo = evaluation.nova_funcao.nome
+        numero_revisao = ultima_revisao.numero_revisao
+        descricao_cargo = f"Conforme: Descrição de cargo N° {numero_dc} - Nome: {nome_cargo}, Última Revisão N° {numero_revisao}"
+
+    # Verifica se o usuário solicitou o download em PDF
+    if request.GET.get('download') == 'pdf':
+        # Renderiza o HTML para o PDF
+        html_string = render_to_string('jobrotation/imprimir_jobrotation_evaluation.html', {
+            'evaluation': evaluation,
+            'ultima_revisao': ultima_revisao,
+            'descricao_cargo': descricao_cargo,
+        })
+        html = HTML(string=html_string)
+        pdf = html.write_pdf()
+
+        # Retorna o PDF como resposta
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="avaliacao_job_rotation_{evaluation.funcionario.nome}.pdf"'
+        return response
+    else:
+        # Renderiza o HTML normalmente para visualização
+        return render(request, 'jobrotation/imprimir_jobrotation_evaluation.html', {
+            'evaluation': evaluation,
+            'ultima_revisao': ultima_revisao,
+            'descricao_cargo': descricao_cargo,
+        })

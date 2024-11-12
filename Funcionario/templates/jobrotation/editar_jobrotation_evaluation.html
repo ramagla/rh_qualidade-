@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Editar Avaliação de Job Rotation{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Editar Avaliação de Job Rotation</h2>
+    <form method="POST" action="{% url 'editar_jobrotation_evaluation' evaluation.id %}" class="row g-3" id="jobRotationForm">
+        {% csrf_token %}
+     
+
+       <!-- Nome do Funcionário (não editável) -->
+        <div class="col-md-6">
+            <label for="funcionario-select" class="form-label">Nome:</label>
+            <select name="funcionario" class="form-control {% if form.funcionario.errors %}is-invalid{% endif %}" id="funcionario-select" disabled>
+                <option value="{{ form.funcionario.value }}" selected>{{ evaluation.funcionario.nome }}</option>
+            </select>
+            <input type="hidden" name="funcionario" value="{{ evaluation.funcionario.id }}" />  <!-- Campo oculto para enviar o id do funcionário -->
+            {% if form.funcionario.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.funcionario.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Campos do Job Rotation -->
+        <h3 class="mt-4 mb-3">Job Rotation</h3>
+        
+        <!-- Área -->
+        <div class="col-md-6">
+            <label for="area" class="form-label">Área:</label>
+            <input type="text" name="area" class="form-control" value="{{ evaluation.area }}" placeholder="Insira a área para o Job Rotation" required>
+        </div>
+
+        <!-- Função -->
+        <div class="col-md-6">
+            <label for="nova_funcao" class="form-label">Função:</label>
+            <select name="nova_funcao" class="form-select {% if form.nova_funcao.errors %}is-invalid{% endif %}" required>
+                {% for cargo in lista_cargos %}
+                    <option value="{{ cargo.id }}" {% if cargo.id == evaluation.nova_funcao.id %}selected{% endif %}>{{ cargo.nome }}</option>
+                {% endfor %}
+            </select>
+            {% if form.nova_funcao.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.nova_funcao.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Data de Início -->
+        <div class="col-md-6">
+            <label for="data_inicio" class="form-label">Data de Início:</label>
+            <input type="date" id="data_inicio" name="data_inicio" class="form-control {% if form.data_inicio.errors %}is-invalid{% endif %}" value="{{ evaluation.data_inicio|date:'Y-m-d' }}" required>
+            {% if form.data_inicio.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.data_inicio.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Término Previsto (Calculado) -->
+        <div class="col-md-6">
+            <label for="termino_previsto" class="form-label">Término Previsto (Calculado):</label>
+            <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" value="{{ evaluation.termino_previsto|date:'Y-m-d' }}" readonly>
+        </div>
+
+        <!-- Gestor Responsável -->
+        <div class="col-md-6">
+            <label for="gestor_responsavel" class="form-label">Gestor Responsável:</label>
+            <select name="gestor_responsavel" class="form-select {% if form.gestor_responsavel.errors %}is-invalid{% endif %}" required>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}" {% if funcionario.id == evaluation.gestor_responsavel.id %}selected{% endif %}>{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+            {% if form.gestor_responsavel.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.gestor_responsavel.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Treinamentos Requeridos e Propostos -->
+        <h3 class="mt-4 mb-3">Treinamentos Requeridos e Propostos</h3>
+        <div class="col-md-6">
+            <label for="id_treinamentos_requeridos" class="form-label">Treinamentos Requeridos:</label>
+            {{ form.treinamentos_requeridos }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="id_treinamentos_propostos" class="form-label">Treinamentos Propostos:</label>
+            {{ form.treinamentos_propostos }}
+        </div>
+
+        <!-- Avaliações -->
+        <h3 class="mt-4 mb-3">Avaliações</h3>
+        <div class="col-md-6">
+            <label for="id_avaliacao_gestor" class="form-label">Avaliação do Gestor:</label>
+            {{ form.avaliacao_gestor }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="id_avaliacao_funcionario" class="form-label">Avaliação do Funcionário:</label>
+            {{ form.avaliacao_funcionario }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="avaliacao_rh" class="form-label">Avaliação do RH:</label>
+            <select name="avaliacao_rh" class="form-select" id="avaliacao_rh" onchange="toggleDiasProrrogacao()" required>
+                <option value="Apto" {% if form.avaliacao_rh.value == 'Apto' %}selected{% endif %}>Apto</option>
+                <option value="Inapto" {% if form.avaliacao_rh.value == 'Inapto' %}selected{% endif %}>Inapto</option>
+                <option value="Prorrogar" {% if form.avaliacao_rh.value == 'Prorrogar' %}selected{% endif %}>Prorrogar</option>
+                <option value="EmAndamento" {% if form.avaliacao_rh.value == 'EmAndamento' %}selected{% endif %}>Em Andamento</option>
+            </select>
+        </div>
+
+        <!-- Disponibilidade de Vaga -->
+        <h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
+        <div class="col-md-6">
+            <label for="disponibilidade_vaga" class="form-label">Disponibilidade de Vaga no Quadro:</label>
+            <input type="checkbox" name="disponibilidade_vaga" {% if form.disponibilidade_vaga.value %}checked{% endif %}> Sim
+        </div>
+
+        <!-- Botão para salvar -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+    </form>
+</div>
+
+
+
+
+<script src="{% static 'django_ckeditor_5/ckeditor5/configs/default.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const dataInicioInput = document.getElementById('data_inicio');
+    const terminoPrevistoInput = document.getElementById('termino_previsto');
+
+    // Função para calcular automaticamente o "Término Previsto (Calculado)" adicionando 60 dias à data de início
+    function calcularTerminoPrevisto() {
+        const dataInicio = new Date(dataInicioInput.value);
+        if (!isNaN(dataInicio.getTime())) {
+            const terminoPrevisto = new Date(dataInicio);
+            terminoPrevisto.setDate(terminoPrevisto.getDate() + 60); // Calcula 60 dias após a data de início
+
+            const dia = String(terminoPrevisto.getDate()).padStart(2, '0');
+            const mes = String(terminoPrevisto.getMonth() + 1).padStart(2, '0');
+            const ano = terminoPrevisto.getFullYear();
+
+            terminoPrevistoInput.value = `${ano}-${mes}-${dia}`;
+        } else {
+            terminoPrevistoInput.value = ''; // Limpa se a data de início for inválida
+        }
+    }
+
+    // Eventos para calcular o término previsto
+    dataInicioInput.addEventListener('change', calcularTerminoPrevisto);
+});
+</script>
+
+{% endblock %}

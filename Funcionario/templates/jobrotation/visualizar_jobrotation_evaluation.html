@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Visualizar Avaliação de Job Rotation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Visualizar Avaliação de Job Rotation</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <label for="funcionario" class="form-label">Nome:</label>
+            <input type="text" class="form-control" value="{{ evaluation.funcionario.nome }}" disabled>
+        </div>
+
+        <div class="col-md-6">
+            <label for="area" class="form-label">Área:</label>
+            <input type="text" class="form-control" value="{{ evaluation.area }}" disabled>
+        </div>
+        
+        <div class="col-md-6">
+            <label for="nova_funcao" class="form-label">Função:</label>
+            <input type="text" class="form-control" value="{{ evaluation.nova_funcao.nome }}" disabled>
+        </div>
+        
+        <div class="col-md-6">
+            <label for="data_inicio" class="form-label">Data de Início:</label>
+            <input type="text" class="form-control" value="{{ evaluation.data_inicio|date:"d/m/Y" }}" disabled>
+        </div>
+
+        <!-- Término Previsto (Calculado) -->
+        <div class="col-md-6">
+            <label for="termino_previsto" class="form-label">Término Previsto (Calculado):</label>
+            <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" value="{{ evaluation.termino_previsto|date:'d/m/Y' }}" readonly>
+        </div>
+
+
+        <div class="col-md-6">
+            <label for="gestor_responsavel" class="form-label">Gestor Responsável:</label>
+            <input type="text" class="form-control" value="{{ evaluation.gestor_responsavel.nome }}" disabled>
+        </div>
+    </div>
+
+    <!-- Treinamentos Requeridos -->
+<div class="col-md-6">
+    <label for="treinamentos_requeridos" class="form-label">Treinamentos Requeridos:</label>
+    <textarea class="form-control" rows="4" disabled>{{ evaluation.treinamentos_requeridos|linebreaksbr }}</textarea>
+</div>
+
+<!-- Treinamentos Propostos -->
+<div class="col-md-6">
+    <label for="treinamentos_propostos" class="form-label">Treinamentos Propostos:</label>
+    <textarea class="form-control" rows="4" disabled>{{ evaluation.treinamentos_propostos|linebreaksbr }}</textarea>
+</div>
+
+<!-- Avaliação do Gestor -->
+<div class="col-md-6">
+    <label for="avaliacao_gestor" class="form-label">Avaliação do Gestor:</label>
+    <textarea class="form-control" rows="4" disabled>{{ evaluation.avaliacao_gestor|linebreaksbr }}</textarea>
+</div>
+
+<!-- Avaliação do Funcionário -->
+<div class="col-md-6">
+    <label for="avaliacao_funcionario" class="form-label">Avaliação do Funcionário:</label>
+    <textarea class="form-control" rows="4" disabled>{{ evaluation.avaliacao_funcionario|linebreaksbr }}</textarea>
+</div>
+
+
+        <div class="col-md-6">
+            <label for="avaliacao_rh" class="form-label">Avaliação do RH:</label>
+            <input type="text" class="form-control" value="{{ evaluation.avaliacao_rh }}" disabled>
+        </div>
+    </div>
+
+    <h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
+    <div class="row">
+        <div class="col-md-6">
+            <label for="disponibilidade_vaga" class="form-label">Disponibilidade de Vaga no Quadro:</label>
+            <input type="checkbox" class="form-check-input" {% if evaluation.disponibilidade_vaga %}checked{% endif %} disabled>
+        </div>
+    </div>
+
+    <div class="col-12 text-center mt-4">
+        <a href="{% url 'lista_jobrotation_evaluation' %}" class="btn btn-primary">Voltar</a>
+    </div>
+</div>
+{% endblock %}

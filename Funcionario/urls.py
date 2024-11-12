@@ -67,6 +67,7 @@ from .views.job_rotation_views import (
     visualizar_jobrotation_evaluation,
     editar_jobrotation_evaluation,
     excluir_jobrotation,
+    imprimir_jobrotation_evaluation
 )
 from .views.api_views import get_funcionario_info, get_treinamentos, get_competencias, get_cargo,get_funcionario_ficha
 
@@ -154,8 +155,10 @@ urlpatterns = [
     path('jobrotation/', lista_jobrotation_evaluation, name='lista_jobrotation_evaluation'),
     path('jobrotation/cadastrar/', cadastrar_jobrotation_evaluation, name='cadastrar_jobrotation_evaluation'),
     path('jobrotation/<int:id>/', visualizar_jobrotation_evaluation, name='visualizar_jobrotation_evaluation'),
-    path('jobrotation/<int:id>/editar/', editar_jobrotation_evaluation, name='editar_jobrotation_evaluation'),
+    path('jobrotation/editar/<int:id>/', editar_jobrotation_evaluation, name='editar_jobrotation_evaluation'),
     path('jobrotation/<int:id>/excluir/', excluir_jobrotation, name='excluir_jobrotation'),
+    path('jobrotation/imprimir/<int:id>/', imprimir_jobrotation_evaluation, name='imprimir_jobrotation_evaluation'),
+
 
     # APIs auxiliares
     path('get_funcionario_info/<int:id>/', get_funcionario_info, name='get_funcionario_info'),

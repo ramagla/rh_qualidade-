@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Avaliação de Job Rotation{% endblock %}
+{% load static %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastrar Avaliação de Job Rotation</h2>
+    <form method="POST" action="{% url 'cadastrar_jobrotation_evaluation' %}" class="row g-3" id="jobRotationForm">
+        {% csrf_token %}
+
+        <!-- Seleção do Nome do Funcionário -->
+        <div class="col-md-6">
+            <label for="funcionario-select" class="form-label">Nome:</label>
+            <select name="funcionario" class="form-control {% if form.funcionario.errors %}is-invalid{% endif %}" id="funcionario-select">
+                <option value="">Selecione um Funcionário</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+            {% if form.funcionario.errors %}
+            <div class="invalid-feedback">
+                {% for error in form.funcionario.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Área Atual do Funcionário -->
+        <div class="col-md-6">
+            <label for="local-trabalho" class="form-label">Área Atual:</label>
+            <input type="text" id="local-trabalho" name="local_trabalho" class="form-control" readonly>
+        </div>
+
+        <!-- Cargo Atual do Funcionário -->
+        <div class="col-md-6">
+            <label for="cargo-atual" class="form-label">Cargo Atual:</label>
+            <input type="text" id="cargo-atual" class="form-control" readonly>
+        </div> 
+
+        <!-- Competências do Funcionário -->
+        <div class="col-md-6">
+            <label for="competencias" class="form-label">Competências:</label>
+            <textarea id="competencias" name="competencias" class="form-control" readonly></textarea>
+        </div>
+
+        <!-- Data da Última Avaliação de Desempenho -->
+        <div class="col-md-6">
+            <label for="data-ultima-avaliacao" class="form-label">Data da Última Avaliação de Desempenho:</label>
+            <input type="text" id="data-ultima-avaliacao" class="form-control" readonly>
+        </div>
+
+        <!-- Status da Última Avaliação de Desempenho -->
+        <div class="col-md-6">
+            <label for="status-ultima-avaliacao" class="form-label">Status da Última Avaliação de Desempenho:</label>
+            <input type="text" id="status-ultima-avaliacao" class="form-control" readonly>
+        </div>
+
+        <!-- Cursos / Treinamentos -->
+        <h3 class="mt-4 mb-3">Cursos / Treinamentos</h3>
+        <div class="col-12">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Nome do Curso</th>
+                        <th>Categoria</th>
+                        <th>Status</th>
+                        <th>Data de Conclusão</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for treinamento in ultimos_treinamentos %}
+                    <tr>
+                        <td>{{ treinamento.tipo }}</td>
+                        <td>{{ treinamento.nome_curso }}</td>
+                        <td>{{ treinamento.categoria }}</td>
+                        <td>{{ treinamento.status }}</td>
+                        <td>{{ treinamento.data_fim }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not ultimos_treinamentos %}
+                    <tr>
+                        <td colspan="5">Nenhum treinamento encontrado para este funcionário.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Escolaridade / Formação -->
+        <div class="col-md-6">
+            <label for="escolaridade" class="form-label">Escolaridade:</label>
+            <input type="text" id="escolaridade" name="escolaridade" class="form-control" readonly>
+        </div>
+
+       <!-- Campos para Job Rotation -->
+            <h3 class="mt-4 mb-3">Job Rotation</h3>
+            <div class="col-md-6">
+                <label for="area" class="form-label">Área:</label>
+                <input type="text" name="area" class="form-control" placeholder="Insira a área para o Job Rotation">
+            </div>
+            <div class="col-md-6">
+                <label for="nova_funcao" class="form-label">Função:</label>
+                <select name="nova_funcao" class="form-select">
+                    {% for cargo in lista_cargos %}
+                    <option value="{{ cargo.id }}">{{ cargo.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="data_inicio" class="form-label">Data de Início:</label>
+                <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
+            </div>
+
+
+        <!-- Término Previsto (Calculado) -->
+        <div class="col-md-6">
+            <label for="termino_previsto" class="form-label">Término Previsto (Calculado):</label>
+            <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" readonly>
+        </div>>
+        
+
+        <div class="col-md-6">
+            <label for="gestor_responsavel" class="form-label">Gestor Responsável:</label>
+            <select name="gestor_responsavel" class="form-select">
+                {% for funcionario in funcionarios %}
+                <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+       <!-- Treinamentos Requeridos e Propostos -->
+            <h3 class="mt-4 mb-3">Treinamentos Requeridos e Propostos</h3>
+
+            <div class="col-md-6">
+                <label for="id_treinamentos_requeridos" class="form-label">Treinamentos Requeridos:</label>
+                {{ form.treinamentos_requeridos }}
+            </div>
+
+            <div class="col-md-6">
+                <label for="id_treinamentos_propostos" class="form-label">Treinamentos Propostos:</label>
+                {{ form.treinamentos_propostos }}
+            </div>
+
+
+       <!-- Avaliações -->
+            <h3 class="mt-4 mb-3">Avaliações</h3>
+
+            <div class="col-md-6">
+                <label for="id_avaliacao_gestor" class="form-label">Avaliação do Gestor:</label>
+                {{ form.avaliacao_gestor }}
+            </div>
+
+            <div class="col-md-6">
+                <label for="id_avaliacao_funcionario" class="form-label">Avaliação do Funcionário:</label>
+                {{ form.avaliacao_funcionario }}
+            </div>
+
+            <div class="col-md-6">
+                <label for="avaliacao_rh" class="form-label">Avaliação do RH:</label>
+                <select name="avaliacao_rh" class="form-select" id="avaliacao_rh" required>
+                    <option value="Apto" {% if form.avaliacao_rh.value == 'Apto' %}selected{% endif %}>Apto</option>
+                    <option value="Inapto" {% if form.avaliacao_rh.value == 'Inapto' %}selected{% endif %}>Inapto</option>
+                    <option value="Prorrogar TN" {% if form.avaliacao_rh.value == 'Prorrogar TN' %}selected{% endif %}>Prorrogar TN</option>
+                    <option value="EmProgresso" {% if form.avaliacao_rh.value == 'EmProgresso' %}selected{% endif %}>Em Progresso</option>
+                </select>
+            </div>
+
+            
+
+        <!-- Disponibilidade de Vaga -->
+        <h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
+        <div class="col-md-6">
+            <label for="disponibilidade_vaga" class="form-label">Disponibilidade de Vaga no Quadro:</label>
+            <input type="checkbox" name="disponibilidade_vaga"> Sim
+        </div>
+
+        <!-- Botão para salvar -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+    </form>
+</div>
+<script src="{% static 'django_ckeditor_5/ckeditor5/configs/default.js' %}"></script>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const dataInicioInput = document.getElementById('data_inicio');
+    const terminoPrevistoInput = document.getElementById('termino_previsto'); 
+    const funcionarioSelect = document.getElementById('funcionario-select');
+
+    // Função para calcular automaticamente o "Término Previsto (Calculado)" adicionando 60 dias à data de início
+    function calcularTerminoPrevisto() {
+        const dataInicio = new Date(dataInicioInput.value);
+        if (!isNaN(dataInicio.getTime())) {
+            const terminoPrevisto = new Date(dataInicio);
+            terminoPrevisto.setDate(terminoPrevisto.getDate() + 60); 
+
+            const dia = String(terminoPrevisto.getDate()).padStart(2, '0');
+            const mes = String(terminoPrevisto.getMonth() + 1).padStart(2, '0');
+            const ano = terminoPrevisto.getFullYear();
+
+            terminoPrevistoInput.value = `${ano}-${mes}-${dia}`;
+        } else {
+            terminoPrevistoInput.value = ''; 
+        }
+    }
+
+    // Função para carregar informações do funcionário selecionado
+    funcionarioSelect.addEventListener('change', function() {
+        const funcionarioId = this.value;
+        
+        if (funcionarioId) {
+            fetch(`/get_funcionario_info/${funcionarioId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('local-trabalho').value = data.local_trabalho || '';
+                    document.getElementById('cargo-atual').value = data.cargo_atual || '';
+                    document.getElementById('competencias').value = data.competencias || '';
+                    document.getElementById('data-ultima-avaliacao').value = data.data_ultima_avaliacao || 'Não disponível';
+                    document.getElementById('status-ultima-avaliacao').value = data.status_ultima_avaliacao || 'Nenhum status encontrado';
+                    document.getElementById('escolaridade').value = data.escolaridade || '';
+                    carregarTreinamentos(funcionarioId); 
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar informações do funcionário:', error);
+                    alert('Erro ao buscar informações. Por favor, tente novamente.');
+                });
+        }
+    });
+
+    // Função para carregar treinamentos do funcionário
+    function carregarTreinamentos(funcionarioId) {
+        fetch(`/get_treinamentos/${funcionarioId}/`)
+            .then(response => response.json())
+            .then(treinamentos => {
+                const tbody = document.querySelector('table tbody');
+                tbody.innerHTML = '';  
+
+                if (treinamentos.length > 0) {
+                    treinamentos.forEach(treinamento => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${treinamento.tipo || 'Não especificado'}</td>
+                            <td>${treinamento.nome_curso || 'Não especificado'}</td>
+                            <td>${treinamento.categoria || 'Não especificado'}</td>
+                            <td>${treinamento.status || 'Não especificado'}</td>
+                            <td>${treinamento.data_fim || 'Não especificado'}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="5">Nenhum treinamento encontrado para este funcionário.</td>`;
+                    tbody.appendChild(row);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar treinamentos do funcionário:', error);
+                alert('Erro ao carregar treinamentos. Por favor, tente novamente.');
+            });
+    }
+
+    // Eventos para calcular o término previsto
+    dataInicioInput.addEventListener('change', calcularTerminoPrevisto);
+});
+</script>
+
+
+
+
+
+
+{% endblock %}

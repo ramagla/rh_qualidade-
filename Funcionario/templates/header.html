@@ -1,81 +1,73 @@
 {% load static %}
-<div class="header d-flex align-items-center mb-4" style="font-family: Arial, sans-serif;">
+<div class="header d-flex align-items-center mb-3" style="font-family: Arial, sans-serif;">
     <!-- Logo da empresa -->
-    <div class="left-section me-3" style="margin-right: 20px;">
-        <img src="{% static 'logo.png' %}" alt="Logotipo" style="width: 80px; height: auto;">
+    <div class="left-section me-2">
+        <img src="{% static 'logo.png' %}" alt="Logotipo" style="width: 50px; height: auto;">
     </div>
     
-    <!-- Barra de separação -->
-    <div style="border-left: 2px solid #ddd; height: 100px; margin-right: 20px;"></div>
+    <!-- Barra de separação reduzida -->
+    <div style="border-left: 1px solid #ddd; height: 60px; margin-right: 10px;"></div>
     
-    <!-- Informações da empresa -->
-    <div class="center-section text-start" style="font-size: 12px; color: #4a4a4a;">
-        <strong style="font-size: 12px; color: #333;">BRAS-MOL MOLAS & ESTAMPADOS LTDA</strong><br>
+    <!-- Informações da empresa com fonte reduzida -->
+    <div class="center-section text-start" style="font-size: 10px; color: #4a4a4a;">
+        <strong style="font-size: 10px; color: #333;">BRAS-MOL MOLAS & ESTAMPADOS LTDA</strong><br>
         <span><strong>CEP:</strong> 08579000</span><br>
         <span>BONSUCESSO, DO, 1961 - RIO ABAIXO - Itaquaquecetuba / SP</span><br>
         <span><strong>Fone:</strong> 1146482611 - <strong>E-mail:</strong> rh@brasmol.com.br</span><br>
-        <span><strong>CNPJ:</strong> 61.296.901/0002-48 - </span>
+        <span><strong>CNPJ:</strong> 61.296.901/0002-48</span>
     </div>
 
-    <!-- Barra de separação -->
-    <div style="border-left: 2px solid #ddd; height: 100px; margin-left: 20px; margin-right: 20px;"></div>
+    <!-- Barra de separação reduzida -->
+    <div style="border-left: 1px solid #ddd; height: 60px; margin-left: 10px; margin-right: 10px;"></div>
 
-    <!-- Data de impressão e número da página -->
-    <div class="right-section text-end" style="font-size: 12px; color: #4a4a4a;">
+    <!-- Data de impressão e número da página reduzido -->
+    <div class="right-section text-end" style="font-size: 10px; color: #4a4a4a;">
         <span><strong>Data de Impressão:</strong> <span id="data-impressao"></span></span><br>
     </div>
 </div>
 
-<hr style="border-top: 1px solid #ddd; margin-top: 20px; margin-bottom: 20px;">
+<hr style="border-top: 1px solid #ddd; margin-top: 10px; margin-bottom: 10px;">
 
 <style>
     @media print {
-        /* Estilos para o cabeçalho na impressão */
         .header {
             display: flex;
             align-items: center;
             font-family: Arial, sans-serif;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             page-break-after: avoid;
         }
 
         /* Reduz o tamanho do logotipo na impressão */
         .left-section img {
-            width: 50px; /* Reduzido para impressão */
+            width: 40px; /* Reduzido para impressão */
             height: auto;
-            margin-right: 10px;
+            margin-right: 5px;
         }
 
-        /* Reduz o tamanho do texto para 10px */
+        /* Reduz o tamanho do texto para 8px */
         .center-section {
-            font-size: 10px;
+            font-size: 8px;
             color: #4a4a4a;
-            margin-left: 10px;
         }
 
         /* Texto principal da empresa */
         .center-section strong {
-            font-size: 10px; /* Reduzido para impressão */
+            font-size: 8px;
             color: #333;
         }
 
         /* Ajusta a seção da data de impressão */
         .right-section {
-            font-size: 10px; /* Reduzido para impressão */
+            font-size: 8px;
             color: #4a4a4a;
             margin-left: auto;
             text-align: right;
-            margin-right: 10px;
         }
 
-        /* Ocultar barra de separação nas laterais do logotipo e data */
+        /* Reduz altura das barras de separação */
         .header > div[style*="border-left"] {
-            height: 60px; /* Reduz a altura na impressão */
-        }
-
-        /* Exibe o número da página corretamente */
-        .page-num::after {
-            content: counter(page);
+            height: 50px;
         }
     }
 </style>
