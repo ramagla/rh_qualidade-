@@ -80,6 +80,15 @@ from .views.lista_presenca_views import (
     imprimir_lista_presenca
 )
 
+from .views.comunicados_views import (
+    lista_comunicados,
+    cadastrar_comunicado,
+    visualizar_comunicado,
+    editar_comunicado,
+    excluir_comunicado,
+    imprimir_comunicado,
+)
+
 
 # Definição das `urlpatterns`
 urlpatterns = [
@@ -176,6 +185,14 @@ urlpatterns = [
     path('listas-presenca/<int:lista_id>/visualizar/', visualizar_lista_presenca, name='visualizar_lista_presenca'),
     path('lista-presenca/imprimir/<int:lista_id>/', imprimir_lista_presenca, name='imprimir_lista_presenca'),
   
+  # Comunicados       
+    path('comunicados/', lista_comunicados, name='lista_comunicados'),
+    path('comunicados/cadastrar/', cadastrar_comunicado, name='cadastrar_comunicado'),
+    path('comunicados/<int:id>/', visualizar_comunicado, name='visualizar_comunicado'),
+    path('comunicados/editar/<int:id>/', editar_comunicado, name='editar_comunicado'),
+    path('comunicados/excluir/<int:id>/', excluir_comunicado, name='excluir_comunicado'),
+    path('comunicados/imprimir/<int:id>/', imprimir_comunicado, name='imprimir_comunicado'),
+
 
 ]
 

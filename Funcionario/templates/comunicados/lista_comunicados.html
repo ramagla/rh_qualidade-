@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Comunicados{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Lista de Comunicados</h2>
+    
+    <!-- Toast container para mensagens de alerta -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast align-items-center border-0" 
+                     {% if message.tags == "error" %} style="background-color: #f8d7da; color: #842029;" {% else %} style="background-color: #d1e7dd; color: #0f5132;" {% endif %} 
+                     role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <h4 class="alert-heading">{% if message.tags == "error" %}Atenção!{% else %}Sucesso!{% endif %}</h4>
+                            <p>{{ message }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Botão de Cadastrar Comunicado e Imprimir -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_comunicado' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Cadastrar Comunicado
+        </a>
+        <button class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirComunicadoModal">
+            <i class="bi bi-printer"></i> Imprimir Comunicado
+        </button>
+    </div>
+
+    <!-- Modal para selecionar comunicado para impressão -->
+    <div class="modal fade" id="imprimirComunicadoModal" tabindex="-1" aria-labelledby="imprimirComunicadoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imprimirComunicadoModalLabel">Selecionar Comunicado para Imprimir</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="imprimirComunicadoForm" method="get" action="">
+                        <div class="mb-3">
+                            <label for="comunicado_modal" class="form-label">Comunicado:</label>
+                            <select name="comunicado" id="comunicado_modal" class="form-select" required>
+                                <option value="">Selecione</option>
+                                {% for comunicado in comunicados %}
+                                    <option value="{{ comunicado.id }}">{{ comunicado.assunto }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="submitImprimirButton" class="btn btn-primary">Imprimir</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Comunicados -->
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Data</th>
+                <th>Assunto</th>
+                <th>Tipo</th>
+                <th>Departamento</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comunicado in comunicados %}
+            <tr>
+                <td>{{ comunicado.id }}</td>
+                <td>{{ comunicado.data|date:"d/m/Y" }}</td>
+                <td>{{ comunicado.assunto }}</td>
+                <td>{{ comunicado.tipo }}</td>
+                <td>{{ comunicado.departamento_responsavel }}</td>
+                <td class="align-middle">
+                    <a href="{% url 'visualizar_comunicado' comunicado.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'editar_comunicado' comunicado.id %}" class="btn btn-sm btn-light" title="Editar">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <!-- Botão para abrir o modal de exclusão -->
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalExcluirComunicado{{ comunicado.id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+
+            <!-- Modal de Confirmação de Exclusão para cada comunicado -->
+            <div class="modal fade" id="modalExcluirComunicado{{ comunicado.id }}" tabindex="-1" aria-labelledby="modalExcluirComunicadoLabel{{ comunicado.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalExcluirComunicadoLabel{{ comunicado.id }}">Excluir Comunicado</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem certeza que deseja excluir este comunicado?</p>
+                            <p><strong>Assunto:</strong> {{ comunicado.assunto }}</p>
+                            <p><strong>Data:</strong> {{ comunicado.data|date:"d/m/Y" }}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <!-- Formulário para confirmação da exclusão -->
+                            <form method="POST" action="{% url 'excluir_comunicado' comunicado.id %}">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-danger">Excluir</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Script para exibir mensagens de toast
+    document.addEventListener('DOMContentLoaded', function () {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const bootstrapToast = new bootstrap.Toast(toast);
+            bootstrapToast.show();
+        });
+    });
+
+    // Script para redirecionar para a impressão do comunicado selecionado
+    document.getElementById('submitImprimirButton').addEventListener('click', function(event) {
+        event.preventDefault();
+        var comunicadoId = document.getElementById('comunicado_modal').value;
+        if (comunicadoId) {
+            var url = "{% url 'imprimir_comunicado' 0 %}".replace('/0/', '/' + comunicadoId + '/');
+            window.location.href = url;
+        } else {
+            alert("Por favor, selecione um comunicado.");
+        }
+    });
+</script>
+{% endblock %}

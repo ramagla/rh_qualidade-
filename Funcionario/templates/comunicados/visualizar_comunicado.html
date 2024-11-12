@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Visualização de Comunicado{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Detalhes do Comunicado</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label"><strong>Data:</strong></label>
+                <p class="form-control-static">{{ comunicado.data|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label"><strong>Assunto:</strong></label>
+                <p class="form-control-static">{{ comunicado.assunto }}</p>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="mb-3">
+                <label class="form-label"><strong>Descrição:</strong></label>
+                <!-- Adicionando o filtro 'safe' para renderizar HTML formatado pelo CKEditor5 -->
+                <p class="form-control-static">{{ comunicado.descricao|safe }}</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label"><strong>Tipo de Comunicado:</strong></label>
+                <p class="form-control-static">{{ comunicado.tipo }}</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label"><strong>Departamento Responsável:</strong></label>
+                <p class="form-control-static">{{ comunicado.departamento_responsavel }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão de Voltar -->
+    <div class="text-center mt-4">
+        <a href="{% url 'lista_comunicados' %}" class="btn btn-secondary">Voltar para a Lista de Comunicados</a>
+    </div>
+</div>
+{% endblock %}

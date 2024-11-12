@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro de Comunicado{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastro de Comunicado</h2>
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-md-6">
+            <label for="data" class="form-label">Data:</label>
+            {{ form.data }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="assunto" class="form-label">Assunto:</label>
+            {{ form.assunto }}
+        </div>
+
+        <div class="col-md-12">
+            <label for="descricao" class="form-label">Descrição:</label>
+            {{ form.descricao }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="tipo" class="form-label">Tipo de Comunicado:</label>
+            {{ form.tipo }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="departamento_responsavel" class="form-label">Departamento Responsável:</label>
+            {{ form.departamento_responsavel }}
+        </div>
+
+        <!-- Botão de Salvar -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

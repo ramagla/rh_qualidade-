@@ -326,3 +326,33 @@ class JobRotationEvaluation(models.Model):
 
     def __str__(self):
         return f"Avaliação de Job Rotation - {self.funcionario.nome}"
+
+
+class Comunicado(models.Model):
+    TIPO_CHOICES = [
+        ('Auditoria', 'Auditoria'),
+        ('Conscientizacao', 'Conscientização'),
+        ('Melhoria', 'Melhoria'),
+        ('Organizacao/Processos', 'Organização / Processos'),
+        ('Recursos Humanos', 'Recursos Humanos'),
+        ('Visita de Cliente', 'Visita de Cliente'),
+    ]
+    
+    
+    data = models.DateField(default=timezone.now)
+    assunto = models.CharField(max_length=100)
+    descricao = models.TextField()
+    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
+    departamento_responsavel = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"Comunicado {self.id} - {self.assunto}"  # Usando 'id' como identificador
+    
+
+class AtualizacaoSistema(models.Model):
+    titulo = models.CharField(max_length=100)
+    descricao = models.TextField()
+    previsao = models.DateField()
+
+    def __str__(self):
+        return self.titulo

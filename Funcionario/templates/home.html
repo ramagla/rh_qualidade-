@@ -3,25 +3,83 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-
-
 <div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Próximas Atualizações do Sistema</h5>
-                <ul class="list-group">
-                    {% for atualizacao in proximas_atualizacoes %}
-                        <li class="list-group-item">
-                            <strong>{{ atualizacao.titulo }}</strong> - {{ atualizacao.descricao }} <br>
-                            <small class="text-muted">Previsão: {{ atualizacao.previsao|date:"d/m/Y" }}</small>
-                        </li>
-                    {% empty %}
-                        <li class="list-group-item text-muted">Nenhuma atualização prevista no momento.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
+    <!-- Coluna de Comunicados Recentes -->
+    <div class="col-md-4">
+        <h5 class="text-center">Últimos Comunicados</h5>
+        {% if comunicados %}
+            {% for comunicado in comunicados %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ comunicado.assunto }}</h6>
+                        <p class="card-text">
+                            <small class="text-muted">{{ comunicado.data|date:"d/m/Y" }}</small><br>
+                            <strong>Departamento:</strong> {{ comunicado.departamento_responsavel }}
+                        </p>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#comunicadoModal{{ comunicado.id }}">
+                            <i class="bi bi-eye"></i> Visualizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal para visualizar a descrição do comunicado -->
+                <div class="modal fade" id="comunicadoModal{{ comunicado.id }}" tabindex="-1" aria-labelledby="comunicadoModalLabel{{ comunicado.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="comunicadoModalLabel{{ comunicado.id }}">{{ comunicado.assunto }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                {{ comunicado.descricao|safe }}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">Nenhum comunicado recente.</p>
+        {% endif %}
+    </div>
+
+    <!-- Coluna de Funcionários com Avaliação Baixa -->
+    <div class="col-md-4">
+        <h5 class="text-center">Funcionários com Avaliação Baixa</h5>
+        {% if funcionarios_avaliacao_baixa %}
+            {% for funcionario in funcionarios_avaliacao_baixa %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ funcionario.nome }}</h6>
+                        <p class="card-text">Avaliação: {{ funcionario.avaliacao }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">Nenhum funcionário com avaliação baixa.</p>
+        {% endif %}
+    </div>
+
+    <!-- Coluna de Próximas Atualizações do Sistema -->
+    <div class="col-md-4">
+        <h5 class="text-center">Próximas Atualizações do Sistema</h5>
+        {% if proximas_atualizacoes %}
+            {% for atualizacao in proximas_atualizacoes %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ atualizacao.titulo }}</h6>
+                        <p class="card-text">{{ atualizacao.descricao }}</p>
+                        <p class="text-muted">Previsão: {{ atualizacao.previsao|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">Nenhuma atualização prevista no momento.</p>
+        {% endif %}
     </div>
 </div>
+
+
 {% endblock %}

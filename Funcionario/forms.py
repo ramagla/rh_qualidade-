@@ -2,8 +2,9 @@ from datetime import timedelta  # Correto
 from django.utils import timezone  # Já está correto
 
 from django import forms
-from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,JobRotationEvaluation,AvaliacaoExperiencia, AvaliacaoAnual
+from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,JobRotationEvaluation,AvaliacaoExperiencia, AvaliacaoAnual,Comunicado
 from django_ckeditor_5.widgets import CKEditor5Widget
+from django.forms.widgets import DateInput
 
 class FuncionarioForm(forms.ModelForm):
     ESCOLARIDADE_CHOICES = [
@@ -252,3 +253,18 @@ class JobRotationEvaluationForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+    
+
+
+class ComunicadoForm(forms.ModelForm):
+    descricao = forms.CharField(widget=CKEditor5Widget(), required=True)
+
+    class Meta:
+        model = Comunicado
+        fields = ['data', 'assunto', 'descricao', 'tipo', 'departamento_responsavel']
+        widgets = {
+            'data': DateInput(attrs={'class': 'form-control', 'type': 'date', 'value': ''}),  # Aqui, adicionamos 'value' como vazio
+            'assunto': forms.TextInput(attrs={'class': 'form-control'}),           
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'departamento_responsavel': forms.TextInput(attrs={'class': 'form-control'}),
+        }
