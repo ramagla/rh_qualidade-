@@ -90,6 +90,15 @@ from .views.comunicados_views import (
     imprimir_assinaturas
 )
 
+from .views.integracao_views import (
+    lista_integracoes,
+    visualizar_integracao,
+    cadastrar_integracao,
+    excluir_integracao,
+    editar_integracao,
+    imprimir_integracao,
+)
+
 
 # Definição das `urlpatterns`
 urlpatterns = [
@@ -196,6 +205,14 @@ urlpatterns = [
     path('comunicados/imprimir_assinaturas/<int:id>/', imprimir_assinaturas, name='imprimir_assinaturas'),
 
 
+# Integração de Funcionários
+    path('integracao/', lista_integracoes, name='lista_integracoes'),
+    path('integracao/cadastrar/', cadastrar_integracao, name='cadastrar_integracao'),
+    path('integracao/<int:integracao_id>/', visualizar_integracao, name='visualizar_integracao'),
+    path('integracao/editar/<int:integracao_id>/', editar_integracao, name='editar_integracao'),  # Adicione esta linha
+    path('integracao/imprimir/<int:integracao_id>/', imprimir_integracao, name='imprimir_integracao'),
+
+    path('integracao/excluir/<int:integracao_id>/', excluir_integracao, name='excluir_integracao'),
 
 ]
 

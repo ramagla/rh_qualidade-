@@ -28,7 +28,7 @@ class Funcionario(models.Model):
     nome = models.CharField(max_length=100)
     data_admissao = models.DateField()
     cargo_inicial = models.ForeignKey(Cargo, related_name='cargo_inicial_funcionarios', on_delete=models.CASCADE)
-    cargo_atual = models.ForeignKey(Cargo, related_name='cargo_atual_funcionarios', on_delete=models.CASCADE)
+    cargo_atual = models.ForeignKey(Cargo, related_name='cargo_atual_funcionarios', on_delete=models.CASCADE, null=True)
     numero_registro = models.CharField(max_length=20, unique=True)
     local_trabalho = models.CharField(max_length=100)
     data_integracao = models.DateField()
@@ -101,6 +101,7 @@ class Treinamento(models.Model):
         ('concluido', 'Concluído'),
         ('trancado', 'Trancado'),
         ('cursando', 'Cursando'),
+        ('requirido', 'Requirido'),
     ]
     
     funcionario = models.ForeignKey(Funcionario, on_delete=models.PROTECT, related_name='treinamentos')
@@ -356,3 +357,27 @@ class AtualizacaoSistema(models.Model):
 
     def __str__(self):
         return self.titulo
+    
+class IntegracaoFuncionario(models.Model):
+    funcionario = models.ForeignKey('Funcionario', on_delete=models.CASCADE)
+    grupo_whatsapp = models.BooleanField(default=False)
+    requer_treinamento = models.BooleanField(default=False)
+    treinamentos_requeridos = models.TextField(blank=True, null=True)
+    data_integracao = models.DateField(default=timezone.now)
+
+    @property
+    def departamento(self):
+        return self.funcionario.local_trabalho
+
+    def save(self, *args, **kwargs):
+        # Verifica se o campo data_integracao foi alterado
+        if self.pk:
+            original = IntegracaoFuncionario.objects.get(pk=self.pk)
+            if original.data_integracao != self.data_integracao:
+                # Atualiza a data_integracao no modelo Funcionario
+                self.funcionario.data_integracao = self.data_integracao
+                self.funcionario.save()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Integração - {self.funcionario.nome} ({self.data_integracao})"

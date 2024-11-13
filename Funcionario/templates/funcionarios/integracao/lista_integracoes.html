@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}Integrações de Funcionários{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Integrações de Funcionários</h2>
+    
+    <!-- Toast container para mensagens de alerta -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast align-items-center border-0" 
+                     {% if message.tags == "error" %} style="background-color: #f8d7da; color: #842029;" {% else %} style="background-color: #d1e7dd; color: #0f5132;" {% endif %} 
+                     role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <h4 class="alert-heading">{% if message.tags == "error" %}Atenção!{% else %}Sucesso!{% endif %}</h4>
+                            <p>{{ message }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+  <!-- Botão de Cadastrar Integração e Imprimir Ficha -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_integracao' %}" class="btn btn-success">
+            <i class="bi bi-person-plus"></i> Cadastrar Integração
+        </a>
+        <button class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#imprimirModal">
+            <i class="bi bi-printer"></i> Imprimir Ficha
+        </button>
+    </div>
+
+  <!-- Modal para selecionar integração -->
+    <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imprimirModalLabel">Selecionar Integração de Funcionário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="imprimirForm" method="GET" action="">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="integracao_id" class="form-label">Integração:</label>
+                            <select name="integracao_id" id="integracao_id" class="form-select" required>
+                                <option value="">Selecione uma integração</option>
+                                {% for integracao in integracoes %}
+                                    <option value="{{ integracao.id }}">{{ integracao.funcionario.nome }} - {{ integracao.data_integracao|date:"d/m/Y" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Imprimir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Formulário de filtro -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <!-- Filtro por Funcionário -->
+            <div class="col-md-3">
+                <label for="funcionario" class="form-label">Funcionário:</label>
+                <select name="funcionario" id="funcionario" class="form-select">
+                    <option value="">Selecione</option>
+                    {% for func in funcionarios %}
+                        <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Departamento -->
+            <div class="col-md-3">
+                <label for="departamento" class="form-label">Departamento:</label>
+                <select name="departamento" id="departamento" class="form-select">
+                    <option value="">Selecione</option>
+                    {% for dept in departamentos %}
+                        <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Status de Treinamento -->
+            <div class="col-md-3">
+                <label for="requer_treinamento" class="form-label">Requer Treinamento:</label>
+                <select name="requer_treinamento" id="requer_treinamento" class="form-select">
+                    <option value="">Selecione</option>
+                    <option value="True" {% if request.GET.requer_treinamento == 'True' %}selected{% endif %}>Sim</option>
+                    <option value="False" {% if request.GET.requer_treinamento == 'False' %}selected{% endif %}>Não</option>
+                </select>
+            </div>
+            
+            <!-- Filtro por Grupo WhatsApp -->
+            <div class="col-md-3">
+                <label for="grupo_whatsapp" class="form-label">Grupo WhatsApp:</label>
+                <select name="grupo_whatsapp" id="grupo_whatsapp" class="form-select">
+                    <option value="">Selecione</option>
+                    <option value="True" {% if request.GET.grupo_whatsapp == 'True' %}selected{% endif %}>Sim</option>
+                    <option value="False" {% if request.GET.grupo_whatsapp == 'False' %}selected{% endif %}>Não</option>
+                </select>
+            </div>
+        </div>
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+
+    <!-- Lista de Integrações -->
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                <th>Funcionário</th>
+                <th>Data de Integração</th>
+                <th>Departamento</th>
+                <th>Grupo WhatsApp</th>
+                <th>Requer Treinamento</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for integracao in integracoes %}
+            <tr>
+                <td>{{ integracao.funcionario.nome }}</td>
+                <td>{{ integracao.data_integracao|date:"d/m/Y" }}</td>
+                <td>{{ integracao.funcionario.local_trabalho }}</td>
+                <td>{{ integracao.grupo_whatsapp|yesno:"Sim,Não" }}</td>
+                <td>{{ integracao.requer_treinamento|yesno:"Sim,Não" }}</td>
+                <td>
+                    <a href="{% url 'visualizar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'editar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Editar">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <button class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#excluirModal{{ integracao.id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+
+            <!-- Modal de confirmação de exclusão -->
+            <div class="modal fade" id="excluirModal{{ integracao.id }}" tabindex="-1" aria-labelledby="excluirModalLabel{{ integracao.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="excluirModalLabel{{ integracao.id }}">Confirmar Exclusão</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Tem certeza de que deseja excluir a integração de <strong>{{ integracao.funcionario.nome }}</strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <form action="{% url 'excluir_integracao' integracao.id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Excluir</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">Nenhuma integração cadastrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Exibir os toasts de mensagens
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const bootstrapToast = new bootstrap.Toast(toast);
+            bootstrapToast.show();
+        });
+
+        // Abrir o modal para seleção de integração
+        document.querySelector('.btn-primary.ms-2').addEventListener('click', function(event) {
+            event.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('imprimirModal'));
+            modal.show();
+        });
+
+        // Capturar o evento de submit do formulário de impressão
+        document.getElementById('imprimirForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Pegar o ID da integração selecionada
+            const integracaoId = document.getElementById('integracao_id').value;
+
+            if (integracaoId) {
+                // Construir a URL de impressão com o ID da integração
+                const imprimirUrl = "{% url 'imprimir_integracao' 0 %}".replace('0', integracaoId);
+                window.open(imprimirUrl, '_blank');  // Abre a URL de impressão em uma nova aba
+            } else {
+                alert('Por favor, selecione uma integração.');
+            }
+        });
+    });
+</script>
+
+
+
+{% endblock %}

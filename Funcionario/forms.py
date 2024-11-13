@@ -2,7 +2,7 @@ from datetime import timedelta  # Correto
 from django.utils import timezone  # Já está correto
 
 from django import forms
-from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,JobRotationEvaluation,AvaliacaoExperiencia, AvaliacaoAnual,Comunicado
+from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,JobRotationEvaluation,AvaliacaoExperiencia, AvaliacaoAnual,Comunicado,IntegracaoFuncionario
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django.forms.widgets import DateInput
 
@@ -268,4 +268,16 @@ class ComunicadoForm(forms.ModelForm):
             'assunto': forms.TextInput(attrs={'class': 'form-control'}),           
             'tipo': forms.Select(attrs={'class': 'form-select'}),
             'departamento_responsavel': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class IntegracaoFuncionarioForm(forms.ModelForm):
+    treinamentos_requeridos = forms.CharField(widget=CKEditor5Widget(), required=False)
+
+    class Meta:
+        model = IntegracaoFuncionario
+        fields = ['funcionario', 'grupo_whatsapp', 'requer_treinamento', 'data_integracao', 'treinamentos_requeridos']
+        widgets = {
+            'data_integracao': forms.DateInput(attrs={'type': 'date'}),
+            'treinamentos_requeridos': forms.Textarea(attrs={'rows': 3}),
         }

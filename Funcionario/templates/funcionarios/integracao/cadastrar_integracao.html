@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Integração de Funcionário{% endblock %}
+
+{% block content %}
+{% if form.errors %}
+    <div class="alert alert-danger">
+        <strong>Erro ao salvar o formulário:</strong>
+        <ul>
+            {% for field, errors in form.errors.items %}
+                <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastrar Integração de Funcionário</h2>
+
+    <form method="post" enctype="multipart/form-data" class="row g-3" id="integracaoForm">
+        {% csrf_token %}
+
+        <!-- Funcionário -->
+        <div class="col-md-6">
+            <label for="funcionario" class="form-label">Funcionário:</label>
+            {{ form.funcionario|add_class:"form-select" }}
+            <div class="invalid-feedback">Por favor, selecione um funcionário.</div>
+        </div>
+
+        <!-- Data de Integração -->
+        <div class="col-md-6">
+            <label for="data_integracao" class="form-label">Data de Integração:</label>
+            {{ form.data_integracao|add_class:"form-control" }}
+        </div>
+
+        <!-- Grupo WhatsApp -->
+        <div class="col-md-6">
+            <label for="grupo_whatsapp" class="form-label">Grupo WhatsApp:</label>
+            {{ form.grupo_whatsapp|add_class:"form-check-input" }}
+        </div>
+
+        <!-- Requer Treinamento -->
+        <div class="col-md-6">
+            <label for="requer_treinamento" class="form-label">Requer Treinamento:</label>
+            {{ form.requer_treinamento|add_class:"form-check-input" }}
+        </div>
+
+        <!-- Treinamentos Requeridos (Exibido Condicionalmente) -->
+        <div class="col-md-12" id="treinamentosRequeridosContainer" style="display: none;">
+            <label for="treinamentos_requeridos" class="form-label">Treinamentos Requeridos:</label>
+            {{ form.treinamentos_requeridos|add_class:"form-control" }}
+        </div>
+
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary" onclick="validarFormulario(event)">Salvar</button>
+            <a href="{% url 'lista_integracoes' %}" class="btn btn-secondary ms-2">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const requerTreinamentoCheckbox = document.getElementById('id_requer_treinamento');
+        const treinamentosContainer = document.getElementById('treinamentosRequeridosContainer');
+
+        // Exibir/esconder o campo de Treinamentos Requeridos com base na seleção
+        function toggleTreinamentosRequeridos() {
+            if (requerTreinamentoCheckbox.checked) {
+                treinamentosContainer.style.display = 'block';
+            } else {
+                treinamentosContainer.style.display = 'none';
+            }
+        }
+
+        requerTreinamentoCheckbox.addEventListener('change', toggleTreinamentosRequeridos);
+        toggleTreinamentosRequeridos();  // Executar uma vez ao carregar a página
+
+        // Validação personalizada para garantir que o campo Treinamentos Requeridos esteja preenchido se Requer Treinamento estiver selecionado
+        document.getElementById('integracaoForm').addEventListener('submit', function (event) {
+            if (requerTreinamentoCheckbox.checked && !document.getElementById('id_treinamentos_requeridos').value) {
+                event.preventDefault();
+                alert("Por favor, preencha o campo de Treinamentos Requeridos.");
+            }
+        });
+    });
+</script>
+
+{% endblock %}

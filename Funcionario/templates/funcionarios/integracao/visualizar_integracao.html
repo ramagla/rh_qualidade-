@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Visualizar Integração de Funcionário{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Visualizar Integração de Funcionário</h2>
+
+    <!-- Detalhes da Integração -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Detalhes da Integração</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-4">Funcionário:</dt>
+                <dd class="col-sm-8">{{ integracao.funcionario.nome }}</dd>
+
+                <dt class="col-sm-4">Data de Integração:</dt>
+                <dd class="col-sm-8">{{ integracao.data_integracao|date:"d/m/Y" }}</dd>
+
+                <dt class="col-sm-4">Departamento:</dt>
+                <dd class="col-sm-8">{{ integracao.funcionario.local_trabalho }}</dd>
+
+                <dt class="col-sm-4">Grupo WhatsApp:</dt>
+                <dd class="col-sm-8">{{ integracao.grupo_whatsapp|yesno:"Sim,Não" }}</dd>
+
+                <dt class="col-sm-4">Requer Treinamento:</dt>
+                <dd class="col-sm-8">{{ integracao.requer_treinamento|yesno:"Sim,Não" }}</dd>
+
+                <dt class="col-sm-4">Treinamentos Requeridos:</dt>
+                <dd class="col-sm-8">
+                    {% if integracao.treinamentos_requeridos %}
+                        {{ integracao.treinamentos_requeridos |safe}}
+                    {% else %}
+                        Nenhum treinamento requerido.
+                    {% endif %}
+                </dd>
+            </dl>
+        </div>
+        <div class="card-footer text-end">
+            <a href="{% url 'editar_integracao' integracao.id %}" class="btn btn-primary">
+                <i class="bi bi-pencil-square"></i> Editar
+            </a>
+            <a href="{% url 'excluir_integracao' integracao.id %}" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta integração?')">
+                <i class="bi bi-trash"></i> Excluir
+            </a>
+            <a href="{% url 'lista_integracoes' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
