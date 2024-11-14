@@ -103,6 +103,7 @@ from .views.integracao_views import (
 # Definição das `urlpatterns`
 urlpatterns = [
     # Home
+    path('', home, name='home'),
     path('home/', home, name='home'),
     
     # Funcionários

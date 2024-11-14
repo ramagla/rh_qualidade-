@@ -6,7 +6,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # URLs de redirecionamento
-LOGIN_REDIRECT_URL = '/home/'
+LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # Chave secreta deve ser definida por ambiente (ver development.py e production.py)

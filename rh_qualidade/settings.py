@@ -111,6 +111,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                'Funcionario.context_processors.global_settings',
             ],
         },
     },
@@ -138,6 +139,8 @@ DATABASES = {
 #         default=os.getenv('DATABASE_URL')
 #     )
 # }
+
+LOGIN_URL = '/login/'
 
 
 

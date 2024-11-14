@@ -1,5 +1,6 @@
+from datetime import datetime
 from django.shortcuts import render
-from Funcionario.models import Comunicado, AtualizacaoSistema  # e outros modelos relevantes
+from Funcionario.models import Comunicado, AtualizacaoSistema, Settings  # e outros modelos relevantes
 
 def dashboard(request):
     comunicados = Comunicado.objects.order_by('-data')[:5]
@@ -15,3 +16,6 @@ def dashboard(request):
         'funcionarios_baixa_avaliacao': funcionarios_baixa_avaliacao,
     }
     return render(request, 'dashboard.html', context)
+
+
+

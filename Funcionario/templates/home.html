@@ -1,8 +1,43 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
+<div class="header d-flex align-items-center mb-3" style="font-family: Arial, sans-serif;">
+    <!-- Logo escuro da empresa -->
+    <div class="left-section me-2">
+        {% if settings.logo_escuro %}
+            <img src="{{ settings.logo_escuro.url }}" alt="Logotipo Escuro" style="width: 50px; height: auto;">
+        {% else %}
+            <img src="{% static 'logo.png' %}" alt="Logotipo Padrão" style="width: 50px; height: auto;">
+        {% endif %}
+    </div>
+
+    <!-- Barra de separação reduzida -->
+    <div style="border-left: 1px solid #ddd; height: 60px; margin-right: 10px;"></div>
+    
+    <!-- Informações da empresa com fonte reduzida -->
+    <div class="center-section text-start" style="font-size: 10px; color: #4a4a4a;">
+        <strong style="font-size: 10px; color: #333;">{{ settings.nome_empresa }}</strong><br>
+        <span><strong>CEP:</strong> {{ settings.cep }}</span><br>
+        <span>{{ settings.endereco }}</span><br>
+        <span><strong>Fone:</strong> {{ settings.telefone }} - <strong>E-mail:</strong> {{ settings.email }}</span><br>
+        <span><strong>CNPJ:</strong> {{ settings.cnpj }}</span>
+    </div>
+
+    <!-- Barra de separação reduzida -->
+    <div style="border-left: 1px solid #ddd; height: 60px; margin-left: 10px; margin-right: 10px;"></div>
+
+    <!-- Data de impressão -->
+    <div class="right-section text-end" style="font-size: 10px; color: #4a4a4a;">
+        <span><strong>Data de Impressão:</strong> <span id="data-impressao"></span></span><br>
+    </div>
+</div>
+
+<hr style="border-top: 1px solid #ddd; margin-top: 10px; margin-bottom: 10px;">
+
+<!-- Conteúdo principal -->
 <div class="row mt-4">
     <!-- Coluna de Comunicados Recentes -->
     <div class="col-md-4">
@@ -81,5 +116,18 @@
     </div>
 </div>
 
+<script>
+    // Script para exibir a data de impressão
+    document.addEventListener("DOMContentLoaded", function() {
+        const dataImpressao = document.getElementById('data-impressao');
+        if (dataImpressao) {
+            dataImpressao.textContent = new Date().toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+    });
+</script>
 
 {% endblock %}

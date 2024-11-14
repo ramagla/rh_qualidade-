@@ -354,9 +354,10 @@ class AtualizacaoSistema(models.Model):
     titulo = models.CharField(max_length=100)
     descricao = models.TextField()
     previsao = models.DateField()
+    versao = models.CharField(max_length=20)  # Adiciona o campo versão
 
     def __str__(self):
-        return self.titulo
+        return f"{self.versao} - {self.titulo}"
     
 class IntegracaoFuncionario(models.Model):
     funcionario = models.ForeignKey('Funcionario', on_delete=models.CASCADE)
@@ -381,3 +382,29 @@ class IntegracaoFuncionario(models.Model):
 
     def __str__(self):
         return f"Integração - {self.funcionario.nome} ({self.data_integracao})"
+
+
+class Settings(models.Model):
+    nome_empresa = models.CharField(max_length=100, default="BRAS-MOL MOLAS & ESTAMPADOS LTDA")
+    cep = models.CharField(max_length=20, default="08579000")
+    endereco = models.CharField(max_length=150, default="BONSUCESSO, DO, 1961 - RIO ABAIXO - Itaquaquecetuba / SP")
+    telefone = models.CharField(max_length=20, default="1146482611")
+    email = models.EmailField(default="rh@brasmol.com.br")
+    cnpj = models.CharField(max_length=20, default="61.296.901/0002-48")
+    
+    # Campos para os logos
+    logo_claro = models.ImageField(upload_to='logos/', null=True, blank=True)
+    logo_escuro = models.ImageField(upload_to='logos/', null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Configuração"
+        verbose_name_plural = "Configurações"
+
+    def save(self, *args, **kwargs):
+            # Garante que haja apenas um registro de configurações
+            if not Settings.objects.filter(pk=self.pk).exists() and Settings.objects.exists():
+                self.pk = Settings.objects.first().pk
+            super(Settings, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.nome_empresa
