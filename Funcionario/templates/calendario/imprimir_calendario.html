@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'header.html' %}
+
+<div class="container mt-5">
+    <!-- Seleção de Ano -->
+    <form method="get" class="text-center mb-4 d-print-none">
+        <label for="ano">Selecione o Ano:</label>
+        <select name="ano" id="ano" onchange="this.form.submit()">
+            {% for y in anos_disponiveis %}
+                <option value="{{ y }}" {% if y|stringformat:"s" == ano %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <!-- Botão para Imprimir (Visível apenas fora da impressão) -->
+    <div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <!-- Título Centralizado -->
+    <div class="text-center">
+        <h2 class="section-title" style="text-align: center;">Calendário Anual de Eventos - {{ ano }}</h2>
+        <hr style="width: 50px; border: 2px solid #007bff; margin: 0 auto;">
+    </div>
+
+    <!-- Lista de Eventos -->
+    <div class="p-4 shadow-lg rounded">
+        {% if eventos %}
+            <table class="custom-table text-center">
+                <thead>
+                    <tr>
+                        <th>Título do Evento</th>
+                        <th>Data Início</th>
+                        <th>Data Fim</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evento in eventos %}
+                        <tr>
+                            <td style="color: {{ evento.cor }}; font-weight: bold;">
+                                {{ evento.titulo }}
+                            </td>
+                            <td>{{ evento.data_inicio|date:"d/m/Y" }}</td>
+                            <td>{{ evento.data_fim|date:"d/m/Y" }}</td>
+                            <td>{{ evento.tipo }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-center">Nenhum evento cadastrado.</p>
+        {% endif %}
+    </div>
+
+    <!-- Legenda de Cores para os Tipos de Eventos -->
+    <div class="legenda mt-4">
+        <h5 class="text-center"><strong>Legenda de Tipos</strong></h5>
+        <ul class="list-unstyled text-center">
+            <li><span style="color: #00FF00; font-weight: bold;">■ Avaliação de Desempenho</span></li>
+            <li><span style="color: #CC99FF; font-weight: bold;">■ Feriado</span></li>
+            <li><span style="color: #FF3300; font-weight: bold;">■ Ponte</span></li>
+            <li><span style="color: #E6B8B7; font-weight: bold;">■ Confraternização</span></li>
+            <li><span style="color: #A6A6A6; font-weight: bold;">■ Recesso</span></li>
+            <li><span style="color: #8DB4E2; font-weight: bold;">■ Auditoria SGS</span></li>
+            <li><span style="color: #FFC000; font-weight: bold;">■ Auditoria Interna</span></li>
+            <li><span style="color: #C4D79B; font-weight: bold;">■ SIPAT</span></li>
+            <li><span style="color: #CCCC00; font-weight: bold;">■ Inventário</span></li>
+        </ul>
+    </div>
+
+    <!-- Número do Formulário (visível apenas na impressão) -->
+    <div class="numero-formulario d-none d-print-block">
+        F000 Rev.00
+    </div>
+</div>
+
+<style>
+    /* Estilos de tabela e impressão */
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .custom-table th, .custom-table td {
+        padding: 4px;
+        border: 1px solid #ddd;
+        font-size: 10px;
+        text-align: center;
+    }
+    .custom-table th {
+        background-color: #e7f1ff;
+        color: #333;
+        font-weight: bold;
+    }
+    .custom-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    @media print {
+        body {
+            font-size: 10px;
+        }
+        .d-print-none { display: none !important; }
+        .numero-formulario {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #333;
+        }
+    }
+</style>
+
+<script>
+function imprimir() {
+    var conteudo = document.querySelector('.container').innerHTML;
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
+    
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }
+                    .custom-table { width: 100%; border-collapse: collapse; }
+                    .custom-table th, .custom-table td { padding: 4px; border: 1px solid #ddd; font-size: 10px; text-align: center; }
+                    .custom-table th { background-color: #e7f1ff; color: #333; font-weight: bold; }
+                    .custom-table tr:nth-child(even) { background-color: #f9f9f9; }
+                    .numero-formulario { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #333; }
+                    @media print { .d-print-none { display: none !important; } }
+                </style>
+            </head>
+            <body>
+                ${conteudo}
+                <div class="numero-formulario">F000 Rev.00</div>
+            </body>
+        </html>
+    `);
+
+    novaJanela.document.close();
+    novaJanela.print();
+    novaJanela.close();
+}
+</script>
+
+{% endblock %}

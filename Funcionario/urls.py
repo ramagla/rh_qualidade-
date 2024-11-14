@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from Funcionario import views
 
 # Import das views organizadas por funcionalidade
-from .views.home_views import home
+from .views.home_views import home,calendario_view,adicionar_evento,editar_evento,excluir_evento,exportar_calendario,imprimir_calendario
 from .views.funcionario_views import (
     lista_funcionarios,
     cadastrar_funcionario,
@@ -98,6 +98,7 @@ from .views.integracao_views import (
     editar_integracao,
     imprimir_integracao,
 )
+
 
 
 # Definição das `urlpatterns`
@@ -214,6 +215,18 @@ urlpatterns = [
     path('integracao/imprimir/<int:integracao_id>/', imprimir_integracao, name='imprimir_integracao'),
 
     path('integracao/excluir/<int:integracao_id>/', excluir_integracao, name='excluir_integracao'),
+
+
+
+# Calendario
+    path('calendario/', calendario_view, name='calendario'),
+    path('calendario/adicionar/', adicionar_evento, name='adicionar_evento'),
+    path('calendario/editar/<int:evento_id>/', editar_evento, name='editar_evento'),
+    path('calendario/excluir/<int:evento_id>/', excluir_evento, name='excluir_evento'),
+    path('exportar_calendario/', exportar_calendario, name='exportar_calendario'),
+    path('imprimir_calendario/', imprimir_calendario, name='imprimir_calendario'),
+
+
 
 ]
 

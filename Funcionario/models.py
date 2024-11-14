@@ -408,3 +408,26 @@ class Settings(models.Model):
 
     def __str__(self):
         return self.nome_empresa
+    
+
+class Evento(models.Model):
+    TIPOS_EVENTO = [
+        ("avaliacao_desempenho", "Avaliação de Desempenho"),
+        ("feriado", "Feriado"),
+        ("ponte", "Ponte"),
+        ("confraternizacao", "Confraternização"),
+        ("recesso", "Recesso"),
+        ("auditoria_sgs", "Auditoria SGS"),
+        ("auditoria_interna", "Auditoria Interna"),
+        ("sipat", "SIPAT"),
+        ("inventario", "Inventário"),
+    ]
+    titulo = models.CharField(max_length=200)
+    descricao = models.TextField(blank=True, null=True)
+    data_inicio = models.DateField()  # Alterado para DateField
+    data_fim = models.DateField()      # Alterado para DateField
+    cor = models.CharField(max_length=7, default='#3788d8')
+    tipo = models.CharField(max_length=20, choices=TIPOS_EVENTO, default="avaliacao_desempenho")  # Campo de tipo
+
+    def __str__(self):
+        return self.titulo
