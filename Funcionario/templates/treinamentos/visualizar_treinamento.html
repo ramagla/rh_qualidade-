@@ -40,8 +40,18 @@
         </ul>
     </div>
 
+    <!-- Descrição do treinamento -->
+    <div class="mt-4">
+        <h5>Descrição</h5>
+        {% if treinamento.descricao %}
+            <p>{{ treinamento.descricao | safe }}</p>
+        {% else %}
+            <p>Nenhuma descrição fornecida para este treinamento.</p>
+        {% endif %}
+    </div>
+
     <div class="mt-4 text-center">
-        <a href="{% url 'lista_treinamentos' %}" class="btn btn-primary">Voltar para a Lista de Treinamentos</a>
+        <a href="{% url 'lista_treinamentos' %}" class="btn btn-primary"><i class="bi bi-arrow-left-circle"></i>  Voltar</a>
     </div>
 </div>
 {% endblock %}

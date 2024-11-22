@@ -34,6 +34,9 @@ def lista_avaliacao_anual(request):
         except ValueError:
             messages.error(request, "Formato de data inválido. Use o formato AAAA-MM-DD.")
 
+    # Classifica as avaliações por nome do funcionário
+    avaliacoes = avaliacoes.order_by('funcionario__nome')
+
     # Adiciona a classificação como um atributo, incluindo a classificação e percentual
     for avaliacao in avaliacoes:
         classificacao_data = avaliacao.calcular_classificacao()  # Chama o método corretamente
@@ -58,19 +61,24 @@ def lista_avaliacao_anual(request):
 
 
 
+
 def cadastrar_avaliacao_anual(request):
     if request.method == 'POST':
         form = AvaliacaoAnualForm(request.POST)
         if form.is_valid():
-            form.save()  # Aqui os dados do formulário devem ser salvos no banco
+            form.save()
             return redirect('lista_avaliacao_anual')
     else:
         form = AvaliacaoAnualForm()
 
+    # Ordenar os funcionários por nome
+    funcionarios = Funcionario.objects.all().order_by('nome')
+
     return render(request, 'avaliacao_desempenho_anual/cadastrar_avaliacao_anual.html', {
         'form': form,
-        'funcionarios': Funcionario.objects.all(),
+        'funcionarios': funcionarios,
     })
+
 
 def editar_avaliacao_anual(request, id):
     avaliacao = get_object_or_404(AvaliacaoAnual, id=id)
@@ -118,7 +126,37 @@ def imprimir_avaliacao(request, avaliacao_id):
 
 def visualizar_avaliacao_anual(request, id):
     avaliacao = get_object_or_404(AvaliacaoAnual, id=id)
-    return render(request, 'avaliacao_desempenho_anual/visualizar_avaliacao_anual.html', {'avaliacao': avaliacao})
+
+    # Mapeando os textos do status para cada campo
+    campos = [
+        'postura_seg_trabalho',
+        'qualidade_produtividade',
+        'trabalho_em_equipe',
+        'comprometimento',
+        'disponibilidade_para_mudancas',
+        'disciplina',
+        'rendimento_sob_pressao',
+        'proatividade',
+        'comunicacao',
+        'assiduidade',
+    ]
+
+    status_campos = {
+        campo: AvaliacaoAnual.get_status_text(getattr(avaliacao, campo))
+        for campo in campos
+    }
+
+    # Calcula a classificação e percentual
+    classificacao = avaliacao.calcular_classificacao()
+
+    context = {
+        'avaliacao': avaliacao,
+        'status_campos': status_campos,
+        'classificacao': classificacao['status'],
+        'percentual': classificacao['percentual'],
+    }
+    return render(request, 'avaliacao_desempenho_anual/visualizar_avaliacao_anual.html', context)
+
 
 def imprimir_simplificado(request, avaliacao_id):
     # Obtém a avaliação anual pelo ID

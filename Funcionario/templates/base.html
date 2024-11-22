@@ -9,7 +9,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />   
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    {{ form.media }}
+
+
+    <!-- Select2 JS -->
+
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
 
     {% load static %}
@@ -122,42 +128,44 @@
         </div>
     </div>
 
-       <!-- Modal de Informações da Versão -->
-        <div class="modal fade" id="versaoModal" tabindex="-1" aria-labelledby="versaoModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="versaoModalLabel">Informações da Versão</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <!-- Modal de Informações da Versão -->
+<div class="modal fade" id="versaoModal" tabindex="-1" aria-labelledby="versaoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="versaoModalLabel">Informações da Versão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if ultima_atualizacao_concluida %}
+                    <div class="mb-3">
+                        <h6><strong>{{ ultima_atualizacao_concluida.versao }}</strong></h6>
+                        <h6><strong>{{ ultima_atualizacao_concluida.titulo }}</strong></h6>
+                        <p>{{ ultima_atualizacao_concluida.descricao }}</p>
+                        <p class="text-muted">Entrega em: {{ ultima_atualizacao_concluida.previsao|date:"d/m/Y" }}</p>
                     </div>
-                    <div class="modal-body">
-                        {% if proximas_atualizacoes %}
-                            {% for atualizacao in proximas_atualizacoes %}
-                                <div class="mb-3">
-                                    <h6><strong>{{ atualizacao.versao }}</strong></h6>
-                                    <h6><strong>{{ atualizacao.titulo }}</strong></h6>
-                                    <p>{{ atualizacao.descricao }}</p>
-                                    <p class="text-muted">Entrega em: {{ atualizacao.previsao|date:"d/m/Y" }}</p>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <p>Nenhuma atualização registrada.</p>
-                        {% endif %}
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    </div>
-                </div>
+                {% else %}
+                    <p>Nenhuma atualização registrada.</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
             </div>
         </div>
+    </div>
+</div>
 
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+
+
     
-    <script>
+   <script>
     // Função para alternar o estado do sidebar
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -166,7 +174,24 @@
         content.classList.toggle('collapsed');
     }
 
-    </script>
+    // Inicializar o Select2 para todos os elementos <select> com a classe "select2"
+    document.addEventListener("DOMContentLoaded", function () {
+        $('.select2').select2({
+            placeholder: "Selecione uma opção",
+            allowClear: true
+        });
+
+        // Inicializar o CKEditor para todos os campos com a classe "ckeditor"
+        const editors = document.querySelectorAll('.ckeditor');
+        editors.forEach((editorElement) => {
+            ClassicEditor
+                .create(editorElement)
+                .catch(error => {
+                    console.error(error);
+                });
+        });
+    });
+</script>
 
 </body>
 </html>

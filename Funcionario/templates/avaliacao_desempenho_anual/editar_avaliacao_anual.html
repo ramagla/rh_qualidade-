@@ -3,9 +3,21 @@
 {% block title %}Editar Avaliação Anual{% endblock %}
 
 {% block content %}
-
 <div class="container mt-5">
     <h2 class="text-center mb-4">Editar Avaliação Anual</h2>
+
+    <!-- Barra de status -->
+    <div id="status-bar" class="status-bar">
+        <div class="status-container">
+            <div class="status-info">
+                <span id="status-text"><i class="bi bi-dash-circle"></i> Indeterminado</span>
+                <span id="status-percentage" class="ms-2">(0%)</span>
+            </div>
+            <div class="progress">
+                <div id="status-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
 
     {% if form.errors %}
     <div class="alert alert-danger">
@@ -35,7 +47,7 @@
         <div class="col-md-6">
             <label for="funcionario" class="form-label">Funcionário:</label>
             <select class="form-select" id="funcionario" name="funcionario" required>
-                <option selected>Selecione o funcionário</option>
+                <option selected disabled>Selecione o funcionário</option>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}" {% if funcionario.id == avaliacao.funcionario.id %}selected{% endif %}>{{ funcionario.nome }}</option>
                 {% endfor %}
@@ -48,139 +60,158 @@
             <input type="text" class="form-control" id="centro_custo" name="centro_custo" value="{{ avaliacao.centro_custo }}">
         </div>
 
-        <!-- Título para o Questionário da Avaliação -->
+        <!-- Questionário -->
         <div class="col-12 mt-4">
             <h4>Questionário da Avaliação</h4>
         </div>
 
-        <!-- Itens Avaliados Individuais -->
-        <div class="col-md-6">
-            <label for="postura_seg_trabalho" class="form-label">Postura em Segurança do Trabalho</label>
-            <select class="form-select item-avaliado" id="postura_seg_trabalho" name="postura_seg_trabalho" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.postura_seg_trabalho == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.postura_seg_trabalho == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.postura_seg_trabalho == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.postura_seg_trabalho == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="qualidade_produtividade" class="form-label">Qualidade e Produtividade</label>
-            <select class="form-select item-avaliado" id="qualidade_produtividade" name="qualidade_produtividade" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.qualidade_produtividade == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.qualidade_produtividade == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.qualidade_produtividade == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.qualidade_produtividade == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="trabalho_equipe" class="form-label">Trabalho em Equipe</label>
-            <select class="form-select item-avaliado" id="trabalho_equipe" name="trabalho_equipe" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.trabalho_em_equipe == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.trabalho_em_equipe == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.trabalho_em_equipe == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.trabalho_em_equipe == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="comprometimento" class="form-label">Comprometimento</label>
-            <select class="form-select item-avaliado" id="comprometimento" name="comprometimento" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.comprometimento == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.comprometimento == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.comprometimento == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.comprometimento == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="disponibilidade_para_mudancas" class="form-label">Disponibilidade para Mudanças</label>
-            <select class="form-select item-avaliado" id="disponibilidade_para_mudancas" name="disponibilidade_para_mudancas" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.disponibilidade_para_mudancas == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.disponibilidade_para_mudancas == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.disponibilidade_para_mudancas == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.disponibilidade_para_mudancas == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="disciplina" class="form-label">Disciplina</label>
-            <select class="form-select item-avaliado" id="disciplina" name="disciplina" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.disciplina == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.disciplina == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.disciplina == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.disciplina == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="rendimento_sob_pressao" class="form-label">Rendimento sob Pressão</label>
-            <select class="form-select item-avaliado" id="rendimento_sob_pressao" name="rendimento_sob_pressao" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.rendimento_sob_pressao == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.rendimento_sob_pressao == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.rendimento_sob_pressao == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.rendimento_sob_pressao == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="proatividade" class="form-label">Proatividade</label>
-            <select class="form-select item-avaliado" id="proatividade" name="proatividade" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.proatividade == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.proatividade == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.proatividade == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.proatividade == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="comunicacao" class="form-label">Comunicação</label>
-            <select class="form-select item-avaliado" id="comunicacao" name="comunicacao" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.comunicacao == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.comunicacao == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.comunicacao == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.comunicacao == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="assiduidade" class="form-label">Assiduidade</label>
-            <select class="form-select item-avaliado" id="assiduidade" name="assiduidade" required>
-                <option value="" disabled>Select an option</option>
-                <option value="1" {% if avaliacao.assiduidade == 1 %}selected{% endif %}>Ruim (1.0)</option>
-                <option value="2" {% if avaliacao.assiduidade == 2 %}selected{% endif %}>Regular (2.0)</option>
-                <option value="3" {% if avaliacao.assiduidade == 3 %}selected{% endif %}>Bom (3.0)</option>
-                <option value="4" {% if avaliacao.assiduidade == 4 %}selected{% endif %}>Ótimo (4.0)</option>
-            </select>
-        </div>
+        <!-- Campos de Seleção para Itens Avaliados -->
+        {% for field in form %}
+            {% if field.name not in 'avaliacao_global_avaliador avaliacao_global_avaliado data_avaliacao funcionario centro_custo' %}
+            <div class="col-md-6">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                <select class="form-select item-avaliado" id="{{ field.id_for_label }}" name="{{ field.name }}">
+                    <option value="1" {% if field.value == 1 %}selected{% endif %}>Ruim (1.0)</option>
+                    <option value="2" {% if field.value == 2 %}selected{% endif %}>Regular (2.0)</option>
+                    <option value="3" {% if field.value == 3 %}selected{% endif %}>Bom (3.0)</option>
+                    <option value="4" {% if field.value == 4 %}selected{% endif %}>Ótimo (4.0)</option>
+                </select>
+            </div>
+            {% endif %}
+        {% endfor %}
 
         <!-- Avaliação Global -->
-          <div class="col-12">
+        <div class="col-12">
             <label for="avaliacao_global_avaliador" class="form-label">Avaliação Global (Visão do Avaliador)</label>
-            {{ form.avaliacao_global_avaliador }}  <!-- CKEditor Widget -->
+            {{ form.avaliacao_global_avaliador }}
         </div>
 
         <div class="col-12">
             <label for="avaliacao_global_avaliado" class="form-label">Avaliação Global (Visão do Avaliado)</label>
-            {{ form.avaliacao_global_avaliado }}  <!-- CKEditor Widget -->
+            {{ form.avaliacao_global_avaliado }}
         </div>
 
-        <!-- Botão de submissão -->
+        <!-- Botões -->
         <div class="col-12 text-center mt-4">
-            <button type="submit" class="btn btn-primary w-100 mt-3">Salvar Alterações</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar Alterações</button>
+            <a href="{% url 'lista_avaliacao_anual' %}" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
         </div>
     </form>
 
-    {{ form.media }} <!-- Não esqueça de incluir isso! -->
+    {{ form.media }}
 </div>
+
+<!-- Estilo para Barra de Status -->
+<style>
+    .status-bar {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #e0e0e0;
+        padding: 10px;
+        z-index: 1050;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        width: 35% !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        height: auto;
+    }
+
+    .status-container {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .status-info {
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .progress {
+        flex: 1;
+        margin-left: 10px;
+        height: 20px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        transition: width 0.5s ease;
+    }
+
+    .progress-bar.bg-danger {
+        background-color: #dc3545;
+    }
+
+    .progress-bar.bg-warning {
+        background-color: #ffc107;
+    }
+
+    .progress-bar.bg-primary {
+        background-color: #0d6efd;
+    }
+
+    .progress-bar.bg-success {
+        background-color: #28a745;
+    }
+</style>
+
+<!-- Script para Cálculo da Barra de Status -->
+<script>
+    function calcularStatus() {
+        let totalPontos = 0;
+        const itensAvaliados = document.querySelectorAll('.item-avaliado');
+        itensAvaliados.forEach(select => {
+            totalPontos += parseInt(select.value) || 0;
+        });
+
+        const percentual = (totalPontos / 40) * 100;
+        const statusText = document.getElementById('status-text');
+        const statusPercentage = document.getElementById('status-percentage');
+        const statusProgress = document.getElementById('status-progress');
+
+        let status = '';
+        let icon = '';
+        let progressBarClass = '';
+
+        if (percentual >= 85) {
+            status = 'Ótimo';
+            icon = '<i class="bi bi-star-fill"></i>';
+            progressBarClass = 'bg-success';
+        } else if (percentual >= 66) {
+            status = 'Bom';
+            icon = '<i class="bi bi-check-circle"></i>';
+            progressBarClass = 'bg-primary';
+        } else if (percentual >= 46) {
+            status = 'Regular';
+            icon = '<i class="bi bi-exclamation-circle"></i>';
+            progressBarClass = 'bg-warning';
+        } else if (percentual >= 25) {
+            status = 'Ruim';
+            icon = '<i class="bi bi-x-circle"></i>';
+            progressBarClass = 'bg-danger';
+        } else {
+            status = 'Indeterminado';
+            icon = '<i class="bi bi-dash-circle"></i>';
+            progressBarClass = 'bg-secondary';
+        }
+
+        statusText.innerHTML = `${icon} ${status}`;
+        statusPercentage.innerHTML = `(${Math.round(percentual)}%)`;
+        statusProgress.style.width = `${percentual}%`;
+        statusProgress.setAttribute('aria-valuenow', percentual);
+        statusProgress.className = `progress-bar ${progressBarClass}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const itensAvaliados = document.querySelectorAll('.item-avaliado');
+        itensAvaliados.forEach(select => {
+            select.addEventListener('change', calcularStatus);
+        });
+
+        calcularStatus();
+    });
+</script>
 {% endblock %}

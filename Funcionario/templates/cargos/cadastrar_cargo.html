@@ -28,15 +28,12 @@
             {{ form.descricao_arquivo }}
         </div>
 
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary w-100 mt-3">Cadastrar Cargo</button>
+        <!-- Botões Centralizados -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary me-2"><i class="bi bi-plus-circle"></i> Cadastrar</button>
+            <a href="{% url 'lista_cargos' %}" class="btn btn-secondary ms-2"><i class="bi bi-arrow-left"></i> Cancelar</a>
         </div>
     </form>
 </div>
-
-<!-- Incluindo jQuery e jQuery Mask Plugin -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-
 
 {% endblock %}

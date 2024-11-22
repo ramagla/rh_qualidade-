@@ -57,10 +57,35 @@ def editar_avaliacao_experiencia(request, id):
     if request.method == 'POST':
         form = AvaliacaoExperienciaForm(request.POST, instance=avaliacao)
         if form.is_valid():
+            # Calcula o status com base nas respostas
+            adaptacao_trabalho = int(request.POST.get('adaptacao_trabalho', 0))
+            interesse = int(request.POST.get('interesse', 0))
+            relacionamento_social = int(request.POST.get('relacionamento_social', 0))
+            capacidade_aprendizagem = int(request.POST.get('capacidade_aprendizagem', 0))
+            
+            # Calcula o total de pontos e a porcentagem
+            total_pontos = adaptacao_trabalho + interesse + relacionamento_social + capacidade_aprendizagem
+            porcentagem = (total_pontos / 16) * 100
+
+            # Define o status de acordo com a pontuação
+            if porcentagem >= 85:
+                avaliacao.status = 'Ótimo - Efetivar'
+                avaliacao.orientacao = 'Efetivar'
+            elif porcentagem >= 66:
+                avaliacao.status = 'Bom - Efetivar'
+                avaliacao.orientacao = 'Efetivar'
+            elif porcentagem >= 46:
+                avaliacao.status = 'Regular - Treinamento'
+                avaliacao.orientacao = 'Encaminhar p/ Treinamento'
+            else:
+                avaliacao.status = 'Ruim - Desligar'
+                avaliacao.orientacao = 'Desligar'
+
             # Salva as alterações no banco de dados
-            form.save()
+            avaliacao.save()  # Salvando a instância diretamente
             messages.success(request, "Avaliação atualizada com sucesso!")
-            return redirect(reverse('visualizar_avaliacao_experiencia', args=[avaliacao.id]))
+            # Redireciona para a lista de avaliações após salvar
+            return redirect(reverse('lista_avaliacao_experiencia'))
         else:
             messages.error(request, "Erro ao atualizar a avaliação. Verifique os dados informados.")
     else:

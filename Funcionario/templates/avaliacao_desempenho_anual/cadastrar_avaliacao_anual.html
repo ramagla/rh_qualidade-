@@ -3,6 +3,20 @@
 {% block title %}Cadastro de Avaliação Anual{% endblock %}
 
 {% block content %}
+
+<!-- Barra fixa no lado esquerdo -->
+<div id="status-bar" class="status-bar">
+    <div class="status-container">
+        <div class="status-info">
+            <span id="status-text"><i class="bi bi-dash-circle"></i> Indeterminado</span>
+            <span id="status-percentage" class="ms-2">(0%)</span>
+        </div>
+        <div class="progress">
+            <div id="status-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+</div>
+
 <div class="container mt-5">
     <h2 class="text-center mb-4">Cadastro de Avaliação Anual</h2>
 
@@ -34,8 +48,8 @@
         <!-- Funcionário, Cargo, Departamento e Centro de Custo -->
                 <div class="col-md-6">
                     <label for="funcionario" class="form-label">Funcionário:</label>
-                    <select class="form-select" id="funcionario" name="funcionario">
-                        <option selected>Selecione o funcionário</option>
+                    <select class="form-select select2" id="funcionario" name="funcionario">
+                        <option selected disabled>Selecione o funcionário</option>
                         {% for funcionario in funcionarios %}
                             <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
                         {% endfor %}
@@ -187,28 +201,87 @@
             {{ form.avaliacao_global_avaliado }}
         </div>
        
-            <!-- Campo para exibir o Status da Avaliação -->
-            <div class="col-md-6">
-                <label for="status" class="form-label">Status da Avaliação:</label>
-                <input type="text" class="form-control" id="status" name="status" readonly>
-            </div>
+         
+      
+<style>
+    .status-bar {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #e0e0e0;
+        padding: 10px;
+        z-index: 1050;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        width: 35% !important; /* Define a largura */
+        position: fixed !important; /* Garante que a barra fique fixa */
+        left: 0 !important; /* Fixa a barra à esquerda */
+        top: 0 !important; /* Fixa a barra ao topo */
+        height: auto;
+    }
+
+    .status-container {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start; /* Alinha os itens dentro da barra */
+    }
+
+    .status-info {
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .progress {
+        flex: 1;
+        margin-left: 10px;
+        height: 20px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        transition: width 0.5s ease;
+    }
+
+    .progress-bar.bg-danger {
+        background-color: #dc3545;
+    }
+
+    .progress-bar.bg-warning {
+        background-color: #ffc107;
+    }
+
+    .progress-bar.bg-primary {
+        background-color: #0d6efd;
+    }
+
+    .progress-bar.bg-success {
+        background-color: #28a745;
+    }
+</style>
 
 
-        <!-- Botão de submissão -->
+
+
+     <!-- Botões de Salvar e Cancelar -->
         <div class="col-12 text-center mt-4">
-            <button type="submit" class="btn btn-primary w-100 mt-3">Salvar Avaliação Anual</button>
+            <div class="d-flex justify-content-center gap-3">
+                <!-- Botão de Salvar -->
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar</button>
+                <!-- Botão de Cancelar -->
+                <a href="{% url 'lista_avaliacao_anual' %}" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Cancelar</a>
+            </div>
         </div>
-    </form>
-</div>
+
 <script>
     // Função para preencher automaticamente o cargo e departamento com base no funcionário selecionado
     function preencherInfoFuncionario() {
-        const funcionarioSelect = document.getElementById('funcionario');
+        const funcionarioSelect = $('#funcionario'); // Usando jQuery para Select2
         const cargoInput = document.getElementById('cargo');
         const departamentoInput = document.getElementById('departamento');
 
-        funcionarioSelect.addEventListener('change', function () {
-            const funcionarioId = funcionarioSelect.value;
+        // Evento de mudança do Select2
+        funcionarioSelect.on('change', function () {
+            const funcionarioId = $(this).val(); // Obtém o valor do Select2
 
             if (funcionarioId) {
                 fetch(`/get-cargo/${funcionarioId}/`)
@@ -247,32 +320,62 @@
         });
 
         // Calcula a porcentagem com base na fórmula
-        const porcentagem = (totalPontos / 40) * 100;
-        const statusInput = document.getElementById('status');
+        const porcentagem = (totalPontos / 40) * 100; // Total máximo de 40 pontos
+        const statusText = document.getElementById('status-text');
+        const statusPercentage = document.getElementById('status-percentage');
+        const statusProgress = document.getElementById('status-progress');
+
+        let status = '';
+        let icon = '';
+        let progressBarClass = '';
 
         // Define o status com base na porcentagem
         if (porcentagem >= 85) {
-            statusInput.value = 'Ótimo';
+            status = 'Ótimo';
+            icon = '<i class="bi bi-star-fill"></i>';
+            progressBarClass = 'bg-success';
         } else if (porcentagem >= 66) {
-            statusInput.value = 'Bom';
+            status = 'Bom';
+            icon = '<i class="bi bi-check-circle"></i>';
+            progressBarClass = 'bg-primary';
         } else if (porcentagem >= 46) {
-            statusInput.value = 'Regular';
+            status = 'Regular';
+            icon = '<i class="bi bi-exclamation-circle"></i>';
+            progressBarClass = 'bg-warning';
         } else if (porcentagem >= 25) {
-            statusInput.value = 'Ruim';
+            status = 'Ruim';
+            icon = '<i class="bi bi-x-circle"></i>';
+            progressBarClass = 'bg-danger';
         } else {
-            statusInput.value = 'Nota insuficiente';
+            status = 'Nota insuficiente';
+            icon = '<i class="bi bi-dash-circle"></i>';
+            progressBarClass = 'bg-secondary';
         }
+
+        // Atualiza o texto do status
+        statusText.innerHTML = `${icon} ${status}`;
+        statusPercentage.innerHTML = `(${Math.round(porcentagem)}%)`;
+
+        // Atualiza a barra de progresso
+        statusProgress.style.width = `${porcentagem}%`;
+        statusProgress.setAttribute('aria-valuenow', porcentagem);
+
+        // Remove classes antigas e adiciona a nova classe
+        statusProgress.className = `progress-bar ${progressBarClass}`;
     }
 
     // Inicializa as funções ao carregar a página
     document.addEventListener('DOMContentLoaded', () => {
         preencherInfoFuncionario();
-        
+
         // Adiciona o evento 'change' para cada campo de avaliação para cálculo automático
         const itensAvaliados = document.querySelectorAll('.item-avaliado');
         itensAvaliados.forEach(select => {
             select.addEventListener('change', calcularStatus);
         });
+
+        // Calcula o status inicial
+        calcularStatus();
     });
 </script>
 

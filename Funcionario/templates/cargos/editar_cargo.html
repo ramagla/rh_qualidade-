@@ -5,8 +5,31 @@
     <h2 class="text-center mb-4">Editar Cargo</h2>
     <form method="post" enctype="multipart/form-data" class="row g-3">
         {% csrf_token %}
+
+        <!-- Campos do formulário -->
         {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+
+        <!-- Exibir o arquivo já anexado -->
+        {% if form.instance.descricao_arquivo and form.instance.descricao_arquivo.url %}
+        <div class="col-md-12">
+            <label for="id_descricao_arquivo" class="form-label">Arquivo Atual:</label>
+            <p>
+                <a href="{{ form.instance.descricao_arquivo.url }}" target="_blank" class="btn btn-outline-secondary">
+                    {{ form.instance.descricao_arquivo.name }}
+                </a>
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Botões de Salvar e Cancelar -->
+        <div class="col-md-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Salvar Alterações
+            </button>
+            <a href="{% url 'lista_cargos' %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
     </form>
 </div>
 {% endblock %}

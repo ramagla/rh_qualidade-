@@ -36,7 +36,7 @@
         <!-- Funcionário, Cargo, Departamento e Centro de Custo -->
         <div class="col-md-6">
             <label for="funcionario" class="form-label">Funcionário:</label>
-            <select class="form-select" id="funcionario" name="funcionario" required>
+            <select class="form-select select2" id="funcionario" name="funcionario" required>
                 <option selected>Selecione o funcionário</option>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
@@ -113,57 +113,36 @@
                 </select>
             </div>
 
-       <!-- Observações -->
+     <!-- Observações -->
         <div class="col-12">
             <label for="observacoes" class="form-label">Observações</label>
-            <textarea class="form-control" id="observacoes" name="observacoes" style="height: 100px">{{ form.observacoes.value }}</textarea>
+            {{ form.observacoes }}
         </div>
 
         
-
-        <!-- Avaliado e Avaliador -->
-        <div class="col-md-6">
-            <label for="avaliado" class="form-label">Avaliado:</label>
-            <select class="form-select" id="avaliado" name="avaliado" required>
-                <option selected>Selecione o avaliado</option>
-                {% for funcionario in funcionarios %}
-                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label for="avaliador" class="form-label">Avaliador:</label>
-            <select class="form-select" id="avaliador" name="avaliador" required>
-                <option selected>Selecione o avaliador</option>
-                {% for funcionario in funcionarios %}
-                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- Status da Avaliação -->
+               <!-- Status da Avaliação -->
         <div class="col-md-6">
             <label for="status" class="form-label">Status da Avaliação:</label>
             <input type="text" class="form-control" id="status" name="status" readonly>
         </div>
 
-        <!-- Botão de Submissão -->
-        <div class="col-12 text-center mt-4">
-            <button type="submit" class="btn btn-primary w-100 mt-3">Salvar Avaliação de Experiência</button>
-        </div>
-    </form>
+       <!-- Botões de Submissão e Cancelamento -->
+<div class="col-12 text-center mt-4">
+    <button type="submit" class="btn btn-primary me-2"><i class="bi bi-save"></i> Salvar</button>
+    <a href="{% url 'lista_avaliacao_experiencia' %}" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Cancelar</a>
 </div>
 
+
 <script>
+    // Função para preencher informações do funcionário
     function preencherInfoFuncionario() {
-        const funcionarioSelect = document.getElementById('funcionario');
         const cargoInput = document.getElementById('cargo');
         const departamentoInput = document.getElementById('departamento');
         const superiorDiretoInput = document.getElementById('superior_direto');
 
-        funcionarioSelect.addEventListener('change', function () {
-            const funcionarioId = funcionarioSelect.value;
+        // Reconfigurar o evento change para funcionar com Select2
+        $('#funcionario').on('change', function () {
+            const funcionarioId = $(this).val();
 
             if (funcionarioId) {
                 fetch(`/get-cargo/${funcionarioId}/`)
@@ -189,37 +168,45 @@
 
     // Função para calcular o status da avaliação
     function calcularStatus() {
-    let totalPontos = 0;
-    const itensAvaliados = document.querySelectorAll('#adaptacao_trabalho, #interesse, #relacionamento_social, #capacidade_aprendizagem');
-    
-    itensAvaliados.forEach(select => {
-        totalPontos += parseInt(select.value) || 0;
-    });
+        let totalPontos = 0;
+        const itensAvaliados = document.querySelectorAll('#adaptacao_trabalho, #interesse, #relacionamento_social, #capacidade_aprendizagem');
+        
+        itensAvaliados.forEach(select => {
+            totalPontos += parseInt(select.value) || 0;
+        });
 
-    const porcentagem = (totalPontos / 16) * 100;
-    const statusInput = document.getElementById('status');
-    const orientacaoInput = document.getElementById('orientacao');  // Campo oculto para envio
+        const porcentagem = (totalPontos / 16) * 100;
+        const statusInput = document.getElementById('status');
+        const orientacaoInput = document.getElementById('orientacao');  // Campo oculto para envio
 
-    if (porcentagem >= 85) {
-        statusInput.value = 'Ótimo - Efetivar';
-        orientacaoInput.value = 'Efetivar';
-    } else if (porcentagem >= 66) {
-        statusInput.value = 'Bom - Efetivar';
-        orientacaoInput.value = 'Efetivar';
-    } else if (porcentagem >= 46) {
-        statusInput.value = 'Regular - Treinamento';
-        orientacaoInput.value = 'Encaminhar p/ Treinamento';
-    } else {
-        statusInput.value = 'Ruim - Desligar';
-        orientacaoInput.value = 'Desligar';
+        if (porcentagem >= 85) {
+            statusInput.value = 'Ótimo - Efetivar';
+            orientacaoInput.value = 'Efetivar';
+        } else if (porcentagem >= 66) {
+            statusInput.value = 'Bom - Efetivar';
+            orientacaoInput.value = 'Efetivar';
+        } else if (porcentagem >= 46) {
+            statusInput.value = 'Regular - Treinamento';
+            orientacaoInput.value = 'Encaminhar p/ Treinamento';
+        } else {
+            statusInput.value = 'Ruim - Desligar';
+            orientacaoInput.value = 'Desligar';
+        }
     }
-}
 
+    // Inicializar eventos e Select2 ao carregar o DOM
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar Select2
+        $('.select2').select2({
+            placeholder: "Selecione um funcionário",
+            allowClear: true,
+            width: '100%'
+        });
 
-    // Configura o cálculo automático ao alterar uma resposta no questionário
-    document.addEventListener('DOMContentLoaded', function() {
+        // Configurar preenchimento de informações do funcionário
         preencherInfoFuncionario();
 
+        // Configurar o cálculo automático do status
         const itensAvaliados = document.querySelectorAll('#adaptacao_trabalho, #interesse, #relacionamento_social, #capacidade_aprendizagem');
         itensAvaliados.forEach(select => {
             select.addEventListener('change', calcularStatus);  // Atualiza o status automaticamente

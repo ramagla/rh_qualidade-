@@ -6,7 +6,8 @@
 <div class="container mt-5">
     <h2 class="text-center mb-4">Visualizar Avaliação Anual</h2>
 
-    <div class="card">
+    <!-- Dados da Avaliação -->
+    <div class="card mb-4">
         <div class="card-body">
             <h5 class="card-title">Dados da Avaliação</h5>
             <p><strong>Funcionário:</strong> {{ avaliacao.funcionario.nome }}</p>
@@ -14,68 +15,72 @@
             <p><strong>Centro de Custo:</strong> {{ avaliacao.centro_custo }}</p>
             <p><strong>Departamento:</strong> {{ avaliacao.funcionario.local_trabalho }}</p>
             <p><strong>Classificação:</strong>
-                {% if avaliacao.calcular_classificacao == 'Ruim' %}
-                    <span class="badge bg-danger">{{ avaliacao.calcular_classificacao }}</span>
-                {% elif avaliacao.calcular_classificacao == 'Regular' %}
-                    <span class="badge bg-warning text-dark">{{ avaliacao.calcular_classificacao }}</span>
-                {% elif avaliacao.calcular_classificacao == 'Bom' %}
-                    <span class="badge bg-primary">{{ avaliacao.calcular_classificacao }}</span>
-                {% elif avaliacao.calcular_classificacao == 'Ótimo' %}
-                    <span class="badge bg-success">{{ avaliacao.calcular_classificacao }}</span>
+                {% if classificacao == 'Ruim' %}
+                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> {{ classificacao }}</span>
+                {% elif classificacao == 'Regular' %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> {{ classificacao }}</span>
+                {% elif classificacao == 'Bom' %}
+                    <span class="badge bg-primary"><i class="bi bi-check-circle"></i> {{ classificacao }}</span>
+                {% elif classificacao == 'Ótimo' %}
+                    <span class="badge bg-success"><i class="bi bi-star-fill"></i> {{ classificacao }}</span>
                 {% else %}
                     <span class="badge bg-secondary">Indeterminado</span>
                 {% endif %}
             </p>
+            <p><strong>Percentual:</strong> {{ percentual|floatformat:0 }}%</p>
         </div>
     </div>
 
+    <!-- Resultados da Avaliação -->
     <h5 class="mt-4">Resultados da Avaliação</h5>
     <ul class="list-group mb-4">
         <li class="list-group-item">
-            <strong>Postura em Segurança do Trabalho:</strong> {{ avaliacao.postura_seg_trabalho }}
+            <strong>Postura em Segurança do Trabalho:</strong> {{ status_campos.postura_seg_trabalho }}
         </li>
         <li class="list-group-item">
-            <strong>Qualidade e Produtividade:</strong> {{ avaliacao.qualidade_produtividade }}
+            <strong>Qualidade e Produtividade:</strong> {{ status_campos.qualidade_produtividade }}
         </li>
         <li class="list-group-item">
-            <strong>Trabalho em Equipe:</strong> {{ avaliacao.trabalho_em_equipe }}
+            <strong>Trabalho em Equipe:</strong> {{ status_campos.trabalho_em_equipe }}
         </li>
         <li class="list-group-item">
-            <strong>Comprometimento:</strong> {{ avaliacao.comprometimento }}
+            <strong>Comprometimento:</strong> {{ status_campos.comprometimento }}
         </li>
         <li class="list-group-item">
-            <strong>Disponibilidade para Mudanças:</strong> {{ avaliacao.disponibilidade_para_mudancas }}
+            <strong>Disponibilidade para Mudanças:</strong> {{ status_campos.disponibilidade_para_mudancas }}
         </li>
         <li class="list-group-item">
-            <strong>Disciplina:</strong> {{ avaliacao.disciplina }}
+            <strong>Disciplina:</strong> {{ status_campos.disciplina }}
         </li>
         <li class="list-group-item">
-            <strong>Rendimento sob Pressão:</strong> {{ avaliacao.rendimento_sob_pressao }}
+            <strong>Rendimento sob Pressão:</strong> {{ status_campos.rendimento_sob_pressao }}
         </li>
         <li class="list-group-item">
-            <strong>Proatividade:</strong> {{ avaliacao.proatividade }}
+            <strong>Proatividade:</strong> {{ status_campos.proatividade }}
         </li>
         <li class="list-group-item">
-            <strong>Comunicação:</strong> {{ avaliacao.comunicacao }}
+            <strong>Comunicação:</strong> {{ status_campos.comunicacao }}
         </li>
         <li class="list-group-item">
-            <strong>Assiduidade:</strong> {{ avaliacao.assiduidade }}
+            <strong>Assiduidade:</strong> {{ status_campos.assiduidade }}
         </li>
     </ul>
 
+    <!-- Avaliação Global -->
     <h5>Avaliação Global</h5>
     <div class="mb-4">
         <strong>Visão do Avaliador:</strong>
-        <p>{{ avaliacao.avaliacao_global_avaliador }}</p>
+        <p>{{ avaliacao.avaliacao_global_avaliador | safe }}</p>
     </div>
     <div class="mb-4">
         <strong>Visão do Avaliado:</strong>
-        <p>{{ avaliacao.avaliacao_global_avaliado }}</p>
+        <p>{{ avaliacao.avaliacao_global_avaliado | safe }}</p>
     </div>
 
+    <!-- Botões -->
     <div class="text-end">
-        <a href="{% url 'editar_avaliacao_anual' avaliacao.id %}" class="btn btn-warning">Editar Avaliação</a>
-        <a href="{% url 'lista_avaliacao_anual' %}" class="btn btn-secondary">Voltar</a>
+        <a href="{% url 'editar_avaliacao_anual' avaliacao.id %}" class="btn btn-warning"><i class="bi bi-pencil-square"></i> Editar Avaliação</a>
+        <a href="{% url 'lista_avaliacao_anual' %}" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i>  Voltar</a>
     </div>
 </div>
 {% endblock %}

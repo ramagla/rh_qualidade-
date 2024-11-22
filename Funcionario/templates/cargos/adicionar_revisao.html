@@ -7,7 +7,15 @@
     <form method="post" class="row g-3">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-primary w-100 mt-3">Adicionar Revisão</button>
+        <!-- Botões Centralizados -->
+        <div class="col-12 text-center mt-3">
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-plus-circle"></i> Adicionar Revisão
+            </button>
+            <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
     </form>
 </div>
 {% endblock %}

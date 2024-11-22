@@ -104,12 +104,11 @@
 
     <!-- Número do Formulário (visível apenas na impressão) -->
     <div class="numero-formulario d-none d-print-block" style="text-align: right; margin-top: 20px;">
-        F003 Rev.04
+        F013 Rev.03
     </div>
 </div>
 
-<!-- Número da página (visível apenas na impressão) -->
-<div class="numero-pagina d-none d-print-block"></div>
+
 
 <!-- Estilos personalizados e de impressão -->
 <style>
@@ -185,14 +184,7 @@
             color: #333;
         }
 
-        .numero-pagina {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            font-size: 10px;
-            color: #333;
-            content: "Página " counter(page);
-        }
+        
         .d-print-none, .sidebar, .navbar {
             display: none !important;
         }
@@ -228,7 +220,6 @@ function imprimir() {
                     .info-card { display: flex; gap: 20px; flex-wrap: wrap; }
                     .info-column { width: 48%; }
                     .numero-formulario { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #333; }
-                    .numero-pagina { position: fixed; bottom: 10px; left: 10px; font-size: 10px; color: #333; }
 
                     .custom-table {
                         width: 100%;
@@ -253,10 +244,7 @@ function imprimir() {
                         font-size: 14px; /* Ajusta o tamanho do título, se necessário */
                         margin-top: 0;
                     }
-                    @media print {
-                        .numero-pagina::after {
-                            content: "Página " counter(page);
-                        }
+                    @media print {                        
                         .d-print-none { display: none !important; }
                     }
                 </style>
@@ -264,8 +252,7 @@ function imprimir() {
             <body>
                 <h2>Lista de Presença</h2>
                 ${conteudo}
-                <div class="numero-formulario">F013 Rev.03</div>
-                <div class="numero-pagina"></div> 
+                <div class="numero-formulario">F013 Rev.03</div>                
             </body>
         </html>
     `);

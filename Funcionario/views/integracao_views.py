@@ -10,7 +10,7 @@ from django.http import Http404
 def lista_integracoes(request):
     # Obter os filtros do GET
     funcionario_id = request.GET.get('funcionario')
-    local_trabalho = request.GET.get('departamento')
+    local_trabalho = request.GET.get('departamento')  # O filtro do departamento vem como 'departamento'
     requer_treinamento = request.GET.get('requer_treinamento')
     grupo_whatsapp = request.GET.get('grupo_whatsapp')
     
@@ -25,17 +25,26 @@ def lista_integracoes(request):
     if grupo_whatsapp:
         integracoes = integracoes.filter(grupo_whatsapp=(grupo_whatsapp == 'True'))
 
-    # Filtrar apenas funcionários com integração cadastrada
-    funcionarios_com_integracao = Funcionario.objects.filter(integracaofuncionario__isnull=False).distinct()
+    # Ordenar as integrações pelo nome do funcionário relacionado
+    integracoes = integracoes.order_by('funcionario__nome')
 
-    # Obter locais de trabalho para o filtro
-    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
+    # Filtrar apenas funcionários com integração cadastrada e ordenar por nome
+    funcionarios_com_integracao = Funcionario.objects.filter(
+        integracaofuncionario__isnull=False
+    ).distinct().order_by('nome')
 
+    # Obter os valores únicos do campo `local_trabalho` para o filtro de departamento e ordená-los
+    departamentos = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
+    departamentos = sorted(departamentos, key=lambda x: x.lower() if x else '')
+
+    # Não é necessário nenhum ajuste adicional aqui para o PDF, pois será renderizado diretamente no template.
     return render(request, 'funcionarios/integracao/lista_integracoes.html', {
-        'integracoes': integracoes,
+        'integracoes': integracoes,  # Ordenado pelo nome do funcionário
         'funcionarios': funcionarios_com_integracao,  # Somente funcionários com integração
-        'locais_trabalho': locais_trabalho,
+        'departamentos': departamentos,  # Passar os departamentos ordenados para o template
     })
+
+
 
 # View para visualizar uma integração específica
 def visualizar_integracao(request, integracao_id):
@@ -45,7 +54,7 @@ def visualizar_integracao(request, integracao_id):
 # View para cadastrar uma nova integração
 def cadastrar_integracao(request):
     if request.method == 'POST':
-        form = IntegracaoFuncionarioForm(request.POST)
+        form = IntegracaoFuncionarioForm(request.POST, request.FILES)  # Aqui incluímos request.FILES
         if form.is_valid():
             form.save()
             messages.success(request, 'Integração cadastrada com sucesso.')
@@ -53,6 +62,8 @@ def cadastrar_integracao(request):
     else:
         form = IntegracaoFuncionarioForm()
     return render(request, 'funcionarios/integracao/cadastrar_integracao.html', {'form': form})
+
+
 
 # View para excluir uma integração
 def excluir_integracao(request, integracao_id):

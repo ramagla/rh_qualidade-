@@ -5,24 +5,24 @@
 {% block content %}
 {% load custom_filters %}
 
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Cadastro de Avaliação de Treinamentos</h2>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Cadastro de Avaliação de Treinamentos</h2>
 
-    <!-- Validação de Erros do Formulário -->
-   {% if form.errors %}
-    <div class="alert alert-danger">
-        <strong>Erro!</strong> Por favor, corrija os seguintes erros:
-        <ul>
-            {% for field, errors in form.errors.items %}
-                {% for error in errors %}
-                    <li>
-                        {{ field|capfirst }}: {{ error }}
-                    </li>
+        <!-- Validação de Erros do Formulário -->
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Erro!</strong> Por favor, corrija os seguintes erros:
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>
+                            {{ field|capfirst }}: {{ error }}
+                        </li>
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
-        </ul>
-    </div>
-{% endif %}
+            </ul>
+        </div>
+    {% endif %}
 
     
 
@@ -51,22 +51,28 @@
             </div>
         </div>
 
-      <!-- Nome do Funcionário -->
-        <select class="form-select" id="funcionario" name="funcionario" required>
-            <option selected>Selecione o funcionário</option>
-            {% for funcionario in funcionarios %}
-                <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
-            {% endfor %}
-        </select>
+        <div class="row">
+            <!-- Nome do Funcionário -->
+            <div class="col-md-6">
+                <label for="funcionario" class="form-label">Funcionário:</label>
+                <select class="form-select" id="funcionario" name="funcionario" required>
+                    <option selected>Selecione o funcionário</option>
+                    {% for funcionario in funcionarios %}
+                        <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <!-- Treinamento/Curso -->
-        <div class="col-md-6">
-            <label for="treinamento" class="form-label">Treinamento/Curso:</label>
-            <select class="form-select" id="treinamento" name="treinamento" required>
-                <option selected>Selecione o treinamento</option>
-                <!-- opções de treinamento serão carregadas aqui via JavaScript -->
-            </select>
+            <!-- Treinamento/Curso -->
+            <div class="col-md-6">
+                <label for="treinamento" class="form-label">Treinamento/Curso:</label>
+                <select class="form-select" id="treinamento" name="treinamento" required>
+                    <option selected>Selecione o treinamento</option>
+                    <!-- opções de treinamento serão carregadas aqui via JavaScript -->
+                </select>
+            </div>
         </div>
+
 
         <!-- Responsáveis pela Avaliação -->
         <div class="col-12">
@@ -74,36 +80,36 @@
         </div>
 
         <!-- Primeiro Responsável -->
-<div class="col-md-6">
-    <label for="responsavel_1" class="form-label">Primeiro Responsável:</label>
-    {{ form.responsavel_1 }}
-</div>
+        <div class="col-md-6">
+            <label for="responsavel_1" class="form-label">Primeiro Responsável:</label>
+            {{ form.responsavel_1 }}
+        </div>
 
-<!-- Segundo Responsável -->
-<div class="col-md-6">
-    <label for="responsavel_2" class="form-label">Segundo Responsável:</label>
-    {{ form.responsavel_2 }}
-</div>
+        <!-- Segundo Responsável -->
+        <div class="col-md-6">
+            <label for="responsavel_2" class="form-label">Segundo Responsável:</label>
+            {{ form.responsavel_2 }}
+        </div>
 
-<!-- Terceiro Responsável -->
-<div class="col-md-6">
-    <label for="responsavel_3" class="form-label">Terceiro Responsável:</label>
-    {{ form.responsavel_3 }}
-</div>
+        <!-- Terceiro Responsável -->
+        <div class="col-md-6">
+            <label for="responsavel_3" class="form-label">Terceiro Responsável:</label>
+            {{ form.responsavel_3 }}
+        </div>
 
 
 
         <!-- Questionários -->
           <!-- Pergunta 1 -->
-    <div class="col-12">
-        <label class="form-label">I- Com relação ao grau de conhecimento atual dos participantes da metodologia provida pelo treinamento?:</label>
-        {% for valor, label in opcoes_conhecimento %}
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="pergunta_1" id="pergunta_1_{{ valor }}" value="{{ valor }}" required>
-            <label class="form-check-label" for="pergunta_1_{{ valor }}">{{ valor }} - {{ label }}</label>
+        <div class="col-12">
+            <label class="form-label">I- Com relação ao grau de conhecimento atual dos participantes da metodologia provida pelo treinamento?:</label>
+            {% for valor, label in opcoes_conhecimento %}
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="pergunta_1" id="pergunta_1_{{ valor }}" value="{{ valor }}" required>
+                <label class="form-check-label" for="pergunta_1_{{ valor }}">{{ valor }} - {{ label }}</label>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
 
     <!-- Pergunta 2 -->
     <div class="col-12">
@@ -127,14 +133,12 @@
         {% endfor %}
     </div>
 
-    <!-- Descrição de Melhorias -->
-    <div class="col-12">
-        <label for="descricao_melhorias" class="form-label">Descreva as melhorias obtidas/resultados:</label>
-        <div class="form-floating">
-            <textarea class="form-control" id="descricao_melhorias" name="descricao_melhorias" style="height: 100px" required></textarea>
-            <label for="descricao_melhorias">Comentários</label>
+        <!-- Descrição de Melhorias -->
+        <div class="col-12">
+            <label for="descricao_melhorias" class="form-label">Descreva as melhorias obtidas/resultados:</label>
+            {{ form.descricao_melhorias }}
         </div>
-    </div>
+
 
       <!-- Campo oculto para Avaliação Geral -->
     <input type="hidden"  name="avaliacao_geral" id="avaliacao_geral" value="12">
@@ -146,12 +150,18 @@
         </div>
             
 
-        <!-- Botão de submissão -->
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary w-100 mt-3">Salvar Avaliação</button>
+                   <!-- Botões de ação -->
+        <div class="col-12 text-center mt-3">
+            <div class="btn-group" role="group" aria-label="Ações do formulário">
+                <!-- Botão de Salvar -->
+                <button type="submit" class="btn btn-primary me-2"><i class="bi bi-save"></i> Salvar</button>
+
+                <!-- Botão de Cancelar -->
+                <a href="{% url 'lista_avaliacoes' %}" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Cancelar</a>
+            </div>
         </div>
-    </form>
-</div>
+
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

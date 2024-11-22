@@ -3,6 +3,9 @@
 {% block title %}Cadastro de Comunicado{% endblock %}
 
 {% block content %}
+
+{% load widget_tweaks %}
+
 <div class="container mt-5">
     <h2 class="text-center mb-4">Cadastro de Comunicado</h2>
     <form method="post" enctype="multipart/form-data" class="row g-3">
@@ -18,10 +21,11 @@
             {{ form.assunto }}
         </div>
 
-        <div class="col-md-12">
-            <label for="descricao" class="form-label">Descrição:</label>
+        <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição</label>
             {{ form.descricao }}
         </div>
+
 
         <div class="col-md-6">
             <label for="tipo" class="form-label">Tipo de Comunicado:</label>
@@ -41,7 +45,9 @@
 
         <!-- Botão de Salvar -->
         <div class="col-12 text-center mt-4">
-            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button type="submit" class="btn btn-primary">                
+                 <i class="bi bi-save"></i> Salvar
+                </button>
         </div>
     </form>
 </div>

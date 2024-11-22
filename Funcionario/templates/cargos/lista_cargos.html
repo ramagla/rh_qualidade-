@@ -10,11 +10,8 @@
     <div class="text-end mb-4">
         <!-- Botão de Adicionar Cargo com Ícone -->
         <a href="{% url 'cadastrar_cargo' %}" class="btn btn-success me-2">
-            <i class="bi bi-plus-circle"></i> <!-- Ícone de Adicionar -->
-            Adicionar Cargo
-        </a>
-
-      
+           <i class="bi bi-plus-circle"></i> Cadastrar
+        </a>      
     </div>
 
     <!-- Toast container para mensagens de alerta no canto inferior direito -->
@@ -52,7 +49,7 @@
         <div class="row">
             <div class="col-md-6">
                 <label for="departamento" class="form-label">Filtrar por Departamento:</label>
-                <select name="departamento" id="departamento" class="form-select">
+                <select name="departamento" id="departamento" class="form-select select2">
                     <option value="">Todos</option>
                     {% for dept in departamentos %}
                         <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>
@@ -63,7 +60,7 @@
             </div>
             <div class="col-md-6">
                 <label for="cargo" class="form-label">Filtrar por Cargo:</label>
-                <select name="cargo" id="cargo" class="form-select">
+                <select name="cargo" id="cargo" class="form-select select2">
                     <option value="">Todos</option>
                     {% for cargo in todos_cargos %}
                         <option value="{{ cargo.nome }}" {% if request.GET.cargo == cargo.nome %}selected{% endif %}>
@@ -74,7 +71,9 @@
             </div>
         </div>
         <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
         </div>
     </form>
 
@@ -114,8 +113,8 @@
                     <a href="{% url 'editar_cargo' cargo.id %}" class="btn btn-warning btn-sm" title="Editar">
                         <i class="bi bi-pencil-square"></i>  <!-- Ícone de Editar -->
                     </a>
-                    <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm" title="Histórico">
-                        <i class="bi bi-clock-history"></i>  <!-- Ícone de Histórico -->
+                    <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm" title="Histórico de Revisões">
+                        <i class="bi bi-clock-history"></i>
                     </a>
                     <!-- Verifica se o arquivo de descrição está presente -->
                     {% if cargo.descricao_arquivo %}

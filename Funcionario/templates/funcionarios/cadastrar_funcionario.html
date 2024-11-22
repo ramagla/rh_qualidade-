@@ -60,7 +60,7 @@
 
         <div class="col-md-6">
             <label for="data_admissao" class="form-label">Data de Admissão:</label>
-            <input type="text" name="data_admissao" class="form-control" value="{{ form.data_admissao.value }}" placeholder="dd/mm/aaaa">
+            <input type="date" name="data_admissao" class="form-control" value="{{ form.data_admissao.value }}" placeholder="dd/mm/aaaa">
         </div>
 
         <div class="col-md-6">
@@ -85,7 +85,7 @@
 
         <div class="col-md-6">
             <label for="data_integracao" class="form-label">Data de Integração:</label>
-            <input type="text" name="data_integracao" class="form-control" value="{{ form.data_integracao.value }}" placeholder="dd/mm/aaaa">
+            <input type="date" name="data_integracao" class="form-control" value="{{ form.data_integracao.value }}" placeholder="dd/mm/aaaa">
         </div>
 
         <div class="col-md-6">
@@ -122,7 +122,7 @@
 
         <!-- Formulário F146 -->
         <div class="col-md-6">
-            <label for="formulario_f146" class="form-label">Formulário F146:</label>
+            <label for="formulario_f146" class="form-label">Formulário F146: (Integração)</label>
             <div class="input-group mb-3">
                 <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_formulario_f146').click();">Selecionar Arquivo</button>
                 <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="formulario_f146_filename" readonly>
@@ -130,11 +130,18 @@
             <input type="file" id="id_formulario_f146" name="formulario_f146" style="display: none;" onchange="document.getElementById('formulario_f146_filename').value = this.files[0].name;">
         </div>
 
-        <!-- Botão para salvar -->
-        <div class="col-12 text-center">
-            <button type="submit" class="btn btn-primary" onclick="validarFormulario(event)">Salvar</button>
+        <!-- Botões de Salvar e Cancelar Centralizados -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary me-2" onclick="validarFormulario(event)">
+                <i class="bi bi-save"></i> Salvar
+            </button>
+            <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
         </div>
     </form>
+</div>
+
 
     <!-- Script para edição -->
     <script>

@@ -115,11 +115,11 @@
             </div>
 
 
-        <!-- Término Previsto (Calculado) -->
-        <div class="col-md-6">
-            <label for="termino_previsto" class="form-label">Término Previsto (Calculado):</label>
-            <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" readonly>
-        </div>>
+       <!-- Término Previsto (Calculado) -->
+            <div class="col-md-6">
+                <label for="termino_previsto" class="form-label">Término Previsto (Calculado):</label>
+                <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" readonly>
+            </div>
         
 
         <div class="col-md-6">
@@ -169,21 +169,27 @@
             </div>
 
             
-
-        <!-- Disponibilidade de Vaga -->
-        <h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
-        <div class="col-md-6">
-            <label for="disponibilidade_vaga" class="form-label">Disponibilidade de Vaga no Quadro:</label>
-            <input type="checkbox" name="disponibilidade_vaga"> Sim
-        </div>
-
-        <!-- Botão para salvar -->
-        <div class="col-12 text-center mt-4">
-            <button type="submit" class="btn btn-primary">Salvar</button>
-        </div>
-    </form>
+<!-- Disponibilidade de Vaga -->
+<h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
+<div class="col-md-6">
+    <label for="disponibilidade_vaga" class="form-label">Disponibilidade de Vaga no Quadro:</label>
+    <div class="form-check">
+        <input type="radio" id="vaga_sim" name="disponibilidade_vaga" value="Sim" class="form-check-input" required>
+        <label for="vaga_sim" class="form-check-label">Sim</label>
+    </div>
+    <div class="form-check">
+        <input type="radio" id="vaga_nao" name="disponibilidade_vaga" value="Não" class="form-check-input" required>
+        <label for="vaga_nao" class="form-check-label">Não</label>
+    </div>
 </div>
-<script src="{% static 'django_ckeditor_5/ckeditor5/configs/default.js' %}"></script>
+
+
+
+    <!-- Botões de Salvar e Cancelar -->
+<div class="col-12 text-center mt-4">
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar</button>
+    <a href="{% url 'lista_jobrotation_evaluation' %}" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
+</div>
 
 
 
@@ -200,11 +206,13 @@ document.addEventListener("DOMContentLoaded", function() {
             const terminoPrevisto = new Date(dataInicio);
             terminoPrevisto.setDate(terminoPrevisto.getDate() + 60); 
 
+            // Formata a data para o formato dd/mm/aaaa
             const dia = String(terminoPrevisto.getDate()).padStart(2, '0');
             const mes = String(terminoPrevisto.getMonth() + 1).padStart(2, '0');
             const ano = terminoPrevisto.getFullYear();
 
-            terminoPrevistoInput.value = `${ano}-${mes}-${dia}`;
+            // Atualiza o campo com a data formatada
+            terminoPrevistoInput.value = `${dia}/${mes}/${ano}`;
         } else {
             terminoPrevistoInput.value = ''; 
         }
@@ -269,6 +277,7 @@ document.addEventListener("DOMContentLoaded", function() {
     dataInicioInput.addEventListener('change', calcularTerminoPrevisto);
 });
 </script>
+
 
 
 

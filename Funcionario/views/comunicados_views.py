@@ -4,8 +4,11 @@ from Funcionario.models import Comunicado, Funcionario
 from Funcionario.forms import ComunicadoForm
 
 def lista_comunicados(request):
-    # Recupera todos os comunicados
-    comunicados = Comunicado.objects.all()
+    # Recupera todos os comunicados e ordena do maior para o menor ID
+    comunicados = Comunicado.objects.all().order_by('-id')
+
+    # Recupera os departamentos únicos
+    departamentos = Comunicado.objects.values_list('departamento_responsavel', flat=True).distinct()
 
     # Obtenção dos filtros
     tipo = request.GET.get('tipo', '')
@@ -17,7 +20,7 @@ def lista_comunicados(request):
     if tipo:
         comunicados = comunicados.filter(tipo=tipo)
     if departamento:
-        comunicados = comunicados.filter(departamento_responsavel__icontains=departamento)
+        comunicados = comunicados.filter(departamento_responsavel=departamento)
     if data_inicio and data_fim:
         comunicados = comunicados.filter(data__range=[data_inicio, data_fim])
     elif data_inicio:
@@ -28,6 +31,7 @@ def lista_comunicados(request):
     # Contexto do template com os filtros aplicados
     context = {
         'comunicados': comunicados,
+        'departamentos': departamentos,
         'tipo': tipo,
         'departamento': departamento,
         'data_inicio': data_inicio,
@@ -35,6 +39,7 @@ def lista_comunicados(request):
     }
 
     return render(request, 'comunicados/lista_comunicados.html', context)
+
     
 def imprimir_comunicado(request, id):
     comunicado = get_object_or_404(Comunicado, id=id)  # Alterado para buscar por 'id'
@@ -67,7 +72,7 @@ def editar_comunicado(request, id):
     else:
         form = ComunicadoForm(instance=comunicado)  # Carrega os dados existentes do banco
 
-    return render(request, 'comunicados/editar_comunicado.html', {'form': form})
+    return render(request, 'comunicados/editar_comunicado.html', {'form': form, 'comunicado': comunicado})
 
 
 def excluir_comunicado(request, id):

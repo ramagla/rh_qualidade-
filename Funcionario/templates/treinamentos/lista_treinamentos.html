@@ -33,43 +33,66 @@
         {% endif %}
     </div>
 
+       <!-- Controles de exportação e paginação -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <form method="get" class="d-inline">
+                <label for="registros_por_pagina" class="form-label me-2">Registros por página:</label>
+                <select name="registros_por_pagina" id="registros_por_pagina" class="form-select d-inline w-auto" onchange="this.form.submit()">
+                    <option value="10" {% if registros_por_pagina == 10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if registros_por_pagina == 20 %}selected{% endif %}>20</option>
+                    <option value="50" {% if registros_por_pagina == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if registros_por_pagina == 100 %}selected{% endif %}>100</option>
+                </select>
+            </form>
+        </div>
+        <div>
+            <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary">
+                <i class="bi bi-download"></i> Exportar para Excel
+            </a>
+        </div>
+    </div>
+
     <!-- Botão de Cadastrar Treinamento e Imprimir F003 -->
     <div class="text-end mb-4">
-        <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success"><i class="bi bi-person-plus"></i> Cadastrar Treinamento</a>
+        <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Cadastrar</a>
         
         <!-- Botão para abrir a modal de Imprimir F003 -->
         <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
-            <i class="bi bi-printer"></i> F003
+            <i class="bi bi-printer"></i> Imprimir
         </button>
     </div>
 
-    <!-- Modal para selecionar funcionário e imprimir F003 -->
-    <div class="modal fade" id="imprimirF003Modal" tabindex="-1" aria-labelledby="imprimirF003ModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imprimirF003ModalLabel">Selecionar Funcionário</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="imprimirF003Form" method="get" action="">
-                        <div class="mb-3">
-                            <label for="funcionario_modal" class="form-label">Funcionário:</label>
-                            <select name="funcionario" id="funcionario_modal" class="form-select" required>
-                                <option value="">Selecione</option>
-                                {% for func in funcionarios %}
-                                    <option value="{{ func.id }}">{{ func.nome }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" id="submitButton" class="btn btn-primary">Imprimir</button>
-                        </div>
-                    </form>
-                </div>
+   <!-- Modal para Selecionar Funcionário -->
+<div class="modal fade" id="imprimirF003Modal" tabindex="-1" aria-labelledby="imprimirF003ModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imprimirF003ModalLabel">Selecionar Funcionário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="imprimirF003Form" method="GET" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="funcionario_modal" class="form-label">Funcionário:</label>
+                        <select name="funcionario" id="funcionario_modal" class="form-select select2" required>
+                            <option value="">Selecione um funcionário</option>
+                            {% for func in funcionarios %}
+                                <option value="{{ func.id }}">{{ func.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Imprimir</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
+
+
+
+    
 
     <!-- Script para manipular a modal de impressão F003 -->
     <script>
@@ -95,7 +118,7 @@
             <!-- Filtro de Funcionário -->
             <div class="col-md-4">
                 <label for="funcionario" class="form-label">Funcionário</label>
-                <select name="funcionario" id="funcionario" class="form-select">
+                <select name="funcionario" id="funcionario" class="form-select select2">
                     <option value="">Todos</option>
                     {% for func in funcionarios %}
                         <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
@@ -106,7 +129,7 @@
             <!-- Filtro de Tipo de Treinamento -->
             <div class="col-md-4">
                 <label for="tipo" class="form-label">Tipo de Treinamento</label>
-                <select name="tipo" id="tipo" class="form-select">
+                <select name="tipo" id="tipo" class="form-select select2">
                     <option value="">Todos</option>
                     {% for tipo_choice in tipos_treinamento %}
                         <option value="{{ tipo_choice.0 }}" {% if request.GET.tipo == tipo_choice.0 %}selected{% endif %}>{{ tipo_choice.1 }}</option>
@@ -117,7 +140,7 @@
             <!-- Filtro de Status -->
             <div class="col-md-4">
                 <label for="status" class="form-label">Status</label>
-                <select name="status" id="status" class="form-select">
+                <select name="status" id="status" class="form-select select2">
                     <option value="">Todos</option>
                     <option value="cursando" {% if request.GET.status == "cursando" %}selected{% endif %}>Cursando</option>
                     <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
@@ -126,12 +149,12 @@
             </div>
         </div>
         <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
         </div>
     </form>
 
-    <!-- Lista de Treinamentos -->
-    <table class="table table-bordered text-center">
+   <!-- Lista de Treinamentos -->
+<table class="table table-bordered text-center">
     <thead>
         <tr>            
             <th class="align-middle">Funcionário</th>
@@ -150,7 +173,6 @@
             <td class="align-middle">{{ treinamento.funcionario.nome }}</td>
             <td class="align-middle">{{ treinamento.nome_curso }}</td>
             <td class="align-middle">{{ treinamento.tipo|title }}</td>
-            
             <td class="align-middle">
                 {% if treinamento.data_fim %}
                     {{ treinamento.data_fim|date:"d/m/Y" }}
@@ -159,25 +181,27 @@
                 {% endif %}
             </td>
             <td class="align-middle">{{ treinamento.carga_horaria }}</td>
-            <td class="align-middle">
+           <td class="align-middle">
                 {% if treinamento.status == 'cursando' %}
                     <span class="badge bg-warning text-dark">Cursando</span>
                 {% elif treinamento.status == 'concluido' %}
                     <span class="badge bg-success text-white">Concluído</span>
                 {% elif treinamento.status == 'trancado' %}
                     <span class="badge bg-danger text-white">Trancado</span>
+                {% elif treinamento.status == 'requerido' %}
+                    <span class="badge bg-info text-white">Requerido</span>
                 {% else %}
                     <span class="badge bg-secondary">Indefinido</span>
                 {% endif %}
             </td>
-          <td class="align-middle">
-            {% if treinamento.anexo %}
-                <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Certificado">
-                    <i class="bi bi-patch-check"></i>
-                </a>
-            {% endif %}
-        </td>
 
+            <td class="align-middle">
+                {% if treinamento.anexo %}
+                    <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Certificado">
+                        <i class="bi bi-patch-check"></i>
+                    </a>
+                {% endif %}
+            </td>
             <td class="align-middle">
                 <a href="{% url 'visualizar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Visualizar">
                     <i class="bi bi-eye"></i>
@@ -185,19 +209,72 @@
                 <a href="{% url 'editar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Editar">
                     <i class="bi bi-pencil-square"></i>
                 </a>
-                <a href="{% url 'excluir_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir?')">
+                <!-- Botão para abrir a modal de exclusão -->
+                <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirTreinamento{{ treinamento.id }}">
                     <i class="bi bi-trash"></i>
-                </a>
+                </button>
             </td>
         </tr>
+
+           <!-- Modal de confirmação de exclusão -->
+        <div class="modal fade" id="modalExcluirTreinamento{{ treinamento.id }}" tabindex="-1" aria-labelledby="modalExcluirTreinamentoLabel{{ treinamento.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalExcluirTreinamentoLabel{{ treinamento.id }}">Confirmar Exclusão</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza de que deseja excluir o treinamento <strong>{{ treinamento.nome_curso }}</strong> do funcionário <strong>{{ treinamento.funcionario.nome }}</strong>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form action="{% url 'excluir_treinamento' treinamento.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
         {% empty %}
-        <tr>
-            <td colspan="8" class="text-center align-middle">Nenhum treinamento cadastrado.</td>
-        </tr>
-        {% endfor %}
+    <tr>
+        <td colspan="8" class="text-center align-middle">Nenhum treinamento cadastrado.</td>
+    </tr>
+    {% endfor %}
     </tbody>
-    </table>
+</table>
 </div>
+
+<style>
+/* Ajustes para o Select2 dentro da Modal */
+#imprimirF003Modal .select2-container--default .select2-selection--single {
+    height: calc(2.25rem + 2px); /* Alinha com o restante dos inputs */
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+}
+
+#imprimirF003Modal .select2-container {
+    z-index: 9999 !important; /* Evita que o Select2 fique atrás da modal */
+    width: 100% !important;
+}
+
+#imprimirF003Modal .select2-dropdown {
+    z-index: 1050; /* Faz o dropdown aparecer acima da modal */
+}
+
+#imprimirF003Modal #funcionario_modal + .select2-container {
+    width: 100% !important;
+}
+</style>
+
+
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -208,4 +285,41 @@
         });
     });
 </script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializa o Select2
+        $('.select2').select2({
+            placeholder: 'Selecione uma opção',
+            allowClear: true,
+            width: '100%',
+        });
+
+        // Garante que o Select2 fique funcional na modal
+        $('#imprimirF003Modal').on('shown.bs.modal', function () {
+            $('#funcionario_modal').select2({
+                placeholder: 'Selecione um funcionário',
+                allowClear: true,
+                dropdownParent: $('#imprimirF003Modal') // Garante que o dropdown fique dentro da modal
+            });
+        });
+
+        // Configura o formulário de impressão
+        document.getElementById('imprimirF003Form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const funcionarioId = document.getElementById('funcionario_modal').value;
+
+            if (funcionarioId) {
+                // Ajusta a URL para a impressão
+                this.action = `/treinamentos/imprimir_f003/${funcionarioId}/`;
+                this.submit();
+            } else {
+                alert('Por favor, selecione um funcionário.');
+            }
+        });
+    });
+</script>
+
+
 {% endblock %}

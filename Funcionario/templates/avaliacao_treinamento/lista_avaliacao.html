@@ -36,42 +36,46 @@
    <!-- Botões de Cadastrar Avaliação e Imprimir -->
     <div class="text-end mb-4">
         <a href="{% url 'avaliacao_create' %}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Cadastrar Avaliação
+            <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
-        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirModal">
+       <!-- Botão de Imprimir Avaliação -->
+        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirAvaliacaoModal">
             <i class="bi bi-printer"></i> Imprimir
         </button>
+
+
     </div>
 
 
 
-    <!-- Modal para selecionar treinamento e imprimir -->
-    <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imprimirModalLabel">Selecionar Treinamento para Imprimir</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="imprimirForm" method="get" action="">
-                        <div class="mb-3">
-                            <label for="treinamento_modal" class="form-label">Treinamento:</label>
-                            <select name="treinamento" id="treinamento_modal" class="form-select" required>
-                                <option value="">Selecione</option>
-                                {% for avaliacao in avaliacoes_treinamento %}
-                                    <option value="{{ avaliacao.id }}">{{ avaliacao.treinamento.assunto }} - {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" id="submitImprimirButton" class="btn btn-primary">Imprimir</button>
-                        </div>
-                    </form>
-                </div>
+   <!-- Modal para selecionar avaliação e imprimir -->
+<div class="modal fade" id="imprimirAvaliacaoModal" tabindex="-1" aria-labelledby="imprimirAvaliacaoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imprimirAvaliacaoModalLabel">Selecionar Avaliação para Imprimir</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="imprimirAvaliacaoForm" method="GET" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="avaliacao_id" class="form-label">Avaliação:</label>
+                        <select name="avaliacao_id" id="avaliacao_id" class="form-select select2" required>
+                            <option value="">Selecione uma avaliação</option>
+                            {% for avaliacao in avaliacoes_treinamento %}
+                                <option value="{{ avaliacao.id }}">{{ avaliacao.funcionario.nome }} - {{ avaliacao.treinamento.assunto }} - {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Imprimir</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
+
+
     <form method="get" class="mb-4">
     <div class="row">
         <!-- Filtro por Treinamento com Select2 -->
@@ -111,7 +115,7 @@
 
     <!-- Botão de Filtrar -->
     <div class="text-end mt-3">
-        <button type="submit" class="btn btn-light">
+        <button type="submit" class="btn btn-primary">
             <i class="bi bi-funnel"></i> Filtrar
         </button>
     </div>
@@ -205,38 +209,83 @@
     </table>
 </div>
 
+<style>
+/* Estilos específicos para Select2 dentro da modal */
+#imprimirAvaliacaoModal .select2-container--default .select2-selection--single {
+    height: calc(2.25rem + 2px);
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+}
 
-<!-- Script para exibir toasts e inicializar Select2 -->
+#imprimirAvaliacaoModal .select2-container {
+    z-index: 9999 !important;
+    width: 100% !important;
+}
+
+#imprimirAvaliacaoModal .select2-dropdown {
+    z-index: 1050; /* Garante que o dropdown fique acima da modal */
+}
+</style>
+
+
+
+
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Exibe os toasts
-        const toasts = document.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            const bsToast = new bootstrap.Toast(toast);
-            bsToast.show();
-        });
+document.addEventListener('DOMContentLoaded', function () {
+    // Exibe os toasts
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    });
 
-        // Inicializa o Select2 nos campos de seleção
-        $('.select2').select2({
-            placeholder: "Selecione ou digite para buscar",
-            allowClear: true
-        });
+</script>
 
-        // Script para manipular a modal de impressão
-        document.getElementById('submitImprimirButton').addEventListener('click', function(event) {
-            event.preventDefault();
-            var treinamentoId = document.getElementById('treinamento_modal').value;
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Inicializa os elementos Select2
+    $('.select2').select2({
+        placeholder: 'Selecione uma avaliação',
+        allowClear: true,
+        width: '100%',
+    });
 
-            if (treinamentoId) {
-                // Construindo a URL para a impressão do treinamento
-                var url = "{% url 'imprimir_treinamento' 0 %}".replace('/0/', '/' + treinamentoId + '/');
-                window.location.href = url;  // Redireciona para a URL de impressão
-            } else {
-                alert("Por favor, selecione um treinamento.");
-            }
+    // Configura o Select2 para dropdowns dentro da modal
+    $('#imprimirAvaliacaoModal').on('shown.bs.modal', function () {
+        $('#avaliacao_id').select2({
+            placeholder: 'Selecione uma avaliação',
+            allowClear: true,
+            dropdownParent: $('#imprimirAvaliacaoModal') // Garante que o dropdown do Select2 fique dentro da modal
         });
     });
+
+    // Submissão do formulário de impressão
+    document.getElementById('imprimirAvaliacaoForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        // Obtém o ID da avaliação selecionada
+        const avaliacaoId = document.getElementById('avaliacao_id').value;
+
+        if (avaliacaoId) {
+            // Constrói a URL de impressão com o ID da avaliação
+            const imprimirUrl = "{% url 'imprimir_treinamento' 0 %}".replace('0', avaliacaoId);
+            window.open(imprimirUrl, '_blank'); // Abre a página de impressão em uma nova aba
+        } else {
+            alert('Por favor, selecione uma avaliação.');
+        }
+    });
+});
 </script>
+
+
+
+
 
 
 

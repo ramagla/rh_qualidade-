@@ -30,6 +30,7 @@ from .views.treinamento_views import (
     imprimir_f003,
     gerar_pdf,
     gerar_relatorio_f003,
+    exportar_treinamentos_csv
 )
 
 from .views.avaliacao_treinamentos_views import (
@@ -77,7 +78,8 @@ from .views.lista_presenca_views import (
     editar_lista_presenca,
     excluir_lista_presenca,
     visualizar_lista_presenca,
-    imprimir_lista_presenca
+    imprimir_lista_presenca,
+    exportar_listas_presenca  
 )
 
 from .views.comunicados_views import (
@@ -133,11 +135,13 @@ urlpatterns = [
     path('treinamentos/', lista_treinamentos, name='lista_treinamentos'),
     path('cadastrar-treinamento/', cadastrar_treinamento, name='cadastrar_treinamento'),
     path('treinamentos/editar/<int:id>/', editar_treinamento, name='editar_treinamento'),
-    path('treinamentos/excluir/<int:id>/', excluir_treinamento, name='excluir_treinamento'),
+    path('excluir/<int:id>/', excluir_treinamento, name='excluir_treinamento'),
     path('treinamentos/imprimir_f003/<int:funcionario_id>/', imprimir_f003, name='imprimir_f003'),
     path('gerar_relatorio_f003/', gerar_relatorio_f003, name='gerar_relatorio_f003'),
     path('relatorio/<int:funcionario_id>/pdf/', gerar_pdf, name='gerar_pdf'),
     path('treinamentos/<int:treinamento_id>/visualizar/', visualizar_treinamento, name='visualizar_treinamento'),
+    path('exportar-treinamentos/', exportar_treinamentos_csv, name='exportar_treinamentos'),
+
 
     # Avaliação de Treinamentos
     path('avaliacoes/', lista_avaliacoes, name='lista_avaliacoes'),
@@ -196,6 +200,8 @@ urlpatterns = [
     path('lista-presenca/excluir/<int:id>/', excluir_lista_presenca, name='excluir_lista_presenca'),
     path('listas-presenca/<int:lista_id>/visualizar/', visualizar_lista_presenca, name='visualizar_lista_presenca'),
     path('lista-presenca/imprimir/<int:lista_id>/', imprimir_lista_presenca, name='imprimir_lista_presenca'),
+    path('lista-presenca/exportar/', exportar_listas_presenca, name='exportar_listas_presenca'),
+
   
   # Comunicados       
     path('comunicados/', lista_comunicados, name='lista_comunicados'),

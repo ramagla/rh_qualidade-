@@ -35,12 +35,13 @@
 
     <!-- Botões de Cadastrar Avaliação e Imprimir -->
     <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_avaliacao_anual' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Cadastrar
+        </a>
         <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#imprimirModal">
             <i class="bi bi-printer"></i> Imprimir
         </button>
-        <a href="{% url 'cadastrar_avaliacao_anual' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Cadastrar Avaliação
-        </a>
+        
     </div>
 
    <!-- Formulário de Filtro -->
@@ -86,12 +87,12 @@
 
 
     <div class="text-end mt-3">
-        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
     </div>
 </form>
 
 
-    <!-- Modal para selecionar avaliação para impressão -->
+    <!-- Modal para Selecionar Avaliação -->
     <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -100,20 +101,17 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="imprimirForm">
+                    <form id="imprimirForm" method="GET" action="">
                         <div class="mb-3">
                             <label for="avaliacao_modal" class="form-label">Avaliação:</label>
-                            <select name="avaliacao" id="avaliacao_modal" class="form-select" required>
-                                <option value="">Selecione</option>
+                            <select name="avaliacao" id="avaliacao_modal" class="form-select select2" required>
+                                <option value="">Selecione uma avaliação</option>
                                 {% for avaliacao in avaliacoes %}
                                     <option value="{{ avaliacao.id }}">{{ avaliacao.funcionario.nome }} - {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" id="submitImprimirButton" class="btn btn-primary">Imprimir</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        </div>
+                        <button type="submit" id="imprimirButton" class="btn btn-primary">Imprimir</button>
                     </form>
                 </div>
             </div>
@@ -121,7 +119,7 @@
     </div>
 
  <!-- Lista de Avaliações -->
-<table class="table table-bordered text-center">
+<table class="table table-bordered text-center mt-4">
     <thead>
         <tr>
             <th>Funcionário</th>
@@ -129,6 +127,7 @@
             <th>Centro de Custo</th>
             <th>Departamento</th>
             <th>Classificação</th>
+            <th>%</th>
             <th>Ações</th>
         </tr>
     </thead>
@@ -217,39 +216,70 @@
         color: #084298;
     }
 </style>
+<style>
+/* Ajuste para o Select2 dentro da Modal */
+#imprimirModal .select2-container--default .select2-selection--single {
+    height: calc(2.25rem + 2px); /* Ajusta a altura para alinhar com outros inputs */
+    padding: 0.375rem 0.75rem;   /* Padding interno */
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+}
+
+#imprimirModal .select2-container {
+    z-index: 9999 !important; /* Garante que o Select2 fique acima da modal */
+    width: 100% !important;   /* Ocupa toda a largura do container */
+}
+
+#imprimirModal .select2-dropdown {
+    z-index: 1050 !important; /* Coloca o dropdown acima da modal */
+}
+
+#imprimirModal #avaliacao_modal + .select2-container {
+    width: 100% !important; /* Ajusta largura */
+}
+</style>
+
 
 
 <!-- Script para exibir toasts e inicializar Select2 -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Exibe os toasts
-        const toasts = document.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            const bootstrapToast = new bootstrap.Toast(toast);
-            bootstrapToast.show();
-        });
+document.addEventListener('DOMContentLoaded', function () {
+    // Exibe os toasts
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+        const bootstrapToast = new bootstrap.Toast(toast);
+        bootstrapToast.show();
+    });
 
-        // Inicializa o Select2 nos campos de seleção
-        $('.select2').select2({
-            placeholder: "Selecione ou digite para buscar",
-            allowClear: true
-        });
-
-        // Manipula o botão de impressão no modal
-        document.getElementById('submitImprimirButton').addEventListener('click', function(event) {
-            event.preventDefault();
-            var avaliacaoId = document.getElementById('avaliacao_modal').value;
-
-            if (avaliacaoId) {
-                // Substitui o ID na URL e redireciona para a página de impressão
-                var url = "{% url 'imprimir_avaliacao_anual' 0 %}".replace('/0/', '/' + avaliacaoId + '/');
-                window.location.href = url;
-            } else {
-                alert("Por favor, selecione uma avaliação para imprimir.");
-            }
+    // Inicializa o Select2 dentro da modal
+    $('#imprimirModal').on('shown.bs.modal', function () {
+        $('#avaliacao_modal').select2({
+            placeholder: 'Selecione uma avaliação',
+            allowClear: true,
+            dropdownParent: $('#imprimirModal') // Define que o dropdown do Select2 pertence à modal
         });
     });
+
+    // Configura o botão de impressão
+    document.getElementById('imprimirButton').addEventListener('click', function (event) {
+        event.preventDefault();
+        const avaliacaoId = document.getElementById('avaliacao_modal').value;
+
+        if (avaliacaoId) {
+            // Ajusta a URL para a impressão
+            const url = `/avaliacoes-anual/imprimir/${avaliacaoId}/`; // Substitua pelo caminho correto
+            window.location.href = url;
+        } else {
+            alert('Por favor, selecione uma avaliação para imprimir.');
+        }
+    });
+});
 </script>
+
 
 {% endblock %}
 

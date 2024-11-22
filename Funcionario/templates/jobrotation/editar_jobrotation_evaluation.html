@@ -123,18 +123,26 @@
             </select>
         </div>
 
-        <!-- Disponibilidade de Vaga -->
-        <h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
-        <div class="col-md-6">
-            <label for="disponibilidade_vaga" class="form-label">Disponibilidade de Vaga no Quadro:</label>
-            <input type="checkbox" name="disponibilidade_vaga" {% if form.disponibilidade_vaga.value %}checked{% endif %}> Sim
-        </div>
+      <!-- Disponibilidade de Vaga -->
+<h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
+<div class="col-md-6">
+    <label for="disponibilidade_vaga" class="form-label">Disponibilidade de Vaga no Quadro:</label>
+    <div class="form-check">
+        <input type="radio" id="vaga_sim" name="disponibilidade_vaga" value="True" class="form-check-input"
+               {% if form.disponibilidade_vaga.value == "True" %}checked{% endif %}>
+        <label for="vaga_sim" class="form-check-label">Sim</label>
+    </div>
+    <div class="form-check">
+        <input type="radio" id="vaga_nao" name="disponibilidade_vaga" value="False" class="form-check-input"
+               {% if form.disponibilidade_vaga.value == "False" or form.disponibilidade_vaga.value == None %}checked{% endif %}>
+        <label for="vaga_nao" class="form-check-label">Não</label>
+    </div>
+</div>
 
-        <!-- Botão para salvar -->
-        <div class="col-12 text-center mt-4">
-            <button type="submit" class="btn btn-primary">Salvar</button>
-        </div>
-    </form>
+<!-- Botões para Salvar e Cancelar -->
+<div class="col-12 text-center mt-4">
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar</button>
+    <a href="{% url 'lista_jobrotation_evaluation' %}" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
 </div>
 
 

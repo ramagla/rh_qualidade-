@@ -36,15 +36,21 @@
                         Nenhum treinamento requerido.
                     {% endif %}
                 </dd>
+                <dt class="col-sm-4">PDF da Integração Assinada:</dt>
+                    <dd class="col-sm-8">
+                        {% if integracao.pdf_integracao %}
+                            <a href="{{ integracao.pdf_integracao.url }}" target="_blank" class="btn btn-link">
+                                Visualizar PDF
+                            </a>
+                        {% else %}
+                            Nenhum PDF anexado.
+                        {% endif %}
+                    </dd>
+
             </dl>
         </div>
-        <div class="card-footer text-end">
-            <a href="{% url 'editar_integracao' integracao.id %}" class="btn btn-primary">
-                <i class="bi bi-pencil-square"></i> Editar
-            </a>
-            <a href="{% url 'excluir_integracao' integracao.id %}" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta integração?')">
-                <i class="bi bi-trash"></i> Excluir
-            </a>
+        <div class="card-footer text-end">           
+           
             <a href="{% url 'lista_integracoes' %}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Voltar
             </a>

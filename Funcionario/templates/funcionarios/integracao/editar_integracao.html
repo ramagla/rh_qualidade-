@@ -33,47 +33,91 @@
             <label for="data_integracao" class="form-label">Data de Integração:</label>
             {{ form.data_integracao|add_class:"form-control" }}
         </div>
-        
 
-        <!-- Checkbox para o grupo de WhatsApp -->
+        <!-- Grupo WhatsApp -->
         <div class="col-md-6">
-            <label for="grupo_whatsapp" class="form-label">Grupo WhatsApp:</label>
-            {{ form.grupo_whatsapp|add_class:"form-check-input" }}
+            <label class="form-label"><strong>Grupo WhatsApp:</strong></label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" id="grupo_whatsapp_sim" name="grupo_whatsapp" value="True" class="form-check-input" 
+                           {% if form.grupo_whatsapp.value == True %}checked{% endif %}>
+                    <label for="grupo_whatsapp_sim" class="form-check-label">Sim</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" id="grupo_whatsapp_nao" name="grupo_whatsapp" value="False" class="form-check-input" 
+                           {% if form.grupo_whatsapp.value == False %}checked{% endif %}>
+                    <label for="grupo_whatsapp_nao" class="form-check-label">Não</label>
+                </div>
+            </div>
         </div>
 
-        <!-- Checkbox para requer treinamento -->
+        <!-- Requer Treinamento -->
         <div class="col-md-6">
-            <label for="requer_treinamento" class="form-label">Requer Treinamento:</label>
-            {{ form.requer_treinamento|add_class:"form-check-input" }}
+            <label class="form-label"><strong>Requer Treinamento:</strong></label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" id="requer_treinamento_sim" name="requer_treinamento" value="True" class="form-check-input requer-treinamento" 
+                           {% if form.requer_treinamento.value == True %}checked{% endif %}>
+                    <label for="requer_treinamento_sim" class="form-check-label">Sim</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" id="requer_treinamento_nao" name="requer_treinamento" value="False" class="form-check-input requer-treinamento" 
+                           {% if form.requer_treinamento.value == False %}checked{% endif %}>
+                    <label for="requer_treinamento_nao" class="form-check-label">Não</label>
+                </div>
+            </div>
         </div>
 
-        <!-- Campo para os treinamentos requeridos (exibido apenas se Requer Treinamento estiver marcado) -->
-        <div class="col-md-6" id="treinamentosRequeridos" style="display: {% if form.requer_treinamento.value %}block{% else %}none{% endif %};">
+        <!-- Treinamentos Requeridos (Exibido Condicionalmente) -->
+        <div class="col-md-12" id="treinamentosRequeridosContainer" style="display: {% if form.requer_treinamento.value == True %}block{% else %}none{% endif %};">
             <label for="treinamentos_requeridos" class="form-label">Treinamentos Requeridos:</label>
             {{ form.treinamentos_requeridos|add_class:"form-control" }}
         </div>
 
+
+        <!-- PDF da Integração Assinada -->
+        <div class="col-md-6">
+            <label for="pdf_integracao" class="form-label">PDF da Integração Assinada:</label>
+            {{ form.pdf_integracao|add_class:"form-control" }}
+            {% if integracao.pdf_integracao %}
+                <p class="mt-2">
+                    <a href="{{ integracao.pdf_integracao.url }}" target="_blank" class="btn btn-link">
+                        Ver PDF Atual
+                    </a>
+                </p>
+            {% endif %}
+        </div>
+
         <!-- Botão para salvar as alterações -->
         <div class="col-12 text-center">
-            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-            <a href="{% url 'lista_integracoes' %}" class="btn btn-secondary ms-2">Cancelar</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar Alterações</button>
+            <a href="{% url 'lista_integracoes' %}" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
         </div>
     </form>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Exibe o campo Treinamentos Requeridos se o checkbox Requer Treinamento estiver marcado
-        const requerTreinamentoCheckbox = document.getElementById('id_requer_treinamento');
-        const treinamentosRequeridosDiv = document.getElementById('treinamentosRequeridos');
+        const treinamentosContainer = document.getElementById('treinamentosRequeridosContainer');
+        const radioButtons = document.querySelectorAll('.requer-treinamento');
 
-        requerTreinamentoCheckbox.addEventListener('change', function () {
-            if (this.checked) {
-                treinamentosRequeridosDiv.style.display = 'block';
+        // Exibir/esconder o campo de Treinamentos Requeridos com base na seleção
+        function toggleTreinamentosRequeridos() {
+            const selectedValue = document.querySelector('.requer-treinamento:checked').value;
+            if (selectedValue === "True") {
+                treinamentosContainer.style.display = 'block';
             } else {
-                treinamentosRequeridosDiv.style.display = 'none';
+                treinamentosContainer.style.display = 'none';
             }
+        }
+
+        // Adicionar evento de mudança para os botões de rádio
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', toggleTreinamentosRequeridos);
         });
+
+        // Executar uma vez ao carregar a página
+        toggleTreinamentosRequeridos();
     });
 </script>
 {% endblock %}

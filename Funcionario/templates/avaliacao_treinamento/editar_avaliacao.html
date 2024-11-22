@@ -118,22 +118,26 @@
             {% endfor %}
         </div>
 
-        <!-- Descrição de Melhorias -->
-        <div class="col-12">
-            <label for="descricao_melhorias" class="form-label">Descreva as melhorias obtidas/resultados:</label>
-            <div class="form-floating">
-                <textarea class="form-control" id="descricao_melhorias" name="descricao_melhorias" style="height: 100px" required>{{ avaliacao.descricao_melhorias }}</textarea>
+       <!-- Descrição de Melhorias -->
+            <div class="col-12">
+                <label for="descricao_melhorias" class="form-label">Descreva as melhorias obtidas/resultados:</label>
+                {{ form.descricao_melhorias }}
             </div>
-        </div>
+
 
         <!-- Campo oculto para Avaliação Geral -->
         <input type="hidden" name="avaliacao_geral" id="avaliacao_geral" value="{{ avaliacao.avaliacao_geral }}">
+              <!-- Botões de ação centralizados com espaçamento -->
+<div class="col-12 d-flex justify-content-center gap-3 mt-3">
+    <!-- Botão de Salvar -->
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save"></i> Salvar Avaliação
+    </button>
 
-        <!-- Botão de submissão -->
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary w-100 mt-3">Salvar Avaliação</button>
-        </div>
-    </form>
+    <!-- Botão de Cancelar -->
+    <a href="{% url 'lista_avaliacoes' %}" class="btn btn-secondary">
+        <i class="bi bi-x-circle"></i> Cancelar
+    </a>
 </div>
 
 <script>

@@ -12,7 +12,7 @@ from datetime import timedelta
 
 def lista_avaliacoes(request):
     # Busca todas as avaliações de treinamento no banco de dados
-    avaliacoes_treinamento = AvaliacaoTreinamento.objects.all()
+    avaliacoes_treinamento = AvaliacaoTreinamento.objects.all().order_by('funcionario__nome')  # Ordena por nome do funcionário
     
     # Filtra por treinamento, se selecionado
     treinamento_id = request.GET.get('treinamento')
@@ -44,14 +44,9 @@ def lista_avaliacoes(request):
     })
 
 
-from django.shortcuts import redirect, render
-from django.contrib import messages
-from Funcionario.forms import AvaliacaoTreinamentoForm
-from Funcionario.models import Funcionario
-
 def cadastrar_avaliacao(request):
-    # Carregar todos os funcionários
-    funcionarios = Funcionario.objects.all()
+    # Carregar todos os funcionários ordenados por nome
+    funcionarios = Funcionario.objects.order_by('nome')
 
     # Define as opções para os campos de questionário
     opcoes_conhecimento = [
@@ -101,8 +96,6 @@ def cadastrar_avaliacao(request):
         'opcoes_aplicacao': opcoes_aplicacao,
         'opcoes_resultados': opcoes_resultados,
     })
-
-
 
 def editar_avaliacao(request, id):
     # Busca a avaliação de treinamento com o ID fornecido
@@ -278,26 +271,30 @@ def get_treinamentos_por_funcionario(request, funcionario_id):
     return JsonResponse(data, safe=False)
 
 
-# views.py
-
 def imprimir_treinamento(request, treinamento_id):
-    # Corrigido para utilizar o parâmetro correto treinamento_id
+    # Obtém a avaliação de treinamento ou retorna 404
     avaliacao = get_object_or_404(AvaliacaoTreinamento, id=treinamento_id)
-    funcionario = avaliacao.funcionario  
-    
+
+    # Verifica se o funcionário relacionado existe
+    funcionario = avaliacao.funcionario if avaliacao.funcionario else None
+
+    # Define o contexto para o template
     context = {
         'avaliacao': avaliacao,
         'opcoes_conhecimento': AvaliacaoTreinamento.OPCOES_CONHECIMENTO,
         'opcoes_aplicacao': AvaliacaoTreinamento.OPCOES_APLICACAO,
         'opcoes_resultados': AvaliacaoTreinamento.OPCOES_RESULTADOS,
-        'responsavel_funcionario': funcionario.responsavel,
-
+        'responsavel_funcionario': funcionario.responsavel if funcionario else "Não definido",
     }
+
+    # Renderiza o template de impressão
     return render(request, 'avaliacao_treinamento/impressao_treinamento.html', context)
 
 
-
 def excluir_avaliacao(request, id):
+    # Obtém a avaliação ou retorna 404
     avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)
+
+    # Exclui a avaliação e redireciona para a lista
     avaliacao.delete()
     return redirect('lista_avaliacoes')

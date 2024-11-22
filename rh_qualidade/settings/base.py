@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'crispy_forms',  
     'xhtml2pdf', 
-    'django_ckeditor_5' 
+    'django_ckeditor_5', 
+    'widget_tweaks'
 ]
 
 # Configurações do CKEditor
@@ -94,3 +95,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Tipo de campo de chave primária padrão
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+X_FRAME_OPTIONS = 'ALLOWALL'
+
+

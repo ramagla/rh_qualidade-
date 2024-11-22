@@ -9,10 +9,9 @@ from datetime import timedelta
 
 
 
-
 @login_required
 def lista_funcionarios(request):
-    funcionarios = Funcionario.objects.all()
+    funcionarios = Funcionario.objects.all().order_by('nome')
 
     local_trabalho = request.GET.get('local_trabalho')
     if local_trabalho:
@@ -43,20 +42,21 @@ def lista_funcionarios(request):
 def visualizar_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
 
-    # Aqui você deve obter o cargo do responsável, caso exista
+    # Obter o cargo do responsável, caso exista
     cargo_responsavel = None
     if funcionario.responsavel:
-        try:
-            responsavel_funcionario = Funcionario.objects.get(nome=funcionario.responsavel)
-            cargo_responsavel = responsavel_funcionario.cargo_responsavel  # Obtenha o cargo
-        except Funcionario.DoesNotExist:
+        responsaveis = Funcionario.objects.filter(nome=funcionario.responsavel)
+        if responsaveis.exists():
+            cargo_responsavel = responsaveis.first().cargo_responsavel  # Obtenha o cargo do primeiro registro encontrado
+        else:
             cargo_responsavel = 'Cargo não encontrado'  # Ou lidar de outra forma
 
     context = {
         'funcionario': funcionario,
-        'cargo_responsavel': cargo_responsavel,  # Adicione o cargo ao contexto
+        'cargo_responsavel': cargo_responsavel,
     }
     return render(request, 'funcionarios/visualizar_funcionario.html', context)
+
 
 
 

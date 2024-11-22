@@ -35,15 +35,36 @@
         </div>
 
         <!-- Grupo WhatsApp -->
-        <div class="col-md-6">
-            <label for="grupo_whatsapp" class="form-label">Grupo WhatsApp:</label>
-            {{ form.grupo_whatsapp|add_class:"form-check-input" }}
-        </div>
+            <div class="col-md-6">
+                <label class="form-label"><strong>Grupo WhatsApp:</strong></label>
+                <div>
+                    {% for value, label in form.grupo_whatsapp.field.choices %}
+                        <div class="form-check form-check-inline">
+                            <input type="radio" id="grupo_whatsapp_{{ forloop.counter }}" name="grupo_whatsapp" value="{{ value }}" class="form-check-input" {% if value|stringformat:"s" == form.grupo_whatsapp.value|stringformat:"s" %}checked{% endif %}>
+                            <label for="grupo_whatsapp_{{ forloop.counter }}" class="form-check-label">{{ label }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
 
-        <!-- Requer Treinamento -->
+       <!-- Requer Treinamento -->
         <div class="col-md-6">
-            <label for="requer_treinamento" class="form-label">Requer Treinamento:</label>
-            {{ form.requer_treinamento|add_class:"form-check-input" }}
+            <label class="form-label"><strong>Requer Treinamento:</strong></label>
+            <div>
+                {% for value, label in form.requer_treinamento.field.choices %}
+                    <div class="form-check form-check-inline">
+                        <input 
+                            type="radio" 
+                            id="requer_treinamento_{{ forloop.counter }}" 
+                            name="requer_treinamento" 
+                            value="{{ value }}" 
+                            class="form-check-input requer-treinamento" 
+                            {% if value|stringformat:"s" == form.requer_treinamento.value|stringformat:"s" %}checked{% endif %}
+                        >
+                        <label for="requer_treinamento_{{ forloop.counter }}" class="form-check-label">{{ label }}</label>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
 
         <!-- Treinamentos Requeridos (Exibido Condicionalmente) -->
@@ -53,37 +74,53 @@
         </div>
 
         <div class="col-12 text-center mt-4">
-            <button type="submit" class="btn btn-primary" onclick="validarFormulario(event)">Salvar</button>
-            <a href="{% url 'lista_integracoes' %}" class="btn btn-secondary ms-2">Cancelar</a>
+            <button type="submit" class="btn btn-primary" onclick="validarFormulario(event)"><i class="bi bi-save"></i> Salvar</button>
+            <a href="{% url 'lista_integracoes' %}" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
         </div>
+        <!-- PDF da Integração Assinada -->
+            <div class="col-md-6">
+                <label for="pdf_integracao" class="form-label">PDF da Integração Assinada:</label>
+                {{ form.pdf_integracao|add_class:"form-control" }}
+            </div>
     </form>
+    
 </div>
+
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const requerTreinamentoCheckbox = document.getElementById('id_requer_treinamento');
         const treinamentosContainer = document.getElementById('treinamentosRequeridosContainer');
+        const radioButtons = document.querySelectorAll('.requer-treinamento'); // Seleciona todos os botões de rádio
 
         // Exibir/esconder o campo de Treinamentos Requeridos com base na seleção
         function toggleTreinamentosRequeridos() {
-            if (requerTreinamentoCheckbox.checked) {
+            const selectedValue = document.querySelector('.requer-treinamento:checked').value; // Verifica qual botão está marcado
+            if (selectedValue === "True") { // Exibe o campo se "Sim" foi selecionado
                 treinamentosContainer.style.display = 'block';
-            } else {
+            } else { // Esconde o campo se "Não" foi selecionado
                 treinamentosContainer.style.display = 'none';
             }
         }
 
-        requerTreinamentoCheckbox.addEventListener('change', toggleTreinamentosRequeridos);
-        toggleTreinamentosRequeridos();  // Executar uma vez ao carregar a página
+        // Adicionar evento de mudança para os botões de rádio
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', toggleTreinamentosRequeridos);
+        });
 
-        // Validação personalizada para garantir que o campo Treinamentos Requeridos esteja preenchido se Requer Treinamento estiver selecionado
+        // Executar uma vez ao carregar a página
+        toggleTreinamentosRequeridos();
+
+        // Validação personalizada para garantir que o campo Treinamentos Requeridos esteja preenchido
         document.getElementById('integracaoForm').addEventListener('submit', function (event) {
-            if (requerTreinamentoCheckbox.checked && !document.getElementById('id_treinamentos_requeridos').value) {
+            const selectedValue = document.querySelector('.requer-treinamento:checked').value;
+            if (selectedValue === "True" && !document.getElementById('id_treinamentos_requeridos').value) {
                 event.preventDefault();
                 alert("Por favor, preencha o campo de Treinamentos Requeridos.");
             }
         });
     });
 </script>
+
 
 {% endblock %}

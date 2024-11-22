@@ -2,6 +2,9 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 from django_ckeditor_5.fields import CKEditor5Field
+from django.utils.text import slugify
+import os
+
 
 
 
@@ -13,6 +16,16 @@ class Cargo(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+def renomear_curriculo(instance, filename):   
+    # Extrai a extensão do arquivo
+    nome, extensao = os.path.splitext(filename)
+    # Cria um nome com base no nome do funcionário e no número de registro
+    novo_nome = f"{slugify(instance.nome)}-{instance.numero_registro}{extensao}"
+    # Retorna o caminho completo onde o arquivo será salvo
+    return os.path.join('curriculos_funcionarios', novo_nome)
+
 
 class Funcionario(models.Model):
     STATUS_CHOICES = [
@@ -38,12 +51,13 @@ class Funcionario(models.Model):
     experiencia_profissional = models.CharField(max_length=3, choices=EXPERIENCIA_CHOICES, default='Sim')
     updated_at = models.DateTimeField(auto_now=True)
     foto = models.ImageField(upload_to='fotos_funcionarios/', blank=True, null=True)
-    curriculo = models.FileField(upload_to='curriculos_funcionarios/', blank=True, null=True)
+    curriculo = models.FileField(upload_to=renomear_curriculo, blank=True, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo')
     formulario_f146 = models.FileField(upload_to='formularios_f146/', blank=True, null=True)
    
     def __str__(self):
         return self.nome
+       
     
     def atualizar_escolaridade(self):
         # Define a hierarquia das formações
@@ -101,22 +115,30 @@ class Treinamento(models.Model):
         ('concluido', 'Concluído'),
         ('trancado', 'Trancado'),
         ('cursando', 'Cursando'),
-        ('requirido', 'Requirido'),
+        ('requerido', 'Requerido'),
     ]
     
     funcionario = models.ForeignKey(Funcionario, on_delete=models.PROTECT, related_name='treinamentos')
     tipo = models.CharField(max_length=50, choices=TIPO_TREINAMENTO_CHOICES)
     categoria = models.CharField(max_length=100, choices=CATEGORIA_CHOICES)
-    nome_curso = models.CharField(max_length=255)
+    nome_curso = models.CharField(max_length=100)
     instituicao_ensino = models.CharField(max_length=255)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='cursando')  # Campo de status
     data_inicio = models.DateField()
     data_fim = models.DateField()
     carga_horaria = models.CharField(max_length=50)
-    anexo = models.FileField(upload_to='anexos/', blank=True, null=True)
+    anexo = models.FileField(upload_to='certificados/', blank=True, null=True)
+    descricao = CKEditor5Field(config_name='default', blank=True, null=True )
 
     def __str__(self):
         return self.nome_curso
+    
+    def delete(self, *args, **kwargs):
+        # Remove o arquivo de mídia associado antes de excluir o registro
+        if self.anexo:
+            if os.path.isfile(self.anexo.path):
+                os.remove(self.anexo.path)
+        super().delete(*args, **kwargs)
 
 class ListaPresenca(models.Model):
     TIPO_CHOICES = [
@@ -209,13 +231,7 @@ class AvaliacaoTreinamento(models.Model):
 
 class AvaliacaoExperiencia(models.Model):
     data_avaliacao = models.DateField()
-    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
-    avaliador = models.ForeignKey(
-        Funcionario,
-        related_name='avaliacoes_experiencia',
-        on_delete=models.CASCADE
-    )    
-    avaliado = models.ForeignKey(Funcionario, related_name='avaliado_experiencia', on_delete=models.CASCADE, null=True, blank=True)
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)    
     gerencia = models.CharField(max_length=100, blank=True, null=True)
 
     # Campos específicos para o questionário de experiência
@@ -285,17 +301,26 @@ class AvaliacaoAnual(models.Model):
         percentual = (total_pontos / 40) * 100  # Assume que o total máximo de pontos é 40
         status = ''
 
-        if percentual <= 25:
+        if 25<= percentual <= 45:
             status = 'Ruim'
-        elif percentual <= 45:
+        elif 46 <= percentual <= 65:
             status = 'Regular'
-        elif percentual <= 84:
+        elif 66 <= percentual <= 84:
             status = 'Bom'
-        else:
-            status = 'Ótimo'
+        elif 85 <= percentual <= 100:
+             status = 'Ótimo'       
 
         return {'percentual': percentual, 'status': status}
-
+    
+    @staticmethod
+    def get_status_text(value):
+        status_map = {
+            1: "Ruim",
+            2: "Regular",
+            3: "Bom",
+            4: "Ótimo"
+        }
+        return status_map.get(value, "Indeterminado")
 
 
 
@@ -351,13 +376,25 @@ class Comunicado(models.Model):
     
 
 class AtualizacaoSistema(models.Model):
+    STATUS_CHOICES = [
+        ('concluido', 'Concluído'),
+        ('em_andamento', 'Em andamento'),
+        ('cancelado', 'Cancelado'),
+    ]
+
     titulo = models.CharField(max_length=100)
     descricao = models.TextField()
     previsao = models.DateField()
-    versao = models.CharField(max_length=20)  # Adiciona o campo versão
+    versao = models.CharField(max_length=20)
+    status = models.CharField(
+        max_length=15,
+        choices=STATUS_CHOICES,
+        default='em_andamento',  # Define um valor padrão
+    )
 
     def __str__(self):
         return f"{self.versao} - {self.titulo}"
+
     
 class IntegracaoFuncionario(models.Model):
     funcionario = models.ForeignKey('Funcionario', on_delete=models.CASCADE)
@@ -365,6 +402,8 @@ class IntegracaoFuncionario(models.Model):
     requer_treinamento = models.BooleanField(default=False)
     treinamentos_requeridos = models.TextField(blank=True, null=True)
     data_integracao = models.DateField(default=timezone.now)
+    pdf_integracao = models.FileField(upload_to='integracoes/', blank=True, null=True, verbose_name='PDF da Integração Assinada')
+
 
     @property
     def departamento(self):
@@ -379,6 +418,12 @@ class IntegracaoFuncionario(models.Model):
                 self.funcionario.data_integracao = self.data_integracao
                 self.funcionario.save()
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        
+        if self.pdf_integracao and os.path.isfile(self.pdf_integracao.path):
+            os.remove(self.pdf_integracao.path)
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"Integração - {self.funcionario.nome} ({self.data_integracao})"

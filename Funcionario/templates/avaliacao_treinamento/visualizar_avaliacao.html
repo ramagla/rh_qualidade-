@@ -88,13 +88,12 @@
             <p>{{ resultados_obtidos }}</p>
         </div>
 
-        <!-- Descrição de Melhorias -->
+       <!-- Descrição de Melhorias -->
         <div class="col-12">
             <label class="form-label">Descreva as melhorias obtidas/resultados:</label>
-            <div class="form-floating">
-                <textarea class="form-control" style="height: 100px" readonly>{{ melhorias }}</textarea>
-            </div>
+            <div class="form-control" style="height: auto; overflow: auto;">{{ melhorias|safe }}</div>
         </div>
+
 
         <!-- Avaliação Geral -->
         <div class="col-12 mt-3">
@@ -106,7 +105,7 @@
 
         <!-- Botão de Voltar -->
         <div class="col-12">
-            <a href="{% url 'lista_avaliacoes' %}" class="btn btn-secondary w-100 mt-3">Voltar</a>
+            <a href="{% url 'lista_avaliacoes' %}" class="btn btn-secondary w-100 mt-3"><i class="bi bi-arrow-left-circle"></i>  Voltar</a>
         </div>
     </div>
 </div>

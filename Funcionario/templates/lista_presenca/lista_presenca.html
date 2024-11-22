@@ -11,9 +11,9 @@
 
     <!-- Botão de Cadastrar Lista de Presença e Imprimir F013 -->
     <div class="text-end mb-4">
-        <a href="{% url 'cadastrar_lista_presenca' %}" class="btn btn-success">Cadastrar Lista de Presença</a>
+        <a href="{% url 'cadastrar_lista_presenca' %}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Cadastrar</a>
         <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirF013Modal">
-            Imprimir F013
+            <i class="bi bi-printer"></i> Imprimir
         </button>
     </div>
 
@@ -23,7 +23,7 @@
             <!-- Filtro por Instrutor -->
             <div class="col-md-4">
                 <label for="instrutor" class="form-label">Instrutor:</label>
-                <select name="instrutor" id="instrutor" class="form-select">
+                <select name="instrutor" id="instrutor" class="form-select select2">
                     <option value="">Selecione</option>
                     {% for instrutor in instrutores %}
                         <option value="{{ instrutor }}">{{ instrutor }}</option>
@@ -42,7 +42,7 @@
             </div>
         </div>
         <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
         </div>
     </form>
 
@@ -72,6 +72,27 @@
                         <img src="https://servidor-estaticos-teal-ten.vercel.app/olho.png" alt="Participantes" style="width: 20px; height: 20px;">
                     </a>
                 </td>
+                <!-- Modal de Participantes -->
+            <div class="modal fade" id="modalParticipantes{{ lista.id }}" tabindex="-1" aria-labelledby="modalParticipantesLabel{{ lista.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalParticipantesLabel{{ lista.id }}">Participantes da Lista de Presença</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <ul>
+                                {% for participante in lista.participantes.all %}
+                                    <li>{{ participante.nome }} - {{ participante.local_trabalho }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
                 <!-- Necessita Avaliação de Eficácia -->
                 <td class="align-middle">
@@ -101,33 +122,60 @@
                      <a href="{% url 'editar_lista_presenca' lista.id %}" class="btn btn-sm btn-light" title="Editar">
                         <i class="bi bi-pencil-square"></i>
                     </a>
-                    <a href="{% url 'excluir_lista_presenca' lista.id %}" class="btn btn-sm btn-light" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir?')">
+                    <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirLista{{ lista.id }}">
                         <i class="bi bi-trash"></i>
-                    </a>
+                    </button>
                 </td>
             </tr>
+            <!-- Modal de confirmação de exclusão -->
+                <div class="modal fade" id="modalExcluirLista{{ lista.id }}" tabindex="-1" aria-labelledby="modalExcluirListaLabel{{ lista.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalExcluirListaLabel{{ lista.id }}">Confirmar Exclusão</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Tem certeza de que deseja excluir a lista de presença de <strong>{{ lista.assunto }}</strong> realizada em {{ lista.data_realizacao|date:"d/m/Y" }}?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <form action="{% url 'excluir_lista_presenca' lista.id %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Excluir</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Modal para lista de participantes -->
-            <div class="modal fade" id="modalParticipantes{{ lista.id }}" tabindex="-1" aria-labelledby="modalParticipantesLabel{{ lista.id }}" aria-hidden="true">
+           <!-- Modal para selecionar treinamento e imprimir F013 -->
+            <div class="modal fade" id="imprimirF013Modal" tabindex="-1" aria-labelledby="imprimirF013ModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="modalParticipantesLabel{{ lista.id }}">Participantes da Lista de Presença</h5>
+                            <h5 class="modal-title" id="imprimirF013ModalLabel">Selecionar Lista de Presença</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <ul>
-                                {% for participante in lista.participantes.all %}
-                                    <li>{{ participante.nome }} - {{ participante.local_trabalho }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            <form id="imprimirF013Form" method="GET" action="">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="lista_id" class="form-label">Lista de Presença:</label>
+                                    <select name="lista_id" id="lista_id" class="form-select select2" required>
+                                        <option value="">Selecione uma lista</option>
+                                        {% for lista in listas_presenca %}
+                                            <option value="{{ lista.id }}">{{ lista.assunto }} - {{ lista.data_realizacao|date:"d/m/Y" }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Imprimir</button>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
+
             {% empty %}
             <tr>
                 <td colspan="7" class="text-center align-middle">Nenhuma lista de presença encontrada.</td>
@@ -165,6 +213,30 @@
 </div>
 
 
+<style>
+/* Estilos específicos para Select2 */
+#imprimirF013Modal .select2-container--default .select2-selection--single {
+    height: calc(2.25rem + 2px);
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+}
+
+#imprimirF013Modal .select2-container {
+    z-index: 9999 !important;
+    width: 100% !important;
+}
+
+#imprimirF013Modal .select2-dropdown {
+    z-index: 1050;
+}
+</style>
+
+
    <!-- Script para manipular a modal de impressão F013 -->
 <script>
 document.getElementById('submitF013Button').addEventListener('click', function(event) {
@@ -181,4 +253,42 @@ document.getElementById('submitF013Button').addEventListener('click', function(e
 });
 </script>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Inicializa os elementos Select2
+    $('.select2').select2({
+        placeholder: 'Selecione uma opção',
+        allowClear: true,
+        width: '100%',
+    });
+
+    // Configura o Select2 para dropdowns dentro da modal
+    $('#imprimirF013Modal').on('shown.bs.modal', function () {
+        $('#lista_id').select2({
+            placeholder: 'Selecione uma lista',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#imprimirF013Modal') // Garante que o dropdown do Select2 fique dentro da modal
+        });
+    });
+
+    // Submissão do formulário de impressão
+    document.getElementById('imprimirF013Form').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        // Obtém o ID da lista selecionada
+        const listaId = document.getElementById('lista_id').value;
+
+        if (listaId) {
+            // Constrói a URL de impressão com o ID da lista
+            const imprimirUrl = "{% url 'imprimir_lista_presenca' 0 %}".replace('0', listaId);
+            window.open(imprimirUrl, '_blank'); // Abre a URL em uma nova aba
+        } else {
+            alert('Por favor, selecione uma lista.');
+        }
+    });
+});
+</script>
+
 {% endblock %}

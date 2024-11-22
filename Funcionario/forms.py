@@ -62,17 +62,21 @@ class CargoForm(forms.ModelForm):
             'descricao_arquivo': forms.FileInput(attrs={'class': 'form-control'}),
             'departamento': forms.TextInput(attrs={'class': 'form-control'}),  # Widget para 'departamento'
         }
+        
 class RevisaoForm(forms.ModelForm):
+    descricao_mudanca = forms.CharField(widget=CKEditor5Widget(config_name='default'))
     class Meta:
         model = Revisao
         fields = ['numero_revisao', 'data_revisao', 'descricao_mudanca']
         widgets = {
             'numero_revisao': forms.TextInput(attrs={'class': 'form-control'}),
             'data_revisao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'descricao_mudanca': forms.Textarea(attrs={'class': 'form-control'}),
+            # 'descricao_mudanca': forms.Textarea(attrs={'class': 'form-control'}),
         }
 
 class TreinamentoForm(forms.ModelForm):
+    descricao = forms.CharField(widget=CKEditor5Widget(config_name='default'))
+
     class Meta:
         model = Treinamento
         fields = '__all__'
@@ -110,11 +114,10 @@ class ListaPresencaForm(forms.ModelForm):
         }
 
 class AvaliacaoForm(forms.ModelForm):
-    class Meta:
+     descricao_melhorias = forms.CharField(widget=CKEditor5Widget(), required=True,label="Descreva as melhorias obtidas/resultados")
+     class Meta:
         model = AvaliacaoTreinamento
         fields = '__all__'
-
-
 
 
 class AvaliacaoTreinamentoForm(forms.ModelForm):
@@ -138,7 +141,7 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
         label="Resultados obtidos com a aplicação da metodologia"
     )
     descricao_melhorias = forms.CharField(
-        widget=forms.Textarea(attrs={'style': 'height: 100px'}),
+        widget=CKEditor5Widget(),
         required=True,
         label="Descreva as melhorias obtidas/resultados"
     )
@@ -183,11 +186,58 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
 
 
 class AvaliacaoExperienciaForm(forms.ModelForm):
+    observacoes = forms.CharField(
+        widget=CKEditor5Widget(config_name='default'),  # Usando o CKEditor5Widget
+        required=False,
+        label="Observações"
+    )
+
     class Meta:
         model = AvaliacaoExperiencia
-        fields = '__all__' 
+        fields = '__all__'
         widgets = {
-            'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
+            'data_avaliacao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'adaptacao_trabalho': forms.Select(
+                choices=[
+                    (1, "Ruim (D) - Mantém um comportamento oposto ao solicitado para seu cargo e demonstra dificuldades de aceitação."),
+                    (2, "Regular (C) - Precisa de muito esforço para se integrar ao trabalho e aos requisitos da Bras-Mol."),
+                    (3, "Bom (B) - Faz o possível para integrar-se ao trabalho e às características da Bras-Mol."),
+                    (4, "Ótimo (A) - Identifica-se plenamente com as atividades do cargo e normas da Bras-Mol.")
+                ],
+                attrs={'class': 'form-select'}
+            ),
+            'interesse': forms.Select(
+                choices=[
+                    (1, "Ruim (D) - Apresenta falta de entusiasmo e vontade de trabalhar."),
+                    (2, "Regular (C) - Necessitará de estímulo constante para se interessar pelo trabalho."),
+                    (3, "Bom (B) - Apresenta entusiasmo adequado para o tempo na Bras-Mol."),
+                    (4, "Ótimo (A) - Demonstra vivo interesse pelo novo trabalho.")
+                ],
+                attrs={'class': 'form-select'}
+            ),
+            'relacionamento_social': forms.Select(
+                choices=[
+                    (1, "Ruim (D) - Sente-se perdido entre os colegas e parece não ter sido aceito."),
+                    (2, "Regular (C) - Esforça-se para conseguir maior integração social com os colegas."),
+                    (3, "Bom (B) - Entrosou-se bem e foi aceito sem resistência."),
+                    (4, "Ótimo (A) - Demonstra grande habilidade em fazer amigos, sendo muito apreciado.")
+                ],
+                attrs={'class': 'form-select'}
+            ),
+            'capacidade_aprendizagem': forms.Select(
+                choices=[
+                    (1, "Ruim (D) - Parece não ter capacidade mínima para o trabalho."),
+                    (2, "Regular (C) - Necessita de muito esforço e repetição para compreender as tarefas."),
+                    (3, "Bom (B) - Aprende suas tarefas sem dificuldades."),
+                    (4, "Ótimo (A) - Habilitado para o cargo, executa sem falhas.")
+                ],
+                attrs={'class': 'form-select'}
+            ),
+            'orientacao': forms.TextInput(attrs={'class': 'form-control', 'readonly': True}),
+            'gerencia': forms.TextInput(attrs={'class': 'form-control'}),
+            'avaliador': forms.Select(attrs={'class': 'form-select'}),
+            'avaliado': forms.Select(attrs={'class': 'form-select'}),
+            'funcionario': forms.Select(attrs={'class': 'form-select select2'}),
         }
 
 
@@ -257,36 +307,61 @@ class JobRotationEvaluationForm(forms.ModelForm):
 
 
 class ComunicadoForm(forms.ModelForm):
-    descricao = forms.CharField(widget=CKEditor5Widget(), required=True)
-
+    descricao = forms.CharField(
+        widget=CKEditor5Widget(config_name='default'),  # Certifique-se de usar o mesmo config_name
+        required=True
+    )
+ 
     class Meta:
         model = Comunicado
         fields = ['data', 'assunto', 'descricao', 'tipo', 'departamento_responsavel', 'lista_assinaturas']
 
         widgets = {
-            'data': DateInput(attrs={'class': 'form-control', 'type': 'date', 'value': ''}),  # Aqui, adicionamos 'value' como vazio
+            'data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
             'assunto': forms.TextInput(attrs={'class': 'form-control'}),           
             'tipo': forms.Select(attrs={'class': 'form-select'}),
             'departamento_responsavel': forms.TextInput(attrs={'class': 'form-control'}),
-        }
+            'lista_assinaturas': forms.FileInput(attrs={'class': 'form-control'}),
 
+        }
 
 class IntegracaoFuncionarioForm(forms.ModelForm):
     treinamentos_requeridos = forms.CharField(widget=CKEditor5Widget(), required=False)
 
+    GRUPO_WHATSAPP_CHOICES = [
+        (True, 'Sim'),
+        (False, 'Não'),
+    ]
+    REQUER_TREINAMENTO_CHOICES = [
+        (True, 'Sim'),
+        (False, 'Não'),
+    ]
+
+    grupo_whatsapp = forms.ChoiceField(
+        choices=GRUPO_WHATSAPP_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        initial=False,
+        label="Grupo WhatsApp"
+    )
+    requer_treinamento = forms.ChoiceField(
+        choices=REQUER_TREINAMENTO_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        initial=False,
+        label="Requer Treinamento"
+    )
+
+    treinamentos_requeridos = forms.CharField(
+        widget=CKEditor5Widget(),
+        required=False
+    )
+
     class Meta:
         model = IntegracaoFuncionario
-        fields = ['funcionario', 'grupo_whatsapp', 'requer_treinamento', 'data_integracao', 'treinamentos_requeridos']
+        fields = ['funcionario', 'grupo_whatsapp', 'requer_treinamento', 'treinamentos_requeridos', 'data_integracao', 'pdf_integracao']
         widgets = {
-            'data_integracao': forms.DateInput(attrs={'type': 'date'}),
-            'treinamentos_requeridos': forms.Textarea(attrs={'rows': 3}),
+            'data_integracao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}, format='%Y-%m-%d'),
         }
 
-from django import forms
-from Funcionario.models import Evento
-
-from django import forms
-from Funcionario.models import Evento
 
 class EventoForm(forms.ModelForm):
     class Meta:

@@ -54,12 +54,20 @@
         </div>
 
         <div class="col-md-6">
-            <label for="anexo" class="form-label">Anexo de Certificado ou Lista de Presença:</label>
-            {{ form.anexo }}
+    <label for="anexo" class="form-label">Anexo de Certificado ou Lista de Presença:</label>
+    {{ form.anexo }}
+</div>
+
+
+        <!-- Descrição -->
+        <div class="col-md-12">
+            <label for="descricao" class="form-label">Descrição (opcional):</label>
+            {{ form.descricao }}
         </div>
 
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary w-100 mt-3">Salvar Alterações</button>
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar Alterações</button>
+            <a href="{% url 'lista_treinamentos' %}" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
         </div>
     </form>
 </div>
@@ -77,6 +85,17 @@
                 }
             });
         }
+
+        const anexoInput = document.getElementById('id_anexo');
+        const currentAnexoDiv = document.getElementById('current-anexo');
+
+        anexoInput.addEventListener('change', function () {
+            if (anexoInput.files.length > 0) {
+                if (currentAnexoDiv) {
+                    currentAnexoDiv.style.display = 'none';
+                }
+            }
+        });
     });
 </script>
 {% endblock %}

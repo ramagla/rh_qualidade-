@@ -11,8 +11,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 
-
-
 @login_required
 def home(request):
     # Obter feriados da API
@@ -35,11 +33,11 @@ def home(request):
         {"nome": "Funcionário 3", "avaliacao": "Baixa"},
     ]
     
-    # Consulta às próximas atualizações do sistema
-    proximas_atualizacoes = AtualizacaoSistema.objects.order_by('-previsao')[:5]
+    # Consulta às atualizações do sistema com status "concluído"
+    proximas_atualizacoes = AtualizacaoSistema.objects.all().order_by('-previsao')[:4]
     
     # Consulta a última atualização para o modal de informações de versão
-    ultima_atualizacao = AtualizacaoSistema.objects.last()
+    ultima_atualizacao_concluida = AtualizacaoSistema.objects.filter(status='concluido').order_by('-previsao').first()
 
     # Consulta às configurações da empresa, incluindo logos
     settings = Settings.objects.first()  # Obtém a primeira instância de Settings, caso haja mais de uma
@@ -50,11 +48,12 @@ def home(request):
         'comunicados': comunicados,
         'funcionarios_avaliacao_baixa': funcionarios_avaliacao_baixa,
         'proximas_atualizacoes': proximas_atualizacoes,
-        'ultima_atualizacao': ultima_atualizacao,  # Adiciona última atualização ao contexto
+        'ultima_atualizacao_concluida': ultima_atualizacao_concluida,
         'settings': settings,  # Inclui settings para acesso aos logos
     }
     
     return render(request, 'home.html', context)
+
 
 
 def sucesso_view(request):

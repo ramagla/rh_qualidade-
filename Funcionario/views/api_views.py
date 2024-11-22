@@ -49,7 +49,7 @@ def get_funcionario_info(request, id):
 
 
 def get_treinamentos(request, funcionario_id):
-    treinamentos = Treinamento.objects.filter(funcionario_id=funcionario_id).values('tipo', 'nome_curso', 'categoria')
+    treinamentos = Treinamento.objects.filter(funcionario_id=funcionario_id).values('id','tipo', 'nome_curso', 'categoria')
     return JsonResponse(list(treinamentos), safe=False)
 
 def get_competencias(request):

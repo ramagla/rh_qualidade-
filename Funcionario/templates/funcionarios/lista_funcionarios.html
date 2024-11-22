@@ -29,7 +29,7 @@
     <!-- Botão de Cadastrar Funcionário e Imprimir Ficha -->
     <div class="text-end mb-4">
         <a href="{% url 'cadastrar_funcionario' %}" class="btn btn-success">
-            <i class="bi bi-person-plus"></i> Cadastrar Funcionário
+            <i class="bi bi-person-plus"></i> Cadastrar
         </a>
         <!-- Botão que ativa a modal -->
         <button class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#imprimirModal">
@@ -65,15 +65,13 @@
 </div>
 
 
-
-
     <!-- Formulário de filtro -->
     <form method="get" class="mb-4">
         <div class="row">
             <!-- Filtro por Local de Trabalho -->
             <div class="col-md-3">
                 <label for="local_trabalho" class="form-label">Local de Trabalho:</label>
-                <select name="local_trabalho" id="local_trabalho" class="form-select">
+                <select name="local_trabalho" id="local_trabalho" class="form-select select2">
                     <option value="">Selecione</option>
                     {% for local in locais_trabalho %}
                         <option value="{{ local }}" {% if request.GET.local_trabalho == local %}selected{% endif %}>{{ local }}</option>
@@ -84,7 +82,7 @@
             <!-- Filtro por Responsável -->
             <div class="col-md-3">
                 <label for="responsavel" class="form-label">Responsável:</label>
-                <select name="responsavel" id="responsavel" class="form-select">
+                <select name="responsavel" id="responsavel" class="form-select select2">
                     <option value="">Selecione</option>
                     {% for resp in responsaveis %}
                         <option value="{{ resp.responsavel }}" {% if request.GET.responsavel == resp.responsavel %}selected{% endif %}>{{ resp.responsavel }}</option>
@@ -95,7 +93,7 @@
             <!-- Filtro por Escolaridade -->
             <div class="col-md-3">
                 <label for="escolaridade" class="form-label">Escolaridade:</label>
-                <select name="escolaridade" id="escolaridade" class="form-select">
+                <select name="escolaridade" id="escolaridade" class="form-select select2">
                     <option value="">Selecione</option>
                     {% for nivel in niveis_escolaridade %}
                         <option value="{{ nivel }}" {% if request.GET.escolaridade == nivel %}selected{% endif %}>{{ nivel }}</option>
@@ -106,7 +104,7 @@
             <!-- Filtro por Status -->
             <div class="col-md-3">
                 <label for="status" class="form-label">Status:</label>
-                <select name="status" id="status" class="form-select">
+                <select name="status" id="status" class="form-select select2">
                     <option value="">Selecione</option>
                     {% for opcao in status_opcoes %}
                         <option value="{{ opcao }}" {% if request.GET.status == opcao %}selected{% endif %}>{{ opcao }}</option>
@@ -115,7 +113,7 @@
             </div>
         </div>
         <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
         </div>
     </form>
 
@@ -168,10 +166,12 @@
                     <a href="{% url 'editar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Editar">
                         <i class="bi bi-pencil-square"></i>  
                     </a>
-                    <a href="{% url 'excluir_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir?')">
+                    <!-- Botão de Excluir, que ativa a modal de confirmação -->
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalExcluirFuncionario{{ funcionario.id }}" title="Excluir">
                         <i class="bi bi-trash"></i>  
-                    </a>
+                    </button>
                 </td>
+
             </tr>
             {% empty %}
             <tr>
@@ -181,6 +181,38 @@
         </tbody>
     </table>
 </div>
+
+<!-- Modal de Confirmação de Exclusão para cada Funcionário -->
+{% for funcionario in funcionarios %}
+<div class="modal fade" id="modalExcluirFuncionario{{ funcionario.id }}" tabindex="-1" aria-labelledby="modalExcluirFuncionarioLabel{{ funcionario.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalExcluirFuncionarioLabel{{ funcionario.id }}">Excluir Funcionário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este funcionário?</p>
+                <p><strong>Nome:</strong> {{ funcionario.nome }}</p>
+                <p><strong>Cargo:</strong> {{ funcionario.cargo_inicial }}</p>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" action="{% url 'excluir_funcionario' funcionario.id %}">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+
+
+
+
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

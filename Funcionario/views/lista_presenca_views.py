@@ -1,35 +1,44 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.utils import timezone
 from datetime import datetime
 from Funcionario.models import ListaPresenca, Funcionario, AvaliacaoTreinamento
 from Funcionario.forms import ListaPresencaForm
 from Funcionario.templatetags.conversores import horas_formatadas
+from django.core.paginator import Paginator
+
+import openpyxl
+
 
 
 
 # Função lista_presenca
 def lista_presenca(request):
-    listas_presenca = ListaPresenca.objects.all()
-    
-    # Obter todos os instrutores únicos do modelo ListaPresenca
-    instrutores = ListaPresenca.objects.values_list('instrutor', flat=True).distinct()
+    listas_presenca = ListaPresenca.objects.all().order_by('-data_realizacao')  # Ordenação decrescente pela data
 
-    # Filtro por Instrutor
+    # Filtros
+    instrutores = ListaPresenca.objects.values_list('instrutor', flat=True).distinct()
     instrutor_filtro = request.GET.get('instrutor')
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+
     if instrutor_filtro:
         listas_presenca = listas_presenca.filter(instrutor=instrutor_filtro)
 
-    # Filtro por Período
-    data_inicio = request.GET.get('data_inicio')
-    data_fim = request.GET.get('data_fim')
     if data_inicio and data_fim:
         listas_presenca = listas_presenca.filter(data_realizacao__range=[data_inicio, data_fim])
 
+    # Paginação
+    registros_por_pagina = int(request.GET.get('registros_por_pagina', 10))  # Valor padrão é 10
+    paginator = Paginator(listas_presenca, registros_por_pagina)
+    pagina = request.GET.get('pagina')
+    listas_presenca = paginator.get_page(pagina)
+
     return render(request, 'lista_presenca/lista_presenca.html', {
         'listas_presenca': listas_presenca,
-        'instrutores': instrutores,  # Passa os instrutores para o template
+        'instrutores': instrutores,
+        'registros_por_pagina': registros_por_pagina
     })
 
 
@@ -132,3 +141,46 @@ def imprimir_lista_presenca(request, lista_id):
         'data_realizacao': data_realizacao,
     })
 
+def exportar_listas_presenca(request):
+    listas_presenca = ListaPresenca.objects.all()
+
+    # Filtros
+    instrutor_filtro = request.GET.get('instrutor')
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+
+    if instrutor_filtro:
+        listas_presenca = listas_presenca.filter(instrutor=instrutor_filtro)
+
+    if data_inicio and data_fim:
+        listas_presenca = listas_presenca.filter(data_realizacao__range=[data_inicio, data_fim])
+
+    # Criar o arquivo Excel
+    workbook = openpyxl.Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Listas de Presença'
+
+    # Cabeçalhos
+    worksheet.append([
+        'ID', 'Assunto', 'Data', 'Duração (Horas)', 'Instrutor', 'Necessita Avaliação', 'Participantes'
+    ])
+
+    # Adicionar os dados
+    for lista in listas_presenca:
+        participantes = ', '.join([p.nome for p in lista.participantes.all()])
+        worksheet.append([
+            lista.id,
+            lista.assunto,
+            lista.data_realizacao.strftime('%d/%m/%Y') if lista.data_realizacao else '',
+            lista.duracao,
+            lista.instrutor,
+            'Sim' if lista.necessita_avaliacao else 'Não',
+            participantes
+        ])
+
+    # Configurar a resposta para download
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=Listas_de_Presenca.xlsx'
+
+    workbook.save(response)
+    return response

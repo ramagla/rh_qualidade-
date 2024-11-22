@@ -65,9 +65,16 @@
             {{ form.anexo }}
         </div>
 
-        <!-- Botão de Salvar -->
+        <!-- Descrição do treinamento -->
+        <div class="col-md-12">
+            <label for="descricao" class="form-label">Descrição (Opcional):</label>
+            {{ form.descricao }}
+        </div>
+
+        <!-- Botões de Salvar e Cancelar -->
         <div class="col-12 text-center mt-4">
-            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar</button>
+            <a href="{% url 'lista_treinamentos' %}" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
         </div>
     </form>
 

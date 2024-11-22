@@ -27,39 +27,40 @@
   <!-- Botão de Cadastrar Integração e Imprimir Ficha -->
     <div class="text-end mb-4">
         <a href="{% url 'cadastrar_integracao' %}" class="btn btn-success">
-            <i class="bi bi-person-plus"></i> Cadastrar Integração
+            <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
         <button class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#imprimirModal">
-            <i class="bi bi-printer"></i> Imprimir Ficha
-        </button>
+            <i class="bi bi-printer"></i> Imprimir
     </div>
 
   <!-- Modal para selecionar integração -->
-    <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imprimirModalLabel">Selecionar Integração de Funcionário</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="imprimirForm" method="GET" action="">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="integracao_id" class="form-label">Integração:</label>
-                            <select name="integracao_id" id="integracao_id" class="form-select" required>
-                                <option value="">Selecione uma integração</option>
-                                {% for integracao in integracoes %}
-                                    <option value="{{ integracao.id }}">{{ integracao.funcionario.nome }} - {{ integracao.data_integracao|date:"d/m/Y" }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Imprimir</button>
-                    </form>
-                </div>
+<div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imprimirModalLabel">Selecionar Integração de Funcionário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="imprimirForm" method="GET" action="">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="integracao_id" class="form-label">Integração:</label>
+                        <select name="integracao_id" id="integracao_id" class="form-select select2" required>
+                            <option value="">Selecione uma integração</option>
+                            {% for integracao in integracoes %}
+                                <option value="{{ integracao.id }}">{{ integracao.funcionario.nome }} - {{ integracao.data_integracao|date:"d/m/Y" }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Imprimir</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
+
+
 
 
     <!-- Formulário de filtro -->
@@ -68,7 +69,7 @@
             <!-- Filtro por Funcionário -->
             <div class="col-md-3">
                 <label for="funcionario" class="form-label">Funcionário:</label>
-                <select name="funcionario" id="funcionario" class="form-select">
+                <select name="funcionario" id="funcionario" class="form-select select2">
                     <option value="">Selecione</option>
                     {% for func in funcionarios %}
                         <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
@@ -76,21 +77,24 @@
                 </select>
             </div>
 
-            <!-- Filtro por Departamento -->
+           <!-- Filtro por Departamento -->
             <div class="col-md-3">
                 <label for="departamento" class="form-label">Departamento:</label>
-                <select name="departamento" id="departamento" class="form-select">
+                <select name="departamento" id="departamento" class="form-select select2">
                     <option value="">Selecione</option>
                     {% for dept in departamentos %}
-                        <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>{{ dept }}</option>
+                        <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>
+                            {{ dept }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
 
+
             <!-- Filtro por Status de Treinamento -->
             <div class="col-md-3">
                 <label for="requer_treinamento" class="form-label">Requer Treinamento:</label>
-                <select name="requer_treinamento" id="requer_treinamento" class="form-select">
+                <select name="requer_treinamento" id="requer_treinamento" class="form-select select2">
                     <option value="">Selecione</option>
                     <option value="True" {% if request.GET.requer_treinamento == 'True' %}selected{% endif %}>Sim</option>
                     <option value="False" {% if request.GET.requer_treinamento == 'False' %}selected{% endif %}>Não</option>
@@ -100,7 +104,7 @@
             <!-- Filtro por Grupo WhatsApp -->
             <div class="col-md-3">
                 <label for="grupo_whatsapp" class="form-label">Grupo WhatsApp:</label>
-                <select name="grupo_whatsapp" id="grupo_whatsapp" class="form-select">
+                <select name="grupo_whatsapp" id="grupo_whatsapp" class="form-select select2">
                     <option value="">Selecione</option>
                     <option value="True" {% if request.GET.grupo_whatsapp == 'True' %}selected{% endif %}>Sim</option>
                     <option value="False" {% if request.GET.grupo_whatsapp == 'False' %}selected{% endif %}>Não</option>
@@ -108,7 +112,7 @@
             </div>
         </div>
         <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
         </div>
     </form>
 
@@ -121,51 +125,62 @@
                 <th>Departamento</th>
                 <th>Grupo WhatsApp</th>
                 <th>Requer Treinamento</th>
+                <th>PDF</th> 
                 <th>Ações</th>
             </tr>
         </thead>
-        <tbody>
-            {% for integracao in integracoes %}
-            <tr>
-                <td>{{ integracao.funcionario.nome }}</td>
-                <td>{{ integracao.data_integracao|date:"d/m/Y" }}</td>
-                <td>{{ integracao.funcionario.local_trabalho }}</td>
-                <td>{{ integracao.grupo_whatsapp|yesno:"Sim,Não" }}</td>
-                <td>{{ integracao.requer_treinamento|yesno:"Sim,Não" }}</td>
-                <td>
-                    <a href="{% url 'visualizar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Visualizar">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a href="{% url 'editar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Editar">
-                        <i class="bi bi-pencil-square"></i>
-                    </a>
-                    <button class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#excluirModal{{ integracao.id }}">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-
-            <!-- Modal de confirmação de exclusão -->
-            <div class="modal fade" id="excluirModal{{ integracao.id }}" tabindex="-1" aria-labelledby="excluirModalLabel{{ integracao.id }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="excluirModalLabel{{ integracao.id }}">Confirmar Exclusão</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            Tem certeza de que deseja excluir a integração de <strong>{{ integracao.funcionario.nome }}</strong>?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <form action="{% url 'excluir_integracao' integracao.id %}" method="post" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger">Excluir</button>
-                            </form>
-                        </div>
+      <tbody>
+    {% for integracao in integracoes %}
+    <tr>
+        <td>{{ integracao.funcionario.nome }}</td>
+        <td>{{ integracao.data_integracao|date:"d/m/Y" }}</td>
+        <td>{{ integracao.funcionario.local_trabalho }}</td>
+        <td>{{ integracao.grupo_whatsapp|yesno:"Sim,Não" }}</td>
+        <td>{{ integracao.requer_treinamento|yesno:"Sim,Não" }}</td>
+        <td>
+            {% if integracao.pdf_integracao %}
+                <a href="{{ integracao.pdf_integracao.url }}" class="btn btn-light" target="_blank">
+                    <i class="bi bi-filetype-pdf"></i> Download
+                </a>
+            {% else %}
+                <span class="text-muted">Não anexado</span>
+            {% endif %}
+        </td>
+        <td>
+            <a href="{% url 'visualizar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                <i class="bi bi-eye"></i>
+            </a>
+            <a href="{% url 'editar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Editar">
+                <i class="bi bi-pencil-square"></i>
+            </a>
+            <button class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirIntegracao{{ integracao.id }}">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    </tr>
+        </div>
+        <!-- Modal de confirmação de exclusão -->
+        <div class="modal fade" id="modalExcluirIntegracao{{ integracao.id }}" tabindex="-1" aria-labelledby="modalExcluirIntegracaoLabel{{ integracao.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalExcluirIntegracaoLabel{{ integracao.id }}">Confirmar Exclusão</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza de que deseja excluir a integração de <strong>{{ integracao.funcionario.nome }}</strong>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form action="{% url 'excluir_integracao' integracao.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
                     </div>
                 </div>
             </div>
+        </div>
+
             {% empty %}
             <tr>
                 <td colspan="6" class="text-center">Nenhuma integração cadastrada.</td>
@@ -175,38 +190,102 @@
     </table>
 </div>
 
+
+<style>
+/* Escopo específico para o Select2 dentro da modal */
+#imprimirModal .select2-container--default .select2-selection--single {
+    height: calc(2.25rem + 2px); /* Mesma altura do form-select */
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+}
+
+#imprimirModal .select2-container {
+    z-index: 9999 !important;
+    width: 100% !important; /* Define a largura total */
+}
+
+#imprimirModal .select2-dropdown {
+    z-index: 1050; /* Garante que fique na frente da modal */
+}
+
+/* Estilos específicos para o Select2 dentro da modal */
+#imprimirModal #integracao_id + .select2-container {
+    width: 100% !important; /* Aplica especificamente ao Select2 do ID integracao_id dentro da modal */
+}
+
+
+
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Exibir os toasts de mensagens
-        const toasts = document.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            const bootstrapToast = new bootstrap.Toast(toast);
-            bootstrapToast.show();
-        });
+    // Exibir os toasts de mensagens
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+        const bootstrapToast = new bootstrap.Toast(toast);
+        bootstrapToast.show();
+    });
 
-        // Abrir o modal para seleção de integração
-        document.querySelector('.btn-primary.ms-2').addEventListener('click', function(event) {
-            event.preventDefault();
-            const modal = new bootstrap.Modal(document.getElementById('imprimirModal'));
+    // Exibir o modal de exclusão ao clicar no botão correspondente
+    document.querySelectorAll('button[data-bs-target^="#modalExcluirIntegracao"]').forEach(button => {
+        button.addEventListener('click', function () {
+            const modalId = this.getAttribute('data-bs-target');
+            const modal = new bootstrap.Modal(document.querySelector(modalId));
             modal.show();
         });
+    });
 
-        // Capturar o evento de submit do formulário de impressão
-        document.getElementById('imprimirForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            // Pegar o ID da integração selecionada
-            const integracaoId = document.getElementById('integracao_id').value;
+    // Abrir o modal para seleção de integração
+    document.querySelector('.btn-primary.ms-2').addEventListener('click', function (event) {
+        event.preventDefault();
+        const modal = new bootstrap.Modal(document.getElementById('imprimirModal'));
+        modal.show();
+    });
 
-            if (integracaoId) {
-                // Construir a URL de impressão com o ID da integração
-                const imprimirUrl = "{% url 'imprimir_integracao' 0 %}".replace('0', integracaoId);
-                window.open(imprimirUrl, '_blank');  // Abre a URL de impressão em uma nova aba
-            } else {
-                alert('Por favor, selecione uma integração.');
-            }
+    // Capturar o evento de submit do formulário de impressão
+    document.getElementById('imprimirForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        // Pegar o ID da integração selecionada
+        const integracaoId = document.getElementById('integracao_id').value;
+
+        if (integracaoId) {
+            // Construir a URL de impressão com o ID da integração
+            const imprimirUrl = "{% url 'imprimir_integracao' 0 %}".replace('0', integracaoId);
+            window.open(imprimirUrl, '_blank'); // Abre a URL de impressão em uma nova aba
+        } else {
+            alert('Por favor, selecione uma integração.');
+        }
+    });
+
+    // Recarregar a página ao fechar a modal de impressão
+    $('#imprimirModal').on('hidden.bs.modal', function () {
+        location.reload(); // Recarrega a página
+    });
+
+    // Inicializa Select2 para os campos dentro e fora da modal
+    $('.select2').select2({
+        placeholder: 'Selecione uma opção',
+        allowClear: true,
+        width: '100%',
+    });
+
+    // Reconfigura Select2 dentro da modal
+    $('#imprimirModal').on('shown.bs.modal', function () {
+        $('#integracao_id').select2({
+            placeholder: 'Selecione uma integração',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#imprimirModal') // Garante que o dropdown do Select2 fique dentro da modal
         });
     });
+});
+
 </script>
 
 

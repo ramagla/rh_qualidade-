@@ -4,7 +4,7 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="header d-flex align-items-center mb-3" style="font-family: Arial, sans-serif;">
+{% comment %} <div class="header d-flex align-items-center mb-3" style="font-family: Arial, sans-serif;">
     <!-- Logo escuro da empresa -->
     <div class="left-section me-2">
         {% if settings.logo_escuro %}
@@ -35,7 +35,7 @@
     </div>
 </div>
 
-<hr style="border-top: 1px solid #ddd; margin-top: 10px; margin-bottom: 10px;">
+<hr style="border-top: 1px solid #ddd; margin-top: 10px; margin-bottom: 10px;"> {% endcomment %}
 
 <!-- Conteúdo principal -->
 <div class="row mt-4">
@@ -97,24 +97,35 @@
         {% endif %}
     </div>
 
-    <!-- Coluna de Próximas Atualizações do Sistema -->
-    <div class="col-md-4">
-        <h5 class="text-center">Próximas Atualizações do Sistema</h5>
-        {% if proximas_atualizacoes %}
-            {% for atualizacao in proximas_atualizacoes %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h6 class="card-title">{{ atualizacao.titulo }}</h6>
-                        <p class="card-text">{{ atualizacao.descricao }}</p>
-                        <p class="text-muted">Previsão: {{ atualizacao.previsao|date:"d/m/Y" }}</p>
-                    </div>
+  <!-- Coluna de Próximas Atualizações do Sistema -->
+<div class="col-md-4">
+    <h5 class="text-center">Próximas Atualizações do Sistema</h5>
+    {% if proximas_atualizacoes %}
+        {% for atualizacao in proximas_atualizacoes %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">{{ atualizacao.versao }}</h6>
+                    <h5 class="card-title">{{ atualizacao.titulo }}</h5>
+                    <p class="card-text">{{ atualizacao.descricao }}</p>
+                    <p class="text-muted">Previsão: {{ atualizacao.previsao|date:"d/m/Y" }}</p>
+                    <!-- Exibir o status com a regra de cores -->
+                    <p class="card-text">
+                        <span class="badge 
+                            {% if atualizacao.status == 'concluido' %} bg-success 
+                            {% elif atualizacao.status == 'em_andamento' %} bg-warning 
+                            {% elif atualizacao.status == 'cancelado' %} bg-danger 
+                            {% else %} bg-secondary {% endif %}">
+                            {{ atualizacao.status|capfirst }}
+                        </span>
+                    </p>
                 </div>
-            {% endfor %}
-        {% else %}
-            <p class="text-muted">Nenhuma atualização prevista no momento.</p>
-        {% endif %}
-    </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">Nenhuma atualização registrada.</p>
+    {% endif %}
 </div>
+
 
 <script>
     // Script para exibir a data de impressão

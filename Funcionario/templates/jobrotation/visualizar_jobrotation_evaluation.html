@@ -34,38 +34,51 @@
             <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" value="{{ evaluation.termino_previsto|date:'d/m/Y' }}" readonly>
         </div>
 
-
         <div class="col-md-6">
             <label for="gestor_responsavel" class="form-label">Gestor Responsável:</label>
             <input type="text" class="form-control" value="{{ evaluation.gestor_responsavel.nome }}" disabled>
         </div>
     </div>
 
+    <h3 class="mt-4 mb-3">Treinamentos e Avaliações</h3>
+<div class="row">
     <!-- Treinamentos Requeridos -->
-<div class="col-md-6">
-    <label for="treinamentos_requeridos" class="form-label">Treinamentos Requeridos:</label>
-    <textarea class="form-control" rows="4" disabled>{{ evaluation.treinamentos_requeridos|linebreaksbr }}</textarea>
+    <div class="col-md-6">
+        <label for="treinamentos_requeridos" class="form-label">Treinamentos Requeridos:</label>
+        <div class="border p-3 bg-light" id="treinamentos_requeridos">
+            {{ evaluation.treinamentos_requeridos|safe }}
+        </div>
+    </div>
+
+    <!-- Treinamentos Propostos -->
+    <div class="col-md-6">
+        <label for="treinamentos_propostos" class="form-label">Treinamentos Propostos:</label>
+        <div class="border p-3 bg-light" id="treinamentos_propostos">
+            {{ evaluation.treinamentos_propostos|safe }}
+        </div>
+    </div>
 </div>
 
-<!-- Treinamentos Propostos -->
-<div class="col-md-6">
-    <label for="treinamentos_propostos" class="form-label">Treinamentos Propostos:</label>
-    <textarea class="form-control" rows="4" disabled>{{ evaluation.treinamentos_propostos|linebreaksbr }}</textarea>
+<div class="row mt-3">
+    <!-- Avaliação do Gestor -->
+    <div class="col-md-6">
+        <label for="avaliacao_gestor" class="form-label">Avaliação do Gestor:</label>
+        <div class="border p-3 bg-light" id="avaliacao_gestor">
+            {{ evaluation.avaliacao_gestor|safe }}
+        </div>
+    </div>
+
+    <!-- Avaliação do Funcionário -->
+    <div class="col-md-6">
+        <label for="avaliacao_funcionario" class="form-label">Avaliação do Funcionário:</label>
+        <div class="border p-3 bg-light" id="avaliacao_funcionario">
+            {{ evaluation.avaliacao_funcionario|safe }}
+        </div>
+    </div>
 </div>
 
-<!-- Avaliação do Gestor -->
-<div class="col-md-6">
-    <label for="avaliacao_gestor" class="form-label">Avaliação do Gestor:</label>
-    <textarea class="form-control" rows="4" disabled>{{ evaluation.avaliacao_gestor|linebreaksbr }}</textarea>
-</div>
 
-<!-- Avaliação do Funcionário -->
-<div class="col-md-6">
-    <label for="avaliacao_funcionario" class="form-label">Avaliação do Funcionário:</label>
-    <textarea class="form-control" rows="4" disabled>{{ evaluation.avaliacao_funcionario|linebreaksbr }}</textarea>
-</div>
-
-
+    <div class="row mt-3">
         <div class="col-md-6">
             <label for="avaliacao_rh" class="form-label">Avaliação do RH:</label>
             <input type="text" class="form-control" value="{{ evaluation.avaliacao_rh }}" disabled>
@@ -75,8 +88,15 @@
     <h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
     <div class="row">
         <div class="col-md-6">
-            <label for="disponibilidade_vaga" class="form-label">Disponibilidade de Vaga no Quadro:</label>
-            <input type="checkbox" class="form-check-input" {% if evaluation.disponibilidade_vaga %}checked{% endif %} disabled>
+            <label class="form-label">Disponibilidade de Vaga no Quadro:</label>
+            <div class="form-check">
+                <input type="radio" class="form-check-input" name="disponibilidade_vaga" id="vaga_sim" value="Sim" {% if evaluation.disponibilidade_vaga %}checked{% endif %} disabled>
+                <label for="vaga_sim" class="form-check-label">Sim</label>
+            </div>
+            <div class="form-check">
+                <input type="radio" class="form-check-input" name="disponibilidade_vaga" id="vaga_nao" value="Não" {% if not evaluation.disponibilidade_vaga %}checked{% endif %} disabled>
+                <label for="vaga_nao" class="form-check-label">Não</label>
+            </div>
         </div>
     </div>
 

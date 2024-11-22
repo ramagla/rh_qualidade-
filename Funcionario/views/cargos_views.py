@@ -5,10 +5,8 @@ from ..models import Funcionario, Cargo, Revisao
 from ..forms import CargoForm, RevisaoForm
 
 
-
-
 def lista_cargos(request):
-    cargos = Cargo.objects.all()
+    cargos = Cargo.objects.all().order_by('-numero_dc')
 
     # Aplicar filtro de departamento
     departamento = request.GET.get('departamento')

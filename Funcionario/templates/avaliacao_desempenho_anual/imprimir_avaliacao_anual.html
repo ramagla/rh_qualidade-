@@ -177,7 +177,7 @@
         <tbody>
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd;">
-                    {{ avaliacao.avaliacao_global_avaliador|default:"Sem avaliação registrada." }}
+                    {{ avaliacao.avaliacao_global_avaliador|default:"Sem avaliação registrada." | safe }}
                 </td>
             </tr>
         </tbody>
@@ -194,7 +194,7 @@
         <tbody>
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd;">
-                    {{ avaliacao.avaliacao_global_avaliado|default:"Sem avaliação registrada." }}
+                    {{ avaliacao.avaliacao_global_avaliado|default:"Sem avaliação registrada." | safe }}
                 </td>
             </tr>
         </tbody>

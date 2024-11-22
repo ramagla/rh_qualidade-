@@ -6,24 +6,39 @@ from xhtml2pdf import pisa
 from Funcionario.models import Treinamento, Funcionario
 from Funcionario.forms import TreinamentoForm
 from django.utils import timezone
+from django.core.paginator import Paginator
+import csv
+
+
 
 def lista_treinamentos(request):
     tipo = request.GET.get('tipo')
     status = request.GET.get('status')
-    
-    treinamentos = Treinamento.objects.all().order_by('-data_fim')
-    
+    ordenacao = request.GET.get('ordenacao', 'funcionario__nome')  # Ordenação padrão
+    registros_por_pagina = int(request.GET.get('registros_por_pagina', 50))  # Registros por página (padrão: 50)
+
+    treinamentos = Treinamento.objects.all().order_by(ordenacao)
+
     if tipo:
         treinamentos = treinamentos.filter(tipo=tipo)
     if status:
         treinamentos = treinamentos.filter(status=status)
-    
+
+    # Paginação
+    paginator = Paginator(treinamentos, registros_por_pagina)
+    pagina = request.GET.get('pagina')
+    treinamentos_paginados = paginator.get_page(pagina)
+
     context = {
-        'treinamentos': treinamentos,
+        'treinamentos': treinamentos_paginados,
         'funcionarios': Funcionario.objects.all(),
         'tipos_treinamento': Treinamento.TIPO_TREINAMENTO_CHOICES,
+        'ordenacao': ordenacao,
+        'paginator': paginator,
+        'registros_por_pagina': registros_por_pagina,
     }
     return render(request, 'treinamentos/lista_treinamentos.html', context)
+
 
 def cadastrar_treinamento(request):
     if request.method == 'POST':
@@ -115,3 +130,24 @@ def gerar_relatorio_f003(request):
             'treinamentos': treinamentos,
         }
         return render(request, 'relatorio_f003.html', context)
+    
+def exportar_treinamentos_csv(request):
+    treinamentos = Treinamento.objects.all()
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="treinamentos.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Funcionário', 'Curso', 'Tipo', 'Status', 'Data Conclusão', 'Carga Horária'])
+
+    for treinamento in treinamentos:
+        writer.writerow([
+            treinamento.funcionario.nome,
+            treinamento.nome_curso,
+            treinamento.tipo,
+            treinamento.status,
+            treinamento.data_fim,
+            treinamento.carga_horaria,
+        ])
+
+    return response

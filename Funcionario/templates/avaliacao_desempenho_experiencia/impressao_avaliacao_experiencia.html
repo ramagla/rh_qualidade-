@@ -147,7 +147,7 @@
             <td><strong>Observações:</strong></td>
         </tr>
         <tr>
-            <td>{{ avaliacao.observacoes|default:"Sem observações registradas." }}</td>
+            <td>{{ avaliacao.observacoes|default:"Sem observações registradas." | safe}}</td>
         </tr>
     </table>
 </div>
@@ -185,7 +185,7 @@
             <td style="padding: 8px; text-align: center; width: 50%;">
                 <p><strong>Assinatura da Chefia</strong></p>
                 <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
-                    {{ responsavel_funcionario }}
+                    {{ avaliacao.funcionario.responsavel }}
                 </div>
             </td>
         </tr>
