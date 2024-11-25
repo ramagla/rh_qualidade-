@@ -3,6 +3,8 @@
 {% block title %}Cadastro de Treinamentos{% endblock %}
 
 {% block content %}
+{% load widget_tweaks %}
+
 <div class="container mt-5">
     <h2 class="text-center mb-4">Cadastro de Treinamentos</h2>
     <form method="post" enctype="multipart/form-data" class="row g-3">
@@ -10,7 +12,7 @@
 
         <div class="col-md-6">
             <label for="funcionario" class="form-label">Funcionário:</label>
-            {{ form.funcionario }}
+            {{ form.funcionario|add_class:"form-select select2" }}
         </div>
 
         <div class="col-md-6">
@@ -36,6 +38,11 @@
         <div class="col-md-6">
             <label for="status" class="form-label">Status:</label>
             {{ form.status }}
+        </div>
+
+        <div class="col-md-6" id="situacao-container" style="display: none;">
+            <label for="situacao" class="form-label">Situação:</label>
+            {{ form.situacao }}
         </div>
 
         <div class="col-md-6">
@@ -105,5 +112,27 @@
             });
         });
     </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const statusSelect = document.getElementById('id_status');
+        const situacaoContainer = document.getElementById('situacao-container');
+        
+        function toggleSituacao() {
+            if (statusSelect.value === 'requerido') {
+                situacaoContainer.style.display = 'block';
+            } else {
+                situacaoContainer.style.display = 'none';
+                const situacaoSelect = document.getElementById('id_situacao');
+                if (situacaoSelect) {
+                    situacaoSelect.value = ''; // Limpa o campo
+                }
+            }
+        }
+
+        statusSelect.addEventListener('change', toggleSituacao);
+        toggleSituacao(); // Chamada inicial para definir o estado correto
+    });
+</script>
 </div>
 {% endblock %}

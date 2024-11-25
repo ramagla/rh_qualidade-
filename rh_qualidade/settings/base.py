@@ -28,7 +28,9 @@ INSTALLED_APPS = [
     'crispy_forms',  
     'xhtml2pdf', 
     'django_ckeditor_5', 
-    'widget_tweaks'
+    'widget_tweaks',
+    'django_select2'
+
 ]
 
 # Configurações do CKEditor

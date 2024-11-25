@@ -5,14 +5,11 @@
 
 {% block content %}
 
-<head>
-    {{ form.media }}  
-</head>
 <div class="container mt-5">
     <h2 class="text-center mb-4">Visualizar Lista de Presença: {{ lista.treinamento }}</h2>
 
     <div class="row">
-        <!-- Certificado de Presença -->
+        <!-- Lista de Presença -->
         <div class="col-md-6 text-center">
             <label class="form-label">Lista de Presença (PDF):</label>
             {% if lista.lista_presenca %}
@@ -36,13 +33,29 @@
         <h5>Detalhes da Lista de Presença</h5>
         <ul class="list-group">
             <li class="list-group-item"><strong>Treinamento:</strong> {{ lista.treinamento }}</li>
-            <li class="list-group-item"><strong>Data de Realização:</strong> {{ lista.data_realizacao|date:"d/m/Y" }}</li>
+            <li class="list-group-item"><strong>Data de Início:</strong> {{ lista.data_inicio|date:"d/m/Y" }}</li>
+            <li class="list-group-item"><strong>Data de Fim:</strong> {{ lista.data_fim|date:"d/m/Y" }}</li>
             <li class="list-group-item"><strong>Horário de Início:</strong> {{ lista.horario_inicio }}</li>
             <li class="list-group-item"><strong>Horário de Fim:</strong> {{ lista.horario_fim }}</li>
-            <li class="list-group-item"><strong>Duração:</strong> {{ lista.duracao }} horas</li>
+            <li class="list-group-item"><strong>Duração:</strong> {{ lista.duracao|floatformat:2 }} horas</li>
+            <li class="list-group-item"><strong>Situação:</strong> 
+                {% if lista.situacao == 'finalizado' %}
+                    <span class="badge bg-success text-white">Finalizado</span>
+                {% elif lista.situacao == 'em_andamento' %}
+                    <span class="badge bg-warning text-dark">Em Andamento</span>
+                {% else %}
+                    <span class="badge bg-secondary text-white">Indefinido</span>
+                {% endif %}
+            </li>
             <li class="list-group-item"><strong>Assunto:</strong> {{ lista.assunto }}</li>
             <li class="list-group-item"><strong>Descrição:</strong> {{ lista.descricao|safe }}</li>
-            <li class="list-group-item"><strong>Necessita Avaliação de Eficácia?:</strong> {{ lista.get_necessita_avaliacao_display }}</li>
+            <li class="list-group-item"><strong>Necessita Avaliação de Eficácia?:</strong> 
+                {% if lista.necessita_avaliacao %}
+                    Sim
+                {% else %}
+                    Não
+                {% endif %}
+            </li>
         </ul>
     </div>
 
@@ -60,7 +73,8 @@
     </div>
 
     <div class="mt-4 text-center">
-        <a href="{% url 'lista_presenca' %}" class="btn btn-primary"><i class="bi bi-arrow-left-circle"></i>  Voltar</a>
+        <a href="{% url 'lista_presenca' %}" class="btn btn-primary"><i class="bi bi-arrow-left-circle"></i> Voltar</a>
     </div>
 </div>
+
 {% endblock %}

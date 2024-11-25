@@ -65,8 +65,10 @@
 
         <div class="col-md-6">
             <label for="cargo_inicial" class="form-label">Cargo Inicial:</label>
-            {{ form.cargo_inicial }}
+            {{ form.cargo_inicial|attr:"id:id_cargo_inicial" }}
         </div>
+
+
 
         <div class="col-md-6">
             <label for="cargo_atual" class="form-label">Cargo Atual:</label>
@@ -141,6 +143,17 @@
         </div>
     </form>
 </div>
+
+<script>
+    $(document).ready(function() {
+        // Inicializa o Select2 nos campos pelo ID
+        $('#id_cargo_inicial, #id_cargo_atual, #id_escolaridade').select2({
+            placeholder: "Selecione uma opção",
+            allowClear: true
+        });
+    });
+</script>
+
 
 
     <!-- Script para edição -->

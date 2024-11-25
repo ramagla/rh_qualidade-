@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <hr>
+
+    <!-- Cabeçalho -->
+    <div class="header-container">
+        <table class="table table-bordered">
+            <tr>
+                <td rowspan="2" style="width: 20%; text-align: center;">
+                    <img src="{% static 'logo.png' %}" alt="Logo" style="width: 80px; height: auto;">
+                </td>
+                <td colspan="2" style="text-align: center; font-weight: bold;">LEVANTAMENTO DE NECESSIDADES DE TREINAMENTO</td>
+            </tr>
+            <tr>
+                <td style="width: 40%;">
+                    <strong>SETOR:</strong> {{ filtro_departamento|default:"Todos os Departamentos" }}
+                </td>
+                <td style="width: 40%;">
+                   <strong>ANO:</strong> {{ ano_inicio|default:"-" }}
+
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <strong>CHEFIA IMEDIATA:</strong> {{ chefia_imediata|default:"-" }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Formulário de Filtros -->
+<form method="get" class="row g-3 mb-4 d-print-none">
+    <div class="col-md-4">
+        <label for="departamento" class="form-label">Departamento</label>
+        <select name="departamento" id="departamento" class="form-select">
+            <option value="">Todos</option>
+            {% for dep in departamentos %}
+                <option value="{{ dep }}" {% if filtro_departamento == dep %}selected{% endif %}>{{ dep }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="data_inicio" class="form-label">Data de Início</label>
+        <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ filtro_data_inicio }}">
+    </div>
+    <div class="col-md-3">
+        <label for="data_fim" class="form-label">Data de Fim</label>
+        <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ filtro_data_fim }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+    <div class="text-center mb-4">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+</form>
+
+    <!-- Tabela de Resultados -->
+    <div class="table-responsive">
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Treinamento Requerido</th>
+                    <th>Local</th>
+                    <th>Nome do Funcionário</th>
+                    <th>Situação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if treinamentos %}
+                    {% for treinamento in treinamentos %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ treinamento.nome_curso }}</td>
+                            <td>{{ treinamento.instituicao_ensino }}</td>
+                            <td>{{ treinamento.funcionario.nome }}</td>
+                            <td>
+                                {% if treinamento.situacao == 'APROVADO' %}
+                                    <span style="color: green; font-weight: bold;">{{ treinamento.situacao }}</span>
+                                {% elif treinamento.situacao == 'REPROVADO' %}
+                                    <span style="color: red; font-weight: bold;">{{ treinamento.situacao }}</span>
+                                {% else %}
+                                    <span style="color: orange; font-weight: bold;">{{ treinamento.situacao }}</span>
+                                {% endif %}
+                            </td>
+
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5">Nenhum treinamento encontrado com os filtros aplicados.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mt-5">
+    <table class="custom-table" style="width: 100%; border: 1px solid #000; border-collapse: collapse; table-layout: fixed;">
+        <tr>
+            
+
+            <!-- Assinatura da Chefia -->
+            <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
+                <p><strong>Assinatura da Chefia</strong></p>
+                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                    {{ evaluation.gestor_responsavel.nome }}
+                </div>
+                <div style="margin-top: 10px;">
+                    <em>Data da Assinatura:</em> ___/___/____
+                </div>
+            </td>
+
+            <!-- Assinatura do Responsável R.H. -->
+            <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
+                <p><strong>Assinatura do Responsável R.H.</strong></p>
+                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                   
+                </div>
+                <div style="margin-top: 10px;">
+                    <em>Data da Assinatura:</em> ___/___/____
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<style>
+    
+    /* Estilo do Cabeçalho */
+    .header-container table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    .header-container td {
+        border: 1px solid #ddd;
+        padding: 5px;
+        vertical-align: middle;
+    }
+        .table {
+            width: 100%; /* Garante que a tabela ocupe toda a largura */
+            border-collapse: collapse; /* Remove espaços extras entre bordas */
+            table-layout: auto; /* Ajusta as colunas automaticamente */
+            font-size: 10px; /* Ajusta a fonte para caber melhor */
+            margin-bottom: 20px; /* Adiciona espaço abaixo da tabela */
+
+        }
+
+    @media print {
+        @media print {
+    body {
+        font-size: 10px;
+    }
+    .table {
+        width: 100%;
+        margin-bottom: 30px; /* Espaço entre a tabela e outros elementos */
+    }
+    .custom-table {
+        width: 100%;
+    }
+    .d-print-none {
+        display: none !important;
+    }
+}
+
+</style>
+
+<script>
+function imprimir() {
+    var conteudo = document.querySelector('.container').innerHTML;
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
+
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <title>Levantamento de Necessidades de Treinamento</title>
+                <style>
+                    /* Estilos gerais */
+                    body { font-family: Arial, sans-serif; color: #333; padding: 10px; font-size: 10px; }
+                    .custom-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        table-layout: fixed;
+                        max-width: 100%; 
+                    }
+                    th, td {
+                        padding: 4px;
+                        border: 1px solid #ddd;
+                        font-size: 10px;
+                        text-align: center;
+                    }
+                    th {
+                        background-color: #e7f1ff;
+                        color: #333;
+                        font-weight: bold;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9f9f9;
+                    }
+                    .header-container table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    .header-container td {
+                        border: 1px solid #ddd;
+                        padding: 5px;
+                        text-align: left;
+                    }
+                    .numero-formulario {
+                        position: absolute;
+                        bottom: 0;
+                        right: 10px;
+                        width: 100%;
+                        font-size: 10px;
+                        color: #333;
+                        text-align: right;
+                        padding-right: 10px;
+                    }
+                    @media print {
+                        .d-print-none { display: none !important; }
+                        .numero-formulario {
+                            position: fixed;
+                            bottom: 10px;
+                            right: 10px;
+                            font-size: 8px;
+                            color: #333;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <h2 style="text-align: center;">Levantamento de Necessidades de Treinamento</h2>
+                ${conteudo}
+                <div class="numero-formulario">F150 Rev.05</div>
+            </body>
+        </html>
+    `);
+
+    novaJanela.document.close();
+    novaJanela.onload = function () {
+        novaJanela.print();
+        novaJanela.close();
+    };
+}
+</script>
+
+{% endblock %}

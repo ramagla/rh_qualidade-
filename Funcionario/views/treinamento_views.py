@@ -151,3 +151,56 @@ def exportar_treinamentos_csv(request):
         ])
 
     return response
+
+
+from django.db.models import Case, When, Value, CharField
+from datetime import datetime
+
+
+def levantamento_treinamento(request):
+    filtro_departamento = request.GET.get('departamento', '')
+    filtro_data_inicio = request.GET.get('data_inicio', '')
+    filtro_data_fim = request.GET.get('data_fim', '')
+
+    # Converte filtro_data_inicio para um objeto de data e extrai o ano
+    ano_inicio = None
+    if filtro_data_inicio:
+        try:
+            ano_inicio = datetime.strptime(filtro_data_inicio, '%Y-%m-%d').year
+        except ValueError:
+            ano_inicio = None  # Define como None se o formato for inválido
+
+    # Filtros
+    funcionarios = Funcionario.objects.all()
+    if filtro_departamento:
+        funcionarios = funcionarios.filter(local_trabalho=filtro_departamento)
+
+    treinamentos = Treinamento.objects.filter(funcionario__in=funcionarios)
+    if filtro_data_inicio:
+        treinamentos = treinamentos.filter(data_inicio__gte=filtro_data_inicio)
+    if filtro_data_fim:
+        treinamentos = treinamentos.filter(data_fim__lte=filtro_data_fim)
+
+    # Determina a chefia imediata
+    chefia_imediata = funcionarios.first().responsavel if funcionarios.exists() else None
+
+    # Anotação para status da situação
+    treinamentos = treinamentos.annotate(
+        situacao_treinamento=Case(
+            When(status='aprovado', then=Value('APROVADO')),
+            When(status='reprovado', then=Value('REPROVADO')),
+            default=Value('PENDENTE'),
+            output_field=CharField(),
+        )
+    )
+
+    # Renderiza o template
+    return render(request, 'treinamentos/levantamento_treinamento.html', {
+        'departamentos': Funcionario.objects.values_list('local_trabalho', flat=True).distinct(),
+        'filtro_departamento': filtro_departamento,
+        'filtro_data_inicio': filtro_data_inicio,
+        'filtro_data_fim': filtro_data_fim,
+        'ano_inicio': ano_inicio,  # Envia o ano para o template
+        'treinamentos': treinamentos,
+        'chefia_imediata': chefia_imediata,
+    })

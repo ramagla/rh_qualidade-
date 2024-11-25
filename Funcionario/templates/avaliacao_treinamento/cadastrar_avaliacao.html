@@ -45,18 +45,18 @@
 
         <!-- Status do Prazo -->
         <div class="col-12 mt-3">
-            <label class="form-label">Status do Prazo:</label>
-            <div id="status_prazo" class="alert" role="alert">
-                <!-- O status do prazo será exibido aqui -->
+                <label class="form-label">Status do Prazo:</label>
+                <div id="status_prazo" class="alert alert-secondary" role="alert">
+                    Defina a data de avaliação e o período.
+                </div>
             </div>
-        </div>
 
         <div class="row">
             <!-- Nome do Funcionário -->
             <div class="col-md-6">
                 <label for="funcionario" class="form-label">Funcionário:</label>
-                <select class="form-select" id="funcionario" name="funcionario" required>
-                    <option selected>Selecione o funcionário</option>
+                <select class="form-select select2" id="funcionario" name="funcionario" required>
+                    <option value="" selected>Selecione o funcionário</option>
                     {% for funcionario in funcionarios %}
                         <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
                     {% endfor %}
@@ -66,13 +66,10 @@
             <!-- Treinamento/Curso -->
             <div class="col-md-6">
                 <label for="treinamento" class="form-label">Treinamento/Curso:</label>
-                <select class="form-select" id="treinamento" name="treinamento" required>
-                    <option selected>Selecione o treinamento</option>
-                    <!-- opções de treinamento serão carregadas aqui via JavaScript -->
+                <select class="form-select select2" id="treinamento" name="treinamento" required>
+                    <option value="" selected>Selecione o treinamento</option>
                 </select>
             </div>
-        </div>
-
 
         <!-- Responsáveis pela Avaliação -->
         <div class="col-12">
@@ -82,19 +79,19 @@
         <!-- Primeiro Responsável -->
         <div class="col-md-6">
             <label for="responsavel_1" class="form-label">Primeiro Responsável:</label>
-            {{ form.responsavel_1 }}
+            {{ form.responsavel_1 |add_class:"form-select select2" }}
         </div>
 
         <!-- Segundo Responsável -->
         <div class="col-md-6">
             <label for="responsavel_2" class="form-label">Segundo Responsável:</label>
-            {{ form.responsavel_2 }}
+            {{ form.responsavel_2 |add_class:"form-select select2" }}
         </div>
 
         <!-- Terceiro Responsável -->
         <div class="col-md-6">
             <label for="responsavel_3" class="form-label">Terceiro Responsável:</label>
-            {{ form.responsavel_3 }}
+            {{ form.responsavel_3 |add_class:"form-select select2" }}
         </div>
 
 
@@ -164,7 +161,7 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener("DOMContentLoaded", function () {
         // Função para calcular a avaliação geral
         function calcularAvaliacaoGeral() {
             let total = 0;
@@ -179,8 +176,8 @@
                 total += valor; // Soma os valores das respostas
             });
 
-            const avaliacaoGeralInput = document.getElementById('avaliacao_geral');
-            const avaliacaoStatus = document.getElementById('avaliacao_status'); // Certifique-se de que este elemento exista
+            const avaliacaoGeralInput = document.getElementById("avaliacao_geral");
+            const avaliacaoStatus = document.getElementById("avaliacao_status"); // Certifique-se de que este elemento exista
 
             let valorAvaliacao;
             let statusAvaliacao;
@@ -188,16 +185,16 @@
             // Define a pontuação e o status da avaliação com base no total acumulado
             if (poucoEficaz) {
                 valorAvaliacao = 1; // Pouco Eficaz
-                statusAvaliacao = 'Pouco Eficaz';
+                statusAvaliacao = "Pouco Eficaz";
             } else if (total < 15) {
                 valorAvaliacao = 2; // Eficaz
-                statusAvaliacao = 'Eficaz';
-            } else if (total === 15) {  // 5 + 5 + 5 para três respostas excelentes
+                statusAvaliacao = "Eficaz";
+            } else if (total === 15) { // 5 + 5 + 5 para três respostas excelentes
                 valorAvaliacao = 5; // Muito Eficaz
-                statusAvaliacao = 'Muito Eficaz';
+                statusAvaliacao = "Muito Eficaz";
             } else {
                 valorAvaliacao = 0; // Valor padrão caso nenhuma condição seja atendida
-                statusAvaliacao = 'Indeterminado'; // Mensagem padrão
+                statusAvaliacao = "Indeterminado"; // Mensagem padrão
             }
 
             // Atualiza o valor do campo de avaliação geral e o status no DOM
@@ -213,9 +210,9 @@
 
         // Função para verificar o status do prazo
         function verificarPrazo() {
-            const dataAvaliacao = document.getElementById('data_avaliacao').value;
-            const periodoAvaliacao = parseInt(document.getElementById('periodo_avaliacao').value);
-            const statusPrazoDiv = document.getElementById('status_prazo');
+            const dataAvaliacao = document.getElementById("data_avaliacao").value;
+            const periodoAvaliacao = parseInt(document.getElementById("periodo_avaliacao").value);
+            const statusPrazoDiv = document.getElementById("status_prazo");
 
             if (dataAvaliacao && !isNaN(periodoAvaliacao)) {
                 const dataAvaliacaoDate = new Date(dataAvaliacao);
@@ -223,89 +220,109 @@
                 dataLimite.setDate(dataLimite.getDate() + periodoAvaliacao);
 
                 const hoje = new Date();
-                let status = '';
-                let cor = '';
-                let emoji = '';
+                let status = "";
+                let cor = "";
+                let emoji = "";
 
                 if (hoje <= dataLimite) {
-                    status = 'Dentro do Prazo';
-                    cor = 'alert-success';
-                    emoji = '😃';
+                    status = "Dentro do Prazo";
+                    cor = "alert-success";
+                    emoji = "😃";
                 } else {
-                    status = 'Fora do Prazo';
-                    cor = 'alert-danger';
-                    emoji = '😔';
+                    status = "Fora do Prazo";
+                    cor = "alert-danger";
+                    emoji = "😔";
                 }
 
                 statusPrazoDiv.className = `alert ${cor}`;
                 statusPrazoDiv.textContent = `${status} ${emoji}`;
                 console.log("Status do prazo:", status);
             } else {
-                statusPrazoDiv.className = 'alert alert-secondary';
-                statusPrazoDiv.textContent = 'Defina a data de avaliação e o período.';
+                statusPrazoDiv.className = "alert alert-secondary";
+                statusPrazoDiv.textContent = "Defina a data de avaliação e o período.";
             }
         }
 
-       
-        // Adiciona o evento de mudança no funcionário para carregar os treinamentos
-        const funcionarioSelect = document.getElementById('funcionario');
-        const treinamentoSelect = document.getElementById('treinamento');
+        // Eventos para atualizar o status do prazo ao alterar data ou período
+        document.getElementById("data_avaliacao").addEventListener("change", verificarPrazo);
+        document.getElementById("periodo_avaliacao").addEventListener("input", verificarPrazo);
 
-        if (funcionarioSelect && treinamentoSelect) {
-            funcionarioSelect.addEventListener('change', function () {
-                const funcionarioId = funcionarioSelect.value;
-                console.log("Funcionário selecionado para treinamentos:", funcionarioId);
+        // Configuração do Select2 para Funcionário e Treinamento
+        const funcionarioSelect = $("#funcionario"); // Usando Select2
+        const treinamentoSelect = $("#treinamento"); // Usando Select2 também
 
-                treinamentoSelect.innerHTML = '<option selected>Selecione o treinamento</option>';
-
-                if (funcionarioId) {
-                    fetch(`/get-treinamentos/${funcionarioId}/`)
-                        .then(response => response.json())
-                        .then(data => {
-                            data.forEach(treinamento => {
-                                const option = document.createElement('option');
-                                option.value = treinamento.id;
-
-                                const [year, month, day] = treinamento.data_realizacao.split('-');
-                                const formattedDate = `${day}/${month}/${year}`;
-
-                                option.textContent = ` ${formattedDate} - ${treinamento.assunto}`;
-                                treinamentoSelect.appendChild(option);
-                            });
-                            console.log("Treinamentos carregados para o funcionário:", data);
-                        })
-                        .catch(error => {
-                            console.error('Erro:', error);
-                        });
-                }
-            });
-        } else {
-            console.error("Erro: Elementos 'funcionario' ou 'treinamento' não encontrados no DOM.");
-        }
-
-        // Adiciona os eventos necessários
-        document.querySelectorAll('input[type="radio"]').forEach(function (input) {
-            input.addEventListener('change', calcularAvaliacaoGeral);
+        // Inicializa o Select2 no campo de funcionário
+        funcionarioSelect.select2({
+            placeholder: "Selecione um Funcionário",
+            allowClear: true
         });
 
-        document.getElementById('data_avaliacao').addEventListener('change', verificarPrazo);
-        document.getElementById('periodo_avaliacao').addEventListener('input', verificarPrazo);
+        // Inicializa o Select2 no campo de treinamento
+        treinamentoSelect.select2({
+            placeholder: "Selecione o Treinamento",
+            allowClear: true
+        });
 
-        // Chamada inicial para verificar o status do prazo ao carregar a página
+        // Evento de mudança no Select2 do funcionário
+        funcionarioSelect.on("select2:select", function (e) {
+            const funcionarioId = e.params.data.id; // ID do funcionário selecionado
+            console.log("Funcionário selecionado:", funcionarioId);
+
+            if (funcionarioId) {
+                // Atualiza o Select2 com um placeholder enquanto carrega
+                treinamentoSelect.html('<option value="">Carregando...</option>').trigger("change");
+
+                // Faz a requisição para buscar os treinamentos
+                fetch(`/get-treinamentos-funcionarios/${funcionarioId}/`)
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error(`Erro na API: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        console.log("Dados recebidos da API:", data);
+
+                        // Limpa as opções do Select2 e popula com os novos dados
+                        treinamentoSelect.empty().append('<option value="">Selecione o Treinamento</option>');
+                        if (data.length === 0) {
+                            treinamentoSelect.append('<option value="">Nenhum treinamento encontrado</option>');
+                        } else {
+                            data.forEach((treinamento) => {
+                                console.log("Adicionando treinamento:", treinamento); // Log dos dados
+                                const option = new Option(
+                                    `${treinamento.nome_curso} (${treinamento.data_fim || "Sem data"})`,
+                                    treinamento.id,
+                                    false,
+                                    false
+                                );
+                                treinamentoSelect.append(option);
+                            });
+                        }
+
+                        // Atualiza o Select2
+                        treinamentoSelect.trigger("change");
+                    })
+                    .catch((error) => {
+                        console.error("Erro ao carregar treinamentos:", error);
+                        treinamentoSelect.html('<option value="">Erro ao carregar treinamentos</option>').trigger("change");
+                    });
+            } else {
+                // Caso nenhum funcionário seja selecionado, limpa o Select2
+                treinamentoSelect.html('<option value="">Selecione o Treinamento</option>').trigger("change");
+            }
+        });
+
+        // Adiciona eventos de mudança para calcular avaliação geral
+        document.querySelectorAll('input[type="radio"]').forEach(function (input) {
+            input.addEventListener("change", calcularAvaliacaoGeral);
+        });
+
+        // Inicializa os valores de prazo e avaliação geral ao carregar a página
         verificarPrazo();
-
-        // Preenche os cargos ao carregar a página
-        for (let i = 1; i <= 3; i++) {
-            preencherCargo(i);
-        }
+        calcularAvaliacaoGeral();
     });
 </script>
-
-
-
-
-
-
 
 
 {% endblock %}

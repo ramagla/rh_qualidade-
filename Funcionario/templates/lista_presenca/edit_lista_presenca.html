@@ -33,10 +33,16 @@
             {{ form.treinamento|add_class:"form-select" }}
         </div>
 
-        <!-- Data de Realização (Input de Data) -->
+        <!-- Data de Início -->
         <div class="col-md-6">
-            <label for="data_realizacao" class="form-label">Data de Realização:</label>
-            {{ form.data_realizacao|add_class:"form-control" }}
+            <label for="data_inicio" class="form-label">Data de Início:</label>
+            {{ form.data_inicio|add_class:"form-control" }}
+        </div>
+
+        <!-- Data de Fim -->
+        <div class="col-md-6">
+            <label for="data_fim" class="form-label">Data de Fim:</label>
+            {{ form.data_fim|add_class:"form-control" }}
         </div>
 
         <!-- Horário de Início -->
@@ -77,6 +83,12 @@
         <div class="col-md-6">
             <label for="instrutor" class="form-label">Instrutor:</label>
             {{ form.instrutor|add_class:"form-control" }}
+        </div>
+
+         <!-- Situação -->
+        <div class="col-md-6">
+            <label for="situacao" class="form-label">Situação:</label>
+            {{ form.situacao|add_class:"form-select" }}
         </div>
 
         <!-- Necessita Avaliação de Eficácia? (Botões Sim/Não) -->

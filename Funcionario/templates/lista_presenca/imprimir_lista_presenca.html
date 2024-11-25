@@ -17,44 +17,39 @@
     </div>
 {% load conversores %} 
 
-<div class="info-section mt-4">
-    <table class="custom-table" style="width: 100%;">
-        <tr>
-            <td style="padding: 8px; text-align: left;">
-                <strong>TIPO:</strong> {{ lista.treinamento }}
-            </td>
-            <td style="padding: 8px; text-align: left;">
-                <strong>DATA DA REALIZAÇÃO:</strong> {{ data_realizacao }}
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" style="padding: 8px; text-align: left;">
-                <strong>ASSUNTO:</strong> {{ lista.assunto }}
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" style="padding: 8px; text-align: left;">
-                <strong>DESCRIÇÃO:</strong> {{ lista.descricao|safe }}
-            </td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; text-align: left;">
-                <strong>HORÁRIO:</strong> {{ lista.horario_inicio }} - {{ lista.horario_fim }}
-            </td>
-            <td style="padding: 8px; text-align: left;">
-                <strong>DURAÇÃO:</strong> {{ lista.duracao|horas_formatadas }}
-            </td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; text-align: left;">
-                <strong>INSTRUTOR:</strong> {{ lista.instrutor }}
-            </td>
-            <td style="padding: 8px; text-align: left;">
-                <strong>VISTO DO INSTRUTOR:</strong> ______________________
-            </td>
-        </tr>
-    </table>
-</div>
+ <!-- Informações da Lista de Presença -->
+    <div class="info-section mt-4">
+        <table class="custom-table" style="width: 100%;">
+            <tr>
+                <td style="padding: 8px; text-align: left;"><strong>TIPO:</strong> {{ lista.treinamento }}</td>
+                <td style="padding: 8px; text-align: left;"><strong>DATA DE INÍCIO:</strong> {{ lista.data_inicio|date:"d/m/Y" }}</td>
+                <td style="padding: 8px; text-align: left;"><strong>DATA DE FIM:</strong> {{ lista.data_fim|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="padding: 8px; text-align: left;"><strong>ASSUNTO:</strong> {{ lista.assunto }}</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="padding: 8px; text-align: left;"><strong>DESCRIÇÃO:</strong> {{ lista.descricao|safe }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; text-align: left;"><strong>HORÁRIO:</strong> {{ lista.horario_inicio }} - {{ lista.horario_fim }}</td>
+                <td style="padding: 8px; text-align: left;"><strong>DURAÇÃO:</strong> {{ lista.duracao|floatformat:2 }} horas</td>
+                <td style="padding: 8px; text-align: left;"><strong>SITUAÇÃO:</strong> 
+                    {% if lista.situacao == 'finalizado' %}
+                        Finalizado
+                    {% elif lista.situacao == 'em_andamento' %}
+                        Em Andamento
+                    {% else %}
+                        Indefinido
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; text-align: left;"><strong>INSTRUTOR:</strong> {{ lista.instrutor }}</td>
+                <td style="padding: 8px; text-align: left;"><strong>VISTO DO INSTRUTOR:</strong> ______________________</td>
+            </tr>
+        </table>
+    </div>
 
 
     <!-- Seção para Gestor da Qualidade com estrutura alinhada -->

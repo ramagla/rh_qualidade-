@@ -12,7 +12,7 @@
         <!-- Seleção do Nome do Funcionário -->
         <div class="col-md-6">
             <label for="funcionario-select" class="form-label">Nome:</label>
-            <select name="funcionario" class="form-control {% if form.funcionario.errors %}is-invalid{% endif %}" id="funcionario-select">
+            <select name="funcionario" class="form-control select2 {% if form.funcionario.errors %}is-invalid{% endif %}" id="funcionario-select">
                 <option value="">Selecione um Funcionário</option>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
@@ -197,7 +197,7 @@
 document.addEventListener("DOMContentLoaded", function() {
     const dataInicioInput = document.getElementById('data_inicio');
     const terminoPrevistoInput = document.getElementById('termino_previsto'); 
-    const funcionarioSelect = document.getElementById('funcionario-select');
+    const funcionarioSelect = $('#funcionario-select'); // Select2 para funcionário
 
     // Função para calcular automaticamente o "Término Previsto (Calculado)" adicionando 60 dias à data de início
     function calcularTerminoPrevisto() {
@@ -219,8 +219,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Função para carregar informações do funcionário selecionado
-    funcionarioSelect.addEventListener('change', function() {
-        const funcionarioId = this.value;
+    funcionarioSelect.on('select2:select', function(e) {
+        const funcionarioId = e.params.data.id; // ID do funcionário selecionado
         
         if (funcionarioId) {
             fetch(`/get_funcionario_info/${funcionarioId}/`)
@@ -273,10 +273,17 @@ document.addEventListener("DOMContentLoaded", function() {
             });
     }
 
+    // Inicializa o Select2
+    funcionarioSelect.select2({
+        placeholder: "Selecione um Funcionário",
+        allowClear: true
+    });
+
     // Eventos para calcular o término previsto
     dataInicioInput.addEventListener('change', calcularTerminoPrevisto);
 });
 </script>
+
 
 
 

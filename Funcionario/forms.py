@@ -5,6 +5,9 @@ from django import forms
 from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,JobRotationEvaluation,AvaliacaoExperiencia, AvaliacaoAnual,Comunicado,IntegracaoFuncionario,Evento
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django.forms.widgets import DateInput
+from django_select2.forms import Select2Widget
+
+
 
 class FuncionarioForm(forms.ModelForm):
     ESCOLARIDADE_CHOICES = [
@@ -19,13 +22,24 @@ class FuncionarioForm(forms.ModelForm):
         ('Doutorado', 'Doutorado'),
     ]
 
-    cargo_inicial = forms.ModelChoiceField(queryset=Cargo.objects.all(), label="Cargo Inicial", widget=forms.Select(attrs={'class': 'form-select'}))
-    cargo_atual = forms.ModelChoiceField(queryset=Cargo.objects.all(), label="Cargo Atual", widget=forms.Select(attrs={'class': 'form-select'}))
+    cargo_inicial = forms.ModelChoiceField(
+        queryset=Cargo.objects.all(),
+        label="Cargo Inicial",
+        widget=Select2Widget(attrs={'class': 'select2 form-select', 'id': 'id_cargo_inicial'})
+    )
+    cargo_atual = forms.ModelChoiceField(
+        queryset=Cargo.objects.all(),
+        label="Cargo Atual",
+        widget=Select2Widget(attrs={'class': 'select2 form-select', 'id': 'id_cargo_atual'})
+    )
     data_admissao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Data de Admissão")
     data_integracao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Data de Integração")
     escolaridade = forms.ChoiceField(choices=ESCOLARIDADE_CHOICES, label="Escolaridade", widget=forms.Select(attrs={'class': 'form-select'}))
-    responsavel = forms.ModelChoiceField(queryset=Funcionario.objects.all(), required=False, widget=forms.Select(attrs={'class': 'form-select'}))
-    
+    responsavel = forms.ModelChoiceField(
+            queryset=Funcionario.objects.all(),
+            required=False,
+            widget=Select2Widget(attrs={'class': 'select2 form-select','id': 'id_responsavel'})
+        )    
     foto = forms.ImageField(required=False, label="Foto")
     curriculo = forms.FileField(required=False, label="Currículo")
     status = forms.ChoiceField(choices=Funcionario.STATUS_CHOICES, label="Status", widget=forms.Select(attrs={'class': 'form-select'}))
@@ -49,8 +63,8 @@ class FuncionarioForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FuncionarioForm, self).__init__(*args, **kwargs)
         for field in self.fields:
-            self.fields[field].widget.attrs.update({'class': 'form-control'})
-
+            if not isinstance(self.fields[field].widget, Select2Widget):  # Evita sobrescrever widgets Select2
+                self.fields[field].widget.attrs.update({'class': 'form-control'})
 
 class CargoForm(forms.ModelForm):
     class Meta:
@@ -91,27 +105,49 @@ class TreinamentoForm(forms.ModelForm):
             'data_fim': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'carga_horaria': forms.TextInput(attrs={'class': 'form-control'}),
             'anexo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'situacao': forms.Select(choices=Treinamento.SITUACAO_CHOICES, attrs={'class': 'form-select'}),
+
         }
+
+        def clean(self):
+         cleaned_data = super().clean()
+         status = cleaned_data.get('status')
+         situacao = cleaned_data.get('situacao')
+
+        # Validar que situação está preenchida apenas se o status for 'requerido'
+         if status == 'requerido' and not situacao:
+            raise forms.ValidationError({'situacao': 'A situação é obrigatória quando o status é "Requerido".'})
+         return cleaned_data
 
 class ListaPresencaForm(forms.ModelForm):
     descricao = forms.CharField(widget=CKEditor5Widget(config_name='default'))
 
     class Meta:
         model = ListaPresenca
-        fields = [
-            'treinamento', 'data_realizacao', 'horario_inicio', 'horario_fim', 
-            'instrutor', 'duracao', 'necessita_avaliacao', 'lista_presenca', 
-            'participantes', 'assunto', 'descricao'
-        ]
+        fields = '__all__'
         widgets = {
-            'data_realizacao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'data_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'data_fim': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'participantes': forms.SelectMultiple(attrs={'class': 'form-select'}),
             'horario_inicio': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'horario_fim': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'duracao': forms.TextInput(attrs={'class': 'form-control'}),
             'instrutor': forms.TextInput(attrs={'class': 'form-control'}),
             'assunto': forms.TextInput(attrs={'class': 'form-control'}),
+            'situacao': forms.Select(attrs={'class': 'form-select'}),
+
         }
+
+        def clean(self):
+                cleaned_data = super().clean()
+                data_inicio = cleaned_data.get('data_inicio')
+                data_fim = cleaned_data.get('data_fim')
+
+                if data_inicio and data_fim and data_fim < data_inicio:
+                    raise forms.ValidationError("A data de fim não pode ser anterior à data de início.")
+
+                return cleaned_data
+
 
 class AvaliacaoForm(forms.ModelForm):
      descricao_melhorias = forms.CharField(widget=CKEditor5Widget(), required=True,label="Descreva as melhorias obtidas/resultados")
@@ -121,7 +157,13 @@ class AvaliacaoForm(forms.ModelForm):
 
 
 class AvaliacaoTreinamentoForm(forms.ModelForm):
-    # Campos do formulário
+    treinamento = forms.ModelChoiceField(
+        queryset=Treinamento.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Treinamento/Curso",
+        required=True
+    ),
+   
     pergunta_1 = forms.ChoiceField(
         choices=AvaliacaoTreinamento.OPCOES_CONHECIMENTO,
         widget=forms.RadioSelect,

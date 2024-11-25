@@ -33,12 +33,15 @@
             {{ form.treinamento|add_class:"form-select" }}
         </div>
 
-        <!-- Data de Realização (Input de Data) -->
-        <div class="col-md-6">
-            <label for="data_realizacao" class="form-label">Data de Realização:</label>
-            {{ form.data_realizacao|add_class:"form-control" }}
-        </div>
+       <div class="col-md-6">
+    <label for="data_inicio" class="form-label">Data de Início:</label>
+    <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+</div>
 
+<div class="col-md-6">
+    <label for="data_fim" class="form-label">Data de Fim:</label>
+    <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+</div>
         <!-- Horário de Início -->
         <div class="col-md-3">
             <label for="horario_inicio" class="form-label">Horário Início:</label>
@@ -55,6 +58,12 @@
         <div class="col-md-6">
             <label for="duracao" class="form-label">Duração (em horas):</label>
             <input type="text" id="duracao" name="duracao" class="form-control" value="{{ form.instance.duracao }}" readonly>
+        </div>
+
+        <!-- Situação -->
+        <div class="col-md-6">
+            <label for="situacao" class="form-label">Situação:</label>
+            {{ form.situacao|add_class:"form-select" }}
         </div>
 
         <!-- Assunto do Treinamento -->

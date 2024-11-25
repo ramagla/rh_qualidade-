@@ -30,7 +30,8 @@ from .views.treinamento_views import (
     imprimir_f003,
     gerar_pdf,
     gerar_relatorio_f003,
-    exportar_treinamentos_csv
+    exportar_treinamentos_csv,
+    levantamento_treinamento
 )
 
 from .views.avaliacao_treinamentos_views import (
@@ -70,7 +71,7 @@ from .views.job_rotation_views import (
     excluir_jobrotation,
     imprimir_jobrotation_evaluation
 )
-from .views.api_views import get_funcionario_info, get_treinamentos, get_competencias, get_cargo,get_funcionario_ficha
+from .views.api_views import get_funcionario_info, get_treinamentos, get_competencias, get_cargo,get_funcionario_ficha,get_treinamentos_por_funcionario
 
 from .views.lista_presenca_views import (
     lista_presenca,
@@ -151,6 +152,8 @@ urlpatterns = [
     path('avaliacoes/<int:id>/visualizar/', visualizar_avaliacao, name='visualizar_avaliacao'),
     path('get-treinamentos/<int:funcionario_id>/', get_treinamentos_por_funcionario, name='get_treinamentos_por_funcionario'),
     path('imprimir_treinamento/<int:treinamento_id>/', imprimir_treinamento, name='imprimir_treinamento'),
+    path('levantamento-treinamento/', levantamento_treinamento, name='levantamento_treinamento'),
+
 
 
 
@@ -187,7 +190,8 @@ urlpatterns = [
 
     # APIs auxiliares
     path('get_funcionario_info/<int:id>/', get_funcionario_info, name='get_funcionario_info'),
-    path('get_treinamentos/<int:funcionario_id>/', get_treinamentos, name='get_treinamentos'),
+    path('get-treinamentos/<int:funcionario_id>/', get_treinamentos, name='get_treinamentos'),
+    path('get-treinamentos-funcionarios/<int:funcionario_id>/', get_treinamentos_por_funcionario, name='get_treinamentos_por_funcionario'),
     path('api/competencias/', get_competencias, name='get_competencias'),
     path('get-cargo/<int:funcionario_id>/', get_cargo, name='get_cargo'),
     path('api/funcionario/ficha/<int:id>/', get_funcionario_ficha, name='funcionario-ficha'),

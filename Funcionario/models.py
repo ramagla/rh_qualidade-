@@ -108,7 +108,9 @@ class Treinamento(models.Model):
         ('capacitacao', 'Capacitação'),
         ('tecnico', 'Técnico'),
         ('graduacao', 'Graduação'),
+        ('pos-graduacao', 'Pos-graduacao'),
         ('treinamento', 'Treinamento'),
+        ('divulgacao', 'Divulgação'),
     ]
     
     STATUS_CHOICES = [
@@ -117,22 +119,33 @@ class Treinamento(models.Model):
         ('cursando', 'Cursando'),
         ('requerido', 'Requerido'),
     ]
+
+    SITUACAO_CHOICES = [
+        ('aprovado', 'Aprovado'),
+        ('reprovado', 'Reprovado'),
+    ]
     
     funcionario = models.ForeignKey(Funcionario, on_delete=models.PROTECT, related_name='treinamentos')
     tipo = models.CharField(max_length=50, choices=TIPO_TREINAMENTO_CHOICES)
     categoria = models.CharField(max_length=100, choices=CATEGORIA_CHOICES)
     nome_curso = models.CharField(max_length=100)
-    instituicao_ensino = models.CharField(max_length=255)
+    instituicao_ensino = models.CharField(max_length=255, default='Bras-Mol')
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='cursando')  # Campo de status
     data_inicio = models.DateField()
     data_fim = models.DateField()
     carga_horaria = models.CharField(max_length=50)
     anexo = models.FileField(upload_to='certificados/', blank=True, null=True)
     descricao = CKEditor5Field(config_name='default', blank=True, null=True )
+    situacao = models.CharField(max_length=50,choices=SITUACAO_CHOICES,blank=True,null=True,help_text="Campo exibido apenas para treinamentos requeridos.")
 
     def __str__(self):
         return self.nome_curso
     
+    def save(self, *args, **kwargs):
+            if self.status != 'requerido':
+                self.situacao = None  # Remove valor caso status não seja 'requerido'
+            super().save(*args, **kwargs)
+
     def delete(self, *args, **kwargs):
         # Remove o arquivo de mídia associado antes de excluir o registro
         if self.anexo:
@@ -147,8 +160,14 @@ class ListaPresenca(models.Model):
         ('Divulgacao', 'Divulgação')
     ]
     
+    SITUACAO_CHOICES = [
+        ('finalizado', 'Finalizado'),
+        ('em_andamento', 'Em Andamento'),
+    ]
+    
     treinamento = models.CharField(max_length=255, choices=TIPO_CHOICES)
-    data_realizacao = models.DateField(default='2024-01-01')
+    data_inicio = models.DateField(null=True, blank=True)
+    data_fim = models.DateField(null=True, blank=True)  
     horario_inicio = models.TimeField()
     horario_fim = models.TimeField()
     instrutor = models.CharField(max_length=255)
@@ -158,6 +177,11 @@ class ListaPresenca(models.Model):
     participantes = models.ManyToManyField('Funcionario', related_name='participantes')
     assunto = models.CharField(max_length=255, null=True, blank=True)  # Permite valores nulos
     descricao = CKEditor5Field(config_name='default')
+    situacao = models.CharField(max_length=20, choices=SITUACAO_CHOICES, default='em_andamento')
+    
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
     def duracao_formatada(self):
         total_minutes = int(self.duracao * 60)  # Converte horas para minutos
@@ -166,7 +190,8 @@ class ListaPresenca(models.Model):
         return f"{hours}h {minutes}m"
 
     def __str__(self):
-        return f"Lista de Presença - {self.treinamento} ({self.data_realizacao})"
+        return f"Lista de Presença - {self.treinamento} ({self.data_inicio} - {self.data_fim})"
+
     
 class AvaliacaoTreinamento(models.Model):
     OPCOES_CONHECIMENTO = [
@@ -476,3 +501,21 @@ class Evento(models.Model):
 
     def __str__(self):
         return self.titulo
+
+from django.utils.timezone import now
+
+
+class MatrizPolivalencia(models.Model):
+    local_trabalho = models.CharField(max_length=255)
+    observacoes = models.CharField(max_length=50)
+    atividades = models.JSONField()  # Para armazenar até 22 atividades e suas pontuações
+    
+    elaboracao = models.ForeignKey('Funcionario', on_delete=models.CASCADE, related_name='elaboracao_matriz')
+    coordenacao = models.ForeignKey('Funcionario', on_delete=models.CASCADE, related_name='coordenacao_matriz')
+    validacao = models.ForeignKey('Funcionario', on_delete=models.CASCADE, related_name='validacao_matriz')
+    
+    colaboradores = models.ManyToManyField('Funcionario', related_name='colaboradores_matriz')
+    atualizado_em = models.DateTimeField()
+
+    def __str__(self):
+        return f"Matriz de Polivalência - {self.local_trabalho}"

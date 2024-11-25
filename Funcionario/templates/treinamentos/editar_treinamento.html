@@ -3,6 +3,8 @@
 {% block title %}Editar Treinamento{% endblock %}
 
 {% block content %}
+{% load widget_tweaks %}
+
 <div class="container mt-5">
     <h2 class="text-center mb-4">Editar Treinamento</h2>
     <form method="post" enctype="multipart/form-data" class="row g-3">
@@ -10,7 +12,7 @@
         
         <div class="col-md-6">
             <label for="funcionario" class="form-label">Funcionário:</label>
-            {{ form.funcionario }}
+            {{ form.funcionario |add_class:"form-select select2" }}
         </div>
 
         <div class="col-md-6">
@@ -38,6 +40,12 @@
             {{ form.status }}
         </div>
 
+        <!-- Campo Situação (aparece apenas quando o status for "Requerido") -->
+        <div class="col-md-6" id="situacao-container" style="display: none;">
+            <label for="situacao" class="form-label">Situação:</label>
+            {{ form.situacao }}
+        </div>
+
         <div class="col-md-6">
             <label for="data_inicio" class="form-label">Data de Início:</label>
             {{ form.data_inicio }}
@@ -54,12 +62,17 @@
         </div>
 
         <div class="col-md-6">
-    <label for="anexo" class="form-label">Anexo de Certificado ou Lista de Presença:</label>
-    {{ form.anexo }}
-</div>
+            <label for="anexo" class="form-label">Anexo de Certificado ou Lista de Presença:</label>
+            {% if form.instance.anexo %}
+                <div id="current-anexo">
+                    <p>Arquivo atual: 
+                        <a href="{{ form.instance.anexo.url }}" target="_blank">{{ form.instance.anexo.name }}</a>
+                    </p>
+                </div>
+            {% endif %}
+            {{ form.anexo }}
+        </div>
 
-
-        <!-- Descrição -->
         <div class="col-md-12">
             <label for="descricao" class="form-label">Descrição (opcional):</label>
             {{ form.descricao }}
@@ -72,22 +85,40 @@
     </form>
 </div>
 
-<!-- Script para aplicar máscara de horas -->
+<!-- Script para exibir o campo "Situação" dinamicamente -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var cargaHorariaInput = document.querySelector('#id_carga_horaria');
-        
+        const statusSelect = document.getElementById('id_status');
+        const situacaoContainer = document.getElementById('situacao-container');
+
+        function toggleSituacao() {
+            if (statusSelect.value === 'requerido') {
+                situacaoContainer.style.display = 'block';
+            } else {
+                situacaoContainer.style.display = 'none';
+                const situacaoSelect = document.getElementById('id_situacao');
+                if (situacaoSelect) {
+                    situacaoSelect.value = ''; // Limpa o campo caso esteja oculto
+                }
+            }
+        }
+
+        statusSelect.addEventListener('change', toggleSituacao);
+        toggleSituacao(); // Executa ao carregar a página para definir o estado inicial
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const cargaHorariaInput = document.querySelector('#id_carga_horaria');
+        const anexoInput = document.getElementById('id_anexo');
+        const currentAnexoDiv = document.getElementById('current-anexo');
+
         if (cargaHorariaInput) {
             cargaHorariaInput.addEventListener('blur', function () {
-                // Adiciona "h" ao final do valor, se ainda não estiver presente
                 if (cargaHorariaInput.value && !cargaHorariaInput.value.endsWith('h')) {
                     cargaHorariaInput.value += 'h';
                 }
             });
         }
-
-        const anexoInput = document.getElementById('id_anexo');
-        const currentAnexoDiv = document.getElementById('current-anexo');
 
         anexoInput.addEventListener('change', function () {
             if (anexoInput.files.length > 0) {

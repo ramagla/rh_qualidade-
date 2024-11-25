@@ -3,7 +3,7 @@ import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from Funcionario.models import Funcionario, Revisao, AvaliacaoAnual,Cargo
+from Funcionario.models import Funcionario, Revisao, AvaliacaoAnual,Cargo, Treinamento
 
 def get_funcionario_info(request, id):
     try:
@@ -47,9 +47,14 @@ def get_funcionario_info(request, id):
         return JsonResponse({'error': str(e)}, status=500)
        
 
-
+from django.db.models import F
 def get_treinamentos(request, funcionario_id):
-    treinamentos = Treinamento.objects.filter(funcionario_id=funcionario_id).values('id','tipo', 'nome_curso', 'categoria')
+    treinamentos = Treinamento.objects.filter(funcionario_id=funcionario_id).values('id','tipo', 'nome_curso', 'categoria','status','data_fim')
+    return JsonResponse(list(treinamentos), safe=False)
+
+
+def get_treinamentos_por_funcionario(request, funcionario_id):
+    treinamentos = Treinamento.objects.filter(funcionario_id=funcionario_id).values('id', 'nome_curso', 'data_fim')
     return JsonResponse(list(treinamentos), safe=False)
 
 def get_competencias(request):

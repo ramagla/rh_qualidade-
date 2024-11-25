@@ -41,21 +41,36 @@
                 <input type="date" name="data_fim" id="data_fim" class="form-control">
             </div>
         </div>
+        
+        <!-- Filtro de Situação -->
+            <div class="col-md-4">
+                <label for="situacao" class="form-label">Situação:</label>
+                <select name="situacao" id="situacao" class="form-select select2">
+                    <option value="">Todas</option>
+                    <option value="finalizado" {% if request.GET.situacao == "finalizado" %}selected{% endif %}>Finalizado</option>
+                    <option value="em_andamento" {% if request.GET.situacao == "em_andamento" %}selected{% endif %}>Em Andamento</option>
+                    <option value="indefinido" {% if request.GET.situacao == "indefinido" %}selected{% endif %}>Indefinido</option>
+                </select>
+            </div>
+        </div>
         <div class="text-end mt-3">
             <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
         </div>
     </form>
+    
 
     <!-- Lista de Presenças -->
-    <table class="table table-bordered text-center">
+    <table class="table table-bordered text-center mt-4">
         <thead>
             <tr>
                 <th class="align-middle">Assunto</th>
-                <th class="align-middle">Data</th>
+                <th class="align-middle">Data Início</th>
+                <th class="align-middle">Data Fim</th>
                 <th class="align-middle">Duração</th>
                 <th class="align-middle">Participantes</th>
                 <th class="align-middle">Necessita Avaliação</th>
-                <th class="align-middle">Anexo</th>
+                <th class="align-middle">Situação</th>
+                <th class="align-middle">Anexo</th>                
                 <th class="align-middle">Ações</th>
             </tr>
         </thead>
@@ -63,7 +78,8 @@
             {% for lista in listas_presenca %}
             <tr>
                 <td class="align-middle">{{ lista.assunto }}</td>
-                <td class="align-middle">{{ lista.data_realizacao|date:"d/m/Y" }}</td>
+                <td class="align-middle">{{ lista.data_inicio|date:"d/m/Y" }}</td>
+                <td class="align-middle">{{ lista.data_fim|date:"d/m/Y" }}</td>
                 <td class="align-middle">{{ lista.duracao|horas_formatadas }}</td>
                 
                 <!-- Participantes com ícone de modal -->
@@ -103,7 +119,17 @@
                     {% endif %}
                 </td>
 
-                <!-- Link para baixar o anexo da lista de presença -->
+                 <!-- Situação -->
+               <td class="align-middle">
+                    {% if lista.situacao == 'finalizado' %}
+                        <span class="badge bg-success text-white">Finalizado</span>
+                    {% elif lista.situacao == 'em_andamento' %}
+                        <span class="badge bg-warning text-dark">Em Andamento</span>
+                    {% elif lista.situacao == 'indefinido' %}
+                        <span class="badge bg-secondary text-white">Indefinido</span>
+                    {% endif %}
+                </td>
+                                <!-- Link para baixar o anexo da lista de presença -->
                 <td class="align-middle">
                     {% if lista.lista_presenca %}
                         <a href="{{ lista.lista_presenca.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Anexo">
