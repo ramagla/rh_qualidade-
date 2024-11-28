@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Matriz de Polivalência{% endblock %}
+
+{% block content %}
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    {{ form.media }}
+   <style>
+    /* Centraliza o conteúdo da tabela */
+    th, td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 10px;
+        white-space: nowrap;
+    }
+
+    /* Define a rolagem fixa para a tabela */
+    .tabela-scroll {
+        max-height: 400px;
+        overflow: auto;
+        border: 1px solid #dee2e6;
+        margin-top: 20px;
+        position: relative;
+    }
+
+    /* Botões centralizados */
+    .top-buttons {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    /* Fundo uniforme para todos os cabeçalhos */
+    th {
+        position: sticky;
+        top: 0;
+        background-color: #343a40; /* Fundo escuro */
+        color: #ffffff; /* Texto branco */
+        z-index: 5;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Primeira coluna fixa com fundo escuro */
+    th.sticky-column, td.sticky-column {
+        background-color: #343a40;
+        color: #ffffff;
+        position: sticky;
+        left: 0;
+        z-index: 6; /* Ajustado para sobrepor outras células */
+        box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Fundo escuro para cabeçalho da coluna "Suplente" */
+    th.sticky-suplente {
+        background-color: #343a40; /* Mesmo fundo escuro */
+        color: #ffffff; /* Texto branco */
+    }
+
+    /* Fundo branco para as células */
+    td {
+        background-color: #ffffff; /* Fundo branco */
+        color: #000000; /* Texto preto */
+    }
+
+    /* Fundo uniforme para cabeçalhos das atividades */
+    th.activity-header {
+        background-color: #343a40;
+        color: #ffffff;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Tooltip para informações nos cabeçalhos */
+    th .info-icon {
+        margin-left: 5px;
+        color: #007bff;
+        cursor: pointer;
+    }
+
+    th .tooltip-text {
+        visibility: hidden;
+        width: max-content;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 5px;
+        padding: 5px;
+        position: absolute;
+        z-index: 7;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -50%;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    th:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+</style>
+
+</head>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">{{ form.instance.id|default:"Cadastrar" }} Matriz de Polivalência</h2>
+
+    <!-- Botões no topo -->
+    <div class="top-buttons">
+        <a href="{% url 'lista_matriz_polivalencia' %}" class="btn btn-secondary me-2">Cancelar</a>
+        <button type="submit" form="matriz-form" class="btn btn-primary">Cadastrar Matriz</button>
+    </div>
+
+    <form method="post" id="matriz-form" action="{% url 'cadastrar_matriz_polivalencia' %}" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Erro!</strong> Por favor, corrija os seguintes erros:
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Departamento -->
+        <div class="col-md-6">
+            <label for="departamento" class="form-label">Departamento (Atividade):</label>
+            <select name="departamento" id="departamento" class="form-select select2">
+                <option value="">Selecione o Departamento</option>
+                {% for departamento in departamentos %}
+                    <option value="{{ departamento }}">{{ departamento }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Elaboração -->
+        <div class="col-md-6">
+            <label for="elaboracao" class="form-label">Elaboração:</label>
+            <select name="elaboracao" id="elaboracao" class="form-select select2">
+                <option value="">Selecione o Funcionário Responsável</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Coordenação -->
+        <div class="col-md-6">
+            <label for="coordenacao" class="form-label">Coordenação:</label>
+            <select name="coordenacao" id="coordenacao" class="form-select select2">
+                <option value="">Selecione o Funcionário Responsável</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Validação -->
+        <div class="col-md-6">
+            <label for="validacao" class="form-label">Validação:</label>
+            <select name="validacao" id="validacao" class="form-select select2">
+                <option value="">Selecione o Funcionário Responsável</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Tabela de Notas -->
+        <div id="tabela-notas-container" class="col-md-12">
+            <label class="form-label">Notas de Funcionários</label>
+            <div class="tabela-scroll">
+                <table class="table table-bordered" id="tabela-notas">
+                    <thead>
+                        <tr>
+                            <th class="sticky-header sticky-column">Funcionário</th>
+                            <th class="sticky-header sticky-suplente">Suplente</th>
+                            {% for atividade in atividades %}
+                                <th class="activity-header">
+                                    Atividade {{ forloop.counter }}
+                                    <span class="info-icon" title="{{ atividade.nome }}">
+                                        <i class="bi bi-info-circle-fill"></i>
+                                        <span class="tooltip-text">{{ atividade.nome }}</span>
+                                    </span>
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for funcionario in funcionarios %}
+                            <tr>
+                                <td class="sticky-column">{{ funcionario.nome }}</td>
+                                <td class="sticky-suplente">
+                                    <input type="checkbox" name="suplente_{{ funcionario.id }}" class="form-check-input">
+                                </td>
+                                {% for atividade in atividades %}
+                                    <td>
+                                        <select name="nota_{{ funcionario.id }}_{{ atividade.id }}" class="form-select">
+                                            <option value="">Selecione a Nota</option>
+                                            <option value="0">0 - Observador</option>
+                                            <option value="1">1 - Aprendiz</option>
+                                            <option value="2">2 - Assistente</option>
+                                            <option value="3">3 - Autônomo</option>
+                                            <option value="4">4 - Instrutor</option>
+                                        </select>
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('.select2').select2({
+        placeholder: 'Selecione uma opção',
+        allowClear: true
+    });
+
+    $('#departamento').on('change', function() {
+        var departamentoId = $(this).val();
+        if (departamentoId) {
+            $.ajax({
+                url: '{% url "get_atividades_e_funcionarios_por_departamento" %}',
+                data: { 'departamento': departamentoId },
+                success: function(data) {
+                    var tabelaNotas = $('#tabela-notas');
+                    var atividades = data.atividades;
+                    var funcionarios = data.funcionarios;
+
+                    tabelaNotas.find('thead tr').empty().append('<th class="sticky-header sticky-column">Funcionário</th><th class="sticky-header sticky-suplente">Suplente</th>');
+                    tabelaNotas.find('tbody').empty();
+
+                    atividades.forEach(function(atividade, index) {
+                        tabelaNotas.find('thead tr').append(`
+                            <th class="activity-header">
+                                Atividade ${index + 1}
+                                <span class="info-icon" title="${atividade.nome}">
+                                    <i class="bi bi-info-circle-fill"></i>
+                                    <span class="tooltip-text">${atividade.nome}</span>
+                                </span>
+                            </th>
+                        `);
+                    });
+
+                    funcionarios.forEach(function(funcionario) {
+                        var row = `
+                            <tr>
+                                <td class="sticky-column">${funcionario.nome}</td>
+                                <td class="sticky-suplente">
+                                    <input type="checkbox" name="suplente_${funcionario.id}" class="form-check-input">
+                                </td>
+                        `;
+                        atividades.forEach(function(atividade) {
+                            row += `
+                                <td>
+                                    <select name="nota_${funcionario.id}_${atividade.id}" class="form-select">
+                                        <option value="">Selecione a Nota</option>
+                                        <option value="0">0 - Observador</option>
+                                        <option value="1">1 - Aprendiz</option>
+                                        <option value="2">2 - Assistente</option>
+                                        <option value="3">3 - Autônomo</option>
+                                        <option value="4">4 - Instrutor</option>
+                                    </select>
+                                </td>
+                            `;
+                        });
+                        row += `</tr>`;
+                        tabelaNotas.find('tbody').append(row);
+                    });
+
+                    $('#tabela-notas-container').show(); // Exibe a tabela
+                }
+            });
+        } else {
+            $('#tabela-notas-container').hide(); // Esconde a tabela
+        }
+    });
+});
+</script>
+
+{% endblock %}

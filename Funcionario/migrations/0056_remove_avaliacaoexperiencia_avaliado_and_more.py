@@ -6,8 +6,9 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("Funcionario", "0055_matrizpolivalencia"),
-    ]
+    ("Funcionario", "0053_integracaofuncionario_pdf_integracao_and_more"),
+]
+
 
     operations = [
         migrations.RemoveField(

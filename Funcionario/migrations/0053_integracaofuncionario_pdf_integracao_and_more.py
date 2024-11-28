@@ -25,7 +25,9 @@ class Migration(migrations.Migration):
             model_name="funcionario",
             name="curriculo",
             field=models.FileField(
-                blank=True, null=True, upload_to=Funcionario.models.renomear_curriculo
+                blank=True, null=True, upload_to='Funcionario.models.funcionario.renomear_curriculo'
+ 
+
             ),
         ),
     ]

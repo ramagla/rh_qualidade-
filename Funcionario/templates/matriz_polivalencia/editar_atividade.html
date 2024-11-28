@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Editar Atividade{% endblock %}
+
+{% block content %}
+
+<head>
+    {{ form.media }}
+</head>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Editar Atividade</h2>
+
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Erro!</strong> Por favor, corrija os seguintes erros:
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Nome da Atividade -->
+        <div class="col-md-6">
+            <label for="nome" class="form-label">Nome da Atividade:</label>
+            {{ form.nome|add_class:"form-control" }}
+        </div>
+
+        <!-- Departamento (Local de Trabalho) - Relacionado ao Funcionario -->
+        <div class="col-md-6">
+    <label for="departamento" class="form-label">Departamento (Atividade):</label>
+    <select name="departamento" id="departamento" class="form-select select2">
+        <option value="">Selecione o Departamento</option>
+        {% for departamento in departamentos %}
+            <option value="{{ departamento.local_trabalho }}" 
+                {% if departamento.local_trabalho == form.instance.departamento %}selected{% endif %}>
+                {{ departamento.local_trabalho }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
+
+
+        <!-- Botões de Editar e Cancelar -->
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Salvar Alterações
+            </button>
+            <a href="{% url 'lista_atividades' %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<style>
+    .cke_textarea_inline {
+        min-height: 1300px;
+        width: auto;
+    }
+</style>
+
+<!-- Script para inicializar o Select2 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializa o Select2 no campo de departamento
+    $('#departamento').select2({
+        placeholder: 'Selecione o Departamento',  // Texto para quando não estiver selecionado
+        allowClear: true  // Permite limpar a seleção
+    });
+});
+</script>
+
+{% endblock %}

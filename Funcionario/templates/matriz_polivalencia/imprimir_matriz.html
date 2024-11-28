@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load custom_filters %}
+{% load static %}
+
+<div class="global-container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+
+
+<div class="print-container container mt-5">
+    <!-- Cabeçalho da Matriz -->
+    <div class="header text-center">
+        <table class="custom-table" style="width: 100%; border: 1px solid black; border-collapse: collapse;">
+            <tr>
+                <td rowspan="2" style="text-align: center; vertical-align: middle; width: 10%;">
+                    <img src="/static/logo.png" alt="Logo" style="width: 80px; height: auto;">
+                </td>
+                <td colspan="4" style="text-align: center; font-weight: bold; font-size: 16px; vertical-align: middle;">
+                    MATRIZ DE POLIVALÊNCIA
+                </td>
+                <td rowspan="2" style="text-align: center; vertical-align: middle; width: 15%;">
+                    <strong>MP001 REV.: 01</strong><br>
+                    <span>21/09/14</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: left; padding-left: 10px;"><strong>Elaboração:</strong> {{ matriz.elaboracao }}</td>
+                <td style="text-align: left; padding-left: 10px;"><strong>Coordenação:</strong> {{ matriz.coordenacao }}</td>
+                <td style="text-align: left; padding-left: 10px;"><strong>Validação:</strong> {{ matriz.validacao }}</td>
+            </tr>
+            <tr>                 
+                <td colspan="3" style="text-align: left; padding-left: 10px;"><strong>Departamento:</strong> {{ matriz.departamento }}</td>                
+                <td colspan="3" style="text-align: left; padding-right: 10px;"><strong>Atualizado em:</strong> {{ matriz.atualizado_em|date:"d/m/Y" }}</td>
+
+            </tr>
+        </table>
+    
+    
+
+    <!-- Botão de Imprimir -->
+    <div class="text-center mb-4 mt-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <!-- Tabela Principal -->
+    <table class="custom-table" style="width: 100%; border: 1px solid black; margin-top: 20px;">
+        <thead>
+            <tr>
+                <th rowspan="2" style="text-align: center; vertical-align: middle;">COLABORADOR</th>
+                <th rowspan="2" style="text-align: center; vertical-align: middle;">SUPLENTE</th>
+                {% for atividade in atividades %}
+                <th style="
+                    writing-mode: vertical-rl; 
+                    text-orientation: mixed; 
+                    text-align: center; 
+                    vertical-align: middle; 
+                    white-space: normal; 
+                    overflow-wrap: break-word; 
+                    word-wrap: break-word; 
+                    padding: 5px; 
+                    font-size: 10px; 
+                    height: auto; 
+                    max-width: 100px; 
+                    border: 1px solid #ccc; 
+                    transform: rotate(180deg);
+                    font-weight: normal; /* Remove o negrito */
+                ">
+                    {{ atividade.nome|auto_breaks:20|safe }}
+                </th>
+
+
+
+
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for colaborador in colaboradores %}
+            <tr>
+                <td>{{ colaborador.nome }}</td>
+                <td>{{ colaborador.suplente|yesno:"Sim,Não" }}</td>
+                {% for atividade in atividades %}
+                <td>
+                    {% with colaborador.id as colab_id %}
+                        {% with atividade.id as ativ_id %}
+                            {% for nota in notas_lista %}
+                                {% if nota.colaborador_id == colab_id and nota.atividade_id == ativ_id %}
+                    <img src="{% static nota.grafico %}" alt="Ícone de Nota">
+
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    {% endwith %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="{{ atividades|length|add:2 }}">Nenhum funcionário com notas nesta matriz.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <!-- Legenda -->
+<div class="legenda mt-4" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: white; padding: 10px; border-top: 1px solid #ccc;">
+    <div class="legenda-container" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
+        <div class="legenda-item" style="display: flex; align-items: center; width: 18%;">
+            <span class="numero">0</span>
+            <img src="{% static 'icons/barra_0.png' %}" alt="Ícone de Nota 0" style="width: 30px; height: auto; margin-left: 5px;">
+            <span>Não Treinado, somente observa as atividades</span>
+        </div>
+        <div class="legenda-item" style="display: flex; align-items: center; width: 18%;">
+            <span class="numero">1</span>
+            <img src="{% static 'icons/barra_1.png' %}" alt="Ícone de Nota 1" style="width: 30px; height: auto; margin-left: 5px;">
+            <span>Execução das tarefas básicas com acompanhamento</span>
+        </div>
+        <div class="legenda-item" style="display: flex; align-items: center; width: 18%;">
+            <span class="numero">2</span>
+            <img src="{% static 'icons/barra_2.png' %}" alt="Ícone de Nota 2" style="width: 30px; height: auto; margin-left: 5px;">
+            <span>Execução das tarefas chave com acompanhamento</span>
+        </div>
+        <div class="legenda-item" style="display: flex; align-items: center; width: 18%;">
+            <span class="numero">3</span>
+            <img src="{% static 'icons/barra_3.png' %}" alt="Ícone de Nota 3" style="width: 30px; height: auto; margin-left: 5px;">
+            <span>QUALIFICADO. Executa as tarefas sem acompanhamento</span>
+        </div>
+        <div class="legenda-item" style="display: flex; align-items: center; width: 18%;">
+            <span class="numero">4</span>
+            <img src="{% static 'icons/barra_4.png' %}" alt="Ícone de Nota 4" style="width: 30px; height: auto; margin-left: 5px;">
+            <span>QUALIFICADOR</span>
+        </div>
+    </div>
+</div>
+
+</div>
+</div> 
+</div>
+</div>
+
+<style>
+
+    .legenda {
+    position: fixed; /* Fixa a legenda no rodapé */
+    bottom: 0; /* Coloca no final da página */
+    left: 0; /* Início da página */
+    width: 100%; /* Largura total */
+    background-color: white; /* Fundo branco para legibilidade */
+    padding: 10px; /* Espaçamento interno */
+    border-top: 1px solid #ccc; /* Linha para separar do restante do conteúdo */
+    z-index: 1000; /* Garante que a legenda fique acima de outros elementos */
+}
+
+    .legenda-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .legenda-item {
+        display: flex;
+        align-items: center;
+        width: 18%;
+    }
+
+    .legenda-item span {
+        margin-left: 5px;
+        font-size: 12px;
+    }
+
+    /* Estilo para os números da legenda */
+    .numero {
+        font-size: 20px;  /* Aumentando o tamanho da fonte */
+        font-weight: bold; /* Colocando em negrito */
+    }
+
+    /* Estilos personalizados da tabela */
+    .custom-table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 10px;
+    }
+
+    .custom-table th, .custom-table td {
+        border: 1px solid black;
+        padding: 5px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .custom-table th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+    }
+
+
+    /* Ajuste para os cabeçalhos das atividades */
+    .custom-table th.atividade-header {
+        writing-mode: vertical-rl; /* Texto em orientação vertical */
+        text-orientation: mixed;  /* Garante a leitura natural do texto */
+        transform: rotate(180deg); /* Corrige a direção do texto */
+        height: 150px; /* Ajusta a altura para caber o texto */
+        white-space: nowrap; /* Impede quebra de linha */
+    }
+    
+    .header {
+        margin-bottom: 20px;
+    }
+
+    /* Estilo do botão de imprimir */
+    .d-print-none {
+        display: block; 
+    }
+
+    @media print {
+         .legenda {
+        position: fixed; /* Continua fixa durante a impressão */
+        bottom: 0;
+    }
+        .print-container {
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .d-print-none {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+function imprimir() {
+    var conteudo = document.querySelector('.print-container').innerHTML;  // Pega o conteúdo da área para impressão
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');  // Cria uma nova janela
+
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <title>Imprimir Matriz</title>
+                <style>
+                    /* Estilos gerais */
+                    body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; margin: 0; }
+                    .custom-table {
+                        width: 100%; /* Garante que a tabela use 100% da largura disponível */
+                        border-collapse: collapse;
+                    }
+                    th, td {
+                        padding: 4px;
+                        border: 1px solid #ddd;
+                        font-size: 10px;
+                        text-align: center;
+                    }
+                    th {
+                        background-color: #e7f1ff;
+                        color: #333;
+                        font-weight: bold;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9f9f9;
+                    }
+                    h2 {
+                        text-align: center;
+                        font-size: 14px;
+                    }
+
+                    /* Reduzindo o tamanho dos ícones */
+                    .custom-table img {
+                        width: 20px; /* Reduzindo o tamanho dos ícones */
+                        height: auto;
+                    }
+
+                    /* Estilo para a impressão - definindo a orientação como paisagem */
+                    @page {
+                        size: landscape; /* Define a orientação como horizontal/paisagem */
+                        margin: 10mm; /* Ajusta as margens */
+                    }
+
+                    @media print {
+                        .d-print-none { display: none !important; }
+                        .print-container {
+                            width: 100%;
+                            max-width: 100%;
+                            margin: 0 auto;
+                        }
+                        /* Ajustando a tabela para ficar bem alinhada com o cabeçalho */
+                        .custom-table th, .custom-table td {
+                            text-align: center;
+                            padding: 5px;
+                        }
+                    }
+
+                    /* Ajuste no tamanho da legenda */
+                    .legenda-item span {
+                        font-size: 10px;  /* Reduzindo o tamanho da legenda */
+                    }
+
+                    .legenda-container {
+                        margin-top: 20px;  /* Adicionando espaço entre a tabela e a legenda */
+                    }
+
+                </style>
+            </head>
+            <body>
+        
+                ${conteudo}  <!-- Adiciona o conteúdo a ser impresso -->
+            </body>
+        </html>
+    `);
+
+    novaJanela.document.close();
+    novaJanela.onload = function () {
+        novaJanela.print();  // Chama a função de impressão
+        novaJanela.close();  // Fecha a janela após a impressão
+    };
+}
+</script>
+
+{% endblock %}

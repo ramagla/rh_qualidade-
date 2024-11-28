@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Visualizar Atividade{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Visualizar Atividade: {{ atividade.nome }}</h2>
+
+    <div class="row">
+        <!-- Nome da Atividade -->
+        <div class="col-md-6 text-center">
+            <label class="form-label">Nome da Atividade:</label>
+            <p class="mt-2"><strong>{{ atividade.nome }}</strong></p>
+        </div>
+
+        <!-- Departamento -->
+        <div class="col-md-6 text-center align-self-center">
+            <label class="form-label">Departamento:</label>
+            <p class="mt-2"><strong>{{ atividade.departamento }}</strong></p>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h5>Detalhes da Atividade</h5>
+        <ul class="list-group">
+            <li class="list-group-item"><strong>Nome:</strong> {{ atividade.nome }}</li>
+            <li class="list-group-item"><strong>Departamento:</strong> {{ atividade.departamento }}</li>
+            
+        </ul>
+    </div>
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'lista_atividades' %}" class="btn btn-primary"><i class="bi bi-arrow-left-circle"></i> Voltar para a Lista de Atividades</a>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Atividades{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Lista de Atividades</h2>
+
+    <!-- Botão para Cadastrar Atividade -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_atividade' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Cadastrar
+        </a>
+    </div>
+
+    <!-- Formulário de filtro e limite de visualização -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <!-- Filtro por Departamento -->
+            <div class="col-md-3">
+                <label for="departamento" class="form-label">Departamento:</label>
+                <select name="departamento" id="departamento" class="form-select select2">
+                    <option value="">Selecione</option>
+                    {% for departamento in departamentos %}
+                        <option value="{{ departamento }}" {% if request.GET.departamento == departamento %}selected{% endif %}>
+                            {{ departamento }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Nome de Atividade -->
+            <div class="col-md-3">
+                <label for="nome" class="form-label">Nome da Atividade:</label>
+                <select name="nome" id="nome" class="form-select select2">
+                    <option value="">Selecione</option>
+                    {% for nome in nomes_atividades %}
+                        <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>
+                            {{ nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Limite de Visualização -->
+            <div class="col-md-3">
+                <label for="limit" class="form-label">Itens por página:</label>
+                <select name="limit" id="limit" class="form-select select2">
+                    <option value="10" {% if request.GET.limit == '10' %}selected{% endif %}>10</option>
+                    <option value="20" {% if request.GET.limit == '20' %}selected{% endif %}>20</option>
+                    <option value="50" {% if request.GET.limit == '50' %}selected{% endif %}>50</option>
+                    <option value="100" {% if request.GET.limit == '100' %}selected{% endif %}>100</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Botão para Submeter Filtro -->
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
+        </div>
+    </form>
+
+    <!-- Exibindo o número de itens visíveis e total de itens -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span class="text-muted">Exibindo {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ page_obj.paginator.count }}</span>
+    </div>
+
+    <!-- Paginação -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <nav aria-label="Navegação de páginas">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1&limit={{ request.GET.limit }}" aria-label="Primeira">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&limit={{ request.GET.limit }}" aria-label="Anterior">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item disabled">
+                    <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&limit={{ request.GET.limit }}" aria-label="Próxima">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&limit={{ request.GET.limit }}" aria-label="Última">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Tabela de Atividades -->
+    <table class="table table-bordered text-center mt-4">
+        <thead>
+            <tr>
+                <th class="align-middle">Nome da Atividade</th>
+                <th class="align-middle">Departamento</th>
+                <th class="align-middle">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for atividade in page_obj %}
+                <tr>
+                    <td class="align-middle text-start">{{ atividade.nome }}</td>
+                    <td class="align-middle">{{ atividade.departamento }}</td>
+                    <td class="align-middle">
+                        <a href="{% url 'visualizar_atividade' atividade.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                            <i class="bi bi-eye"></i>
+                        </a>
+
+                        <a href="{% url 'editar_atividade' atividade.id %}" class="btn btn-sm btn-light" title="Editar">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirAtividade{{ atividade.id }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- Modal de confirmação de exclusão -->
+                <div class="modal fade" id="modalExcluirAtividade{{ atividade.id }}" tabindex="-1" aria-labelledby="modalExcluirAtividadeLabel{{ atividade.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalExcluirAtividadeLabel{{ atividade.id }}">Confirmar Exclusão</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Tem certeza de que deseja excluir a atividade <strong>{{ atividade.nome }}</strong>?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <form action="{% url 'excluir_atividade' atividade.id %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Excluir</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center align-middle">Nenhuma atividade encontrada.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Modal de Toasts de Sucesso -->
+    <div id="toastSucesso" class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+        <div class="d-flex">
+            <div class="toast-body">
+                Ação realizada com sucesso!
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Script para inicialização do Select2 e modal -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Inicializa os elementos Select2
+    $('.select2').select2({
+        placeholder: 'Selecione uma opção',
+        allowClear: true,
+        width: '100%',
+    });
+});
+
+// Para exibir o toast
+window.onload = function() {
+    var toastEl = document.getElementById('toastSucesso');
+    var toast = new bootstrap.Toast(toastEl);
+    toast.show();
+};
+</script>
+
+{% endblock %}

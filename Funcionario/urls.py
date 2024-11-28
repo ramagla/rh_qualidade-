@@ -102,6 +102,21 @@ from .views.integracao_views import (
     imprimir_integracao,
 )
 
+from .views.matriz_polivalencia_views import (
+    lista_matriz_polivalencia,
+    cadastrar_matriz_polivalencia,
+    editar_matriz_polivalencia,
+    excluir_matriz_polivalencia,
+    lista_atividades,
+    gerenciar_notas,
+    imprimir_matriz,
+    cadastrar_atividade,
+    visualizar_atividade,
+    editar_atividade,
+    excluir_atividade,
+    get_atividades_por_departamento,
+    get_atividades_e_funcionarios_por_departamento
+)
 
 
 # Definição das `urlpatterns`
@@ -236,6 +251,25 @@ urlpatterns = [
     path('exportar_calendario/', exportar_calendario, name='exportar_calendario'),
     path('imprimir_calendario/', imprimir_calendario, name='imprimir_calendario'),
 
+
+     # Matriz de Polivalência
+    path('matriz/', lista_matriz_polivalencia, name='lista_matriz_polivalencia'),
+    path('matriz/cadastrar/', cadastrar_matriz_polivalencia, name='cadastrar_matriz_polivalencia'),
+    path('matriz/<int:id>/editar/', editar_matriz_polivalencia, name='editar_matriz_polivalencia'),
+    path('matriz/<int:id>/excluir/', excluir_matriz_polivalencia, name='excluir_matriz_polivalencia'),
+    path('matriz/<int:id>/notas/', gerenciar_notas, name='gerenciar_notas'),
+    path('matriz/<int:id>/imprimir/', imprimir_matriz, name='imprimir_matriz'),
+
+    # Atividades
+    path('atividades/', lista_atividades, name='lista_atividades'),
+    path('atividades/cadastrar/', cadastrar_atividade, name='cadastrar_atividade'),
+    path('atividades/<int:id>/', visualizar_atividade, name='visualizar_atividade'),
+    path('atividades/<int:id>/editar/', editar_atividade, name='editar_atividade'),
+    path('atividades/<int:id>/excluir/', excluir_atividade, name='excluir_atividade'),
+
+    # APIs para AJAX
+    path('get-atividades-por-departamento/', get_atividades_por_departamento, name='get_atividades_por_departamento'),
+    path('get-atividades-e-funcionarios-por-departamento/', get_atividades_e_funcionarios_por_departamento, name='get_atividades_e_funcionarios_por_departamento'),
 
 
 ]

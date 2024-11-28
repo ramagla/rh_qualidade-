@@ -2,7 +2,7 @@ from datetime import timedelta  # Correto
 from django.utils import timezone  # Já está correto
 
 from django import forms
-from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,JobRotationEvaluation,AvaliacaoExperiencia, AvaliacaoAnual,Comunicado,IntegracaoFuncionario,Evento
+from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,JobRotationEvaluation,AvaliacaoExperiencia, AvaliacaoAnual,Comunicado,IntegracaoFuncionario,Evento, Atividade
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django.forms.widgets import DateInput
 from django_select2.forms import Select2Widget
@@ -427,3 +427,7 @@ class EventoForm(forms.ModelForm):
         label="Data de Fim"
     )
 
+class AtividadeForm(forms.ModelForm):
+    class Meta:
+        model = Atividade
+        fields = ['nome', 'departamento']  # Incluindo o campo 'departamento'

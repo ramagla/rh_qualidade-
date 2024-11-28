@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Matrizes de Polivalência{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Matrizes de Polivalência por Departamento</h2>
+    
+    <!-- Filtros -->
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label for="departamento" class="form-label">Departamento</label>
+            <select id="departamento" name="departamento" class="form-select">
+                <option value="">Todos os Departamentos</option>
+                {% for dep in departamentos %}
+                    <option value="{{ dep }}" {% if request.GET.departamento == dep %}selected{% endif %}>{{ dep }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="data_inicio" class="form-label">Data Início</label>
+            <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+        </div>
+        <div class="col-md-4">
+            <label for="data_fim" class="form-label">Data Fim</label>
+            <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+        </div>
+        <div class="col-md-12 text-end">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+        </div>
+    </form>
+    
+    <!-- Botões de ações gerais -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_matriz_polivalencia' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nova Matriz
+        </a>
+        <a href="{% url 'lista_atividades' %}" class="btn btn-sm btn-light" title="Gerenciar Atividades">
+            <i class="bi bi-tools"></i> Gerenciar Atividades
+        </a>
+    </div>
+
+    <!-- Lista de matrizes -->
+    <table class="table table-bordered text-center">
+        <thead>
+            <tr>
+                <th class="align-middle">Departamento</th>
+                <th class="align-middle">Elaboração</th>
+                <th class="align-middle">Coordenação</th>
+                <th class="align-middle">Validação</th>
+                <th class="align-middle">Última Atualização</th>
+                <th class="align-middle">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for matriz in matrizes %}
+            <tr>
+                <td class="align-middle">{{ matriz.departamento }}</td>
+                <td class="align-middle">{{ matriz.elaboracao.nome }}</td>
+                <td class="align-middle">{{ matriz.coordenacao.nome }}</td>
+                <td class="align-middle">{{ matriz.validacao.nome }}</td>
+                <td class="align-middle">{{ matriz.atualizado_em|date:"d/m/Y H:i" }}</td>
+
+                <td class="align-middle">
+                    
+                    <a href="{% url 'editar_matriz_polivalencia' matriz.id %}" class="btn btn-sm btn-light" title="Editar">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a href="{% url 'imprimir_matriz' matriz.id %}" class="btn btn-sm btn-info" title="Imprimir">
+                        <i class="bi bi-printer"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirMatriz{{ matriz.id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            
+            <!-- Modal de confirmação de exclusão -->
+            <div class="modal fade" id="modalExcluirMatriz{{ matriz.id }}" tabindex="-1" aria-labelledby="modalExcluirMatrizLabel{{ matriz.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalExcluirMatrizLabel{{ matriz.id }}">Confirmar Exclusão</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Tem certeza de que deseja excluir a matriz do departamento <strong>{{ matriz.departamento }}</strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <form action="{% url 'excluir_matriz_polivalencia' matriz.id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Excluir</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center align-middle">Nenhuma matriz cadastrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const bootstrapToast = new bootstrap.Toast(toast);
+            bootstrapToast.show();
+        });
+    });
+</script>
+
+{% endblock %}

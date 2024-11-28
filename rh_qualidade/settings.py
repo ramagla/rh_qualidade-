@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 import dj_database_url
-from decouple import config
 
 # Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
 
 # URLs de redirecionamento
 LOGIN_URL = '/login/'
@@ -12,8 +13,8 @@ LOGOUT_REDIRECT_URL = '/login/'
 LOGIN_REDIRECT_URL = '/' 
 
 # Chave secreta e modo de depuração
-SECRET_KEY = config('SECRET_KEY', default='-i@@0^twl)tb4ivcjrrt9mi5s)+ar@88ofqfmxav%7=4%v$z01')
-DEBUG = config('DEBUG', default=True, cast=bool)
+SECRET_KEY = '-i@@0^twl)tb4ivcjrrt9mi5s)+ar@88ofqfmxav%7=4%v$z01'
+DEBUG = True
 
 # Lista de hosts permitidos
 ALLOWED_HOSTS = ['*', '192.168.0.139', '127.0.0.1', 'localhost']
@@ -61,13 +62,13 @@ CKEDITOR_5_CONFIGS = {
 
 # Middlewares
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',  # Certifique-se de que essa linha está presente
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 # Configuração de URLs e WSGI
@@ -99,21 +100,28 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # Tipo de campo de chave primária padrão
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'
+
+
+
 # Configurações de segurança
 SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = False
 X_FRAME_OPTIONS = 'ALLOWALL'
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in config(
-    'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost,http://127.0.0.1,http://192.168.0.139'
-).split(',')]
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost', 
+    'http://127.0.0.1', 
+    'http://192.168.0.139'
+]
+
 
 # Configurações de banco de dados
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='postgres://postgres:gr212015@localhost:5432/rh_qualidade')
+        default='postgres://postgres:gr212015@localhost:5432/rh_qualidade'
     )
 }
+
 
 
 
@@ -139,7 +147,14 @@ TEMPLATES = [
     },
 ]
 
-# Logging
+# Caminho do diretório de logs
+log_dir = os.path.join(BASE_DIR, 'logs')
+
+# Verificar se o diretório existe, se não, criar
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -147,7 +162,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
+            'filename': os.path.join(log_dir, 'debug.log'),
         },
     },
     'loggers': {
@@ -159,7 +174,3 @@ LOGGING = {
     },
 }
 
-# Print statements after variables are assigned
-print(f"DEBUG: {DEBUG}")
-print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
-print(f"ROOT_URLCONF: {ROOT_URLCONF}")
