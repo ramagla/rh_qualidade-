@@ -71,7 +71,7 @@ from .views.job_rotation_views import (
     excluir_jobrotation,
     imprimir_jobrotation_evaluation
 )
-from .views.api_views import get_funcionario_info, get_treinamentos, get_competencias, get_cargo,get_funcionario_ficha,get_treinamentos_por_funcionario
+from .views.api_views import get_funcionario_info, get_treinamentos, get_competencias, get_cargo,get_funcionario_ficha,get_treinamentos_por_funcionario,funcionario_api
 
 from .views.lista_presenca_views import (
     lista_presenca,
@@ -125,6 +125,15 @@ from .views.relatorios_views import (
     cronograma_avaliacao_eficacia
     
 )
+
+from .views.formularios_views import (
+    avaliacao_capacitacao,
+    FormularioPesquisaConscienciaView,
+    FormularioCartaCompetenciaView,
+    filtro_funcionario,
+    filtro_carta_competencia
+)
+
 
 
 
@@ -279,6 +288,8 @@ urlpatterns = [
     # APIs para AJAX
     path('get-atividades-por-departamento/', get_atividades_por_departamento, name='get_atividades_por_departamento'),
     path('get-atividades-e-funcionarios-por-departamento/', get_atividades_e_funcionarios_por_departamento, name='get_atividades_e_funcionarios_por_departamento'),
+    path('api/funcionario/<int:funcionario_id>/', funcionario_api, name='funcionario_api'),
+
 
     # Relatorios
     path('relatorios/indicador_anual/', RelatorioIndicadorAnualView.as_view(), name='relatorio_indicador_anual'),
@@ -287,6 +298,17 @@ urlpatterns = [
     path('relatorios/horas-treinamento/', RelatorioPlanilhaTreinamentosView.as_view(template_name='relatorios/relatorio_horas_treinamento.html'), name='relatorio_horas_treinamento'),
     path('cronograma-treinamentos/', cronograma_treinamentos, name='cronograma_treinamentos'),
     path('cronograma-avaliacao-eficacia/', cronograma_avaliacao_eficacia, name='cronograma_avaliacao_eficacia'),
+
+     # Formularios
+    path('formularios/filtro/', filtro_funcionario, name='filtro_funcionario'),
+    path('formularios/filtro-carta-competencia/', filtro_carta_competencia, name='filtro_carta_competencia'),
+
+    path('formularios/avaliacao-capacitacao-pratica/carta/<int:funcionario_id>/', avaliacao_capacitacao, name='carta_avaliacao_capacitacao'),
+    path('formularios/pesquisa-consciencia/', FormularioPesquisaConscienciaView.as_view(), name='formulario_pesquisa_consciencia'),
+    path('formularios/carta-competencia/<int:funcionario_id>/', FormularioCartaCompetenciaView.as_view(), name='formulario_carta_competencia'),
+
+  
+
 
 
 ]

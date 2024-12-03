@@ -111,6 +111,18 @@
     </ul>
 </div>
 
+<div class="dropdown">
+    <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-edit"></i> <span class="sidebar-text">Formulários</span>
+    </a>
+    <ul class="dropdown-menu" style="background-color: #343a40; color: white;">
+        <li><a class="dropdown-item text-white" href="{% url 'filtro_funcionario' %}">Carta de Competência</a></li>
+        <li><a class="dropdown-item text-white" href="{% url 'formulario_pesquisa_consciencia' %}">Pesquisa de Consciência</a></li>
+        <li><a class="dropdown-item text-white" href="{% url 'filtro_carta_competencia' %}">Avaliação de Capacitação Prática</a></li>
+    </ul>
+</div>
+
+
 
 
 
@@ -122,9 +134,8 @@
                         <i class="fas fa-calendar-alt"></i> <span class="sidebar-text">Calendário</span>
                     </a>
                     <span class="version-section" data-bs-toggle="modal" data-bs-target="#versaoModal">
-                        <i class="fas fa-info-circle"></i> <span class="sidebar-text">&copy; {{ ano_atual }} - v{{ ultima_atualizacao.versao }}</span>
+                        <i class="fas fa-info-circle"></i> <span class="sidebar-text">&copy; {{ ano_atual }}  {{ ultima_atualizacao.versao }}</span>
                     </span>
-
                 </div>
             </div>
         
@@ -133,7 +144,7 @@
             <!-- Navbar -->
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <div class="container-fluid">
-                    <a class="navbar-brand" href="{% url 'home' %}">Sistema de Gestão de Recursos Humanos</a>
+                    <a class="navbar-brand" href="{% url 'home' %}">Modulo Gestão de Recursos Humanos</a>
                     <div class="d-flex align-items-center">
                         <span class="me-3">{{ user.username }}</span>
                         <form method="POST" action="{% url 'logout' %}" class="d-inline me-2">
@@ -159,31 +170,31 @@
     </div>
 
       <!-- Modal de Informações da Versão -->
-<div class="modal fade" id="versaoModal" tabindex="-1" aria-labelledby="versaoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="versaoModalLabel">Informações da Versão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                {% if ultima_atualizacao_concluida %}
-                    <div class="mb-3">
-                        <h6><strong>{{ ultima_atualizacao_concluida.versao }}</strong></h6>
-                        <h6><strong>{{ ultima_atualizacao_concluida.titulo }}</strong></h6>
-                        <p>{{ ultima_atualizacao_concluida.descricao }}</p>
-                        <p class="text-muted">Entrega em: {{ ultima_atualizacao_concluida.previsao|date:"d/m/Y" }}</p>
-                    </div>
-                {% else %}
-                    <p>Nenhuma atualização registrada.</p>
-                {% endif %}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+    <div class="modal fade" id="versaoModal" tabindex="-1" aria-labelledby="versaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="versaoModalLabel">Informações da Versão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if ultima_atualizacao_concluida %}
+                        <div class="mb-3">
+                            <h6><strong>{{ ultima_atualizacao_concluida.versao }}</strong></h6>
+                            <h6><strong>{{ ultima_atualizacao_concluida.titulo }}</strong></h6>
+                            <p>{{ ultima_atualizacao_concluida.descricao | safe }}</p>
+                            <p class="text-muted">Entregue em: {{ ultima_atualizacao_concluida.data_termino|date:"d/m/Y" }}</p>
+                        </div>
+                    {% else %}
+                        <p>Nenhuma atualização registrada.</p>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 
     <!-- Scripts -->

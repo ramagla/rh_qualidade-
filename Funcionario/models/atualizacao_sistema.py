@@ -19,7 +19,7 @@ class AtualizacaoSistema(models.Model):
         choices=STATUS_CHOICES,
         default='em_andamento',
     )
-    data_termino = models.DateField(default=now)  # Valor padrão definido como a data atual
+    data_termino = models.DateField(default=now, blank=True, null=True)  # Valor padrão definido como a data atual
 
 
     def __str__(self):

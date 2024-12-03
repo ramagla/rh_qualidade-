@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Seleção de Funcionário</h2>
+    <form method="post" action="">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="funcionario"><strong>Selecionar Funcionário:</strong></label>
+            <select id="funcionario" name="funcionario" class="form-control select2" required>
+                <option value="" selected disabled>Selecione um funcionário</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary">Gerar Carta</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#funcionario').select2({
+            placeholder: "Selecione um funcionário",
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %}

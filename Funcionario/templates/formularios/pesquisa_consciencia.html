@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+        {% load static %}
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Funcionários</title>
+    <!-- Inclua o CSS do Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Estilos para impressão */
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+            .card {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Centralizar cabeçalhos da tabela */
+        table thead th {
+            text-align: center;
+        }
+
+        /* Estilo para o texto no canto superior direito do card */
+        .card-header-text {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* Ajuste para o símbolo na pergunta 5 */
+        .question-icon {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center no-print">Lista de Funcionários</h2>
+        <div class="text-center mb-4 no-print">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> Imprimir
+            </button>
+        </div>
+
+        <div class="row">
+            {% for funcionario in funcionarios %}
+                <div class="col-md-6 mb-4">
+                    <div class="card position-relative">
+                        <div class="card-header-text">F200 - rev 01</div>
+                        <div class="card-body">
+                            <h5 class="card-title">Pesquisa de Conscientização</h5>
+                            <p><strong>Nome:</strong> {{ funcionario.nome }}</p>
+                            <p><strong>Setor:</strong> {{ funcionario.local_trabalho }}</p>
+                            <p><strong>Data:</strong> ___/___/____</p>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Questão</th>
+                                        <th>Sim</th>
+                                        <th>Não</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1. Você reconhece que as atividades realizadas por você são importantes para a obtenção dos
+                                            objetivos da qualidade e influenciam no desempenho da empresa?</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2. Você entende que a qualidade dos produtos, processos e serviços da Bras-Mol também
+                                            dependem da realização adequada das suas atividades diárias?</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>3. Você tem ciência que outros setores dependem da realização adequada das suas atividades para
+                                            que as atividades subsequentes também sejam realizadas adequadamente?</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>4. Você entende que a Política da Qualidade da Bras-Mol estabelece que os clientes internos e
+                                            externos devem ser atendidos com qualidade e pontualidade?</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            5. Você reconhece que as peças identificadas com o símbolo são itens automotivos de
+                                            segurança e que podem influenciar na segurança do usuário do veículo?
+                                            <img src="{% static 'seguranca.png' %}" alt="Segurança" class="question-icon">
+                                        </td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>6. Você tem ciência que a empresa possui um canal (de sugestões, melhorias e denuncias) para
+                                            comunicação com a empresa? QR Code disponível nos quadros de gestão a vista.</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% if forloop.counter|divisibleby:2 %}
+                    <div class="w-100 page-break"></div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Inclua o JS do Bootstrap e dependências -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

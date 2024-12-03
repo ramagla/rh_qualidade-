@@ -2,8 +2,10 @@ from django.http import JsonResponse
 import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
 
-from Funcionario.models import Funcionario, Revisao, AvaliacaoAnual,Cargo, Treinamento
+from Funcionario.models import Funcionario, Revisao, AvaliacaoAnual,Cargo, Treinamento,Settings
 
 def get_funcionario_info(request, id):
     try:
@@ -214,3 +216,30 @@ def atualizar_cargo_funcionario(request, funcionario_id):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+
+
+
+def funcionario_api(request, funcionario_id):
+    # Obtemos o funcionário pelo ID
+    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+    settings = Settings.objects.first()
+    
+    # Verificamos se `responsavel` é um objeto e obtemos o cargo associado
+    responsavel_nome = funcionario.responsavel.nome if hasattr(funcionario.responsavel, 'nome') else funcionario.responsavel
+    cargo_responsavel = (
+        funcionario.responsavel.cargo.nome if hasattr(funcionario.responsavel, 'cargo') else "N/A"
+    )
+    
+    # Montamos os dados a serem retornados
+    data = {
+        'nome': funcionario.nome,
+        'cargo_atual': funcionario.cargo_atual.nome if hasattr(funcionario.cargo_atual, 'nome') else funcionario.cargo_atual,
+        'responsavel': responsavel_nome,
+        'cargo_responsavel': cargo_responsavel,
+        'settings': {
+            'nome_empresa': settings.nome_empresa,
+        },
+        'data_atual': now().strftime('%d de %B de %Y'),
+    }
+    return JsonResponse(data)

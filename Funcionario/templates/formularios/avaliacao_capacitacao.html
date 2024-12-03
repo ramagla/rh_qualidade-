@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'header.html' %}
+{% load static %}
+
+<!-- Botão de Imprimir -->
+<div class="text-center mb-4 d-print-none">
+    <button onclick="imprimir()" class="btn btn-primary">
+        <i class="fas fa-print"></i> Imprimir
+    </button>
+</div>
+
+<div class="container mt-5">
+    <!-- Cabeçalho e Botão de Impressão -->
+    <div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <!-- Título do Documento -->
+    <div class="row mt-4">
+        <div class="col text-center">
+            <h4><strong>CARTA DE COMPETÊNCIA</strong></h4>
+        </div>
+    </div>
+
+    <!-- Local e Data -->
+    <div class="row mt-4">
+        <div class="col text-center">
+            <p><em>Itaquaquecetuba - SP, {{ data_atual|date }}</em></p>
+        </div>
+    </div>
+
+
+
+    <!-- Corpo do Documento -->
+    <div class="row mt-4">
+        <div class="main-text">
+            <p>
+                Apesar da não correspondência completa aos requisitos mínimos de <strong>ESCOLARIDADE</strong>, 
+                determinados pela <strong>{{ settings.nome_empresa }}</strong> na Descrição de Cargo, 
+                autorizo o(a) funcionário(a) <strong>{{ funcionario.nome }}</strong> a exercer a função de 
+                <strong>{{ funcionario.cargo_atual }}</strong>, considerando a experiência e o seu desempenho 
+                apresentado até o momento.
+            </p>
+        </div>
+    </div>
+
+    <!-- Finalização -->
+    <div class="row mt-4">
+        <div class="">
+            <p>Sem mais,</p>
+        </div>
+    </div>
+
+    <!-- Assinaturas -->
+    <div class="mt-5">
+        <table class="custom-table" style="width: 100%; border: 1px solid #000; border-collapse: collapse; table-layout: fixed;">
+            <tr>
+                <!-- Assinatura do Funcionário -->
+                <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
+                    <p><strong>Assinatura do Colaborador</strong></p>
+                    <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                        {{ funcionario.nome }}
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <em>Data da Assinatura:</em> ___/___/____
+                    </div>
+                </td>
+
+                <!-- Assinatura da Chefia -->
+                <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
+                    <p><strong>Assinatura da Gestor</strong></p>
+                    <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                        {{ funcionario.responsavel }}
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <em>Data da Assinatura:</em> ___/___/____
+                    </div>
+                </td>
+
+                <!-- Assinatura do Responsável R.H. -->
+                <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
+                    <p><strong>Assinatura do Responsável R.H.</strong></p>
+                    <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+                        Responsável R.H.
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <em>Data da Assinatura:</em> ___/___/____
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Rodapé -->
+    <!-- Número do Formulário (visível apenas na impressão) -->
+    <div class="numero-formulario d-none d-print-block" style="text-align: right; margin-top: 20px;">
+        F216 Rev.01
+    </div>
+    </div>
+</div>
+
+<style>
+    .custom-table {
+        width: 100%;
+        border: 1px solid #000;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    .custom-table th, .custom-table td {
+        padding: 8px;
+        text-align: center;
+        border: 1px solid #000;
+    }
+</style>
+
+
+<script>
+function imprimir() {
+    // Seleciona o conteúdo da div .container
+    const conteudo = document.querySelector('.container').outerHTML;
+
+    // Abre uma nova janela para impressão
+    const novaJanela = window.open('', '_blank', 'width=800,height=600');
+
+    novaJanela.document.open();
+    novaJanela.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Carta de Competência</title>
+                <style>
+                    .numero-formulario { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #333; }
+
+                    body {
+                        font-family: Arial, sans-serif;
+                        color: #333;
+                        margin: 20px;
+                        font-size: 14px;
+                    }
+                  .custom-table {
+                    width: 100%;
+                    border: 1px solid #000;
+                    border-collapse: collapse;
+                    table-layout: fixed;
+                    margin-top: 480px; /* Adiciona uma margem superior maior */
+                }
+
+                .custom-table th, .custom-table td {
+                    padding: 4px; /* Reduz o espaçamento interno */
+                    text-align: center;
+                    border: 1px solid #000;
+                    font-size: 10px; /* Reduz o tamanho do texto */
+                }
+                    .custom-table td.signature-cell {
+                        height: 50px; /* Ajusta a altura do campo de assinatura */
+                        vertical-align: bottom; /* Posiciona o conteúdo no final da célula */
+                    }
+                         .custom-table td strong {
+                        font-size: 12px; /* Reduz o tamanho do texto em negrito */
+                        font-weight: bold;
+                    }
+                .main-text {
+                margin-top: 60px
+                }
+
+                    h4 {
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        text-align: center;
+                    }
+                    p {
+                        line-height: 1.6;
+                        font-size: 14px;
+                        margin: 10px 0;
+                    }
+                    .d-print-none {
+                        display: none !important;
+                    }
+                    .location-date {
+                        text-align: center;
+                        font-style: italic;
+                        margin: 20px 0;
+                    }
+                    .col {
+                        text-align: center;
+                    }
+                </style>
+            </head>
+            <body>
+                ${conteudo}
+               
+                <div class="numero-formulario">F216 Rev.01</div>
+            </body>
+        </html>
+    `);
+    novaJanela.document.close();
+
+    // Aguarda o carregamento do conteúdo antes de executar a impressão
+    novaJanela.onload = () => {
+        novaJanela.print();
+        novaJanela.close();
+    };
+}
+</script>
+
+
+
+
+
+{% endblock %}
+
+
+
+

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Seleção de Funcionário</h2>
+    <form method="post" action="">
+        {% csrf_token %}
+        <!-- Campo oculto para definir o redirecionamento -->
+        <input type="hidden" name="next_view" value="{{ next_view }}">
+
+        <div class="form-group">
+            <label for="funcionario-select"><strong>Selecionar Funcionário:</strong></label>
+            <select id="funcionario-select" name="funcionario" class="form-control select2" required>
+                <option value="">Selecione um funcionário</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary">Gerar Formulário</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Initialize Select2 for the dropdown
+    $(document).ready(function() {
+        $('#funcionario-select').select2({
+            placeholder: "Selecione um funcionário",
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %}
