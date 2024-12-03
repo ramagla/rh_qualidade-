@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load custom_filters %}
+
+<div class="print-container container mt-5">
+    <!-- Cabeçalho do Relatório -->
+    <div class="header">
+        <table>
+            <tr>
+                <td style="width: 20%; text-align: center; border-right: 1px solid black;">
+                    <img src="/static/logo.png" alt="Logo Bras-Mol" style="max-width: 80px;">
+                </td>
+                <td style="width: 60%; text-align: center; border-right: 1px solid black;">
+                    <h2>2.1 - Índice de Avaliação de Desempenho de Funcionário</h2>
+                </td>
+                <td style="width: 20%; text-align: center;">
+                    <p>Resp. pelo indicador:</p>
+                    <p><strong>Lilian Fernandes</strong></p>
+                </td>
+            </tr>
+            <tr style="border-top: 1px solid black;">
+                <td colspan="2" style="padding: 10px; border-right: 1px solid black;">
+                    <p><strong>Objetivo do Indicador de Desempenho:</strong></p>
+                    <p>Demonstrar a eficácia do processo de RH em conseguir manter os funcionários com bom desempenho.</p>
+                </td>
+                <td style="padding: 10px; text-align: center;">
+                    <p><strong>Meta:</strong></p>
+                    <p>≥ 70%</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Botão de impressão -->
+    <div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <!-- Contêiner para o Gráfico e a Tabela -->
+    <div style="display: flex; justify-content: flex-start; align-items: flex-start; margin-top: 20px; gap: 20px;">
+        <!-- Gráfico -->
+        <div>
+            {% if grafico_base64 %}
+                <img src="data:image/png;base64,{{ grafico_base64 }}" alt="Gráfico" style="width: 100%; max-width: 800px; border: 1px solid #ddd;">
+            {% else %}
+                <p style="color: red;">Nenhum gráfico disponível para os dados selecionados.</p>
+            {% endif %}
+        </div>
+
+        <!-- Tabela de Média -->
+        <div style="border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Média (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center; 
+                        {% if media >= 70 %} color: green; {% else %} color: red; {% endif %}">
+                            <strong>{{ media }}</strong>
+                            <span style="font-size: 20px;">
+                                {% if media >= 70 %}
+                                    😊
+                                {% else %}
+                                    😞
+                                {% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+   <!-- Sessão dos Indicadores -->
+<div class="indicadores-container" style="margin-top: 20px;">
+    <table class="custom-table" style="width: 100%; border-collapse: collapse; margin: 0 auto;">
+        <thead>
+            <tr>
+                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Descrição</th>
+                {% for ano in dados_por_ano.keys %}
+                    <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">{{ ano }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 8px; font-weight: bold; text-align: left; border: 1px solid #ddd;">Números de Funcionários Avaliados</td>
+                {% for ano in dados_por_ano.keys %}
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">{{ funcionarios_avaliados|dict:ano }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold; text-align: left; border: 1px solid #ddd;">Índice - Média dos valores obtidos</td>
+                {% for ano in dados_por_ano.keys %}
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd; {% if dados_por_ano|dict:ano >= 70 %}color: green;{% else %}color: red;{% endif %}">
+                        <strong>{{ dados_por_ano|dict:ano }}%</strong>
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold; text-align: left; border: 1px solid #ddd;">Meta</td>
+                {% for ano in dados_por_ano.keys %}
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd; color: green;">70%</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+    <!-- Forma de Cálculo -->
+    <div class="forma-calculo" style="margin-top: 30px; text-align: center; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 10px 0;">
+        <p class="forma-calculo-titulo" style="margin: 0; font-weight: bold; font-size: 16px;">Forma de Cálculo:</p>
+        <div class="forma-calculo-conteudo" style="border-left: 3px solid #4CAF50; padding-left: 15px; margin-top: 10px; font-size: 14px; text-align: center;">
+            <p style="margin: 0; line-height: 1.5;">
+                <span style="display: inline-block; border-bottom: 2px solid #4CAF50; padding-bottom: 5px; font-weight: normal;">
+                Total das notas obtidas pelos colaboradores
+                </span>
+            </p>
+            <p style="margin: 0; line-height: 1.5;">
+                Total de colaboradores avaliados
+           </p>
+        </div>
+    </div>
+
+    <!-- Análise de Dados -->
+<div class="analise-dados" style="margin-top: 20px;">
+    <p style="font-weight: bold; font-size: 16px;">Análise de Dados:</p>
+    <table class="custom-table" style="width: 100%; border-collapse: collapse; margin: 0 auto; border: 1px solid #ddd;">
+        <thead>
+            <tr>
+                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Ano</th>
+                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">Mensagem</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ano, mensagem in analise_dados.items %}
+            <tr>
+                <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">{{ ano }}</td>
+                <td style="padding: 8px; text-align: left; border: 1px solid #ddd;">{{ mensagem }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" style="padding: 8px; text-align: center; border: 1px solid #ddd; color: #999;">Nenhum dado disponível.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Plano de Ação/Melhoria -->
+<div class="plano-acao" style="margin-top: 20px;">
+    <p style="font-weight: bold; font-size: 16px;">Plano de Ação / Melhoria:</p>
+    <table class="custom-table" style="width: 100%; border-collapse: collapse; border: 1px solid #ccc; margin-top: 10px;">
+        <thead>
+            <tr style="background-color: #f7f7f7; border-bottom: 1px solid #ccc;">
+                <th style="padding: 8px; text-align: center; font-size: 14px;">Item</th>
+                <th style="padding: 8px; text-align: left; font-size: 14px;">Ação Corretiva / Melhoria</th>
+                <th style="padding: 8px; text-align: left; font-size: 14px;">Responsável</th>
+                <th style="padding: 8px; text-align: center; font-size: 14px;">Prazo</th>
+                <th style="padding: 8px; text-align: center; font-size: 14px;">Situação</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 8px; text-align: center;">1</td>
+                <td style="padding: 8px; text-align: left;">[Descrição da ação]</td>
+                <td style="padding: 8px; text-align: left;">[Responsável]</td>
+                <td style="padding: 8px; text-align: center;">[Prazo]</td>
+                <td style="padding: 8px; text-align: center;">[Situação]</td>
+            </tr>
+            <!-- Adicionar mais linhas conforme necessário -->
+        </tbody>
+    </table>
+</div>
+
+
+    <!-- Rodapé -->
+    <div style="display: flex; justify-content: space-between; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
+        <p>Atualizado por: <strong>Lilian Fernandes</strong></p>
+        <p>Data: {{ data_atual }}</p>
+    </div>
+</div>
+
+<style>
+    /* Estilos gerais */
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    .text-success {
+        color: green;
+        font-weight: bold;
+    }
+
+    .text-danger {
+        color: red;
+        font-weight: bold;
+    }
+
+    .indicadores-container {
+        margin-top: 20px;
+    }
+
+    /* Tabela personalizada */
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    .custom-table th, 
+    .custom-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .custom-table th {
+        background-color: #f7f7f7;
+        font-weight: bold;
+    }
+
+    .custom-table tr:nth-child(even) {
+        background-color: #f9f9f9; /* Zebra */
+    }
+
+    /* Seções específicas */
+    .formas-calculo,
+    .analise-dados,
+    .plano-acao {
+        margin-bottom: 20px;
+    }
+
+    .formas-calculo ul {
+        list-style-type: disc;
+        padding-left: 20px;
+    }
+
+    /* Rodapé */
+    .rodape {
+        margin-top: 20px;
+        text-align: left;
+        font-size: 12px;
+    }
+
+    /* Cabeçalho geral */
+    .header {
+        border: 1px solid black;
+        margin-bottom: 20px;
+        padding: 10px;
+    }
+
+    .header table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .header img {
+        max-width: 120px;
+        height: auto;
+        padding: 5px;
+    }
+
+    .header h2 {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .header p {
+        font-size: 12px;
+        margin: 0;
+    }
+
+    /* Ajustes para impressão */
+    @media print {
+        .d-print-none {
+            display: none !important;
+        }
+
+        .print-container {
+            margin: 0 auto;
+            padding: 10px;
+            max-width: 800px;
+        }
+
+        .header {
+            margin-bottom: 10px; /* Reduz margem */
+            padding: 5px; /* Reduz espaçamento */
+        }
+
+        .header img {
+            max-width: 80px; /* Reduz logotipo */
+        }
+
+        .header h2 {
+            font-size: 14px; /* Reduz título */
+        }
+
+        .header p {
+            font-size: 10px; /* Reduz texto */
+        }
+
+        .custom-table th, 
+        .custom-table td {
+            padding: 5px; /* Reduz padding */
+            font-size: 10px; /* Ajusta tamanho da fonte */
+        }
+
+        .rodape {
+            font-size: 10px; /* Fonte menor no rodapé */
+        }
+          .forma-calculo {
+        margin-top: 5px !important;
+        padding: 2px 0 !important;
+        border-top: 1px solid #ddd !important;
+        border-bottom: 1px solid #ddd !important;
+    }
+
+    .forma-calculo-titulo {
+        font-size: 9px !important; /* Reduz o tamanho do título */
+        font-weight: bold !important;
+        margin-bottom: 3px !important;
+    }
+
+    .forma-calculo-conteudo {
+        border-left: 1px solid #4CAF50 !important; /* Reduz a espessura da borda verde */
+        padding-left: 5px !important; /* Reduz o espaçamento interno */
+        font-size: 8px !important; /* Reduz ainda mais o tamanho do texto */
+    }
+
+    .forma-calculo-conteudo span {
+        border-bottom: 1px solid #4CAF50 !important; /* Reduz a espessura da linha verde */
+    }
+    }
+</style>
+
+
+
+<!-- Script para impressão -->
+<script>
+    function imprimir() {
+        var conteudo = document.querySelector('.print-container').innerHTML;
+        var novaJanela = window.open('', '_blank', 'width=1200,height=800');
+        novaJanela.document.write(`
+            <html>
+                <head>
+                    <title>Relatório de Treinamentos</title>
+                    <style>
+                        body {
+                            font-size: 10px; /* Texto padrão */
+                            line-height: 1.4; /* Linha compacta */
+                            margin: 0;
+                            font-family: Arial, sans-serif;
+                        }
+
+                        /* Ajustes no cabeçalho */
+                        .header {
+                            border: none; /* Remove bordas duplicadas */
+                            margin-bottom: 20px;
+                            padding: 5px;
+                        }
+
+                        .header table {
+                            width: 100%;
+                            border-collapse: collapse; /* Remove espaços entre bordas */
+                        }
+
+                        .header td {
+                            border: 0.5px solid #ccc; /* Bordas suaves e uniformes */
+                            padding: 5px;
+                            text-align: center;
+                            vertical-align: middle;
+                        }
+
+                        .header td img {
+                            max-width: 40px; /* Define tamanho do logotipo */
+                            height: 40px;
+                        }
+
+                        .header h2 {
+                            font-size: 11px; /* Título ajustado */
+                            margin: 0;
+                        }
+
+                        .header p {
+                            font-size: 10px; /* Texto menor */
+                            margin: 0;
+                        }
+
+                        /* Estilo para o gráfico */
+                        img {
+                            max-width: 70%; /* Reduz largura para 60% */
+                            height:300px; /* Mantém proporção */
+                            display: block;
+                            margin: 10px auto; /* Centraliza e ajusta margens */
+                        }
+
+                        /* Tabelas */
+                        .custom-table {
+                            width: 100%;
+                            border-collapse: collapse; /* Remove espaços entre bordas */
+                            margin-bottom: 20px;
+                        }
+
+                        .custom-table th, 
+                        .custom-table td {
+                            border: 0.5px solid #ccc; /* Bordas suaves */
+                            padding: 6px;
+                            text-align: center;
+                            font-size: 10px; /* Texto menor */
+                        }
+
+                        .custom-table th {
+                            background-color: #f7f7f7; /* Fundo do cabeçalho */
+                            font-weight: bold;
+                        }
+
+                        .custom-table tr:nth-child(even) {
+                            background-color: #f9f9f9; /* Fundo alternado */
+                        }
+
+                        /* Ajustes na seção Forma de Cálculo */
+                        .forma-calculo {
+                            margin-top: 5px; /* Reduz margem superior */
+                            text-align: center;
+                            border-top: 0.5px solid #ccc;
+                            border-bottom: 0.5px solid #ccc;
+                            padding: 2px 0; /* Padding reduzido */
+                        }
+
+                        .forma-calculo-titulo {
+                            font-size: 9px; /* Texto menor para o título */
+                            font-weight: bold;
+                            margin-bottom: 3px;
+                        }
+
+                        .forma-calculo-conteudo {
+                            border-left: 1px solid #4CAF50; /* Bordas mais finas */
+                            padding-left: 5px; /* Reduz espaçamento */
+                            font-size: 8px; /* Texto menor */
+                            text-align: left;
+                        }
+
+                        .forma-calculo-conteudo p {
+                            margin: 0;
+                            line-height: 1.1; /* Linha compacta */
+                            font-size: 8px; /* Texto menor */
+                        }
+
+                        .forma-calculo-conteudo span {
+                            border-bottom: 0.5px solid #4CAF50; /* Linha fina */
+                            padding-bottom: 2px; /* Reduz espaço */
+                        }
+
+                        /* Rodapé */
+                        .rodape {
+                            font-size: 9px; /* Texto menor no rodapé */
+                            margin-top: 10px;
+                            padding-top: 5px;
+                            border-top: 0.5px solid #ccc;
+                            text-align: left;
+                        }
+
+                        /* Ocultar elementos não imprimíveis */
+                        .d-print-none {
+                            display: none !important;
+                        }
+
+                        /* Evitar quebras de página */
+                        table, tr, td, th, div {
+                            page-break-inside: avoid;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${conteudo}
+                </body>
+            </html>
+        `);
+        novaJanela.document.close();
+        novaJanela.onload = function() {
+            novaJanela.print();
+            novaJanela.close();
+        };
+    }
+</script>
+
+
+{% endblock %}

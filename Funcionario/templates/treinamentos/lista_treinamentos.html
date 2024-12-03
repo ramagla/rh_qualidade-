@@ -84,7 +84,7 @@
                         <select name="funcionario" id="funcionario_modal" class="form-select select2" required>
                             <option value="">Selecione um funcionário</option>
                             {% for func in funcionarios %}
-                                <option value="{{ func.id }}">{{ func.nome }}</option>
+                                 <option value="{{ func.id }}">{{ func.nome }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -102,18 +102,18 @@
     <!-- Script para manipular a modal de impressão F003 -->
     <script>
     document.getElementById('submitButton').addEventListener('click', function (event) {
-        event.preventDefault();
-        var funcionarioId = document.getElementById('funcionario_modal').value;
-        
-        if (funcionarioId) {
-            var form = document.getElementById('imprimirF003Form');
-            var url = "/treinamentos/imprimir_f003/" + funcionarioId + "/";
-            form.action = url;
-            form.submit();
-        } else {
-            alert("Por favor, selecione um funcionário.");
-        }
-    });
+    event.preventDefault();
+    var funcionarioId = document.getElementById('funcionario_modal').value;
+    
+    if (funcionarioId) {
+        var form = document.getElementById('imprimirF003Form');
+        var url = "/treinamentos/imprimir_f003/" + funcionarioId + "/";
+        form.action = url;
+        form.submit();
+    } else {
+        alert("Por favor, selecione um funcionário.");
+    }
+});
     </script>
 
     <!-- Formulário de filtro e lista de treinamentos -->
@@ -162,7 +162,7 @@
 <table class="table table-bordered text-center">
     <thead>
         <tr>            
-            <th class="align-middle">Funcionário</th>
+            <th class="align-middle">Funcionários</th>
             <th class="align-middle">Nome do Curso</th>
             <th class="align-middle">Tipo</th>            
             <th class="align-middle">Data de Conclusão</th>
@@ -175,7 +175,12 @@
     <tbody>
         {% for treinamento in treinamentos %}
         <tr>            
-            <td class="align-middle">{{ treinamento.funcionario.nome }}</td>
+            <td class="align-middle">
+                <!-- Botão para abrir a modal -->
+                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalFuncionarios{{ treinamento.id }}">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </td>
             <td class="align-middle">{{ treinamento.nome_curso }}</td>
             <td class="align-middle">{{ treinamento.tipo|title }}</td>
             <td class="align-middle">
@@ -186,7 +191,7 @@
                 {% endif %}
             </td>
             <td class="align-middle">{{ treinamento.carga_horaria }}</td>
-           <td class="align-middle">
+            <td class="align-middle">
                 {% if treinamento.status == 'cursando' %}
                     <span class="badge bg-warning text-dark">Cursando</span>
                 {% elif treinamento.status == 'concluido' %}
@@ -199,7 +204,6 @@
                     <span class="badge bg-secondary">Indefinido</span>
                 {% endif %}
             </td>
-
             <td class="align-middle">
                 {% if treinamento.anexo %}
                     <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Certificado">
@@ -214,14 +218,37 @@
                 <a href="{% url 'editar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Editar">
                     <i class="bi bi-pencil-square"></i>
                 </a>
-                <!-- Botão para abrir a modal de exclusão -->
                 <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirTreinamento{{ treinamento.id }}">
                     <i class="bi bi-trash"></i>
                 </button>
             </td>
         </tr>
 
-           <!-- Modal de confirmação de exclusão -->
+        <!-- Modal para listar os funcionários -->
+        <div class="modal fade" id="modalFuncionarios{{ treinamento.id }}" tabindex="-1" aria-labelledby="modalFuncionariosLabel{{ treinamento.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalFuncionariosLabel{{ treinamento.id }}">Funcionários do Treinamento</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-group">
+                            {% for funcionario in treinamento.funcionarios.all %}
+                                <li class="list-group-item">{{ funcionario.nome }}</li>
+                            {% empty %}
+                                <li class="list-group-item">Nenhum funcionário cadastrado.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de confirmação de exclusão -->
         <div class="modal fade" id="modalExcluirTreinamento{{ treinamento.id }}" tabindex="-1" aria-labelledby="modalExcluirTreinamentoLabel{{ treinamento.id }}" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -230,7 +257,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Tem certeza de que deseja excluir o treinamento <strong>{{ treinamento.nome_curso }}</strong> do funcionário <strong>{{ treinamento.funcionario.nome }}</strong>?</p>
+                        <p>Tem certeza de que deseja excluir o treinamento <strong>{{ treinamento.nome_curso }}</strong>?</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -243,12 +270,13 @@
             </div>
         </div>
         {% empty %}
-    <tr>
-        <td colspan="8" class="text-center align-middle">Nenhum treinamento cadastrado.</td>
-    </tr>
-    {% endfor %}
+        <tr>
+            <td colspan="8" class="text-center align-middle">Nenhum treinamento cadastrado.</td>
+        </tr>
+        {% endfor %}
     </tbody>
 </table>
+
 </div>
 
 <style>

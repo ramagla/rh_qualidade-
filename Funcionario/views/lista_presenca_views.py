@@ -54,15 +54,27 @@ def lista_presenca(request):
 
 
 def cadastrar_lista_presenca(request):
+    # Verifica os treinamentos que precisam de avaliação
+    treinamentos = Treinamento.objects.all()
+
     if request.method == 'POST':
         form = ListaPresencaForm(request.POST, request.FILES)
         if form.is_valid():
             with transaction.atomic():
                 lista_presenca = form.save()
+
                 if lista_presenca.situacao == 'finalizado':
-                    for participante in lista_presenca.participantes.all():
-                        Treinamento.objects.create(
-                            funcionario=participante,
+                    treinamento_existente = Treinamento.objects.filter(
+                        nome_curso=lista_presenca.assunto,
+                        data_inicio=lista_presenca.data_inicio,
+                        data_fim=lista_presenca.data_fim,
+                        descricao=lista_presenca.descricao,
+                        carga_horaria=lista_presenca.duracao,
+                    ).first()
+
+                    if not treinamento_existente:
+                        # Cria o treinamento se não existir
+                        treinamento_existente = Treinamento.objects.create(
                             tipo='interno',
                             categoria='treinamento',
                             nome_curso=lista_presenca.assunto,
@@ -73,21 +85,39 @@ def cadastrar_lista_presenca(request):
                             carga_horaria=lista_presenca.duracao,
                             descricao=lista_presenca.descricao,
                             situacao='aprovado',
+                            planejado='sim',  # Definindo "Sim" no campo planejado
                         )
+
+                    for participante in lista_presenca.participantes.all():
+                        treinamento_existente.funcionarios.add(participante)
+
                 return redirect('lista_presenca')
     else:
         form = ListaPresencaForm()
 
-    funcionarios = Funcionario.objects.filter(status='Ativo')
+    funcionarios = Funcionario.objects.filter(status='Ativo')  # Lista de funcionários ativos
+    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
+
+
     return render(request, 'lista_presenca/cadastrar_lista_presenca.html', {
         'form': form,
         'funcionarios': funcionarios,
+        'treinamentos': treinamentos,  # Passando os treinamentos para o template
+        'locais_trabalho': locais_trabalho,  # Passando os locais de trabalho
+
     })
+
+
 
 
 # Função editar_lista_presenca
 def editar_lista_presenca(request, id):
     lista = get_object_or_404(ListaPresenca, id=id)
+
+    treinamentos = Treinamento.objects.all()
+
+    funcionarios = Funcionario.objects.filter(status='Ativo')
+
 
     if request.method == 'POST':
         form = ListaPresencaForm(request.POST, request.FILES, instance=lista)
@@ -95,9 +125,18 @@ def editar_lista_presenca(request, id):
             with transaction.atomic():
                 lista = form.save()
                 if lista.situacao == 'finalizado':
-                    for participante in lista.participantes.all():
-                        Treinamento.objects.create(
-                            funcionario=participante,
+                    # Verifica se já existe um treinamento com os mesmos atributos
+                    treinamento_existente = Treinamento.objects.filter(
+                        nome_curso=lista.assunto,
+                        data_inicio=lista.data_inicio,
+                        data_fim=lista.data_fim,
+                        descricao=lista.descricao,
+                        carga_horaria=lista.duracao,
+                    ).first()
+
+                    if not treinamento_existente:
+                        # Cria o treinamento se não existir
+                        treinamento_existente = Treinamento.objects.create(
                             tipo='interno',
                             categoria='treinamento',
                             nome_curso=lista.assunto,
@@ -108,14 +147,28 @@ def editar_lista_presenca(request, id):
                             carga_horaria=lista.duracao,
                             descricao=lista.descricao,
                             situacao='aprovado',
+                            planejado='sim', 
                         )
+
+                    # Atualiza os participantes do treinamento
+                    treinamento_existente.funcionarios.clear()  # Remove os participantes antigos
+                    for participante in lista.participantes.all():
+                        treinamento_existente.funcionarios.add(participante)
+
                 return redirect('lista_presenca')
     else:
         form = ListaPresencaForm(instance=lista)
 
+    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
+
     return render(request, 'lista_presenca/edit_lista_presenca.html', {
         'form': form,
+        'treinamentos': treinamentos,
+        'funcionarios': funcionarios,  # Passando os funcionários filtrados para o template
+
+        'locais_trabalho': locais_trabalho,
     })
+
 
 
 # Função para excluir lista de presença

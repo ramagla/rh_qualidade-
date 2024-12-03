@@ -54,8 +54,23 @@ def get_treinamentos(request, funcionario_id):
 
 
 def get_treinamentos_por_funcionario(request, funcionario_id):
-    treinamentos = Treinamento.objects.filter(funcionario_id=funcionario_id).values('id', 'nome_curso', 'data_fim')
-    return JsonResponse(list(treinamentos), safe=False)
+    try:
+        # Verifique se o funcionário existe
+        funcionario = Funcionario.objects.get(id=funcionario_id)
+        
+        # Obtenha os treinamentos associados ao funcionário
+        treinamentos = Treinamento.objects.filter(funcionarios=funcionario).values(
+            'id', 'nome_curso', 'data_fim'
+        )
+        
+        # Retorne os treinamentos como JSON
+        return JsonResponse(list(treinamentos), safe=False)
+    
+    except Funcionario.DoesNotExist:
+        return JsonResponse({'error': 'Funcionário não encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 
 def get_competencias(request):
     try:

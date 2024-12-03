@@ -95,7 +95,7 @@ class TreinamentoForm(forms.ModelForm):
         model = Treinamento
         fields = '__all__'
         widgets = {
-            'funcionario': forms.Select(attrs={'class': 'form-select'}),
+            'funcionarios': forms.SelectMultiple(attrs={'class': 'form-select select2'}),
             'tipo': forms.Select(choices=Treinamento.TIPO_TREINAMENTO_CHOICES, attrs={'class': 'form-select'}),
             'categoria': forms.Select(choices=Treinamento.CATEGORIA_CHOICES, attrs={'class': 'form-select'}),
             'nome_curso': forms.TextInput(attrs={'class': 'form-control'}),
@@ -157,13 +157,15 @@ class AvaliacaoForm(forms.ModelForm):
 
 
 class AvaliacaoTreinamentoForm(forms.ModelForm):
+    # Campo Treinamento com queryset dinâmico
     treinamento = forms.ModelChoiceField(
-        queryset=Treinamento.objects.all(),
+        queryset=Treinamento.objects.none(),
         widget=forms.Select(attrs={'class': 'form-select'}),
         label="Treinamento/Curso",
         required=True
-    ),
+    )
    
+    # Campos de perguntas
     pergunta_1 = forms.ChoiceField(
         choices=AvaliacaoTreinamento.OPCOES_CONHECIMENTO,
         widget=forms.RadioSelect,
@@ -183,13 +185,13 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
         label="Resultados obtidos com a aplicação da metodologia"
     )
     descricao_melhorias = forms.CharField(
-        widget=CKEditor5Widget(),
+        widget=CKEditor5Widget(config_name='default'),
         required=True,
         label="Descreva as melhorias obtidas/resultados"
     )
     avaliacao_geral = forms.IntegerField(
-        widget=forms.HiddenInput(),  # Mude para IntegerField
-        required=False  # Ajuste se este campo não for obrigatório no formulário
+        widget=forms.HiddenInput(),
+        required=False  # Campo oculto, preenchido automaticamente no front-end
     )
 
     class Meta:
@@ -200,32 +202,31 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
             'responsavel_2': forms.Select(attrs={'class': 'form-select'}),
             'responsavel_3': forms.Select(attrs={'class': 'form-select'}),
             'funcionario': forms.Select(attrs={'class': 'form-select'}),
-            'treinamento': forms.Select(attrs={'class': 'form-select'}),
         }
 
     def __init__(self, *args, **kwargs):
-        super(AvaliacaoTreinamentoForm, self).__init__(*args, **kwargs)
+        # Recebe o funcionário como argumento adicional
+        funcionario_id = kwargs.pop('funcionario_id', None)
+        super().__init__(*args, **kwargs)
 
-        # Definindo o queryset para o campo 'treinamento'
-        self.fields['treinamento'].queryset = ListaPresenca.objects.all()
-        self.fields['treinamento'].label = 'Treinamento/Curso'
+        # Ajusta dinamicamente o queryset do campo treinamento
+        if funcionario_id:
+            self.fields['treinamento'].queryset = Treinamento.objects.filter(funcionarios__id=funcionario_id)
+        else:
+            self.fields['treinamento'].queryset = Treinamento.objects.none()
 
-        # Configurando o queryset para campos de responsáveis
-        # Agora os responsáveis são ForeignKeys para o modelo Funcionario
+        # Configurando os responsáveis como opcionais
         self.fields['responsavel_1'].queryset = Funcionario.objects.filter(status="Ativo")
-        self.fields['responsavel_1'].required = False  # Definindo como opcional
-
+        self.fields['responsavel_1'].required = False
         self.fields['responsavel_2'].queryset = Funcionario.objects.filter(status="Ativo")
-        self.fields['responsavel_2'].required = False  # Definindo como opcional
-
+        self.fields['responsavel_2'].required = False
         self.fields['responsavel_3'].queryset = Funcionario.objects.filter(status="Ativo")
-        self.fields['responsavel_3'].required = False  # Definindo como opcional
+        self.fields['responsavel_3'].required = False
 
-        # Ajustando rótulos
+        # Ajustando os rótulos para os responsáveis
         self.fields['responsavel_1'].label = "Primeiro Responsável (opcional)"
         self.fields['responsavel_2'].label = "Segundo Responsável (opcional)"
         self.fields['responsavel_3'].label = "Terceiro Responsável (opcional)"
-
 
 class AvaliacaoExperienciaForm(forms.ModelForm):
     observacoes = forms.CharField(
@@ -431,3 +432,16 @@ class AtividadeForm(forms.ModelForm):
     class Meta:
         model = Atividade
         fields = ['nome', 'departamento']  # Incluindo o campo 'departamento'
+
+from django import forms
+from .models import IndicadorDesempenho, PlanoAcaoMelhoria
+
+class IndicadorDesempenhoForm(forms.ModelForm):
+    class Meta:
+        model = IndicadorDesempenho
+        fields = ['nome', 'responsavel', 'objetivo', 'meta']
+
+class PlanoAcaoMelhoriaForm(forms.ModelForm):
+    class Meta:
+        model = PlanoAcaoMelhoria
+        fields = ['indicador', 'acao', 'responsavel', 'prazo', 'situacao']

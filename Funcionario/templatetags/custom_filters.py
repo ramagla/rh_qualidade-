@@ -49,3 +49,22 @@ def auto_breaks(value, max_length=20):
 
     # Junta as linhas com <br> para quebras no HTML
     return "<br>".join(lines)
+
+@register.filter
+def sum_values(queryset, field_name):
+    return sum(getattr(obj, field_name, 0) for obj in queryset)
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+
+
+@register.filter
+def dict(value, key):
+    return value.get(key, '')
+
+
+@register.filter
+def primeiro_nome(nome_completo):
+    """Retorna apenas o primeiro nome de um nome completo."""
+    return nome_completo.split()[0] if nome_completo else ""

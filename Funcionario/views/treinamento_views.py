@@ -14,10 +14,11 @@ import csv
 def lista_treinamentos(request):
     tipo = request.GET.get('tipo')
     status = request.GET.get('status')
-    ordenacao = request.GET.get('ordenacao', 'funcionario__nome')  # Ordenação padrão
+    ordenacao = request.GET.get('ordenacao', 'nome_curso')  # Alterado para evitar problema com ManyToMany
     registros_por_pagina = int(request.GET.get('registros_por_pagina', 50))  # Registros por página (padrão: 50)
 
-    treinamentos = Treinamento.objects.all().order_by(ordenacao)
+    # Atualização para ManyToMany
+    treinamentos = Treinamento.objects.prefetch_related('funcionarios').all()
 
     if tipo:
         treinamentos = treinamentos.filter(tipo=tipo)
@@ -25,7 +26,7 @@ def lista_treinamentos(request):
         treinamentos = treinamentos.filter(status=status)
 
     # Paginação
-    paginator = Paginator(treinamentos, registros_por_pagina)
+    paginator = Paginator(treinamentos.order_by(ordenacao).distinct(), registros_por_pagina)
     pagina = request.GET.get('pagina')
     treinamentos_paginados = paginator.get_page(pagina)
 
@@ -38,7 +39,6 @@ def lista_treinamentos(request):
         'registros_por_pagina': registros_por_pagina,
     }
     return render(request, 'treinamentos/lista_treinamentos.html', context)
-
 
 def cadastrar_treinamento(request):
     if request.method == 'POST':
@@ -83,7 +83,7 @@ def visualizar_treinamento(request, treinamento_id):
 
 def imprimir_f003(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-    treinamentos = Treinamento.objects.filter(funcionario=funcionario)
+    treinamentos = Treinamento.objects.filter(funcionarios=funcionario)
 
     # Obtendo a data da última atualização
     ultima_atualizacao = treinamentos.order_by('-data_fim').first().data_fim if treinamentos.exists() else None
@@ -132,17 +132,18 @@ def gerar_relatorio_f003(request):
         return render(request, 'relatorio_f003.html', context)
     
 def exportar_treinamentos_csv(request):
-    treinamentos = Treinamento.objects.all()
+    treinamentos = Treinamento.objects.prefetch_related('funcionarios').all()
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="treinamentos.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(['Funcionário', 'Curso', 'Tipo', 'Status', 'Data Conclusão', 'Carga Horária'])
+    writer.writerow(['Funcionários', 'Curso', 'Tipo', 'Status', 'Data Conclusão', 'Carga Horária'])
 
     for treinamento in treinamentos:
+        funcionarios = ", ".join(func.nome for func in treinamento.funcionarios.all())
         writer.writerow([
-            treinamento.funcionario.nome,
+            funcionarios,
             treinamento.nome_curso,
             treinamento.tipo,
             treinamento.status,
@@ -151,6 +152,7 @@ def exportar_treinamentos_csv(request):
         ])
 
     return response
+
 
 
 from django.db.models import Case, When, Value, CharField
@@ -175,7 +177,7 @@ def levantamento_treinamento(request):
     if filtro_departamento:
         funcionarios = funcionarios.filter(local_trabalho=filtro_departamento)
 
-    treinamentos = Treinamento.objects.filter(funcionario__in=funcionarios)
+    treinamentos = Treinamento.objects.filter(funcionarios__in=funcionarios)
     if filtro_data_inicio:
         treinamentos = treinamentos.filter(data_inicio__gte=filtro_data_inicio)
     if filtro_data_fim:

@@ -4,4 +4,5 @@ from .models import Treinamento
 
 @receiver(post_save, sender=Treinamento)
 def atualizar_escolaridade_funcionario(sender, instance, **kwargs):
-    instance.funcionario.atualizar_escolaridade()
+    for funcionario in instance.funcionarios.all():
+        funcionario.atualizar_escolaridade()

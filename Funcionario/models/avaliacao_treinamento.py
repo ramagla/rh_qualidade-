@@ -2,7 +2,7 @@ from django.db import models
 from datetime import timedelta
 from django.utils import timezone
 from .funcionario import Funcionario
-from .lista_presenca import ListaPresenca
+from .treinamento import Treinamento
 
 class AvaliacaoTreinamento(models.Model):
     OPCOES_CONHECIMENTO = [
@@ -30,7 +30,7 @@ class AvaliacaoTreinamento(models.Model):
     ]
 
     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
-    treinamento = models.ForeignKey(ListaPresenca, on_delete=models.CASCADE, related_name="avaliacoes")
+    treinamento = models.ForeignKey(Treinamento, on_delete=models.CASCADE, related_name="avaliacoes")
 
     data_avaliacao = models.DateField()
     periodo_avaliacao = models.IntegerField(default=60)  # Período de avaliação em dias

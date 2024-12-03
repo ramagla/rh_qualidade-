@@ -118,6 +118,15 @@ from .views.matriz_polivalencia_views import (
     get_atividades_e_funcionarios_por_departamento
 )
 
+from .views.relatorios_views import (
+    RelatorioPlanilhaTreinamentosView,
+    RelatorioIndicadorAnualView,
+    cronograma_treinamentos,
+    cronograma_avaliacao_eficacia
+    
+)
+
+
 
 # Definição das `urlpatterns`
 urlpatterns = [
@@ -270,6 +279,14 @@ urlpatterns = [
     # APIs para AJAX
     path('get-atividades-por-departamento/', get_atividades_por_departamento, name='get_atividades_por_departamento'),
     path('get-atividades-e-funcionarios-por-departamento/', get_atividades_e_funcionarios_por_departamento, name='get_atividades_e_funcionarios_por_departamento'),
+
+    # Relatorios
+    path('relatorios/indicador_anual/', RelatorioIndicadorAnualView.as_view(), name='relatorio_indicador_anual'),
+    path('relatorios/planilha-treinamentos/', RelatorioPlanilhaTreinamentosView.as_view(), name='relatorio_planilha_treinamentos'),
+    path('relatorios/indicador/', RelatorioPlanilhaTreinamentosView.as_view(template_name='relatorios/indicador.html'), name='relatorio_indicador'),
+    path('relatorios/horas-treinamento/', RelatorioPlanilhaTreinamentosView.as_view(template_name='relatorios/relatorio_horas_treinamento.html'), name='relatorio_horas_treinamento'),
+    path('cronograma-treinamentos/', cronograma_treinamentos, name='cronograma_treinamentos'),
+    path('cronograma-avaliacao-eficacia/', cronograma_avaliacao_eficacia, name='cronograma_avaliacao_eficacia'),
 
 
 ]

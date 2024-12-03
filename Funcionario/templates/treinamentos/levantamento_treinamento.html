@@ -80,8 +80,11 @@
                             <td>{{ forloop.counter }}</td>
                             <td>{{ treinamento.nome_curso }}</td>
                             <td>{{ treinamento.instituicao_ensino }}</td>
-                            <td>{{ treinamento.funcionario.nome }}</td>
                             <td>
+                                {% for funcionario in treinamento.funcionarios.all %}
+                                    {{ funcionario.nome }}<br>
+                                {% endfor %}
+                            </td>                            <td>
                                 {% if treinamento.situacao == 'APROVADO' %}
                                     <span style="color: green; font-weight: bold;">{{ treinamento.situacao }}</span>
                                 {% elif treinamento.situacao == 'REPROVADO' %}

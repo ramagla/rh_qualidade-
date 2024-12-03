@@ -44,6 +44,11 @@ def lista_avaliacoes(request):
     })
 
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from Funcionario.forms import AvaliacaoTreinamentoForm
+from Funcionario.models import Funcionario, Treinamento
+
 def cadastrar_avaliacao(request):
     # Carregar todos os funcionários ordenados por nome
     funcionarios = Funcionario.objects.order_by('nome')
@@ -56,7 +61,6 @@ def cadastrar_avaliacao(request):
         (4, "Bom"),
         (5, "Excelente")
     ]
-    
     opcoes_aplicacao = [
         (1, "Muito baixo"),
         (2, "Baixo"),
@@ -64,7 +68,6 @@ def cadastrar_avaliacao(request):
         (4, "Bom"),
         (5, "Excelente")
     ]
-    
     opcoes_resultados = [
         (1, "Muito baixo"),
         (2, "Baixo"),
@@ -74,18 +77,25 @@ def cadastrar_avaliacao(request):
     ]
 
     if request.method == 'POST':
-        # Processar a submissão do formulário
+        # Captura o ID do funcionário selecionado
+        funcionario_id = request.POST.get('funcionario')
+
+        # Cria o formulário com os dados do POST
         form = AvaliacaoTreinamentoForm(request.POST)
-        
+
+        # Ajusta o queryset dinamicamente para o campo treinamento
+        if funcionario_id:
+            form.fields['treinamento'].queryset = Treinamento.objects.filter(funcionarios__id=funcionario_id)
+
+        # Verifica se o formulário é válido
         if form.is_valid():
             form.save()
             messages.success(request, "Avaliação cadastrada com sucesso!")
-            return redirect('lista_avaliacoes')  # Redireciona para a lista de avaliações
+            return redirect('lista_avaliacoes')
         else:
             messages.error(request, "Erro ao cadastrar a avaliação. Verifique os campos.")
-    
     else:
-        # Inicializa o formulário vazio para o GET
+        # Cria um formulário vazio para o GET
         form = AvaliacaoTreinamentoForm()
 
     # Renderiza o template com o formulário e opções necessárias
@@ -97,115 +107,53 @@ def cadastrar_avaliacao(request):
         'opcoes_resultados': opcoes_resultados,
     })
 
+
 def editar_avaliacao(request, id):
     # Busca a avaliação de treinamento com o ID fornecido
     avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)
-    funcionarios = Funcionario.objects.all()  # Todos os funcionários disponíveis
-    treinamentos = ListaPresenca.objects.all()  # Todos os treinamentos disponíveis
+    funcionarios = Funcionario.objects.order_by('nome')  # Carrega todos os funcionários ordenados por nome
 
-    # Mapeamento das respostas para texto
-    opcoes_conhecimento = {
-        1: "Não possui conhecimento mínimo da metodologia para sua aplicação.",
-        2: "Apresenta deficiências nos conceitos, o que compromete a aplicação.",
-        3: "Possui noções básicas, mas necessita de acompanhamento e suporte na aplicação.",
-        4: "Possui domínio necessário da metodologia e a utiliza adequadamente.",
-        5: "Possui completo domínio e utiliza a metodologia com excelência."
-    }
-    opcoes_aplicacao = {
-        1: "Está muito abaixo do esperado.",
-        2: "Aplicação está abaixo do esperado.",
-        3: "Aplicação é razoável, mas não dentro do esperado.",
-        4: "Aplicação está adequada e corresponde às expectativas.",
-        5: "Aplicação excede as expectativas."
-    }
-    opcoes_resultados = {
-        1: "Nenhum resultado foi obtido efetivamente até o momento.",
-        2: "As melhorias obtidas estão muito abaixo do esperado.",
-        3: "As melhorias obtidas são consideráveis, mas não dentro do esperado.",
-        4: "As melhorias obtidas são boas e estão dentro do esperado.",
-        5: "As melhorias obtidas excederam as expectativas."
-    }
+    # Inicializa os treinamentos vinculados ao funcionário da avaliação
+    treinamentos = Treinamento.objects.filter(funcionarios=avaliacao.funcionario)
 
     if request.method == 'POST':
+        # Carrega o formulário com os dados enviados
         form = AvaliacaoTreinamentoForm(request.POST, instance=avaliacao)
+
+        # Obtém o funcionário selecionado no formulário
+        funcionario_id = request.POST.get('funcionario')
+
+        # Ajusta dinamicamente o queryset do campo treinamento com base no funcionário selecionado
+        if funcionario_id:
+            form.fields['treinamento'].queryset = Treinamento.objects.filter(funcionarios__id=funcionario_id)
+        else:
+            form.fields['treinamento'].queryset = Treinamento.objects.none()
+
         if form.is_valid():
+            # Salva a avaliação com os dados atualizados
             form.save()
             messages.success(request, "Avaliação atualizada com sucesso!")
             return redirect('lista_avaliacoes')  # Redireciona para a lista de avaliações
         else:
             messages.error(request, "Erro ao atualizar a avaliação. Verifique os campos.")
     else:
+        # Inicializa o formulário com os dados existentes
         form = AvaliacaoTreinamentoForm(instance=avaliacao)
 
-    # Renderiza o template com os dados da avaliação e as opções de questionário
+        # Define o queryset do treinamento com base no funcionário da avaliação existente
+        form.fields['treinamento'].queryset = treinamentos
+
+    # Renderiza o template com os dados necessários
     return render(request, 'avaliacao_treinamento/editar_avaliacao.html', {
         'form': form,
         'avaliacao': avaliacao,
         'funcionarios': funcionarios,
-        'treinamentos': treinamentos,
+        'treinamentos': treinamentos,  # Envia os treinamentos disponíveis para o template
         'opcoes_conhecimento': AvaliacaoTreinamento.OPCOES_CONHECIMENTO,
         'opcoes_aplicacao': AvaliacaoTreinamento.OPCOES_APLICACAO,
         'opcoes_resultados': AvaliacaoTreinamento.OPCOES_RESULTADOS,
-        'grau_conhecimento': opcoes_conhecimento.get(avaliacao.pergunta_1, "Resposta não especificada"),
-        'aplicacao_conceitos': opcoes_aplicacao.get(avaliacao.pergunta_2, "Resposta não especificada"),
-        'resultados_obtidos': opcoes_resultados.get(avaliacao.pergunta_3, "Resposta não especificada"),
-        'avaliacao_geral': avaliacao.get_avaliacao_geral_display(),
     })
-
-    # Função para verificar e buscar um Funcionario pelo ID
-    def get_responsavel(responsavel_id, cargo):
-        try:
-            # Verifica se o valor do ID é um número
-            responsavel_id = int(responsavel_id)
-            responsavel = Funcionario.objects.get(id=responsavel_id)
-            return {'nome': responsavel.nome, 'cargo': cargo}
-        except (ValueError, TypeError, Funcionario.DoesNotExist):
-            # Retorna valores padrão se não for um número ou não existir
-            return {'nome': 'Não selecionado', 'cargo': cargo}
-
-    # Coletando dados dos responsáveis
-    responsaveis = [
-        get_responsavel(avaliacao.responsavel_1_nome, avaliacao.responsavel_1_cargo),
-        get_responsavel(avaliacao.responsavel_2_nome, avaliacao.responsavel_2_cargo),
-        get_responsavel(avaliacao.responsavel_3_nome, avaliacao.responsavel_3_cargo),
-    ]
-
-    # Traduzindo respostas para texto
-    grau_conhecimento = opcoes_conhecimento.get(avaliacao.pergunta_1, "Resposta não especificada")
-    aplicacao_conceitos = opcoes_aplicacao.get(avaliacao.pergunta_2, "Resposta não especificada")
-    resultados_obtidos = opcoes_resultados.get(avaliacao.pergunta_3, "Resposta não especificada")
-
-    # Avaliação geral - Mapeamento do número para o texto correspondente
-    avaliacao_geral_map = {
-        1: "Pouco Eficaz",
-        2: "Eficaz",
-        5: "Muito Eficaz"
-    }
-    avaliacao_geral = avaliacao_geral_map.get(avaliacao.avaliacao_geral, "Indeterminado")
-
-    if request.method == 'POST':
-        form = AvaliacaoTreinamentoForm(request.POST, instance=avaliacao)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_avaliacoes')  # Redireciona para a lista de avaliações
-    else:
-        form = AvaliacaoTreinamentoForm(instance=avaliacao)
-
-    context = {
-        'form': form,
-        'avaliacao': avaliacao,
-        'funcionarios': funcionarios,
-        'treinamentos': treinamentos,
-        'opcoes_conhecimento': AvaliacaoTreinamento.OPCOES_CONHECIMENTO,
-        'opcoes_aplicacao': AvaliacaoTreinamento.OPCOES_APLICACAO,
-        'opcoes_resultados': AvaliacaoTreinamento.OPCOES_RESULTADOS,
-        'responsaveis': responsaveis,
-        'grau_conhecimento': grau_conhecimento,
-        'aplicacao_conceitos': aplicacao_conceitos,
-        'resultados_obtidos': resultados_obtidos,
-        'avaliacao_geral': avaliacao_geral,
-    }
-    return render(request, 'avaliacao_treinamento/editar_avaliacao.html', context)
+    
 
 
 

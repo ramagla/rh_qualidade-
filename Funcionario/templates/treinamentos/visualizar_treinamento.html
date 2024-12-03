@@ -21,8 +21,16 @@
         </div>
 
         <div class="col-md-6 text-center align-self-center">
-            <label class="form-label">Funcionário:</label>
-            <p class="mt-2"><strong>{{ treinamento.funcionario.nome }}</strong></p>
+            <label class="form-label">Funcionários:</label>
+            {% if treinamento.funcionarios.exists %}
+                <ul class="list-unstyled mt-2">
+                    {% for funcionario in treinamento.funcionarios.all %}
+                        <li><strong>{{ funcionario.nome }}</strong></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Nenhum funcionário associado a este treinamento.</p>
+            {% endif %}
         </div>
     </div>
 

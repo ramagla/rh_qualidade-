@@ -3,6 +3,10 @@ from django.db import models
 from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 from .funcionario import Funcionario
+from calendar import monthrange
+import calendar
+
+
 
 class Treinamento(models.Model):
     TIPO_TREINAMENTO_CHOICES = [
@@ -14,7 +18,7 @@ class Treinamento(models.Model):
         ('capacitacao', 'Capacitação'),
         ('tecnico', 'Técnico'),
         ('graduacao', 'Graduação'),
-        ('pos-graduacao', 'Pos-graduacao'),
+        ('pos-graduacao', 'Pos-graduação'),
         ('treinamento', 'Treinamento'),
         ('divulgacao', 'Divulgação'),
     ]
@@ -30,24 +34,35 @@ class Treinamento(models.Model):
         ('aprovado', 'Aprovado'),
         ('reprovado', 'Reprovado'),
     ]
+
+    PLANEJADO_CHOICES = [
+        ('sim', 'Sim'),
+        ('nao', 'Não'),
+    ]
     
-    funcionario = models.ForeignKey(Funcionario, on_delete=models.PROTECT, related_name='treinamentos')
+    funcionarios = models.ManyToManyField(Funcionario, related_name='treinamentos')
     tipo = models.CharField(max_length=50, choices=TIPO_TREINAMENTO_CHOICES)
     categoria = models.CharField(max_length=100, choices=CATEGORIA_CHOICES)
     nome_curso = models.CharField(max_length=100)
     instituicao_ensino = models.CharField(max_length=255, default='Bras-Mol')
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='cursando')  # Campo de status
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='cursando')
     data_inicio = models.DateField()
     data_fim = models.DateField()
     carga_horaria = models.CharField(max_length=50)
     anexo = models.FileField(upload_to='certificados/', blank=True, null=True)
-    descricao = CKEditor5Field(config_name='default', blank=True, null=True )
+    descricao = CKEditor5Field(config_name='default', blank=True, null=True)
     situacao = models.CharField(
         max_length=50,
         choices=SITUACAO_CHOICES,
         blank=True,
         null=True,
         help_text="Campo exibido apenas para treinamentos requeridos."
+    )
+    planejado = models.CharField(
+        max_length=3,
+        choices=PLANEJADO_CHOICES,
+        default='nao',
+        verbose_name="Planejado"
     )
 
     def __str__(self):
@@ -59,8 +74,28 @@ class Treinamento(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        # Remove o arquivo de mídia associado antes de excluir o registro
         if self.anexo:
             if os.path.isfile(self.anexo.path):
                 os.remove(self.anexo.path)
         super().delete(*args, **kwargs)
+
+    @property
+    def meses_agendados(self):
+        if not self.data_inicio or not self.data_fim:
+            return []
+
+        # Lista para armazenar os meses
+        meses = []
+        ano_inicio, mes_inicio = self.data_inicio.year, self.data_inicio.month
+        ano_fim, mes_fim = self.data_fim.year, self.data_fim.month
+
+        # Percorre o intervalo de anos e meses
+        for ano in range(ano_inicio, ano_fim + 1):
+            mes_inicial = mes_inicio if ano == ano_inicio else 1
+            mes_final = mes_fim if ano == ano_fim else 12
+
+            for mes in range(mes_inicial, mes_final + 1):
+                # Formata como "Jan/24", "Fev/24", etc.
+                meses.append(f"{calendar.month_abbr[mes].capitalize()}/{str(ano)[-2:]}")
+
+        return meses

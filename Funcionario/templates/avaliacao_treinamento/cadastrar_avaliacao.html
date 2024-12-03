@@ -4,6 +4,7 @@
 
 {% block content %}
 {% load custom_filters %}
+{% load static %}
 
     <div class="container mt-5">
         <h2 class="text-center mb-4">Cadastro de Avaliação de Treinamentos</h2>
@@ -161,168 +162,146 @@
 
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Função para calcular a avaliação geral
-        function calcularAvaliacaoGeral() {
-            let total = 0;
-            let poucoEficaz = false;
+   document.addEventListener("DOMContentLoaded", function () {
+    // Função para calcular a avaliação geral
+    function calcularAvaliacaoGeral() {
+        let total = 0;
+        let poucoEficaz = false;
 
-            // Calcula o total somando os valores das respostas e verifica se há alguma resposta "Pouco Eficaz"
-            document.querySelectorAll('input[type="radio"]:checked').forEach(function (input) {
-                const valor = parseInt(input.value);
-                if (valor === 1) {
-                    poucoEficaz = true; // Define como pouco eficaz se qualquer resposta for 1
-                }
-                total += valor; // Soma os valores das respostas
-            });
-
-            const avaliacaoGeralInput = document.getElementById("avaliacao_geral");
-            const avaliacaoStatus = document.getElementById("avaliacao_status"); // Certifique-se de que este elemento exista
-
-            let valorAvaliacao;
-            let statusAvaliacao;
-
-            // Define a pontuação e o status da avaliação com base no total acumulado
-            if (poucoEficaz) {
-                valorAvaliacao = 1; // Pouco Eficaz
-                statusAvaliacao = "Pouco Eficaz";
-            } else if (total < 15) {
-                valorAvaliacao = 2; // Eficaz
-                statusAvaliacao = "Eficaz";
-            } else if (total === 15) { // 5 + 5 + 5 para três respostas excelentes
-                valorAvaliacao = 5; // Muito Eficaz
-                statusAvaliacao = "Muito Eficaz";
-            } else {
-                valorAvaliacao = 0; // Valor padrão caso nenhuma condição seja atendida
-                statusAvaliacao = "Indeterminado"; // Mensagem padrão
+        document.querySelectorAll('input[type="radio"]:checked').forEach(function (input) {
+            const valor = parseInt(input.value);
+            if (valor === 1) {
+                poucoEficaz = true;
             }
+            total += valor;
+        });
 
-            // Atualiza o valor do campo de avaliação geral e o status no DOM
-            if (avaliacaoGeralInput) {
-                avaliacaoGeralInput.value = valorAvaliacao;
-            }
-            if (avaliacaoStatus) {
-                avaliacaoStatus.textContent = statusAvaliacao;
-            }
+        const avaliacaoGeralInput = document.getElementById("avaliacao_geral");
+        const avaliacaoStatus = document.getElementById("avaliacao_status");
 
-            console.log("Avaliação geral:", valorAvaliacao, "Status:", statusAvaliacao);
+        let valorAvaliacao;
+        let statusAvaliacao;
+
+        if (poucoEficaz) {
+            valorAvaliacao = 1; 
+            statusAvaliacao = "Pouco Eficaz";
+        } else if (total < 15) {
+            valorAvaliacao = 2; 
+            statusAvaliacao = "Eficaz";
+        } else if (total === 15) { 
+            valorAvaliacao = 5; 
+            statusAvaliacao = "Muito Eficaz";
+        } else {
+            valorAvaliacao = 0;
+            statusAvaliacao = "Indeterminado";
         }
 
-        // Função para verificar o status do prazo
-        function verificarPrazo() {
-            const dataAvaliacao = document.getElementById("data_avaliacao").value;
-            const periodoAvaliacao = parseInt(document.getElementById("periodo_avaliacao").value);
-            const statusPrazoDiv = document.getElementById("status_prazo");
-
-            if (dataAvaliacao && !isNaN(periodoAvaliacao)) {
-                const dataAvaliacaoDate = new Date(dataAvaliacao);
-                const dataLimite = new Date(dataAvaliacaoDate);
-                dataLimite.setDate(dataLimite.getDate() + periodoAvaliacao);
-
-                const hoje = new Date();
-                let status = "";
-                let cor = "";
-                let emoji = "";
-
-                if (hoje <= dataLimite) {
-                    status = "Dentro do Prazo";
-                    cor = "alert-success";
-                    emoji = "😃";
-                } else {
-                    status = "Fora do Prazo";
-                    cor = "alert-danger";
-                    emoji = "😔";
-                }
-
-                statusPrazoDiv.className = `alert ${cor}`;
-                statusPrazoDiv.textContent = `${status} ${emoji}`;
-                console.log("Status do prazo:", status);
-            } else {
-                statusPrazoDiv.className = "alert alert-secondary";
-                statusPrazoDiv.textContent = "Defina a data de avaliação e o período.";
-            }
+        if (avaliacaoGeralInput) {
+            avaliacaoGeralInput.value = valorAvaliacao;
         }
+        if (avaliacaoStatus) {
+            avaliacaoStatus.textContent = statusAvaliacao;
+        }
+    }
 
-        // Eventos para atualizar o status do prazo ao alterar data ou período
-        document.getElementById("data_avaliacao").addEventListener("change", verificarPrazo);
-        document.getElementById("periodo_avaliacao").addEventListener("input", verificarPrazo);
+    function verificarPrazo() {
+        const dataAvaliacao = document.getElementById("data_avaliacao").value;
+        const periodoAvaliacao = parseInt(document.getElementById("periodo_avaliacao").value);
+        const statusPrazoDiv = document.getElementById("status_prazo");
 
-        // Configuração do Select2 para Funcionário e Treinamento
-        const funcionarioSelect = $("#funcionario"); // Usando Select2
-        const treinamentoSelect = $("#treinamento"); // Usando Select2 também
+        if (dataAvaliacao && !isNaN(periodoAvaliacao)) {
+            const dataAvaliacaoDate = new Date(dataAvaliacao);
+            const dataLimite = new Date(dataAvaliacaoDate);
+            dataLimite.setDate(dataLimite.getDate() + periodoAvaliacao);
 
-        // Inicializa o Select2 no campo de funcionário
-        funcionarioSelect.select2({
-            placeholder: "Selecione um Funcionário",
-            allowClear: true
-        });
+            const hoje = new Date();
+            let status = "";
+            let cor = "";
+            let emoji = "";
 
-        // Inicializa o Select2 no campo de treinamento
-        treinamentoSelect.select2({
-            placeholder: "Selecione o Treinamento",
-            allowClear: true
-        });
-
-        // Evento de mudança no Select2 do funcionário
-        funcionarioSelect.on("select2:select", function (e) {
-            const funcionarioId = e.params.data.id; // ID do funcionário selecionado
-            console.log("Funcionário selecionado:", funcionarioId);
-
-            if (funcionarioId) {
-                // Atualiza o Select2 com um placeholder enquanto carrega
-                treinamentoSelect.html('<option value="">Carregando...</option>').trigger("change");
-
-                // Faz a requisição para buscar os treinamentos
-                fetch(`/get-treinamentos-funcionarios/${funcionarioId}/`)
-                    .then((response) => {
-                        if (!response.ok) {
-                            throw new Error(`Erro na API: ${response.statusText}`);
-                        }
-                        return response.json();
-                    })
-                    .then((data) => {
-                        console.log("Dados recebidos da API:", data);
-
-                        // Limpa as opções do Select2 e popula com os novos dados
-                        treinamentoSelect.empty().append('<option value="">Selecione o Treinamento</option>');
-                        if (data.length === 0) {
-                            treinamentoSelect.append('<option value="">Nenhum treinamento encontrado</option>');
-                        } else {
-                            data.forEach((treinamento) => {
-                                console.log("Adicionando treinamento:", treinamento); // Log dos dados
-                                const option = new Option(
-                                    `${treinamento.nome_curso} (${treinamento.data_fim || "Sem data"})`,
-                                    treinamento.id,
-                                    false,
-                                    false
-                                );
-                                treinamentoSelect.append(option);
-                            });
-                        }
-
-                        // Atualiza o Select2
-                        treinamentoSelect.trigger("change");
-                    })
-                    .catch((error) => {
-                        console.error("Erro ao carregar treinamentos:", error);
-                        treinamentoSelect.html('<option value="">Erro ao carregar treinamentos</option>').trigger("change");
-                    });
+            if (hoje <= dataLimite) {
+                status = "Dentro do Prazo";
+                cor = "alert-success";
+                emoji = "😃";
             } else {
-                // Caso nenhum funcionário seja selecionado, limpa o Select2
-                treinamentoSelect.html('<option value="">Selecione o Treinamento</option>').trigger("change");
+                status = "Fora do Prazo";
+                cor = "alert-danger";
+                emoji = "😔";
             }
-        });
 
-        // Adiciona eventos de mudança para calcular avaliação geral
-        document.querySelectorAll('input[type="radio"]').forEach(function (input) {
-            input.addEventListener("change", calcularAvaliacaoGeral);
-        });
+            statusPrazoDiv.className = `alert ${cor}`;
+            statusPrazoDiv.textContent = `${status} ${emoji}`;
+        } else {
+            statusPrazoDiv.className = "alert alert-secondary";
+            statusPrazoDiv.textContent = "Defina a data de avaliação e o período.";
+        }
+    }
 
-        // Inicializa os valores de prazo e avaliação geral ao carregar a página
-        verificarPrazo();
-        calcularAvaliacaoGeral();
+    document.getElementById("data_avaliacao").addEventListener("change", verificarPrazo);
+    document.getElementById("periodo_avaliacao").addEventListener("input", verificarPrazo);
+
+    const funcionarioSelect = $("#funcionario");
+    const treinamentoSelect = $("#treinamento");
+
+    funcionarioSelect.select2({
+        placeholder: "Selecione um Funcionário",
+        allowClear: true
     });
+
+    treinamentoSelect.select2({
+        placeholder: "Selecione o Treinamento",
+        allowClear: true
+    });
+
+    funcionarioSelect.on("select2:select", function (e) {
+        const funcionarioId = e.params.data.id;
+
+        if (funcionarioId) {
+            treinamentoSelect.html('<option value="">Carregando...</option>').trigger("change");
+
+            fetch(`/get-treinamentos-funcionarios/${funcionarioId}/`)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`Erro na API: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    console.log(data); // Verifique a resposta da API aqui
+                    treinamentoSelect.empty().append('<option value="">Selecione o Treinamento</option>');
+                    if (data.length === 0) {
+                        treinamentoSelect.append('<option value="">Nenhum treinamento encontrado</option>');
+                    } else {
+                        data.forEach((treinamento) => {
+                            const option = new Option(
+                                `${treinamento.nome_curso} - ${treinamento.data_fim}`,
+                                treinamento.id
+                            );
+                            treinamentoSelect.append(option);
+                        });
+                    }
+                    treinamentoSelect.trigger("change");
+                })
+                .catch((error) => {
+                    console.error("Erro ao carregar treinamentos:", error);
+                    treinamentoSelect.html('<option value="">Erro ao carregar treinamentos</option>').trigger("change");
+                });
+        } else {
+            treinamentoSelect.html('<option value="">Selecione o Treinamento</option>').trigger("change");
+        }
+    });
+
+    document.querySelectorAll('input[type="radio"]').forEach(function (input) {
+        input.addEventListener("change", calcularAvaliacaoGeral);
+    });
+
+    verificarPrazo();
+    calcularAvaliacaoGeral();
+});
+
 </script>
+
+
 
 
 {% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load custom_filters %}
+
+<head>
+    {{ form.media }} <!-- Inclui scripts e estilos adicionais se necessário -->
+</head>
+
+<div class="print-container container mt-5">
+    {% include 'header.html' %} <!-- Inclui o cabeçalho do relatório -->
+
+    <!-- Botões de Ação -->
+    <div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+        <a href="{% url 'relatorio_indicador' %}" class="btn btn-secondary">
+            <i class="fas fa-chart-line"></i> Indicador
+        </a>
+    </div>
+
+
+    <!-- Filtro por Trimestre -->
+    <form method="GET" class="mb-4 d-print-none">
+        <label for="trimestre">Selecione o Trimestre:</label>
+        <select name="trimestre" id="trimestre" class="form-select">
+            {% for key, value in trimestres.items %}
+                <option value="{{ key }}" {% if key == trimestre_selecionado %}selected{% endif %}>{{ value }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary mt-2">Filtrar</button>
+    </form>
+
+    <!-- Tabelas Mensais -->
+    {% for mes, treinamentos in treinamentos_por_mes.items %}
+        <h4>{{ meses|get_item:mes }}</h4>
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Nome do Curso</th>
+                    <th>Participantes</th>
+                    <th>Quantidade Total de Horas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% with total_horas_mes=0 %}
+                    {% for treinamento in treinamentos %}
+                        <tr>
+                            <td>{{ treinamento.nome_curso }}</td>
+                            <td>{{ treinamento.participantes_count }}</td>
+                            <td>{{ treinamento.total_horas }}h</td>
+                        </tr>
+                        {% with total_horas_mes=total_horas_mes|add:treinamento.total_horas %}
+                        {% endwith %}
+                    {% endfor %}
+                {% endwith %}
+            </tbody>
+        </table>
+
+        <!-- Totais para o mês -->
+        <div class="totais mt-4">
+            <h5>Totais para o Mês</h5>
+            <ul>
+                <li><strong>Total de Horas de Treinamento:</strong> {{ total_horas_por_mes|get_item:mes }}h</li>
+            </ul>
+        </div>
+    {% endfor %}
+
+    <!-- Totais gerais -->
+    <div class="totais mt-5">
+        <h4>Totais Gerais</h4>
+        <ul>
+            <li><strong>Total de Horas de Treinamento:</strong> {{ total_horas_treinamento }}h</li>
+            <li><strong>Total de Horas Trabalhadas no Mês por Funcionário:</strong> {{ total_horas_trabalhadas_mes_funcionario }}h</li>
+            <li><strong>Total Número de Funcionários:</strong> {{ total_funcionarios }}</li>
+            <li><strong>Total de Horas Trabalhadas na Empresa:</strong> {{ total_horas_trabalhadas_empresa }}h</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Estilos personalizados e de impressão -->
+<style>
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .custom-table th, .custom-table td {
+        padding: 8px;
+        border: 1px solid #ddd;
+        text-align: center;
+    }
+    .custom-table th {
+        background-color: #f7f7f7;
+    }
+    @media print {
+        .d-print-none {
+            display: none !important;
+        }
+        .print-container {
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 800px;
+        }
+        .custom-table th, .custom-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            font-size: 10px;
+        }
+    }
+</style>
+
+<!-- Script para impressão -->
+<script>
+    function imprimir() {
+        var conteudo = document.querySelector('.print-container').innerHTML;
+        var novaJanela = window.open('', '_blank', 'width=800,height=600');
+        novaJanela.document.write(`
+            <html>
+                <head>
+                    <title>Relatório de Treinamentos</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 10px; }
+                        .custom-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+                        .custom-table th, .custom-table td {
+                            padding: 8px;
+                            border: 1px solid #ddd;
+                            text-align: center;
+                            font-size: 8px;
+                        }
+                        .custom-table th {
+                            background-color: #f7f7f7;
+                        }
+                        .numero-formulario {
+                            position: fixed;
+                            bottom: 10px;
+                            right: 10px;
+                        }
+                        @media print {
+                            .d-print-none { display: none !important; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${conteudo}
+                </body>
+            </html>
+        `);
+        novaJanela.document.close();
+        novaJanela.onload = function() {
+            novaJanela.print();
+            novaJanela.close();
+        };
+    }
+</script>
+{% endblock %}

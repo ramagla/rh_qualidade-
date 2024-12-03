@@ -171,53 +171,80 @@
 
     <script>
         function imprimir() {
-            var conteudo = document.querySelector('.container').innerHTML;
-            var novaJanela = window.open('', '_blank', 'width=800,height=600');
+    var conteudo = document.querySelector('.container').innerHTML;
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
 
-            novaJanela.document.write(`
-                <html>
-                    <head>
-                        <title>Integração de Funcionário</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }
-                            .info-card { display: flex; gap: 20px; flex-wrap: wrap; }
-                            .info-column { width: 48%; }
-                            .numero-formulario { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #333; }
-                            
-                            /* Estilos da tabela */
-                            th, td {
-                                padding: 4px;
-                                border: 1px solid #ddd;
-                                font-size: 10px;
-                                text-align: center;
-                            }
-                            th {
-                                background-color: #e7f1ff;
-                                color: #333;
-                                font-weight: bold;
-                            }
-                            tr:nth-child(even) {
-                                background-color: #f9f9f9;
-                            }
-                            
-                            /* Estilos para impressão */
-                            @media print {
-                                .d-print-none { display: none !important; }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <h2>Integração de Funcionário</h2>
-                        ${conteudo}
-                        <div class="numero-formulario">F146 Rev.02</div>
-                    </body>
-                </html>
-            `);
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <title>Integração de Funcionário</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        color: #333;
+                        padding: 20px;
+                        font-size: 10px;
+                    }
+                    .info-card {
+                        display: flex;
+                        gap: 20px;
+                        flex-wrap: wrap;
+                    }
+                    .info-column {
+                        width: 48%;
+                    }
+                    .numero-formulario {
+                        position: fixed;
+                        bottom: 10px;
+                        right: 10px;
+                        font-size: 10px;
+                        color: #333;
+                    }
+                    
+                    /* Estilos da tabela */
+                    th, td {
+                        padding: 4px;
+                        border: 1px solid #ddd;
+                        font-size: 10px;
+                        text-align: center;
+                    }
+                    th {
+                        background-color: #e7f1ff;
+                        color: #333;
+                        font-weight: bold;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f9f9f9;
+                    }
 
-            novaJanela.document.close();
-            novaJanela.print();
-            novaJanela.close();
-        }
+                    /* Estilo para centralizar o título */
+                    h2 {
+                        text-align: center;
+                        font-size: 16px; /* Ajuste o tamanho se necessário */
+                        margin: 10px 0;
+                    }
+                    
+                    /* Estilos para impressão */
+                    @media print {
+                        .d-print-none {
+                            display: none !important;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <h2>Integração de Funcionário</h2>
+                ${conteudo}
+                <div class="numero-formulario">F146 Rev.02</div>
+            </body>
+        </html>
+    `);
+
+    novaJanela.document.close();
+    novaJanela.print();
+    novaJanela.close();
+}
+
     </script>
 </div>
 {% endblock %}

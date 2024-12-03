@@ -145,12 +145,14 @@
 <script>
 function imprimir() {
     var conteudo = document.querySelector('.print-container').innerHTML;
+    
+
     var novaJanela = window.open('', '_blank', 'width=800,height=600');
     
     novaJanela.document.write(`
         <html>
-            <head>
-                <title>Lista de Assinaturas</title>
+            <head>    
+                <title>Lista de Assinaturas</title> <!-- Define o título da página -->            
                 <style>
                     /* Estilos gerais */
                     body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }
@@ -188,7 +190,7 @@ function imprimir() {
             </head>
             <body>
                 <h2>Lista de Assinaturas</h2>
-                ${conteudo}
+                ${conteudo}               
             </body>
         </html>
     `);

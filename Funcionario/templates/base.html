@@ -98,6 +98,18 @@
     </ul>
 </div>
 
+<div class="dropdown">
+    <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-file-alt"></i> <span class="sidebar-text">Relatórios</span>
+    </a>
+    <ul class="dropdown-menu" style="background-color: #343a40; color: white;">
+        <li><a class="dropdown-item text-white" href="{% url 'relatorio_indicador' %}">Indicador de Treinamentos</a></li>
+        <li><a class="dropdown-item text-white" href="{% url 'relatorio_indicador_anual' %}">Indicador Anual</a></li>
+        <li><a class="dropdown-item text-white" href="{% url 'cronograma_treinamentos' %}">Cronograma de Treinamentos</a></li>
+        <li><a class="dropdown-item text-white" href="{% url 'cronograma_avaliacao_eficacia' %}">Cronograma de Eficácia</a></li>
+
+    </ul>
+</div>
 
 
 

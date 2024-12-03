@@ -139,12 +139,13 @@
     <tr>
         <td class="align-middle">{{ avaliacao.funcionario.nome }}</td>
         <td class="align-middle">
-            {% if avaliacao.treinamento %}
-                {{ avaliacao.treinamento.assunto }} - {{ avaliacao.treinamento.data_realizacao }}
-            {% else %}
-                Não definido
-            {% endif %}
-        </td>
+    {% if avaliacao.treinamento %}
+        {{ avaliacao.treinamento.nome_curso }} - {{ avaliacao.treinamento.data_realizacao|date:"d/m/Y" }}
+    {% else %}
+        <span class="text-muted">Não definido</span>
+    {% endif %}
+</td>
+
         <td class="align-middle">{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
         <td class="align-middle">
             {% if avaliacao.avaliacao_geral == 1 %}

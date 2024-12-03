@@ -1,15 +1,27 @@
 from django.contrib import admin
-from .models import Treinamento, AvaliacaoTreinamento,AtualizacaoSistema,Settings
+from ckeditor.widgets import CKEditorWidget
+from django import forms
+from Funcionario.models import Treinamento, AvaliacaoTreinamento, AtualizacaoSistema, Settings
 
+# Registro dos modelos simples
 admin.site.register(Treinamento)
 admin.site.register(AvaliacaoTreinamento)
+admin.site.register(Settings)
 
+# Formulário personalizado para usar CKEditor no campo 'descricao'
+class AtualizacaoSistemaForm(forms.ModelForm):
+    class Meta:
+        model = AtualizacaoSistema
+        fields = '__all__'
+        widgets = {
+            'descricao': CKEditorWidget(),  # Aplica CKEditor ao campo 'descricao'
+        }
+
+# Configuração do admin para AtualizacaoSistema
 @admin.register(AtualizacaoSistema)
 class AtualizacaoSistemaAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'descricao', 'previsao', 'versao')  # Mostra o campo versão no admin
+    form = AtualizacaoSistemaForm
+    list_display = ('titulo', 'previsao', 'versao', 'status')
     search_fields = ('titulo',)
     list_filter = ('previsao',)
-    ordering = ('-previsao',)  # Exibe as atualizações mais recentes no topo
-
-
-admin.site.register(Settings)
+    ordering = ('-previsao',)  # Ordena por previsão mais recente primeiro

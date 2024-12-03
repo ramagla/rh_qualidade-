@@ -13,3 +13,4 @@ from .settings import Settings
 from .evento import Evento
 from .matriz_polivalencia import MatrizPolivalencia, Atividade, Nota
 
+

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from Funcionario.models import Comunicado, AtualizacaoSistema, Settings,Evento
+from Funcionario.models import Comunicado, AtualizacaoSistema, Settings,Evento, AvaliacaoAnual, Funcionario
 from django.contrib.auth.decorators import login_required
 import requests
 from datetime import datetime
@@ -26,11 +26,17 @@ def home(request):
     # Consulta aos últimos comunicados
     comunicados = Comunicado.objects.order_by('-data')[:4]
     
-    # Dados fictícios para funcionários com avaliação baixa
+    # Consulta ao banco de dados para funcionários com avaliação baixa
     funcionarios_avaliacao_baixa = [
-        {"nome": "Funcionário 1", "avaliacao": "Baixa"},
-        {"nome": "Funcionário 2", "avaliacao": "Baixa"},
-        {"nome": "Funcionário 3", "avaliacao": "Baixa"},
+        {
+            "id": avaliacao.funcionario.id,
+            "nome": avaliacao.funcionario.nome,
+            "foto": avaliacao.funcionario.foto.url if avaliacao.funcionario.foto else None,
+            "classificacao": classificacao['percentual'],
+            "status": classificacao['status'],
+        }
+        for avaliacao in AvaliacaoAnual.objects.all()
+        if (classificacao := avaliacao.calcular_classificacao())["percentual"] < 66
     ]
     
     # Consulta às atualizações do sistema com status "concluído"
@@ -53,7 +59,6 @@ def home(request):
     }
     
     return render(request, 'home.html', context)
-
 
 
 def sucesso_view(request):
