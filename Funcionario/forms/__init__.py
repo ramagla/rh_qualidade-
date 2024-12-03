@@ -12,4 +12,5 @@ from .integracao_funcionario_forms import IntegracaoFuncionarioForm
 from .evento_forms import EventoForm
 from .job_rotation_forms import JobRotationEvaluationForm
 from .matriz_polivalencia_forms import MatrizPolivalenciaForm, AtividadeForm, NotaForm
+from .documentos_forms import DocumentoForm, RevisaoDocForm
 

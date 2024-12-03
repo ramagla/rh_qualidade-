@@ -134,6 +134,15 @@ from .views.formularios_views import (
     filtro_carta_competencia
 )
 
+from .views.documentos_views import (
+    lista_documentos,
+    cadastrar_documento,
+    editar_documento,
+    excluir_documento,
+    historico_revisoes,
+    adicionar_revisao,
+    excluir_revisao2,
+)
 
 
 
@@ -307,7 +316,16 @@ urlpatterns = [
     path('formularios/pesquisa-consciencia/', FormularioPesquisaConscienciaView.as_view(), name='formulario_pesquisa_consciencia'),
     path('formularios/carta-competencia/<int:funcionario_id>/', FormularioCartaCompetenciaView.as_view(), name='formulario_carta_competencia'),
 
-  
+
+    # Documentos
+    path('documentos/', lista_documentos, name='lista_documentos'),
+    path('documentos/cadastrar/', cadastrar_documento, name='cadastrar_documento'),
+    path('documentos/<int:documento_id>/editar/', editar_documento, name='editar_documento'),
+    path('documentos/<int:documento_id>/excluir/', excluir_documento, name='excluir_documento'),
+    path('documentos/<int:documento_id>/historico-revisoes/', historico_revisoes, name='historico_revisoes'),
+    path('documentos/<int:documento_id>/adicionar-revisao/', adicionar_revisao, name='adicionar_revisao'),
+    path('revisoes2/<int:revisao_id>/excluir/', excluir_revisao2, name='excluir_revisao2'),
+
 
 
 

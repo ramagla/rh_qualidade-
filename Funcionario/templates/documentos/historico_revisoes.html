@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center">Histórico de Revisões - {{ documento.nome }}</h2>
+    <table class="table table-centered">
+        <thead>
+            <tr>
+                <th>Número da Revisão</th>
+                <th>Data da Revisão</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for revisao in revisoes %}
+            <tr>
+                <td>{{ revisao.numero_revisao }}</td>
+                <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
+                <td>
+                    <!-- Botão para abrir a modal de descrição -->
+                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ revisao.id }}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+
+                    <!-- Botão para abrir a modal de exclusão -->
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirRevisao{{ revisao.id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+
+            <!-- Modal de Descrição -->
+            <div class="modal fade" id="modalDescricao{{ revisao.id }}" tabindex="-1" aria-labelledby="modalDescricaoLabel{{ revisao.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalDescricaoLabel{{ revisao.id }}">Descrição da Mudança</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            {{ revisao.descricao_mudanca|safe }}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+           <!-- Modal de Exclusão -->
+<div class="modal fade" id="modalExcluirRevisao{{ revisao.id }}" tabindex="-1" aria-labelledby="modalExcluirRevisaoLabel{{ revisao.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalExcluirRevisaoLabel{{ revisao.id }}">Inativar Revisão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja inativar esta revisão?</p>
+                <p><strong>Número da Revisão:</strong> {{ revisao.numero_revisao }}</p>
+                <p><strong>Data:</strong> {{ revisao.data_revisao|date:"d/m/Y" }}</p>
+            </div>
+            <div class="modal-footer">
+                
+                    <form method="POST" action="{% url 'excluir_revisao2' revisao.id %}">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Botões adicionais -->
+    <div class="text-end mb-4">
+        <a href="{% url 'adicionar_revisao' documento.id %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Adicionar Revisão
+        </a>
+        <a href="{% url 'lista_documentos' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retornar
+        </a>
+    </div>
+</div>
+{% endblock %}

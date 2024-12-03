@@ -2,7 +2,11 @@ from datetime import timedelta  # Correto
 from django.utils import timezone  # Já está correto
 
 from django import forms
-from .models import Funcionario, Cargo, Revisao, Treinamento,ListaPresenca,AvaliacaoTreinamento,JobRotationEvaluation,AvaliacaoExperiencia, AvaliacaoAnual,Comunicado,IntegracaoFuncionario,Evento, Atividade
+from Funcionario.models import (
+    Funcionario, Cargo, Revisao, Treinamento, ListaPresenca, AvaliacaoTreinamento, 
+    JobRotationEvaluation, AvaliacaoExperiencia, AvaliacaoAnual, Comunicado, 
+    IntegracaoFuncionario, Evento, Atividade, Documento, RevisaoDoc
+)
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django.forms.widgets import DateInput
 from django_select2.forms import Select2Widget
@@ -433,7 +437,7 @@ class AtividadeForm(forms.ModelForm):
         model = Atividade
         fields = ['nome', 'departamento']  # Incluindo o campo 'departamento'
 
-from django import forms
+
 from .models import IndicadorDesempenho, PlanoAcaoMelhoria
 
 class IndicadorDesempenhoForm(forms.ModelForm):
@@ -445,3 +449,33 @@ class PlanoAcaoMelhoriaForm(forms.ModelForm):
     class Meta:
         model = PlanoAcaoMelhoria
         fields = ['indicador', 'acao', 'responsavel', 'prazo', 'situacao']
+
+
+
+
+
+from django import forms
+from .models import Documento, RevisaoDoc
+
+class DocumentoForm(forms.ModelForm):
+    class Meta:
+        model = Documento
+        fields = ['nome', 'codigo', 'arquivo', 'responsavel_recuperacao', 'status']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            'arquivo': forms.FileInput(attrs={'class': 'form-control'}),
+            'responsavel_recuperacao': forms.Select(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+class RevisaoDocForm(forms.ModelForm):
+    class Meta:
+        model = RevisaoDoc
+        fields = ['numero_revisao', 'data_revisao', 'descricao_mudanca']
+        widgets = {
+            'numero_revisao': forms.TextInput(attrs={'class': 'form-control'}),
+            'data_revisao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'descricao_mudanca': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),  # Corrige esta linha
+        }
+

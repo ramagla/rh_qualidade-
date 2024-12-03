@@ -12,5 +12,6 @@ from .integracao_funcionario import IntegracaoFuncionario
 from .settings import Settings
 from .evento import Evento
 from .matriz_polivalencia import MatrizPolivalencia, Atividade, Nota
+from .documentos import Documento,RevisaoDoc
 
 
