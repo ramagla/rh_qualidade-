@@ -56,6 +56,7 @@ def lista_jobrotation_evaluation(request):
     # Renderiza o template
     return render(request, 'jobrotation/lista_jobrotation_evaluation.html', {
         'evaluations': page_obj,
+        'page_obj': page_obj,
         'funcionarios': funcionarios,
         'total_avaliacoes': total_avaliacoes,
         'apto': apto,

@@ -1,6 +1,7 @@
 from django import template
 
 register = template.Library()
+from urllib.parse import urlencode, parse_qs
 
 
 
@@ -80,3 +81,12 @@ def split_by_comma(value):
     if value:
         return value.split(',')
     return []
+
+@register.filter
+def remove_query_param(querystring, param):
+    """
+    Remove o parâmetro especificado do querystring.
+    """
+    query_dict = parse_qs(querystring)
+    query_dict.pop(param, None)  # Remove o parâmetro, se existir
+    return urlencode(query_dict, doseq=True)

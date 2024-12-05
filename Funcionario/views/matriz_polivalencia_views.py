@@ -50,6 +50,7 @@ def lista_matriz_polivalencia(request):
 
     return render(request, 'matriz_polivalencia/matriz_polivalencia_lista.html', {
         'matrizes': page_obj,
+        'page_obj': page_obj,
         'departamentos': departamentos
     })
 

@@ -5,9 +5,12 @@ from ..models import Funcionario, Cargo, Revisao
 from ..forms import CargoForm, RevisaoForm
 from django.db.models import Count
 from django.db.models import Q
+from django.core.paginator import Paginator
+
 
 
 def lista_cargos(request):
+    # Recupera todos os cargos ordenados por número da DC
     cargos = Cargo.objects.all().order_by('-numero_dc')
 
     # Aplicar filtro de departamento
@@ -15,18 +18,18 @@ def lista_cargos(request):
     if departamento:
         cargos = cargos.filter(departamento=departamento)
 
-    # Aplicar filtro de cargo
+    # Aplicar filtro de nome do cargo
     cargo_nome = request.GET.get('cargo')
     if cargo_nome:
-        cargos = cargos.filter(nome=cargo_nome)
+        cargos = cargos.filter(nome__icontains=cargo_nome)
 
     # Adicionar a última revisão para cada cargo
     for cargo in cargos:
         cargo.ultima_revisao = cargo.revisoes.order_by('-data_revisao').first()
 
-    # Obter todos os departamentos e cargos para o formulário de filtro
+    # Obter todos os departamentos e nomes de cargos distintos
     todos_departamentos = Cargo.objects.values_list('departamento', flat=True).distinct()
-    todos_cargos = Cargo.objects.all()
+    todos_cargos = Cargo.objects.values_list('nome', flat=True).distinct()
 
     # Dados para os cards
     total_cargos = cargos.count()
@@ -46,12 +49,18 @@ def lista_cargos(request):
     ultima_revisao = ultima_revisao.data_revisao if ultima_revisao else "Sem revisão"
 
     cargos_sem_descricao = cargos.filter(
-      Q(descricao_arquivo__isnull=True) | Q(descricao_arquivo='')
+        Q(descricao_arquivo__isnull=True) | Q(descricao_arquivo='')
     ).count()
 
+    # Paginação
+    paginator = Paginator(cargos, 10)  # Define 10 cargos por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
+    # Contexto para o template
     return render(request, 'cargos/lista_cargos.html', {
-        'cargos': cargos,
+        'cargos' : page_obj,
+        'page_obj': page_obj,  # Passa o objeto paginado para o template
         'departamentos': todos_departamentos,
         'todos_cargos': todos_cargos,
         'total_cargos': total_cargos,
@@ -59,7 +68,6 @@ def lista_cargos(request):
         'ultima_revisao': ultima_revisao,
         'cargos_sem_descricao': cargos_sem_descricao,
     })
-
 
 def cadastrar_cargo(request):
     if request.method == 'POST':

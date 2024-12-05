@@ -41,10 +41,10 @@ def lista_comunicados(request):
         .order_by('tipo')
     )
 
-
     # Contexto do template com os filtros aplicados
     context = {
-        'comunicados': comunicados,
+        'comunicados': page_obj,
+        'page_obj': page_obj,
         'departamentos': departamentos,
         'tipo': tipo,
         'departamento': departamento,

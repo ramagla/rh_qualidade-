@@ -51,15 +51,12 @@ def lista_integracoes(request):
     total_grupo_whatsapp = integracoes.filter(grupo_whatsapp=True).count()
     total_sem_pdf = integracoes.filter(
         Q(pdf_integracao__isnull=True) | Q(pdf_integracao='')
-        ).count()
+        ).count()   
     
-    
-    
-
-
     # Não é necessário nenhum ajuste adicional aqui para o PDF, pois será renderizado diretamente no template.
     return render(request, 'funcionarios/integracao/lista_integracoes.html', {
-        'integracoes': integracoes,  # Ordenado pelo nome do funcionário
+        'integracoes': page_obj,
+        'page_obj': page_obj,   # Ordenado pelo nome do funcionário
         'funcionarios': funcionarios_com_integracao,  # Somente funcionários com integração
         'departamentos': departamentos,  # Passar os departamentos ordenados para o template
         'total_integracoes': total_integracoes,

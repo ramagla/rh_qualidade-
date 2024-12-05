@@ -3,6 +3,8 @@
 {% block title %}Avaliações de Treinamentos{% endblock %}
 
 {% block content %}
+{% load custom_filters %}
+
 <!-- Toast container para mensagens de alerta -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
     {% if messages %}
@@ -271,39 +273,42 @@
 
 
 <!-- Paginação -->
-<nav aria-label="Page navigation">
+<nav aria-label="Navegação de página">
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="First">
+                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Primeira">
                     <span aria-hidden="true">&laquo;&laquo;</span>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Previous">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Anterior">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
         {% endif %}
-
-        <li class="page-item disabled">
-            <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-        </li>
-
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Next">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Próxima">
                     <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Last">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Última">
                     <span aria-hidden="true">&raquo;&raquo;</span>
                 </a>
             </li>
         {% endif %}
     </ul>
 </nav>
+
 
 
 <style>
