@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'ckeditor',
     'ckeditor_uploader',
 ]
+    
 DATE_FORMAT = "d 'de' F 'de' Y"
 
 # Configurações do CKEditor

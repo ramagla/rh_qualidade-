@@ -15,7 +15,6 @@ def lista_treinamentos(request):
     tipo = request.GET.get('tipo')
     status = request.GET.get('status')
     ordenacao = request.GET.get('ordenacao', 'nome_curso')  # Alterado para evitar problema com ManyToMany
-    registros_por_pagina = int(request.GET.get('registros_por_pagina', 50))  # Registros por página (padrão: 50)
 
     # Atualização para ManyToMany
     treinamentos = Treinamento.objects.prefetch_related('funcionarios').all()
@@ -26,18 +25,28 @@ def lista_treinamentos(request):
         treinamentos = treinamentos.filter(status=status)
 
     # Paginação
-    paginator = Paginator(treinamentos.order_by(ordenacao).distinct(), registros_por_pagina)
-    pagina = request.GET.get('pagina')
-    treinamentos_paginados = paginator.get_page(pagina)
+    paginator = Paginator(treinamentos, 10)  # 10 itens por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Dados para os cards
+    total_treinamentos = treinamentos.count()
+    treinamentos_concluidos = treinamentos.filter(status='concluido').count()
+    treinamentos_em_andamento = treinamentos.filter(status='cursando').count()
+    treinamentos_requeridos = treinamentos.filter(status='requerido').count()
 
     context = {
-        'treinamentos': treinamentos_paginados,
+        'treinamentos': page_obj,
+        'page_obj': page_obj,
         'funcionarios': Funcionario.objects.all(),
         'tipos_treinamento': Treinamento.TIPO_TREINAMENTO_CHOICES,
         'ordenacao': ordenacao,
-        'paginator': paginator,
-        'registros_por_pagina': registros_por_pagina,
+        'total_treinamentos': total_treinamentos,
+        'treinamentos_concluidos': treinamentos_concluidos,
+        'treinamentos_em_andamento': treinamentos_em_andamento,
+        'treinamentos_requeridos': treinamentos_requeridos,
     }
+    
     return render(request, 'treinamentos/lista_treinamentos.html', context)
 
 def cadastrar_treinamento(request):
@@ -46,6 +55,9 @@ def cadastrar_treinamento(request):
         if form.is_valid():
             form.save()
             return redirect('lista_treinamentos')
+        else:
+            print(f"Erros: {form.errors}")
+            print(f"Dados enviados: {request.POST}")
     else:
         form = TreinamentoForm()
     return render(request, 'treinamentos/cadastrar_treinamento.html', {'form': form})

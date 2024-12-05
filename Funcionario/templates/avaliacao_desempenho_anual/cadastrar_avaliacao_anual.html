@@ -56,15 +56,16 @@
                     </select>
                 </div>
 
-                <div class="col-md-6">
-                    <label for="cargo" class="form-label">Cargo:</label>
-                    <input type="text" class="form-control" id="cargo" name="cargo" value="{% if funcionarios %}{{ funcionarios.0.cargo_atual }}{% endif %}" disabled>
-                </div>
+                            <div class="col-md-6">
+                <label for="cargo" class="form-label">Cargo:</label>
+                <input type="text" class="form-control" id="cargo" name="cargo" disabled>
+            </div>
 
-                <div class="col-md-6">
-                    <label for="departamento" class="form-label">Departamento:</label>
-                    <input type="text" class="form-control" id="departamento" name="departamento" value="{% if funcionarios %}{{ funcionarios.0.local_trabalho }}{% endif %}" disabled>
-                </div>
+            <div class="col-md-6">
+                <label for="departamento" class="form-label">Departamento:</label>
+                <input type="text" class="form-control" id="departamento" name="departamento" disabled>
+            </div>
+
 
                 <div class="col-md-6">
                     <label for="centro_custo" class="form-label">Centro de Custo:</label>

@@ -23,9 +23,9 @@
                     </button>
 
                     <!-- Botão para abrir a modal de exclusão -->
-                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirRevisao{{ revisao.id }}">
+                    {% comment %} <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirRevisao{{ revisao.id }}">
                         <i class="bi bi-trash"></i>
-                    </button>
+                    </button> {% endcomment %}
                 </td>
             </tr>
 
@@ -79,7 +79,7 @@
     
     <!-- Botões adicionais -->
     <div class="text-end mb-4">
-        <a href="{% url 'adicionar_revisao' documento.id %}" class="btn btn-success">
+        <a href="{% url 'adicionar_documento' documento.id %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Adicionar Revisão
         </a>
         <a href="{% url 'lista_documentos' %}" class="btn btn-secondary">

@@ -29,7 +29,7 @@
                 </select>
             </div>
 
-            <!-- Filtro por Status -->
+           <!-- Filtro por Status -->
             <div class="col-md-4">
                 <label for="status" class="form-label">Filtrar por Status:</label>
                 <select name="status" id="status" class="form-select select2">
@@ -42,25 +42,73 @@
                 </select>
             </div>
 
-            <!-- Limite de Registros -->
-            <div class="col-md-4">
-                <label for="limit" class="form-label">Registros por Página:</label>
-                <select name="limit" id="limit" class="form-select select2">
-                    <option value="10" {% if request.GET.limit == '10' %}selected{% endif %}>10</option>
-                    <option value="20" {% if request.GET.limit == '20' %}selected{% endif %}>20</option>
-                    <option value="50" {% if request.GET.limit == '50' %}selected{% endif %}>50</option>
-                </select>
-            </div>
-        </div>
-        <div class="text-end mt-3">
+
+                    <div class="text-end mt-3">
             <button type="submit" class="btn btn-primary">
                 <i class="bi bi-funnel"></i> Filtrar
             </button>
         </div>
     </form>
+     <div class="row mb-4 mt-4">
+    <!-- Card: Total de Documentos -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-header text-center">
+                <i class="bi bi-file-earmark" style="font-size: 1.5rem; margin-right: 5px;"></i> Total de Documentos
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_documentos }}</h5>
+                <p class="card-text text-center">Documentos cadastrados.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Documentos Aprovados -->
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-header text-center">
+                <i class="bi bi-check-circle" style="font-size: 1.5rem; margin-right: 5px;"></i> Aprovados
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_aprovados }}</h5>
+                <p class="card-text text-center">Documentos aprovados.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Documentos em Revisão -->
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-header text-center">
+                <i class="bi bi-clock-history" style="font-size: 1.5rem; margin-right: 5px;"></i> Em Revisão
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_em_revisao }}</h5>
+                <p class="card-text text-center">Documentos aguardando revisão.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Documentos Inativos -->
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-header text-center">
+                <i class="bi bi-x-circle" style="font-size: 1.5rem; margin-right: 5px;"></i> Inativos
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_inativos }}</h5>
+                <p class="card-text text-center">Documentos inativos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+       
+
 
     <!-- Tabela de Documentos -->
-    <table class="table table-bordered text-center">
+    <table class="table table-bordered text-center mt-4">
         <thead>
             <tr>
                 <th>Nome</th>
@@ -78,7 +126,18 @@
                 <td>{{ documento.nome }}</td>
                 <td>{{ documento.codigo }}</td>
                 <td>{{ documento.responsavel_recuperacao.nome }}</td>
-                <td>{{ documento.get_status_display }}</td>
+                <td>
+                    {% if documento.status == 'aprovado' %}
+                        <span class="badge bg-success">{{ documento.get_status_display }}</span>
+                    {% elif documento.status == 'em_revisao' %}
+                        <span class="badge bg-warning text-dark">{{ documento.get_status_display }}</span>
+                    {% elif documento.status == 'inativo' %}
+                        <span class="badge bg-danger">{{ documento.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Indefinido</span>
+                    {% endif %}
+                </td>
+
                 <td>
                     {% if documento.revisoes.last %}
                         {{ documento.revisoes.last.numero_revisao }}
@@ -97,60 +156,57 @@
                     <a href="{% url 'editar_documento' documento.id %}" class="btn btn-warning btn-sm" title="Editar">
                         <i class="bi bi-pencil-square"></i>
                     </a>
-                    <a href="{% url 'historico_revisoes' documento.id %}" class="btn btn-info btn-sm" title="Histórico de Revisões">
+                    <a href="{% url 'historico_documentos' documento.id %}" class="btn btn-info btn-sm" title="Histórico de Revisões Doc">
                         <i class="bi bi-clock-history"></i>
                     </a>
+
                     {% if documento.arquivo %}
                         <a href="{{ documento.arquivo.url }}" class="btn btn-secondary btn-sm" download title="Baixar Arquivo">
                             <i class="bi bi-file-earmark-arrow-down"></i>
                         </a>
                     {% endif %}
-                    <a href="{% url 'excluir_documento' documento.id %}" class="btn btn-danger btn-sm" title="Excluir">
+                    {% comment %} <a href="{% url 'excluir_documento' documento.id %}" class="btn btn-danger btn-sm" title="Excluir">
                         <i class="bi bi-trash"></i>
-                    </a>
+                    </a> {% endcomment %}
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <!-- Paginação -->
-    <div class="text-center">
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
-                {% if documentos.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page=1" aria-label="Primeira">
-                            <span aria-hidden="true">&laquo;&laquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ documentos.previous_page_number }}" aria-label="Anterior">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                {% endif %}
-                {% for page in documentos.paginator.page_range %}
-                    <li class="page-item {% if page == documentos.number %}active{% endif %}">
-                        <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page }}">{{ page }}</a>
-                    </li>
-                {% endfor %}
-                {% if documentos.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ documentos.next_page_number }}" aria-label="Próxima">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ documentos.paginator.num_pages }}" aria-label="Última">
-                            <span aria-hidden="true">&raquo;&raquo;</span>
-                        </a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
-</div>
+  
+ <!-- Paginação -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

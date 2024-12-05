@@ -259,7 +259,7 @@
         if (funcionarioId) {
             treinamentoSelect.html('<option value="">Carregando...</option>').trigger("change");
 
-            fetch(`/get-treinamentos-funcionarios/${funcionarioId}/`)
+            fetch(`/get-treinamentos/${funcionarioId}/`)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error(`Erro na API: ${response.statusText}`);

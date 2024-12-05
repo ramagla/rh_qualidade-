@@ -135,6 +135,10 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
             'funcionario': forms.Select(attrs={'class': 'form-select select2'}),
         }
 
+    def clean_gerencia(self):
+        gerencia = self.cleaned_data.get('gerencia', '')
+        return gerencia.title()  # Converte o texto para Title Case
+
 
 class AvaliacaoAnualForm(forms.ModelForm):
     avaliacao_global_avaliador = forms.CharField(widget=CKEditor5Widget(config_name='default'))
@@ -145,3 +149,9 @@ class AvaliacaoAnualForm(forms.ModelForm):
         widgets = {
             'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def clean_centro_custo(self):
+        centro_custo = self.cleaned_data.get('centro_custo')
+        if centro_custo:
+            return centro_custo.title()  # Converte para Title Case
+        return centro_custo

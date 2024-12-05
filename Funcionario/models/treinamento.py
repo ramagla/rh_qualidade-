@@ -99,3 +99,5 @@ class Treinamento(models.Model):
                 meses.append(f"{calendar.month_abbr[mes].capitalize()}/{str(ano)[-2:]}")
 
         return meses
+
+  

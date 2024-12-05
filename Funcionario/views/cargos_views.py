@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from ..models import Funcionario, Cargo, Revisao
 from ..forms import CargoForm, RevisaoForm
+from django.db.models import Count
+from django.db.models import Q
 
 
 def lista_cargos(request):
@@ -26,10 +28,36 @@ def lista_cargos(request):
     todos_departamentos = Cargo.objects.values_list('departamento', flat=True).distinct()
     todos_cargos = Cargo.objects.all()
 
+    # Dados para os cards
+    total_cargos = cargos.count()
+    departamento_mais_frequente = (
+        cargos.values('departamento')
+        .annotate(total=Count('departamento'))
+        .order_by('-total')
+        .first()
+    )
+    departamento_mais_frequente = departamento_mais_frequente['departamento'] if departamento_mais_frequente else "Nenhum"
+
+    ultima_revisao = (
+        Revisao.objects.filter(cargo__in=cargos)
+        .order_by('-data_revisao')
+        .first()
+    )
+    ultima_revisao = ultima_revisao.data_revisao if ultima_revisao else "Sem revisão"
+
+    cargos_sem_descricao = cargos.filter(
+      Q(descricao_arquivo__isnull=True) | Q(descricao_arquivo='')
+    ).count()
+
+
     return render(request, 'cargos/lista_cargos.html', {
         'cargos': cargos,
         'departamentos': todos_departamentos,
         'todos_cargos': todos_cargos,
+        'total_cargos': total_cargos,
+        'departamento_mais_frequente': departamento_mais_frequente,
+        'ultima_revisao': ultima_revisao,
+        'cargos_sem_descricao': cargos_sem_descricao,
     })
 
 

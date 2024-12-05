@@ -1,6 +1,8 @@
 from django import forms
 from ..models import JobRotationEvaluation
 from django_ckeditor_5.widgets import CKEditor5Widget
+from django.utils import timezone
+from datetime import timedelta
 
 class JobRotationEvaluationForm(forms.ModelForm):
     treinamentos_requeridos = forms.CharField(widget=CKEditor5Widget(), required=False)
@@ -17,6 +19,13 @@ class JobRotationEvaluationForm(forms.ModelForm):
         if data_inicio and data_inicio < timezone.now().date():  # Caso queira validar se a data é futura
             raise forms.ValidationError("A data de início não pode ser no passado.")
         return data_inicio
+    
+    def clean_area_atual(self):
+        """Garante que o campo 'Área Atual' esteja em Title Case."""
+        area_atual = self.cleaned_data.get('area_atual')
+        if area_atual:
+            return area_atual.title()  # Converte para Title Case
+        return area_atual
 
     def save(self, commit=True):
         instance = super().save(commit=False)

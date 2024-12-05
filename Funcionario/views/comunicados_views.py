@@ -2,12 +2,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from Funcionario.models import Comunicado, Funcionario
 from Funcionario.forms import ComunicadoForm
+from django.core.paginator import Paginator
+from django.db.models import Count
+
 
 def lista_comunicados(request):
-    # Recupera todos os comunicados e ordena do maior para o menor ID
     comunicados = Comunicado.objects.all().order_by('-id')
-
-    # Recupera os departamentos únicos
     departamentos = Comunicado.objects.values_list('departamento_responsavel', flat=True).distinct()
 
     # Obtenção dos filtros
@@ -28,6 +28,20 @@ def lista_comunicados(request):
     elif data_fim:
         comunicados = comunicados.filter(data__lte=data_fim)
 
+    # Paginação
+    paginator = Paginator(comunicados, 10)  # 10 comunicados por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Dados para os cards
+    total_comunicados = comunicados.count()
+    comunicados_por_tipo = (
+        comunicados.values('tipo')
+        .annotate(total=Count('tipo'))
+        .order_by('tipo')
+    )
+
+
     # Contexto do template com os filtros aplicados
     context = {
         'comunicados': comunicados,
@@ -36,6 +50,9 @@ def lista_comunicados(request):
         'departamento': departamento,
         'data_inicio': data_inicio,
         'data_fim': data_fim,
+        'total_comunicados': total_comunicados,
+        'comunicados_por_tipo': comunicados_por_tipo,  # Adicionando resumo por tipo
+
     }
 
     return render(request, 'comunicados/lista_comunicados.html', context)

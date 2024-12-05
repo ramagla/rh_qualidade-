@@ -16,6 +16,12 @@ class AtividadeForm(forms.ModelForm):
     class Meta:
         model = Atividade
         fields = '__all__'
+        
+    def clean_nome(self):
+        nome = self.cleaned_data.get('nome')
+        if nome:
+            return nome.title()  # Aplica Title Case apenas no campo nome
+        return nome
 
 
 class NotaForm(forms.ModelForm):

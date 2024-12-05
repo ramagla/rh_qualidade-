@@ -124,7 +124,7 @@
 
         <div class="col-md-6">
             <label for="gestor_responsavel" class="form-label">Gestor Responsável:</label>
-            <select name="gestor_responsavel" class="form-select">
+            <select name="gestor_responsavel" class="form-select select2">
                 {% for funcionario in funcionarios %}
                 <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
                 {% endfor %}
@@ -243,7 +243,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Função para carregar treinamentos do funcionário
     function carregarTreinamentos(funcionarioId) {
-        fetch(`/get_treinamentos/${funcionarioId}/`)
+        fetch(`/get-treinamentos/${funcionarioId}/`)
             .then(response => response.json())
             .then(treinamentos => {
                 const tbody = document.querySelector('table tbody');

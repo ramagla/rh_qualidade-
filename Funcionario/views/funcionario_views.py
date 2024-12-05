@@ -6,13 +6,28 @@ from Funcionario.forms import FuncionarioForm
 from django.views.generic import View
 from django.utils import timezone
 from datetime import timedelta
+from django.core.paginator import Paginator
+from django.db.models import Count 
+from django.db.models import Q
+
 
 
 
 @login_required
 def lista_funcionarios(request):
-    funcionarios = Funcionario.objects.all().order_by('nome')
+    # Aplica o filtro padrão de status "Ativo"
+    status = request.GET.get('status', 'Ativo')  # Valor padrão é "Ativo"
+    funcionarios = Funcionario.objects.filter(status=status).order_by('nome')
 
+    # Dados para os cards
+    total_ativos = Funcionario.objects.filter(status="Ativo").count()
+    total_inativos = Funcionario.objects.filter(status="Inativo").count()
+    local_mais_comum = Funcionario.objects.values('local_trabalho').annotate(count=Count('id')).order_by('-count').first()
+    total_pendentes = Funcionario.objects.filter(
+        Q(curriculo__isnull=True) | Q(curriculo='')
+    ).count()  # Verifica NULL e strings vazias
+
+    # Outros filtros
     local_trabalho = request.GET.get('local_trabalho')
     if local_trabalho:
         funcionarios = funcionarios.filter(local_trabalho=local_trabalho)
@@ -25,16 +40,27 @@ def lista_funcionarios(request):
     if escolaridade:
         funcionarios = funcionarios.filter(escolaridade=escolaridade)
 
-    status = request.GET.get('status')
-    if status:
-        funcionarios = funcionarios.filter(status=status)
+    # Paginação
+    paginator = Paginator(funcionarios, 10)  # 10 itens por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    
+
 
     context = {
-        'funcionarios': funcionarios,
+        'page_obj': page_obj,
         'locais_trabalho': Funcionario.objects.values_list('local_trabalho', flat=True).distinct(),
         'responsaveis': Funcionario.objects.values('responsavel').distinct(),
         'niveis_escolaridade': Funcionario.objects.values_list('escolaridade', flat=True).distinct(),
         'status_opcoes': Funcionario.objects.values_list('status', flat=True).distinct(),
+        'filtro_status': status,  # Inclui o status aplicado no contexto
+        'total_ativos': total_ativos,
+        'total_pendentes': total_pendentes,
+        'local_mais_comum': local_mais_comum['local_trabalho'] if local_mais_comum else "N/A",
+        'total_inativos': total_inativos,
+
+
     }
 
     return render(request, 'funcionarios/lista_funcionarios.html', context)
@@ -153,3 +179,41 @@ class ImprimirFichaView(View):
         # A lógica de imprimir deve ser tratada aqui, se necessário.
         # Para o momento, apenas redireciona para o método GET
         return self.get(request, funcionario_id)
+    
+
+
+def gerar_organograma(funcionario):
+    """
+    Função recursiva para construir a hierarquia completa.
+    Inclui a contagem de subordinados.
+    """
+    subordinados = Funcionario.objects.filter(responsavel=funcionario.nome, status="Ativo")
+    estrutura = []
+    for subordinado in subordinados:
+        estrutura.append({
+            'nome': subordinado.nome,
+            'cargo': subordinado.cargo_atual,
+            'foto': subordinado.foto.url if subordinado.foto else None,
+            'subordinados': gerar_organograma(subordinado),
+            'quantidade_subordinados': subordinados.count()  # Contagem de subordinados
+        })
+    return estrutura
+
+
+def organograma_view(request):
+    """
+    View para exibir o organograma.
+    Carrega todos os funcionários no topo da hierarquia (sem responsável).
+    """
+    top_funcionarios = Funcionario.objects.filter(responsavel__isnull=True, status="Ativo")
+
+    organograma = []
+    for funcionario in top_funcionarios:
+        organograma.append({
+            'nome': funcionario.nome,
+            'cargo': funcionario.cargo_atual,
+            'foto': funcionario.foto.url if funcionario.foto else None,
+            'subordinados': gerar_organograma(funcionario)  # Gera a hierarquia completa
+        })
+
+    return render(request, 'funcionarios/organograma.html', {'organograma': organograma})

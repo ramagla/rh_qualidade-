@@ -3,6 +3,8 @@ from Funcionario.models import AvaliacaoExperiencia, Funcionario
 from Funcionario.forms import AvaliacaoExperienciaForm
 from django.contrib import messages
 from django.urls import reverse
+from django.core.paginator import Paginator
+
 
 
 def lista_avaliacao_experiencia(request):
@@ -22,15 +24,32 @@ def lista_avaliacao_experiencia(request):
     if data_inicio and data_fim:
         avaliacoes = avaliacoes.filter(data_avaliacao__range=[data_inicio, data_fim])
 
-    # Debug: Verifica o conteúdo de orientacao em cada avaliação
-    for avaliacao in avaliacoes:
-        print(f"Avaliação ID: {avaliacao.id}, Orientação: {avaliacao.orientacao}")  # <-- Verificação
+    # Filtra os funcionários que possuem avaliações na lista
+    funcionarios = Funcionario.objects.filter(id__in=avaliacoes.values_list('funcionario_id', flat=True))
 
-    # Renderiza o template com as avaliações filtradas e todos os funcionários
+    # Cálculo dos dados para os cards
+    total_avaliacoes = avaliacoes.count()
+    efetivar = avaliacoes.filter(orientacao__icontains="Efetivar").count()
+    treinamento = avaliacoes.filter(orientacao__icontains="Treinamento").count()
+    desligar = avaliacoes.filter(orientacao__icontains="Desligar").count()
+
+    # Paginação
+    paginator = Paginator(avaliacoes, 10)  # Mostra 10 itens por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Renderiza o template
     return render(request, 'avaliacao_desempenho_experiencia/lista_avaliacao_experiencia.html', {
-        'avaliacoes': avaliacoes,
-        'funcionarios': Funcionario.objects.all(),
+        'avaliacoes': page_obj,
+        'funcionarios': funcionarios,  # Apenas funcionários com avaliações
+        'total_avaliacoes': total_avaliacoes,
+        'efetivar': efetivar,
+        'treinamento': treinamento,
+        'desligar': desligar,
+        'page_obj': page_obj,
     })
+
+
 
 def cadastrar_avaliacao_experiencia(request):
     if request.method == 'POST':

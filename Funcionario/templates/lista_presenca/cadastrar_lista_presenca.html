@@ -86,30 +86,34 @@
 
         <!-- Necessita Avaliação de Eficácia? (Botões Sim/Não) -->
        <div class="col-md-6">
-    <label class="form-label">Necessita Avaliação de Eficácia?</label>
-    <div class="form-check">
-        <input class="form-check-input" type="radio" name="necessita_avaliacao" id="avaliacaoSim" value="True"
-            {% if form.necessita_avaliacao.value == 'True' %}checked{% endif %} onclick="toggleTreinamentoSelect(true)">
-        <label class="form-check-label" for="avaliacaoSim">Sim</label>
-    </div>
-    <div class="form-check">
-        <input class="form-check-input" type="radio" name="necessita_avaliacao" id="avaliacaoNao" value="False"
-            {% if form.necessita_avaliacao.value == 'False' %}checked{% endif %} onclick="toggleTreinamentoSelect(false)">
-        <label class="form-check-label" for="avaliacaoNao">Não</label>
-    </div>
-</div>
+            <label class="form-label">Necessita Avaliação de Eficácia?</label>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="necessita_avaliacao" id="avaliacaoSim" value="True"
+                    {% if form.necessita_avaliacao.value == 'True' %}checked{% endif %} onclick="toggleTreinamentoSelect(true)">
+                <label class="form-check-label" for="avaliacaoSim">Sim</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="necessita_avaliacao" id="avaliacaoNao" value="False"
+                    {% if form.necessita_avaliacao.value == 'False' %}checked{% endif %} onclick="toggleTreinamentoSelect(false)">
+                <label class="form-check-label" for="avaliacaoNao">Não</label>
+            </div>
+        </div>
 
      <!-- Campo de Seleção de Treinamento -->
-<div class="col-md-6" id="treinamentoSelect" style="display: none;">
-    <label for="treinamento_id" class="form-label">Selecionar Treinamento para Avaliação:</label>
-    <select id="treinamento_id" name="treinamento_id" class="form-select">
+<div id="treinamentoSelect" class="mb-3" style="display: none;">
+    <label for="treinamento_id" class="form-label d-block">Selecionar Treinamento para Avaliação:</label>
+<select id="treinamento_id" name="treinamento_id" class="form-select select2" style="width: 50%;">
+        <option value="">Selecione um treinamento</option>
         {% for treinamento in treinamentos %}
-            <option value="{{ treinamento.id }}">
-                {{ treinamento.nome_curso }} - {{ treinamento.data_inicio }}
-            </option>
+            {% if treinamento.categoria == 'treinamento' %}
+                <option value="{{ treinamento.id }}">
+                    {{ treinamento.nome_curso }} - {{ treinamento.data_inicio|date:"d/m/Y" }}
+                </option>
+            {% endif %}
         {% endfor %}
     </select>
 </div>
+
 
 
         <!-- Anexar Lista de Presença (PDF) -->
@@ -170,6 +174,34 @@
     }
 </style>
 
+<script>
+function toggleTreinamentoSelect(show) {
+    const treinamentoSelect = document.getElementById('treinamentoSelect');
+    if (show) {
+        treinamentoSelect.style.display = 'block';
+    } else {
+        treinamentoSelect.style.display = 'none';
+        document.getElementById('treinamento_id').value = ""; // Limpa o valor selecionado
+    }
+}
+
+// Inicialização baseada no valor atual
+document.addEventListener("DOMContentLoaded", function() {
+    const necessitaAvaliacao = document.querySelector('input[name="necessita_avaliacao"]:checked');
+    if (necessitaAvaliacao) {
+        toggleTreinamentoSelect(necessitaAvaliacao.value === "True");
+    }
+
+    // Adiciona eventos para os botões de rádio
+    document.querySelectorAll('input[name="necessita_avaliacao"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            toggleTreinamentoSelect(this.value === "True");
+        });
+    });
+});
+</script>
+
+
 <!-- Script para Filtro de Funcionários por Local de Trabalho -->
 <script>
 document.getElementById('filtro_local_trabalho').addEventListener('change', function() {
@@ -206,9 +238,7 @@ function calcularDuracao() {
         }
     }
 }
-function toggleTreinamentoSelect(show) {
-    document.getElementById('treinamentoSelect').style.display = show ? 'block' : 'none';
-}
+
 
 // Inicialização baseada no valor atual
 document.addEventListener("DOMContentLoaded", function() {

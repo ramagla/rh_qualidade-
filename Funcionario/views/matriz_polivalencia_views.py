@@ -42,8 +42,14 @@ def lista_matriz_polivalencia(request):
     # Recuperando os departamentos disponíveis
     departamentos = MatrizPolivalencia.objects.values_list('departamento', flat=True).distinct()
 
+    # Paginação
+    paginator = Paginator(matrizes, 10)  # 10 itens por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+
     return render(request, 'matriz_polivalencia/matriz_polivalencia_lista.html', {
-        'matrizes': matrizes,
+        'matrizes': page_obj,
         'departamentos': departamentos
     })
 
@@ -269,14 +275,7 @@ def lista_atividades(request):
     # Pega os filtros do GET
     departamento = request.GET.get('departamento', '')
     nome = request.GET.get('nome', '')
-    limit = request.GET.get('limit', '20')  # Obtém o 'limit' ou usa '20' como padrão
-
-    # Tenta converter 'limit' para inteiro e define como 20 se falhar
-    try:
-        limit = int(limit)
-    except ValueError:
-        limit = 20
-
+   
     # Filtrando as atividades
     atividades = Atividade.objects.all()
 
@@ -290,14 +289,27 @@ def lista_atividades(request):
     atividades = atividades.order_by('nome')  # Ou qualquer outro campo desejado
 
     # Paginação
-    paginator = Paginator(atividades, limit)  # Cria o paginator com o limite escolhido
-    page_number = request.GET.get('page')  # Obtém o número da página
-    page_obj = paginator.get_page(page_number)  # Pega a página específica
+    paginator = Paginator(atividades, 10)  # 10 itens por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Dados para os cards e acordions
+    total_atividades = atividades.count()
+    
+    # Quantidade de atividades por departamento
+    atividades_por_departamento = (
+        Atividade.objects.values('departamento')
+        .annotate(total=Count('departamento'))
+        .order_by('departamento')
+    )
+
 
     return render(request, 'matriz_polivalencia/lista_atividades.html', {
         'page_obj': page_obj,  # Objeto de paginação
         'nomes_atividades': Atividade.objects.values_list('nome', flat=True).distinct(),  # Listagem de nomes para filtro
         'departamentos': Atividade.objects.values_list('departamento', flat=True).distinct(),  # Listagem de departamentos para filtro
+        'total_atividades': total_atividades,  # Total de atividades
+        'atividades_por_departamento': atividades_por_departamento,  # Atividades por departamento
     })
     
 def cadastrar_atividade(request):

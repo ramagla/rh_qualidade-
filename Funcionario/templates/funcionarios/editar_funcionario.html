@@ -15,7 +15,7 @@
             <label for="foto" class="form-label">Foto:</label>
             {% if funcionario.foto %}
                 <div class="mt-2">
-                    <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" style="width: 250px; height: 300px; object-fit: cover;">
+                    <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" style="width: 150px; height: 200px; object-fit: cover;">
                 </div>
             {% endif %}
             <div class="mt-3">
@@ -88,15 +88,12 @@
        <!-- Responsável -->
             <div class="col-md-6">
                 <label for="responsavel" class="form-label">Responsável:</label>
-                <select id="id_responsavel" name="responsavel" class="form-select">
+                <select id="id_responsavel" name="responsavel" class="form-select select2">
                     <option value="" disabled {% if not funcionario.responsavel %}selected{% endif %}>Selecione</option>
                     {% for resp in responsaveis %}
                         <option value="{{ resp.id }}" {% if resp.nome == funcionario.responsavel %}selected{% endif %}>{{ resp.nome }}</option>
                     {% endfor %}
-                </select>
-                <div class="invalid-feedback" id="responsavelError" style="display: none;">
-                    O campo Responsável é obrigatório.
-                </div>
+                </select>                
             </div>
 
      
@@ -107,7 +104,7 @@
             {{ form.status|add_class:"form-select" }}
         </div>
 
-        <!-- Formulário F146 -->
+        {% comment %} <!-- Formulário F146 -->
         <div class="col-md-6">
             <label for="formulario_f146" class="form-label">Formulário F146:</label>
             <div class="input-group mb-3">
@@ -115,7 +112,7 @@
                 <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="formulario_f146_filename" readonly>
             </div>
             <input type="file" id="id_formulario_f146" name="formulario_f146" style="display: none;" onchange="document.getElementById('formulario_f146_filename').value = this.files[0].name;">
-        </div>
+        </div> {% endcomment %}
 
         <!-- Botão para salvar -->
         <div class="col-12 text-center">
@@ -164,17 +161,7 @@
         preencherCargo();
     });
 
-    function validarFormulario(event) {
-        var responsavel = document.getElementById('id_responsavel');
-        if (responsavel.value === '') {
-            event.preventDefault();
-            document.getElementById('responsavelError').style.display = 'block';
-            responsavel.classList.add('is-invalid');
-        } else {
-            document.getElementById('responsavelError').style.display = 'none';
-            responsavel.classList.remove('is-invalid');
-        }
-    }
+    
 </script>
 
 

@@ -27,7 +27,11 @@ class FuncionarioForm(forms.ModelForm):
         widget=Select2Widget(attrs={'class': 'select2 form-select', 'id': 'id_cargo_atual'})
     )
     data_admissao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Data de Admissão")
-    data_integracao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Data de Integração")
+    data_integracao = forms.DateField(
+    required=False,  # Torna o campo opcional
+    widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+    label="Data de Integração"
+)
     escolaridade = forms.ChoiceField(choices=ESCOLARIDADE_CHOICES, label="Escolaridade", widget=forms.Select(attrs={'class': 'form-select'}))
     responsavel = forms.ModelChoiceField(
             queryset=Funcionario.objects.all(),
@@ -59,3 +63,18 @@ class FuncionarioForm(forms.ModelForm):
         for field in self.fields:
             if not isinstance(self.fields[field].widget, Select2Widget):  # Evita sobrescrever widgets Select2
                 self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+    # Métodos para limpar e formatar os campos
+    def clean_nome(self):
+        nome = self.cleaned_data.get('nome', '')
+        return nome.title()  # Converte para Title Case
+
+    def clean_local_trabalho(self):
+        local_trabalho = self.cleaned_data.get('local_trabalho', '')
+        return local_trabalho.title()  # Converte para Title Case
+
+    def clean_responsavel(self):
+        responsavel = self.cleaned_data.get('responsavel', None)
+        if responsavel:
+            responsavel.nome = responsavel.nome.title()  # Converte para Title Case
+        return responsavel

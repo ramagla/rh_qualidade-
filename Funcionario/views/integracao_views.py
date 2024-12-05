@@ -3,8 +3,11 @@ from django.contrib import messages
 from Funcionario.models import IntegracaoFuncionario, Funcionario  # Modelo IntegracaoFuncionario e Funcionario
 from Funcionario.forms import IntegracaoFuncionarioForm  # Formulário para Integração
 from django.urls import reverse
-from django.db.models import Q
+
 from django.http import Http404
+from django.db.models import Q, Count
+from django.core.paginator import Paginator
+
 
 # View para listar integrações com filtros
 def lista_integracoes(request):
@@ -28,6 +31,11 @@ def lista_integracoes(request):
     # Ordenar as integrações pelo nome do funcionário relacionado
     integracoes = integracoes.order_by('funcionario__nome')
 
+    # Paginação (10 registros por página)
+    paginator = Paginator(integracoes, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     # Filtrar apenas funcionários com integração cadastrada e ordenar por nome
     funcionarios_com_integracao = Funcionario.objects.filter(
         integracaofuncionario__isnull=False
@@ -36,12 +44,28 @@ def lista_integracoes(request):
     # Obter os valores únicos do campo `local_trabalho` para o filtro de departamento e ordená-los
     departamentos = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
     departamentos = sorted(departamentos, key=lambda x: x.lower() if x else '')
+    
+    # Dados para os cards
+    total_integracoes = integracoes.count()
+    total_requer_treinamento = integracoes.filter(requer_treinamento=True).count()
+    total_grupo_whatsapp = integracoes.filter(grupo_whatsapp=True).count()
+    total_sem_pdf = integracoes.filter(
+        Q(pdf_integracao__isnull=True) | Q(pdf_integracao='')
+        ).count()
+    
+    
+    
+
 
     # Não é necessário nenhum ajuste adicional aqui para o PDF, pois será renderizado diretamente no template.
     return render(request, 'funcionarios/integracao/lista_integracoes.html', {
         'integracoes': integracoes,  # Ordenado pelo nome do funcionário
         'funcionarios': funcionarios_com_integracao,  # Somente funcionários com integração
         'departamentos': departamentos,  # Passar os departamentos ordenados para o template
+        'total_integracoes': total_integracoes,
+        'total_requer_treinamento': total_requer_treinamento,
+        'total_grupo_whatsapp': total_grupo_whatsapp,
+        'total_sem_pdf': total_sem_pdf,
     })
 
 

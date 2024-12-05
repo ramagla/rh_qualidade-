@@ -3,57 +3,79 @@ from django.shortcuts import render, redirect, get_object_or_404
 from Funcionario.models import AvaliacaoAnual, Funcionario
 from Funcionario.forms import AvaliacaoAnualForm
 from datetime import datetime
+from django.core.paginator import Paginator
+
 
 
 
 def lista_avaliacao_anual(request):
+    from collections import Counter
+
     # Obtém todas as avaliações anuais
     avaliacoes = AvaliacaoAnual.objects.all()
-    
-    # Obtém os parâmetros de filtro da requisição GET
+
+    # Filtros
     funcionario_id = request.GET.get('funcionario')
     departamento = request.GET.get('departamento')
     data_inicio = request.GET.get('data_inicio')
     data_fim = request.GET.get('data_fim')
 
-    # Aplica o filtro por funcionário, se selecionado
     if funcionario_id:
         avaliacoes = avaliacoes.filter(funcionario_id=funcionario_id)
 
-    # Aplica o filtro por departamento, se preenchido
     if departamento:
         avaliacoes = avaliacoes.filter(funcionario__local_trabalho__icontains=departamento)
 
-    # Aplica o filtro por data de avaliação, se ambas as datas de início e fim estiverem presentes
     if data_inicio and data_fim:
         try:
-            # Converte as strings de data para objetos de data
             data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
             data_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
             avaliacoes = avaliacoes.filter(data_avaliacao__range=[data_inicio, data_fim])
         except ValueError:
             messages.error(request, "Formato de data inválido. Use o formato AAAA-MM-DD.")
 
-    # Classifica as avaliações por nome do funcionário
-    avaliacoes = avaliacoes.order_by('funcionario__nome')
+    # Inicializa contadores para classificações
+    classificacao_counter = Counter()
 
-    # Adiciona a classificação como um atributo, incluindo a classificação e percentual
+    # Adiciona as classificações dinamicamente
     for avaliacao in avaliacoes:
-        classificacao_data = avaliacao.calcular_classificacao()  # Chama o método corretamente
-        avaliacao.classificacao = classificacao_data['status']  # Armazena o status
-        avaliacao.percentual = classificacao_data['percentual']  # Armazena o percentual
+        classificacao = avaliacao.calcular_classificacao()
+        classificacao_status = classificacao['status']
+        classificacao_percentual = classificacao['percentual']
 
-    # Obtém a lista de funcionários para o filtro
-    funcionarios = Funcionario.objects.all()
-    
-    # Obtém a lista de departamentos únicos para o filtro
-    departamentos = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
+        # Atualiza o contador com a classificação atual
+        classificacao_counter[classificacao_status] += 1
 
-    # Renderiza o template com as avaliações filtradas e a lista de funcionários e departamentos para o filtro
+        # Adiciona os dados calculados ao objeto para uso no template
+        avaliacao.classificacao = classificacao_status
+        avaliacao.percentual = classificacao_percentual
+
+    # Contadores para os cards
+    total_avaliacoes = avaliacoes.count()
+    classificacao_ruim = classificacao_counter.get("Ruim", 0)
+    classificacao_regular = classificacao_counter.get("Regular", 0)
+    classificacao_bom = classificacao_counter.get("Bom", 0)
+    classificacao_otimo = classificacao_counter.get("Ótimo", 0)
+
+    # Paginação
+    paginator = Paginator(avaliacoes, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Dados para os filtros
+    funcionarios = Funcionario.objects.filter(id__in=avaliacoes.values_list('funcionario_id', flat=True)).distinct().order_by('nome')
+    departamentos = Funcionario.objects.filter(id__in=avaliacoes.values_list('funcionario_id', flat=True)).values_list('local_trabalho', flat=True).distinct()
+
     return render(request, 'avaliacao_desempenho_anual/lista_avaliacao_anual.html', {
-        'avaliacoes': avaliacoes,
+        'avaliacoes': page_obj,
+        'total_avaliacoes': total_avaliacoes,
+        'classificacao_ruim': classificacao_ruim,
+        'classificacao_regular': classificacao_regular,
+        'classificacao_bom': classificacao_bom,
+        'classificacao_otimo': classificacao_otimo,
         'funcionarios': funcionarios,
         'departamentos': departamentos,
+        'page_obj': page_obj,
     })
 
 

@@ -20,9 +20,15 @@ def lista_presenca(request):
     listas_presenca = ListaPresenca.objects.all().order_by('-data_inicio')  # Substituído para data_inicio
 
     
+    # Contadores para os cards
+    total_listas = listas_presenca.count()
+    listas_finalizadas = listas_presenca.filter(situacao='finalizado').count()
+    listas_em_andamento = listas_presenca.filter(situacao='em_andamento').count()
+    listas_indefinidas = listas_presenca.filter(situacao='indefinido').count()
+
     # Filtros
     instrutores = ListaPresenca.objects.values_list('instrutor', flat=True).distinct()
-    instrutor_filtro = request.GET.get('instrutor')
+    instrutor_filtro = request.GET.get('instrutor', None) 
     situacao_filtro = request.GET.get('situacao')
     data_inicio = request.GET.get('data_inicio')
     data_fim = request.GET.get('data_fim')
@@ -37,17 +43,22 @@ def lista_presenca(request):
     if data_inicio and data_fim:
         listas_presenca = listas_presenca.filter(data_inicio__gte=data_inicio, data_fim__lte=data_fim)
 
-    # Paginação
-    registros_por_pagina = int(request.GET.get('registros_por_pagina', 10))  # Valor padrão é 10
-    paginator = Paginator(listas_presenca, registros_por_pagina)
-    pagina = request.GET.get('pagina')
-    listas_presenca = paginator.get_page(pagina)
+   # Paginação
+    paginator = Paginator(listas_presenca, 10)  # 10 itens por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
 
     return render(request, 'lista_presenca/lista_presenca.html', {
+        'listas_presenca': page_obj,
+        'page_obj': page_obj,
         'listas_presenca': listas_presenca,
-        'instrutores': instrutores,
-        'registros_por_pagina': registros_por_pagina,
+        'instrutores': instrutores,        
         'situacao_opcoes': ListaPresenca.SITUACAO_CHOICES,
+         'total_listas': total_listas,
+        'listas_finalizadas': listas_finalizadas,
+        'listas_em_andamento': listas_em_andamento,
+        'listas_indefinidas': listas_indefinidas,      
 
         
     })
@@ -55,7 +66,7 @@ def lista_presenca(request):
 
 def cadastrar_lista_presenca(request):
     # Verifica os treinamentos que precisam de avaliação
-    treinamentos = Treinamento.objects.all()
+    treinamentos = Treinamento.objects.filter(categoria='treinamento')
 
     if request.method == 'POST':
         form = ListaPresencaForm(request.POST, request.FILES)

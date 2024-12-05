@@ -68,3 +68,15 @@ def dict(value, key):
 def primeiro_nome(nome_completo):
     """Retorna apenas o primeiro nome de um nome completo."""
     return nome_completo.split()[0] if nome_completo else ""
+
+@register.filter
+def default_if_none(value, default="Não informado"):
+    """Retorna um valor padrão se o valor for None ou vazio"""
+    return value if value else default
+
+@register.filter
+def split_by_comma(value):
+    """Divide uma string por vírgulas e retorna uma lista"""
+    if value:
+        return value.split(',')
+    return []

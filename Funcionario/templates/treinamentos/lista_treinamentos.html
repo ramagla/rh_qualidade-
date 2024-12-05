@@ -33,19 +33,7 @@
         {% endif %}
     </div>
 
-       <!-- Controles de exportação e paginação -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <form method="get" class="d-inline">
-                <label for="registros_por_pagina" class="form-label me-2">Registros por página:</label>
-                <select name="registros_por_pagina" id="registros_por_pagina" class="form-select d-inline w-auto" onchange="this.form.submit()">
-                    <option value="10" {% if registros_por_pagina == 10 %}selected{% endif %}>10</option>
-                    <option value="20" {% if registros_por_pagina == 20 %}selected{% endif %}>20</option>
-                    <option value="50" {% if registros_por_pagina == 50 %}selected{% endif %}>50</option>
-                    <option value="100" {% if registros_por_pagina == 100 %}selected{% endif %}>100</option>
-                </select>
-            </form>
-        </div>
+      
         <div>
             <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary">
                 <i class="bi bi-download"></i> Exportar para Excel
@@ -150,6 +138,7 @@
                     <option value="cursando" {% if request.GET.status == "cursando" %}selected{% endif %}>Cursando</option>
                     <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
                     <option value="trancado" {% if request.GET.status == "trancado" %}selected{% endif %}>Trancado</option>
+                    <option value="requerido" {% if request.GET.status == "requerido" %}selected{% endif %}>Requerido</option>
                 </select>
             </div>
         </div>
@@ -158,8 +147,63 @@
         </div>
     </form>
 
+    <div class="row mb-4">
+    <!-- Total de Treinamentos -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-header text-center">
+                <i class="bi bi-list-task"></i> Total de Treinamentos
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_treinamentos }}</h5>
+                <p class="card-text text-center">Todos os treinamentos cadastrados.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Treinamentos Concluídos -->
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-header text-center">
+                <i class="bi bi-check-circle"></i> Concluídos
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ treinamentos_concluidos }}</h5>
+                <p class="card-text text-center">Treinamentos finalizados.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Treinamentos em Andamento -->
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-header text-center">
+                <i class="bi bi-hourglass-split"></i> Em Andamento
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ treinamentos_em_andamento }}</h5>
+                <p class="card-text text-center">Treinamentos cursando.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Treinamentos Requeridos -->
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-header text-center">
+                <i class="bi bi-exclamation-circle"></i> Requeridos
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ treinamentos_requeridos }}</h5>
+                <p class="card-text text-center">Treinamentos planejados ou exigidos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
    <!-- Lista de Treinamentos -->
-<table class="table table-bordered text-center">
+<table class="table table-bordered text-center mt-4">
     <thead>
         <tr>            
             <th class="align-middle">Funcionários</th>
@@ -174,55 +218,55 @@
     </thead>
     <tbody>
         {% for treinamento in treinamentos %}
-        <tr>            
-            <td class="align-middle">
-                <!-- Botão para abrir a modal -->
-                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalFuncionarios{{ treinamento.id }}">
-                    <i class="bi bi-eye"></i>
-                </button>
-            </td>
-            <td class="align-middle">{{ treinamento.nome_curso }}</td>
-            <td class="align-middle">{{ treinamento.tipo|title }}</td>
-            <td class="align-middle">
-                {% if treinamento.data_fim %}
-                    {{ treinamento.data_fim|date:"d/m/Y" }}
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-            <td class="align-middle">{{ treinamento.carga_horaria }}</td>
-            <td class="align-middle">
-                {% if treinamento.status == 'cursando' %}
-                    <span class="badge bg-warning text-dark">Cursando</span>
-                {% elif treinamento.status == 'concluido' %}
-                    <span class="badge bg-success text-white">Concluído</span>
-                {% elif treinamento.status == 'trancado' %}
-                    <span class="badge bg-danger text-white">Trancado</span>
-                {% elif treinamento.status == 'requerido' %}
-                    <span class="badge bg-info text-white">Requerido</span>
-                {% else %}
-                    <span class="badge bg-secondary">Indefinido</span>
-                {% endif %}
-            </td>
-            <td class="align-middle">
-                {% if treinamento.anexo %}
-                    <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Certificado">
-                        <i class="bi bi-patch-check"></i>
-                    </a>
-                {% endif %}
-            </td>
-            <td class="align-middle">
-                <a href="{% url 'visualizar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Visualizar">
-                    <i class="bi bi-eye"></i>
+    <tr>            
+        <td class="align-middle">
+            <!-- Botão para abrir a modal -->
+            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalFuncionarios{{ treinamento.id }}">
+                <i class="bi bi-eye"></i>
+            </button>
+        </td>
+        <td class="align-middle">{{ treinamento.nome_curso }}</td>
+        <td class="align-middle">{{ treinamento.tipo|title }}</td>
+        <td class="align-middle">
+            {% if treinamento.data_fim %}
+                {{ treinamento.data_fim|date:"d/m/Y" }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td class="align-middle">{{ treinamento.carga_horaria }}</td>
+        <td class="align-middle">
+            {% if treinamento.status == 'cursando' %}
+                <span class="badge bg-warning text-dark">Cursando</span>
+            {% elif treinamento.status == 'concluido' %}
+                <span class="badge bg-success text-white">Concluído</span>
+            {% elif treinamento.status == 'trancado' %}
+                <span class="badge bg-danger text-white">Trancado</span>
+            {% elif treinamento.status == 'requerido' %}
+                <span class="badge bg-info text-white">Requerido</span>
+            {% else %}
+                <span class="badge bg-secondary">Indefinido</span>
+            {% endif %}
+        </td>
+        <td class="align-middle">
+            {% if treinamento.anexo %}
+                <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Certificado">
+                    <i class="bi bi-patch-check"></i>
                 </a>
-                <a href="{% url 'editar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Editar">
-                    <i class="bi bi-pencil-square"></i>
-                </a>
-                <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirTreinamento{{ treinamento.id }}">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        </tr>
+            {% endif %}
+        </td>
+        <td class="align-middle">
+            <a href="{% url 'visualizar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                <i class="bi bi-eye"></i>
+            </a>
+            <a href="{% url 'editar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Editar">
+                <i class="bi bi-pencil-square"></i>
+            </a>
+            {% comment %} <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirTreinamento{{ treinamento.id }}">
+                <i class="bi bi-trash"></i>
+            </button> {% endcomment %}
+        </td>
+    </tr>
 
         <!-- Modal para listar os funcionários -->
         <div class="modal fade" id="modalFuncionarios{{ treinamento.id }}" tabindex="-1" aria-labelledby="modalFuncionariosLabel{{ treinamento.id }}" aria-hidden="true">
@@ -277,6 +321,41 @@
     </tbody>
 </table>
 
+</div>
+
+
+<!-- Paginação -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
 </div>
 
 <style>

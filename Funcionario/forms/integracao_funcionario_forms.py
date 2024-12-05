@@ -38,3 +38,9 @@ class IntegracaoFuncionarioForm(forms.ModelForm):
         widgets = {
             'data_integracao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}, format='%Y-%m-%d'),
         }
+
+    def clean_funcionario(self):
+        funcionario = self.cleaned_data.get('funcionario')
+        if funcionario:
+            return funcionario.title()
+        return funcionario

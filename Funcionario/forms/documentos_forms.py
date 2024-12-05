@@ -15,6 +15,11 @@ class DocumentoForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
 
+    def clean_nome(self):
+        nome = self.cleaned_data.get('nome', '')
+        return nome.title()  
+
+
 class RevisaoDocForm(forms.ModelForm):
     descricao_mudanca = forms.CharField(widget=CKEditor5Widget(), required=False)
     class Meta:

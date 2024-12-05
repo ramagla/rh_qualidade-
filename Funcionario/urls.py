@@ -13,6 +13,7 @@ from .views.funcionario_views import (
     excluir_funcionario,
     visualizar_funcionario,
     ImprimirFichaView,
+    organograma_view,
 )
 from .views.cargos_views import (
     lista_cargos,
@@ -138,10 +139,10 @@ from .views.documentos_views import (
     lista_documentos,
     cadastrar_documento,
     editar_documento,
-    excluir_documento,
-    historico_revisoes,
-    adicionar_revisao,
+    excluir_documento,   
+    adicionar_documento,
     excluir_revisao2,
+    historico_documentos
 )
 
 
@@ -192,7 +193,7 @@ urlpatterns = [
     path('avaliacoes/editar/<int:id>/', editar_avaliacao, name='editar_avaliacao'),
     path('avaliacoes/excluir/<int:id>/', excluir_avaliacao, name='excluir_avaliacao'),
     path('avaliacoes/<int:id>/visualizar/', visualizar_avaliacao, name='visualizar_avaliacao'),
-    path('get-treinamentos/<int:funcionario_id>/', get_treinamentos_por_funcionario, name='get_treinamentos_por_funcionario'),
+    path('get-treinamentos-funcionarios/<int:funcionario_id>/', get_treinamentos_por_funcionario, name='get_treinamentos_por_funcionario'),
     path('imprimir_treinamento/<int:treinamento_id>/', imprimir_treinamento, name='imprimir_treinamento'),
     path('levantamento-treinamento/', levantamento_treinamento, name='levantamento_treinamento'),
 
@@ -322,11 +323,12 @@ urlpatterns = [
     path('documentos/cadastrar/', cadastrar_documento, name='cadastrar_documento'),
     path('documentos/<int:documento_id>/editar/', editar_documento, name='editar_documento'),
     path('documentos/<int:documento_id>/excluir/', excluir_documento, name='excluir_documento'),
-    path('documentos/<int:documento_id>/historico-revisoes/', historico_revisoes, name='historico_revisoes'),
-    path('documentos/<int:documento_id>/adicionar-revisao/', adicionar_revisao, name='adicionar_revisao'),
+    path('documentos/<int:documento_id>/historico-documentos/', historico_documentos, name='historico_documentos'),
+    path('documentos/<int:documento_id>/adicionar-documento/', adicionar_documento, name='adicionar_documento'),
     path('revisoes2/<int:revisao_id>/excluir/', excluir_revisao2, name='excluir_revisao2'),
 
 
+    path('organograma/', organograma_view, name='organograma'),
 
 
 ]

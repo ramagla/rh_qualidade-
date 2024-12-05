@@ -77,8 +77,63 @@
         </div>
     </form>
 
+    <div class="row mb-4">
+    <!-- Card: Total de Cargos -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-header text-center">
+                <i class="bi bi-briefcase-fill" style="font-size: 1.5rem; margin-right: 5px;"></i> Total de Cargos
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_cargos }}</h5>
+                <p class="card-text text-center">Cargos cadastrados no sistema.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Departamento Mais Frequente -->
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-header text-center">
+                <i class="bi bi-building" style="font-size: 1.5rem; margin-right: 5px;"></i> Departamento Mais Frequente
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ departamento_mais_frequente }}</h5>
+                <p class="card-text text-center">Departamento com mais cargos.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Última Revisão -->
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-header text-center">
+                <i class="bi bi-clock-history" style="font-size: 1.5rem; margin-right: 5px;"></i> Última Revisão
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ ultima_revisao }}</h5>
+                <p class="card-text text-center">Última revisão registrada.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Cargos Sem Descrição -->
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-header text-center">
+                <i class="bi bi-file-earmark-excel" style="font-size: 1.5rem; margin-right: 5px;"></i> Cargos Sem Descrição
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ cargos_sem_descricao }}</h5>
+                <p class="card-text text-center">Cargos sem descrição anexada.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <!-- Tabela de cargos -->
-    <table class="table table-bordered text-center">
+    <table class="table table-bordered text-center mt-4">
         <thead>
             <tr>
                 <th>Nome do Cargo</th>
@@ -128,6 +183,40 @@
         </tbody>
     </table>
 </div>
+<!-- Paginação -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

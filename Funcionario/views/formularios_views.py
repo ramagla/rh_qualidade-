@@ -57,3 +57,4 @@ def filtro_carta_competencia(request):
     # Filtra apenas os funcionários com status ativo
     funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
     return render(request, 'formularios/filtro_funcionario2.html', {'funcionarios': funcionarios})
+

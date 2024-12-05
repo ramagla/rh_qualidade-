@@ -20,3 +20,15 @@ class ComunicadoForm(forms.ModelForm):
             'lista_assinaturas': forms.FileInput(attrs={'class': 'form-control'}),
 
         }
+
+    def clean_assunto(self):
+        assunto = self.cleaned_data.get('assunto')
+        if assunto:
+            return assunto.title()
+        return assunto
+
+    def clean_departamento_responsavel(self):
+        departamento_responsavel = self.cleaned_data.get('departamento_responsavel')
+        if departamento_responsavel:
+            return departamento_responsavel.title()
+        return departamento_responsavel

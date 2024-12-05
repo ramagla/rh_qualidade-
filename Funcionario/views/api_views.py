@@ -49,10 +49,21 @@ def get_funcionario_info(request, id):
         return JsonResponse({'error': str(e)}, status=500)
        
 
-from django.db.models import F
 def get_treinamentos(request, funcionario_id):
-    treinamentos = Treinamento.objects.filter(funcionario_id=funcionario_id).values('id','tipo', 'nome_curso', 'categoria','status','data_fim')
-    return JsonResponse(list(treinamentos), safe=False)
+    try:
+        # Filtra os treinamentos do funcionário e retorna todos os campos relevantes
+        treinamentos = Treinamento.objects.filter(funcionarios__id=funcionario_id).values(
+            'id',  # ID do treinamento
+            'tipo',  # Tipo de treinamento
+            'nome_curso',  # Nome do curso
+            'categoria',  # Categoria do treinamento
+            'status',  # Status do treinamento
+            'data_fim'  # Data de conclusão
+        ).order_by('data_fim')  # Ordenar por data de conclusão
+
+        return JsonResponse(list(treinamentos), safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 def get_treinamentos_por_funcionario(request, funcionario_id):

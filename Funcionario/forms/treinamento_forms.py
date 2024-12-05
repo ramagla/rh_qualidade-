@@ -3,7 +3,10 @@ from ..models import Treinamento
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 class TreinamentoForm(forms.ModelForm):
-    descricao = forms.CharField(widget=CKEditor5Widget(config_name='default'))
+    descricao = forms.CharField(
+        widget=CKEditor5Widget(config_name='default'),
+        required=False  # Torna o campo opcional
+    )
 
     class Meta:
         model = Treinamento
@@ -20,15 +23,28 @@ class TreinamentoForm(forms.ModelForm):
             'carga_horaria': forms.TextInput(attrs={'class': 'form-control'}),
             'anexo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'situacao': forms.Select(choices=Treinamento.SITUACAO_CHOICES, attrs={'class': 'form-select'}),
-
         }
 
-        def clean(self):
-         cleaned_data = super().clean()
-         status = cleaned_data.get('status')
-         situacao = cleaned_data.get('situacao')
+    def clean(self):
+        cleaned_data = super().clean()
+        status = cleaned_data.get('status')
+        situacao = cleaned_data.get('situacao')
 
         # Validar que situação está preenchida apenas se o status for 'requerido'
-         if status == 'requerido' and not situacao:
+        if status == 'requerido' and not situacao:
             raise forms.ValidationError({'situacao': 'A situação é obrigatória quando o status é "Requerido".'})
-         return cleaned_data
+        return cleaned_data
+
+    def clean_nome_curso(self):
+        nome_curso = self.cleaned_data.get('nome_curso')
+        if nome_curso:
+            return nome_curso.title()
+        return nome_curso
+
+    def clean_instituicao_ensino(self):
+        instituicao_ensino = self.cleaned_data.get('instituicao_ensino')
+        if instituicao_ensino:
+            return instituicao_ensino.title()
+        return instituicao_ensino
+
+   

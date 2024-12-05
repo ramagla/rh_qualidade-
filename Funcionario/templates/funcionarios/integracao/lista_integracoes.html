@@ -116,8 +116,63 @@
         </div>
     </form>
 
+    <div class="row mb-4">
+    <!-- Card: Total de Integrações -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-header text-center">
+                <i class="bi bi-people-fill" style="font-size: 1.5rem; margin-right: 5px;"></i> Total de Integrações
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_integracoes }}</h5>
+                <p class="card-text text-center">Integrações realizadas.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Requer Treinamento -->
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-header text-center">
+                <i class="bi bi-journal-bookmark-fill" style="font-size: 1.5rem; margin-right: 5px;"></i> Requer Treinamento
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_requer_treinamento }}</h5>
+                <p class="card-text text-center">Requerem treinamento.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Grupo WhatsApp -->
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-header text-center">
+                <i class="bi bi-chat-dots-fill" style="font-size: 1.5rem; margin-right: 5px;"></i> Grupo WhatsApp
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_grupo_whatsapp }}</h5>
+                <p class="card-text text-center">Funcionários no grupo WhatsApp.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Sem PDF Anexado -->
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-header text-center">
+                <i class="bi bi-file-earmark-text" style="font-size: 1.5rem; margin-right: 5px;"></i> Sem PDF Anexado
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_sem_pdf }}</h5>
+                <p class="card-text text-center">Integrações sem PDF anexado.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <!-- Lista de Integrações -->
-    <table class="table table-bordered text-center">
+    <table class="table table-bordered text-center mt-4">
         <thead>
             <tr>
                 <th>Funcionário</th>
@@ -153,9 +208,9 @@
             <a href="{% url 'editar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Editar">
                 <i class="bi bi-pencil-square"></i>
             </a>
-            <button class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirIntegracao{{ integracao.id }}">
+            {% comment %} <button class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirIntegracao{{ integracao.id }}">
                 <i class="bi bi-trash"></i>
-            </button>
+            </button> {% endcomment %}
         </td>
     </tr>
         </div>
@@ -189,7 +244,39 @@
         </tbody>
     </table>
 </div>
-
+<!-- Paginação -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
 
 <style>
 /* Escopo específico para o Select2 dentro da modal */

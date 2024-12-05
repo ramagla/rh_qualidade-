@@ -8,19 +8,59 @@ from django.urls import reverse_lazy
 from datetime import timezone
 from Funcionario.models import JobRotationEvaluation, Funcionario, Cargo
 from Funcionario.forms import JobRotationEvaluationForm
+from django.core.paginator import Paginator
 
-# Lista as avaliações de Job Rotation
 def lista_jobrotation_evaluation(request):
     # Obtem todas as avaliações
-    evaluations = JobRotationEvaluation.objects.all()
+    evaluations = JobRotationEvaluation.objects.select_related('cargo_atual').all()
 
-    # Obtem todos os funcionários para o filtro e a modal
-    funcionarios = Funcionario.objects.all()
+    # Filtros opcionais
+    funcionario_id = request.GET.get('funcionario')
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
 
-    # Passa as avaliações e os funcionários para o template
+    # Filtrar por funcionário
+    if funcionario_id:
+        evaluations = evaluations.filter(funcionario_id=funcionario_id)
+
+    # Filtrar por data
+    if data_inicio and data_fim:
+        evaluations = evaluations.filter(data_inicio__range=[data_inicio, data_fim])
+
+    # Paginação
+    paginator = Paginator(evaluations, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Filtra funcionários que têm avaliações
+    funcionarios = Funcionario.objects.filter(
+        id__in=evaluations.values_list('funcionario_id', flat=True)
+    )
+
+    # Dados para os cards
+    total_avaliacoes = evaluations.count()
+    apto = evaluations.filter(avaliacao_rh="Apto").count()
+    prorrogar = evaluations.filter(avaliacao_rh="Prorrogar TN").count()
+    inapto = evaluations.filter(avaliacao_rh="Inapto").count()
+
+    # Adiciona lógica para campos opcionais
+    for evaluation in evaluations:
+        evaluation.nova_funcao_nome = (
+            evaluation.nova_funcao.nome if evaluation.nova_funcao else "Não informado"
+        )
+        evaluation.local_trabalho_nome = (
+            evaluation.local_trabalho if evaluation.local_trabalho else "Não informado"
+        )
+
+
+    # Renderiza o template
     return render(request, 'jobrotation/lista_jobrotation_evaluation.html', {
-        'evaluations': evaluations,
-        'funcionarios': funcionarios  # Adiciona a lista de funcionários ao contexto
+        'evaluations': page_obj,
+        'funcionarios': funcionarios,
+        'total_avaliacoes': total_avaliacoes,
+        'apto': apto,
+        'prorrogar': prorrogar,
+        'inapto': inapto,
     })
 
 

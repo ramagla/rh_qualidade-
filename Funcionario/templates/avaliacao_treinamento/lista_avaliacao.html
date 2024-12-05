@@ -80,14 +80,17 @@
     <div class="row">
         <!-- Filtro por Treinamento com Select2 -->
         <div class="col-md-6">
-            <label for="treinamento" class="form-label">Treinamento/Curso:</label>
-            <select name="treinamento" id="treinamento" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for presenca in listas_presenca %}
-                    <option value="{{ presenca.id }}">{{ presenca.assunto }} - {{ presenca.data_realizacao }}</option>
-                {% endfor %}
-            </select>
-        </div>
+    <label for="treinamento" class="form-label">Treinamento/Curso:</label>
+    <select name="treinamento" id="treinamento" class="form-select select2">
+        <option value="">Selecione</option>
+        {% for treinamento in listas_presenca %}
+            <option value="{{ treinamento.id }}" {% if request.GET.treinamento == treinamento.id|stringformat:"s" %}selected{% endif %}>
+                {{ treinamento.nome_curso }} - {{ treinamento.data_inicio|date:"d/m/Y" }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
+
 
         <!-- Filtro por Funcionário com Select2 -->
         <div class="col-md-6">
@@ -122,8 +125,64 @@
 </form>
 
 
+<div class="row mb-4">
+    <!-- Card: Total de Avaliações -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-header text-center">
+                <i class="bi bi-list-task"></i> Total de Avaliações
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_avaliacoes|default:0 }}</h5>
+                <p class="card-text text-center">Total de avaliações cadastradas.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Muito Eficaz -->
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-header text-center">
+                <i class="bi bi-star-fill"></i> Muito Eficaz
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ muito_eficaz|default:0 }}</h5>
+                <p class="card-text text-center">Avaliações muito eficazes.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Eficaz -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-header text-center">
+                <i class="bi bi-check-circle"></i> Eficaz
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ eficaz|default:0 }}</h5>
+                <p class="card-text text-center">Avaliações eficazes.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Pouco Eficaz -->
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-header text-center">
+                <i class="bi bi-x-circle"></i> Pouco Eficaz
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ pouco_eficaz|default:0 }}</h5>
+                <p class="card-text text-center">Avaliações pouco eficazes.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
     <!-- Lista de Avaliações -->
-    <table class="table table-bordered text-center">
+    <table class="table table-bordered text-center mt-4">
         <thead>
             <tr>
                 <th>Funcionário</th>
@@ -140,7 +199,7 @@
         <td class="align-middle">{{ avaliacao.funcionario.nome }}</td>
         <td class="align-middle">
     {% if avaliacao.treinamento %}
-        {{ avaliacao.treinamento.nome_curso }} - {{ avaliacao.treinamento.data_realizacao|date:"d/m/Y" }}
+        {{ avaliacao.treinamento.nome_curso }}
     {% else %}
         <span class="text-muted">Não definido</span>
     {% endif %}
@@ -173,9 +232,9 @@
             <a href="{% url 'editar_avaliacao' avaliacao.id %}" class="btn btn-light" title="Editar">
                 <i class="bi bi-pencil"></i>
             </a>
-            <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}" title="Excluir">
+            {% comment %} <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}" title="Excluir">
                 <i class="bi bi-trash"></i>
-            </a>
+            </a> {% endcomment %}
         </td>
     </tr>
 
@@ -209,6 +268,43 @@
         </tbody>
     </table>
 </div>
+
+
+<!-- Paginação -->
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        {% endif %}
+
+        <li class="page-item disabled">
+            <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
 
 <style>
 /* Estilos específicos para Select2 dentro da modal */

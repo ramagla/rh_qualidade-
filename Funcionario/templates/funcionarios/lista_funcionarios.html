@@ -26,13 +26,15 @@
         {% endif %}
     </div>
 
-    <!-- Botão de Cadastrar Funcionário e Imprimir Ficha -->
-    <div class="text-end mb-4">
-        <a href="{% url 'cadastrar_funcionario' %}" class="btn btn-success">
+    <!-- Botões -->
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{% url 'cadastrar_funcionario' %}" class="btn btn-success me-2">
             <i class="bi bi-person-plus"></i> Cadastrar
         </a>
-        <!-- Botão que ativa a modal -->
-        <button class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#imprimirModal">
+        <a href="{% url 'organograma' %}" class="btn btn-info me-2">
+            <i class="bi bi-diagram-2"></i> Organograma
+        </a>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#imprimirModal">
             <i class="bi bi-printer"></i> Imprimir Ficha
         </button>
     </div>
@@ -101,24 +103,82 @@
                 </select>
             </div>
 
+            
+             <!-- Filtro de Status -->
             <!-- Filtro por Status -->
-            <div class="col-md-3">
-                <label for="status" class="form-label">Status:</label>
-                <select name="status" id="status" class="form-select select2">
-                    <option value="">Selecione</option>
-                    {% for opcao in status_opcoes %}
-                        <option value="{{ opcao }}" {% if request.GET.status == opcao %}selected{% endif %}>{{ opcao }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+<div class="col-md-3">
+    <label for="status" class="form-label">Status:</label>
+    <select name="status" id="status" class="form-select select2">
+        {% for opcao in status_opcoes %}
+            <option value="{{ opcao }}" {% if filtro_status == opcao %}selected{% endif %}>{{ opcao }}</option>
+        {% endfor %}
+    </select>
+</div>
+
         </div>
         <div class="text-end mt-3">
             <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
         </div>
     </form>
+<div class="row mb-4">
+    <!-- Card: Total de Funcionários Ativos -->
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-header text-center">
+                <i class="bi bi-person-check" style="font-size: 1.5rem; margin-right: 5px;"></i> Funcionários Ativos
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_ativos }}</h5>
+                <p class="card-text text-center">Funcionários com status "Ativo".</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Total de Funcionários Inativos -->
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-header text-center">
+                <i class="bi bi-person-x" style="font-size: 1.5rem; margin-right: 5px;"></i> Funcionários Inativos
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_inativos }}</h5>
+                <p class="card-text text-center">Funcionários com status "Inativo".</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Local de Trabalho Mais Comum -->
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-header text-center">
+                <i class="bi bi-geo-alt" style="font-size: 1.5rem; margin-right: 5px;"></i> Local Mais Comum
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ local_mais_comum }}</h5>
+                <p class="card-text text-center">Local de trabalho mais frequente.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Integrações Pendentes -->
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-header text-center">
+                <i class="bi bi-clock-history" style="font-size: 1.5rem; margin-right: 5px;"></i> Colaboradores sem Curriculo
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_pendentes }}</h5>
+                <p class="card-text text-center">Colaboradores sem Curriculo.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
 
     <!-- Lista de Funcionários -->
-    <table class="table table-bordered text-center">
+    <table class="table table-bordered text-center mt-4">
         <thead>
             <tr>
                 <th style="vertical-align: middle;">Foto</th>  
@@ -132,55 +192,56 @@
             </tr>
         </thead>
         <tbody>
-            {% for funcionario in funcionarios %}
-            <tr>
-                <td style="vertical-align: middle;">
-                    {% if funcionario.foto %}
-                        <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" 
-                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid black;">
-                    {% else %}
-                        <span>Sem Foto</span>
-                    {% endif %}
-                </td>
-                <td style="vertical-align: middle;">{{ funcionario.nome }}</td>
-                <td style="vertical-align: middle;">{{ funcionario.cargo_inicial }}</td>
-                <td style="vertical-align: middle;">{{ funcionario.cargo_atual }}</td>
-                <td style="vertical-align: middle;">{{ funcionario.data_admissao|date:"d/m/Y" }}</td>
-                <td style="vertical-align: middle;">{{ funcionario.responsavel }}</td>
-                <td style="vertical-align: middle;">
-                    {% if funcionario.curriculo %}
-                        <a href="{{ funcionario.curriculo.url }}" download target="_blank" title="Download Currículo">
-                            <i class="bi bi-file-earmark-text" alt="Currículo" style="font-size: 24px;"></i>
-                        </a>
-                    {% endif %}
-                    {% if funcionario.formulario_f146 %}
-                        <a href="{{ funcionario.formulario_f146.url }}" download target="_blank" title="Download Integração">
-                            <i class="bi bi-file-earmark-person" alt="Integração" style="font-size: 24px;"></i>
-                        </a>
-                    {% endif %}
-                </td>
-                <td style="vertical-align: middle;">
-                    <a href="{% url 'visualizar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Visualizar">
-                        <i class="bi bi-eye"></i>  
+    {% for funcionario in page_obj %}
+        <tr>
+            <td style="vertical-align: middle;">
+                {% if funcionario.foto %}
+                    <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" 
+                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid black;">
+                {% else %}
+                    <span>Sem Foto</span>
+                {% endif %}
+            </td>
+            <td style="vertical-align: middle;">{{ funcionario.nome }}</td>
+            <td style="vertical-align: middle;">{{ funcionario.cargo_inicial }}</td>
+            <td style="vertical-align: middle;">{{ funcionario.cargo_atual }}</td>
+            <td style="vertical-align: middle;">{{ funcionario.data_admissao|date:"d/m/Y" }}</td>
+            <td style="vertical-align: middle;">{{ funcionario.responsavel }}</td>
+            <td style="vertical-align: middle;">
+                {% if funcionario.curriculo %}
+                    <a href="{{ funcionario.curriculo.url }}" download target="_blank" title="Download Currículo">
+                        <i class="bi bi-file-earmark-text" alt="Currículo" style="font-size: 24px;"></i>
                     </a>
-                    <a href="{% url 'editar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Editar">
-                        <i class="bi bi-pencil-square"></i>  
+                {% endif %}
+                {% if funcionario.formulario_f146 %}
+                    <a href="{{ funcionario.formulario_f146.url }}" download target="_blank" title="Download Integração">
+                        <i class="bi bi-file-earmark-person" alt="Integração" style="font-size: 24px;"></i>
                     </a>
-                    <!-- Botão de Excluir, que ativa a modal de confirmação -->
-                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalExcluirFuncionario{{ funcionario.id }}" title="Excluir">
-                        <i class="bi bi-trash"></i>  
-                    </button>
-                </td>
+                {% endif %}
+            </td>
+            <td style="vertical-align: middle;">
+                <a href="{% url 'visualizar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                    <i class="bi bi-eye"></i>  
+                </a>
+                <a href="{% url 'editar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Editar">
+                    <i class="bi bi-pencil-square"></i>  
+                </a>
+                {% comment %} <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalExcluirFuncionario{{ funcionario.id }}" title="Excluir">
+                    <i class="bi bi-trash"></i>  
+                </button> {% endcomment %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="8" class="text-center" style="vertical-align: middle;">Nenhum funcionário cadastrado.</td>
+        </tr>
+    {% endfor %}
+</tbody>
 
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="8" class="text-center" style="vertical-align: middle;">Nenhum funcionário cadastrado.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
     </table>
 </div>
+
+
 
 <!-- Modal de Confirmação de Exclusão para cada Funcionário -->
 {% for funcionario in funcionarios %}
@@ -206,6 +267,8 @@
         </div>
     </div>
 </div>
+
+
 {% endfor %}
 
 
@@ -237,5 +300,37 @@
         });
     });
 </script>
-
+  <!-- Paginação -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|safe }}{% endif %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
 {% endblock %}

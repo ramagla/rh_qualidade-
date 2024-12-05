@@ -5,8 +5,9 @@ from .cargo import Cargo
 
 class Documento(models.Model):
     STATUS_CHOICES = [
-        ('ativo', 'Ativo'),
-        ('inativo', 'Inativo'),        
+        ('aprovado', 'Aprovado'),
+        ('em_revisao', 'Em Revisão'),
+        ('inativo', 'Inativo'),
     ]
 
     nome = models.CharField(max_length=100)
@@ -16,7 +17,7 @@ class Documento(models.Model):
     status = models.CharField(
         max_length=15,
         choices=STATUS_CHOICES,
-        default='ativo',
+        default='em_revisao',
     )
 
     def __str__(self):

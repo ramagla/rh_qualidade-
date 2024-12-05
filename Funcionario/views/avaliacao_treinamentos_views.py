@@ -9,10 +9,12 @@ from Funcionario.models import AvaliacaoTreinamento, Funcionario, ListaPresenca
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
+from django.core.paginator import Paginator
+
 
 def lista_avaliacoes(request):
-    # Busca todas as avaliações de treinamento no banco de dados
     avaliacoes_treinamento = AvaliacaoTreinamento.objects.all().order_by('funcionario__nome')  # Ordena por nome do funcionário
+    
     
     # Filtra por treinamento, se selecionado
     treinamento_id = request.GET.get('treinamento')
@@ -30,17 +32,31 @@ def lista_avaliacoes(request):
     if data_inicio and data_fim:
         avaliacoes_treinamento = avaliacoes_treinamento.filter(data_avaliacao__range=[data_inicio, data_fim])
 
-    # Busca apenas funcionários ativos
-    funcionarios_ativos = Funcionario.objects.filter(status="Ativo")
-    
-    # Busca todos os treinamentos para o filtro
-    listas_presenca = ListaPresenca.objects.all()
+    # Contadores para os cards
+    total_avaliacoes = avaliacoes_treinamento.count()
+    muito_eficaz = avaliacoes_treinamento.filter(avaliacao_geral=5).count()
+    eficaz = avaliacoes_treinamento.filter(avaliacao_geral=2).count()
+    pouco_eficaz = avaliacoes_treinamento.filter(avaliacao_geral=1).count()
+
+    # Paginação
+    paginator = Paginator(avaliacoes_treinamento, 10)  # 10 itens por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+     # Busca apenas funcionários e treinamentos com avaliações no conjunto filtrado
+    funcionarios_ativos = Funcionario.objects.filter(id__in=avaliacoes_treinamento.values_list('funcionario_id', flat=True).distinct())
+    listas_presenca = Treinamento.objects.filter(id__in=avaliacoes_treinamento.values_list('treinamento_id', flat=True).distinct())
 
     # Renderiza o template com os filtros aplicados
     return render(request, 'avaliacao_treinamento/lista_avaliacao.html', {
-        'avaliacoes_treinamento': avaliacoes_treinamento,
+        'avaliacoes_treinamento': page_obj,  # Paginação aplicada
         'funcionarios_ativos': funcionarios_ativos,
-        'listas_presenca': listas_presenca
+        'listas_presenca': listas_presenca,
+        'total_avaliacoes': total_avaliacoes,
+        'muito_eficaz': muito_eficaz,
+        'eficaz': eficaz,
+        'pouco_eficaz': pouco_eficaz,
+        'page_obj': page_obj  # Enviado para o template para controle do paginator
     })
 
 
