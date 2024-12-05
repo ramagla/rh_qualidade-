@@ -7,6 +7,7 @@ class ListaPresenca(models.Model):
         ('Treinamento', 'Treinamento'),
         ('Curso', 'Curso'),
         ('Divulgacao', 'Divulgação'),
+        ('Conscientização', 'Conscientização'),
     ]
     
     SITUACAO_CHOICES = [
