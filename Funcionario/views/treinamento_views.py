@@ -14,6 +14,7 @@ import csv
 def lista_treinamentos(request):
     tipo = request.GET.get('tipo')
     status = request.GET.get('status')
+    funcionario_id = request.GET.get('funcionario')  # Obtém o ID do funcionário selecionado
     ordenacao = request.GET.get('ordenacao', 'nome_curso')  # Alterado para evitar problema com ManyToMany
 
     # Atualização para ManyToMany
@@ -23,6 +24,14 @@ def lista_treinamentos(request):
         treinamentos = treinamentos.filter(tipo=tipo)
     if status:
         treinamentos = treinamentos.filter(status=status)
+    if funcionario_id:
+        treinamentos = treinamentos.filter(funcionarios__id=funcionario_id)
+
+
+    # Filtrar funcionários que estão na lista de treinamentos
+    funcionarios = Funcionario.objects.filter(
+        id__in=treinamentos.values_list('funcionarios__id', flat=True)
+    ).distinct()
 
     # Paginação
     paginator = Paginator(treinamentos, 10)  # 10 itens por página
@@ -38,7 +47,8 @@ def lista_treinamentos(request):
     context = {
         'treinamentos': page_obj,
         'page_obj': page_obj,
-        'funcionarios': Funcionario.objects.all(),
+        'funcionarios': funcionarios,  # Apenas funcionários relacionados
+
         'tipos_treinamento': Treinamento.TIPO_TREINAMENTO_CHOICES,
         'ordenacao': ordenacao,
         'total_treinamentos': total_treinamentos,
