@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import get_template
 from io import BytesIO
 from xhtml2pdf import pisa
-from Funcionario.models import Treinamento, Funcionario
+from Funcionario.models import Treinamento, Funcionario, IntegracaoFuncionario
 from Funcionario.forms import TreinamentoForm
 from django.utils import timezone
 from django.core.paginator import Paginator
@@ -104,17 +104,30 @@ def visualizar_treinamento(request, treinamento_id):
 
 
 def imprimir_f003(request, funcionario_id):
+    # Obtém o funcionário pelo ID
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+
+    # Busca os treinamentos associados ao funcionário
     treinamentos = Treinamento.objects.filter(funcionarios=funcionario)
 
-    # Obtendo a data da última atualização
+    # Busca a integração associada ao funcionário
+    integracao = IntegracaoFuncionario.objects.filter(funcionario=funcionario).first()
+
+    # Obtém a data da última atualização dos treinamentos
     ultima_atualizacao = treinamentos.order_by('-data_fim').first().data_fim if treinamentos.exists() else None
 
+    # Debug para verificar os dados no terminal
+    print(f"Funcionário: {funcionario}")
+    print(f"Treinamentos: {list(treinamentos)}")
+    print(f"Data de Integração: {integracao.data_integracao if integracao else 'Nenhuma integração encontrada'}")
+
+    # Renderiza o template com os dados necessários
     return render(request, 'treinamentos/relatorio_f003.html', {
         'funcionario': funcionario,
         'treinamentos': treinamentos,
         'current_date': timezone.now(),
         'ultima_atualizacao': ultima_atualizacao,
+        'integracao': integracao,  # Inclui a integração no contexto
     })
 
 def gerar_pdf(request, funcionario_id):
@@ -141,17 +154,33 @@ def gerar_pdf(request, funcionario_id):
 def gerar_relatorio_f003(request):
     if request.method == 'POST':
         funcionario_id = request.POST.get('funcionario')
+        
+        # Busca o funcionário
         funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+
+        # Busca a integração associada ao funcionário
+        integracao = IntegracaoFuncionario.objects.filter(funcionario=funcionario).first()
+
+        # Busca os treinamentos associados ao funcionário
         treinamentos = Treinamento.objects.filter(funcionario=funcionario)
 
-        # Lógica para preencher o relatório com as informações do funcionário e treinamentos
-        # Aqui você pode configurar para renderizar um PDF ou exibir uma visualização prévia na tela.
+        # Debug: Verifica os dados do funcionário, integração e treinamentos
+        print(f"Funcionário: {funcionario}")
+        print(f"Integracao encontrada: {integracao}")
+        print(f"Treinamentos encontrados: {list(treinamentos)}")
 
+        # Cria o contexto a ser enviado ao template
         context = {
             'funcionario': funcionario,
             'treinamentos': treinamentos,
+            'integracao': integracao,  # Inclui a integração no contexto
         }
+
+        # Debug: Exibe o contexto completo
+        print(f"Contexto enviado ao template: {context}")
+
         return render(request, 'relatorio_f003.html', context)
+
     
 def exportar_treinamentos_csv(request):
     treinamentos = Treinamento.objects.prefetch_related('funcionarios').all()

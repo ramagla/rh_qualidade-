@@ -31,8 +31,20 @@ class Funcionario(models.Model):
     numero_registro = models.CharField(max_length=20, unique=True)
     local_trabalho = models.CharField(max_length=100)
     data_integracao = models.DateField(blank=True, null=True)
-    responsavel = models.CharField(max_length=100, blank=True, null=True)
-    cargo_responsavel = models.CharField(max_length=100)
+    responsavel = models.ForeignKey(
+        'self',  # Relacionamento ao próprio modelo
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='funcionarios_gerenciados'
+    )    
+    cargo_responsavel = models.ForeignKey(
+        Cargo,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='responsaveis'
+    )
     escolaridade = models.CharField(max_length=100, blank=True, null=True)
     experiencia_profissional = models.CharField(max_length=3, choices=EXPERIENCIA_CHOICES, default='Sim')
     updated_at = models.DateTimeField(auto_now=True)

@@ -5,7 +5,7 @@ from weasyprint import HTML
 
 from django.contrib import messages
 from django.urls import reverse_lazy
-from datetime import timezone
+from datetime import timezone, timedelta
 from Funcionario.models import JobRotationEvaluation, Funcionario, Cargo
 from Funcionario.forms import JobRotationEvaluationForm
 from django.core.paginator import Paginator

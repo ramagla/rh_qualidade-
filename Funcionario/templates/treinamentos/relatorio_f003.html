@@ -22,7 +22,17 @@
         </div>
         <div class="info-column">
             <h5><strong>Departamento:</strong> {{ funcionario.local_trabalho }}</h5>
-            <h5><strong>Data de Integração:</strong> {{ funcionario.data_integracao|date:"d/m/Y" }}</h5>
+<h5><strong>Data de Integração:</strong> 
+    
+    {% if integracao %}
+        {{ integracao.data_integracao|date:"d/m/Y" }}
+    {% else %}
+        <span style="color: red;">Não cadastrada</span>
+    {% endif %}
+</h5>
+
+
+
             <h5><strong>Status:</strong> 
                 {% if funcionario.status == "Inativo" %}
                     <span style="color: red; font-weight: bold;">{{ funcionario.status }}</span>
@@ -33,7 +43,8 @@
                 {% endif %}
             </h5>
             <h5><strong>Responsável:</strong> {{ funcionario.responsavel }}</h5>
-            <h5><strong>Cargo:</strong> {{ funcionario.cargo_responsavel }}</h5>
+            <h5><strong>Cargo:</strong> {{ funcionario.cargo_responsavel.nome }}</h5>
+
         </div>
     </div>
 

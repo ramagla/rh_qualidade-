@@ -21,7 +21,7 @@ class ListaPresenca(models.Model):
     horario_inicio = models.TimeField()
     horario_fim = models.TimeField()
     instrutor = models.CharField(max_length=255)
-    duracao = models.DecimalField(max_digits=5, decimal_places=2)
+    duracao = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     necessita_avaliacao = models.BooleanField(default=False)
     lista_presenca = models.FileField(upload_to='listas_presenca/', null=True, blank=True)
     participantes = models.ManyToManyField(Funcionario, related_name='participantes')

@@ -27,14 +27,26 @@ def lista_funcionarios(request):
         Q(curriculo__isnull=True) | Q(curriculo='')
     ).count()  # Verifica NULL e strings vazias
 
+    # Lista de responsáveis disponíveis
+    responsaveis = Funcionario.objects.filter(responsavel__isnull=False).distinct()
+
     # Outros filtros
+    nome = request.GET.get('nome')
+    if nome:
+        funcionarios = funcionarios.filter(nome__icontains=nome)
+
     local_trabalho = request.GET.get('local_trabalho')
     if local_trabalho:
         funcionarios = funcionarios.filter(local_trabalho=local_trabalho)
 
     responsavel = request.GET.get('responsavel')
     if responsavel:
-        funcionarios = funcionarios.filter(responsavel=responsavel)
+        if responsavel == "None":
+            funcionarios = funcionarios.filter(responsavel__isnull=True)
+        else:
+            funcionarios = funcionarios.filter(responsavel_id=responsavel)
+
+
 
     escolaridade = request.GET.get('escolaridade')
     if escolaridade:
@@ -51,7 +63,7 @@ def lista_funcionarios(request):
     context = {
         'page_obj': page_obj,
         'locais_trabalho': Funcionario.objects.values_list('local_trabalho', flat=True).distinct(),
-        'responsaveis': Funcionario.objects.values('responsavel').distinct(),
+        'responsaveis': responsaveis,
         'niveis_escolaridade': Funcionario.objects.values_list('escolaridade', flat=True).distinct(),
         'status_opcoes': Funcionario.objects.values_list('status', flat=True).distinct(),
         'filtro_status': status,  # Inclui o status aplicado no contexto
@@ -59,6 +71,8 @@ def lista_funcionarios(request):
         'total_pendentes': total_pendentes,
         'local_mais_comum': local_mais_comum['local_trabalho'] if local_mais_comum else "N/A",
         'total_inativos': total_inativos,
+        'funcionarios': Funcionario.objects.all().order_by('nome'),  # Ordena os funcionários por nome
+
 
 
     }
@@ -91,7 +105,9 @@ def cadastrar_funcionario(request):
     if request.method == 'POST':
         form = FuncionarioForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            funcionario = form.save(commit=False)
+            print(f"Responsável: {funcionario.responsavel}, Cargo do Responsável: {funcionario.cargo_responsavel}")
+            funcionario.save()
             messages.success(request, 'Funcionário cadastrado com sucesso!')
             return redirect('lista_funcionarios')
         else:

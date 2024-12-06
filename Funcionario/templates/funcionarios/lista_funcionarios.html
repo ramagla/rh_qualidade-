@@ -68,59 +68,73 @@
 </div>
 
 
-    <!-- Formulário de filtro -->
     <form method="get" class="mb-4">
-        <div class="row">
-            <!-- Filtro por Local de Trabalho -->
-            <div class="col-md-3">
-                <label for="local_trabalho" class="form-label">Local de Trabalho:</label>
-                <select name="local_trabalho" id="local_trabalho" class="form-select select2">
-                    <option value="">Selecione</option>
-                    {% for local in locais_trabalho %}
-                        <option value="{{ local }}" {% if request.GET.local_trabalho == local %}selected{% endif %}>{{ local }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+    <div class="row">
+        <!-- Filtro por Nome -->
+        <div class="col-md-3">
+            <label for="nome" class="form-label">Nome do Funcionário:</label>
+            <select name="nome" id="nome" class="form-select select2">
+                <option value="">Selecione</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.nome }}" {% if request.GET.nome == funcionario.nome %}selected{% endif %}>
+                        {{ funcionario.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
 
-            <!-- Filtro por Responsável -->
-            <div class="col-md-3">
-                <label for="responsavel" class="form-label">Responsável:</label>
-                <select name="responsavel" id="responsavel" class="form-select select2">
-                    <option value="">Selecione</option>
-                    {% for resp in responsaveis %}
-                        <option value="{{ resp.responsavel }}" {% if request.GET.responsavel == resp.responsavel %}selected{% endif %}>{{ resp.responsavel }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+        <!-- Filtro por Local de Trabalho -->
+        <div class="col-md-3">
+            <label for="local_trabalho" class="form-label">Local de Trabalho:</label>
+            <select name="local_trabalho" id="local_trabalho" class="form-select select2">
+                <option value="">Selecione</option>
+                {% for local in locais_trabalho %}
+                    <option value="{{ local }}" {% if request.GET.local_trabalho == local %}selected{% endif %}>{{ local }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-            <!-- Filtro por Escolaridade -->
-            <div class="col-md-3">
-                <label for="escolaridade" class="form-label">Escolaridade:</label>
-                <select name="escolaridade" id="escolaridade" class="form-select select2">
-                    <option value="">Selecione</option>
-                    {% for nivel in niveis_escolaridade %}
-                        <option value="{{ nivel }}" {% if request.GET.escolaridade == nivel %}selected{% endif %}>{{ nivel }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            
-             <!-- Filtro de Status -->
-            <!-- Filtro por Status -->
-<div class="col-md-3">
-    <label for="status" class="form-label">Status:</label>
-    <select name="status" id="status" class="form-select select2">
-        {% for opcao in status_opcoes %}
-            <option value="{{ opcao }}" {% if filtro_status == opcao %}selected{% endif %}>{{ opcao }}</option>
-        {% endfor %}
-    </select>
-</div>
+        <!-- Filtro por Responsável -->
+        <div class="col-md-3">
+            <label for="responsavel" class="form-label">Responsável:</label>
+            <select name="responsavel" id="responsavel" class="form-select select2">
+    <option value="">Selecione</option>
+    <option value="None" {% if request.GET.responsavel == "None" %}selected{% endif %}>Sem responsável</option>
+    {% for resp in responsaveis %}
+        <option value="{{ resp.id }}" {% if request.GET.responsavel == resp.id|stringformat:"s" %}selected{% endif %}>
+            {{ resp.nome }}
+        </option>
+    {% endfor %}
+</select>
 
         </div>
-        <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+
+        <!-- Filtro por Escolaridade -->
+        <div class="col-md-3">
+            <label for="escolaridade" class="form-label">Escolaridade:</label>
+            <select name="escolaridade" id="escolaridade" class="form-select select2">
+                <option value="">Selecione</option>
+                {% for nivel in niveis_escolaridade %}
+                    <option value="{{ nivel }}" {% if request.GET.escolaridade == nivel %}selected{% endif %}>{{ nivel }}</option>
+                {% endfor %}
+            </select>
         </div>
-    </form>
+
+        <!-- Filtro por Status -->
+        <div class="col-md-3">
+            <label for="status" class="form-label">Status:</label>
+            <select name="status" id="status" class="form-select select2">
+                {% for opcao in status_opcoes %}
+                    <option value="{{ opcao }}" {% if filtro_status == opcao %}selected{% endif %}>{{ opcao }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="text-end mt-3">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+    </div>
+</form>
+
 <div class="row mb-4">
     <!-- Card: Total de Funcionários Ativos -->
     <div class="col-md-3">
@@ -301,6 +315,27 @@
         });
     });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Ativa o select2 para todos os campos com a classe 'select2'
+        $('.select2').select2({
+            placeholder: "Selecione uma opção",
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Sincroniza os valores do select2 antes de enviar o formulário
+        const form = document.querySelector('form[method="get"]');
+        form.addEventListener('submit', function (event) {
+            $('.select2').each(function () {
+                // Atualiza o valor do select2 no campo original
+                $(this).val($(this).val()).trigger('change');
+            });
+        });
+    });
+</script>
+
+
   <!-- Paginação -->
 <nav aria-label="Navegação de página">
     <ul class="pagination justify-content-center">

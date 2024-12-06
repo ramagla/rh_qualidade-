@@ -34,10 +34,12 @@ class FuncionarioForm(forms.ModelForm):
 )
     escolaridade = forms.ChoiceField(choices=ESCOLARIDADE_CHOICES, label="Escolaridade", widget=forms.Select(attrs={'class': 'form-select'}))
     responsavel = forms.ModelChoiceField(
-            queryset=Funcionario.objects.all(),
-            required=False,
-            widget=Select2Widget(attrs={'class': 'select2 form-select','id': 'id_responsavel'})
-        )    
+        queryset=Funcionario.objects.all().order_by('nome'),
+        required=False,
+        empty_label="Selecione um responsável", 
+        widget=forms.Select(),  # Nenhuma classe ou ID personalizado
+        label="Responsável"
+    )
     foto = forms.ImageField(required=False, label="Foto")
     curriculo = forms.FileField(required=False, label="Currículo")
     status = forms.ChoiceField(choices=Funcionario.STATUS_CHOICES, label="Status", widget=forms.Select(attrs={'class': 'form-select'}))
@@ -55,7 +57,7 @@ class FuncionarioForm(forms.ModelForm):
         fields = [
             'nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro', 
             'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto', 
-            'curriculo', 'status', 'formulario_f146', 'experiencia_profissional'  # Inclua o novo campo aqui
+            'curriculo', 'status', 'formulario_f146', 'experiencia_profissional' ,'cargo_responsavel' # Inclua o novo campo aqui
         ]
 
     def __init__(self, *args, **kwargs):
@@ -78,3 +80,19 @@ class FuncionarioForm(forms.ModelForm):
         if responsavel:
             responsavel.nome = responsavel.nome.title()  # Converte para Title Case
         return responsavel
+    
+     # Método save para preencher o cargo_responsavel automaticamente
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        print(f"Responsável: {instance.responsavel}")  # Verifique se o responsável foi atribuído
+
+        if instance.responsavel:
+            print(f"Responsável é um objeto Funcionario? {isinstance(instance.responsavel, Funcionario)}")
+            if isinstance(instance.responsavel, Funcionario):  # Confirma que é um objeto Funcionario
+                print(f"Cargo Atual do Responsável: {instance.responsavel.cargo_atual}")
+                instance.cargo_responsavel = instance.responsavel.cargo_atual
+                print(f"Cargo Responsável definido como: {instance.cargo_responsavel}")
+        if commit:
+            instance.save()
+            print("Instância salva com sucesso.")
+        return instance

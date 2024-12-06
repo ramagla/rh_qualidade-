@@ -36,33 +36,35 @@
         <!-- Data de Início -->
         <div class="col-md-6">
             <label for="data_inicio" class="form-label">Data de Início:</label>
-            {{ form.data_inicio|add_class:"form-control" }}
+            <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ form.instance.data_inicio|date:"Y-m-d" }}">
         </div>
 
         <!-- Data de Fim -->
         <div class="col-md-6">
             <label for="data_fim" class="form-label">Data de Fim:</label>
-            {{ form.data_fim|add_class:"form-control" }}
+            <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ form.instance.data_fim|date:"Y-m-d" }}">
         </div>
+
 
         <!-- Horário de Início -->
-        <div class="col-md-3">
-            <label for="horario_inicio" class="form-label">Horário Início:</label>
-            {{ form.horario_inicio|add_class:"form-control" }}
-        </div>
+            <div class="col-md-3">
+                <label for="horario_inicio" class="form-label">Horário Início:</label>
+                <input type="time" id="id_horario_inicio" name="horario_inicio" class="form-control" value="{{ form.instance.horario_inicio|time:'H:i' }}">
+            </div>
 
-        <!-- Horário de Fim -->
-        <div class="col-md-3">
-            <label for="horario_fim" class="form-label">Horário Fim:</label>
-            {{ form.horario_fim|add_class:"form-control" }}
-        </div>
+            <!-- Horário de Fim -->
+            <div class="col-md-3">
+                <label for="horario_fim" class="form-label">Horário Fim:</label>
+                <input type="time" id="id_horario_fim" name="horario_fim" class="form-control" value="{{ form.instance.horario_fim|time:'H:i' }}">
+            </div>
+
 
      <!-- Duração (Calculada automaticamente) -->
         <div class="col-md-6">
             <label for="duracao" class="form-label">Duração (em horas):</label>
-            <input type="text" id="duracao" name="duracao" class="form-control" 
-                value="{{ form.instance.duracao|floatformat:2 }}" readonly>
+            <input type="text" id="duracao" name="duracao" class="form-control" value="{{ form.instance.duracao|floatformat:2 }}" readonly>
         </div>
+
 
         <!-- Assunto do Treinamento -->
         <div class="col-md-6">
@@ -103,7 +105,7 @@
             </div>
         </div>
 
-        <!-- Campo de Seleção de Treinamento -->
+        {% comment %} <!-- Campo de Seleção de Treinamento -->
         <div class="col-md-6" id="treinamentoSelect" style="display: none;">
             <label for="treinamento_id" class="form-label">Selecionar Treinamento para Avaliação:</label>
             <select id="treinamento_id" name="treinamento_id" class="form-select">
@@ -113,7 +115,7 @@
                     </option>
                 {% endfor %}
             </select>
-        </div>
+        </div> {% endcomment %}
 
         <!-- Anexar Lista de Presença (PDF) -->
         <div class="col-md-6">
@@ -181,26 +183,30 @@ document.getElementById('filtro_local_trabalho').addEventListener('change', func
 });
 
 // Script para calcular a duração com base no horário de início e fim
-document.getElementById('id_horario_fim').addEventListener('change', calcularDuracao);
-document.getElementById('id_horario_inicio').addEventListener('change', calcularDuracao);
+document.addEventListener("DOMContentLoaded", function () {
+        const horarioInicio = document.getElementById("id_horario_inicio");
+        const horarioFim = document.getElementById("id_horario_fim");
+        const duracaoField = document.getElementById("duracao");
 
-function calcularDuracao() {
-    var inicio = document.getElementById('id_horario_inicio').value;
-    var fim = document.getElementById('id_horario_fim').value;
+        function calcularDuracao() {
+            if (horarioInicio.value && horarioFim.value) {
+                const inicioDate = new Date(`1970-01-01T${horarioInicio.value}Z`);
+                const fimDate = new Date(`1970-01-01T${horarioFim.value}Z`);
+                const diff = (fimDate - inicioDate) / (1000 * 60 * 60); // diferença em horas
 
-    if (inicio && fim) {
-        var inicioDate = new Date('1970-01-01T' + inicio + 'Z');
-        var fimDate = new Date('1970-01-01T' + fim + 'Z');
-        var diff = (fimDate - inicioDate) / (1000 * 60 * 60);
-
-        if (diff >= 0) {
-            document.getElementById('duracao').value = diff.toFixed(2);  // Garante o ponto decimal
-        } else {
-            alert('Horário de fim deve ser posterior ao horário de início.');
-            document.getElementById('duracao').value = '';
+                if (diff >= 0) {
+                    duracaoField.value = diff.toFixed(2); // Atualiza o campo de duração
+                } else {
+                    alert("Horário de fim deve ser posterior ao horário de início.");
+                    duracaoField.value = "";
+                }
+            }
         }
-    }
-}
+
+        // Adiciona os eventos para recalcular a duração
+        horarioInicio.addEventListener("change", calcularDuracao);
+        horarioFim.addEventListener("change", calcularDuracao);
+    });
 
 // Função para mostrar ou ocultar o campo de seleção de treinamento com base na escolha
 function toggleTreinamentoSelect(show) {

@@ -85,10 +85,10 @@
             {{ form.local_trabalho }}
         </div>
 
-        <div class="col-md-6">
+        {% comment %} <div class="col-md-6">
             <label for="data_integracao" class="form-label">Data de Integração:</label>
                 <input type="date" name="data_integracao" class="form-control" value="{{ form.data_integracao.value|default:'' }}" placeholder="dd/mm/aaaa">
-        </div>
+        </div> {% endcomment %}
 
         <div class="col-md-6">
             <label for="escolaridade" class="form-label">Escolaridade:</label>

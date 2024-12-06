@@ -106,8 +106,8 @@ def cadastrar_lista_presenca(request):
     else:
         form = ListaPresencaForm()
 
-    funcionarios = Funcionario.objects.filter(status='Ativo')  # Lista de funcionários ativos
-    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
+    funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
+    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct().order_by('local_trabalho')
 
 
     return render(request, 'lista_presenca/cadastrar_lista_presenca.html', {
@@ -127,14 +127,15 @@ def editar_lista_presenca(request, id):
 
     treinamentos = Treinamento.objects.all()
 
-    funcionarios = Funcionario.objects.filter(status='Ativo')
+    funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
 
 
     if request.method == 'POST':
         form = ListaPresencaForm(request.POST, request.FILES, instance=lista)
         if form.is_valid():
             with transaction.atomic():
-                lista = form.save()
+                lista = form.save()                
+
                 if lista.situacao == 'finalizado':
                     # Verifica se já existe um treinamento com os mesmos atributos
                     treinamento_existente = Treinamento.objects.filter(
@@ -167,10 +168,11 @@ def editar_lista_presenca(request, id):
                         treinamento_existente.funcionarios.add(participante)
 
                 return redirect('lista_presenca')
-    else:
+    else:      
+
         form = ListaPresencaForm(instance=lista)
 
-    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
+    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct().order_by('local_trabalho')
 
     return render(request, 'lista_presenca/edit_lista_presenca.html', {
         'form': form,

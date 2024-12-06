@@ -1,5 +1,5 @@
 from django import forms
-from ..models import JobRotationEvaluation
+from ..models import JobRotationEvaluation,AvaliacaoAnual
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django.utils import timezone
 from datetime import timedelta
