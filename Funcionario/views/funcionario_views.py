@@ -203,7 +203,8 @@ def gerar_organograma(funcionario):
     Função recursiva para construir a hierarquia completa.
     Inclui a contagem de subordinados.
     """
-    subordinados = Funcionario.objects.filter(responsavel=funcionario.nome, status="Ativo")
+    # Alterando para filtrar pelo id do responsável, em vez de pelo nome
+    subordinados = Funcionario.objects.filter(responsavel_id=funcionario.id, status="Ativo")
     estrutura = []
     for subordinado in subordinados:
         estrutura.append({
@@ -214,6 +215,7 @@ def gerar_organograma(funcionario):
             'quantidade_subordinados': subordinados.count()  # Contagem de subordinados
         })
     return estrutura
+
 
 
 def organograma_view(request):
