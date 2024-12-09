@@ -104,15 +104,15 @@
             {{ form.status|add_class:"form-select" }}
         </div>
 
-        {% comment %} <!-- Formulário F146 -->
+        <!-- Formulário F146 -->
         <div class="col-md-6">
-            <label for="formulario_f146" class="form-label">Formulário F146:</label>
+            <label for="formulario_f146" class="form-label">Certificado de Conclusão de Ensino Médio:</label>
             <div class="input-group mb-3">
                 <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_formulario_f146').click();">Selecionar Arquivo</button>
                 <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="formulario_f146_filename" readonly>
             </div>
             <input type="file" id="id_formulario_f146" name="formulario_f146" style="display: none;" onchange="document.getElementById('formulario_f146_filename').value = this.files[0].name;">
-        </div> {% endcomment %}
+        </div>
 
         <!-- Botão para salvar -->
         <div class="col-12 text-center">

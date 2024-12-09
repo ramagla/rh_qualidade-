@@ -192,8 +192,22 @@
         <td>{{ integracao.funcionario.nome }}</td>
         <td>{{ integracao.data_integracao|date:"d/m/Y" }}</td>
         <td>{{ integracao.funcionario.local_trabalho }}</td>
-        <td>{{ integracao.grupo_whatsapp|yesno:"Sim,Não" }}</td>
-        <td>{{ integracao.requer_treinamento|yesno:"Sim,Não" }}</td>
+         <td>
+                {% if integracao.grupo_whatsapp %}
+                    <span class="badge bg-success text-white">Sim</span>
+                {% else %}
+                    <span class="badge bg-danger text-white">Não</span>
+                {% endif %}
+            </td>
+
+            <!-- Requer Treinamento com Badge -->
+            <td>
+                {% if integracao.requer_treinamento %}
+                    <span class="badge bg-warning text-dark">Sim</span>
+                {% else %}
+                    <span class="badge bg-secondary">Não</span>
+                {% endif %}
+            </td>
         <td>
             {% if integracao.pdf_integracao %}
                 <a href="{{ integracao.pdf_integracao.url }}" class="btn btn-light" target="_blank">

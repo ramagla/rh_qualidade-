@@ -51,7 +51,7 @@ class Funcionario(models.Model):
     foto = models.ImageField(upload_to='fotos_funcionarios/', blank=True, null=True)
     curriculo = models.FileField(upload_to=renomear_curriculo, blank=True, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo')
-    formulario_f146 = models.FileField(upload_to='formularios_f146/', blank=True, null=True)
+    formulario_f146 = models.FileField(upload_to='certificado_ensino/', blank=True, null=True)
    
     def __str__(self):
         return self.nome

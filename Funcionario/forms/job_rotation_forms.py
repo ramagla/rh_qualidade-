@@ -16,9 +16,12 @@ class JobRotationEvaluationForm(forms.ModelForm):
 
     def clean_data_inicio(self):
         data_inicio = self.cleaned_data.get('data_inicio')
-        if data_inicio and data_inicio < timezone.now().date():  # Caso queira validar se a data é futura
-            raise forms.ValidationError("A data de início não pode ser no passado.")
+        limite_retroativo = timezone.now().date() - timedelta(days=365)  # Permite até 1 ano no passado
+        if data_inicio and data_inicio < limite_retroativo:
+            raise forms.ValidationError("A data de início não pode ser retroativa além de 1 ano.")
         return data_inicio
+
+
     
     def clean_area_atual(self):
         """Garante que o campo 'Área Atual' esteja em Title Case."""

@@ -228,7 +228,11 @@ def levantamento_treinamento(request):
     if filtro_departamento:
         funcionarios = funcionarios.filter(local_trabalho=filtro_departamento)
 
-    treinamentos = Treinamento.objects.filter(funcionarios__in=funcionarios)
+    # Filtra os treinamentos associados aos funcionários filtrados
+    treinamentos = Treinamento.objects.filter(
+        funcionarios__in=funcionarios,
+        status='requerido'   # Apenas treinamentos com o status "Requerido"
+    )
     if filtro_data_inicio:
         treinamentos = treinamentos.filter(data_inicio__gte=filtro_data_inicio)
     if filtro_data_fim:

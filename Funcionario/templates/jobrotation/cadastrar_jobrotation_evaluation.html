@@ -103,7 +103,7 @@
             </div>
             <div class="col-md-6">
                 <label for="nova_funcao" class="form-label">Função:</label>
-                <select name="nova_funcao" class="form-select">
+                <select name="nova_funcao" class="form-select select2">
                     {% for cargo in lista_cargos %}
                     <option value="{{ cargo.id }}">{{ cargo.nome }}</option>
                     {% endfor %}

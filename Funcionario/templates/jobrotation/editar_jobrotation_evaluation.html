@@ -39,7 +39,7 @@
         <!-- Função -->
         <div class="col-md-6">
             <label for="nova_funcao" class="form-label">Função:</label>
-            <select name="nova_funcao" class="form-select {% if form.nova_funcao.errors %}is-invalid{% endif %}" required>
+            <select name="nova_funcao" class="form-select select2 {% if form.nova_funcao.errors %}is-invalid{% endif %}" required>
                 {% for cargo in lista_cargos %}
                     <option value="{{ cargo.id }}" {% if cargo.id == evaluation.nova_funcao.id %}selected{% endif %}>{{ cargo.nome }}</option>
                 {% endfor %}
@@ -75,7 +75,7 @@
         <!-- Gestor Responsável -->
         <div class="col-md-6">
             <label for="gestor_responsavel" class="form-label">Gestor Responsável:</label>
-            <select name="gestor_responsavel" class="form-select {% if form.gestor_responsavel.errors %}is-invalid{% endif %}" required>
+            <select name="gestor_responsavel" class="form-select select2 {% if form.gestor_responsavel.errors %}is-invalid{% endif %}" required>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}" {% if funcionario.id == evaluation.gestor_responsavel.id %}selected{% endif %}>{{ funcionario.nome }}</option>
                 {% endfor %}
