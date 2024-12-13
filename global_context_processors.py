@@ -3,8 +3,7 @@ from datetime import datetime
 def global_menu(request):
     # Definindo menus por módulo
     menu_metrologia = [
-        {'name': 'Tabela Técnica', 'url': 'lista_tabelatecnica', 'icon': 'fas fa-table'},
-        {'name': 'Instrumentos', 'url': 'lista_instrumentos', 'icon': 'fas fa-ruler-combined'},
+        {'name': 'Instrumentos', 'url': 'lista_tabelatecnica', 'icon': 'fas fa-ruler-combined'},
         {'name': 'Calibrações', 'url': 'metrologia_calibracoes', 'icon': 'fas fa-cogs'},
         {'name': 'Relatórios', 'url': 'metrologia_relatorios', 'icon': 'fas fa-file-alt'},
         {'name': 'Configurações', 'url': 'metrologia_configuracoes', 'icon': 'fas fa-cog'},
