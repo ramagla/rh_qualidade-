@@ -45,7 +45,9 @@ def lista_avaliacoes(request):
 
      # Busca apenas funcionários e treinamentos com avaliações no conjunto filtrado
     funcionarios_ativos = Funcionario.objects.filter(id__in=avaliacoes_treinamento.values_list('funcionario_id', flat=True).distinct())
-    listas_presenca = Treinamento.objects.filter(id__in=avaliacoes_treinamento.values_list('treinamento_id', flat=True).distinct())
+    listas_presenca = Treinamento.objects.filter(
+        id__in=AvaliacaoTreinamento.objects.values_list('treinamento_id', flat=True).distinct()
+    )
 
     # Renderiza o template com os filtros aplicados
     return render(request, 'avaliacao_treinamento/lista_avaliacao.html', {
@@ -67,7 +69,8 @@ from Funcionario.models import Funcionario, Treinamento
 
 def cadastrar_avaliacao(request):
     # Carregar todos os funcionários ordenados por nome
-    funcionarios = Funcionario.objects.order_by('nome')
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by('nome')
+
 
     # Define as opções para os campos de questionário
     opcoes_conhecimento = [
@@ -212,6 +215,9 @@ def visualizar_avaliacao(request, id):
     }
     avaliacao_geral = avaliacao_geral_map.get(avaliacao.avaliacao_geral, "Indeterminado")
 
+     # Verifica se há um treinamento associado
+    treinamento = avaliacao.treinamento if avaliacao.treinamento else None
+
     return render(request, 'avaliacao_treinamento/visualizar_avaliacao.html', {
         'avaliacao': avaliacao,
         'grau_conhecimento': grau_conhecimento,
@@ -219,6 +225,7 @@ def visualizar_avaliacao(request, id):
         'resultados_obtidos': resultados_obtidos,
         'melhorias': avaliacao.descricao_melhorias,
         'avaliacao_geral': avaliacao_geral,
+        'treinamento': treinamento,
     })
 
 def get_treinamentos_por_funcionario(request, funcionario_id):

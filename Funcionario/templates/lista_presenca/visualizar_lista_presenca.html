@@ -1,79 +1,82 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Visualizar Lista de Presença{% endblock %}
+{% block title %}Visualização da Lista de Presença{% endblock %}
 
 {% block content %}
+{% load widget_tweaks custom_filters %}
+
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Visualizar Lista de Presença: {{ lista.treinamento }}</h2>
-
-    <div class="row">
-        <!-- Lista de Presença -->
-        <div class="col-md-6 text-center">
-            <label class="form-label">Lista de Presença (PDF):</label>
-            {% if lista.lista_presenca %}
-                <div class="mt-2">
-                    <a href="{{ lista.lista_presenca.url }}" class="btn btn-info" target="_blank" download>Baixar Lista de Presença</a>
-                    <p>Arquivo: {{ lista.lista_presenca.name }}</p>
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h2 class="mb-0">Visualização da Lista de Presença</h2>
+        </div>
+        <div class="card-body">
+            <!-- Dados da Lista de Presença -->
+            <h5 class="text-primary mb-3">Informações da Lista</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Tipo</label>
+                    <p class="fw-bold">{{ form.instance.treinamento }}</p>
                 </div>
-            {% else %}
-                <p>Nenhum arquivo disponível.</p>
-            {% endif %}
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Data de Início</label>
+                    <p class="fw-bold">{{ form.instance.data_inicio|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Data de Fim</label>
+                    <p class="fw-bold">{{ form.instance.data_fim|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Duração (em horas)</label>
+                    <p class="fw-bold">{{ form.instance.duracao }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Situação</label>
+                    <p class="fw-bold">{{ form.instance.situacao }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Assunto</label>
+                    <p class="fw-bold">{{ form.instance.assunto }}</p>
+                </div>
+            </div>
+
+            <!-- Detalhes adicionais -->
+            <h5 class="text-primary mb-3">Detalhes</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Instrutor</label>
+                    <p class="fw-bold">{{ form.instance.instrutor }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Lista de Presença (PDF)</label>
+                    {% if form.instance.lista_presenca %}
+                        <a href="{{ form.instance.lista_presenca.url }}" class="btn btn-info btn-sm" download>
+                            <i class="bi bi-download"></i> Baixar Lista de Presença
+                        </a>
+                        <p class="mt-2 text-muted"><strong>Arquivo:</strong> {{ form.instance.lista_presenca.name|basename }}</p>
+                    {% else %}
+                        <p class="fw-bold">Não disponível</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Participantes -->
+            <h5 class="text-primary mb-3">Colaboradores Participantes</h5>
+            <ul class="list-group">
+                {% for participante in form.instance.participantes.all %}
+                    <li class="list-group-item">{{ participante.nome }} - {{ participante.local_trabalho }}</li>
+                {% endfor %}
+            </ul>
         </div>
 
-        <!-- Instrutor -->
-        <div class="col-md-6 text-center align-self-center">
-            <label class="form-label">Instrutor:</label>
-            <p class="mt-2"><strong>{{ lista.instrutor }}</strong></p>
+        <!-- Botão de Voltar -->
+        <div class="card-footer text-center">
+            <a href="{% url 'lista_presenca' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Voltar
+            </a>
         </div>
-    </div>
-
-    <div class="mt-4">
-        <h5>Detalhes da Lista de Presença</h5>
-        <ul class="list-group">
-            <li class="list-group-item"><strong>Treinamento:</strong> {{ lista.treinamento }}</li>
-            <li class="list-group-item"><strong>Data de Início:</strong> {{ lista.data_inicio|date:"d/m/Y" }}</li>
-            <li class="list-group-item"><strong>Data de Fim:</strong> {{ lista.data_fim|date:"d/m/Y" }}</li>
-            <li class="list-group-item"><strong>Horário de Início:</strong> {{ lista.horario_inicio }}</li>
-            <li class="list-group-item"><strong>Horário de Fim:</strong> {{ lista.horario_fim }}</li>
-            <li class="list-group-item"><strong>Duração:</strong> {{ lista.duracao|floatformat:2 }} horas</li>
-            <li class="list-group-item"><strong>Situação:</strong> 
-                {% if lista.situacao == 'finalizado' %}
-                    <span class="badge bg-success text-white">Finalizado</span>
-                {% elif lista.situacao == 'em_andamento' %}
-                    <span class="badge bg-warning text-dark">Em Andamento</span>
-                {% else %}
-                    <span class="badge bg-secondary text-white">Indefinido</span>
-                {% endif %}
-            </li>
-            <li class="list-group-item"><strong>Assunto:</strong> {{ lista.assunto }}</li>
-            <li class="list-group-item"><strong>Descrição:</strong> {{ lista.descricao|safe }}</li>
-            <li class="list-group-item"><strong>Necessita Avaliação de Eficácia?:</strong> 
-                {% if lista.necessita_avaliacao %}
-                    Sim
-                {% else %}
-                    Não
-                {% endif %}
-            </li>
-        </ul>
-    </div>
-
-    <div class="mt-4">
-        <h5>Funcionários Participantes</h5>
-        <ul class="list-group">
-            {% for participante in lista.participantes.all %}
-                <li class="list-group-item">
-                    <strong>Nome:</strong> {{ participante.nome }} - <strong>Local de Trabalho:</strong> {{ participante.local_trabalho }}
-                </li>
-            {% empty %}
-                <li class="list-group-item">Nenhum participante registrado.</li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <div class="mt-4 text-center">
-        <a href="{% url 'lista_presenca' %}" class="btn btn-primary"><i class="bi bi-arrow-left-circle"></i> Voltar</a>
     </div>
 </div>
 

@@ -69,7 +69,7 @@
                     <th>Item</th>
                     <th>Treinamento Requerido</th>
                     <th>Local</th>
-                    <th>Nome do Funcionário</th>
+                    <th>Nome do Colaborador</th>
                     <th>Situação</th>
                 </tr>
             </thead>
@@ -84,15 +84,17 @@
                                 {% for funcionario in treinamento.funcionarios.all %}
                                     {{ funcionario.nome }}<br>
                                 {% endfor %}
-                            </td>                            <td>
-                                {% if treinamento.situacao == 'APROVADO' %}
-                                    <span style="color: green; font-weight: bold;">{{ treinamento.situacao }}</span>
-                                {% elif treinamento.situacao == 'REPROVADO' %}
-                                    <span style="color: red; font-weight: bold;">{{ treinamento.situacao }}</span>
-                                {% else %}
-                                    <span style="color: orange; font-weight: bold;">{{ treinamento.situacao }}</span>
-                                {% endif %}
-                            </td>
+                           <td>
+    {% if treinamento.situacao|lower == 'aprovado' %}
+        <span style="color: green; font-weight: bold;">{{ treinamento.situacao|title }}</span>
+    {% elif treinamento.situacao|lower == 'reprovado' %}
+        <span style="color: red; font-weight: bold;">{{ treinamento.situacao|title }}</span>
+    {% else %}
+        <span style="color: orange; font-weight: bold;">{{ treinamento.situacao|title }}</span>
+    {% endif %}
+</td>
+
+
 
                         </tr>
                     {% endfor %}
@@ -107,14 +109,12 @@
 </div>
 
 <div class="mt-5">
-    <table class="custom-table" style="width: 100%; border: 1px solid #000; border-collapse: collapse; table-layout: fixed;">
+    <table class="custom-table" style="width: 100%; border: 1px solid #ccc; border-collapse: collapse; table-layout: fixed;">
         <tr>
-            
-
             <!-- Assinatura da Chefia -->
-            <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
-                <p><strong>Assinatura da Chefia</strong></p>
-                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+            <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #ccc;">
+                <p><strong>Assinatura do Gestor</strong></p>
+                <div style="border-top: 1px dashed #999; padding-top: 5px; margin-top: 20px;">
                     {{ evaluation.gestor_responsavel.nome }}
                 </div>
                 <div style="margin-top: 10px;">
@@ -123,10 +123,9 @@
             </td>
 
             <!-- Assinatura do Responsável R.H. -->
-            <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
+            <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #ccc;">
                 <p><strong>Assinatura do Responsável R.H.</strong></p>
-                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
-                   
+                <div style="border-top: 1px dashed #999; padding-top: 5px; margin-top: 20px;">
                 </div>
                 <div style="margin-top: 10px;">
                     <em>Data da Assinatura:</em> ___/___/____
@@ -135,6 +134,7 @@
         </tr>
     </table>
 </div>
+
 
 <style>
     

@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Editar Instrumento{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Editar Instrumento</h2>
+
+    <!-- Mensagens de erro -->
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Erro ao salvar o formulário:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        <!-- Dados Gerais -->
+        <div class="col-md-6">
+            <label for="codigo" class="form-label">Código do Equipamento:</label>
+            {{ form.codigo|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="nome_equipamento" class="form-label">Nome do Equipamento:</label>
+            {{ form.nome_equipamento|add_class:"form-control" }}
+        </div>
+
+        <!-- Capacidade e Resolução -->
+        <div class="col-md-6">
+            <label for="capacidade_minima" class="form-label">Capacidade de Medição Mínima:</label>
+            {{ form.capacidade_minima|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="capacidade_maxima" class="form-label">Capacidade de Medição Máxima:</label>
+            {{ form.capacidade_maxima|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="resolucao" class="form-label">Resolução:</label>
+            {{ form.resolucao|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="unidade_medida" class="form-label">Unidade de Medida:</label>
+            {{ form.unidade_medida|add_class:"form-select" }}
+        </div>
+
+        <!-- Tolerância e Frequência -->
+        <div class="col-md-6">
+            <label for="tolerancia_total_minima" class="form-label">Tolerância Total Mínima:</label>
+            {{ form.tolerancia_total_minima|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="exatidao_requerida" class="form-label">Exatidão Requerida (ER):</label>
+            <input type="text" id="exatidao_requerida" class="form-control" readonly>
+        </div>
+        <div class="col-md-6">
+            <label for="tolerancia_em_percentual" class="form-label">Tolerância em (%):</label>
+            {{ form.tolerancia_em_percentual|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="frequencia_calibracao" class="form-label">Frequência de Calibração (em meses):</label>
+            {{ form.frequencia_calibracao|add_class:"form-control" }}
+        </div>
+
+        <!-- Dados Específicos -->
+        <div class="col-md-6">
+            <label for="numero_serie" class="form-label">Número de Série:</label>
+            {{ form.numero_serie|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="modelo" class="form-label">Modelo:</label>
+            {{ form.modelo|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="fabricante" class="form-label">Fabricante:</label>
+            {{ form.fabricante|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="foto_equipamento" class="form-label">Foto do Equipamento:</label>
+            {{ form.foto_equipamento|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="responsavel" class="form-label">Responsável:</label>
+            {{ form.responsavel|add_class:"form-select select2" }}
+        </div>
+        <div class="col-md-6">
+            <label for="proprietario" class="form-label">Proprietário:</label>
+            {{ form.proprietario|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="localizacao" class="form-label">Localização:</label>
+            {{ form.localizacao|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="status" class="form-label">Status:</label>
+            {{ form.status|add_class:"form-select" }}
+        </div>
+
+        <!-- Novo Campo: Data da Última Calibração -->
+        <div class="col-md-6">
+            <label for="data_ultima_calibracao" class="form-label">Data da Última Calibração:</label>
+            {{ form.data_ultima_calibracao|add_class:"form-control" }}
+        </div>
+
+        <!-- Botões de ação -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-save"></i> Atualizar
+            </button>
+            <a href="{% url 'lista_tabelatecnica' %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Script para calcular o campo Exatidão Requerida (ER)
+    document.addEventListener('DOMContentLoaded', function () {
+        const toleranciaField = document.querySelector('input[name="tolerancia_total_minima"]');
+        const erField = document.getElementById('exatidao_requerida');
+
+        function calcularER() {
+            const tolerancia = parseFloat(toleranciaField.value.replace(',', '.')) || 0;
+            const er = tolerancia / 2;
+            erField.value = er > 0 ? `L ≤ ${er.toFixed(3)}` : 'N/A';
+        }
+
+        toleranciaField.addEventListener('input', calcularER);
+    });
+</script>
+{% endblock %}

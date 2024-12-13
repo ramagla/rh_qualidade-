@@ -65,8 +65,9 @@ def cadastrar_avaliacao_experiencia(request):
 
     return render(request, 'avaliacao_desempenho_experiencia/cadastrar_avaliacao_experiencia.html', {
         'form': form,
-        'funcionarios': Funcionario.objects.all(),
+        'funcionarios': Funcionario.objects.filter(status='Ativo').order_by('nome'),
     })
+
 
 def editar_avaliacao_experiencia(request, id):
     # Busca a avaliação pelo ID ou retorna 404 se não encontrada
@@ -111,7 +112,8 @@ def editar_avaliacao_experiencia(request, id):
         form = AvaliacaoExperienciaForm(instance=avaliacao)
     
     # Pega todos os funcionários para preencher o select de avaliador e avaliado
-    funcionarios = Funcionario.objects.all()
+    funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
+
     
     # Renderiza o template de edição com o formulário preenchido
     return render(request, 'avaliacao_desempenho_experiencia/editar_avaliacao_experiencia.html', {

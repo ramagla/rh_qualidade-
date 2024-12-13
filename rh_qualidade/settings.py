@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "Funcionario",
+    'metrologia',
     'crispy_forms',
     'xhtml2pdf',
     'django_ckeditor_5',
@@ -35,9 +36,19 @@ INSTALLED_APPS = [
     'django_select2',
     'ckeditor',
     'ckeditor_uploader',
+    'django_celery_beat',
+    'alerts',
+
 ]
     
 DATE_FORMAT = "d 'de' F 'de' Y"
+
+# Configurações Celery
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+
 
 # Configurações do CKEditor
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
@@ -155,7 +166,7 @@ SESSION_CACHE_ALIAS = "default"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -164,6 +175,8 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 'Funcionario.context_processors.global_settings',
+                'global_context_processors.global_menu',
+
             ],
         },
     },
@@ -196,3 +209,11 @@ LOGGING = {
     },
 }
 
+# Configurações do e-mail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'webmail.c.inova.com.br'  # Substitua pelo host SMTP real
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'no-reply@brasmol.com.br'
+EMAIL_HOST_PASSWORD = 'Brasmol@2024'
+DEFAULT_FROM_EMAIL = 'no-reply@brasmol.com.br'

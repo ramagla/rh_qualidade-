@@ -12,7 +12,7 @@
                     <img src="/static/logo.png" alt="Logo Bras-Mol" style="max-width: 80px;">
                 </td>
                 <td style="width: 60%; text-align: center; border-right: 1px solid black;">
-                    <h2>2.1 - Índice de Avaliação de Desempenho de Funcionário</h2>
+                    <h2>2.1 - Índice de Avaliação de Desempenho dos Colaboradores</h2>
                 </td>
                 <td style="width: 20%; text-align: center;">
                     <p>Resp. pelo indicador:</p>
@@ -22,7 +22,7 @@
             <tr style="border-top: 1px solid black;">
                 <td colspan="2" style="padding: 10px; border-right: 1px solid black;">
                     <p><strong>Objetivo do Indicador de Desempenho:</strong></p>
-                    <p>Demonstrar a eficácia do processo de RH em conseguir manter os funcionários com bom desempenho.</p>
+                    <p>Demonstrar a eficácia do processo de RH em conseguir manter os colaboradores com bom desempenho.</p>
                 </td>
                 <td style="padding: 10px; text-align: center;">
                     <p><strong>Meta:</strong></p>
@@ -90,7 +90,7 @@
         </thead>
         <tbody>
             <tr>
-                <td style="padding: 8px; font-weight: bold; text-align: left; border: 1px solid #ddd;">Números de Funcionários Avaliados</td>
+                <td style="padding: 8px; font-weight: bold; text-align: left; border: 1px solid #ddd;">Números de Colaboradores Avaliados</td>
                 {% for ano in dados_por_ano.keys %}
                     <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">{{ funcionarios_avaliados|dict:ano }}</td>
                 {% endfor %}
@@ -182,9 +182,7 @@
 
     <!-- Rodapé -->
     <div style="display: flex; justify-content: space-between; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
-        <p>Atualizado por: <strong>Lilian Fernandes</strong></p>
-        <p>Data: {{ data_atual }}</p>
-    </div>
+<p style="margin: 0; text-align: left; font-size: 8px; color: #555;">* Este formulário é atualizado automaticamente com base nas avaliações de desempenho anuais dos colaboradores, assegurando que as informações reflitam de forma precisa as competências e resultados mais recentes da equipe.</p>    </div>
 </div>
 
 <style>

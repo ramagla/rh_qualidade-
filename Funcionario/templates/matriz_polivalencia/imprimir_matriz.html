@@ -98,7 +98,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="{{ atividades|length|add:2 }}">Nenhum funcionário com notas nesta matriz.</td>
+                <td colspan="{{ atividades|length|add:2 }}">Nenhum colaborador com notas nesta matriz.</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -238,8 +238,7 @@ function imprimir() {
 
     novaJanela.document.write(`
         <html>
-            <head>
-                <title>Imprimir Matriz</title>
+            <head>                
                 <style>
                     /* Estilos gerais */
                     body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; margin: 0; }

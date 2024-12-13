@@ -45,13 +45,16 @@
 
         <!-- Funcionário -->
         <div class="col-md-6">
-            <label for="funcionario" class="form-label">Funcionário:</label>
-            <select class="form-select" id="funcionario" name="funcionario" required>
-                <option selected disabled>Selecione o funcionário</option>
-                {% for funcionario in funcionarios %}
-                    <option value="{{ funcionario.id }}" {% if funcionario.id == avaliacao.funcionario.id %}selected{% endif %}>{{ funcionario.nome }}</option>
-                {% endfor %}
-            </select>
+            <label for="funcionario" class="form-label">Colaborador:</label>
+            <select class="form-select select2" id="funcionario" name="funcionario" required>
+    <option selected disabled>Selecione o colaborador</option>
+    {% for funcionario in form.fields.funcionario.queryset %}
+        <option value="{{ funcionario.id }}" {% if funcionario.id == avaliacao.funcionario.id %}selected{% endif %}>
+            {{ funcionario.nome }}
+        </option>
+    {% endfor %}
+</select>
+
         </div>
 
         <!-- Centro de Custo -->

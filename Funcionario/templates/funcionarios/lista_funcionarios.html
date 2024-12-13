@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Funcionários Cadastrados{% endblock %}
+{% block title %}Colaboradores Cadastrados{% endblock %}
 
 {% block content %}
 {% load custom_filters %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Funcionários Cadastrados</h2>
+    <h2 class="text-center mb-4">Colaboradores Cadastrados</h2>
     <!-- Toast container para mensagens de alerta no canto inferior direito -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
         {% if messages %}
@@ -40,21 +40,21 @@
         </button>
     </div>
 
-<!-- Modal para selecionar funcionário -->
+<!-- Modal para selecionar Colaborador -->
 <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="imprimirModalLabel">Selecionar Funcionário</h5>
+                <h5 class="modal-title" id="imprimirModalLabel">Selecionar Colaborador</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="imprimirForm" method="POST" action="">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="funcionario_id" class="form-label">Funcionário:</label>
+                        <label for="funcionario_id" class="form-label">Colaborador:</label>
                         <select name="funcionario_id" id="funcionario_id" class="form-select" required>
-                            <option value="">Selecione um funcionário</option>
+                            <option value="">Selecione um Colaborador</option>
                             {% for funcionario in funcionarios %}
                                 <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
                             {% endfor %}
@@ -72,9 +72,9 @@
     <div class="row">
         <!-- Filtro por Nome -->
         <div class="col-md-3">
-            <label for="nome" class="form-label">Nome do Funcionário:</label>
+            <label for="nome" class="form-label">Nome do Colaborador:</label>
             <select name="nome" id="nome" class="form-select select2">
-                <option value="">Selecione</option>
+                <option value="">Todos</option>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.nome }}" {% if request.GET.nome == funcionario.nome %}selected{% endif %}>
                         {{ funcionario.nome }}
@@ -136,28 +136,28 @@
 </form>
 
 <div class="row mb-4">
-    <!-- Card: Total de Funcionários Ativos -->
+    <!-- Card: Total de Colaboradores Ativos -->
     <div class="col-md-3">
         <div class="card text-white bg-success">
             <div class="card-header text-center">
-                <i class="bi bi-person-check" style="font-size: 1.5rem; margin-right: 5px;"></i> Funcionários Ativos
+                <i class="bi bi-person-check" style="font-size: 1.5rem; margin-right: 5px;"></i> Colaboradores Ativos
             </div>
             <div class="card-body">
                 <h5 class="card-title text-center">{{ total_ativos }}</h5>
-                <p class="card-text text-center">Funcionários com status "Ativo".</p>
+                <p class="card-text text-center">Colaboradores com status "Ativo".</p>
             </div>
         </div>
     </div>
 
-    <!-- Card: Total de Funcionários Inativos -->
+    <!-- Card: Total de Colaboradores Inativos -->
     <div class="col-md-3">
         <div class="card text-white bg-danger">
             <div class="card-header text-center">
-                <i class="bi bi-person-x" style="font-size: 1.5rem; margin-right: 5px;"></i> Funcionários Inativos
+                <i class="bi bi-person-x" style="font-size: 1.5rem; margin-right: 5px;"></i> Colaboradores Inativos
             </div>
             <div class="card-body">
                 <h5 class="card-title text-center">{{ total_inativos }}</h5>
-                <p class="card-text text-center">Funcionários com status "Inativo".</p>
+                <p class="card-text text-center">Colaboradores com status "Inativo".</p>
             </div>
         </div>
     </div>
@@ -192,7 +192,7 @@
 
     
 
-    <!-- Lista de Funcionários -->
+    <!-- Lista de Colaboradores -->
     <table class="table table-bordered text-center mt-4">
         <thead>
             <tr>
@@ -217,7 +217,7 @@
                     <span>Sem Foto</span>
                 {% endif %}
             </td>
-            <td style="vertical-align: middle;">{{ funcionario.nome }}</td>
+            <td style="vertical-align: middle; text-align: left;">{{ funcionario.nome }}</td>
             <td style="vertical-align: middle;">{{ funcionario.cargo_inicial }}</td>
             <td style="vertical-align: middle;">{{ funcionario.cargo_atual }}</td>
             <td style="vertical-align: middle;">{{ funcionario.data_admissao|date:"d/m/Y" }}</td>
@@ -229,8 +229,8 @@
                     </a>
                 {% endif %}
                 {% if funcionario.formulario_f146 %}
-                    <a href="{{ funcionario.formulario_f146.url }}" download target="_blank" title="Download Integração">
-                        <i class="bi bi-file-earmark-person" alt="Integração" style="font-size: 24px;"></i>
+                    <a href="{{ funcionario.formulario_f146.url }}" download target="_blank" title="Download Certificado">
+                        <i class="bi bi-award" alt="Certificado" style="font-size: 24px;"></i>
                     </a>
                 {% endif %}
             </td>
@@ -248,7 +248,7 @@
         </tr>
     {% empty %}
         <tr>
-            <td colspan="8" class="text-center" style="vertical-align: middle;">Nenhum funcionário cadastrado.</td>
+            <td colspan="8" class="text-center" style="vertical-align: middle;">Nenhum Colaborador cadastrado.</td>
         </tr>
     {% endfor %}
 </tbody>
@@ -258,17 +258,17 @@
 
 
 
-<!-- Modal de Confirmação de Exclusão para cada Funcionário -->
+<!-- Modal de Confirmação de Exclusão para cada Colaborador -->
 {% for funcionario in funcionarios %}
 <div class="modal fade" id="modalExcluirFuncionario{{ funcionario.id }}" tabindex="-1" aria-labelledby="modalExcluirFuncionarioLabel{{ funcionario.id }}" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalExcluirFuncionarioLabel{{ funcionario.id }}">Excluir Funcionário</h5>
+                <h5 class="modal-title" id="modalExcluirFuncionarioLabel{{ funcionario.id }}">Excluir Colaborador</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Tem certeza que deseja excluir este funcionário?</p>
+                <p>Tem certeza que deseja excluir este Colaborador?</p>
                 <p><strong>Nome:</strong> {{ funcionario.nome }}</p>
                 <p><strong>Cargo:</strong> {{ funcionario.cargo_inicial }}</p>
             </div>

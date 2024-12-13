@@ -9,7 +9,7 @@
         <div class="info-section mt-4">
             <table class="custom-table" style="width: 100%;">
                 <tr>
-                    <td><strong>Nome do Funcionário:</strong> {{ avaliacao.funcionario.nome }}</td>
+                    <td><strong>Nome do Colaborador:</strong> {{ avaliacao.funcionario.nome }}</td>
                     <td><strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
                 </tr>
                 <tr>
@@ -26,7 +26,7 @@
    
 
     <!-- Botão de Imprimir (visível apenas fora da impressão) -->
-    <div class="text-center mb-4 d-print-none">
+    <div class="text-center mb-4 mt-4 d-print-none">
         <button onclick="imprimir()" class="btn btn-primary">
             <i class="fas fa-print"></i> Imprimir
         </button>
@@ -37,13 +37,13 @@
     <div class="intro-text mt-4 p-3" style="border: 1px solid #ccc; background-color: #f9f9f9; border-radius: 8px;">
         <h3 style="text-align: center;"><strong>INFORMAÇÕES IMPORTANTES, LEIA ANTES DE PREENCHER</strong></h3>
         <p>
-            Esta ficha constitui a <strong>primeira avaliação de desempenho</strong> do novo funcionário. A decisão de contratação ou desligamento do funcionário da Bras-Mol será baseada nesta avaliação.
+            Esta ficha constitui a <strong>primeira avaliação de desempenho</strong> do novo colaborador. A decisão de contratação ou desligamento do colaborador da Bras-Mol será baseada nesta avaliação.
         </p>
         <p>
-            Ao fornecer sua opinião, seja <strong>objetivo e imparcial</strong>, avaliando o desempenho do funcionário durante o período de experiência e suas chances de se integrar à Bras-Mol.
+            Ao fornecer sua opinião, seja <strong>objetivo e imparcial</strong>, avaliando o desempenho do colaborador durante o período de experiência e suas chances de se integrar à Bras-Mol.
         </p>
         <p>
-            <strong>Se as descrições das avaliações não corresponderem exatamente</strong> ao desempenho do funcionário, escolha a alternativa mais próxima e explique melhor na seção de <strong>Observações</strong>.
+            <strong>Se as descrições das avaliações não corresponderem exatamente</strong> ao desempenho do colaborador, escolha a alternativa mais próxima e explique melhor na seção de <strong>Observações</strong>.
         </p>
 
         <p style="margin-top: 20px;"><strong>Instruções:</strong></p>
@@ -177,13 +177,13 @@
     <table class="custom-table" style="width: 100%;">
         <tr>
             <td style="padding: 8px; text-align: center; width: 50%;">
-                <p><strong>Assinatura do Funcionário</strong></p>
+                <p><strong>Assinatura do Colaborador</strong></p>
                 <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
                     {{ avaliacao.funcionario.nome }}
                 </div>
             </td>
             <td style="padding: 8px; text-align: center; width: 50%;">
-                <p><strong>Assinatura da Chefia</strong></p>
+                <p><strong>Assinatura do Gestor</strong></p>
                 <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
                     {{ avaliacao.funcionario.responsavel }}
                 </div>
@@ -263,10 +263,10 @@ function imprimir() {
     novaJanela.document.write(`
         <html>
             <head>
-                <title>AVALIAÇÃO DE DESEMPENHO DOS COLABORADORES (EXPERIÊNCIA)</title>
                 <style>
                     body { font-family: Arial, sans-serif; color: #333; padding: 5px; font-size: 0.5rem; }
-                    .custom-table { width: 100%; border-collapse: collapse; }
+                    .intro-text {margin-top: 15px;}
+                    .custom-table { width: 100%; border-collapse: collapse; margin-top:15px; }
                     th, td { padding: 4px; border: 1px solid #ddd; font-size: 0.5rem; text-align: left; }
                     th { background-color: #e7f1ff; font-weight: bold; }
                     h2 { font-size: 0.8rem; text-align: center; }

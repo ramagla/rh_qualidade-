@@ -35,9 +35,9 @@
 
         <!-- Funcionário, Cargo, Departamento e Centro de Custo -->
         <div class="col-md-6">
-            <label for="funcionario" class="form-label">Funcionário:</label>
+            <label for="funcionario" class="form-label">Colaborador:</label>
             <select class="form-select select2" id="funcionario" name="funcionario" required>
-                <option selected>Selecione o funcionário</option>
+                <option selected>Selecione o colaborador</option>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
                 {% endfor %}
@@ -136,35 +136,37 @@
 <script>
     // Função para preencher informações do funcionário
     function preencherInfoFuncionario() {
-        const cargoInput = document.getElementById('cargo');
-        const departamentoInput = document.getElementById('departamento');
-        const superiorDiretoInput = document.getElementById('superior_direto');
+    const cargoInput = document.getElementById('cargo');
+    const departamentoInput = document.getElementById('departamento');
+    const superiorDiretoInput = document.getElementById('superior_direto');
 
-        // Reconfigurar o evento change para funcionar com Select2
-        $('#funcionario').on('change', function () {
-            const funcionarioId = $(this).val();
+    // Reconfigurar o evento change para funcionar com Select2
+    $('#funcionario').on('change', function () {
+        const funcionarioId = $(this).val();
 
-            if (funcionarioId) {
-                fetch(`/get-cargo/${funcionarioId}/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        cargoInput.value = data.cargo || 'Cargo não encontrado';
-                        departamentoInput.value = data.departamento || 'Departamento não encontrado';
-                        superiorDiretoInput.value = data.responsavel || 'Responsável não encontrado';
-                    })
-                    .catch(error => {
-                        console.error('Erro ao buscar informações:', error);
-                        cargoInput.value = 'Erro ao carregar';
-                        departamentoInput.value = 'Erro ao carregar';
-                        superiorDiretoInput.value = 'Erro ao carregar';
-                    });
-            } else {
-                cargoInput.value = '';
-                departamentoInput.value = '';
-                superiorDiretoInput.value = '';
-            }
-        });
-    }
+        if (funcionarioId) {
+            fetch(`/get-cargo/${funcionarioId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    cargoInput.value = data.cargo || 'Cargo não encontrado';
+                    departamentoInput.value = data.departamento || 'Departamento não encontrado';
+
+                    // Corrigir para preencher apenas o nome do responsável
+                    superiorDiretoInput.value = data.responsavel.nome || 'Responsável não encontrado';
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar informações:', error);
+                    cargoInput.value = 'Erro ao carregar';
+                    departamentoInput.value = 'Erro ao carregar';
+                    superiorDiretoInput.value = 'Erro ao carregar';
+                });
+        } else {
+            cargoInput.value = '';
+            departamentoInput.value = '';
+            superiorDiretoInput.value = '';
+        }
+    });
+}
 
     // Função para calcular o status da avaliação
     function calcularStatus() {
@@ -198,7 +200,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Inicializar Select2
         $('.select2').select2({
-            placeholder: "Selecione um funcionário",
+            placeholder: "Selecione um colaborador",
             allowClear: true,
             width: '100%'
         });

@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 @login_required
 def home(request):
     # Obter feriados da API
+    
     url = 'https://brasilapi.com.br/api/feriados/v1/2025'
     feriados = []
     try:
@@ -47,18 +48,22 @@ def home(request):
 
     # Consulta às configurações da empresa, incluindo logos
     settings = Settings.objects.first()  # Obtém a primeira instância de Settings, caso haja mais de uma
-
+    
+        
     # Contexto para o template
     context = {
+        'nome_modulo': 'Recursos Humanos',
+        'icone_modulo': 'bi-people',
         'feriados': feriados,
         'comunicados': comunicados,
         'funcionarios_avaliacao_baixa': funcionarios_avaliacao_baixa,
         'proximas_atualizacoes': proximas_atualizacoes,
         'ultima_atualizacao_concluida': ultima_atualizacao_concluida,
-        'settings': settings,  # Inclui settings para acesso aos logos
+        'settings': settings,  # Inclui settings para acesso aos logos        
     }
     
-    return render(request, 'home.html', context)
+    return render(request, 'funcionarios/home.html', context)
+
 
 
 def sucesso_view(request):

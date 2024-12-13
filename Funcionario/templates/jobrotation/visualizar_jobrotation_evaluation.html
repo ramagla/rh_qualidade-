@@ -1,107 +1,89 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
 
 {% block title %}Visualizar Avaliação de Job Rotation{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Visualizar Avaliação de Job Rotation</h2>
-    
-    <div class="row">
-        <div class="col-md-6">
-            <label for="funcionario" class="form-label">Nome:</label>
-            <input type="text" class="form-control" value="{{ evaluation.funcionario.nome }}" disabled>
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h2 class="mb-0">Visualização da Avaliação de Job Rotation</h2>
         </div>
-
-        <div class="col-md-6">
-            <label for="area" class="form-label">Área:</label>
-            <input type="text" class="form-control" value="{{ evaluation.area }}" disabled>
-        </div>
-        
-        <div class="col-md-6">
-            <label for="nova_funcao" class="form-label">Função:</label>
-            <input type="text" class="form-control" value="{{ evaluation.nova_funcao.nome }}" disabled>
-        </div>
-        
-        <div class="col-md-6">
-            <label for="data_inicio" class="form-label">Data de Início:</label>
-            <input type="text" class="form-control" value="{{ evaluation.data_inicio|date:"d/m/Y" }}" disabled>
-        </div>
-
-        <!-- Término Previsto (Calculado) -->
-        <div class="col-md-6">
-            <label for="termino_previsto" class="form-label">Término Previsto (Calculado):</label>
-            <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" value="{{ evaluation.termino_previsto|date:'d/m/Y' }}" readonly>
-        </div>
-
-        <div class="col-md-6">
-            <label for="gestor_responsavel" class="form-label">Gestor Responsável:</label>
-            <input type="text" class="form-control" value="{{ evaluation.gestor_responsavel.nome }}" disabled>
-        </div>
-    </div>
-
-    <h3 class="mt-4 mb-3">Treinamentos e Avaliações</h3>
-<div class="row">
-    <!-- Treinamentos Requeridos -->
-    <div class="col-md-6">
-        <label for="treinamentos_requeridos" class="form-label">Treinamentos Requeridos:</label>
-        <div class="border p-3 bg-light" id="treinamentos_requeridos">
-            {{ evaluation.treinamentos_requeridos|safe }}
-        </div>
-    </div>
-
-    <!-- Treinamentos Propostos -->
-    <div class="col-md-6">
-        <label for="treinamentos_propostos" class="form-label">Treinamentos Propostos:</label>
-        <div class="border p-3 bg-light" id="treinamentos_propostos">
-            {{ evaluation.treinamentos_propostos|safe }}
-        </div>
-    </div>
-</div>
-
-<div class="row mt-3">
-    <!-- Avaliação do Gestor -->
-    <div class="col-md-6">
-        <label for="avaliacao_gestor" class="form-label">Avaliação do Gestor:</label>
-        <div class="border p-3 bg-light" id="avaliacao_gestor">
-            {{ evaluation.avaliacao_gestor|safe }}
-        </div>
-    </div>
-
-    <!-- Avaliação do Funcionário -->
-    <div class="col-md-6">
-        <label for="avaliacao_funcionario" class="form-label">Avaliação do Funcionário:</label>
-        <div class="border p-3 bg-light" id="avaliacao_funcionario">
-            {{ evaluation.avaliacao_funcionario|safe }}
-        </div>
-    </div>
-</div>
-
-
-    <div class="row mt-3">
-        <div class="col-md-6">
-            <label for="avaliacao_rh" class="form-label">Avaliação do RH:</label>
-            <input type="text" class="form-control" value="{{ evaluation.avaliacao_rh }}" disabled>
-        </div>
-    </div>
-
-    <h3 class="mt-4 mb-3">Disponibilidade de Vaga</h3>
-    <div class="row">
-        <div class="col-md-6">
-            <label class="form-label">Disponibilidade de Vaga no Quadro:</label>
-            <div class="form-check">
-                <input type="radio" class="form-check-input" name="disponibilidade_vaga" id="vaga_sim" value="Sim" {% if evaluation.disponibilidade_vaga %}checked{% endif %} disabled>
-                <label for="vaga_sim" class="form-check-label">Sim</label>
+        <div class="card-body">
+            <!-- Informações Gerais -->
+            <h5 class="text-primary mb-3">Informações Gerais</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Nome</label>
+                    <p class="fw-bold">{{ evaluation.funcionario.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Área</label>
+                    <p class="fw-bold">{{ evaluation.area }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Função</label>
+                    <p class="fw-bold">{{ evaluation.nova_funcao.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Data de Início</label>
+                    <p class="fw-bold">{{ evaluation.data_inicio|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Término Previsto</label>
+                    <p class="fw-bold">{{ evaluation.termino_previsto|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Gestor Responsável</label>
+                    <p class="fw-bold">{{ evaluation.gestor_responsavel.nome }}</p>
+                </div>
             </div>
-            <div class="form-check">
-                <input type="radio" class="form-check-input" name="disponibilidade_vaga" id="vaga_nao" value="Não" {% if not evaluation.disponibilidade_vaga %}checked{% endif %} disabled>
-                <label for="vaga_nao" class="form-check-label">Não</label>
+
+            <!-- Treinamentos -->
+            <h5 class="text-primary mb-3">Treinamentos</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Treinamentos Requeridos</label>
+                    <div class="border p-3 bg-light">{{ evaluation.treinamentos_requeridos|safe }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Treinamentos Propostos</label>
+                    <div class="border p-3 bg-light">{{ evaluation.treinamentos_propostos|safe }}</div>
+                </div>
+            </div>
+
+            <!-- Avaliações -->
+            <h5 class="text-primary mb-3">Avaliações</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Avaliação do Gestor</label>
+                    <div class="border p-3 bg-light">{{ evaluation.avaliacao_gestor|safe }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Avaliação do Funcionário</label>
+                    <div class="border p-3 bg-light">{{ evaluation.avaliacao_funcionario|safe }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Avaliação do RH</label>
+                    <p class="fw-bold">{{ evaluation.avaliacao_rh }}</p>
+                </div>
+            </div>
+
+            <!-- Disponibilidade de Vaga -->
+            <h5 class="text-primary mb-3">Disponibilidade de Vaga</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Disponibilidade no Quadro</label>
+                    <p class="fw-bold">{{ evaluation.disponibilidade_vaga|yesno:"Sim,Não" }}</p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-12 text-center mt-4">
-        <a href="{% url 'lista_jobrotation_evaluation' %}" class="btn btn-primary">Voltar</a>
+        <!-- Botão de Voltar -->
+        <div class="card-footer text-center">
+            <a href="{% url 'lista_jobrotation_evaluation' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Voltar
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}

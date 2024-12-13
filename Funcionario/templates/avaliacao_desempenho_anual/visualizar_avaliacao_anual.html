@@ -1,86 +1,91 @@
 {% extends 'base.html' %}
 
-{% block title %}Visualizar Avaliação Anual{% endblock %}
+{% block title %}Visualização da Avaliação Anual{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Visualizar Avaliação Anual</h2>
-
-    <!-- Dados da Avaliação -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Dados da Avaliação</h5>
-            <p><strong>Funcionário:</strong> {{ avaliacao.funcionario.nome }}</p>
-            <p><strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</p>
-            <p><strong>Centro de Custo:</strong> {{ avaliacao.centro_custo }}</p>
-            <p><strong>Departamento:</strong> {{ avaliacao.funcionario.local_trabalho }}</p>
-            <p><strong>Classificação:</strong>
-                {% if classificacao == 'Ruim' %}
-                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> {{ classificacao }}</span>
-                {% elif classificacao == 'Regular' %}
-                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> {{ classificacao }}</span>
-                {% elif classificacao == 'Bom' %}
-                    <span class="badge bg-primary"><i class="bi bi-check-circle"></i> {{ classificacao }}</span>
-                {% elif classificacao == 'Ótimo' %}
-                    <span class="badge bg-success"><i class="bi bi-star-fill"></i> {{ classificacao }}</span>
-                {% else %}
-                    <span class="badge bg-secondary">Indeterminado</span>
-                {% endif %}
-            </p>
-            <p><strong>Percentual:</strong> {{ percentual|floatformat:0 }}%</p>
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h2 class="mb-0">Visualização da Avaliação Anual</h2>
         </div>
-    </div>
+        <div class="card-body">
+            <!-- Dados da Avaliação -->
+            <h5 class="text-primary mb-3">Informações da Avaliação</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Colaborador</label>
+                    <p class="fw-bold">{{ avaliacao.funcionario.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Data da Avaliação</label>
+                    <p class="fw-bold">{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Centro de Custo</label>
+                    <p class="fw-bold">{{ avaliacao.centro_custo }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Departamento</label>
+                    <p class="fw-bold">{{ avaliacao.funcionario.local_trabalho }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Classificação</label>
+                    <p class="fw-bold">
+                        {% if classificacao == 'Ruim' %}
+                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> {{ classificacao }}</span>
+                        {% elif classificacao == 'Regular' %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> {{ classificacao }}</span>
+                        {% elif classificacao == 'Bom' %}
+                            <span class="badge bg-primary"><i class="bi bi-check-circle"></i> {{ classificacao }}</span>
+                        {% elif classificacao == 'Ótimo' %}
+                            <span class="badge bg-success"><i class="bi bi-star-fill"></i> {{ classificacao }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Indeterminado</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Percentual</label>
+                    <p class="fw-bold">{{ percentual|floatformat:0 }}%</p>
+                </div>
+            </div>
 
-    <!-- Resultados da Avaliação -->
-    <h5 class="mt-4">Resultados da Avaliação</h5>
-    <ul class="list-group mb-4">
-        <li class="list-group-item">
-            <strong>Postura em Segurança do Trabalho:</strong> {{ status_campos.postura_seg_trabalho }}
-        </li>
-        <li class="list-group-item">
-            <strong>Qualidade e Produtividade:</strong> {{ status_campos.qualidade_produtividade }}
-        </li>
-        <li class="list-group-item">
-            <strong>Trabalho em Equipe:</strong> {{ status_campos.trabalho_em_equipe }}
-        </li>
-        <li class="list-group-item">
-            <strong>Comprometimento:</strong> {{ status_campos.comprometimento }}
-        </li>
-        <li class="list-group-item">
-            <strong>Disponibilidade para Mudanças:</strong> {{ status_campos.disponibilidade_para_mudancas }}
-        </li>
-        <li class="list-group-item">
-            <strong>Disciplina:</strong> {{ status_campos.disciplina }}
-        </li>
-        <li class="list-group-item">
-            <strong>Rendimento sob Pressão:</strong> {{ status_campos.rendimento_sob_pressao }}
-        </li>
-        <li class="list-group-item">
-            <strong>Proatividade:</strong> {{ status_campos.proatividade }}
-        </li>
-        <li class="list-group-item">
-            <strong>Comunicação:</strong> {{ status_campos.comunicacao }}
-        </li>
-        <li class="list-group-item">
-            <strong>Assiduidade:</strong> {{ status_campos.assiduidade }}
-        </li>
-    </ul>
+            <!-- Resultados da Avaliação -->
+            <h5 class="text-primary mb-3">Resultados Detalhados</h5>
+            <div class="row mb-3">
+                {% for campo, valor in status_campos.items %}
+                <div class="col-md-6">
+                    <label class="form-label text-muted">{{ campo|capfirst }}</label>
+                    <p class="fw-bold">{{ valor }}</p>
+                </div>
+                {% endfor %}
+            </div>
 
-    <!-- Avaliação Global -->
-    <h5>Avaliação Global</h5>
-    <div class="mb-4">
-        <strong>Visão do Avaliador:</strong>
-        <p>{{ avaliacao.avaliacao_global_avaliador | safe }}</p>
-    </div>
-    <div class="mb-4">
-        <strong>Visão do Avaliado:</strong>
-        <p>{{ avaliacao.avaliacao_global_avaliado | safe }}</p>
-    </div>
+            <!-- Avaliação Global -->
+            <h5 class="text-primary mb-3">Avaliação Global</h5>
+            <div class="mb-3">
+                <label class="form-label text-muted">Visão do Avaliador</label>
+                <div class="border rounded p-3">
+                    <p>{{ avaliacao.avaliacao_global_avaliador|safe }}</p>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">Visão do Avaliado</label>
+                <div class="border rounded p-3">
+                    <p>{{ avaliacao.avaliacao_global_avaliado|safe }}</p>
+                </div>
+            </div>
+        </div>
 
-    <!-- Botões -->
-    <div class="text-end">
-        <a href="{% url 'editar_avaliacao_anual' avaliacao.id %}" class="btn btn-warning"><i class="bi bi-pencil-square"></i> Editar Avaliação</a>
-        <a href="{% url 'lista_avaliacao_anual' %}" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i>  Voltar</a>
+        <!-- Botões -->
+        <div class="card-footer text-center">
+            <a href="{% url 'editar_avaliacao_anual' avaliacao.id %}" class="btn btn-warning me-2">
+                <i class="bi bi-pencil-square"></i> Editar Avaliação
+            </a>
+            <a href="{% url 'lista_avaliacao_anual' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Voltar
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}

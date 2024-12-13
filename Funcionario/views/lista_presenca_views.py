@@ -17,7 +17,8 @@ import openpyxl
 
 # Função lista_presenca
 def lista_presenca(request):
-    listas_presenca = ListaPresenca.objects.all().order_by('-data_inicio')  # Substituído para data_inicio
+    listas_presenca = ListaPresenca.objects.all().order_by('assunto')  # Ordenar por assunto
+
 
     
     # Contadores para os cards
@@ -102,6 +103,23 @@ def cadastrar_lista_presenca(request):
                     for participante in lista_presenca.participantes.all():
                         treinamento_existente.funcionarios.add(participante)
 
+                 # Verifica se é necessário criar avaliação de eficácia
+                if lista_presenca.necessita_avaliacao:
+                    for participante in lista_presenca.participantes.all():
+                        AvaliacaoTreinamento.objects.create(
+                            funcionario=participante,
+                            treinamento=treinamento_existente,
+                            data_avaliacao=lista_presenca.data_inicio or date.today(),
+                            pergunta_1=1,
+                            pergunta_2=1,
+                            pergunta_3=1,
+                            periodo_avaliacao=60,  # Valor padrão
+                            responsavel_1=participante.responsavel,  # Campo 'responsavel' do modelo Funcionario
+                            descricao_melhorias="Aguardando avaliação",
+                            avaliacao_geral=1
+                        )
+
+
                 return redirect('lista_presenca')
     else:
         form = ListaPresencaForm()
@@ -167,6 +185,41 @@ def editar_lista_presenca(request, id):
                     for participante in lista.participantes.all():
                         treinamento_existente.funcionarios.add(participante)
 
+                # Verifica se é necessário criar ou atualizar avaliações de eficácia
+                if lista.necessita_avaliacao:
+                    for participante in lista.participantes.all():
+                        # Verifica se já existe uma avaliação para o participante e treinamento
+                        avaliacao_existente = AvaliacaoTreinamento.objects.filter(
+                            funcionario=participante,
+                            treinamento=treinamento_existente,
+                        ).first()
+
+                        if not avaliacao_existente:
+                            # Cria uma nova avaliação se não existir
+                            AvaliacaoTreinamento.objects.create(
+                                funcionario=participante,
+                                treinamento=treinamento_existente,
+                                data_avaliacao=lista.data_inicio or date.today(),
+                                pergunta_1=1,
+                                pergunta_2=1,
+                                pergunta_3=1,
+                                periodo_avaliacao=60,  # Valor padrão
+                                responsavel_1=participante.responsavel,  # Campo 'responsavel' do modelo Funcionario
+                                descricao_melhorias="Aguardando avaliação",
+                                avaliacao_geral=1
+                            )
+                        else:
+                            # Atualiza os dados da avaliação existente
+                            avaliacao_existente.data_avaliacao = lista.data_inicio or date.today()
+                            avaliacao_existente.pergunta_1 = 1
+                            avaliacao_existente.pergunta_2 = 1
+                            avaliacao_existente.pergunta_3 = 1
+                            avaliacao_existente.responsavel_1 = participante.responsavel
+                            avaliacao_existente.descricao_melhorias = "Aguardando avaliação"
+                            avaliacao_existente.avaliacao_geral = 1
+                            avaliacao_existente.save()
+                    
+
                 return redirect('lista_presenca')
     else:      
 
@@ -190,10 +243,15 @@ def excluir_lista_presenca(request, id):
     lista.delete()
     return redirect('lista_presenca')
 
-# Função para visualizar uma lista de presença
+from django.forms import modelform_factory
+
 def visualizar_lista_presenca(request, lista_id):
     lista = get_object_or_404(ListaPresenca, id=lista_id)
-    return render(request, 'lista_presenca/visualizar_lista_presenca.html', {'lista': lista})
+    # Criar um formulário baseado no modelo sem campos editáveis
+    ListaPresencaForm = modelform_factory(ListaPresenca, fields='__all__')
+    form = ListaPresencaForm(instance=lista)
+    return render(request, 'lista_presenca/visualizar_lista_presenca.html', {'form': form})
+
 
 # Função para imprimir lista de presença
 def imprimir_lista_presenca(request, lista_id):

@@ -39,18 +39,17 @@
         </table>
     </div>
 
-   <!-- Lista de Participantes com estrutura alinhada -->
-<div class="participants-section mt-3">
+  <div class="participants-section mt-3">
     <table class="custom-table" style="width: 100%;">
         <tr>
-            <th style="width: 50%;">NOME</th>
+            <th style="width: 50%; text-align: left;">NOME</th>
             <th>SETOR</th>
             <th>VISTO</th>
         </tr>
         {% for participante in funcionarios_ativos %}
             <tr>
-                <td>{{ participante.nome }}</td>
-                <td>{{ participante.local_trabalho }}</td>
+                <td style="text-align: left;">{{ participante.nome }}</td>
+                <td style="text-align: left;">{{ participante.local_trabalho }}</td>
                 <td>______________________</td>
             </tr>
         {% empty %}
@@ -152,7 +151,6 @@ function imprimir() {
     novaJanela.document.write(`
         <html>
             <head>    
-                <title>Lista de Assinaturas</title> <!-- Define o título da página -->            
                 <style>
                     /* Estilos gerais */
                     body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }

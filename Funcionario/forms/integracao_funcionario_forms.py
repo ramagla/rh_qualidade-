@@ -1,5 +1,5 @@
 from django import forms
-from ..models import IntegracaoFuncionario
+from ..models import IntegracaoFuncionario, Funcionario
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 class IntegracaoFuncionarioForm(forms.ModelForm):
@@ -39,3 +39,7 @@ class IntegracaoFuncionarioForm(forms.ModelForm):
             'data_integracao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}, format='%Y-%m-%d'),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filtrar funcionários ativos e ordenar por nome
+        self.fields['funcionario'].queryset = Funcionario.objects.filter(status='Ativo').order_by('nome')

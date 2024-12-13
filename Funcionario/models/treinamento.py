@@ -71,7 +71,14 @@ class Treinamento(models.Model):
     def save(self, *args, **kwargs):
         if self.status != 'requerido':
             self.situacao = None  # Remove valor caso status não seja 'requerido'
+
+        # Salva o treinamento antes de associar os funcionários
         super().save(*args, **kwargs)
+
+         # Atualiza a escolaridade dos funcionários associados, se os critérios forem atendidos
+        if self.status == 'concluido' and self.categoria in ['tecnico', 'graduacao', 'pos-graduacao', 'mestrado', 'doutorado']:
+            for funcionario in self.funcionarios.all():
+                funcionario.atualizar_escolaridade()
 
     def delete(self, *args, **kwargs):
         if self.anexo:

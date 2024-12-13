@@ -55,6 +55,13 @@ class Funcionario(models.Model):
    
     def __str__(self):
         return self.nome
+    
+    @property
+    def primeiro_nome(self):
+        """
+        Retorna o primeiro nome do funcionário.
+        """
+        return self.nome.split(" ")[0] if self.nome else ""
        
     def atualizar_escolaridade(self):
         # Define a hierarquia das formações
@@ -66,6 +73,7 @@ class Funcionario(models.Model):
             'doutorado': 5,
         }
 
+       
         # Filtra os treinamentos concluídos e que não são de capacitação, ordena pela hierarquia
         treinamentos_concluidos = self.treinamentos.filter(status='concluido').exclude(categoria='capacitacao')
         treinamento_mais_alto = None
@@ -84,3 +92,7 @@ class Funcionario(models.Model):
         else:
             self.escolaridade = None
             self.save()
+
+    
+            
+  

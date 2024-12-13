@@ -1,65 +1,105 @@
 {% extends 'base.html' %}
-{% load widget_tweaks %}
 
-{% block title %}Visualizar Treinamento{% endblock %}
+{% block title %}Visualização do Treinamento{% endblock %}
 
 {% block content %}
+{% load widget_tweaks custom_filters %}
+
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Visualizar Treinamento: {{ treinamento.nome_curso }}</h2>
-
-    <div class="row">
-        <div class="col-md-6 text-center">
-            <label class="form-label">Certificado:</label>
-            {% if treinamento.anexo %}
-                <div class="mt-2">
-                    <a href="{{ treinamento.anexo.url }}" class="btn btn-info" target="_blank" download>Baixar Certificado</a>
-                    <p>Arquivo: {{ treinamento.anexo.name }}</p>
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h2 class="mb-0">Visualização do Treinamento</h2>
+        </div>
+        <div class="card-body">
+            <!-- Informações Básicas -->
+            <h5 class="text-primary mb-3">Informações do Treinamento</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Nome do Curso</label>
+                    <p class="fw-bold">{{ treinamento.nome_curso }}</p>
                 </div>
-            {% else %}
-                <p>Nenhum certificado disponível.</p>
-            {% endif %}
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Instituição de Ensino</label>
+                    <p class="fw-bold">{{ treinamento.instituicao_ensino }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Categoria</label>
+                    <p class="fw-bold">{{ treinamento.get_categoria_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Tipo</label>
+                    <p class="fw-bold">{{ treinamento.get_tipo_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Status</label>
+                    <p class="fw-bold">{{ treinamento.get_status_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Planejado</label>
+                    <p class="fw-bold">{{ treinamento.get_planejado_display }}</p>
+                </div>
+            </div>
+
+            <!-- Período e Carga Horária -->
+            <h5 class="text-primary mb-3">Período e Carga Horária</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Data de Início</label>
+                    <p class="fw-bold">{{ treinamento.data_inicio|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Data de Término</label>
+                    <p class="fw-bold">{{ treinamento.data_fim|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Carga Horária</label>
+                    <p class="fw-bold">{{ treinamento.carga_horaria }}</p>
+                </div>
+            </div>
+
+            <!-- Colaboradores -->
+            <h5 class="text-primary mb-3">Colaboradores</h5>
+            <ul class="list-group mb-3">
+                {% for funcionario in treinamento.funcionarios.all %}
+                    <li class="list-group-item">{{ funcionario.nome }}</li>
+                {% empty %}
+                    <li class="list-group-item">Nenhum colaborador cadastrado.</li>
+                {% endfor %}
+            </ul>
+
+            <!-- Documentos -->
+            <h5 class="text-primary mb-3">Documentos</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Certificado ou Lista de Presença</label>
+                    {% if treinamento.anexo %}
+                        <a href="{{ treinamento.anexo.url }}" class="btn btn-info btn-sm" download>
+                            <i class="bi bi-download"></i> Baixar Documento
+                        </a>
+                        <p class="mt-2 text-muted"><strong>Arquivo:</strong> {{ treinamento.anexo.name|basename }}</p>
+                    {% else %}
+                        <p class="fw-bold">Não disponível</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Descrição -->
+            <h5 class="text-primary mb-3">Descrição</h5>
+            <div class="mb-3">
+                {% if treinamento.descricao %}
+                    <p class="fw-bold">{{ treinamento.descricao|safe }}</p>
+                {% else %}
+                    <p class="fw-bold">Não disponível</p>
+                {% endif %}
+            </div>
         </div>
 
-        <div class="col-md-6 text-center align-self-center">
-            <label class="form-label">Funcionários:</label>
-            {% if treinamento.funcionarios.exists %}
-                <ul class="list-unstyled mt-2">
-                    {% for funcionario in treinamento.funcionarios.all %}
-                        <li><strong>{{ funcionario.nome }}</strong></li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Nenhum funcionário associado a este treinamento.</p>
-            {% endif %}
+        <!-- Botão de Voltar -->
+        <div class="card-footer text-center">
+            <a href="{% url 'lista_treinamentos' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Voltar
+            </a>
         </div>
-    </div>
-
-    <div class="mt-4">
-        <h5>Detalhes do Treinamento</h5>
-        <ul class="list-group">
-            <li class="list-group-item"><strong>Nome do Curso:</strong> {{ treinamento.nome_curso }}</li>
-            <li class="list-group-item"><strong>Instituição de Ensino:</strong> {{ treinamento.instituicao_ensino }}</li>
-            <li class="list-group-item"><strong>Tipo de Treinamento:</strong> {{ treinamento.get_tipo_display }}</li>
-            <li class="list-group-item"><strong>Categoria:</strong> {{ treinamento.get_categoria_display }}</li>
-            <li class="list-group-item"><strong>Status:</strong> {{ treinamento.get_status_display }}</li>
-            <li class="list-group-item"><strong>Data de Início:</strong> {{ treinamento.data_inicio|date:"d/m/Y" }}</li>
-            <li class="list-group-item"><strong>Data de Término:</strong> {{ treinamento.data_fim|date:"d/m/Y" }}</li>
-            <li class="list-group-item"><strong>Carga Horária:</strong> {{ treinamento.carga_horaria }}</li>
-        </ul>
-    </div>
-
-    <!-- Descrição do treinamento -->
-    <div class="mt-4">
-        <h5>Descrição</h5>
-        {% if treinamento.descricao %}
-            <p>{{ treinamento.descricao | safe }}</p>
-        {% else %}
-            <p>Nenhuma descrição fornecida para este treinamento.</p>
-        {% endif %}
-    </div>
-
-    <div class="mt-4 text-center">
-        <a href="{% url 'lista_treinamentos' %}" class="btn btn-primary"><i class="bi bi-arrow-left-circle"></i>  Voltar</a>
     </div>
 </div>
 {% endblock %}

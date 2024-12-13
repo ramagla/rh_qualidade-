@@ -84,8 +84,8 @@
         </tr>
         {% for participante in lista.participantes.all|dictsort:"nome" %}
             <tr>
-                <td>{{ participante.nome }}</td>
-                <td>{{ participante.local_trabalho }}</td>
+                <td style="text-align: left;">{{ participante.nome }}</td>
+                <td style="text-align: left;">{{ participante.local_trabalho }}</td>
                 <td>______________________</td>
             </tr>
         {% empty %}
@@ -208,7 +208,6 @@ function imprimir() {
     novaJanela.document.write(`
         <html>
             <head>
-                <title>Lista de Presença</title>
                 <style>
                     /* Estilos gerais */
                     body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }

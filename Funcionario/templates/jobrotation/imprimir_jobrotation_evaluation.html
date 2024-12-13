@@ -24,7 +24,7 @@
                     <table style="width: 100%;">
                         <tr>
                             <td colspan="2" style="background-color: #fcf4d9; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding: 4px;">
-                                FUNCIONÁRIO
+                                COLABORADOR
                             </td>
                         </tr>
                         <tr>
@@ -219,7 +219,7 @@
             <!-- Subtítulo da Seção -->
             <tr>
                 <td colspan="2" style="font-style: italic; text-align: center; padding: 4px;">
-                    AVALIAÇÃO DO GESTOR E DO FUNCIONÁRIO
+                    AVALIAÇÃO DO GESTOR E DO COLABORADOR
                 </td>
             </tr>
             <!-- Avaliação do Gestor e do Funcionário -->
@@ -234,9 +234,9 @@
                 
                 <!-- Coluna de Avaliação do Funcionário -->
                 <td style="width: 50%; padding: 8px; text-align: left; vertical-align: top;">
-                    <strong>Avaliação do Funcionário:</strong>
+                    <strong>Avaliação do Colaborador:</strong>
                     <div style="padding-top: 8px; word-wrap: break-word; white-space: normal;">
-                        {{ evaluation.avaliacao_funcionario|default:"Nenhuma avaliação do funcionário."|safe }}
+                        {{ evaluation.avaliacao_funcionario|default:"Nenhuma avaliação do colaborador."|safe }}
                     </div>
                 </td>
             </tr>
@@ -293,7 +293,7 @@
         <tr>
             <!-- Assinatura do Funcionário -->
             <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
-                <p><strong>Assinatura do Funcionário</strong></p>
+                <p><strong>Assinatura do Colaborador</strong></p>
                 <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
                     {{ evaluation.funcionario.nome }}
                 </div>
@@ -304,7 +304,7 @@
 
             <!-- Assinatura da Chefia -->
             <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
-                <p><strong>Assinatura da Chefia</strong></p>
+                <p><strong>Assinatura do Gestor</strong></p>
                 <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
                     {{ evaluation.gestor_responsavel.nome }}
                 </div>
@@ -412,7 +412,6 @@ function imprimir() {
     novaJanela.document.write(`
         <html>
             <head>
-                <title>PROGRAMA JOB ROTATION</title>
                 <style>
                     /* Estilos gerais */
                     body { font-family: Arial, sans-serif; color: #333; padding: 2px; font-size: 8px; }

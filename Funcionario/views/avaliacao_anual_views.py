@@ -94,7 +94,8 @@ def cadastrar_avaliacao_anual(request):
         form = AvaliacaoAnualForm()
 
     # Ordenar os funcionários por nome
-    funcionarios = Funcionario.objects.all().order_by('nome')
+    funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
+
 
     return render(request, 'avaliacao_desempenho_anual/cadastrar_avaliacao_anual.html', {
         'form': form,
@@ -118,10 +119,11 @@ def editar_avaliacao_anual(request, id):
     else:
         form = AvaliacaoAnualForm(instance=avaliacao)
 
+     
     return render(request, 'avaliacao_desempenho_anual/editar_avaliacao_anual.html', {
         'form': form,
         'avaliacao': avaliacao,
-        'funcionarios': Funcionario.objects.all(),  # Se necessário, para o select
+        
     })
 
 

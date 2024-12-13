@@ -6,7 +6,7 @@
 {% load custom_filters %}
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Integrações de Funcionários</h2>
+    <h2 class="text-center mb-4">Integrações dos Colaboradores</h2>
     
     <!-- Toast container para mensagens de alerta -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
@@ -40,7 +40,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="imprimirModalLabel">Selecionar Integração de Funcionário</h5>
+                <h5 class="modal-title" id="imprimirModalLabel">Selecionar Integração do Colaborador</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -70,7 +70,7 @@
         <div class="row">
             <!-- Filtro por Funcionário -->
             <div class="col-md-3">
-                <label for="funcionario" class="form-label">Funcionário:</label>
+                <label for="funcionario" class="form-label">Colaborador:</label>
                 <select name="funcionario" id="funcionario" class="form-select select2">
                     <option value="">Selecione</option>
                     {% for func in funcionarios %}
@@ -177,7 +177,7 @@
     <table class="table table-bordered text-center mt-4">
         <thead>
             <tr>
-                <th>Funcionário</th>
+                <th>Colaborador</th>
                 <th>Data de Integração</th>
                 <th>Departamento</th>
                 <th>Grupo WhatsApp</th>
@@ -211,12 +211,13 @@
         <td>
             {% if integracao.pdf_integracao %}
                 <a href="{{ integracao.pdf_integracao.url }}" class="btn btn-light" target="_blank">
-                    <i class="bi bi-filetype-pdf"></i> Download
+                    <i class="bi bi-filetype-pdf"></i> 
                 </a>
             {% else %}
                 <span class="text-muted">Não anexado</span>
             {% endif %}
         </td>
+
         <td>
             <a href="{% url 'visualizar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Visualizar">
                 <i class="bi bi-eye"></i>

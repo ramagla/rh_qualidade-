@@ -114,14 +114,17 @@ def get_cargo(request, funcionario_id):
         data = {
             'cargo': funcionario.cargo_atual.nome if funcionario.cargo_atual else 'Cargo não encontrado',
             'departamento': funcionario.local_trabalho or 'Departamento não encontrado',
-            'responsavel': funcionario.responsavel or 'Responsável não encontrado'
+            'responsavel': {
+                'id': funcionario.responsavel.id,
+                'nome': funcionario.responsavel.nome,
+            } if funcionario.responsavel else 'Responsável não encontrado',
         }
         return JsonResponse(data)
     except Funcionario.DoesNotExist:
         return JsonResponse({
-            'cargo': 'Não encontrado', 
+            'cargo': 'Não encontrado',
             'departamento': 'Não encontrado',
-            'responsavel': 'Não encontrado'
+            'responsavel': 'Não encontrado',
         }, status=404)
 
 

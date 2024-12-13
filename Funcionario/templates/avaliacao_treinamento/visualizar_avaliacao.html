@@ -4,108 +4,117 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Visualização da Avaliação de Treinamentos</h2>
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h2 class="mb-0">Visualização da Avaliação de Treinamentos</h2>
+        </div>
+        <div class="card-body">
+            <!-- Dados da Avaliação -->
+            <h5 class="text-primary mb-3">Informações Gerais</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Data da Avaliação</label>
+                    <p class="fw-bold">{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Período da Avaliação (em dias)</label>
+                    <p class="fw-bold">{{ avaliacao.periodo_avaliacao }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Colaborador Avaliado</label>
+                    <p class="fw-bold">{{ avaliacao.funcionario.nome }}</p>
+                </div>
+               <div class="col-md-6">
+                    <label class="form-label text-muted">Treinamento/Curso</label>
+                    {% if avaliacao.treinamento %}
+                        <p class="fw-bold">{{ avaliacao.treinamento.nome_curso }}</p>
+                    {% else %}
+                        <p class="fw-bold text-muted">Treinamento não associado</p>
+                    {% endif %}
+                </div>
+            </div>
 
-    <div class="row g-3">
-        <!-- Data da Avaliação -->
-        <div class="col-md-6">
-            <label class="form-label">Data da Avaliação:</label>
-            <input type="date" class="form-control" value="{{ avaliacao.data_avaliacao|date:'Y-m-d' }}" readonly>
-        </div>
+            <!-- Responsáveis -->
+            <h5 class="text-primary mb-3">Responsáveis pela Avaliação</h5>
+            <div class="row mb-3">
+                {% if avaliacao.responsavel_1 %}
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Primeiro Responsável</label>
+                    <p class="fw-bold">{{ avaliacao.responsavel_1.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Cargo</label>
+                    <p class="fw-bold">{{ avaliacao.responsavel_1.cargo_atual.nome }}</p>
+                </div>
+                {% endif %}
+                {% if avaliacao.responsavel_2 %}
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Segundo Responsável</label>
+                    <p class="fw-bold">{{ avaliacao.responsavel_2.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Cargo</label>
+                    <p class="fw-bold">{{ avaliacao.responsavel_2.cargo_atual.nome }}</p>
+                </div>
+                {% endif %}
+                {% if avaliacao.responsavel_3 %}
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Terceiro Responsável</label>
+                    <p class="fw-bold">{{ avaliacao.responsavel_3.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Cargo</label>
+                    <p class="fw-bold">{{ avaliacao.responsavel_3.cargo_atual.nome }}</p>
+                </div>
+                {% endif %}
+            </div>
 
-        <!-- Período da Avaliação -->
-        <div class="col-md-6">
-            <label class="form-label">Período da Avaliação (em dias):</label>
-            <input type="number" class="form-control" value="{{ avaliacao.periodo_avaliacao }}" readonly>
-        </div>
+            <!-- Questionários -->
+            <h5 class="text-primary mb-3">Resultados da Avaliação</h5>
+            <div class="row mb-3">
+                <div class="col-12">
+                    <label class="form-label text-muted">I - Grau de conhecimento atual dos participantes da metodologia:</label>
+                    <p class="fw-bold">{{ grau_conhecimento }}</p>
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-muted">II - Aplicação dos conceitos da metodologia:</label>
+                    <p class="fw-bold">{{ aplicacao_conceitos }}</p>
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-muted">III - Resultados obtidos com a aplicação da metodologia:</label>
+                    <p class="fw-bold">{{ resultados_obtidos }}</p>
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-muted">Descrição de Melhorias</label>
+                    <div class="border p-3 rounded bg-light" style="white-space: pre-line;">{{ melhorias|safe }}</div>
+                </div>
+            </div>
 
-        <!-- Nome do Funcionário -->
-        <div class="col-md-6">
-            <label class="form-label">Nome do Funcionário:</label>
-            <input type="text" class="form-control" value="{{ avaliacao.funcionario.nome }}" readonly>
-        </div>
-
-        <!-- Treinamento/Curso -->
-        <div class="col-md-6">
-            <label class="form-label">Treinamento/Curso:</label>
-            <input type="text" class="form-control" value="{{ avaliacao.treinamento.assunto }} - {{ avaliacao.treinamento.data_realizacao }}" readonly>
-        </div>
-
-        <!-- Responsáveis pela Avaliação -->
-        <div class="col-12">
-            <label class="form-label">Responsáveis pela Avaliação:</label>
-        </div>
-
-        <!-- Exibindo Responsável 1 -->
-        {% if avaliacao.responsavel_1 %}
-        <div class="col-md-6">
-            <label class="form-label">Primeiro Responsável:</label>
-            <input type="text" class="form-control" value="{{ avaliacao.responsavel_1.nome }}" readonly>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Cargo:</label>
-            <input type="text" class="form-control" value="{{ avaliacao.responsavel_1.cargo_atual.nome }}" readonly>
-        </div>
-        {% endif %}
-
-        <!-- Exibindo Responsável 2 -->
-        {% if avaliacao.responsavel_2 %}
-        <div class="col-md-6">
-            <label class="form-label">Segundo Responsável:</label>
-            <input type="text" class="form-control" value="{{ avaliacao.responsavel_2.nome }}" readonly>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Cargo:</label>
-            <input type="text" class="form-control" value="{{ avaliacao.responsavel_2.cargo_atual.nome }}" readonly>
-        </div>
-        {% endif %}
-
-        <!-- Exibindo Responsável 3 -->
-        {% if avaliacao.responsavel_3 %}
-        <div class="col-md-6">
-            <label class="form-label">Terceiro Responsável:</label>
-            <input type="text" class="form-control" value="{{ avaliacao.responsavel_3.nome }}" readonly>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Cargo:</label>
-            <input type="text" class="form-control" value="{{ avaliacao.responsavel_3.cargo_atual.nome }}" readonly>
-        </div>
-        {% endif %}
-
-        <!-- Questionários com texto das respostas -->
-        <div class="col-12">
-            <label class="form-label">I - Grau de conhecimento atual dos participantes da metodologia:</label>
-            <p>{{ grau_conhecimento }}</p>
-        </div>
-
-        <div class="col-12">
-            <label class="form-label">II - Aplicação dos conceitos da metodologia:</label>
-            <p>{{ aplicacao_conceitos }}</p>
-        </div>
-
-        <div class="col-12">
-            <label class="form-label">III - Resultados obtidos com a aplicação da metodologia:</label>
-            <p>{{ resultados_obtidos }}</p>
-        </div>
-
-       <!-- Descrição de Melhorias -->
-        <div class="col-12">
-            <label class="form-label">Descreva as melhorias obtidas/resultados:</label>
-            <div class="form-control" style="height: auto; overflow: auto;">{{ melhorias|safe }}</div>
-        </div>
-
-
-        <!-- Avaliação Geral -->
-        <div class="col-12 mt-3">
-            <label class="form-label">Avaliação Geral do Treinamento:</label>
-            <div class="alert {{ avaliacao.avaliacao_geral_class }}" role="alert">
-                {{ avaliacao_geral }}
+            <!-- Avaliação Geral -->
+            <h5 class="text-primary mb-3">Avaliação Geral</h5>
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert {{ avaliacao.avaliacao_geral_class }} text-center" role="alert">
+                        <h4 class="alert-heading">
+                            {{ avaliacao_geral }}
+                            {% if avaliacao_geral == "Pouco Eficaz" %}
+                                😔
+                            {% elif avaliacao_geral == "Eficaz" %}
+                                🙂
+                            {% elif avaliacao_geral == "Muito Eficaz" %}
+                                😃
+                            {% endif %}
+                        </h4>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Botão de Voltar -->
-        <div class="col-12">
-            <a href="{% url 'lista_avaliacoes' %}" class="btn btn-secondary w-100 mt-3"><i class="bi bi-arrow-left-circle"></i>  Voltar</a>
+        <div class="card-footer text-center">
+            <a href="{% url 'lista_avaliacoes' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Voltar
+            </a>
         </div>
     </div>
 </div>

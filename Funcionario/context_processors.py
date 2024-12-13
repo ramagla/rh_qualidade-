@@ -5,10 +5,14 @@ from Funcionario.models import Settings, AtualizacaoSistema
 def global_settings(request):
     settings = Settings.objects.first()
     ultima_atualizacao = AtualizacaoSistema.objects.order_by('-previsao').first()
-    versao = ultima_atualizacao.versao if ultima_atualizacao else '1.0.0'
+    versao = ultima_atualizacao.versao if ultima_atualizacao else '1.0.0'  
+  
+
+
     
     return {
-        'settings': settings,
-        'ano_atual': datetime.now().year,
-        'versao': versao,
-    }
+            'settings': settings,
+            'ano_atual': datetime.now().year,
+            'versao': versao,
+            
+        }

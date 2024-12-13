@@ -140,7 +140,7 @@
         <div class="col-md-6">
             <label for="elaboracao" class="form-label">Elaboração:</label>
             <select name="elaboracao" id="elaboracao" class="form-select select2">
-                <option value="">Selecione o Funcionário Responsável</option>
+                <option value="">Selecione o Colaborador Responsável</option>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}" 
                         {% if matriz.elaboracao and matriz.elaboracao.id == funcionario.id %}selected{% endif %}>
@@ -154,7 +154,7 @@
         <div class="col-md-6">
             <label for="coordenacao" class="form-label">Coordenação:</label>
             <select name="coordenacao" id="coordenacao" class="form-select select2">
-                <option value="">Selecione o Funcionário Responsável</option>
+                <option value="">Selecione o Colaborador Responsável</option>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}" {% if matriz.coordenacao.id == funcionario.id %}selected{% endif %}>
                         {{ funcionario.nome }}
@@ -167,7 +167,7 @@
         <div class="col-md-6">
             <label for="validacao" class="form-label">Validação:</label>
             <select name="validacao" id="validacao" class="form-select select2">
-                <option value="">Selecione o Funcionário Responsável</option>
+                <option value="">Selecione o Colaborador Responsável</option>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}" {% if matriz.validacao.id == funcionario.id %}selected{% endif %}>
                         {{ funcionario.nome }}
@@ -183,7 +183,7 @@
                 <table class="table table-bordered" id="tabela-notas">
                     <thead>
                         <tr>
-                            <th class="sticky-header sticky-column">Funcionário</th>
+                            <th class="sticky-header sticky-column">Colaborador</th>
                             <th class="sticky-header sticky-suplente">Suplente</th>
                             {% for atividade in atividades %}
                                 <th class="activity-header">

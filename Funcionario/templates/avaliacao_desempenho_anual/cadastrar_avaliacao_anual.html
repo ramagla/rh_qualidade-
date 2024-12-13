@@ -47,9 +47,9 @@
 
         <!-- Funcionário, Cargo, Departamento e Centro de Custo -->
                 <div class="col-md-6">
-                    <label for="funcionario" class="form-label">Funcionário:</label>
+                    <label for="funcionario" class="form-label">Colaborador:</label>
                     <select class="form-select select2" id="funcionario" name="funcionario">
-                        <option selected disabled>Selecione o funcionário</option>
+                        <option selected disabled>Selecione o colaborador</option>
                         {% for funcionario in funcionarios %}
                             <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
                         {% endfor %}
@@ -283,6 +283,7 @@
         // Evento de mudança do Select2
         funcionarioSelect.on('change', function () {
             const funcionarioId = $(this).val(); // Obtém o valor do Select2
+            console.log('Colaborador selecionado:', funcionarioId); // Log para depuração
 
             if (funcionarioId) {
                 fetch(`/get-cargo/${funcionarioId}/`)
@@ -293,11 +294,12 @@
                         return response.json();
                     })
                     .then(data => {
+                        console.log('Dados retornados pela API:', data); // Log para verificar dados
                         cargoInput.value = data.cargo || 'Cargo não encontrado';
                         departamentoInput.value = data.departamento || 'Departamento não encontrado';
                     })
                     .catch(error => {
-                        console.error('Erro ao buscar informações do funcionário:', error);
+                        console.error('Erro ao buscar informações do colaborador:', error);
                         cargoInput.value = 'Erro ao carregar o cargo';
                         departamentoInput.value = 'Erro ao carregar o departamento';
                     });
@@ -367,6 +369,7 @@
 
     // Inicializa as funções ao carregar a página
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('Script carregado com sucesso!'); // Log para verificar o carregamento do script
         preencherInfoFuncionario();
 
         // Adiciona o evento 'change' para cada campo de avaliação para cálculo automático
@@ -379,7 +382,6 @@
         calcularStatus();
     });
 </script>
-
 
 
 {% endblock %}

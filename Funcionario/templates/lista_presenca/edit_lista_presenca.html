@@ -4,6 +4,8 @@
 {% block title %}Editar Lista de Presença{% endblock %}
 
 {% block content %}
+{% load widget_tweaks custom_filters %}
+
 
 <head>
     {{ form.media }}
@@ -117,11 +119,25 @@
             </select>
         </div> {% endcomment %}
 
-        <!-- Anexar Lista de Presença (PDF) -->
+          <!-- Anexar Lista de Presença -->
         <div class="col-md-6">
-            <label for="lista_presenca" class="form-label">Anexar Lista de Presença (PDF):</label>
-            {{ form.lista_presenca|add_class:"form-control" }}
+    <label for="lista_presenca" class="form-label">Anexar Lista de Presença (PDF):</label>
+    <div class="input-group mb-3">
+        <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_lista_presenca').click();">Selecionar Arquivo</button>
+        <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="lista_presenca_filename" 
+               value="{% if form.instance.lista_presenca %}{{ form.instance.lista_presenca.name|basename }}{% else %}Nenhum arquivo selecionado{% endif %}" readonly>
+    </div>
+    <input type="file" id="id_lista_presenca" name="lista_presenca" style="display: none;" 
+           onchange="document.getElementById('lista_presenca_filename').value = this.files[0].name;">
+    {% if form.instance.lista_presenca %}
+        <div class="mt-2">
+            <a href="{{ form.instance.lista_presenca.url }}" class="btn btn-info" download>Baixar Anexo</a>
+            <p>Arquivo atual: {{ form.instance.lista_presenca.name|basename }}</p>
         </div>
+    {% endif %}
+</div>
+
+
 
         <!-- Filtro por Local de Trabalho -->
         <div class="col-md-12">
@@ -136,12 +152,12 @@
 
         <!-- Listagem de Funcionários com Checkbox -->
         <div class="col-md-12">
-            <label class="form-label">Funcionários Participantes:</label>
+            <label class="form-label">Colaboradores Participantes:</label>
             <table class="table table-bordered">
                 <thead>
                     <tr>
                         <th>Selecionar</th>
-                        <th>Funcionário</th>
+                        <th>Colaborador</th>
                         <th>Local de Trabalho</th>
                     </tr>
                 </thead>

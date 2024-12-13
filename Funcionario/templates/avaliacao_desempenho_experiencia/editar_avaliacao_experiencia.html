@@ -33,7 +33,7 @@
 
         <!-- Funcionário, Cargo, Departamento e Centro de Custo -->
         <div class="col-md-6">
-            <label for="funcionario" class="form-label">Funcionário:</label>
+            <label for="funcionario" class="form-label">Colaborador:</label>
             <select class="form-select select2" id="funcionario" name="funcionario" required>
                 <option selected value="{{ avaliacao.funcionario.id }}">{{ avaliacao.funcionario.nome }}</option>
                 {% for funcionario in funcionarios %}
@@ -145,7 +145,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             // Inicializar Select2
             $('.select2').select2({
-                placeholder: "Selecione um funcionário",
+                placeholder: "Selecione um colaborador",
                 allowClear: true,
                 width: '100%'
             });

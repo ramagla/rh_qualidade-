@@ -69,8 +69,9 @@
         <!-- Término Previsto (Calculado) -->
         <div class="col-md-6">
             <label for="termino_previsto" class="form-label">Término Previsto (Calculado):</label>
-            <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" value="{{ evaluation.termino_previsto|date:'Y-m-d' }}" readonly>
+            <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" value="{{ evaluation.termino_previsto|date:'d/m/Y' }}" readonly>
         </div>
+
 
         <!-- Gestor Responsável -->
         <div class="col-md-6">
@@ -109,7 +110,7 @@
         </div>
 
         <div class="col-md-6">
-            <label for="id_avaliacao_funcionario" class="form-label">Avaliação do Funcionário:</label>
+            <label for="id_avaliacao_funcionario" class="form-label">Avaliação do Colaborador:</label>
             {{ form.avaliacao_funcionario }}
         </div>
 

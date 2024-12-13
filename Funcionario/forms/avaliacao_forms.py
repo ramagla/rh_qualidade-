@@ -65,13 +65,13 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
 
         # Configurando o queryset para campos de responsáveis
         # Agora os responsáveis são ForeignKeys para o modelo Funcionario
-        self.fields['responsavel_1'].queryset = Funcionario.objects.filter(status="Ativo")
+        self.fields['responsavel_1'].queryset = Funcionario.objects.filter(status="Ativo").order_by('nome')
         self.fields['responsavel_1'].required = False  # Definindo como opcional
 
-        self.fields['responsavel_2'].queryset = Funcionario.objects.filter(status="Ativo")
+        self.fields['responsavel_2'].queryset = Funcionario.objects.filter(status="Ativo").order_by('nome')
         self.fields['responsavel_2'].required = False  # Definindo como opcional
 
-        self.fields['responsavel_3'].queryset = Funcionario.objects.filter(status="Ativo")
+        self.fields['responsavel_3'].queryset = Funcionario.objects.filter(status="Ativo").order_by('nome')
         self.fields['responsavel_3'].required = False  # Definindo como opcional
 
         # Ajustando rótulos
@@ -135,6 +135,11 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
             'funcionario': forms.Select(attrs={'class': 'form-select select2'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filtrar funcionários ativos e ordenar por nome
+        self.fields['funcionario'].queryset = Funcionario.objects.filter(status='Ativo').order_by('nome')
+
     def clean_gerencia(self):
         gerencia = self.cleaned_data.get('gerencia', '')
         return gerencia.title()  # Converte o texto para Title Case
@@ -149,6 +154,11 @@ class AvaliacaoAnualForm(forms.ModelForm):
         widgets = {
             'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filtrar funcionários ativos e ordenar por nome
+        self.fields['funcionario'].queryset = Funcionario.objects.filter(status__iexact='Ativo').order_by('nome')
 
     def clean_centro_custo(self):
         centro_custo = self.cleaned_data.get('centro_custo')

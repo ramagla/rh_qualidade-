@@ -13,14 +13,14 @@
 
     <!-- Texto fixo inicial -->
     <div class="text-center mb-4">
-        <p><strong>O funcionário ora contratado necessita de informações adequadas que facilitem sua integração na empresa.</strong></p>
+        <p><strong>O colaborador ora contratado necessita de informações adequadas que facilitem sua integração na empresa.</strong></p>
         <p><strong>Solicitamos a colaboração dos srs. Superiores hierárquicos. Colocando “X” nos itens abaixo, à medida em que os mesmos forem realizados.</strong></p>
     </div>
 
     <!-- Cartão de Informações da Integração -->
     <div class="info-card">
         <div class="info-column">
-            <h5><strong>Nome do Funcionário:</strong> {{ integracao.funcionario.nome }}</h5>
+            <h5><strong>Nome do Colaborador:</strong> {{ integracao.funcionario.nome }}</h5>
             <h5><strong>Departamento/ Setor:</strong> {{ integracao.funcionario.local_trabalho }}</h5>
         </div>
     </div>
@@ -50,7 +50,7 @@
             
             <!-- Checkbox que carrega o estado de 'requer_treinamento' -->
             <li>
-                <input type="checkbox" {% if integracao.requer_treinamento %}checked{% endif %}> O funcionário requer treinamento?
+                <input type="checkbox" {% if integracao.requer_treinamento %}checked{% endif %}> O colaborador requer treinamento?
             </li>
         </ul>
 
@@ -82,7 +82,7 @@
         <tr>
             <!-- Assinatura do Funcionário -->
             <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
-                <p><strong>Assinatura do Funcionário</strong></p>
+                <p><strong>Assinatura do Colaborador</strong></p>
                 <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
                     {{ integracao.funcionario.nome }}
                 </div>
@@ -93,7 +93,7 @@
 
             <!-- Assinatura da Chefia -->
             <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
-                <p><strong>Assinatura da Chefia</strong></p>
+                <p><strong>Assinatura do Gestor</strong></p>
                 <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
                     {{ integracao.funcionario.responsavel }}
                 </div>
@@ -177,7 +177,6 @@
     novaJanela.document.write(`
         <html>
             <head>
-                <title>Integração de Funcionário</title>
                 <style>
                     body {
                         font-family: Arial, sans-serif;

@@ -147,27 +147,30 @@
                         <img src="https://servidor-estaticos-teal-ten.vercel.app/olho.png" alt="Participantes" style="width: 20px; height: 20px;">
                     </a>
                 </td>
-                <!-- Modal de Participantes -->
-            <div class="modal fade" id="modalParticipantes{{ lista.id }}" tabindex="-1" aria-labelledby="modalParticipantesLabel{{ lista.id }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalParticipantesLabel{{ lista.id }}">Participantes da Lista de Presença</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <ul>
-                                {% for participante in lista.participantes.all %}
-                                    <li>{{ participante.nome }} - {{ participante.local_trabalho }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        </div>
-                    </div>
-                </div>
+              <!-- Modal de Participantes -->
+                <div class="modal fade" id="modalParticipantes{{ lista.id }}" tabindex="-1" aria-labelledby="modalParticipantesLabel{{ lista.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalParticipantesLabel{{ lista.id }}">Participantes da Lista de Presença</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div class="modal-body">
+                <ul>
+                    {% for participante in lista.participantes.all %}
+                        <li>{{ participante.nome }}</li> <!-- Apenas o nome -->
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 
                 <!-- Necessita Avaliação de Eficácia -->
                 <td class="align-middle">
@@ -250,9 +253,10 @@
                                     <select name="lista_id" id="lista_id" class="form-select select2" required>
                                         <option value="">Selecione uma lista</option>
                                         {% for lista in listas_presenca %}
-                                            <option value="{{ lista.id }}">{{ lista.assunto }} - {{ lista.data_realizacao|date:"d/m/Y" }}</option>
+                                            <option value="{{ lista.id }}">{{ lista.assunto }}</option>
                                         {% endfor %}
                                     </select>
+
                                 </div>
                                 <button type="submit" class="btn btn-primary">Imprimir</button>
                             </form>

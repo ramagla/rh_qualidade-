@@ -42,7 +42,9 @@ def lista_integracoes(request):
     ).distinct().order_by('nome')
 
     # Obter os valores únicos do campo `local_trabalho` para o filtro de departamento e ordená-los
-    departamentos = Funcionario.objects.values_list('local_trabalho', flat=True).distinct()
+    departamentos = Funcionario.objects.filter(
+        integracaofuncionario__isnull=False  # Filtrar funcionários que possuem integração
+    ).values_list('local_trabalho', flat=True).distinct()
     departamentos = sorted(departamentos, key=lambda x: x.lower() if x else '')
     
     # Dados para os cards
@@ -75,14 +77,17 @@ def visualizar_integracao(request, integracao_id):
 # View para cadastrar uma nova integração
 def cadastrar_integracao(request):
     if request.method == 'POST':
-        form = IntegracaoFuncionarioForm(request.POST, request.FILES)  # Aqui incluímos request.FILES
+        form = IntegracaoFuncionarioForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            integracao = form.save()
             messages.success(request, 'Integração cadastrada com sucesso.')
             return redirect(reverse('lista_integracoes'))
+        else:
+            print(form.errors)  # Debug para erros
     else:
         form = IntegracaoFuncionarioForm()
     return render(request, 'funcionarios/integracao/cadastrar_integracao.html', {'form': form})
+
 
 
 
@@ -97,7 +102,7 @@ def excluir_integracao(request, integracao_id):
 def editar_integracao(request, integracao_id):
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
     if request.method == 'POST':
-        form = IntegracaoFuncionarioForm(request.POST, instance=integracao)
+        form = IntegracaoFuncionarioForm(request.POST, request.FILES, instance=integracao)
         if form.is_valid():
             form.save()
             messages.success(request, 'Integração atualizada com sucesso.')

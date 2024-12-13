@@ -16,7 +16,7 @@
     <div class="info-section mt-4">
         <table class="custom-table" style="width: 100%;">
             <tr>
-                <td><strong>Nome do Funcionário:</strong> {{ avaliacao.funcionario.nome }}</td>
+                <td><strong>Nome do Colaborador:</strong> {{ avaliacao.funcionario.nome }}</td>
                 <td><strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
             </tr>
             <tr>
@@ -206,13 +206,13 @@
         <table class="custom-table" style="width: 100%;">
             <tr>
                 <td style="padding: 8px; text-align: center; width: 50%;">
-                    <p><strong>Assinatura do Funcionário</strong></p>
+                    <p><strong>Assinatura do Colaborador</strong></p>
                     <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
                         {{ avaliacao.funcionario.nome }}
                     </div>
                 </td>
                 <td style="padding: 8px; text-align: center; width: 50%;">
-                    <p><strong>Assinatura da Chefia</strong></p>
+                    <p><strong>Assinatura do Gestor</strong></p>
                     <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
                         {{ avaliacao.funcionario.responsavel}}
                     </div>
@@ -273,7 +273,6 @@
         novaJanela.document.write(`
             <html>
                 <head>
-                    <title>Avaliação de Desempenho de Funcionário</title>
                     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css">
                     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
                     <style>
@@ -287,7 +286,7 @@
                     </style>
                 </head>
                 <body>
-                    <h2>Avaliação de Desempenho de Funcionário</h2>
+                    <h2>Avaliação de Desempenho de Colaborador</h2>
                     ${conteudo}
                     <div class="numero-formulario">${numeroFormulario}</div> <!-- Rodapé com o número do formulário -->
                 </body>

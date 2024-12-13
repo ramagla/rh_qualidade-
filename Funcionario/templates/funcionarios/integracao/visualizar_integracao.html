@@ -1,58 +1,68 @@
 {% extends 'base.html' %}
 
-{% block title %}Visualizar Integração de Funcionário{% endblock %}
+{% block title %}Visualização da Integração{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Visualizar Integração de Funcionário</h2>
+{% load custom_filters %}
 
-    <!-- Detalhes da Integração -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Detalhes da Integração</h5>
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h2 class="mb-0">Visualização da Integração</h2>
         </div>
         <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-4">Funcionário:</dt>
-                <dd class="col-sm-8">{{ integracao.funcionario.nome }}</dd>
+            <!-- Dados da Integração -->
+            <h5 class="text-primary mb-3">Informações da Integração</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Colaborador</label>
+                    <p class="fw-bold">{{ integracao.funcionario.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Data de Integração</label>
+                    <p class="fw-bold">{{ integracao.data_integracao|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Grupo WhatsApp</label>
+                    <p class="fw-bold">{{ integracao.grupo_whatsapp|yesno:"Sim,Não" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Requer Treinamento</label>
+                    <p class="fw-bold">{{ integracao.requer_treinamento|yesno:"Sim,Não" }}</p>
+                </div>
+            </div>
 
-                <dt class="col-sm-4">Data de Integração:</dt>
-                <dd class="col-sm-8">{{ integracao.data_integracao|date:"d/m/Y" }}</dd>
-
-                <dt class="col-sm-4">Departamento:</dt>
-                <dd class="col-sm-8">{{ integracao.funcionario.local_trabalho }}</dd>
-
-                <dt class="col-sm-4">Grupo WhatsApp:</dt>
-                <dd class="col-sm-8">{{ integracao.grupo_whatsapp|yesno:"Sim,Não" }}</dd>
-
-                <dt class="col-sm-4">Requer Treinamento:</dt>
-                <dd class="col-sm-8">{{ integracao.requer_treinamento|yesno:"Sim,Não" }}</dd>
-
-                <dt class="col-sm-4">Treinamentos Requeridos:</dt>
-                <dd class="col-sm-8">
-                    {% if integracao.treinamentos_requeridos %}
-                        {{ integracao.treinamentos_requeridos |safe}}
+            <!-- Documentos -->
+            <h5 class="text-primary mb-3">Documentos</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">PDF da Integração Assinada</label>
+                    {% if integracao.pdf_integracao %}
+                        <a href="{{ integracao.pdf_integracao.url }}" class="btn btn-info btn-sm" download>
+                            <i class="bi bi-download"></i> Baixar PDF
+                        </a>
+                        <p class="mt-2 text-muted"><strong>Arquivo:</strong> {{ integracao.pdf_integracao.name|basename }}</p>
                     {% else %}
-                        Nenhum treinamento requerido.
+                        <p class="fw-bold">Não disponível</p>
                     {% endif %}
-                </dd>
-                <dt class="col-sm-4">PDF da Integração Assinada:</dt>
-                    <dd class="col-sm-8">
-                        {% if integracao.pdf_integracao %}
-                            <a href="{{ integracao.pdf_integracao.url }}" target="_blank" class="btn btn-link">
-                                Visualizar PDF
-                            </a>
-                        {% else %}
-                            Nenhum PDF anexado.
-                        {% endif %}
-                    </dd>
+                </div>
+            </div>
 
-            </dl>
+            <!-- Foto do Colaborador -->
+<h5 class="text-primary mb-3 text-center">Foto do Colaborador</h5>
+            <div class="text-center">
+                {% if integracao.funcionario.foto %}
+                    <img src="{{ integracao.funcionario.foto.url }}" alt="Foto do Colaborador" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;">
+                {% else %}
+                    <p class="fw-bold">Sem foto cadastrada</p>
+                {% endif %}
+            </div>
         </div>
-        <div class="card-footer text-end">           
-           
+
+        <!-- Botão de Voltar -->
+        <div class="card-footer text-center">
             <a href="{% url 'lista_integracoes' %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Voltar
+                <i class="bi bi-arrow-left-circle"></i> Voltar
             </a>
         </div>
     </div>

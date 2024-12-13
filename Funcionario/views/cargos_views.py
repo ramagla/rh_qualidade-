@@ -11,7 +11,8 @@ from django.core.paginator import Paginator
 
 def lista_cargos(request):
     # Recupera todos os cargos ordenados por número da DC
-    cargos = Cargo.objects.all().order_by('-numero_dc')
+    cargos = Cargo.objects.all().order_by('nome')
+
 
     # Aplicar filtro de departamento
     departamento = request.GET.get('departamento')
@@ -21,15 +22,15 @@ def lista_cargos(request):
     # Aplicar filtro de nome do cargo
     cargo_nome = request.GET.get('cargo')
     if cargo_nome:
-        cargos = cargos.filter(nome__icontains=cargo_nome)
+        cargos = cargos.filter(nome=cargo_nome)
 
     # Adicionar a última revisão para cada cargo
     for cargo in cargos:
         cargo.ultima_revisao = cargo.revisoes.order_by('-data_revisao').first()
 
-    # Obter todos os departamentos e nomes de cargos distintos
-    todos_departamentos = Cargo.objects.values_list('departamento', flat=True).distinct()
-    todos_cargos = Cargo.objects.values_list('nome', flat=True).distinct()
+    # Obter todos os departamentos e nomes de cargos distintos em ordem alfabética
+    todos_departamentos = Cargo.objects.values_list('departamento', flat=True).distinct().order_by('departamento')
+    todos_cargos = Cargo.objects.all().distinct('nome').order_by('nome')
 
     # Dados para os cards
     total_cargos = cargos.count()
@@ -59,8 +60,8 @@ def lista_cargos(request):
 
     # Contexto para o template
     return render(request, 'cargos/lista_cargos.html', {
-        'cargos' : page_obj,
-        'page_obj': page_obj,  # Passa o objeto paginado para o template
+        'cargos': page_obj,
+        'page_obj': page_obj,
         'departamentos': todos_departamentos,
         'todos_cargos': todos_cargos,
         'total_cargos': total_cargos,
@@ -68,6 +69,7 @@ def lista_cargos(request):
         'ultima_revisao': ultima_revisao,
         'cargos_sem_descricao': cargos_sem_descricao,
     })
+
 
 def cadastrar_cargo(request):
     if request.method == 'POST':

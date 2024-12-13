@@ -1,47 +1,49 @@
 {% extends 'base.html' %}
-{% load widget_tweaks %}
+{% load widget_tweaks custom_filters %}
 
-{% block title %}Editar Funcionário{% endblock %}
+{% block title %}Editar Colaborador{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Editar Funcionário</h2>
+    <h2 class="text-center mb-4">Editar Colaborador</h2>
 
     <form method="post" enctype="multipart/form-data" class="row g-3" id="funcionarioForm">
         {% csrf_token %}
 
-        <!-- Foto e Currículo lado a lado -->
-        <div class="col-md-6 text-center">
+        <!-- Foto -->
+        <div class="col-md-6">
             <label for="foto" class="form-label">Foto:</label>
+            <div class="input-group mb-3">
+                <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_foto').click();">Selecionar Arquivo</button>
+                <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="foto_filename" readonly>
+            </div>
+            <input type="file" id="id_foto" name="foto" style="display: none;" onchange="document.getElementById('foto_filename').value = this.files[0].name;">
             {% if funcionario.foto %}
-                <div class="mt-2">
-                    <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" style="width: 150px; height: 200px; object-fit: cover;">
+                <div class="mt-2 text-center">
+                    <img src="/media/{{ funcionario.foto.name }}" alt="Foto do Colaborador" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">
                 </div>
             {% endif %}
-            <div class="mt-3">
-                <a href="javascript:void(0);" onclick="editarFoto()" class="btn btn-secondary"><i class="fas fa-edit"></i> Editar Foto</a>
-                <input type="file" id="fotoInput" name="foto" style="display: none;">
-            </div>
         </div>
 
-        <!-- Currículo ao lado da Foto -->
-        <div class="col-md-6 text-center align-self-center">
-            <label for="curriculo" class="form-label">Currículo:</label>
-            {% if funcionario.curriculo %}
-                <a href="{{ funcionario.curriculo.url }}" class="btn btn-info" download>Baixar Currículo</a>
-                <p>Atualmente: {{ funcionario.curriculo.name }}</p>
-            {% else %}
-                <p>Nenhum currículo anexado.</p>
-            {% endif %}
-            <div class="mt-3">
-                <a href="javascript:void(0);" onclick="editarCurriculo()" class="btn btn-secondary"><i class="fas fa-edit"></i> Anexar Currículo</a>
-                <input type="file" id="curriculoInput" name="curriculo" style="display: none;">
-            </div>
-        </div>
-
-        <!-- Dados do Funcionário -->
+        <!-- Currículo -->
         <div class="col-md-6">
-            <label for="nome" class="form-label selec2">Nome:</label>
+            <label for="curriculo" class="form-label">Currículo:</label>
+            <div class="input-group mb-3">
+                <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_curriculo').click();">Selecionar Arquivo</button>
+                <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="curriculo_filename" readonly>
+            </div>
+            <input type="file" id="id_curriculo" name="curriculo" style="display: none;" onchange="document.getElementById('curriculo_filename').value = this.files[0].name;">
+            {% if funcionario.curriculo %}
+                <div class="mt-2">
+                    <a href="{{ funcionario.curriculo.url }}" class="btn btn-info" download>Baixar Currículo</a>
+                    <p>Atualmente: {{ funcionario.curriculo.name|slice:":" |basename}}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Dados do Colaborador -->
+        <div class="col-md-6">
+            <label for="nome" class="form-label">Nome:</label>
             {{ form.nome }}
         </div>
 
@@ -52,12 +54,12 @@
 
         <div class="col-md-6">
             <label for="cargo_inicial" class="form-label">Cargo Inicial:</label>
-            {{ form.cargo_inicial }}
+            {{ form.cargo_inicial|add_class:"form-select select2" }}
         </div>
 
         <div class="col-md-6">
             <label for="cargo_atual" class="form-label">Cargo Atual:</label>
-            {{ form.cargo_atual }}
+            {{ form.cargo_atual|add_class:"form-select select2" }}
         </div>
 
         <div class="col-md-6">
@@ -67,44 +69,38 @@
 
         <div class="col-md-6">
             <label for="local_trabalho" class="form-label">Local de Trabalho:</label>
-            {{ form.local_trabalho }}
-        </div>
-
-        <div class="col-md-6">
-            <label for="data_integracao" class="form-label">Data de Integração:</label>
-            <input type="date" name="data_integracao" class="form-control" value="{{ form.data_integracao.value|date:'Y-m-d' }}">
+            {{ form.local_trabalho|add_class:"form-select select2" }}
         </div>
 
         <div class="col-md-6">
             <label for="escolaridade" class="form-label">Escolaridade:</label>
-            {{ form.escolaridade }}
+            {{ form.escolaridade|add_class:"form-select select2" }}
         </div>
+
         <div class="col-md-6">
             <label for="experiencia_profissional" class="form-label">Experiência Profissional:</label>
-            {{ form.experiencia_profissional }}
+            {{ form.experiencia_profissional|add_class:"form-select select2" }}
         </div>
 
+        <!-- Responsável -->
+        <div class="col-md-6">
+            <label for="responsavel" class="form-label">Responsável:</label>
+            {{ form.responsavel|add_class:"form-select select2" }}
+        </div>
 
-       <!-- Responsável -->
-            <div class="col-md-6">
-                <label for="responsavel" class="form-label">Responsável:</label>
-                <select id="id_responsavel" name="responsavel" class="form-select select2">
-                    <option value="" disabled {% if not funcionario.responsavel %}selected{% endif %}>Selecione</option>
-                    {% for resp in responsaveis %}
-                        <option value="{{ resp.id }}" {% if resp.nome == funcionario.responsavel %}selected{% endif %}>{{ resp.nome }}</option>
-                    {% endfor %}
-                </select>                
-            </div>
-
-     
+        <!-- Cargo do Responsável -->
+        <div class="col-md-6">
+            <label for="cargo_responsavel" class="form-label">Cargo do Responsável:</label>
+            <input type="text" class="form-control" id="cargo_responsavel" value="{{ funcionario.cargo_responsavel }}" disabled>
+        </div>
 
         <!-- Status -->
         <div class="col-md-6">
             <label for="status" class="form-label">Status:</label>
-            {{ form.status|add_class:"form-select" }}
+            {{ form.status|add_class:"form-select select2" }}
         </div>
 
-        <!-- Formulário F146 -->
+        <!-- Certificado de Conclusão de Ensino Médio -->
         <div class="col-md-6">
             <label for="formulario_f146" class="form-label">Certificado de Conclusão de Ensino Médio:</label>
             <div class="input-group mb-3">
@@ -112,58 +108,66 @@
                 <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="formulario_f146_filename" readonly>
             </div>
             <input type="file" id="id_formulario_f146" name="formulario_f146" style="display: none;" onchange="document.getElementById('formulario_f146_filename').value = this.files[0].name;">
+            {% if funcionario.formulario_f146 %}
+                <div class="mt-2">
+                    <a href="{{ funcionario.formulario_f146.url }}" class="btn btn-info" download>Baixar Certificado</a>
+                    <p>Atualmente: {{ funcionario.formulario_f146.name|slice:":"|basename }}</p>
+                </div>
+            {% endif %}
         </div>
 
-        <!-- Botão para salvar -->
-        <div class="col-12 text-center">
-            <button type="submit" class="btn btn-primary" onclick="validarFormulario(event)">Atualizar</button>
+        <!-- Botões -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Atualizar
+            </button>
+            <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
         </div>
     </form>
+</div>
 
 <script>
-    function editarFoto() {
-        document.getElementById('fotoInput').click();
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+        $('#id_responsavel, #id_cargo_inicial, #id_cargo_atual, #id_escolaridade, #id_local_trabalho').select2({
+            placeholder: 'Selecione uma opção',
+            allowClear: true
+        });
 
-    function editarCurriculo() {
-        document.getElementById('curriculoInput').click();
-    }
-
-    function preencherCargo() {
         const responsavelSelect = document.getElementById('id_responsavel');
         const cargoInput = document.getElementById('cargo_responsavel');
-        responsavelSelect.addEventListener('change', function () {
+
+        if (responsavelSelect && cargoInput) {
+            responsavelSelect.addEventListener('change', function () {
+                const funcionarioId = this.value;
+                if (funcionarioId) {
+                    fetch(`/get-cargo/${funcionarioId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            cargoInput.value = data.cargo || 'Cargo não encontrado';
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar cargo:', error);
+                            cargoInput.value = 'Erro ao carregar cargo';
+                        });
+                } else {
+                    cargoInput.value = '';
+                }
+            });
+
+            // Preencher no carregamento inicial
             const funcionarioId = responsavelSelect.value;
             if (funcionarioId) {
                 fetch(`/get-cargo/${funcionarioId}/`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Erro na requisição');
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
                         cargoInput.value = data.cargo || 'Cargo não encontrado';
-                        // Se você quiser exibir o departamento, você pode fazer o seguinte:
-                        // document.getElementById('departamento_responsavel').value = data.departamento || 'Departamento não encontrado';
                     })
-                    .catch(error => {
-                        console.error('Erro:', error);
-                        cargoInput.value = 'Erro ao carregar o cargo';
-                    });
-            } else {
-                cargoInput.value = '';
+                    .catch(error => console.error('Erro ao buscar cargo:', error));
             }
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        preencherCargo();
+        }
     });
-
-    
 </script>
 
-
-</div>
 {% endblock %}

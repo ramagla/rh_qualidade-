@@ -10,6 +10,15 @@ def lista_comunicados(request):
     comunicados = Comunicado.objects.all().order_by('-id')
     departamentos = Comunicado.objects.values_list('departamento_responsavel', flat=True).distinct()
 
+    # Obtenção dos tipos cadastrados no banco
+    tipos_cadastrados = (
+        Comunicado.objects.values_list('tipo', flat=True)
+        .distinct()
+    )
+
+    # Filtrar TIPO_CHOICES com base nos tipos cadastrados
+    tipo_choices = [choice for choice in Comunicado.TIPO_CHOICES if choice[0] in tipos_cadastrados]
+
     # Obtenção dos filtros
     tipo = request.GET.get('tipo', '')
     departamento = request.GET.get('departamento', '')
@@ -51,8 +60,8 @@ def lista_comunicados(request):
         'data_inicio': data_inicio,
         'data_fim': data_fim,
         'total_comunicados': total_comunicados,
-        'comunicados_por_tipo': comunicados_por_tipo,  # Adicionando resumo por tipo
-
+        'comunicados_por_tipo': comunicados_por_tipo,
+        'tipo_choices': tipo_choices,  # Apenas tipos cadastrados
     }
 
     return render(request, 'comunicados/lista_comunicados.html', context)

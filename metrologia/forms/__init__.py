@@ -1,0 +1,1 @@
+from .TabelaTecnicaForm import TabelaTecnicaForm

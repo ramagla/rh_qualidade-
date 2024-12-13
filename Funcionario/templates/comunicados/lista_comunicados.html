@@ -49,7 +49,7 @@
         <label for="filter_tipo" class="form-label">Tipo de Comunicado</label>
         <select name="tipo" id="filter_tipo" class="form-select select2">
             <option value="">Todos</option>
-            {% for valor, nome in comunicados.model.TIPO_CHOICES %}
+            {% for valor, nome in tipo_choices %}
                 <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ nome }}</option>
             {% endfor %}
         </select>

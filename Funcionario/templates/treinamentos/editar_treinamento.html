@@ -3,7 +3,7 @@
 {% block title %}Editar Treinamento{% endblock %}
 
 {% block content %}
-{% load widget_tweaks %}
+{% load widget_tweaks custom_filters %}
 
 <div class="container mt-5">
     <h2 class="text-center mb-4">Editar Treinamento</h2>
@@ -11,7 +11,7 @@
         {% csrf_token %}
 
         <div class="col-md-6">
-            <label for="funcionarios" class="form-label">Funcionários:</label>
+            <label for="funcionarios" class="form-label">Colaboradores:</label>
             {{ form.funcionarios|add_class:"form-select select2" }}
         </div>
 
@@ -79,16 +79,20 @@
         </div>
 
         <div class="col-md-6">
-            <label for="anexo" class="form-label">Anexo de Certificado ou Lista de Presença:</label>
-            {% if form.instance.anexo %}
-                <div id="current-anexo">
-                    <p>Arquivo atual: 
-                        <a href="{{ form.instance.anexo.url }}" target="_blank">{{ form.instance.anexo.name }}</a>
-                    </p>
-                </div>
-            {% endif %}
-            {{ form.anexo }}
+    <label for="anexo" class="form-label">Anexo de Certificado ou Lista de Presença:</label>
+    <div class="input-group mb-3">
+        <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_anexo').click();">Selecionar Arquivo</button>
+        <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="anexo_filename" readonly>
+    </div>
+    <input type="file" id="id_anexo" name="anexo" style="display: none;" onchange="document.getElementById('anexo_filename').value = this.files[0].name;">
+    {% if form.instance.anexo %}
+        <div class="mt-2">
+            <a href="{{ form.instance.anexo.url }}" class="btn btn-info" download>Baixar Arquivo</a>
+            <p>Atualmente: {{ form.instance.anexo.name|basename }}</p>
         </div>
+    {% endif %}
+</div>
+
 
         <div class="col-md-12">
             <label for="descricao" class="form-label">Descrição (opcional):</label>

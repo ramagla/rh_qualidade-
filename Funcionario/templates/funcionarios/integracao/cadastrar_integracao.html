@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Cadastrar Integração de Funcionário{% endblock %}
+{% block title %}Cadastrar Integração de Colaborador{% endblock %}
 
 {% block content %}
 {% if form.errors %}
@@ -23,7 +23,7 @@
 
         <!-- Funcionário -->
         <div class="col-md-6">
-            <label for="funcionario" class="form-label">Funcionário:</label>
+            <label for="funcionario" class="form-label">Colaborador:</label>
             {{ form.funcionario|add_class:"form-select select2" }}
             <div class="invalid-feedback">Por favor, selecione um funcionário.</div>
         </div>

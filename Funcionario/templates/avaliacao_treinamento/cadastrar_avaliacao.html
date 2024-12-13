@@ -55,9 +55,9 @@
         <div class="row">
             <!-- Nome do Funcionário -->
             <div class="col-md-6">
-                <label for="funcionario" class="form-label">Funcionário:</label>
+                <label for="funcionario" class="form-label">Colaborador:</label>
                 <select class="form-select select2" id="funcionario" name="funcionario" required>
-                    <option value="" selected>Selecione o funcionário</option>
+                    <option value="" selected>Selecione o colaborador</option>
                     {% for funcionario in funcionarios %}
                         <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
                     {% endfor %}
@@ -244,7 +244,7 @@
     const treinamentoSelect = $("#treinamento");
 
     funcionarioSelect.select2({
-        placeholder: "Selecione um Funcionário",
+        placeholder: "Selecione um Colaborador",
         allowClear: true
     });
 

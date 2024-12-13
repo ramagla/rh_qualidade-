@@ -150,7 +150,9 @@ from .views.documentos_views import (
 # Definição das `urlpatterns`
 urlpatterns = [
     # Home
-    path('', home, name='home'),
+    path('', home, name='funcionarios_home'),
+
+     path('', home, name='home'),
     path('home/', home, name='home'),
     
     # Funcionários

@@ -4,17 +4,25 @@ from django_select2.forms import Select2Widget
 
 
 class FuncionarioForm(forms.ModelForm):
-    ESCOLARIDADE_CHOICES = [
+    ESCOLARIDADE_CHOICES =[('', 'Selecione uma opção')] +  sorted([
         ('Fundamental Incompleto', 'Fundamental Incompleto'),
         ('Fundamental Completo', 'Fundamental Completo'),
         ('Médio Incompleto', 'Médio Incompleto'),
         ('Médio Completo', 'Médio Completo'),
         ('Superior Incompleto', 'Superior Incompleto'),
         ('Superior Completo', 'Superior Completo'),
+        ('Técnico', 'Técnico'),
         ('Pós-graduação', 'Pós-graduação'),
         ('Mestrado', 'Mestrado'),
         ('Doutorado', 'Doutorado'),
-    ]
+    ], key=lambda x: x[1])
+
+    local_trabalho = forms.ChoiceField(
+        choices=[('', 'Selecione uma opção')] + 
+                [(dep, dep) for dep in Cargo.objects.values_list('departamento', flat=True).distinct().order_by('departamento')],
+        label="Local de Trabalho",
+        widget=forms.Select(attrs={'class': 'form-select select2'})
+    )
 
     cargo_inicial = forms.ModelChoiceField(
         queryset=Cargo.objects.all(),
@@ -34,10 +42,10 @@ class FuncionarioForm(forms.ModelForm):
 )
     escolaridade = forms.ChoiceField(choices=ESCOLARIDADE_CHOICES, label="Escolaridade", widget=forms.Select(attrs={'class': 'form-select'}))
     responsavel = forms.ModelChoiceField(
-        queryset=Funcionario.objects.all().order_by('nome'),
+        queryset=Funcionario.objects.filter(status='Ativo').order_by('nome'),
         required=False,
-        empty_label="Selecione um responsável", 
-        widget=forms.Select(),  # Nenhuma classe ou ID personalizado
+        empty_label="Selecione um responsável",
+        widget=Select2Widget(attrs={'class': 'select2 form-select', 'id': 'id_responsavel'}),
         label="Responsável"
     )
     foto = forms.ImageField(required=False, label="Foto")
@@ -55,44 +63,64 @@ class FuncionarioForm(forms.ModelForm):
     class Meta:
         model = Funcionario
         fields = [
-            'nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro', 
-            'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto', 
-            'curriculo', 'status', 'formulario_f146', 'experiencia_profissional' ,'cargo_responsavel' # Inclua o novo campo aqui
+            'nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro',
+            'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto',
+            'curriculo', 'status', 'formulario_f146', 'experiencia_profissional', 'cargo_responsavel'
         ]
+        widgets = {
+            'local_trabalho': Select2Widget(attrs={
+                'class': 'select2 form-select',
+                'placeholder': 'Selecione um local de trabalho',
+            }),
+        }
+        
 
     def __init__(self, *args, **kwargs):
         super(FuncionarioForm, self).__init__(*args, **kwargs)
+
+        # Ordenar os campos que dependem de consultas
+        self.fields['cargo_inicial'].queryset = Cargo.objects.all().order_by('nome')
+        self.fields['cargo_atual'].queryset = Cargo.objects.all().order_by('nome')
+        self.fields['responsavel'].queryset = Funcionario.objects.filter(status='Ativo').order_by('nome')
+
+       # Preenche o local_trabalho com o valor da instância
+        if self.instance and self.instance.local_trabalho:
+            self.fields['local_trabalho'].initial = self.instance.local_trabalho
+
+         # Adicionar classe "form-control" nos campos, exceto Select2Widget
         for field in self.fields:
-            if not isinstance(self.fields[field].widget, Select2Widget):  # Evita sobrescrever widgets Select2
+            if not isinstance(self.fields[field].widget, Select2Widget):
                 self.fields[field].widget.attrs.update({'class': 'form-control'})
 
-    # Métodos para limpar e formatar os campos
-    def clean_nome(self):
-        nome = self.cleaned_data.get('nome', '')
-        return nome.title()  # Converte para Title Case
+        # Adicionar Select2 ao campo "responsavel"
+        self.fields['responsavel'].widget.attrs.update({
+            'class': 'select2 form-select',
+            'placeholder': 'Selecione um responsável',
+            'data-allow-clear': 'true'
+        })
 
-    def clean_local_trabalho(self):
-        local_trabalho = self.cleaned_data.get('local_trabalho', '')
-        return local_trabalho.title()  # Converte para Title Case
+        # Métodos para limpar e formatar os campos
+        def clean_nome(self):
+            nome = self.cleaned_data.get('nome', '')
+            return nome.title()  # Converte para Title Case
 
-    def clean_responsavel(self):
-        responsavel = self.cleaned_data.get('responsavel', None)
-        if responsavel:
-            responsavel.nome = responsavel.nome.title()  # Converte para Title Case
-        return responsavel
-    
-     # Método save para preencher o cargo_responsavel automaticamente
+        def clean_local_trabalho(self):
+            local_trabalho = self.cleaned_data.get('local_trabalho', '')
+            return local_trabalho.title()  # Converte para Title Case
+
+        def clean_responsavel(self):
+            responsavel = self.cleaned_data.get('responsavel', None)
+            return responsavel  # Não altera mais o nome do responsável diretamente
+
+        # Método save para preencher o cargo_responsavel automaticamente
     def save(self, commit=True):
         instance = super().save(commit=False)
-        print(f"Responsável: {instance.responsavel}")  # Verifique se o responsável foi atribuído
 
+        # Preencher o cargo_responsavel com base no campo responsavel selecionado
         if instance.responsavel:
-            print(f"Responsável é um objeto Funcionario? {isinstance(instance.responsavel, Funcionario)}")
-            if isinstance(instance.responsavel, Funcionario):  # Confirma que é um objeto Funcionario
-                print(f"Cargo Atual do Responsável: {instance.responsavel.cargo_atual}")
-                instance.cargo_responsavel = instance.responsavel.cargo_atual
-                print(f"Cargo Responsável definido como: {instance.cargo_responsavel}")
+            instance.cargo_responsavel = instance.responsavel.cargo_atual  # Certifique-se de que `cargo_atual` é uma instância válida de `Cargo`
+
         if commit:
             instance.save()
-            print("Instância salva com sucesso.")
         return instance
+                

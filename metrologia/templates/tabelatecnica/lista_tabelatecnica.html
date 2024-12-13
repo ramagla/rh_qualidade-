@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Tabela Técnica{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Tabela Técnica</h2>
+
+    <!-- Mensagens de alerta -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast align-items-center border-0"
+                     {% if message.tags == "error" %} style="background-color: #f8d7da; color: #842029;" {% else %} style="background-color: #d1e7dd; color: #0f5132;" {% endif %}
+                     role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <h4 class="alert-heading">{% if message.tags == "error" %}Atenção!{% else %}Sucesso!{% endif %}</h4>
+                            <p>{{ message }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Botão para cadastrar novo equipamento -->
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{% url 'cadastrar_tabelatecnica' %}" class="btn btn-success me-2">
+            <i class="bi bi-plus-circle"></i> Cadastrar
+        </a>
+        <a href="{% url 'imprimir_tabelatecnica' %}" class="btn btn-primary me-2" target="_blank">
+        <i class="bi bi-printer"></i> Imprimir
+    </a>
+    </div>
+
+    
+
+    <form method="get" class="row mb-4">
+    <!-- Linha dos filtros existentes -->
+    <div class="col-md-3">
+        <label for="codigo" class="form-label">Código:</label>
+        <select id="codigo" name="codigo" class="form-select select2">
+            <option value="">Selecione</option>
+            {% for codigo in codigos %}
+                <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>
+                    {{ codigo }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="nome_equipamento" class="form-label">Nome do Equipamento:</label>
+        <select id="nome_equipamento" name="nome_equipamento" class="form-select select2">
+            <option value="">Selecione</option>
+            {% for equipamento in equipamentos %}
+                <option value="{{ equipamento }}" {% if equipamento == request.GET.nome_equipamento %}selected{% endif %}>
+                    {{ equipamento }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="unidade_medida" class="form-label">Unidade de Medida:</label>
+        <select id="unidade_medida" name="unidade_medida" class="form-select select2">
+            <option value="">Selecione</option>
+            {% for unidade in unidades_medida %}
+                <option value="{{ unidade }}" {% if unidade == request.GET.unidade_medida %}selected{% endif %}>
+                    {{ unidade }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Novos filtros -->
+    <div class="col-md-3">
+    <label for="status" class="form-label">Status:</label>
+    <select id="status" name="status" class="form-select select2">
+        <option value="ativo" {% if status_selecionado == "ativo" %}selected{% endif %}>Ativo</option>
+        <option value="inativo" {% if status_selecionado == "inativo" %}selected{% endif %}>Inativo</option>
+    </select>
+</div>
+
+    <div class="col-md-3">
+    <label for="responsavel" class="form-label">Responsável:</label>
+    <select id="responsavel" name="responsavel" class="form-select select2">
+        <option value="">Selecione</option>
+        {% for responsavel in responsaveis %}
+            <option value="{{ responsavel.id }}" {% if responsavel.id|stringformat:"s" == request.GET.responsavel %}selected{% endif %}>
+                {{ responsavel.nome }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
+
+
+    <div class="col-md-3">
+        <label for="proprietario" class="form-label">Proprietário:</label>
+        <select id="proprietario" name="proprietario" class="form-select select2">
+            <option value="">Selecione</option>
+            {% for proprietario in proprietarios %}
+                <option value="{{ proprietario }}" {% if proprietario == request.GET.proprietario %}selected{% endif %}>
+                    {{ proprietario }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="fabricante" class="form-label">Fabricante:</label>
+        <select id="fabricante" name="fabricante" class="form-select select2">
+            <option value="">Selecione</option>
+            {% for fabricante in fabricantes %}
+                <option value="{{ fabricante }}" {% if fabricante == request.GET.fabricante %}selected{% endif %}>
+                    {{ fabricante }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Linha dos botões -->
+    <div class="col-md-12 mt-3 text-end">
+        <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+    </div>
+</form>
+
+
+<div class="row mb-4 mt-4">
+    <!-- Card: Total de Equipamentos -->
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-header text-center">
+                <i class="bi bi-clipboard-data"></i> Total de Equipamentos
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_tabelas }}</h5>
+                <p class="card-text text-center">Equipamentos cadastrados.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Fora do Prazo -->
+    <div class="col-md-4">
+        <div class="card text-white bg-danger">
+            <div class="card-header text-center">
+                <i class="bi bi-x-circle"></i> Fora do Prazo
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_fora_prazo }}</h5>
+                <p class="card-text text-center">Equipamentos com calibração vencida.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Próximo do Prazo -->
+    <div class="col-md-4">
+        <div class="card text-white bg-warning">
+            <div class="card-header text-center">
+                <i class="bi bi-exclamation-circle"></i> Próximo do Prazo
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">{{ total_proximo_prazo }}</h5>
+                <p class="card-text text-center">Equipamentos próximo do vencimento.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Equipamentos -->
+<table class="table table-bordered text-center mt-4">
+    <thead>
+        <tr>
+            <th style="vertical-align: middle;">Código</th>
+            <th style="vertical-align: middle;">Nome do Equipamento</th>
+            <th style="vertical-align: middle;">Fabricante</th>
+            <th style="vertical-align: middle;">Número de Série</th>
+            <th style="vertical-align: middle;">Responsável</th>
+            <th style="vertical-align: middle;">Localização</th>
+            <th style="vertical-align: middle;">Data da Última Calibração</th>
+            <th style="vertical-align: middle;">Próx. Calibração</th>
+            <th style="vertical-align: middle;">Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tabela in page_obj %}
+        <tr>
+            <td style="vertical-align: middle;">{{ tabela.codigo }}</td>
+            <td style="vertical-align: middle;">{{ tabela.nome_equipamento }}</td>
+            <td style="vertical-align: middle;">{{ tabela.fabricante }}</td>
+            <td style="vertical-align: middle;">{{ tabela.numero_serie }}</td>
+            <td style="vertical-align: middle;">
+                {% if tabela.responsavel %}
+                    {{ tabela.responsavel.primeiro_nome }}
+                {% else %}
+                    Não definido
+                {% endif %}
+            </td>
+
+
+            <td style="vertical-align: middle;">{{ tabela.localizacao }}</td>
+            <td style="vertical-align: middle;">
+                {% if tabela.data_ultima_calibracao %}
+                    {{ tabela.data_ultima_calibracao|date:"d/m/Y" }}
+                {% else %}
+                    Não definida
+                {% endif %}
+            </td>
+          <td>
+    {% if tabela.proxima_calibracao %}
+        {{ tabela.proxima_calibracao|date:"d/m/Y" }}
+    {% else %}
+        <span style="color: gray;">Data não definida</span>
+    {% endif %}
+</td>
+
+
+
+
+            <td style="vertical-align: middle;">
+                <a href="{% url 'visualizar_tabelatecnica' tabela.id %}" class="btn btn-sm btn-info">
+                    <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'editar_tabelatecnica' tabela.id %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirTabelaTecnica{{ tabela.id }}">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+
+      
+
+
+
+                <!-- Modal de Confirmação de Exclusão -->
+                <div class="modal fade" id="modalExcluirTabelaTecnica{{ tabela.id }}" tabindex="-1" aria-labelledby="modalExcluirTabelaTecnicaLabel{{ tabela.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalExcluirTabelaTecnicaLabel{{ tabela.id }}">Excluir Tabela Técnica</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Tem certeza que deseja excluir a tabela técnica abaixo?</p>
+                                <p><strong>Código:</strong> {{ tabela.codigo }}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <form method="post" action="{% url 'excluir_tabelatecnica' tabela.id %}">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-danger">Excluir</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center">Nenhuma tabela técnica cadastrada.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Paginação -->
+    <nav aria-label="Navegação de página">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

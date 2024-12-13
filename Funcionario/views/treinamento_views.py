@@ -27,11 +27,14 @@ def lista_treinamentos(request):
     if funcionario_id:
         treinamentos = treinamentos.filter(funcionarios__id=funcionario_id)
 
+    treinamentos = treinamentos.order_by('-data_fim')  # '-data_fim' faz a ordenação decrescente
+
 
     # Filtrar funcionários que estão na lista de treinamentos
     funcionarios = Funcionario.objects.filter(
         id__in=treinamentos.values_list('funcionarios__id', flat=True)
-    ).distinct()
+    ).distinct().order_by('nome')
+
 
     # Paginação
     paginator = Paginator(treinamentos, 10)  # 10 itens por página
@@ -70,7 +73,14 @@ def cadastrar_treinamento(request):
             print(f"Dados enviados: {request.POST}")
     else:
         form = TreinamentoForm()
-    return render(request, 'treinamentos/cadastrar_treinamento.html', {'form': form})
+    
+    # Filtra os funcionários com status 'Ativo'
+    funcionarios_ativos = Funcionario.objects.filter(status='Ativo').order_by('nome')
+    
+    return render(request, 'treinamentos/cadastrar_treinamento.html', {
+        'form': form,
+        'funcionarios': funcionarios_ativos,  # Envia a lista de funcionários ativos para o template
+    })
 
 def editar_treinamento(request, id):
     treinamento = get_object_or_404(Treinamento, id=id)

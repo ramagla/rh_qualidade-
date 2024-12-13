@@ -28,7 +28,7 @@ def lista_funcionarios(request):
     ).count()  # Verifica NULL e strings vazias
 
     # Lista de responsáveis disponíveis
-    responsaveis = Funcionario.objects.filter(responsavel__isnull=False).distinct()
+    responsaveis = Funcionario.objects.filter(responsavel__isnull=False, status="Ativo").distinct()
 
     # Outros filtros
     nome = request.GET.get('nome')
@@ -46,8 +46,6 @@ def lista_funcionarios(request):
         else:
             funcionarios = funcionarios.filter(responsavel_id=responsavel)
 
-
-
     escolaridade = request.GET.get('escolaridade')
     if escolaridade:
         funcionarios = funcionarios.filter(escolaridade=escolaridade)
@@ -57,27 +55,22 @@ def lista_funcionarios(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    
-
-
     context = {
         'page_obj': page_obj,
-        'locais_trabalho': Funcionario.objects.values_list('local_trabalho', flat=True).distinct(),
+        'locais_trabalho': Funcionario.objects.filter(status="Ativo").values_list('local_trabalho', flat=True).distinct(),
         'responsaveis': responsaveis,
-        'niveis_escolaridade': Funcionario.objects.values_list('escolaridade', flat=True).distinct(),
+        'niveis_escolaridade': Funcionario.objects.filter(status="Ativo").values_list('escolaridade', flat=True).distinct(),
         'status_opcoes': Funcionario.objects.values_list('status', flat=True).distinct(),
         'filtro_status': status,  # Inclui o status aplicado no contexto
         'total_ativos': total_ativos,
         'total_pendentes': total_pendentes,
         'local_mais_comum': local_mais_comum['local_trabalho'] if local_mais_comum else "N/A",
         'total_inativos': total_inativos,
-        'funcionarios': Funcionario.objects.all().order_by('nome'),  # Ordena os funcionários por nome
-
-
-
+        'funcionarios': funcionarios,  # Apenas funcionários filtrados
     }
 
     return render(request, 'funcionarios/lista_funcionarios.html', context)
+
 
 def visualizar_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)

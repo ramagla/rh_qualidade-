@@ -1,130 +1,102 @@
 {% extends 'base.html' %}
 
-{% block title %}Visualização de Funcionário{% endblock %}
+{% block title %}Visualização do Colaborador{% endblock %}
 
 {% block content %}
+{% load custom_filters %}
+
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Detalhes do Funcionário</h2>
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h2 class="mb-0">Visualização do Colaborador</h2>
+        </div>
+        <div class="card-body">
+            <!-- Dados do Colaborador -->
+            <h5 class="text-primary mb-3">Informações Pessoais</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Nome</label>
+                    <p class="fw-bold">{{ funcionario.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Número de Registro</label>
+                    <p class="fw-bold">{{ funcionario.numero_registro }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Data de Admissão</label>
+                    <p class="fw-bold">{{ funcionario.data_admissao|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Status</label>
+                    <p class="fw-bold">{{ funcionario.status }}</p>
+                </div>
+            </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Foto:</strong></label>
+            <!-- Dados Profissionais -->
+            <h5 class="text-primary mb-3">Dados Profissionais</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Cargo Inicial</label>
+                    <p class="fw-bold">{{ funcionario.cargo_inicial.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Cargo Atual</label>
+                    <p class="fw-bold">{{ funcionario.cargo_atual.nome }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Local de Trabalho</label>
+                    <p class="fw-bold">{{ funcionario.local_trabalho }}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Responsável</label>
+                    <p class="fw-bold">{{ funcionario.responsavel }}</p>
+                </div>
+            </div>
+
+            <!-- Documentos -->
+            <h5 class="text-primary mb-3">Documentos</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Currículo</label>
+                    {% if funcionario.curriculo %}
+                        <a href="{{ funcionario.curriculo.url }}" class="btn btn-info btn-sm" download>
+                            <i class="bi bi-download"></i> Baixar Currículo
+                        </a>
+                        <p class="mt-2 text-muted"><strong>Arquivo:</strong> {{ funcionario.curriculo.name|basename }}</p>
+                    {% else %}
+                        <p class="fw-bold">Não disponível</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Certificado de Conclusão de Ensino Médio</label>
+                    {% if funcionario.formulario_f146 %}
+                        <a href="{{ funcionario.formulario_f146.url }}" class="btn btn-info btn-sm" download>
+                            <i class="bi bi-download"></i> Baixar Certificado
+                        </a>
+                        <p class="mt-2 text-muted"><strong>Arquivo:</strong> {{ funcionario.formulario_f146.name|basename }}</p>
+                    {% else %}
+                        <p class="fw-bold">Não disponível</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Foto -->
+            <h5 class="text-primary mb-3">Foto</h5>
+            <div class="text-center">
                 {% if funcionario.foto %}
-                    <div class="mt-2">
-                        <img src="/media/{{ funcionario.foto.name }}" alt="{{ funcionario.nome }}" style="width: 100%; max-width: 250px; height: auto; object-fit: cover;">
-                    </div>
+                    <img src="{{ funcionario.foto.url }}" alt="Foto do Colaborador" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;">
                 {% else %}
-                    <p class="form-control-static">Nenhuma foto disponível.</p>
+                    <p class="fw-bold">Sem foto cadastrada</p>
                 {% endif %}
             </div>
         </div>
 
-        <div class="col-md-6 text-center align-self-center">
-            <label class="form-label"><strong>Currículo:</strong></label>
-            {% if funcionario.curriculo %}
-                <!-- Botão de download -->
-                <a href="{{ funcionario.curriculo.url }}" class="btn btn-info mb-3" download>
-                    <i class="bi bi-download"></i> Baixar Currículo
-                </a>
-                <p class="form-control-static mt-2">Atualmente: {{ funcionario.curriculo.name }}</p>
-            {% else %}
-                <p class="form-control-static">Nenhum currículo anexado.</p>
-            {% endif %}
+        <!-- Botão de Voltar -->
+        <div class="card-footer text-center">
+            <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Voltar
+            </a>
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Nome:</strong></label>
-                <p class="form-control-static">{{ funcionario.nome }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Data de Admissão:</strong></label>
-                <p class="form-control-static">{{ funcionario.data_admissao|date:"d/m/Y" }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Cargo Inicial:</strong></label>
-                <p class="form-control-static">{{ funcionario.cargo_inicial }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Cargo Atual:</strong></label>
-                <p class="form-control-static">{{ funcionario.cargo_atual }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Número de Registro:</strong></label>
-                <p class="form-control-static">{{ funcionario.numero_registro }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Local de Trabalho:</strong></label>
-                <p class="form-control-static">{{ funcionario.local_trabalho }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Data de Integração:</strong></label>
-                <p class="form-control-static">{{ funcionario.data_integracao|date:"d/m/Y" }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Escolaridade:</strong></label>
-                <p class="form-control-static">{{ funcionario.escolaridade }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Experiência Profissional:</strong></label>
-                <p class="form-control-static">{{ funcionario.experiencia_profissional }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Status:</strong></label>
-                <p class="form-control-static">{{ funcionario.status }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Responsável:</strong></label>
-                <p class="form-control-static">{{ funcionario.responsavel }}</p>
-            </div>
-        </div>
-    </div>
-
-    {% comment %} <!-- Botão de download do Formulário F146 -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label"><strong>Formulário F146:</strong></label>
-                {% if funcionario.formulario_f146 %}
-                    <a href="{{ funcionario.formulario_f146.url }}" class="btn btn-info mb-3" download>
-                        <i class="bi bi-download"></i> Baixar Formulário F146
-                    </a>
-                    <p class="form-control-static mt-2">Atualmente: {{ funcionario.formulario_f146.name }}</p>
-                {% else %}
-                    <p class="form-control-static">Nenhum formulário F146 anexado.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div> {% endcomment %}
-
-    <!-- Botão de Voltar -->
-    <div class="text-center mt-4">
-        <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left-circle"></i> Voltar
-        </a>
     </div>
 </div>
 {% endblock %}

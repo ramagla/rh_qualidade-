@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Visualizar Instrumento{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Detalhes do Instrumento</h2>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <h5 class="card-title">{{ tabelatecnica.nome_equipamento }}</h5>
+            <p class="card-text"><strong>Código:</strong> {{ tabelatecnica.codigo }}</p>
+            <p class="card-text"><strong>Capacidade de Medição:</strong> 
+                {{ tabelatecnica.capacidade_minima }} - {{ tabelatecnica.capacidade_maxima }} {{ tabelatecnica.unidade_medida }}
+            </p>
+            <p class="card-text"><strong>Resolução:</strong> {{ tabelatecnica.resolucao }} {{ tabelatecnica.unidade_medida }}</p>
+            <p class="card-text"><strong>Tolerância Total Mínima:</strong> {{ tabelatecnica.tolerancia_total_minima }}</p>
+            <p class="card-text"><strong>Exatidão Requerida:</strong> 
+                {% if tabelatecnica.exatidao_requerida %}
+                    L ≤ {{ tabelatecnica.exatidao_requerida }}
+                {% elif tabelatecnica.tolerancia_em_percentual %}
+                    {{ tabelatecnica.tolerancia_em_percentual }}%
+                {% else %}
+                    -----
+                {% endif %}
+            </p>
+            <p class="card-text"><strong>Frequência de Calibração:</strong> {{ tabelatecnica.frequencia_calibracao }} meses</p>
+
+            <!-- Novos Campos -->
+            <p class="card-text"><strong>Número de Série:</strong> {{ tabelatecnica.numero_serie }}</p>
+            <p class="card-text"><strong>Modelo:</strong> {{ tabelatecnica.modelo }}</p>
+            <p class="card-text"><strong>Fabricante:</strong> {{ tabelatecnica.fabricante }}</p>
+            <p class="card-text"><strong>Proprietário:</strong> {{ tabelatecnica.proprietario }}</p>
+            <p class="card-text"><strong>Localização:</strong> {{ tabelatecnica.localizacao }}</p>
+            <p class="card-text"><strong>Status:</strong> 
+                <span class="badge {% if tabelatecnica.status == 'ativo' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ tabelatecnica.status|capfirst }}
+                </span>
+            </p>
+            <p class="card-text"><strong>Responsável:</strong> 
+                {% if tabelatecnica.responsavel %}
+                    {{ tabelatecnica.responsavel.nome }}
+                {% else %}
+                    Não definido
+                {% endif %}
+            </p>
+            <p class="card-text"><strong>Data da Última Calibração:</strong> 
+                {% if tabelatecnica.data_ultima_calibracao %}
+                    {{ tabelatecnica.data_ultima_calibracao|date:"d/m/Y" }}
+                {% else %}
+                    Não definida
+                {% endif %}
+            </p>
+            <p class="card-text">
+                <strong>Foto do Equipamento:</strong><br>
+                {% if tabelatecnica.foto_equipamento %}
+                    <img src="{{ tabelatecnica.foto_equipamento.url }}" alt="Foto do Equipamento" class="img-fluid mt-2">
+                {% else %}
+                    <em>Sem foto cadastrada</em>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="mt-4 text-center">        
+        <a href="{% url 'lista_tabelatecnica' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Metrologia{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Coluna 1: Dados Gerais -->
+        <div class="col-md-4">
+            <h5 class="text-center">Equipamentos Recentes</h5>
+            {% if equipamentos_recente %}
+                {% for equipamento in equipamentos_recente %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ equipamento.nome }}</h6>
+                            <p class="card-text">
+                                <strong>Número de Série:</strong> {{ equipamento.numero_serie }}<br>
+                                <strong>Status:</strong> 
+                                <span class="badge {% if equipamento.status == 'Ativo' %} bg-success {% else %} bg-secondary {% endif %}">
+                                    {{ equipamento.status }}
+                                </span>
+                            </p>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#equipamentoModal{{ equipamento.id }}">
+                                <i class="bi bi-eye"></i> Detalhes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modal de Detalhes do Equipamento -->
+                    <div class="modal fade" id="equipamentoModal{{ equipamento.id }}" tabindex="-1" aria-labelledby="equipamentoModalLabel{{ equipamento.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="equipamentoModalLabel{{ equipamento.id }}">{{ equipamento.nome }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Descrição:</strong> {{ equipamento.descricao }}</p>
+                                    <p><strong>Última Calibração:</strong> {{ equipamento.ultima_calibracao|date:"d/m/Y" }}</p>
+                                    <p><strong>Próxima Calibração:</strong> {{ equipamento.proxima_calibracao|date:"d/m/Y" }}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Nenhum equipamento registrado.</p>
+            {% endif %}
+        </div>
+
+        <!-- Coluna 2: Alertas de Calibração -->
+        <div class="col-md-4">
+            <h5 class="text-center">Alertas de Calibração</h5>
+            {% if alertas_calibracao %}
+                {% for alerta in alertas_calibracao %}
+                    <div class="card mb-3 border-danger">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ alerta.nome }}</h6>
+                            <p class="card-text">
+                                <strong>Próxima Calibração:</strong> {{ alerta.proxima_calibracao|date:"d/m/Y" }}<br>
+                                <strong>Status:</strong> 
+                                <span class="badge bg-danger">Urgente</span>
+                            </p>
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#alertaModal{{ alerta.id }}">
+                                <i class="bi bi-exclamation-circle"></i> Detalhes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modal de Detalhes do Alerta -->
+                    <div class="modal fade" id="alertaModal{{ alerta.id }}" tabindex="-1" aria-labelledby="alertaModalLabel{{ alerta.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="alertaModalLabel{{ alerta.id }}">{{ alerta.nome }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Descrição:</strong> {{ alerta.descricao }}</p>
+                                    <p><strong>Última Calibração:</strong> {{ alerta.ultima_calibracao|date:"d/m/Y" }}</p>
+                                    <p><strong>Próxima Calibração:</strong> {{ alerta.proxima_calibracao|date:"d/m/Y" }}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Nenhum alerta de calibração pendente.</p>
+            {% endif %}
+        </div>
+
+        <!-- Coluna 3: Relatórios Recentes -->
+        <div class="col-md-4">
+            <h5 class="text-center">Relatórios Recentes</h5>
+            {% if relatorios_recente %}
+                {% for relatorio in relatorios_recente %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ relatorio.titulo }}</h6>
+                            <p class="card-text">
+                                <strong>Data:</strong> {{ relatorio.data|date:"d/m/Y" }}<br>
+                                <strong>Status:</strong> 
+                                <span class="badge bg-success">Concluído</span>
+                            </p>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#relatorioModal{{ relatorio.id }}">
+                                <i class="bi bi-file-earmark-text"></i> Detalhes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modal de Detalhes do Relatório -->
+                    <div class="modal fade" id="relatorioModal{{ relatorio.id }}" tabindex="-1" aria-labelledby="relatorioModalLabel{{ relatorio.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="relatorioModalLabel{{ relatorio.id }}">{{ relatorio.titulo }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Descrição:</strong> {{ relatorio.descricao }}</p>
+                                    <p><strong>Data:</strong> {{ relatorio.data|date:"d/m/Y" }}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Nenhum relatório recente.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

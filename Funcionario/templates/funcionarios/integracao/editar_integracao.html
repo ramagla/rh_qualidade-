@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load widget_tweaks %}
+{% load widget_tweaks custom_filters %}
 
 {% block title %}Editar Integração{% endblock %}
 
@@ -24,7 +24,7 @@
 
         <!-- Campo para selecionar o funcionário -->
         <div class="col-md-6">
-            <label for="funcionario" class="form-label">Funcionário:</label>
+            <label for="funcionario" class="form-label">Colaborador:</label>
             {{ form.funcionario|add_class:"form-select select2" }}
         </div>
 
@@ -75,18 +75,23 @@
         </div>
 
 
+
         <!-- PDF da Integração Assinada -->
-        <div class="col-md-6">
-            <label for="pdf_integracao" class="form-label">PDF da Integração Assinada:</label>
-            {{ form.pdf_integracao|add_class:"form-control" }}
-            {% if integracao.pdf_integracao %}
-                <p class="mt-2">
-                    <a href="{{ integracao.pdf_integracao.url }}" target="_blank" class="btn btn-link">
-                        Ver PDF Atual
-                    </a>
-                </p>
-            {% endif %}
+<div class="col-md-6">
+    <label for="pdf_integracao" class="form-label">PDF da Integração Assinada:</label>
+    <div class="input-group mb-3">
+        <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_pdf_integracao').click();">Selecionar Arquivo</button>
+        <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="pdf_filename" readonly>
+    </div>
+    <input type="file" id="id_pdf_integracao" name="pdf_integracao" style="display: none;" onchange="document.getElementById('pdf_filename').value = this.files[0].name;">
+    {% if integracao.pdf_integracao %}
+        <div class="mt-2">
+            <a href="{{ integracao.pdf_integracao.url }}" class="btn btn-info" download>Baixar PDF</a>
+            <p>Atualmente: {{ integracao.pdf_integracao.name|basename }}</p>
         </div>
+    {% endif %}
+</div>
+
 
         <!-- Botão para salvar as alterações -->
         <div class="col-12 text-center">
@@ -120,4 +125,21 @@
         toggleTreinamentosRequeridos();
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializa o CKEditor no campo de Treinamentos Requeridos
+        ClassicEditor
+            .create(document.querySelector('#id_treinamentos_requeridos'), {
+                toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo']  // Ferramentas da barra de ferramentas
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    });
+</script>
+
+
 {% endblock %}
+
+

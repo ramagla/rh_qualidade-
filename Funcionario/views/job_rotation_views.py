@@ -101,7 +101,8 @@ def cadastrar_jobrotation_evaluation(request):
         form = JobRotationEvaluationForm()
 
     lista_cargos = Cargo.objects.all().order_by('nome')
-    funcionarios = Funcionario.objects.all().order_by('nome')
+    funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
+
 
     return render(request, 'jobrotation/cadastrar_jobrotation_evaluation.html', {
         'form': form,

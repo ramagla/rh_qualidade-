@@ -13,7 +13,7 @@
         <div class="col-md-6">
             <label for="funcionario-select" class="form-label">Nome:</label>
             <select name="funcionario" class="form-control select2 {% if form.funcionario.errors %}is-invalid{% endif %}" id="funcionario-select">
-                <option value="">Selecione um Funcionário</option>
+                <option value="">Selecione um Colaborador</option>
                 {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
                 {% endfor %}
@@ -27,19 +27,19 @@
             {% endif %}
         </div>
 
-        <!-- Área Atual do Funcionário -->
+        <!-- Área Atual do Colaborador -->
         <div class="col-md-6">
             <label for="local-trabalho" class="form-label">Área Atual:</label>
             <input type="text" id="local-trabalho" name="local_trabalho" class="form-control" readonly>
         </div>
 
-        <!-- Cargo Atual do Funcionário -->
+        <!-- Cargo Atual do Colaborador -->
         <div class="col-md-6">
             <label for="cargo-atual" class="form-label">Cargo Atual:</label>
             <input type="text" id="cargo-atual" class="form-control" readonly>
         </div> 
 
-        <!-- Competências do Funcionário -->
+        <!-- Competências do Colaborador -->
         <div class="col-md-6">
             <label for="competencias" class="form-label">Competências:</label>
             <textarea id="competencias" name="competencias" class="form-control" readonly></textarea>
@@ -82,7 +82,7 @@
                     {% endfor %}
                     {% if not ultimos_treinamentos %}
                     <tr>
-                        <td colspan="5">Nenhum treinamento encontrado para este funcionário.</td>
+                        <td colspan="5">Nenhum treinamento encontrado para este colaborador.</td>
                     </tr>
                     {% endif %}
                 </tbody>
@@ -154,7 +154,7 @@
             </div>
 
             <div class="col-md-6">
-                <label for="id_avaliacao_funcionario" class="form-label">Avaliação do Funcionário:</label>
+                <label for="id_avaliacao_funcionario" class="form-label">Avaliação do Colaborador:</label>
                 {{ form.avaliacao_funcionario }}
             </div>
 
@@ -164,7 +164,7 @@
                     <option value="Apto" {% if form.avaliacao_rh.value == 'Apto' %}selected{% endif %}>Apto</option>
                     <option value="Inapto" {% if form.avaliacao_rh.value == 'Inapto' %}selected{% endif %}>Inapto</option>
                     <option value="Prorrogar TN" {% if form.avaliacao_rh.value == 'Prorrogar TN' %}selected{% endif %}>Prorrogar TN</option>
-                    <option value="EmProgresso" {% if form.avaliacao_rh.value == 'EmProgresso' %}selected{% endif %}>Em Progresso</option>
+                    <option value="EmProgresso" {% if form.avaliacao_rh.value == 'EmProgresso' or not form.avaliacao_rh.value %}selected{% endif %}>Em Progresso</option>
                 </select>
             </div>
 
@@ -235,7 +235,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     carregarTreinamentos(funcionarioId); 
                 })
                 .catch(error => {
-                    console.error('Erro ao buscar informações do funcionário:', error);
+                    console.error('Erro ao buscar informações do colaborador:', error);
                     alert('Erro ao buscar informações. Por favor, tente novamente.');
                 });
         }
@@ -263,19 +263,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     });
                 } else {
                     const row = document.createElement('tr');
-                    row.innerHTML = `<td colspan="5">Nenhum treinamento encontrado para este funcionário.</td>`;
+                    row.innerHTML = `<td colspan="5">Nenhum treinamento encontrado para este colaborador.</td>`;
                     tbody.appendChild(row);
                 }
             })
             .catch(error => {
-                console.error('Erro ao buscar treinamentos do funcionário:', error);
+                console.error('Erro ao buscar treinamentos do colaborador:', error);
                 alert('Erro ao carregar treinamentos. Por favor, tente novamente.');
             });
     }
 
     // Inicializa o Select2
     funcionarioSelect.select2({
-        placeholder: "Selecione um Funcionário",
+        placeholder: "Selecione um colaborador",
         allowClear: true
     });
 

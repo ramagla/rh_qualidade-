@@ -63,16 +63,16 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="imprimirF003ModalLabel">Selecionar Funcionário</h5>
+                <h5 class="modal-title" id="imprimirF003ModalLabel">Selecionar Colaborador</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="imprimirF003Form" method="GET" action="">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="funcionario_modal" class="form-label">Funcionário:</label>
+                        <label for="funcionario_modal" class="form-label">Colaborador:</label>
                         <select name="funcionario" id="funcionario_modal" class="form-select select2" required>
-                            <option value="">Selecione um funcionário</option>
+                            <option value="">Selecione um Colaborador</option>
                             {% for func in funcionarios %}
                                  <option value="{{ func.id }}">{{ func.nome }}</option>
                             {% endfor %}
@@ -101,7 +101,7 @@
         form.action = url;
         form.submit();
     } else {
-        alert("Por favor, selecione um funcionário.");
+        alert("Por favor, selecione um Colaborador.");
     }
 });
     </script>
@@ -110,9 +110,9 @@
     <form method="get" class="mb-4">
         <div class="row">
 
-            <!-- Filtro de Funcionário -->
+           <!-- Filtro de Colaborador -->
             <div class="col-md-4">
-                <label for="funcionario" class="form-label">Funcionário</label>
+                <label for="funcionario" class="form-label">Colaborador</label>
                 <select name="funcionario" id="funcionario" class="form-select select2">
                     <option value="">Todos</option>
                     {% for func in funcionarios %}
@@ -208,7 +208,7 @@
 <table class="table table-bordered text-center mt-4">
     <thead>
         <tr>            
-            <th class="align-middle">Funcionários</th>
+            <th class="align-middle">Colaboradores</th>
             <th class="align-middle">Nome do Curso</th>
             <th class="align-middle">Tipo</th>            
             <th class="align-middle">Data de Conclusão</th>
@@ -275,7 +275,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modalFuncionariosLabel{{ treinamento.id }}">Funcionários do Treinamento</h5>
+                        <h5 class="modal-title" id="modalFuncionariosLabel{{ treinamento.id }}">Colaboradores do Treinamento</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -283,7 +283,7 @@
                             {% for funcionario in treinamento.funcionarios.all %}
                                 <li class="list-group-item">{{ funcionario.nome }}</li>
                             {% empty %}
-                                <li class="list-group-item">Nenhum funcionário cadastrado.</li>
+                                <li class="list-group-item">Nenhum colaborador cadastrado.</li>
                             {% endfor %}
                         </ul>
                     </div>
@@ -418,7 +418,7 @@
         // Garante que o Select2 fique funcional na modal
         $('#imprimirF003Modal').on('shown.bs.modal', function () {
             $('#funcionario_modal').select2({
-                placeholder: 'Selecione um funcionário',
+                placeholder: 'Selecione um colaborador',
                 allowClear: true,
                 dropdownParent: $('#imprimirF003Modal') // Garante que o dropdown fique dentro da modal
             });
@@ -434,7 +434,7 @@
                 this.action = `/treinamentos/imprimir_f003/${funcionarioId}/`;
                 this.submit();
             } else {
-                alert('Por favor, selecione um funcionário.');
+                alert('Por favor, selecione um colaborador.');
             }
         });
     });

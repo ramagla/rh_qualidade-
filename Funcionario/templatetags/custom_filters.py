@@ -1,4 +1,6 @@
 from django import template
+import os
+
 
 register = template.Library()
 from urllib.parse import urlencode, parse_qs
@@ -90,3 +92,10 @@ def remove_query_param(querystring, param):
     query_dict = parse_qs(querystring)
     query_dict.pop(param, None)  # Remove o parâmetro, se existir
     return urlencode(query_dict, doseq=True)
+
+@register.filter
+def basename(value):
+    """
+    Retorna apenas o nome do arquivo sem o caminho completo.
+    """
+    return os.path.basename(value)
