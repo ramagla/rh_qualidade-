@@ -14,6 +14,10 @@ from .views.funcionario_views import (
     visualizar_funcionario,
     ImprimirFichaView,
     organograma_view,
+    listar_historico_cargo,
+    adicionar_historico_cargo,
+    excluir_historico_cargo,
+
 )
 from .views.cargos_views import (
     lista_cargos,
@@ -144,6 +148,8 @@ from .views.documentos_views import (
     excluir_revisao2,
     historico_documentos
 )
+
+    
 
 
 
@@ -332,6 +338,9 @@ urlpatterns = [
 
     path('organograma/', organograma_view, name='organograma'),
 
+    path('historico-cargo/<int:funcionario_id>/', listar_historico_cargo, name='listar_historico_cargo'),
+    path('historico-cargo/<int:funcionario_id>/adicionar/', adicionar_historico_cargo, name='adicionar_historico_cargo'),
+    path('historico-cargo/<int:historico_id>/excluir/', excluir_historico_cargo, name='excluir_historico_cargo'),
 
 ]
 

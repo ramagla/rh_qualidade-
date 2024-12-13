@@ -74,7 +74,7 @@ class Funcionario(models.Model):
         }
 
        
-        # Filtra os treinamentos concluídos e que não são de capacitação, ordena pela hierarquia
+         # Filtra os treinamentos concluídos e que não são de capacitação, ordena pela hierarquia
         treinamentos_concluidos = self.treinamentos.filter(status='concluido').exclude(categoria='capacitacao')
         treinamento_mais_alto = None
         maior_nivel = 0

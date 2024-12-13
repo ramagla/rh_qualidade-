@@ -1,4 +1,12 @@
 import os
+import sys
+
+# Forçar o uso de backports.zoneinfo para Python < 3.9
+if sys.version_info < (3, 9):
+    import backports.zoneinfo as zoneinfo
+else:
+    import zoneinfo
+
 from celery import Celery
 
 # Configuração do Django para o Celery
@@ -18,7 +26,14 @@ app.conf.update(
     worker_hijack_root_logger=False,  # Evita substituição de logs globais
 )
 
-app.conf.beat_schedule = {}
+app.conf.beat_schedule = {
+    'test_task': {
+        'task': 'alerts.tasks.enviar_alertas_calibracao',
+        'schedule': 60.0,  # Executar a cada 60 segundos
+    },
+}
+
+
 
 @app.task(bind=True)
 def debug_task(self):

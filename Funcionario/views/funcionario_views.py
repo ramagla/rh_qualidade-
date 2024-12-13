@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from Funcionario.models import Funcionario, Treinamento,AvaliacaoAnual, AvaliacaoExperiencia
+from Funcionario.models import Funcionario, Treinamento,AvaliacaoAnual, AvaliacaoExperiencia, HistoricoCargo
 from Funcionario.forms import FuncionarioForm
 from django.views.generic import View
 from django.utils import timezone
@@ -9,6 +9,8 @@ from datetime import timedelta
 from django.core.paginator import Paginator
 from django.db.models import Count 
 from django.db.models import Q
+from ..models.cargo import Cargo
+
 
 
 
@@ -228,3 +230,44 @@ def organograma_view(request):
         })
 
     return render(request, 'funcionarios/organograma.html', {'organograma': organograma})
+
+
+# Listar histórico de cargos
+def listar_historico_cargo(request, funcionario_id):
+    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+    historicos = HistoricoCargo.objects.filter(funcionario=funcionario).order_by('-data_atualizacao')
+    return render(request, 'funcionarios/historico_cargo.html', {'funcionario': funcionario, 'historicos': historicos})
+
+def adicionar_historico_cargo(request, funcionario_id):
+    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+
+    if request.method == 'POST':
+        cargo_id = request.POST.get('cargo')
+        data_atualizacao = request.POST.get('data_atualizacao')  # Captura a data do formulário
+        cargo = get_object_or_404(Cargo, id=cargo_id)
+
+        HistoricoCargo.objects.create(
+            funcionario=funcionario,
+            cargo=cargo,
+            data_atualizacao=data_atualizacao  # Usa a data fornecida pelo usuário
+        )
+        messages.success(request, "Histórico de cargo adicionado com sucesso.")
+        return redirect('listar_historico_cargo', funcionario_id=funcionario.id)
+
+    cargos = Cargo.objects.all()
+    return render(request, 'funcionarios/adicionar_historico_cargo.html', {
+        'funcionario': funcionario,
+        'cargos': cargos
+    })
+
+def excluir_historico_cargo(request, historico_id):
+    # Obtém o objeto HistoricoCargo
+    historico = get_object_or_404(HistoricoCargo, id=historico_id)
+
+    if request.method == 'POST':
+        # Exclui o histórico
+        historico.delete()
+        # Redireciona após a exclusão
+        return redirect('listar_historico_cargo', funcionario_id=historico.funcionario.id)
+
+    return redirect('listar_historico_cargo', funcionario_id=historico.funcionario.id)

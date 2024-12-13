@@ -1,6 +1,9 @@
-from django.db.models.signals import m2m_changed,post_save
+from django.db.models.signals import m2m_changed,post_save,pre_save 
+
 from django.dispatch import receiver
-from .models import Treinamento, JobRotationEvaluation, Funcionario
+from django.utils.timezone import now
+
+from .models import Treinamento, JobRotationEvaluation, Funcionario, HistoricoCargo
 
 @receiver(m2m_changed, sender=Treinamento.funcionarios.through)
 def atualizar_escolaridade_funcionario(sender, instance, action, reverse, pk_set, **kwargs):
@@ -23,3 +26,18 @@ def atualizar_cargo_funcionario(sender, instance, **kwargs):
         funcionario = instance.funcionario
         funcionario.cargo_atual = instance.nova_funcao  # Atualiza o cargo atual
         funcionario.save()  # Salva as alterações no banco
+
+
+@receiver(pre_save, sender=Funcionario)
+def criar_historico_cargo(sender, instance, **kwargs):
+    # Verifica se o cargo foi alterado
+    if instance.pk:
+        funcionario_antigo = Funcionario.objects.get(pk=instance.pk)
+        
+        if funcionario_antigo.cargo_atual != instance.cargo_atual:
+            # Cria o histórico com o cargo que foi alterado
+            HistoricoCargo.objects.create(
+                funcionario=instance,
+                cargo=instance.cargo_atual,  # Registra o cargo atualizado
+                data_atualizacao=now()
+            )

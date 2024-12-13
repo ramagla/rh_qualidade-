@@ -35,10 +35,47 @@
         <a href="{% url 'organograma' %}" class="btn btn-info me-2">
             <i class="bi bi-diagram-2"></i> Organograma
         </a>
+        <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#modalSelecionarFuncionario">
+        <i class="bi bi-clock-history"></i> Histórico de Cargos
+        </button>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#imprimirModal">
             <i class="bi bi-printer"></i> Imprimir Ficha
-        </button>
+        </button>        
     </div>
+
+
+
+    <!-- Modal para Histórico de Cargos -->
+    <div class="modal fade" id="modalSelecionarFuncionario" tabindex="-1" aria-labelledby="modalSelecionarFuncionarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSelecionarFuncionarioLabel">Selecionar Funcionário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="historicoForm" method="GET" action="">
+                    <div class="mb-3">
+                        <label for="funcionario_id" class="form-label">Funcionário:</label>
+                        <select id="funcionario_id" class="form-select" required>
+                            <option value="" selected disabled>Selecione um funcionário</option>
+                            {% for funcionario in funcionarios %}
+                            <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Acessar Histórico</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
 
 <!-- Modal para selecionar Colaborador -->
 <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
@@ -374,4 +411,18 @@
 </nav>
 
 </div>
+<script>
+    document.getElementById('historicoForm').addEventListener('submit', function (e) {
+        e.preventDefault(); // Impede o envio padrão do formulário
+        const funcionarioId = document.getElementById('funcionario_id').value; // Obtém o ID selecionado
+        if (funcionarioId) {
+            // Define a URL dinâmica
+            const url = "{% url 'listar_historico_cargo' 0 %}".replace('0', funcionarioId);
+            this.action = url;
+            this.submit(); // Envia o formulário
+        } else {
+            alert('Por favor, selecione um funcionário.');
+        }
+    });
+</script>
 {% endblock %}

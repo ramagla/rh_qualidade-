@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center">Adicionar Histórico de Cargo</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="cargo" class="form-label">Selecione o Cargo:</label>
+            <select name="cargo" id="cargo" class="form-select" required>
+                <option value="">Selecione um Cargo</option>
+                {% for cargo in cargos %}
+                    <option value="{{ cargo.id }}">{{ cargo.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="data_atualizacao" class="form-label">Data de Atualização:</label>
+            <input type="date" name="data_atualizacao" id="data_atualizacao" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Adicionar</button>
+        <a href="{% url 'listar_historico_cargo' funcionario.id %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
