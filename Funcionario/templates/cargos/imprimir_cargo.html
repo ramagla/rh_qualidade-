@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load static %}
+
+<!-- Botão de Imprimir -->
+<div class="text-center mb-4 d-print-none">
+    <button onclick="imprimir()" class="btn btn-primary">
+        <i class="fas fa-print"></i> Imprimir
+    </button>
+</div>
+<div class="print-container">
+
+  <div class="header" style="font-size: 10px;">
+    <table class="table table-bordered custom-table no-break" style="width: 100%; margin-bottom: 0;">
+        <tr>
+            <!-- Logo -->
+            <td class="text-center align-middle" style="width: 15%;">
+                <img src="{% static 'logo.png' %}" alt="Logo" class="img-fluid" style="max-width: 60px;">
+            </td>
+            <!-- Título e Subtítulo -->
+            <td class="text-center align-middle" style="width: 55%;">
+                <h5 class="mb-1">Descrição de Cargo</h5>
+                <p class="mb-1">(Manual de Responsabilidade e Autoridade)</p>
+                <hr class="my-2" style="border-top: 1px solid #000;">
+                <p class="mb-0 text-start"><strong>{{ cargo.nome }}</strong></p>
+            </td>
+            <!-- Número -->
+            <td class="text-center align-middle" style="width: 10%;">
+                <p class="mb-1"><strong>Número:</strong></p>
+                <p class="mb-0">{{ cargo.numero_dc }}</p>
+            </td>
+            <!-- Revisão -->
+            <td class="text-center align-middle" style="width: 10%;">
+                <p class="mb-1"><strong>Revisão:</strong></p>
+                <p class="mb-0">{{ cargo.revisoes.last.numero_revisao }}</p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<!-- Tabela de Elaboração/Revisão e Aprovação -->
+<div class="table-section mt-4">
+    <table class="table table-bordered  custom-table no-break text-center align-middle" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th colspan="3">Elaboração/Revisão</th>
+                <th colspan="3">Aprovação</th>
+            </tr>
+            <tr>
+                <th>Nome</th>
+                <th>Assinatura</th>
+                <th>Data</th>
+                <th>Nome</th>
+                <th>Assinatura</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <!-- Informações do Elaborador -->
+                <td>{{ cargo.elaborador.nome }}</td>
+                <td>
+                    {% if cargo.elaborador.assinatura_eletronica %}
+                    <img src="{{ cargo.elaborador.assinatura_eletronica.url }}" alt="Assinatura Eletrônica"  class="assinatura-eletronica" style="height: 50px; width: auto;">
+                    {% else %}
+                    <p>Assinatura não disponível</p>
+                    {% endif %}
+                </td>
+                <td>{{ cargo.elaborador_data|date:"d/m/Y" }}</td>
+
+                <!-- Informações do Aprovador -->
+                <td>{{ cargo.aprovador.nome }}</td>
+                <td>
+                    {% if cargo.aprovador.assinatura_eletronica %}
+                    <img src="{{ cargo.aprovador.assinatura_eletronica.url }}" alt="Assinatura Eletrônica" class="assinatura-eletronica" style="height: 50px; width: auto;">
+                    {% else %}
+                    <p>Assinatura não disponível</p>
+                    {% endif %}
+                </td>
+                <td>{{ cargo.aprovador_data|date:"d/m/Y" }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+
+
+    <!-- Responsabilidades -->
+    <div class="responsabilidades mt-4">
+        <h2><strong>1. Responsabilidades e Autoridades</strong></h2>
+        <p><strong>1.1 Atividade Primária:</strong> {{ cargo.responsabilidade_atividade_primaria|safe }}</p>
+        <p><strong>1.2 Atividade Secundária:</strong> {{ cargo.responsabilidade_atividade_secundaria|safe }}</p>
+    </div>
+
+    <!-- Educação -->
+    <div class="educacao mt-4">
+        <h5><strong>2. Educação Mínima</strong></h5>
+        <p>{{ cargo.educacao_minima|safe }}</p>
+    </div>
+
+    <!-- Treinamento -->
+<div class="treinamento mt-4">
+    <h5><strong>3. Treinamento / Curso (Externo):</strong></h5>
+    <p><strong>Externo:</strong> {{ cargo.treinamento_externo|safe }}</p>
+    
+    <h5><strong>4. Treinamento mínimo (interno):</strong></h5>
+    {% if cargo.treinamento_interno_minimo %}
+        <p><strong>Interno:</strong> {{ cargo.treinamento_interno_minimo|safe }}</p>
+    {% else %}
+        <p><strong>Interno:</strong> <em>Sem informações disponíveis</em></p>
+    {% endif %}
+</div>
+
+
+    <!-- Experiência -->
+    <div class="experiencia mt-4">
+        <h5><strong>4. Experiência Mínima</strong></h5>
+        <p>{{ cargo.experiencia_minima|safe }}</p>
+    </div>
+
+    <!-- Tabela de Revisões -->
+    <div class="revisoes mt-5">
+    <h5 class="text-center"><strong>ÚLTIMA REVISÃO</strong></h5>
+    <table class="custom-table no-break ">
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Descrição</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for revisao in revisoes %}
+                <tr>
+                    <td>{{ revisao.numero_revisao }}</td>
+                    <td>{{ revisao.descricao_mudanca |safe }}</td>
+                    <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+   
+</div>
+
+{% comment %} <!-- Estilos Personalizados -->
+<style>
+    /* Estilos gerais */
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    .custom-table th, .custom-table td {
+        border: 1px solid #000;
+        padding: 6px;
+        text-align: center;
+        font-size: 12px; /* Tamanho padrão na tela */
+    }
+    h5 {
+        font-size: 14px; /* Tamanho padrão na tela */
+    }
+
+    @media print {
+        /* Ajuste global */
+        * {
+            font-size: 8px !important; /* Texto padrão na impressão */
+        }
+        /* Títulos e cabeçalhos */
+        h5, th {
+            font-size: 10px !important;
+        }
+        /* Esconder botões de impressão e outros elementos desnecessários */
+        .d-print-none {
+            display: none !important;
+        }
+        /* Tabelas */
+        .custom-table th, .custom-table td {
+            font-size: 8px !important;
+            padding: 4px !important;
+            border: 1px solid #000;
+        }
+
+         .assinatura-eletronica {
+            max-width: 50px !important;
+            max-height: 30px !important;
+        }
+          @page {
+      margin-top: 50px; /* Define uma margem superior para cada página */
+    }
+    .d-print-none {
+      display: none !important; /* Oculta elementos desnecessários na impressão */
+    }
+    .print-container {
+      margin-top: 20px; /* Ajusta a posição do conteúdo para não sobrepor a margem */
+    }
+    }
+</style> {% endcomment %}
+
+
+
+
+<!-- Script de Impressão -->
+<script>
+    function imprimir() {
+        var conteudo = document.querySelector('.print-container').outerHTML;
+        var linksCSS = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+            .map(link => `<link rel="stylesheet" href="${link.href}">`)
+            .join('\n');
+    
+        var novaJanela = window.open('', '_blank', 'width=800,height=600');
+        novaJanela.document.open();
+        novaJanela.document.write(`
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Impressão</title>
+                    ${linksCSS}
+                    <style>
+                        /* Regras globais */
+                        * {
+                            font-size: 9px !important;
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 0;
+                        }
+                        
+                        /* Cabeçalhos */
+                        h5, th {
+                            font-size: 11px !important;
+                            font-weight: bold;
+                        }
+
+                        /* Ajuste das tabelas */
+                        .custom-table {
+                            width: 100%;
+                            table-layout: fixed; /* Evita que as células cresçam descontroladamente */
+                            border-collapse: collapse;
+                            margin-top: 10px;
+                        }
+                        .custom-table th, .custom-table td {
+                            border: 1px solid #ddd; /* Bordas suaves */
+                            padding: 4px; /* Espaçamento interno menor */
+                            text-align: center;
+                            vertical-align: middle;
+                            font-size: 8px !important;
+                            word-wrap: break-word; /* Quebra palavras longas */
+                         
+                        }
+
+                        /* Evitar que as tabelas sejam quebradas */
+                        .no-break {
+                            page-break-inside: avoid; /* Garante que a tabela não quebre */
+                            
+                        }
+
+                        /* Assinaturas */
+                        .assinatura-eletronica {
+                            max-width: 40px !important;
+                            max-height: 25px !important;
+                        }
+
+                        /* Margens para impressão */
+                        @page {
+                            size: A4; /* Define o tamanho A4 */
+                            margin: 5mm 10mm; /* Margem superior/inferior e lateral */
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${conteudo}
+                </body>
+            </html>
+        `);
+    
+        novaJanela.document.close();
+        novaJanela.onload = () => {
+            novaJanela.print();
+            novaJanela.close();
+        };
+    }
+</script>
+
+    
+</div>
+
+{% endblock %}

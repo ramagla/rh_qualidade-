@@ -24,6 +24,22 @@
                 </div>
             {% endif %}
         </div>
+        <!-- Assinatura Eletrônica -->
+<div class="col-md-6">
+    <label for="assinatura_eletronica" class="form-label">Assinatura Eletrônica:</label>
+    <div class="input-group mb-3">
+        <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_assinatura_eletronica').click();">Selecionar Arquivo</button>
+        <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="assinatura_eletronica_filename" readonly>
+    </div>
+    <input type="file" id="id_assinatura_eletronica" name="assinatura_eletronica" style="display: none;" onchange="document.getElementById('assinatura_eletronica_filename').value = this.files[0].name;">
+    {% if funcionario.assinatura_eletronica %}
+        <div class="mt-2 text-center">
+            <img src="{{ funcionario.assinatura_eletronica.url }}" alt="Assinatura Eletrônica" style="width: 200px; height: auto; object-fit: contain;">
+        </div>
+    {% endif %}
+</div>
+
+
 
         <!-- Currículo -->
         <div class="col-md-6">

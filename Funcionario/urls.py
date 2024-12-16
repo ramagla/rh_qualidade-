@@ -1,6 +1,12 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from datetime import date
+from Funcionario.models import Cargo, Funcionario
+from django.shortcuts import render, get_object_or_404
+
+
+
 
 from Funcionario import views
 
@@ -25,6 +31,7 @@ from .views.cargos_views import (
     editar_cargo,
     excluir_cargo,   
     historico_revisoes,
+    imprimir_cargo
 )
 from .views.treinamento_views import (
     lista_treinamentos,
@@ -182,6 +189,8 @@ urlpatterns = [
     path('cargos/<int:cargo_id>/historico-revisoes/', historico_revisoes, name='historico_revisoes'),
     path('revisoes/<int:revisao_id>/excluir/', views.excluir_revisao, name='excluir_revisao'),
     path('cargos/<int:cargo_id>/adicionar-revisao/', views.adicionar_revisao, name='adicionar_revisao'),
+    path('imprimir_cargo/<int:cargo_id>/', imprimir_cargo, name='imprimir_cargo'),
+
 
     # Treinamentos
     path('treinamentos/', lista_treinamentos, name='lista_treinamentos'),

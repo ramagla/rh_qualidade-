@@ -173,6 +173,8 @@ def imprimir_jobrotation_evaluation(request, id):
         numero_revisao = ultima_revisao.numero_revisao
         descricao_cargo = f"Conforme: Descrição de cargo N° {numero_dc} - Nome: {nome_cargo}, Última Revisão N° {numero_revisao}"
 
+        
+
     # Verifica se o usuário solicitou o download em PDF
     if request.GET.get('download') == 'pdf':
         # Renderiza o HTML para o PDF

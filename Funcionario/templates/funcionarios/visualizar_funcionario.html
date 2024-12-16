@@ -90,6 +90,16 @@
                 {% endif %}
             </div>
         </div>
+        <!-- Assinatura Eletrônica -->
+<h5 class="text-primary mb-3">Assinatura Eletrônica</h5>
+<div class="text-center">
+    {% if funcionario.assinatura_eletronica %}
+        <img src="{{ funcionario.assinatura_eletronica.url }}" alt="Assinatura Eletrônica" style="width: 200px; height: auto; object-fit: contain;">
+    {% else %}
+        <p class="fw-bold">Sem assinatura eletrônica cadastrada</p>
+    {% endif %}
+</div>
+
 
         <!-- Botão de Voltar -->
         <div class="card-footer text-center">

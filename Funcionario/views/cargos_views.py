@@ -134,7 +134,8 @@ def buscar_cargos(request, funcionario_id):
 
 
 def editar_cargo(request, cargo_id):
-    cargo = get_object_or_404(Cargo, id=cargo_id)
+    cargo = get_object_or_404(Cargo, pk=cargo_id)
+
     if request.method == 'POST':
         form = CargoForm(request.POST, request.FILES, instance=cargo)
         if form.is_valid():
@@ -144,3 +145,7 @@ def editar_cargo(request, cargo_id):
         form = CargoForm(instance=cargo)
     return render(request, 'cargos/editar_cargo.html', {'form': form})
 
+def imprimir_cargo(request, cargo_id):
+    cargo = get_object_or_404(Cargo, pk=cargo_id)
+    revisoes = cargo.revisoes.all().order_by('-data_revisao')  # Ordenar pela data mais recente
+    return render(request, 'cargos/imprimir_cargo.html', {'cargo': cargo, 'revisoes': revisoes})

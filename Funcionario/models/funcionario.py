@@ -12,6 +12,12 @@ def renomear_curriculo(instance, filename):
     # Retorna o caminho completo onde o arquivo será salvo
     return os.path.join('curriculos_funcionarios', novo_nome)
 
+# Função para renomear o arquivo de assinatura
+def renomear_assinatura(instance, filename):
+    nome, extensao = os.path.splitext(filename)
+    novo_nome = f"assinatura-{slugify(instance.nome)}{extensao}"
+    return os.path.join('assinaturas_funcionarios', novo_nome)
+
 # Modelo Funcionario
 class Funcionario(models.Model):
     STATUS_CHOICES = [
@@ -49,6 +55,12 @@ class Funcionario(models.Model):
     experiencia_profissional = models.CharField(max_length=3, choices=EXPERIENCIA_CHOICES, default='Sim')
     updated_at = models.DateTimeField(auto_now=True)
     foto = models.ImageField(upload_to='fotos_funcionarios/', blank=True, null=True)
+    assinatura_eletronica = models.ImageField(
+        upload_to=renomear_assinatura, 
+        blank=True, 
+        null=True,
+        verbose_name="Assinatura Eletrônica"
+    )
     curriculo = models.FileField(upload_to=renomear_curriculo, blank=True, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo')
     formulario_f146 = models.FileField(upload_to='certificado_ensino/', blank=True, null=True)

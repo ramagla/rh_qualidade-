@@ -49,6 +49,7 @@ class FuncionarioForm(forms.ModelForm):
         label="Responsável"
     )
     foto = forms.ImageField(required=False, label="Foto")
+    assinatura_eletronica = forms.ImageField(required=False, label="Assinatura Eletrônica")  # Novo campo
     curriculo = forms.FileField(required=False, label="Currículo")
     status = forms.ChoiceField(choices=Funcionario.STATUS_CHOICES, label="Status", widget=forms.Select(attrs={'class': 'form-select'}))
     formulario_f146 = forms.FileField(required=False, label="Formulário F146")
@@ -65,7 +66,7 @@ class FuncionarioForm(forms.ModelForm):
         fields = [
             'nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro',
             'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto',
-            'curriculo', 'status', 'formulario_f146', 'experiencia_profissional', 'cargo_responsavel'
+            'curriculo', 'status', 'formulario_f146', 'experiencia_profissional', 'cargo_responsavel','assinatura_eletronica'
         ]
         widgets = {
             'local_trabalho': Select2Widget(attrs={

@@ -1,54 +1,88 @@
-{% extends 'base.html' %}
-
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 <div class="container">
-    <h2 class="text-center">Histórico de Cargos - {{ funcionario.nome }}</h2>
-    <table class="table table-centered">
-        <thead>
-            <tr>
-                <th>Cargo</th>
-                <th>Data de Atualização</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for historico in historicos %}
-            <tr>
-                <td>{{ historico.cargo.nome }}</td>
-                <td>{{ historico.data_atualizacao|date:"d/m/Y" }}</td>
-                <td>
-                    <!-- Botão para abrir a modal de exclusão -->
-                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ historico.id }}">
-                        <i class="bi bi-trash"></i> Excluir
-                    </button>
-                </td>
-            </tr>
+  <h2 class="text-center">Histórico de Cargos - {{ funcionario.nome }}</h2>
+  <!-- Botão de Adicionar -->
+  <a
+    href="{% url 'adicionar_historico_cargo' funcionario.id %}"
+    class="btn btn-success"
+  >
+    <i class="bi bi-plus-circle"></i> Adicionar Histórico
+  </a>
+  <table class="table table-centered">
+    <thead>
+      <tr>
+        <th>Cargo</th>
+        <th>Data de Atualização</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for historico in historicos %}
+      <tr>
+        <td>{{ historico.cargo.nome }}</td>
+        <td>{{ historico.data_atualizacao|date:"d/m/Y" }}</td>
+        <td>
+          <!-- Botão para abrir a modal de exclusão -->
+          <button
+            class="btn btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#modalExcluir{{ historico.id }}"
+          >
+            <i class="bi bi-trash"></i> Excluir
+          </button>
+        </td>
+      </tr>
 
-            <!-- Modal de Exclusão -->
-            <div class="modal fade" id="modalExcluir{{ historico.id }}" tabindex="-1" aria-labelledby="modalExcluirLabel{{ historico.id }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalExcluirLabel{{ historico.id }}">Excluir Histórico</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Tem certeza que deseja excluir este registro de histórico?</p>
-                            <p><strong>Cargo:</strong> {{ historico.cargo.nome }}</p>
-                            <p><strong>Data:</strong> {{ historico.data_atualizacao|date:"d/m/Y" }}</p>
-                        </div>
-                        <div class="modal-footer">
-                            <form method="POST" action="{% url 'excluir_historico_cargo' historico.id %}">
-                                {% csrf_token %}
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-danger">Excluir</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+      <!-- Modal de Exclusão -->
+      <div
+        class="modal fade"
+        id="modalExcluir{{ historico.id }}"
+        tabindex="-1"
+        aria-labelledby="modalExcluirLabel{{ historico.id }}"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modalExcluirLabel{{ historico.id }}">
+                Excluir Histórico
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
             </div>
-            {% endfor %}
-        </tbody>
-    </table>
+            <div class="modal-body">
+              <p>Tem certeza que deseja excluir este registro de histórico?</p>
+              <p><strong>Cargo:</strong> {{ historico.cargo.nome }}</p>
+              <p>
+                <strong>Data:</strong> {{
+                historico.data_atualizacao|date:"d/m/Y" }}
+              </p>
+            </div>
+            <div class="modal-footer">
+              <form
+                method="POST"
+                action="{% url 'excluir_historico_cargo' historico.id %}"
+              >
+                {% csrf_token %}
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-danger">Excluir</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% endblock %}
