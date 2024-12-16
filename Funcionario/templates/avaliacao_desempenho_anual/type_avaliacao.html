@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro de Avaliação Anual{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastro de Avaliação Anual</h2>
+
+    <!-- Exibe erros gerais -->
+    {% if form.errors %}
+    <div class="alert alert-danger" id="form-errors">
+        <strong>Por favor, corrija os seguintes erros:</strong>
+        <ul>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Barra de progresso -->
+    <div class="progress my-4">
+        <div id="status-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+
+    <!-- Formulário -->
+    <form id="avaliacao-form" method="post" action="{% url 'cadastrar_type_avaliacao' %}">
+        {% csrf_token %}
+        <div class="form-step active">
+            <label for="data_avaliacao" class="form-label">Data da Avaliação:</label>
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-calendar3"></i>
+                </span>
+                {{ form.data_avaliacao|add_class:"form-control" }}
+            </div>
+        </div>
+        
+
+        <div class="form-step">
+            <label for="funcionario" class="form-label">Colaborador:</label>
+            <select class="form-select select2" id="funcionario" name="funcionario" required>
+                <option selected disabled>Selecione o colaborador</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-step">
+            <label for="centro_custo" class="form-label">Centro de Custo:</label>
+            {{ form.centro_custo }}
+        </div>
+
+        <!-- Campos Avaliados -->
+        {% for field in form %}
+            {% if field.name in campos_avaliados %}
+                <div class="form-step">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    <select class="form-select item-avaliado" id="{{ field.id_for_label }}" name="{{ field.html_name }}" required>
+                        <option value="" selected disabled>Selecione uma opção</option>
+                        <option value="1">Ruim (1.0)</option>
+                        <option value="2">Regular (2.0)</option>
+                        <option value="3">Bom (3.0)</option>
+                        <option value="4">Ótimo (4.0)</option>
+                    </select>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="form-step">
+            <label for="avaliacao_global_avaliador" class="form-label">Avaliação Global (Visão do Avaliador)</label>
+            {{ form.avaliacao_global_avaliador }}
+        </div>
+
+       <!-- Botões de navegação -->
+<div class="form-navigation mt-4 d-flex justify-content-between align-items-center gap-3">
+    <button type="button" id="next-step" class="btn btn-primary">Próxima</button>
+    <button type="submit" id="submit-button" class="btn btn-success d-none">Salvar</button>
+    <a href="{% url 'lista_avaliacao_anual' %}" class="btn btn-danger">Cancelar</a>
+</div>
+
+    </form>
+</div>
+
+<!-- Modal para sucesso -->
+<div id="imprimir-modal" class="modal fade" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Formulário Salvo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>O formulário foi salvo com sucesso. Deseja imprimir?</p>
+            </div>
+            <div class="modal-footer">
+                <a id="btn-imprimir" href="#" class="btn btn-success">Imprimir</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const steps = document.querySelectorAll(".form-step");
+        const nextStepBtn = document.getElementById("next-step");
+        const submitBtn = document.getElementById("submit-button");
+        const progressBar = document.getElementById("status-progress");
+        let currentStep = 0;
+
+        // Inicializa Select2
+        $(".select2").select2();
+
+        function showStep(stepIndex) {
+            steps.forEach((step, index) => {
+                step.classList.toggle("active", index === stepIndex);
+            });
+
+            const progressPercentage = ((stepIndex + 1) / steps.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+
+            if (stepIndex === steps.length - 1) {
+                nextStepBtn.classList.add("d-none");
+                submitBtn.classList.remove("d-none");
+            } else {
+                nextStepBtn.classList.remove("d-none");
+                submitBtn.classList.add("d-none");
+            }
+        }
+
+        nextStepBtn.addEventListener("click", () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        });
+
+        // Depurador: Submissão do formulário
+        const form = document.getElementById("avaliacao-form");
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    body: formData,
+                    headers: { "X-CSRFToken": formData.get("csrfmiddlewaretoken") },
+                });
+                if (!response.ok) throw new Error("Erro ao salvar.");
+
+                const result = await response.json();
+                const modal = new bootstrap.Modal(document.getElementById("imprimir-modal"));
+                modal.show();
+                document.getElementById("btn-imprimir").href = `/avaliacoes-anual/imprimir/${result.avaliacao_id}/`;
+
+            } catch (error) {
+                console.error("Erro ao enviar o formulário:", error);
+                alert("Erro ao salvar o formulário. Verifique os campos.");
+            }
+        });
+
+        showStep(currentStep);
+    });
+</script>
+
+<style>
+    .form-step { display: none; }
+    .form-step.active { display: block; }
+    .progress { height: 10px; }
+    .progress-bar { transition: width 0.5s ease; }
+</style>
+{% endblock %}

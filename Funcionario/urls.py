@@ -64,7 +64,8 @@ from Funcionario.views.avaliacao_anual_views import (
     excluir_avaliacao_anual,
     imprimir_avaliacao,
     visualizar_avaliacao_anual,
-    imprimir_simplificado
+    imprimir_simplificado,
+    cadastrar_type_avaliacao
 )
 from Funcionario.views.avaliacao_experiencia_views import (
     lista_avaliacao_experiencia,
@@ -350,6 +351,9 @@ urlpatterns = [
     path('historico-cargo/<int:funcionario_id>/', listar_historico_cargo, name='listar_historico_cargo'),
     path('historico-cargo/<int:funcionario_id>/adicionar/', adicionar_historico_cargo, name='adicionar_historico_cargo'),
     path('historico-cargo/<int:historico_id>/excluir/', excluir_historico_cargo, name='excluir_historico_cargo'),
+
+    path('avaliacao-anual/', cadastrar_type_avaliacao, name='cadastrar_type_avaliacao'),
+
 
 ]
 

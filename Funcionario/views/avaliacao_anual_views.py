@@ -103,6 +103,8 @@ def cadastrar_avaliacao_anual(request):
     })
 
 
+  
+
 def editar_avaliacao_anual(request, id):
     avaliacao = get_object_or_404(AvaliacaoAnual, id=id)
     
@@ -188,4 +190,43 @@ def imprimir_simplificado(request, avaliacao_id):
 
     return render(request, 'avaliacao_desempenho_anual/template_simplificado.html', {
         'avaliacao': avaliacao,
+    })
+from django.http import JsonResponse
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+def cadastrar_type_avaliacao(request):
+    campos_avaliados = [
+        "postura_seg_trabalho", 
+        "qualidade_produtividade", 
+        "trabalho_em_equipe", 
+        "comprometimento", 
+        "disponibilidade_para_mudancas",
+        "disciplina", 
+        "rendimento_sob_pressao", 
+        "proatividade", 
+        "comunicacao", 
+        "assiduidade"
+    ]
+
+    if request.method == "POST":
+        form = AvaliacaoAnualForm(request.POST)
+        if form.is_valid():
+            avaliacao = form.save()
+            return JsonResponse({"avaliacao_id": avaliacao.id})  # Retorna o ID da avaliação
+        else:
+            logger.error(f"Erros no formulário: {form.errors}")
+            return JsonResponse({"error": "Erro ao salvar a avaliação", "details": form.errors}, status=400)
+    else:
+        form = AvaliacaoAnualForm()
+    
+    # Filtrar apenas funcionários ativos e ordenar por nome
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+
+    return render(request, 'avaliacao_desempenho_anual/type_avaliacao.html', {
+        'form': form,
+        'campos_avaliados': campos_avaliados,
+        'funcionarios': funcionarios
     })

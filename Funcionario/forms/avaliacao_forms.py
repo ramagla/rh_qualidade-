@@ -146,8 +146,14 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
 
 
 class AvaliacaoAnualForm(forms.ModelForm):
-    avaliacao_global_avaliador = forms.CharField(widget=CKEditor5Widget(config_name='default'))
-    avaliacao_global_avaliado = forms.CharField(widget=CKEditor5Widget(config_name='default'))
+    avaliacao_global_avaliador = forms.CharField(
+        widget=CKEditor5Widget(config_name='default'),
+        required=False  # Define como não obrigatório
+    )
+    avaliacao_global_avaliado = forms.CharField(
+        widget=CKEditor5Widget(config_name='default'),
+        required=False  # Define como não obrigatório
+    )
     class Meta:
         model = AvaliacaoAnual
         fields = '__all__' 
