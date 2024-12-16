@@ -6,9 +6,10 @@ from ..forms import CargoForm, RevisaoForm
 from django.db.models import Count
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
 
-
+@login_required
 def lista_cargos(request):
     # Recupera todos os cargos ordenados por número da DC
     cargos = Cargo.objects.all().order_by('nome')
@@ -70,7 +71,7 @@ def lista_cargos(request):
         'cargos_sem_descricao': cargos_sem_descricao,
     })
 
-
+@login_required
 def cadastrar_cargo(request):
     if request.method == 'POST':
         form = CargoForm(request.POST, request.FILES)
@@ -123,7 +124,7 @@ def obter_cargos(request, funcionario_id):
     except Funcionario.DoesNotExist:
         return JsonResponse({'error': 'Funcionário não encontrado'}, status=404)
 
-    
+@login_required 
 def buscar_cargos(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
     data = {
@@ -132,7 +133,7 @@ def buscar_cargos(request, funcionario_id):
     }
     return JsonResponse(data)
 
-
+@login_required
 def editar_cargo(request, cargo_id):
     cargo = get_object_or_404(Cargo, pk=cargo_id)
 

@@ -4,10 +4,11 @@ from Funcionario.models import AvaliacaoAnual, Funcionario
 from Funcionario.forms import AvaliacaoAnualForm
 from datetime import datetime
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
 
 
-
+@login_required
 def lista_avaliacao_anual(request):
     from collections import Counter
 
@@ -83,7 +84,7 @@ def lista_avaliacao_anual(request):
 
 
 
-
+@login_required
 def cadastrar_avaliacao_anual(request):
     if request.method == 'POST':
         form = AvaliacaoAnualForm(request.POST)
@@ -104,7 +105,7 @@ def cadastrar_avaliacao_anual(request):
 
 
   
-
+@login_required
 def editar_avaliacao_anual(request, id):
     avaliacao = get_object_or_404(AvaliacaoAnual, id=id)
     
@@ -128,7 +129,7 @@ def editar_avaliacao_anual(request, id):
         
     })
 
-
+@login_required
 def excluir_avaliacao_anual(request, id):
     avaliacao = get_object_or_404(AvaliacaoAnual, id=id)
     if request.method == "POST":
@@ -136,6 +137,7 @@ def excluir_avaliacao_anual(request, id):
         return redirect('lista_avaliacao_anual')
     return redirect('lista_avaliacao_anual')
 
+@login_required
 def imprimir_avaliacao(request, avaliacao_id):
     # Obtém a avaliação anual pelo ID
     avaliacao = get_object_or_404(AvaliacaoAnual, id=avaliacao_id)
@@ -150,6 +152,7 @@ def imprimir_avaliacao(request, avaliacao_id):
         'status': classificacao['status'],
     })
 
+@login_required
 def visualizar_avaliacao_anual(request, id):
     avaliacao = get_object_or_404(AvaliacaoAnual, id=id)
 
@@ -183,7 +186,7 @@ def visualizar_avaliacao_anual(request, id):
     }
     return render(request, 'avaliacao_desempenho_anual/visualizar_avaliacao_anual.html', context)
 
-
+@login_required
 def imprimir_simplificado(request, avaliacao_id):
     # Obtém a avaliação anual pelo ID
     avaliacao = get_object_or_404(AvaliacaoAnual, id=avaliacao_id)
@@ -197,6 +200,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+@login_required
 def cadastrar_type_avaliacao(request):
     campos_avaliados = [
         "postura_seg_trabalho", 

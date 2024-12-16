@@ -3,15 +3,15 @@
 
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
-from Funcionario import models
 from Funcionario.forms import AvaliacaoTreinamentoForm
 from Funcionario.models import AvaliacaoTreinamento, Funcionario, ListaPresenca
 from django.http import JsonResponse
-from django.utils import timezone
-from datetime import timedelta
+
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def lista_avaliacoes(request):
     avaliacoes_treinamento = AvaliacaoTreinamento.objects.all().order_by('funcionario__nome')  # Ordena por nome do funcionário
     
@@ -66,7 +66,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from Funcionario.forms import AvaliacaoTreinamentoForm
 from Funcionario.models import Funcionario, Treinamento
-
+@login_required
 def cadastrar_avaliacao(request):
     # Carregar todos os funcionários ordenados por nome
     funcionarios = Funcionario.objects.filter(status="Ativo").order_by('nome')
@@ -126,7 +126,7 @@ def cadastrar_avaliacao(request):
         'opcoes_resultados': opcoes_resultados,
     })
 
-
+@login_required
 def editar_avaliacao(request, id):
     # Busca a avaliação de treinamento com o ID fornecido
     avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)
@@ -175,7 +175,7 @@ def editar_avaliacao(request, id):
     
 
 
-
+@login_required
 def visualizar_avaliacao(request, id):
     avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)
     
@@ -241,7 +241,7 @@ def get_treinamentos_por_funcionario(request, funcionario_id):
     ]
     return JsonResponse(data, safe=False)
 
-
+@login_required
 def imprimir_treinamento(request, treinamento_id):
     # Obtém a avaliação de treinamento ou retorna 404
     avaliacao = get_object_or_404(AvaliacaoTreinamento, id=treinamento_id)
@@ -261,7 +261,7 @@ def imprimir_treinamento(request, treinamento_id):
     # Renderiza o template de impressão
     return render(request, 'avaliacao_treinamento/impressao_treinamento.html', context)
 
-
+@login_required
 def excluir_avaliacao(request, id):
     # Obtém a avaliação ou retorna 404
     avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)

@@ -2,10 +2,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from Funcionario.models import Documento, RevisaoDoc
 from Funcionario.forms import DocumentoForm, RevisaoDocForm
+from django.contrib.auth.decorators import login_required
 
 
 from django.core.paginator import Paginator
 
+@login_required
 def lista_documentos(request):
     nome = request.GET.get('nome', '')
     status = request.GET.get('status', '')
@@ -43,7 +45,7 @@ def lista_documentos(request):
     return render(request, 'documentos/lista_documentos.html', context)
 
 
-
+@login_required
 def cadastrar_documento(request):
     if request.method == 'POST':
         form = DocumentoForm(request.POST, request.FILES)
@@ -55,7 +57,7 @@ def cadastrar_documento(request):
         form = DocumentoForm()
     return render(request, 'documentos/cadastrar_documento.html', {'form': form})
 
-
+@login_required
 def editar_documento(request, documento_id):
     documento = get_object_or_404(Documento, id=documento_id)
     if request.method == 'POST':
@@ -68,21 +70,21 @@ def editar_documento(request, documento_id):
         form = DocumentoForm(instance=documento)
     return render(request, 'documentos/editar_documento.html', {'form': form})
 
-
+@login_required
 def excluir_documento(request, documento_id):
     documento = get_object_or_404(Documento, id=documento_id)
     documento.delete()
     messages.success(request, "Documento excluído com sucesso!")
     return redirect('lista_documentos')
 
-
+@login_required
 def historico_documentos(request, documento_id):
     documento = get_object_or_404(Documento, id=documento_id)
     revisoes = RevisaoDoc.objects.filter(documento=documento, status='ativo')  # Exibe apenas revisões ativas
     return render(request, 'documentos/historico_revisoes.html', {'documento': documento, 'revisoes': revisoes})
 
 
-
+@login_required
 def adicionar_documento(request, documento_id):
     documento = get_object_or_404(Documento, id=documento_id)
     if request.method == "POST":
@@ -98,7 +100,7 @@ def adicionar_documento(request, documento_id):
     return render(request, 'documentos/adicionar_revisao.html', {'form': form, 'documento': documento})
 
 
-
+@login_required
 def excluir_revisao2(request, revisao_id):
     revisao = get_object_or_404(RevisaoDoc, id=revisao_id)
     documento_id = revisao.documento.id  # Salva o ID do documento antes da exclusão

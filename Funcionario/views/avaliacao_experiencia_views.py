@@ -4,9 +4,11 @@ from Funcionario.forms import AvaliacaoExperienciaForm
 from django.contrib import messages
 from django.urls import reverse
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
 
 
+@login_required
 def lista_avaliacao_experiencia(request):
     # Recupera todas as avaliações de experiência
     avaliacoes = AvaliacaoExperiencia.objects.all()
@@ -50,7 +52,7 @@ def lista_avaliacao_experiencia(request):
     })
 
 
-
+@login_required
 def cadastrar_avaliacao_experiencia(request):
     if request.method == 'POST':
         form = AvaliacaoExperienciaForm(request.POST)
@@ -68,7 +70,7 @@ def cadastrar_avaliacao_experiencia(request):
         'funcionarios': Funcionario.objects.filter(status='Ativo').order_by('nome'),
     })
 
-
+@login_required
 def editar_avaliacao_experiencia(request, id):
     # Busca a avaliação pelo ID ou retorna 404 se não encontrada
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=id)
@@ -121,7 +123,7 @@ def editar_avaliacao_experiencia(request, id):
         'avaliacao': avaliacao,
         'funcionarios': funcionarios
     })
-
+@login_required
 def excluir_avaliacao_experiencia(request, id):
     # Exclui uma avaliação de experiência
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=id)
@@ -130,7 +132,7 @@ def excluir_avaliacao_experiencia(request, id):
         return redirect('lista_avaliacao_experiencia')
     return redirect('lista_avaliacao_experiencia')
 
-
+@login_required
 def visualizar_avaliacao_experiencia(request, id):
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=id)
 
@@ -138,7 +140,7 @@ def visualizar_avaliacao_experiencia(request, id):
     return render(request, 'avaliacao_desempenho_experiencia/visualizar_avaliacao_experiencia.html', {
         'avaliacao': avaliacao
     })
-
+@login_required
 def imprimir_avaliacao_experiencia(request, avaliacao_id):
     # Busca a avaliação pelo ID ou retorna 404 se não for encontrada
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=avaliacao_id)

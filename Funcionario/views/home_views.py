@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 import requests
 from datetime import datetime
 
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from Funcionario.forms import EventoForm
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -65,11 +65,11 @@ def home(request):
     return render(request, 'funcionarios/home.html', context)
 
 
-
+@login_required
 def sucesso_view(request):
     return render(request, 'sucesso.html')
 
-
+@login_required
 def login_view(request):
     # Obtém o logo e outras configurações
     settings = Settings.objects.first()
@@ -88,7 +88,7 @@ def login_view(request):
 
 from django.core import serializers
 
-
+@login_required
 def calendario_view(request):
     # Captura o ano da query string ou usa o ano atual como padrão
     ano = str(request.GET.get('ano', datetime.now().year))
@@ -132,6 +132,7 @@ from datetime import datetime
 
 
 @csrf_exempt
+@login_required
 def adicionar_evento(request):
     if request.method == 'POST':
         print("Recebendo requisição POST para adicionar evento")
@@ -174,7 +175,7 @@ def adicionar_evento(request):
             return JsonResponse({"error": "Erro ao processar as datas"}, status=400)
 
     return JsonResponse({"error": "Erro ao criar o evento"}, status=400)
-
+@login_required
 def excluir_evento(request, evento_id):
     if request.method == 'DELETE':
         evento = get_object_or_404(Evento, id=evento_id)
@@ -184,6 +185,7 @@ def excluir_evento(request, evento_id):
         return JsonResponse({"error": "Método não permitido"}, status=405)
 
 @csrf_exempt
+@login_required
 def editar_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id)
     if request.method == 'POST':
@@ -199,7 +201,7 @@ def editar_evento(request, evento_id):
 from django.http import HttpResponse
 from icalendar import Calendar, Event
 import pytz
-
+@login_required
 def exportar_calendario(request):
     cal = Calendar()
     cal.add('prodid', '-//Your Calendar//')
@@ -225,7 +227,7 @@ import requests
 from django.shortcuts import render
 from django.utils.dateparse import parse_date
 
-
+@login_required
 def imprimir_calendario(request):
     # Lista de anos para o filtro
     anos_disponiveis = [2023, 2024, 2025, 2026]

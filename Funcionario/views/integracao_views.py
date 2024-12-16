@@ -7,9 +7,12 @@ from django.urls import reverse
 from django.http import Http404
 from django.db.models import Q, Count
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
+
 
 
 # View para listar integrações com filtros
+@login_required
 def lista_integracoes(request):
     # Obter os filtros do GET
     funcionario_id = request.GET.get('funcionario')
@@ -70,11 +73,13 @@ def lista_integracoes(request):
 
 
 # View para visualizar uma integração específica
+@login_required
 def visualizar_integracao(request, integracao_id):
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
     return render(request, 'funcionarios/integracao/visualizar_integracao.html', {'integracao': integracao})
 
 # View para cadastrar uma nova integração
+@login_required
 def cadastrar_integracao(request):
     if request.method == 'POST':
         form = IntegracaoFuncionarioForm(request.POST, request.FILES)
@@ -92,13 +97,14 @@ def cadastrar_integracao(request):
 
 
 # View para excluir uma integração
+@login_required
 def excluir_integracao(request, integracao_id):
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
     if request.method == 'POST':
         integracao.delete()
         messages.success(request, 'Integração excluída com sucesso.')
     return redirect(reverse('lista_integracoes'))
-
+@login_required
 def editar_integracao(request, integracao_id):
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
     if request.method == 'POST':
@@ -110,7 +116,7 @@ def editar_integracao(request, integracao_id):
     else:
         form = IntegracaoFuncionarioForm(instance=integracao)
     return render(request, 'funcionarios/integracao/editar_integracao.html', {'form': form, 'integracao': integracao})
-
+@login_required
 def imprimir_integracao(request, integracao_id):
     try:
         integracao = IntegracaoFuncionario.objects.get(id=integracao_id)

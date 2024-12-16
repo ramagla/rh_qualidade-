@@ -10,12 +10,13 @@ import os
 from django.db import models
 from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
+from django.contrib.auth.decorators import login_required
 
 
 
 
 
-
+@login_required
 def generate_training_hours_chart_styled(total_horas_por_trimestre, ano):
     # Conteúdo da função para gerar o gráfico
     plt.figure(figsize=(8, 4))
@@ -197,7 +198,7 @@ class RelatorioIndicadorAnualView(TemplateView):
         return context
 
 
-
+    @login_required
     def gerar_grafico(self, dados_por_ano):
         # Obter anos e índices
         anos = list(dados_por_ano.keys())
@@ -231,7 +232,7 @@ class RelatorioIndicadorAnualView(TemplateView):
 
         return base64.b64encode(image_png).decode('utf-8')
 
-
+@login_required
 def cronograma_treinamentos(request):
     # Obtém os filtros
     ano = request.GET.get('ano', None)
@@ -268,7 +269,7 @@ def cronograma_treinamentos(request):
 
     return render(request, 'relatorios/cronograma_treinamentos.html', context)
 
-
+@login_required
 def cronograma_avaliacao_eficacia(request):
     # Obtém os filtros
     ano = request.GET.get('ano', None)

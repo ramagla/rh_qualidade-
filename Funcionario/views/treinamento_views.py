@@ -8,9 +8,10 @@ from Funcionario.forms import TreinamentoForm
 from django.utils import timezone
 from django.core.paginator import Paginator
 import csv
+from django.contrib.auth.decorators import login_required
 
 
-
+@login_required
 def lista_treinamentos(request):
     tipo = request.GET.get('tipo')
     status = request.GET.get('status')
@@ -61,7 +62,7 @@ def lista_treinamentos(request):
     }
     
     return render(request, 'treinamentos/lista_treinamentos.html', context)
-
+@login_required
 def cadastrar_treinamento(request):
     if request.method == 'POST':
         form = TreinamentoForm(request.POST, request.FILES)
@@ -81,7 +82,7 @@ def cadastrar_treinamento(request):
         'form': form,
         'funcionarios': funcionarios_ativos,  # Envia a lista de funcionários ativos para o template
     })
-
+@login_required
 def editar_treinamento(request, id):
     treinamento = get_object_or_404(Treinamento, id=id)
     if request.method == "POST":
@@ -99,7 +100,7 @@ def editar_treinamento(request, id):
         form.initial['data_fim'] = form.instance.data_fim.strftime('%Y-%m-%d')
 
     return render(request, 'treinamentos/editar_treinamento.html', {'form': form})
-
+@login_required
 def excluir_treinamento(request, id):
     treinamento = get_object_or_404(Treinamento, id=id)
     if request.method == "POST":
@@ -107,12 +108,12 @@ def excluir_treinamento(request, id):
         return redirect('lista_treinamentos')
     return render(request, 'treinamentos/excluir_treinamento.html', {'treinamento': treinamento})
 
-
+@login_required
 def visualizar_treinamento(request, treinamento_id):
     treinamento = get_object_or_404(Treinamento, id=treinamento_id)
     return render(request, 'treinamentos/visualizar_treinamento.html', {'treinamento': treinamento})
 
-
+@login_required
 def imprimir_f003(request, funcionario_id):
     # Obtém o funcionário pelo ID
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
@@ -139,7 +140,7 @@ def imprimir_f003(request, funcionario_id):
         'ultima_atualizacao': ultima_atualizacao,
         'integracao': integracao,  # Inclui a integração no contexto
     })
-
+@login_required
 def gerar_pdf(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
     treinamentos = Treinamento.objects.filter(funcionario=funcionario)
@@ -160,7 +161,7 @@ def gerar_pdf(request, funcionario_id):
         return HttpResponse('Erro ao gerar o PDF', status=500)
 
     return response
-
+@login_required
 def gerar_relatorio_f003(request):
     if request.method == 'POST':
         funcionario_id = request.POST.get('funcionario')
@@ -191,7 +192,7 @@ def gerar_relatorio_f003(request):
 
         return render(request, 'relatorio_f003.html', context)
 
-    
+@login_required
 def exportar_treinamentos_csv(request):
     treinamentos = Treinamento.objects.prefetch_related('funcionarios').all()
 
@@ -219,7 +220,7 @@ def exportar_treinamentos_csv(request):
 from django.db.models import Case, When, Value, CharField
 from datetime import datetime
 
-
+@login_required
 def levantamento_treinamento(request):
     filtro_departamento = request.GET.get('departamento', '')
     filtro_data_inicio = request.GET.get('data_inicio', '')

@@ -11,13 +11,14 @@ import matplotlib
 matplotlib.use('Agg')  # Backend para renderização sem GUI
 import matplotlib.pyplot as plt
 
-import io
-import base64
 
 from ..models.matriz_polivalencia import MatrizPolivalencia, Atividade, Nota
 from ..models.funcionario import Funcionario
 from ..forms.matriz_polivalencia_forms import MatrizPolivalenciaForm, AtividadeForm, NotaForm
+from django.contrib.auth.decorators import login_required
 
+
+@login_required
 def lista_matriz_polivalencia(request):
     departamento = request.GET.get('departamento')
     data_inicio = request.GET.get('data_inicio')
@@ -55,7 +56,7 @@ def lista_matriz_polivalencia(request):
     })
 
 
-
+@login_required
 def gerar_grafico_icone(nota):    
     icones = {
         0: "icons/barra_0.png",
@@ -66,7 +67,7 @@ def gerar_grafico_icone(nota):
     }
     return icones.get(nota, "icons/barra_1.png")
 
-
+@login_required
 def imprimir_matriz(request, **kwargs):
     id = kwargs.get("id")
     matriz = get_object_or_404(MatrizPolivalencia, id=id)
@@ -123,7 +124,7 @@ def imprimir_matriz(request, **kwargs):
 
     return render(request, "matriz_polivalencia/imprimir_matriz.html", context)
 
-
+@login_required
 def cadastrar_matriz_polivalencia(request):
     funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")  # Funcionários ativos ordenados
     atividades = Atividade.objects.all()  # Todas as atividades
@@ -169,6 +170,7 @@ def cadastrar_matriz_polivalencia(request):
 
 
 # Editar uma matriz de polivalência
+@login_required
 def editar_matriz_polivalencia(request, id):
     # Pré-carregar as relações para otimizar o acesso aos dados relacionados
     matriz = get_object_or_404(
@@ -263,6 +265,7 @@ def editar_matriz_polivalencia(request, id):
 
 
 # Excluir uma matriz de polivalência
+@login_required
 def excluir_matriz_polivalencia(request, id):
     matriz = get_object_or_404(MatrizPolivalencia, id=id)
     if request.method == "POST":
@@ -312,7 +315,8 @@ def lista_atividades(request):
         'total_atividades': total_atividades,  # Total de atividades
         'atividades_por_departamento': atividades_por_departamento,  # Atividades por departamento
     })
-    
+
+@login_required
 def cadastrar_atividade(request):
     # Obter todos os departamentos únicos
     departamentos = Funcionario.objects.values('local_trabalho').distinct()
@@ -336,6 +340,7 @@ def cadastrar_atividade(request):
     })
 
 # Gerenciar notas (adicionar/editar/excluir)
+@login_required
 def gerenciar_notas(request, id):
     atividade = get_object_or_404(Atividade, id=id)
     if request.method == "POST":
@@ -358,12 +363,12 @@ def gerenciar_notas(request, id):
 
 
 
-
+@login_required
 def visualizar_atividade(request, id):
     atividade = get_object_or_404(Atividade, id=id)
     return render(request, 'matriz_polivalencia/visualizar_atividade.html', {'atividade': atividade})
 
-
+@login_required
 def editar_atividade(request, id):
     atividade = get_object_or_404(Atividade, id=id)
     departamentos = Funcionario.objects.values('local_trabalho').distinct()  # Lista de departamentos únicos
@@ -384,7 +389,7 @@ def editar_atividade(request, id):
     })
 
 
-
+@login_required
 def excluir_atividade(request, id):
     atividade = get_object_or_404(Atividade, id=id)
     if request.method == "POST":
@@ -392,14 +397,14 @@ def excluir_atividade(request, id):
         messages.success(request, "Atividade excluída com sucesso.")
         return redirect('lista_atividades')  # Redireciona para a lista de atividades
     return render(request, 'matriz_polivalencia/excluir_atividade.html', {'atividade': atividade})
-
+@login_required
 def get_atividades_por_departamento(request):
     departamento = request.GET.get('departamento')  # Obtém o departamento selecionado
     atividades = Atividade.objects.filter(departamento=departamento)  # Filtra atividades pelo departamento
     atividade_list = [{'id': atividade.id, 'nome': atividade.nome} for atividade in atividades]
     return JsonResponse({'atividades': atividade_list})
 
-
+@login_required
 def get_atividades_e_funcionarios_por_departamento(request):
     departamento = request.GET.get('departamento')
 

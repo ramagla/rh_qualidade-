@@ -73,7 +73,7 @@ def lista_funcionarios(request):
 
     return render(request, 'funcionarios/lista_funcionarios.html', context)
 
-
+@login_required
 def visualizar_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
 
@@ -95,7 +95,7 @@ def visualizar_funcionario(request, funcionario_id):
 
 
 
-
+@login_required
 def cadastrar_funcionario(request):
     if request.method == 'POST':
         form = FuncionarioForm(request.POST, request.FILES)
@@ -111,7 +111,7 @@ def cadastrar_funcionario(request):
         form = FuncionarioForm()
     return render(request, 'funcionarios/cadastrar_funcionario.html', {'form': form})
 
-
+@login_required
 def editar_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
 
@@ -147,7 +147,7 @@ def editar_funcionario(request, funcionario_id):
     }
 
     return render(request, 'funcionarios/editar_funcionario.html', context)
-
+@login_required
 def excluir_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
     if Treinamento.objects.filter(funcionario=funcionario).exists():
@@ -192,7 +192,7 @@ class ImprimirFichaView(View):
         return self.get(request, funcionario_id)
     
 
-
+@login_required
 def gerar_organograma(funcionario):
     """
     Função recursiva para construir a hierarquia completa.
@@ -212,7 +212,7 @@ def gerar_organograma(funcionario):
     return estrutura
 
 
-
+@login_required
 def organograma_view(request):
     """
     View para exibir o organograma.
@@ -233,11 +233,12 @@ def organograma_view(request):
 
 
 # Listar histórico de cargos
+@login_required
 def listar_historico_cargo(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
     historicos = HistoricoCargo.objects.filter(funcionario=funcionario).order_by('-data_atualizacao')
     return render(request, 'funcionarios/historico_cargo.html', {'funcionario': funcionario, 'historicos': historicos})
-
+@login_required
 def adicionar_historico_cargo(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
 
@@ -259,7 +260,7 @@ def adicionar_historico_cargo(request, funcionario_id):
         'funcionario': funcionario,
         'cargos': cargos
     })
-
+@login_required
 def excluir_historico_cargo(request, historico_id):
     # Obtém o objeto HistoricoCargo
     historico = get_object_or_404(HistoricoCargo, id=historico_id)

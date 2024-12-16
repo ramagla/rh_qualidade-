@@ -9,7 +9,10 @@ from datetime import timezone, timedelta
 from Funcionario.models import JobRotationEvaluation, Funcionario, Cargo
 from Funcionario.forms import JobRotationEvaluationForm
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
+
+@login_required
 def lista_jobrotation_evaluation(request):
     # Obtem todas as avaliações
     evaluations = JobRotationEvaluation.objects.select_related('cargo_atual').all()
@@ -66,6 +69,7 @@ def lista_jobrotation_evaluation(request):
 
 
 # Cadastra nova avaliação de Job Rotation
+@login_required
 def cadastrar_jobrotation_evaluation(request):
     if request.method == 'POST':
         form = JobRotationEvaluationForm(request.POST)
@@ -111,17 +115,18 @@ def cadastrar_jobrotation_evaluation(request):
     })
 
 # Exclui uma avaliação de Job Rotation
+@login_required
 def excluir_jobrotation(request, id):
     job_rotation = get_object_or_404(JobRotationEvaluation, id=id)
     if request.method == 'POST':
         job_rotation.delete()
         messages.success(request, 'Registro de Job Rotation excluído com sucesso!')
     return redirect(reverse_lazy('lista_jobrotation_evaluation'))
-
+@login_required
 def visualizar_jobrotation_evaluation(request, id):
     evaluation = get_object_or_404(JobRotationEvaluation, id=id)
     return render(request, 'jobrotation/visualizar_jobrotation_evaluation.html', {'evaluation': evaluation})
-
+@login_required
 def editar_jobrotation_evaluation(request, id):
     # Carregar a avaliação de Job Rotation que será editada
     evaluation = get_object_or_404(JobRotationEvaluation, id=id)
@@ -154,7 +159,7 @@ def editar_jobrotation_evaluation(request, id):
         'funcionarios': funcionarios
     })
 
-
+@login_required
 def imprimir_jobrotation_evaluation(request, id):
     # Obtenha a avaliação de Job Rotation usando o ID
     evaluation = get_object_or_404(JobRotationEvaluation, id=id)

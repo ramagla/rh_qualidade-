@@ -1,13 +1,12 @@
+from datetime import date
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
-from django.contrib import messages
-from django.utils import timezone
-from datetime import datetime
+from django.http import HttpResponse
 from Funcionario.models import ListaPresenca, Funcionario, AvaliacaoTreinamento, Treinamento
 from Funcionario.forms import ListaPresencaForm
 from Funcionario.templatetags.conversores import horas_formatadas
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.contrib.auth.decorators import login_required
 
 
 import openpyxl
@@ -16,6 +15,7 @@ import openpyxl
 
 
 # Função lista_presenca
+@login_required
 def lista_presenca(request):
     listas_presenca = ListaPresenca.objects.all().order_by('assunto')  # Ordenar por assunto
 
@@ -64,7 +64,7 @@ def lista_presenca(request):
         
     })
 
-
+@login_required
 def cadastrar_lista_presenca(request):
     # Verifica os treinamentos que precisam de avaliação
     treinamentos = Treinamento.objects.filter(categoria='treinamento')
@@ -140,6 +140,7 @@ def cadastrar_lista_presenca(request):
 
 
 # Função editar_lista_presenca
+@login_required
 def editar_lista_presenca(request, id):
     lista = get_object_or_404(ListaPresenca, id=id)
 
@@ -238,13 +239,14 @@ def editar_lista_presenca(request, id):
 
 
 # Função para excluir lista de presença
+@login_required
 def excluir_lista_presenca(request, id):
     lista = get_object_or_404(ListaPresenca, id=id)
     lista.delete()
     return redirect('lista_presenca')
 
 from django.forms import modelform_factory
-
+@login_required
 def visualizar_lista_presenca(request, lista_id):
     lista = get_object_or_404(ListaPresenca, id=lista_id)
     # Criar um formulário baseado no modelo sem campos editáveis
@@ -254,6 +256,7 @@ def visualizar_lista_presenca(request, lista_id):
 
 
 # Função para imprimir lista de presença
+@login_required
 def imprimir_lista_presenca(request, lista_id):
     lista = get_object_or_404(ListaPresenca, id=lista_id)
 
@@ -267,6 +270,7 @@ def imprimir_lista_presenca(request, lista_id):
     })
 
 # Função para exportar listas de presença
+@login_required
 def exportar_listas_presenca(request):
     listas_presenca = ListaPresenca.objects.all()
 

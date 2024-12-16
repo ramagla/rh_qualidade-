@@ -4,8 +4,10 @@ from Funcionario.models import Comunicado, Funcionario
 from Funcionario.forms import ComunicadoForm
 from django.core.paginator import Paginator
 from django.db.models import Count
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def lista_comunicados(request):
     comunicados = Comunicado.objects.all().order_by('-id')
     departamentos = Comunicado.objects.values_list('departamento_responsavel', flat=True).distinct()
@@ -66,11 +68,11 @@ def lista_comunicados(request):
 
     return render(request, 'comunicados/lista_comunicados.html', context)
 
-    
+@login_required  
 def imprimir_comunicado(request, id):
     comunicado = get_object_or_404(Comunicado, id=id)  # Alterado para buscar por 'id'
     return render(request, 'comunicados/imprimir_comunicado.html', {'comunicado': comunicado})
-
+@login_required
 def cadastrar_comunicado(request):
     if request.method == 'POST':
         form = ComunicadoForm(request.POST, request.FILES)  # Inclua request.FILES aqui
@@ -82,11 +84,11 @@ def cadastrar_comunicado(request):
         form = ComunicadoForm()
     return render(request, 'comunicados/cadastrar_comunicado.html', {'form': form})
 
-
+@login_required
 def visualizar_comunicado(request, id):  # Alterado para 'id'
     comunicado = get_object_or_404(Comunicado, id=id)  # Alterado para 'id'
     return render(request, 'comunicados/visualizar_comunicado.html', {'comunicado': comunicado})
-
+@login_required
 def editar_comunicado(request, id):
     comunicado = get_object_or_404(Comunicado, id=id)
     
@@ -100,7 +102,7 @@ def editar_comunicado(request, id):
 
     return render(request, 'comunicados/editar_comunicado.html', {'form': form, 'comunicado': comunicado})
 
-
+@login_required
 def excluir_comunicado(request, id):
     comunicado = get_object_or_404(Comunicado, id=id)
     if request.method == 'POST':
@@ -110,7 +112,7 @@ def excluir_comunicado(request, id):
     return render(request, 'comunicados/excluir_comunicado.html', {'comunicado': comunicado})
 
 
-
+@login_required
 def imprimir_assinaturas(request, id):
     comunicado = get_object_or_404(Comunicado, id=id)
     funcionarios_ativos = Funcionario.objects.filter(status='Ativo').order_by('nome')
