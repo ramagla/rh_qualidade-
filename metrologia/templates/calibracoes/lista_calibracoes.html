@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Lista de Calibrações{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Lista de Calibrações</h2>
+
+    <!-- Mensagens de alerta -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast align-items-center border-0"
+                     {% if message.tags == "error" %} style="background-color: #f8d7da; color: #842029;" {% else %} style="background-color: #d1e7dd; color: #0f5132;" {% endif %}
+                     role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <h4 class="alert-heading">{% if message.tags == "error" %}Atenção!{% else %}Sucesso!{% endif %}</h4>
+                            <p>{{ message }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Botão para cadastrar nova calibração -->
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{% url 'cadastrar_calibracao' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nova Calibração
+        </a>
+    </div>
+
+    <!-- Filtros -->
+<form method="get" class="row g-3 mb-4">
+    <!-- Filtro de Código -->
+    <div class="col-md-3">
+        <label for="codigo" class="form-label">Código do Equipamento:</label>
+        <select id="codigo" name="codigo" class="form-select select2">
+            <option value="">Selecione</option>
+            {% for codigo in codigos %}
+                <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>{{ codigo }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <!-- Filtro de Laboratório -->
+    <div class="col-md-3">
+        <label for="laboratorio" class="form-label">Laboratório:</label>
+        <select id="laboratorio" name="laboratorio" class="form-select select2">
+            <option value="">Selecione</option>
+            <option value="Ceime" {% if request.GET.laboratorio == "Ceime" %}selected{% endif %}>Ceime</option>
+            <option value="Instemaq" {% if request.GET.laboratorio == "Instemaq" %}selected{% endif %}>Instemaq</option>
+            <option value="Microoptica" {% if request.GET.laboratorio == "Microoptica" %}selected{% endif %}>Microoptica</option>
+            <option value="Trescal" {% if request.GET.laboratorio == "Trescal" %}selected{% endif %}>Trescal</option>
+            <option value="Embracal" {% if request.GET.laboratorio == "Embracal" %}selected{% endif %}>Embracal</option>
+            <option value="Kratos" {% if request.GET.laboratorio == "Kratos" %}selected{% endif %}>Kratos</option>
+            <option value="Tecmetro" {% if request.GET.laboratorio == "Tecmetro" %}selected{% endif %}>Tecmetro</option>
+        </select>
+    </div>
+    <!-- Filtro de Proprietário -->
+    <div class="col-md-3">
+        <label for="proprietario" class="form-label">Proprietário:</label>
+        <select id="proprietario" name="proprietario" class="form-select select2">
+            <option value="">Todos</option>
+            {% for prop in proprietarios %}
+                <option value="{{ prop }}" {% if filtro_proprietario == prop %}selected{% endif %}>
+                    {{ prop }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <!-- Filtro de Status -->
+    <div class="col-md-3">
+        <label for="status" class="form-label">Status:</label>
+        <select id="status" name="status" class="form-select select2">
+            <option value="">Todos</option>
+            <option value="Aprovado" {% if request.GET.status == "Aprovado" %}selected{% endif %}>Aprovado</option>
+            <option value="Reprovado" {% if request.GET.status == "Reprovado" %}selected{% endif %}>Reprovado</option>
+        </select>
+    </div>
+    <!-- Filtro de Tipo -->
+    <div class="col-md-3">
+        <label for="tipo" class="form-label">Tipo:</label>
+        <select id="tipo" name="tipo" class="form-select select2">
+            <option value="">Todos</option>
+            <option value="deslocamento" {% if request.GET.tipo == "deslocamento" %}selected{% endif %}>Deslocamento</option>
+            <option value="carga" {% if request.GET.tipo == "carga" %}selected{% endif %}>Carga</option>
+            <option value="dimensional" {% if request.GET.tipo == "dimensional" %}selected{% endif %}>Dimensional</option>
+        </select>
+    </div>
+    <!-- Filtro de Data Inicial -->
+    <div class="col-md-3">
+        <label for="data_inicio" class="form-label">Data Inicial:</label>
+        <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+    </div>
+    <!-- Filtro de Data Final -->
+    <div class="col-md-3">
+        <label for="data_fim" class="form-label">Data Final:</label>
+        <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+    </div>
+    <!-- Botão de Filtrar -->
+    <div class="col-md-3 d-flex align-items-end justify-content-end">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+    </div>
+</form>
+
+
+    <!-- Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-header text-center">Total de Calibrações</div>
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ total_calibracoes }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger">
+                <div class="card-header text-center">Reprovadas</div>
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ total_reprovadas }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-header text-center">Aprovadas</div>
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ total_aprovadas }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela -->
+<table class="table table-bordered text-center align-middle">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Laboratório</th>
+            <th>Erro (E)</th>
+            <th>Incerteza (I)</th>
+            <th>L = (E+I)</th>
+            <th>Exatidão Requerida (ER)</th>
+            <th>Status</th>
+            <th>Tipo</th>
+            <th>Data</th> 
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for calibracao in page_obj %}
+        <tr>
+            <td>{{ calibracao.codigo }}</td>
+            <td>{{ calibracao.laboratorio }}</td>
+            <td>{{ calibracao.erro_equipamento }}</td>
+            <td>{{ calibracao.incerteza }}</td>
+            <td>{{ calibracao.l }}</td>
+            <td>{{ calibracao.codigo.exatidao_requerida }}</td>
+
+            
+            <!-- Status com cores -->
+            <td>
+                {% if calibracao.status == "Aprovado" %}
+                    <span class="badge bg-success">{{ calibracao.status|title }}</span>
+                {% elif calibracao.status == "Reprovado" %}
+                    <span class="badge bg-danger">{{ calibracao.status|title }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ calibracao.status|title }}</span>
+                {% endif %}
+            </td>
+            
+            <!-- Tipo com cores -->
+            <td>
+                {% if calibracao.codigo.tipo_avaliacao == "deslocamento" %}
+                    <span class="badge bg-primary">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
+                {% elif calibracao.codigo.tipo_avaliacao == "carga" %}
+                    <span class="badge bg-warning text-dark">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
+                {% elif calibracao.codigo.tipo_avaliacao == "dimensional" %}
+                    <span class="badge bg-info">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
+                {% endif %}
+            </td>
+            <!-- Data da Calibração -->
+            <td>{{ calibracao.data_calibracao|date:"d/m/Y" }}</td>
+
+            <!-- Ações -->
+            <td>
+                <a href="{% url 'editar_calibracao' calibracao.id %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                
+                <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ calibracao.id }}">
+                    <i class="bi bi-trash"></i>
+                </a>
+                
+                {% if calibracao.certificado_anexo %}
+                <a href="{{ calibracao.certificado_anexo.url }}" class="btn btn-sm btn-success" download>
+                    <i class="bi bi-file-earmark-arrow-down"></i>
+                </a>
+                {% endif %}
+            </td>
+        </tr>
+        <!-- Modal de Exclusão -->
+        <div class="modal fade" id="modalExcluir{{ calibracao.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Excluir Calibração</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza que deseja excluir a calibração <strong>{{ calibracao.numero_certificado }}</strong>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <form method="post" action="{% url 'excluir_calibracao' calibracao.id %}">
+                            {% csrf_token %}
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <tr>
+            <td colspan="10">Nenhuma calibração encontrada.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+    <!-- Paginação -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

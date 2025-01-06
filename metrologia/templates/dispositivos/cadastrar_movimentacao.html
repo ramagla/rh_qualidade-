@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Registrar Movimentação - {{ dispositivo.codigo }}</h2>
+
+    <!-- Formulário de Movimentação -->
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="tipo_movimentacao" class="form-label">Tipo de Movimentação</label>
+                {{ form.tipo_movimentacao|add_class:"form-select" }}
+            </div>
+            <div class="col-md-6">
+                <label for="quantidade" class="form-label">Quantidade</label>
+                {{ form.quantidade|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+                <label for="colaborador" class="form-label">Colaborador</label>
+                {{ form.colaborador|add_class:"form-select select2" }}
+            </div>
+            <div class="col-md-6">
+                <label for="data_movimentacao" class="form-label">Data da Movimentação</label>
+                {{ form.data_movimentacao|add_class:"form-control" }}
+            </div>
+            <div class="col-12">
+                <label for="observacao" class="form-label">Observação</label>
+                {{ form.observacao }}
+            </div>
+            <div class="col-md-6">
+                <label for="setor" class="form-label">Setor</label>
+                <select id="id_setor" name="setor" class="form-select select2">
+                    <option value="">Selecione o setor</option>
+                    {% for setor in setores %}
+                    <option value="{{ setor }}">{{ setor }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-6">
+                <label for="status" class="form-label">Status</label>
+                {{ form.situacao|add_class:"form-select select2" }}
+            </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Salvar
+            </button>
+            <a href="{% url 'historico_movimentacoes' dispositivo.id %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const colaboradorSelect = document.getElementById("id_colaborador");
+        const setorInput = document.getElementById("id_setor");
+
+        if (colaboradorSelect && setorInput) {
+            console.log("Colaborador Select e Setor Input encontrados.");
+
+            // Inicializa o Select2 para o campo colaborador
+            $(colaboradorSelect).select2({
+                placeholder: "Selecione um colaborador",
+                allowClear: true
+            });
+
+            colaboradorSelect.addEventListener("change", function () {
+                const funcionarioId = this.value;
+                console.log(`Funcionário selecionado: ${funcionarioId}`);
+
+                if (funcionarioId) {
+                    fetch(`/get_funcionario_info/${funcionarioId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Dados recebidos da API:", data);
+                            setorInput.value = data.local_trabalho || "Setor não encontrado";
+                        })
+                        .catch(error => {
+                            console.error("Erro ao buscar informações do colaborador:", error);
+                            setorInput.value = "Erro ao carregar setor";
+                        });
+                } else {
+                    console.log("Nenhum funcionário selecionado.");
+                    setorInput.value = "";
+                }
+            });
+        } else {
+            console.error("Campos necessários não encontrados no DOM.");
+        }
+    });
+</script>
+{% endblock %}

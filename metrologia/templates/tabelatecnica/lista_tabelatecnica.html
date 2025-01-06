@@ -4,8 +4,10 @@
 {% block title %}Tabela Técnica{% endblock %}
 
 {% block content %}
+{% load custom_filters %}
+
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Tabela Técnica</h2>
+    <h2 class="text-center mb-4">Lista de Equipamentos</h2>
 
     <!-- Mensagens de alerta -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
@@ -38,92 +40,86 @@
     
 
     <form method="get" class="row mb-4">
-    <!-- Linha dos filtros existentes -->
-    <div class="col-md-3">
-        <label for="codigo" class="form-label">Código:</label>
-        <select id="codigo" name="codigo" class="form-select select2">
-            <option value="">Selecione</option>
-            {% for codigo in codigos %}
-                <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>
-                    {{ codigo }}
-                </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-3">
-        <label for="nome_equipamento" class="form-label">Nome do Equipamento:</label>
-        <select id="nome_equipamento" name="nome_equipamento" class="form-select select2">
-            <option value="">Selecione</option>
-            {% for equipamento in equipamentos %}
-                <option value="{{ equipamento }}" {% if equipamento == request.GET.nome_equipamento %}selected{% endif %}>
-                    {{ equipamento }}
-                </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-3">
-        <label for="unidade_medida" class="form-label">Unidade de Medida:</label>
-        <select id="unidade_medida" name="unidade_medida" class="form-select select2">
-            <option value="">Selecione</option>
-            {% for unidade in unidades_medida %}
-                <option value="{{ unidade }}" {% if unidade == request.GET.unidade_medida %}selected{% endif %}>
-                    {{ unidade }}
-                </option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <!-- Novos filtros -->
-    <div class="col-md-3">
-    <label for="status" class="form-label">Status:</label>
-    <select id="status" name="status" class="form-select select2">
-        <option value="ativo" {% if status_selecionado == "ativo" %}selected{% endif %}>Ativo</option>
-        <option value="inativo" {% if status_selecionado == "inativo" %}selected{% endif %}>Inativo</option>
-    </select>
-</div>
-
-    <div class="col-md-3">
-    <label for="responsavel" class="form-label">Responsável:</label>
-    <select id="responsavel" name="responsavel" class="form-select select2">
-        <option value="">Selecione</option>
-        {% for responsavel in responsaveis %}
-            <option value="{{ responsavel.id }}" {% if responsavel.id|stringformat:"s" == request.GET.responsavel %}selected{% endif %}>
-                {{ responsavel.nome }}
-            </option>
-        {% endfor %}
-    </select>
-</div>
-
-
-    <div class="col-md-3">
-        <label for="proprietario" class="form-label">Proprietário:</label>
-        <select id="proprietario" name="proprietario" class="form-select select2">
-            <option value="">Selecione</option>
-            {% for proprietario in proprietarios %}
-                <option value="{{ proprietario }}" {% if proprietario == request.GET.proprietario %}selected{% endif %}>
-                    {{ proprietario }}
-                </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-3">
-        <label for="fabricante" class="form-label">Fabricante:</label>
-        <select id="fabricante" name="fabricante" class="form-select select2">
-            <option value="">Selecione</option>
-            {% for fabricante in fabricantes %}
-                <option value="{{ fabricante }}" {% if fabricante == request.GET.fabricante %}selected{% endif %}>
-                    {{ fabricante }}
-                </option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <!-- Linha dos botões -->
-    <div class="col-md-12 mt-3 text-end">
-        <button type="submit" class="btn btn-primary me-2">Filtrar</button>
-    </div>
-</form>
-
+        <!-- Filtro: Código -->
+        <div class="col-md-3 mb-3">
+            <label for="codigo" class="form-label">Código:</label>
+            <select id="codigo" name="codigo" class="form-select select2">
+                <option value="">Selecione</option>
+                {% for codigo in codigos %}
+                    <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>
+                        {{ codigo }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    
+        <!-- Filtro: Nome do Equipamento -->
+        <div class="col-md-3 mb-3">
+            <label for="nome_equipamento" class="form-label">Nome do Equipamento:</label>
+            <select id="nome_equipamento" name="nome_equipamento" class="form-select select2">
+                <option value="">Selecione</option>
+                {% for equipamento in equipamentos %}
+                    <option value="{{ equipamento }}" {% if equipamento == request.GET.nome_equipamento %}selected{% endif %}>
+                        {{ equipamento }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    
+        <!-- Filtro: Unidade de Medida -->
+        <div class="col-md-3 mb-3">
+            <label for="unidade_medida" class="form-label">Unidade de Medida:</label>
+            <select id="unidade_medida" name="unidade_medida" class="form-select select2">
+                <option value="">Selecione</option>
+                {% for unidade in unidades_medida %}
+                    <option value="{{ unidade }}" {% if unidade == request.GET.unidade_medida %}selected{% endif %}>
+                        {{ unidade }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    
+        <!-- Filtro: Status -->
+        <div class="col-md-3 mb-3">
+            <label for="status" class="form-label">Status:</label>
+            <select id="status" name="status" class="form-select select2">
+                <option value="ativo" {% if status_selecionado == "ativo" %}selected{% endif %}>Ativo</option>
+                <option value="inativo" {% if status_selecionado == "inativo" %}selected{% endif %}>Inativo</option>
+            </select>
+        </div>
+    
+        <!-- Filtro: Responsável -->
+        <div class="col-md-3 mb-3">
+            <label for="responsavel" class="form-label">Responsável:</label>
+            <select id="responsavel" name="responsavel" class="form-select select2">
+                <option value="">Selecione</option>
+                {% for responsavel in responsaveis %}
+                    <option value="{{ responsavel.id }}" {% if responsavel.id|stringformat:"s" == request.GET.responsavel %}selected{% endif %}>
+                        {{ responsavel.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    
+        <!-- Filtro: Fabricante -->
+        <div class="col-md-3 mb-3">
+            <label for="fabricante" class="form-label">Fabricante:</label>
+            <select id="fabricante" name="fabricante" class="form-select select2">
+                <option value="">Selecione</option>
+                {% for fabricante in fabricantes %}
+                    <option value="{{ fabricante }}" {% if fabricante == request.GET.fabricante %}selected{% endif %}>
+                        {{ fabricante }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    
+        <!-- Botão de Filtrar -->
+        <div class="col-md-12 mt-3 text-end">
+            <button type="submit" class="btn btn-primary me-2"><i class="bi bi-funnel"></i> Filtrar</button>
+        </div>
+    </form>
+    
 
 <div class="row mb-4 mt-4">
     <!-- Card: Total de Equipamentos -->
@@ -147,7 +143,7 @@
             </div>
             <div class="card-body">
                 <h5 class="card-title text-center">{{ total_fora_prazo }}</h5>
-                <p class="card-text text-center">Equipamentos com calibração vencida.</p>
+                <p class="card-text text-center">Calibração vencida.</p>
             </div>
         </div>
     </div>
@@ -160,7 +156,7 @@
             </div>
             <div class="card-body">
                 <h5 class="card-title text-center">{{ total_proximo_prazo }}</h5>
-                <p class="card-text text-center">Equipamentos próximo do vencimento.</p>
+                <p class="card-text text-center">Próximo do vencimento.</p>
             </div>
         </div>
     </div>
@@ -205,28 +201,37 @@
                     Não definida
                 {% endif %}
             </td>
-          <td>
-    {% if tabela.proxima_calibracao %}
-        {{ tabela.proxima_calibracao|date:"d/m/Y" }}
-    {% else %}
-        <span style="color: gray;">Data não definida</span>
-    {% endif %}
+            <td class="text-center align-middle">
+                {% if tabela.proxima_calibracao %}
+                    {% with tabela.proxima_calibracao as data_calibracao %}
+                        {% if data_calibracao < today %}
+                            <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
+                        {% elif data_calibracao <= today|add_days:31 %}
+                            <span class="badge bg-warning">{{ data_calibracao|date:"d/m/Y" }}</span>
+                        {% else %}
+                            <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    <span style="color: gray;">Data não definida</span>
+                {% endif %}
+            </td>
+
+
+
+
+<td style="vertical-align: middle;">
+    <a href="{% url 'visualizar_tabelatecnica' tabela.id %}" class="btn btn-info btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;">
+        <i class="bi bi-eye"></i>
+    </a>
+    <a href="{% url 'editar_tabelatecnica' tabela.id %}" class="btn btn-primary btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;">
+        <i class="bi bi-pencil"></i>
+    </a>
+    {% comment %} <button class="btn btn-danger btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#modalExcluirTabelaTecnica{{ tabela.id }}">
+        <i class="bi bi-trash"></i>
+    </button> {% endcomment %}
 </td>
 
-
-
-
-            <td style="vertical-align: middle;">
-                <a href="{% url 'visualizar_tabelatecnica' tabela.id %}" class="btn btn-sm btn-info">
-                    <i class="bi bi-eye"></i>
-                </a>
-                <a href="{% url 'editar_tabelatecnica' tabela.id %}" class="btn btn-sm btn-primary">
-                    <i class="bi bi-pencil"></i>
-                </a>
-                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirTabelaTecnica{{ tabela.id }}">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
         </tr>
 
       

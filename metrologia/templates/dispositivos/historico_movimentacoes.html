@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center">Histórico de Entrada/Saída - {{ dispositivo.codigo }}</h2>
+    <table class="table table-centered">
+        <thead>
+            <tr>
+                <th>Data da Movimentação</th>
+                <th>Tipo</th>
+                <th>Quantidade</th>
+                <th>Colaborador</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for movimentacao in movimentacoes %}
+            <tr>
+                <td>{{ movimentacao.data_movimentacao|date:"d/m/Y" }}</td>
+                <td>
+                    {% with movimentacao.tipo_movimentacao|lower as tipo %}
+                        {% if tipo == 'entrada' %}
+                            <i class="bi bi-box-arrow-in text-success" title="Entrada"></i> Entrada
+                        {% elif tipo == 'saida' %}
+                            <i class="bi bi-box-arrow-out text-danger" title="Saída"></i> Saída
+                        {% else %}
+                            <i class="bi bi-question-circle text-muted" title="Indefinido"></i> Indefinido
+                        {% endif %}
+                    {% endwith %}
+                </td>
+                
+                <td>{{ movimentacao.quantidade }}</td>
+                <td>{{ movimentacao.colaborador.nome }}</td>
+                <td>
+                    <span class="badge 
+                        {% if movimentacao.situacao == 'OK' %}
+                            bg-success
+                        {% elif movimentacao.situacao == 'NOK' %}
+                            bg-danger
+                        {% else %}
+                            bg-secondary
+                        {% endif %}
+                    ">
+                        {{ movimentacao.get_situacao_display }}
+                    </span>
+                </td>
+                <td>
+                    <!-- Botão para abrir a modal de descrição -->
+                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ movimentacao.id }}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+
+                    <!-- Botão para abrir a modal de exclusão -->
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirMovimentacao{{ movimentacao.id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+
+            <!-- Modal de Descrição -->
+            <div class="modal fade" id="modalDescricao{{ movimentacao.id }}" tabindex="-1" aria-labelledby="modalDescricaoLabel{{ movimentacao.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalDescricaoLabel{{ movimentacao.id }}">Detalhes da Movimentação</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Tipo:</strong> {{ movimentacao.get_tipo_movimentacao_display }}</p>
+                            <p><strong>Quantidade:</strong> {{ movimentacao.quantidade }}</p>
+                            <p><strong>Colaborador:</strong> {{ movimentacao.colaborador.nome }}</p>
+                            <p><strong>Status:</strong> {{ movimentacao.get_situacao_display }}</p>
+                            <p><strong>Observações:</strong> {{ movimentacao.observacao|safe }}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Exclusão -->
+            <div class="modal fade" id="modalExcluirMovimentacao{{ movimentacao.id }}" tabindex="-1" aria-labelledby="modalExcluirMovimentacaoLabel{{ movimentacao.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalExcluirMovimentacaoLabel{{ movimentacao.id }}">Excluir Movimentação</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem certeza que deseja excluir esta movimentação?</p>
+                            <p><strong>Data:</strong> {{ movimentacao.data_movimentacao|date:"d/m/Y" }}</p>
+                            <p><strong>Quantidade:</strong> {{ movimentacao.quantidade }}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <form method="POST" action="{% url 'excluir_movimentacao' movimentacao.id %}">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-danger">Excluir</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Botões adicionais -->
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_movimentacao' dispositivo.id %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Adicionar Movimentação
+        </a>
+        <a href="{% url 'lista_dispositivos' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retornar
+        </a>
+    </div>
+</div>
+{% endblock %}

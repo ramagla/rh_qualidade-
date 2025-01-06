@@ -32,6 +32,27 @@
             {{ form.nome_equipamento|add_class:"form-control" }}
         </div>
 
+        <!-- Equipamento por Faixa -->
+        <div class="col-md-6">
+            <label for="tipo" class="form-label">Equipamento por Faixa?</label>
+            {{ form.tipo|add_class:"form-select" }}
+        </div>
+
+        <!-- Campos visíveis apenas se "Equipamento por Faixa" for "Sim" -->
+        <div class="col-md-6" id="campo-faixa" style="display: none;">
+            <label for="faixa" class="form-label">Faixa (%):</label>
+            {{ form.faixa|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6" id="campo-tolerancia" style="display: none;">
+            <label for="tolerancia_em_percentual" class="form-label">Tolerância em (%):</label>
+            {{ form.tolerancia_em_percentual|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="tipo_avaliacao" class="form-label">Tipo de Avaliação:</label>
+            {{ form.tipo_avaliacao|add_class:"form-select" }}
+        </div>
+        
+
         <!-- Capacidade e Resolução -->
         <div class="col-md-6">
             <label for="capacidade_minima" class="form-label">Capacidade de Medição Mínima:</label>
@@ -58,10 +79,6 @@
         <div class="col-md-6">
             <label for="exatidao_requerida" class="form-label">Exatidão Requerida (ER):</label>
             <input type="text" id="exatidao_requerida" class="form-control" readonly>
-        </div>
-        <div class="col-md-6">
-            <label for="tolerancia_em_percentual" class="form-label">Tolerância em (%):</label>
-            {{ form.tolerancia_em_percentual|add_class:"form-control" }}
         </div>
         <div class="col-md-6">
             <label for="frequencia_calibracao" class="form-label">Frequência de Calibração (em meses):</label>
@@ -121,18 +138,53 @@
 </div>
 
 <script>
-    // Cálculo automático do campo "Exatidão Requerida (ER)"
     document.addEventListener('DOMContentLoaded', function () {
-        const toleranciaField = document.querySelector('input[name="tolerancia_total_minima"]');
-        const erField = document.getElementById('exatidao_requerida');
+        // Seletores
+        const tipoField = document.querySelector('select[name="tipo"]');
+        const faixaField = document.getElementById('campo-faixa');
+        const toleranciaField = document.getElementById('campo-tolerancia');
+        const faixaInput = document.querySelector('input[name="faixa"]');
+        const toleranciaInput = document.querySelector('input[name="tolerancia_em_percentual"]');
+        const toleranciaMinimaField = document.querySelector('input[name="tolerancia_total_minima"]');
+        const exatidaoField = document.getElementById('exatidao_requerida');
 
-        function calcularER() {
-            const tolerancia = parseFloat(toleranciaField.value.replace(',', '.')) || 0;
-            const er = tolerancia / 2;
-            erField.value = er > 0 ? `L ≤ ${er.toFixed(3)}` : 'N/A';
+        // Exibir ou ocultar campos
+        function atualizarCampos() {
+            if (tipoField.value === 'sim') {
+                faixaField.style.display = 'block';
+                toleranciaField.style.display = 'block';
+            } else {
+                faixaField.style.display = 'none';
+                toleranciaField.style.display = 'none';
+                faixaInput.value = '';
+                toleranciaInput.value = '';
+                calcularER();
+            }
         }
 
-        toleranciaField.addEventListener('input', calcularER);
+        // Calcular Exatidão Requerida
+        function calcularER() {
+            const faixa = parseFloat(faixaInput.value) || 0;
+            const toleranciaPercentual = parseFloat(toleranciaInput.value) || 0;
+            const toleranciaMinima = parseFloat(toleranciaMinimaField.value) || 0;
+
+            let er = 0;
+            if (tipoField.value === 'sim' && faixa > 0 && toleranciaPercentual > 0) {
+                er = faixa * (toleranciaPercentual / 100);
+            } else {
+                er = toleranciaMinima / 2;
+            }
+            exatidaoField.value = er > 0 ? er.toFixed(4) : 'N/A';
+        }
+
+        // Eventos
+        tipoField.addEventListener('change', atualizarCampos);
+        faixaInput.addEventListener('input', calcularER);
+        toleranciaInput.addEventListener('input', calcularER);
+        toleranciaMinimaField.addEventListener('input', calcularER);
+
+        // Atualizar campos ao carregar
+        atualizarCampos();
     });
 </script>
 {% endblock %}

@@ -3,11 +3,20 @@ from datetime import datetime
 def global_menu(request):
     # Definindo menus por módulo
     menu_metrologia = [
-        {'name': 'Instrumentos', 'url': 'lista_tabelatecnica', 'icon': 'fas fa-ruler-combined'},
-        {'name': 'Calibrações', 'url': 'metrologia_calibracoes', 'icon': 'fas fa-cogs'},
-        {'name': 'Relatórios', 'url': 'metrologia_relatorios', 'icon': 'fas fa-file-alt'},
-        {'name': 'Configurações', 'url': 'metrologia_configuracoes', 'icon': 'fas fa-cog'},
+        {'name': 'Cadastros', 'icon': 'fas fa-folder', 'submenu': [
+            {'name': 'Instrumentos', 'url': 'lista_tabelatecnica', 'icon': 'fas fa-ruler-combined'},
+            {'name': 'Dispositivos', 'url': 'lista_dispositivos', 'icon': 'fas fa-cogs'},
+        ]},
+        {'name': 'Calibrações', 'icon': 'fas fa-cogs', 'submenu': [
+            {'name': 'Calibrações de Instrumentos', 'url': 'calibracoes_instrumentos', 'icon': 'fas fa-tools'},
+            {'name': 'Calibrações de Dispositivos', 'url': 'calibracoes_dispositivos', 'icon': 'fas fa-wrench'},
+        ]},
+        {'name': 'Cronogramas', 'icon': 'fas fa-calendar-alt', 'submenu': [
+            {'name': 'Cronograma de Equipamentos', 'url': 'cronograma_calibracao'},
+            {'name': 'Cronograma de Dispositivos', 'url': 'cronograma_dispositivos'},
+        ]},
     ]
+    
 
     menu_recursos_humanos = [ {'name': 'Dashboard', 'url': 'funcionarios_home', 'icon': 'fas fa-tachometer-alt'},
             {'name': 'Comunicados Internos', 'url': 'lista_comunicados', 'icon': 'fas fa-bullhorn'},

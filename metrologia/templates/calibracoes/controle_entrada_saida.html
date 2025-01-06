@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Controle de Entrada/Saída{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Controle de Entrada/Saída</h2>
+
+    <!-- Informações do Dispositivo -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Dispositivo: {{ dispositivo.codigo }}</h5>
+            <p class="card-text">
+                <strong>Descrição:</strong> {{ dispositivo.descricao }}<br>
+                <strong>Quantidade:</strong> {{ dispositivo.qtde }}<br>
+                <strong>Cliente:</strong> {{ dispositivo.cliente }}<br>
+                <strong>Local de Armazenagem:</strong> {{ dispositivo.local_armazenagem }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Formulário de Entrada/Saída -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3">
+            <!-- Data da Retirada -->
+            <div class="col-md-6">
+                <label for="data_retirada" class="form-label">Data da Retirada:</label>
+                {{ form.data_retirada|add_class:"form-control" }}
+            </div>
+
+            <!-- Data do Retorno -->
+            <div class="col-md-6">
+                <label for="data_retorno" class="form-label">Data do Retorno:</label>
+                {{ form.data_retorno|add_class:"form-control" }}
+            </div>
+
+            <!-- Colaborador -->
+            <div class="col-md-6">
+                <label for="colaborador" class="form-label">Colaborador:</label>
+                {{ form.colaborador|add_class:"form-select" }}
+            </div>
+
+            <!-- Setor -->
+            <div class="col-md-6">
+                <label for="setor" class="form-label">Setor:</label>
+                {{ form.setor|add_class:"form-select" }}
+            </div>
+
+            <!-- Situação -->
+            <div class="col-md-6">
+                <label for="situacao" class="form-label">Situação:</label>
+                {{ form.situacao|add_class:"form-select" }}
+            </div>
+
+            <!-- Observações -->
+            <div class="col-md-12">
+                <label for="observacoes" class="form-label">Observações:</label>
+                {{ form.observacoes|add_class:"form-control" }}
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Salvar
+            </button>
+            <a href="{% url 'lista_dispositivos' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
