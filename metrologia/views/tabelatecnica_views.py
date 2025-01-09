@@ -80,6 +80,9 @@ def lista_tabelatecnica(request):
         id__in=tabelas.values_list('responsavel_id', flat=True)
     ).distinct().only('id', 'nome')
 
+    # Mapeamento de unidades de medida
+    unidades_medida_choices = dict(TabelaTecnica.UNIDADE_MEDIDA_CHOICES)
+
     paginator = Paginator(tabelas, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -87,7 +90,7 @@ def lista_tabelatecnica(request):
     context = {
         'page_obj': page_obj,
         'equipamentos': tabelas.values_list('nome_equipamento', flat=True).distinct().order_by('nome_equipamento'),
-        'unidades_medida': tabelas.values_list('unidade_medida', flat=True).distinct().order_by('unidade_medida'),
+        'unidades_medida': unidades_medida_choices,  # Passa o mapeamento de unidades para o template
         'codigos': tabelas.values_list('codigo', flat=True).distinct().order_by('codigo'),
         'responsaveis': responsaveis,
         'proprietarios': tabelas.values_list('proprietario', flat=True).distinct().order_by('proprietario'),

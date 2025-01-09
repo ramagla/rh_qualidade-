@@ -3,6 +3,9 @@ from .views.home_views import home
 from . import views
 from .views import calibracoes_views, relatorios_views, configuracoes_views
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 from .views.tabelatecnica_views import (
     lista_tabelatecnica,
     cadastrar_tabelatecnica,
@@ -12,12 +15,15 @@ from .views.tabelatecnica_views import (
     imprimir_tabelatecnica
 )
 
+from .views.relatorios_views import listar_equipamentos_funcionario, listar_funcionarios_ativos,equipamentos_por_funcionario
+
 from .views.calibracoes_views import (
     lista_calibracoes,
     cadastrar_calibracao,
     editar_calibracao,
     excluir_calibracao,
-    metrologia_calibracoes
+    metrologia_calibracoes,
+    obter_exatidao_requerida
 )
 
 from .views.cronogramas_views import (
@@ -42,7 +48,8 @@ from .views.calibracoes_dispositivos_views import (
     cadastrar_calibracao_dispositivo,
     editar_calibracao_dispositivo,
     excluir_calibracao_dispositivo,
-    get_dispositivo_info
+    get_dispositivo_info,
+    imprimir_calibracao_dispositivo, 
 )
 
 
@@ -77,21 +84,35 @@ urlpatterns = [
     path('movimentacoes/<int:id>/excluir/', excluir_movimentacao, name='excluir_movimentacao'),
 
     # URLs de Calibrações de Dispositivos
-    path('calibracoes/dispositivos/', lista_calibracoes_dispositivos, name='calibracoes_dispositivos'),
+    path('calibracoes/dispositivos/', lista_calibracoes_dispositivos, name='lista_calibracoes_dispositivos'),
     path('calibracoes/dispositivos/cadastrar/', cadastrar_calibracao_dispositivo, name='cadastrar_calibracao_dispositivo'),
     path('calibracoes/dispositivos/<int:pk>/editar/', editar_calibracao_dispositivo, name='editar_calibracao_dispositivo'),
     path('calibracoes/dispositivos/<int:id>/excluir/', excluir_calibracao_dispositivo, name='excluir_calibracao_dispositivo'),
+    path('calibracoes/dispositivos/<int:dispositivo_id>/imprimir/', imprimir_calibracao_dispositivo, name='imprimir_calibracao_dispositivo'),  # Nova URL
+
 
     
 
 
-    path('calibracoes/dispositivos/', metrologia_calibracoes, name='calibracoes_dispositivos'),
+    # path('calibracoes/dispositivos/', metrologia_calibracoes, name='calibracoes_dispositivos'),
 
     # URLs de Cronogramas
     path('cronograma/equipamentos/', cronograma_equipamentos, name='cronograma_calibracao'),
     path('cronograma/dispositivos/', cronograma_dispositivos, name='cronograma_dispositivos'),
 
     # Outras URLs
-    path('relatorios/', relatorios_views.metrologia_relatorios, name='metrologia_relatorios'),
+    path('relatorios/equipamentos-a-calibrar/', relatorios_views.lista_equipamentos_a_calibrar, name='relatorio_equipamentos_calibrar'),
+    path('equipamentos/funcionario/<int:funcionario_id>/', listar_equipamentos_funcionario, name='listar_equipamentos_funcionario'),
+    path('listar-funcionarios-ativos/', listar_funcionarios_ativos, name='listar_funcionarios_ativos'),
+    path('equipamentos-por-funcionario/', equipamentos_por_funcionario, name='equipamentos_por_funcionario'),
+
+
+
     path('configuracoes/', configuracoes_views.metrologia_configuracoes, name='metrologia_configuracoes'),
-]
+    path('api/exatidao-requerida/<int:equipamento_id>/', obter_exatidao_requerida, name='obter_exatidao_requerida'),
+
+] 
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

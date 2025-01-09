@@ -118,89 +118,80 @@
     
     
 
-    <!-- Tabela de dispositivos -->
-    <table class="table table-bordered text-center align-middle">
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Quantidade</th>
-                <th>Cliente</th>
-                <th>Descrição</th>
-                <th>Local de Armazenagem</th>
-                <th>Data da Última Calibração</th>
-                <th>Data da Próxima Calibração</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for dispositivo in page_obj %}
-            <tr>
-                <td>{{ dispositivo.codigo }}</td>
-                <td>{{ dispositivo.qtde }}</td>
-                <td>{{ dispositivo.cliente }}</td>
-                <td>{{ dispositivo.descricao }}</td>
-                <td>{{ dispositivo.local_armazenagem }}</td>
-                <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
-                <td class="text-center align-middle">
-                    {% if dispositivo.data_ultima_calibracao %}
-                        {% with dispositivo.data_ultima_calibracao|add_months:dispositivo.frequencia_calibracao as proxima_calibracao %}
-                            {% if proxima_calibracao < today %}
-                                <span class="badge bg-danger">{{ proxima_calibracao|date:"d/m/Y" }}</span>
-                            {% elif proxima_calibracao <= today|add_days:31 %}
-                                <span class="badge bg-warning">{{ proxima_calibracao|date:"d/m/Y" }}</span>
-                            {% else %}
-                                <span class="badge bg-success">{{ proxima_calibracao|date:"d/m/Y" }}</span>
-                            {% endif %}
-                        {% endwith %}
-                    {% else %}
-                        <span style="color: gray;">Não Informada</span>
-                    {% endif %}
-                </td>
-                
-                <td>
-                    <a href="{% url 'visualizar_dispositivo' dispositivo.id %}" class="btn btn-sm btn-secondary" title="Visualizar">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a href="{% url 'editar_dispositivo' dispositivo.id %}" class="btn btn-sm btn-primary" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#excluirModal{{ dispositivo.id }}">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                    <a href="{% url 'historico_movimentacoes' dispositivo.id %}" class="btn btn-sm btn-info" title="Registrar Entrada/Saída">
-                        <i class="bi bi-box-arrow-in-right"></i>
-                    </a>
-                </td>
-                <!-- Modal de Confirmação -->
-<div class="modal fade" id="excluirModal{{ dispositivo.id }}" tabindex="-1" aria-labelledby="excluirModalLabel{{ dispositivo.id }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="excluirModalLabel{{ dispositivo.id }}">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body">
-                Tem certeza que deseja excluir o dispositivo <strong>{{ dispositivo.codigo }}</strong>?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form method="post" action="{% url 'excluir_dispositivo' dispositivo.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Excluir</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="8">Nenhum dispositivo encontrado.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
+   <!-- Tabela de dispositivos -->
+<table class="table table-bordered text-center align-middle small-text-table">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Quantidade</th>
+            <th>Cliente</th>
+            <th>Descrição</th>
+            <th>Local de Armazenagem</th>
+            <th>Data da Última Calibração</th>
+            <th>Data da Próxima Calibração</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dispositivo in page_obj %}
+        <tr>
+            <td>{{ dispositivo.codigo }}</td>
+            <td>{{ dispositivo.qtde }}</td>
+            <td>{{ dispositivo.cliente }}</td>
+            <td>{{ dispositivo.descricao }}</td>
+            <td>{{ dispositivo.local_armazenagem }}</td>
+            <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
+            <td>
+                {% if dispositivo.data_ultima_calibracao %}
+                    {% with dispositivo.data_ultima_calibracao|add_months:dispositivo.frequencia_calibracao as proxima_calibracao %}
+                        {% if proxima_calibracao < today %}
+                            <span class="badge bg-danger small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
+                        {% elif proxima_calibracao <= today|add_days:31 %}
+                            <span class="badge bg-warning small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
+                        {% else %}
+                            <span class="badge bg-success small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    <span style="color: gray;">Não Informada</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'visualizar_dispositivo' dispositivo.id %}" class="btn btn-sm btn-secondary small-icon" title="Visualizar">
+                    <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'editar_dispositivo' dispositivo.id %}" class="btn btn-sm btn-primary small-icon" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'historico_movimentacoes' dispositivo.id %}" class="btn btn-sm btn-info small-icon" title="Registrar Entrada/Saída">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8">Nenhum dispositivo encontrado.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<style>
+    /* Texto menor na tabela */
+    .small-text-table th, .small-text-table td {
+        font-size: 12px; /* Reduz o tamanho do texto */
+    }
+    
+    /* Tamanho menor para os badges */
+    .small-text-table .badge.small-text {
+        font-size: 10px;
+    }
+    
+    /* Ícones menores */
+    .small-icon i {
+        font-size: 14px; /* Ajusta o tamanho dos ícones */
+    }
+    </style>
+    
     <!-- Paginação -->
     <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">

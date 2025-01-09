@@ -128,3 +128,8 @@ def add_attribute(field, args):
     key, value = args.split(':')
     field.field.widget.attrs[key] = value
     return field
+
+@register.filter
+def has_permission(user, perm):
+    """Verifica se o usuário possui uma permissão específica."""
+    return user.has_perm(perm)

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+
+    <!-- Botão de Imprimir (imprime tudo) -->
+    <div class="text-center mb-4 d-print-none mt-5">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    {% if calibracoes %}
+       <!-- Cabeçalho -->
+<div class="header mb-3">
+    <table class="custom-table" style="width: 100%; border: 1px solid black; border-collapse: collapse;">
+        <tr>
+            <!-- Logo -->
+            <td rowspan="2" style="text-align: center; vertical-align: middle; width: 10%;">
+                <img src="/static/logo.png" alt="Logo" style="width: 60px; height: auto;">
+            </td>
+            <!-- Título principal -->
+            <td colspan="4" style="text-align: center; font-weight: bold; font-size: 16px; vertical-align: middle;">
+                REGISTRO DE CALIBRAÇÃO DE DISPOSITIVO
+            </td>
+        </tr>
+    </table>
+</div>
+
+        <!-- Desenho Técnico (envolto em .desenho-tecnico para centralizar) -->
+        <div class="desenho-tecnico">
+            {% if calibracoes.first.codigo_dispositivo.desenho_anexo %}
+                <img src="{{ calibracoes.first.codigo_dispositivo.desenho_anexo.url }}"
+                     alt="Desenho Técnico"
+                     class="img-desenho">
+            {% else %}
+                <p class="text-muted">Nenhum desenho técnico anexado para este dispositivo.</p>
+            {% endif %}
+        </div>        
+
+        <!-- Informações Gerais -->
+        <div class="row mt-4">
+            <table class="table table-bordered">
+                <tr>
+                    <td><strong>Número da peça:</strong> {{ calibracoes.first.codigo_peca }}</td>
+                    <td><strong>Número do dispositivo:</strong> {{ calibracoes.first.codigo_dispositivo.codigo }}</td>
+                    <td>
+                        <strong>Padrão a ser utilizado:</strong> 
+                        {{ calibracoes.first.instrumento_utilizado.nome_equipamento }}
+                        {{ calibracoes.first.instrumento_utilizado.capacidade_minima }} -
+                        {{ calibracoes.first.instrumento_utilizado.capacidade_maxima }}
+                        ({{ calibracoes.first.instrumento_utilizado.resolucao|floatformat:2 }})
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Tabela de Aferições -->
+        <div class="row mt-4">
+            <table class="table table-bordered text-center align-middle">
+                <thead>
+                    <tr>
+                        <th>Cota<br>(Número)</th>
+                        <th>Identificação do<br>padrão utilizado</th>
+                        <th>Valor encontrado</th>
+                        <th>Aprovado</th>
+                        <th>Data</th>
+                        <th>Responsável</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for calibracao in calibracoes %}
+                        {% for afericao in calibracao.afericoes.all %}
+                        <tr>
+                            <td>{{ afericao.cota.numero }}</td>
+                            <td>{{ calibracao.instrumento_utilizado.codigo }}</td>
+                            <td>{{ afericao.valor }}</td>
+                            <td>
+                                {% if afericao.status == 'Aprovado' %}
+                                    <span style="color: #28a745; font-weight: bold;">SIM</span>
+                                {% else %}
+                                    <span style="color: #dc3545; font-weight: bold;">NÃO</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ calibracao.data_afericao|date:"d/m/Y" }}</td>
+                            <td>{{ calibracao.nome_responsavel.nome }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted text-center">Nenhuma calibração encontrada para este dispositivo.</p>
+    {% endif %}
+</div>
+
+ <!-- Número do Formulário (visível apenas na impressão) -->
+ <div class="numero-formulario d-none d-print-block">
+    F55 Rev.02
+</div>
+<style>
+    @media print {
+        .d-print-none { display: none !important; }
+        .numero-formulario {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #333;
+        }
+</style>
+
+
+<script>
+function imprimir() {
+    var conteudo = document.querySelector('.container').innerHTML;
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
+    
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 20px;
+                    }
+
+                    /* Logo do cabeçalho (ajuste o tamanho desejado) */
+                    .logo-cabecalho {
+                        width: 80px; /* Tamanho normal */
+                        height: auto;
+                        display: block;
+                        margin: 0 auto; /* Centraliza horizontalmente a imagem dentro da célula */
+                    }
+
+                    .header {
+                        margin-bottom: 20px; 
+                        text-align: center;
+                    }
+                    .numero-formulario {
+                        position: fixed;
+                        bottom: 10px;
+                        right: 10px;
+                        font-size: 10px;
+                        color: #333;
+                    }
+
+                    .custom-table td {
+                        border: 1px solid black;
+                        padding: 5px;
+                    }
+
+                    .desenho-tecnico {
+                        text-align: center;
+                        margin-top: 20px; 
+                        margin-bottom: 20px;
+                    }
+
+                    /* Desenho técnico com tamanho e centralização */
+                    .img-desenho {
+                        max-width: 800px;
+                        height: auto;
+                        border: 1px solid #000;
+                        display: block;
+                        margin: 0 auto; /* Centralizar a imagem */
+                    }
+
+                  
+
+                    .table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        border: 1px solid #000;
+                        margin-bottom: 20px;
+                        margin-top: 20px;
+                    }
+
+                    .table th, .table td {
+                        border: 1px solid #000;
+                        padding: 8px;
+                        text-align: center;
+                        font-size: 10px;
+                    }
+
+                    /* Ajuste se quiser aumentar/diminuir o texto */
+                    .table th {
+                        font-weight: bold;
+                    }
+
+                    @media print {
+                        body {
+                            margin: 0;
+                            padding: 0;
+                        }
+
+                        .d-print-none {
+                            display: none !important;
+                        }
+
+                        /* Logo menor na impressão */
+                        .logo-cabecalho {
+                            width: 60px !important; 
+                        }
+
+                        .table th, .table td {
+                            font-size: 9px; /* Se quiser diminuir mais */
+                        }
+
+                        .img-desenho {
+                            max-width: 400px; /* Reduz um pouco no papel */
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                ${conteudo}
+                <div class="numero-formulario">F055 Rev.02</div>
+            </body>
+        </html>
+    `);
+    
+    novaJanela.document.close();
+    novaJanela.onload = function () {
+        novaJanela.print();
+        novaJanela.close();
+    };
+}
+</script>
+
+{% endblock %}

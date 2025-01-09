@@ -1,6 +1,8 @@
 from django.db import models
 from Funcionario.models import Funcionario
 from metrologia.models.models_tabelatecnica import TabelaTecnica
+from django.utils.timezone import now
+
 
 class Dispositivo(models.Model):
     UNIDADE_MEDIDA_CHOICES = [
@@ -44,9 +46,53 @@ class Dispositivo(models.Model):
         blank=True, 
         verbose_name="Desenho do Dispositivo"
     )
+    updated_at = models.DateTimeField(auto_now=True)
+    alteracao = models.TextField(blank=True, null=True, verbose_name="Última Alteração")
+
+
+
+    def save(self, *args, **kwargs):
+        alteracoes = []
+        if self.pk:  # Se o registro já existir
+            original = Dispositivo.objects.get(pk=self.pk)
+
+            # Verificar alterações campo por campo
+            campos_para_verificar = [
+                'descricao', 
+                'cliente', 
+                'local_armazenagem', 
+                'frequencia_calibracao',
+                'qtde',
+                'estudo_realizado',
+                'data_ultima_calibracao',
+                'unidade_medida',
+                'desenho_anexo'
+                ]
+            for campo in campos_para_verificar:
+                valor_original = getattr(original, campo)
+                valor_atual = getattr(self, campo)
+                if valor_original != valor_atual:
+                    alteracoes.append(f"{campo.replace('_', ' ').capitalize()} alterado de '{valor_original}' para '{valor_atual}'")
+
+        # Atualizar campo de alteração
+        if alteracoes:
+            self.alteracao = "; ".join(alteracoes)
+
+        # Formatações específicas
+        if self.codigo:
+            self.codigo = self.codigo.upper()
+        if self.local_armazenagem:
+            self.local_armazenagem = self.local_armazenagem.upper()
+        if self.cliente:
+            self.cliente = self.cliente.title()
+        if self.descricao:
+            self.descricao = self.descricao.title()
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.codigo
+
 
 class Cota(models.Model):
     dispositivo = models.ForeignKey(
@@ -56,8 +102,8 @@ class Cota(models.Model):
         verbose_name="Dispositivo"
     )
     numero = models.PositiveIntegerField(verbose_name="Número da Cota")
-    valor_minimo = models.DecimalField(max_digits=10, decimal_places=4, verbose_name="Valor Mínimo")
-    valor_maximo = models.DecimalField(max_digits=10, decimal_places=4, verbose_name="Valor Máximo")
+    valor_minimo = models.DecimalField(max_digits=10, decimal_places=3, verbose_name="Valor Mínimo")
+    valor_maximo = models.DecimalField(max_digits=10, decimal_places=3, verbose_name="Valor Máximo")
 
     def __str__(self):
         return f"Cota {self.numero} do Dispositivo {self.dispositivo.codigo}"
@@ -95,12 +141,8 @@ class ControleEntradaSaida(models.Model):
     setor = models.CharField(
         max_length=100, 
         verbose_name="Setor", 
-        choices=[
-            ('ADMINISTRATIVO', 'Administrativo'),
-            ('FABRIL', 'Fabril'),
-            ('MANUTENÇÃO', 'Manutenção'),
-            # Adicione mais setores conforme necessário
-        ]
+        blank=True, 
+        null=True
     )
     situacao = models.CharField(
         max_length=3, 
@@ -108,6 +150,7 @@ class ControleEntradaSaida(models.Model):
         verbose_name="Situação"
     )
     observacao = models.TextField(null=True, blank=True, verbose_name="Observação")
+
 
     def __str__(self):
         return f"Dispositivo {self.dispositivo.codigo} - {self.situacao} ({self.get_tipo_movimentacao_display()})"

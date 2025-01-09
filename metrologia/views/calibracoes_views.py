@@ -77,7 +77,7 @@ def cadastrar_calibracao(request):
         form = CalibracaoForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('lista_calibracoes')
+            return redirect('calibracoes_instrumentos')
     else:
         # Inicializa o formulário e passa os dados necessários
         form = CalibracaoForm()
@@ -93,7 +93,7 @@ def editar_calibracao(request, pk):
         form = CalibracaoForm(request.POST, request.FILES, instance=calibracao)
         if form.is_valid():
             form.save()
-            return redirect('lista_calibracoes')  # Redireciona para a lista
+            return redirect('calibracoes_instrumentos')  # Redireciona para a lista
     else:
         form = CalibracaoForm(instance=calibracao)  # Carrega a instância no formulário
 
@@ -105,7 +105,7 @@ def excluir_calibracao(request, id):
     calibracao = get_object_or_404(Calibracao, id=id)
     if request.method == "POST":
         calibracao.delete()
-        return redirect('lista_calibracoes')
+        return redirect('calibracoes_instrumentos')
     return render(request, 'calibracoes/excluir_calibracao.html', {'calibracao': calibracao})
 
 from django.core.exceptions import ObjectDoesNotExist

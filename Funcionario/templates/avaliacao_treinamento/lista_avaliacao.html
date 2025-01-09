@@ -37,13 +37,19 @@
 
    <!-- Botões de Cadastrar Avaliação e Imprimir -->
     <div class="text-end mb-4">
+        {% if request.user|has_permission:"Funcionario.add_avaliacaotreinamento" %}
         <a href="{% url 'avaliacao_create' %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
-       <!-- Botão de Imprimir Avaliação -->
+        {% endif %}
+
+        {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
+        <!-- Botão de Imprimir Avaliação -->
         <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirAvaliacaoModal">
             <i class="bi bi-printer"></i> Imprimir
         </button>
+        {% endif %}
+
 
 
     </div>
@@ -228,15 +234,24 @@
         </td>
 
         <td class="align-middle">
+            {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
             <a href="{% url 'visualizar_avaliacao' avaliacao.id %}" class="btn btn-light" title="Visualizar">
                 <i class="bi bi-eye"></i>
             </a>
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.change_avaliacaotreinamento" %}
+
             <a href="{% url 'editar_avaliacao' avaliacao.id %}" class="btn btn-light" title="Editar">
                 <i class="bi bi-pencil"></i>
             </a>
-            {% comment %} <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}" title="Excluir">
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.delete_avaliacaotreinamento" %}
+
+             <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}" title="Excluir">
                 <i class="bi bi-trash"></i>
-            </a> {% endcomment %}
+            </a> 
+            {% endif %}
+
         </td>
     </tr>
 

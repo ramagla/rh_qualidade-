@@ -1,7 +1,10 @@
 from datetime import timedelta,date
+from dateutil.relativedelta import relativedelta
+
 from django.shortcuts import render
 from ..models.models_tabelatecnica import TabelaTecnica
 from ..models.models_calibracao import Calibracao
+from metrologia.models.models_dispositivos import Dispositivo
 
 def cronograma_equipamentos(request):
     # Filtros
@@ -85,4 +88,69 @@ def cronograma_equipamentos(request):
 
 
 def cronograma_dispositivos(request):
-    return render(request, 'metrologia/cronograma_dispositivos.html')
+    today = date.today()
+
+    # Filtros
+    ano = request.GET.get("ano")
+    cliente = request.GET.get("cliente")
+
+    # Base de consulta
+    dispositivos = Dispositivo.objects.all()
+
+    if ano:
+        dispositivos = dispositivos.filter(data_ultima_calibracao__year=ano)
+    if cliente:
+        dispositivos = dispositivos.filter(cliente__iexact=cliente)
+
+    dispositivo_data = []
+    for dispositivo in dispositivos:
+        # Obter a movimentação mais recente do tipo "saida"
+        ultima_saida = dispositivo.controle_entrada_saida.filter(tipo_movimentacao="saida").order_by('-data_movimentacao').first()
+
+        # Obter a movimentação mais recente (independente do tipo) para o retorno, setor, etc.
+        ultima_movimentacao = dispositivo.controle_entrada_saida.order_by('-data_movimentacao').first()
+
+        # Definir valores padrão para evitar erros quando não houver movimentações
+        data_ultima_saida = ultima_saida.data_movimentacao if ultima_saida else None
+        data_retorno = ultima_movimentacao.data_movimentacao if ultima_movimentacao else None
+        situacao = ultima_movimentacao.situacao if ultima_movimentacao else ""
+        observacao = ultima_movimentacao.observacao if ultima_movimentacao else ""
+
+        # Calcular próxima calibração
+        proxima_calibracao = (
+            dispositivo.data_ultima_calibracao + relativedelta(months=dispositivo.frequencia_calibracao)
+            if dispositivo.data_ultima_calibracao and dispositivo.frequencia_calibracao
+            else None
+        )
+
+        dispositivo_data.append({
+            "codigo": dispositivo.codigo,
+            "qtde": dispositivo.qtde,
+            "cliente": dispositivo.cliente,
+            "descricao": dispositivo.descricao,
+            "estudo_realizado": dispositivo.estudo_realizado,
+            "data_ultima_calibracao": dispositivo.data_ultima_calibracao,  # Incluído
+
+            "data_proxima_calibracao": proxima_calibracao,
+            "local_armazenagem": dispositivo.local_armazenagem,
+            "data_ultima_saida": data_ultima_saida,
+            "data_retorno": data_retorno,
+            "setor": ultima_saida.setor if ultima_saida else "",
+            "situacao": situacao,
+            "observacoes": observacao,
+        })
+
+    # Filtros dinâmicos
+    anos_disponiveis = Dispositivo.objects.dates("data_ultima_calibracao", "year").distinct()
+    clientes_disponiveis = Dispositivo.objects.values_list("cliente", flat=True).distinct()
+
+    context = {
+        "dispositivos": dispositivo_data,
+        "anos_disponiveis": [ano.year for ano in anos_disponiveis],
+        "clientes_disponiveis": clientes_disponiveis,
+        "ano": ano,
+        "cliente": cliente,
+        "today": today,
+    }
+
+    return render(request, "cronogramas/cronograma_dispositivos.html", context)

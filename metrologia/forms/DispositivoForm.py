@@ -23,7 +23,7 @@ class ControleEntradaSaidaForm(forms.ModelForm):
     )
     class Meta:
         model = ControleEntradaSaida
-        fields = ['tipo_movimentacao', 'quantidade', 'colaborador', 'data_movimentacao', 'observacao', 'situacao']
+        fields = ['tipo_movimentacao', 'quantidade', 'colaborador', 'data_movimentacao', 'observacao', 'situacao', 'setor']
         widgets = {
             'tipo_movimentacao': forms.Select(attrs={'class': 'form-select'}),
             'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -34,6 +34,10 @@ class ControleEntradaSaidaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Ordena os colaboradores por nome
+        setores = Funcionario.objects.values_list('local_trabalho', flat=True).distinct().order_by('local_trabalho')
+        self.fields['setor'].widget = forms.Select(choices=[('', 'Selecione um setor')] + [(setor, setor) for setor in setores])
+
+
         self.fields['colaborador'].queryset = Funcionario.objects.all().order_by('nome')
 
 class CotaForm(forms.ModelForm):

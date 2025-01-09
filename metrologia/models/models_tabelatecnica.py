@@ -2,6 +2,8 @@ from django.db import models
 from Funcionario.models import Funcionario
 from datetime import timedelta
 from decimal import Decimal
+from django.utils.timezone import now
+
 
 
 
@@ -85,11 +87,65 @@ class TabelaTecnica(models.Model):
             default='deslocamento',
             verbose_name="Tipo de Avaliação"
         )  # Novo campo
+    updated_at = models.DateTimeField(auto_now=True)
+    alteracao = models.TextField(blank=True, null=True, verbose_name="Última Alteração")
 
         
     def save(self, *args, **kwargs):
-        from decimal import Decimal
+        alteracoes = []
+        if self.pk:  # Se o registro já existir
+            original = TabelaTecnica.objects.get(pk=self.pk)
 
+            # Verificar alterações campo por campo
+            campos_para_verificar = [
+                'nome_equipamento', 
+                'capacidade_minima', 
+                'capacidade_maxima', 
+                'resolucao', 
+                'tolerancia_em_percentual',
+                'unidade_medida',
+                'tolerancia_total_minima',
+                'frequencia_calibracao',
+                'exatidao_requerida',
+                'numero_serie',
+                'modelo',
+                'fabricante',
+                'foto_equipamento',
+                'responsavel',
+                'proprietario',
+                'localizacao',
+                'status',
+                'data_ultima_calibracao',
+                'tipo',
+                'faixa',
+                'tipo_avaliacao'                
+                ]
+            
+            for campo in campos_para_verificar:
+                valor_original = getattr(original, campo)
+                valor_atual = getattr(self, campo)
+                if valor_original != valor_atual:
+                    alteracoes.append(f"{campo.replace('_', ' ').capitalize()} alterado de '{valor_original}' para '{valor_atual}'")
+
+        # Atualizar campo de alteração
+        if alteracoes:
+            self.alteracao = "; ".join(alteracoes)
+
+        # Formatações específicas
+        if self.codigo:
+            self.codigo = self.codigo.upper()
+        if self.modelo:
+            self.modelo = self.modelo.upper()
+        if self.nome_equipamento:
+            self.nome_equipamento = self.nome_equipamento.title()
+        if self.proprietario:
+            self.proprietario = self.proprietario.title()
+        if self.localizacao:
+            self.localizacao = self.localizacao.title()
+        if self.fabricante:
+            self.fabricante = self.fabricante.title()
+
+        # Lógica de exatidão requerida
         faixa = Decimal(self.faixa or 0)
         tolerancia = Decimal(self.tolerancia_em_percentual or 0)
 
@@ -102,13 +158,6 @@ class TabelaTecnica(models.Model):
 
         super().save(*args, **kwargs)
 
-
-    # @property
-    # def proxima_calibracao(self):
-    #     if self.data_ultima_calibracao and self.frequencia_calibracao:
-    #         return self.data_ultima_calibracao + timedelta(days=(self.frequencia_calibracao * 30))
-    #     return None
-
-
     def __str__(self):
         return f"{self.codigo} - {self.nome_equipamento}"
+

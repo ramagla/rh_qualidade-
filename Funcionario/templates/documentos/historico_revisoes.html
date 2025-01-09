@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% load custom_filters %}
+
 <div class="container">
     <h2 class="text-center">Histórico de Revisões - {{ documento.nome }}</h2>
     <table class="table table-centered">
@@ -18,18 +20,28 @@
                 <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
                 <td>
                     <!-- Botão para abrir a modal de descrição -->
+                    {% if request.user|has_permission:'Funcionario.view_revisao' %}
+
                     <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ revisao.id }}">
                         <i class="bi bi-eye"></i>
                     </button>
+                    {% endif %}
+
 
                     <!-- Botão para abrir a modal de exclusão -->
-                    {% comment %} <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirRevisao{{ revisao.id }}">
+                    {% if request.user|has_permission:'Funcionario.delete_revisao' %}
+
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirRevisao{{ revisao.id }}">
                         <i class="bi bi-trash"></i>
-                    </button> {% endcomment %}
+                    </button> 
+                    {% endif %}
+
                 </td>
             </tr>
 
             <!-- Modal de Descrição -->
+            {% if request.user|has_permission:'Funcionario.view_revisao' %}
+
             <div class="modal fade" id="modalDescricao{{ revisao.id }}" tabindex="-1" aria-labelledby="modalDescricaoLabel{{ revisao.id }}" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -46,8 +58,12 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
+
 
            <!-- Modal de Exclusão -->
+           {% if request.user|has_permission:'Funcionario.delete_revisao' %}
+
 <div class="modal fade" id="modalExcluirRevisao{{ revisao.id }}" tabindex="-1" aria-labelledby="modalExcluirRevisaoLabel{{ revisao.id }}" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -72,6 +88,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
             {% endfor %}
         </tbody>
@@ -79,12 +96,15 @@
     
     <!-- Botões adicionais -->
     <div class="text-end mb-4">
+        {% if request.user|has_permission:'Funcionario.add_revisao' %}
         <a href="{% url 'adicionar_documento' documento.id %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Adicionar Revisão
         </a>
+        {% endif %}
+    
         <a href="{% url 'lista_documentos' %}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Retornar
         </a>
     </div>
-</div>
+    
 {% endblock %}

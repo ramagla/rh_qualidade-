@@ -134,9 +134,9 @@
         </div>
     </div>
 
-    <!-- Tabela -->
-<table class="table table-bordered text-center align-middle">
-    <thead>
+  <!-- Tabela -->
+<table class="table table-bordered text-center align-middle small-text-table">
+    <thead class="small-header">
         <tr>
             <th>Código</th>
             <th>Laboratório</th>
@@ -146,7 +146,7 @@
             <th>Exatidão Requerida (ER)</th>
             <th>Status</th>
             <th>Tipo</th>
-            <th>Data</th> 
+            <th>Data</th>
             <th>Ações</th>
         </tr>
     </thead>
@@ -160,28 +160,27 @@
             <td>{{ calibracao.l }}</td>
             <td>{{ calibracao.codigo.exatidao_requerida }}</td>
 
-            
             <!-- Status com cores -->
             <td>
                 {% if calibracao.status == "Aprovado" %}
-                    <span class="badge bg-success">{{ calibracao.status|title }}</span>
+                    <span class="badge bg-success small-text">{{ calibracao.status|title }}</span>
                 {% elif calibracao.status == "Reprovado" %}
-                    <span class="badge bg-danger">{{ calibracao.status|title }}</span>
+                    <span class="badge bg-danger small-text">{{ calibracao.status|title }}</span>
                 {% else %}
-                    <span class="badge bg-secondary">{{ calibracao.status|title }}</span>
+                    <span class="badge bg-secondary small-text">{{ calibracao.status|title }}</span>
                 {% endif %}
             </td>
             
             <!-- Tipo com cores -->
             <td>
                 {% if calibracao.codigo.tipo_avaliacao == "deslocamento" %}
-                    <span class="badge bg-primary">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
+                    <span class="badge bg-primary small-text">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
                 {% elif calibracao.codigo.tipo_avaliacao == "carga" %}
-                    <span class="badge bg-warning text-dark">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
+                    <span class="badge bg-warning text-dark small-text">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
                 {% elif calibracao.codigo.tipo_avaliacao == "dimensional" %}
-                    <span class="badge bg-info">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
+                    <span class="badge bg-info small-text">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
                 {% else %}
-                    <span class="badge bg-secondary">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
+                    <span class="badge bg-secondary small-text">{{ calibracao.codigo.tipo_avaliacao|title }}</span>
                 {% endif %}
             </td>
             <!-- Data da Calibração -->
@@ -189,17 +188,18 @@
 
             <!-- Ações -->
             <td>
-                <a href="{% url 'editar_calibracao' calibracao.id %}" class="btn btn-sm btn-primary">
+                <a href="{% url 'editar_calibracao' calibracao.id %}" class="btn btn-sm btn-primary small-icon" title="Editar">
                     <i class="bi bi-pencil"></i>
                 </a>
                 
-                <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ calibracao.id }}">
+                <a href="#" class="btn btn-sm btn-danger small-icon" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ calibracao.id }}" title="Excluir">
                     <i class="bi bi-trash"></i>
                 </a>
                 
                 {% if calibracao.certificado_anexo %}
-                <a href="{{ calibracao.certificado_anexo.url }}" class="btn btn-sm btn-success" download>
-                    <i class="bi bi-file-earmark-arrow-down"></i>
+                <a href="{{ calibracao.certificado_anexo.url }}" class="btn btn-sm btn-info small-icon" download title="Certificado">
+                    <i class="bi bi-award"></i>
+                    <!-- Novo ícone de certificado -->
                 </a>
                 {% endif %}
             </td>
@@ -232,6 +232,37 @@
         {% endfor %}
     </tbody>
 </table>
+
+<style>
+    /* Reduz o tamanho do texto na tabela */
+    .small-text-table th, .small-text-table td {
+        font-size: 12px; /* Tamanho menor */
+    }
+    
+    /* Centraliza o texto do cabeçalho */
+    .small-header th {
+        text-align: center;
+        vertical-align: middle;
+    }
+    
+    /* Tamanho menor para os badges */
+    .badge.small-text {
+        font-size: 10px;
+    }
+    
+    /* Ícones menores */
+    .small-icon i {
+        font-size: 14px; /* Ajuste o tamanho dos ícones */
+    }
+    
+    /* Ícone específico para certificado */
+    .bi-file-earmark-certificate:before {
+        content: "\f5f3"; /* Código do ícone de certificado */
+        font-family: "Bootstrap Icons";
+    }
+    </style>
+    
+
 
 
     <!-- Paginação -->

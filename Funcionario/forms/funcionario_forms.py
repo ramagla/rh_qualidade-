@@ -20,6 +20,9 @@ class FuncionarioForm(forms.ModelForm):
     local_trabalho = forms.ChoiceField(
         choices=[('', 'Selecione uma opção')] + 
                 [(dep, dep) for dep in Cargo.objects.values_list('departamento', flat=True).distinct().order_by('departamento')],
+                
+
+
         label="Local de Trabalho",
         widget=forms.Select(attrs={'class': 'form-select select2'})
     )
@@ -63,11 +66,8 @@ class FuncionarioForm(forms.ModelForm):
 
     class Meta:
         model = Funcionario
-        fields = [
-            'nome', 'data_admissao', 'cargo_inicial', 'cargo_atual', 'numero_registro',
-            'local_trabalho', 'data_integracao', 'escolaridade', 'responsavel', 'foto',
-            'curriculo', 'status', 'formulario_f146', 'experiencia_profissional', 'cargo_responsavel','assinatura_eletronica'
-        ]
+        fields = '__all__'  # Ou liste explicitamente os campos, incluindo 'status'
+
         widgets = {
             'local_trabalho': Select2Widget(attrs={
                 'class': 'select2 form-select',

@@ -26,7 +26,7 @@
         <!-- Código e Laboratório -->
         <div class="col-md-6">
             <label for="codigo" class="form-label">Código do Equipamento:</label>
-            {{ form.codigo|add_class:"form-select select2" }}
+            {{ form.codigo|add_class:"form-select" }}
         </div>
         
         <div class="col-md-6">
@@ -93,9 +93,10 @@
             <button type="submit" class="btn btn-primary me-2">
                 <i class="bi bi-save"></i> Salvar
             </button>
-            <a href="{% url 'lista_calibracoes' %}" class="btn btn-secondary ms-2">
+            <a href="{% url 'calibracoes_instrumentos' %}" class="btn btn-secondary ms-2">
                 <i class="bi bi-arrow-left"></i> Cancelar
             </a>
+            
         </div>
     </form>
 </div>
@@ -187,24 +188,28 @@
 
         // Cálculo de L = E + I
         function calcularL() {
-            const erro = parseFloat(erroField.value) || 0;
-            const incerteza = parseFloat(incertezaField.value) || 0;
-            const exatidaoRequerida = parseFloat(exatidaoField.value) || 0;
-            const l = erro + incerteza;
+            const erro = parseFloat(erroField.value) || 0; // Obter valor do campo de erro
+            const incerteza = parseFloat(incertezaField.value) || 0; // Obter valor do campo de incerteza
+            const exatidaoRequerida = parseFloat(exatidaoField.value) || 0; // Obter valor de exatidão requerida
+            
+            // Calcular L e arredondar para 4 casas decimais
+            const l = parseFloat((erro + incerteza).toFixed(4)); 
 
-            lField.value = l.toFixed(4); // Atualiza o campo L
+            // Atualizar o campo L no formulário
+            lField.value = l.toFixed(4); 
 
             // Determinar o status com base em L e Exatidão Requerida
             if (l <= exatidaoRequerida) {
-                statusField.value = "Aprovado";
-                statusField.classList.remove('is-invalid');
-                statusField.classList.add('is-valid');
+                statusField.value = "Aprovado"; // Aprovado se L <= Exatidão Requerida
+                statusField.classList.remove('is-invalid'); // Remove a classe de erro
+                statusField.classList.add('is-valid'); // Adiciona a classe de aprovação
             } else {
-                statusField.value = "Reprovado";
-                statusField.classList.remove('is-valid');
-                statusField.classList.add('is-invalid');
+                statusField.value = "Reprovado"; // Reprovado se L > Exatidão Requerida
+                statusField.classList.remove('is-valid'); // Remove a classe de aprovação
+                statusField.classList.add('is-invalid'); // Adiciona a classe de erro
             }
         }
+
 
         // Adicionar eventos para o cálculo
         erroField.addEventListener('input', calcularL);

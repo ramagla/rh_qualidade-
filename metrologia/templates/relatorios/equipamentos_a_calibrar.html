@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatório de Equipamentos a Calibrar{% endblock %}
+
+{% block content %}
+<!-- Botão de Imprimir -->
+<div class="text-center mb-4 d-print-none">
+    <button onclick="imprimir()" class="btn btn-primary">
+        <i class="fas fa-print"></i> Imprimir
+    </button>
+</div>
+
+<!-- Conteúdo do Relatório -->
+<div class="container mt-5 print-container">
+    <h2 class="text-center">Relatório de Equipamentos a Calibrar</h2>
+
+    <!-- Equipamentos com Calibração Vencida -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white text-center">
+            <h5>Equipamentos com Calibração Vencida</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome do Equipamento</th>
+                        <th>Data da Última Calibração</th>
+                        <th>Data da Próxima Calibração</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equipamento in equipamentos_vencidos %}
+                    <tr>
+                        <td>{{ equipamento.codigo }}</td>
+                        <td>{{ equipamento.nome_equipamento }}</td>
+                        <td>{{ equipamento.data_ultima_calibracao|date:"d/m/Y" }}</td>
+                        <td>{{ equipamento.proxima_calibracao|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">Nenhum equipamento vencido encontrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Equipamentos Próximos do Vencimento -->
+    <div class="card">
+        <div class="card-header bg-warning text-dark text-center">
+            <h5>Equipamentos Próximos do Vencimento</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome do Equipamento</th>
+                        <th>Data da Última Calibração</th>
+                        <th>Data da Próxima Calibração</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equipamento in equipamentos_proximos %}
+                    <tr>
+                        <td>{{ equipamento.codigo }}</td>
+                        <td>{{ equipamento.nome_equipamento }}</td>
+                        <td>{{ equipamento.data_ultima_calibracao|date:"d/m/Y" }}</td>
+                        <td>{{ equipamento.proxima_calibracao|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">Nenhum equipamento próximo ao vencimento encontrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos Personalizados -->
+<style>
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .custom-table th, .custom-table td {
+        border: 1px solid #000;
+        padding: 8px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .custom-table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+
+    @media print {
+        .d-print-none {
+            display: none !important;
+        }
+
+        .print-container {
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .custom-table th, .custom-table td {
+            font-size: 10px;
+        }
+    }
+</style>
+
+<!-- Script de Impressão -->
+<script>
+function imprimir() {
+    var conteudo = document.querySelector('.print-container').innerHTML;
+    var novaJanela = window.open('', '_blank', 'width=800,height=600');
+
+    novaJanela.document.write(`
+        <html>
+            <head>
+                <title>Relatório de Equipamentos a Calibrar</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        font-size: 10px;
+                        padding: 20px;
+                    }
+
+                    .custom-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+
+                    .custom-table th,
+                    .custom-table td {
+                        border: 1px solid #000;
+                        padding: 8px;
+                        font-size: 10px;
+                    }
+
+                    .custom-table th {
+                        background-color: #f2f2f2;
+                    }
+
+                    h2 {
+                        text-align: center;
+                        font-size: 16px;
+                        font-weight: bold;
+                        margin-bottom: 20px;
+                    }
+                </style>
+            </head>
+            <body>
+                ${conteudo}
+            </body>
+        </html>
+    `);
+
+    novaJanela.document.close();
+    novaJanela.onload = function () {
+        novaJanela.print();
+        novaJanela.close();
+    };
+}
+</script>
+
+{% endblock %}
