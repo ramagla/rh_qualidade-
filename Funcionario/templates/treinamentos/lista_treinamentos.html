@@ -45,17 +45,28 @@
 
     <!-- Botão de Cadastrar Treinamento e Imprimir F003 -->
     <div class="text-end mb-4">
+        {% if request.user|has_permission:"Funcionario.add_treinamento" %}
+
         <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Cadastrar</a>
-        
+        {% endif %}
+
         <!-- Botão para abrir a modal de Imprimir F003 -->
+        {% if request.user|has_permission:"Funcionario.print_treinamento" %}
+
         <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
             <i class="bi bi-printer"></i> Imprimir
         </button>
+        {% endif %}
+
 
          <!-- Botão para Levantamento de Necessidades -->
+         {% if request.user|has_permission:"Funcionario.view_treinamento" %}
+
     <a href="{% url 'levantamento_treinamento' %}" class="btn btn-secondary ms-2">
         <i class="bi bi-file-earmark-spreadsheet"></i> Levantamento de Necessidades
     </a>
+    {% endif %}
+
     </div>
 
    <!-- Modal para Selecionar Funcionário -->
@@ -258,15 +269,25 @@
             {% endif %}
         </td>
         <td class="align-middle">
+            {% if request.user|has_permission:"Funcionario.view_treinamento" %}
+
             <a href="{% url 'visualizar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Visualizar">
                 <i class="bi bi-eye"></i>
             </a>
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.change_treinamento" %}
+
             <a href="{% url 'editar_treinamento' treinamento.id %}" class="btn btn-sm btn-light" title="Editar">
                 <i class="bi bi-pencil-square"></i>
             </a>
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.delete_treinamento" %}
+
             <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirTreinamento{{ treinamento.id }}">
                 <i class="bi bi-trash"></i>
             </button> 
+            {% endif %}
+
         </td>
     </tr>
 

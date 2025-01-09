@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% load custom_filters %}
+
 <div class="container">
     <h2 class="text-center">Histórico de Revisões - {{ cargo.nome }}</h2>
     <table class="table table-centered">
@@ -18,14 +20,21 @@
                 <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
                 <td>
                     <!-- Botão para abrir a modal de descrição -->
+                    {% if request.user|has_permission:"Funcionario.view_revisao" %}
                     <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ revisao.id }}">
                         <i class="bi bi-eye"></i>
                     </button>
+                    {% endif %}
+
 
                     <!-- Botão para abrir a modal de exclusão -->
+                    {% if request.user|has_permission:"Funcionario.delete_revisao" %}
+
                     <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirRevisao{{ revisao.id }}">
                         <i class="bi bi-trash"></i>
                     </button>
+                    {% endif %}
+
                 </td>
             </tr>
 
@@ -76,9 +85,13 @@
     
     <!-- Botões adicionais -->
     <div class="text-end mb-4">
+        {% if request.user|has_permission:"Funcionario.add_revisao" %}
+
         <a href="{% url 'adicionar_revisao' cargo.id %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Adicionar Revisão
         </a>
+        {% endif %}
+
         <a href="{% url 'lista_cargos' %}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Retornar
         </a>

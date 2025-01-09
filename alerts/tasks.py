@@ -3,9 +3,9 @@ from django.template.loader import render_to_string
 from django.utils.timezone import now
 from datetime import timedelta
 from django.core.mail import send_mail
-from django.db.models import ExpressionWrapper, F, DateField
+from django.db.models import ExpressionWrapper, F, DateField, Value
 from alerts.models import Alerta
-from metrologia.models import TabelaTecnica
+from metrologia.models import TabelaTecnica, Dispositivo
 
 @shared_task
 def enviar_alertas_calibracao():
@@ -20,14 +20,29 @@ def enviar_alertas_calibracao():
         )
     )
 
-    # Equipamentos vencidos
-    vencidos = equipamentos.filter(proxima_calibracao__lt=today)
-
-    # Equipamentos próximos do vencimento
-    proximos = equipamentos.filter(
-        proxima_calibracao__gte=today,
-        proxima_calibracao__lte=range_end
+    dispositivos = Dispositivo.objects.annotate(
+        proxima_calibracao=ExpressionWrapper(
+            F('data_ultima_calibracao') + F('frequencia_calibracao') * Value(30),
+            output_field=DateField()
+        )
     )
+
+    objetos = {
+        'vencidos': {
+            'equipamentos': equipamentos.filter(proxima_calibracao__lt=today),
+            'dispositivos': dispositivos.filter(proxima_calibracao__lt=today),
+        },
+        'proximos': {
+            'equipamentos': equipamentos.filter(
+                proxima_calibracao__gte=today,
+                proxima_calibracao__lte=range_end
+            ),
+            'dispositivos': dispositivos.filter(
+                proxima_calibracao__gte=today,
+                proxima_calibracao__lte=range_end
+            ),
+        },
+    }
 
     # Buscar os alertas ativos
     try:
@@ -42,34 +57,36 @@ def enviar_alertas_calibracao():
         print("Nenhum alerta configurado para calibração próxima.")
         alerta_proximos = None
 
-    # Enviar e-mails para equipamentos vencidos
+    # Enviar e-mails para objetos vencidos
     if alerta_vencidos:
-        for equipamento in vencidos:
-            html_content = render_to_string(
-                'alertas/calibracao_vencida.html',
-                {'equipamento': equipamento, 'proxima_calibracao': equipamento.proxima_calibracao}
-            )
-            send_mail(
-                subject=f'Calibração vencida para {equipamento.nome_equipamento}',
-                message=f'O equipamento {equipamento.nome_equipamento} está com a calibração vencida.',
-                from_email='no-reply@brasmol.com.br',
-                recipient_list=alerta_vencidos.get_destinatarios_list(),
-                html_message=html_content
-            )
-            print(f"E-mail enviado para o equipamento vencido: {equipamento.nome_equipamento}")
+        for tipo, colecao in objetos['vencidos'].items():
+            for obj in colecao:
+                html_content = render_to_string(
+                    'alertas/calibracao_vencida.html',
+                    {'objeto': obj, 'proxima_calibracao': obj.proxima_calibracao, 'tipo': tipo}
+                )
+                send_mail(
+                    subject=f'Calibração vencida para {obj.nome_equipamento if tipo == "equipamentos" else obj.codigo}',
+                    message=f'A calibração do {tipo[:-1]} está vencida.',
+                    from_email='no-reply@brasmol.com.br',
+                    recipient_list=alerta_vencidos.get_destinatarios_list(),
+                    html_message=html_content
+                )
+                print(f"E-mail enviado para o {tipo[:-1]} vencido: {obj.nome_equipamento if tipo == 'equipamentos' else obj.codigo}")
 
-    # Enviar e-mails para equipamentos próximos do vencimento
+    # Enviar e-mails para objetos próximos do vencimento
     if alerta_proximos:
-        for equipamento in proximos:
-            html_content = render_to_string(
-                'alertas/calibracao_proxima.html',
-                {'equipamento': equipamento, 'proxima_calibracao': equipamento.proxima_calibracao}
-            )
-            send_mail(
-                subject=f'Calibração próxima para {equipamento.nome_equipamento}',
-                message=f'O equipamento {equipamento.nome_equipamento} está próximo da data de calibração.',
-                from_email='no-reply@brasmol.com.br',
-                recipient_list=alerta_proximos.get_destinatarios_list(),
-                html_message=html_content
-            )
-            print(f"E-mail enviado para o equipamento próximo: {equipamento.nome_equipamento}")
+        for tipo, colecao in objetos['proximos'].items():
+            for obj in colecao:
+                html_content = render_to_string(
+                    'alertas/calibracao_proxima.html',
+                    {'objeto': obj, 'proxima_calibracao': obj.proxima_calibracao, 'tipo': tipo}
+                )
+                send_mail(
+                    subject=f'Calibração próxima para {obj.nome_equipamento if tipo == "equipamentos" else obj.codigo}',
+                    message=f'A calibração do {tipo[:-1]} está próxima.',
+                    from_email='no-reply@brasmol.com.br',
+                    recipient_list=alerta_proximos.get_destinatarios_list(),
+                    html_message=html_content
+                )
+                print(f"E-mail enviado para o {tipo[:-1]} próximo: {obj.nome_equipamento if tipo == 'equipamentos' else obj.codigo}")

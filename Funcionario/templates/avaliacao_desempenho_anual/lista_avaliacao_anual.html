@@ -34,16 +34,20 @@
         {% endif %}
     </div>
 
-    <!-- Botões de Cadastrar Avaliação e Imprimir -->
-    <div class="text-end mb-4">
-        <a href="{% url 'cadastrar_avaliacao_anual' %}" class="btn btn-primary">
+    <div class="d-flex justify-content-end mb-4">
+        {% if request.user|has_permission:'Funcionario.add_avaliacaoanual' %}
+        <a href="{% url 'cadastrar_avaliacao_anual' %}" class="btn btn-primary me-2">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
+        {% endif %}
+    
+        {% if request.user|has_permission:'Funcionario.view_avaliacaoanual' %}
         <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#imprimirModal">
             <i class="bi bi-printer"></i> Imprimir
         </button>
-        
+        {% endif %}
     </div>
+    
 
    <!-- Formulário de Filtro -->
 <form method="get" class="mb-4">
@@ -94,6 +98,7 @@
 
 
     <!-- Modal para Selecionar Avaliação -->
+    {% if request.user|has_permission:'Funcionario.view_avaliacaoanual' %}
     <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -118,6 +123,8 @@
             </div>
         </div>
     </div>
+    {% endif %}
+
 
 <div class="d-flex flex-wrap justify-content-between mb-4 mt-4">
     <!-- Total de Avaliações -->
@@ -211,17 +218,24 @@
 <!-- Para exibir o percentual -->
 <td class="align-middle">{{ avaliacao.percentual|floatformat:1 }}%</td>
 
-                <td class="align-middle">
-                    <a href="{% url 'visualizar_avaliacao_anual' avaliacao.id %}" class="btn btn-sm btn-light" title="Visualizar">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a href="{% url 'editar_avaliacao_anual' avaliacao.id %}" class="btn btn-light" title="Editar">
-                        <i class="bi bi-pencil-square"></i>
-                    </a>
-                    {% comment %} <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}">
-                        <i class="bi bi-trash"></i>
-                    </a> {% endcomment %}
-                </td>
+<td class="align-middle">
+    {% if request.user|has_permission:'Funcionario.view_avaliacaoanual' %}
+    <a href="{% url 'visualizar_avaliacao_anual' avaliacao.id %}" class="btn btn-sm btn-light" title="Visualizar">
+        <i class="bi bi-eye"></i>
+    </a>
+    {% endif %}
+    {% if request.user|has_permission:'Funcionario.change_avaliacaoanual' %}
+    <a href="{% url 'editar_avaliacao_anual' avaliacao.id %}" class="btn btn-light" title="Editar">
+        <i class="bi bi-pencil-square"></i>
+    </a>
+    {% endif %}
+    {% if request.user|has_permission:'Funcionario.delete_avaliacaoanual' %}
+    <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}">
+        <i class="bi bi-trash"></i>
+    </a>
+    {% endif %}
+</td>
+
             </tr>
 
                <!-- Modal para confirmação de exclusão -->

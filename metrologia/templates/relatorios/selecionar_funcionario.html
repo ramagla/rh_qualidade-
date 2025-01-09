@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Seu Template de Seleção de Funcionário com Select2 -->
+<div class="container mt-4">
+    <h5>Selecionar Colaborador</h5>
+    <form id="selecionarFuncionarioForm">
+        <div class="mb-3">
+            <label for="funcionario" class="form-label">Colaborador</label>
+            <!-- Apenas o select com ID 'funcionario' -->
+            <select id="funcionario" name="funcionario_id" class="form-select" style="width: 100%;" required>
+                <option value="" disabled selected>Selecione um Colaborador</option>
+            </select>
+        </div>
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">Selecionar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Script para o Select2 e carregamento dos funcionários -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const select = document.getElementById('funcionario');
+        const form = document.getElementById('selecionarFuncionarioForm');
+
+        // Carregar funcionários ao carregar a página
+        fetch('/metrologia/listar-funcionarios-ativos/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro na resposta da API: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Verificar se a resposta tem dados e estrutura correta
+                if (Array.isArray(data) && data.length > 0) {
+                    // Ordena os funcionários pelo nome antes de popular o select
+                    data.sort((a, b) => a.nome.localeCompare(b.nome));
+
+                    // Popula o select com os funcionários ordenados
+                    select.innerHTML = '<option value="" disabled selected>Selecione um colaborador</option>';
+                    data.forEach(funcionario => {
+                        const option = document.createElement('option');
+                        option.value = funcionario.id;
+                        option.textContent = funcionario.nome;
+                        select.appendChild(option);
+                    });
+
+                    // Re-inicializa o Select2 após carregar os dados (Evita duplicação)
+                    $(select).select2();
+                } else {
+                    throw new Error('Dados inválidos retornados pela API.');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar funcionários:', error);
+                select.innerHTML = '<option value="" disabled>Erro ao carregar</option>';
+            });
+
+        // Redirecionar ao selecionar o funcionário
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); // Evitar o comportamento padrão do formulário
+            const funcionarioId = select.value;
+
+            if (funcionarioId) {
+                // Redireciona para a URL de listar_equipamentos_funcionario
+                window.location.href = `/metrologia/equipamentos/funcionario/${funcionarioId}/`;
+            } else {
+                alert('Por favor, selecione um colaborador.');
+            }
+        });
+    });
+</script>
+{% endblock %}

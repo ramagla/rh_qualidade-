@@ -69,6 +69,8 @@ def lista_funcionarios(request):
         'local_mais_comum': local_mais_comum['local_trabalho'] if local_mais_comum else "N/A",
         'total_inativos': total_inativos,
         'funcionarios': funcionarios,  # Apenas funcionários filtrados
+        'funcionarios_paginados': page_obj,
+
     }
 
     return render(request, 'funcionarios/lista_funcionarios.html', context)
@@ -131,10 +133,15 @@ def editar_funcionario(request, funcionario_id):
     # Criação do formulário para edição
     form = FuncionarioForm(request.POST or None, request.FILES or None, instance=funcionario)
 
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        messages.success(request, 'Funcionário editado com sucesso!')
-        return redirect('lista_funcionarios')
+    if request.method == 'POST':
+        print("Formulário submetido")
+        if form.is_valid():
+            print("Formulário válido")
+            form.save()
+            messages.success(request, 'Funcionário editado com sucesso!')
+            return redirect('lista_funcionarios')
+        else:
+            print("Erros no formulário:", form.errors)
 
     # Certifique-se de que 'responsaveis' está sendo passado no contexto
     responsaveis = Funcionario.objects.exclude(id=funcionario_id)  # Excluir o próprio funcionário da lista
@@ -147,6 +154,7 @@ def editar_funcionario(request, funcionario_id):
     }
 
     return render(request, 'funcionarios/editar_funcionario.html', context)
+
 @login_required
 def excluir_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)

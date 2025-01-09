@@ -54,55 +54,50 @@
 
     <h2>Alerta de Calibração Próxima</h2>
     <p class="alerta-content">
-        Prezado, o equipamento <strong>{{ equipamento.nome_equipamento }}</strong> está com a calibração programada para breve.
+        Prezado, o {{ tipo|title }}
+        <strong>
+            {% if tipo == "equipamentos" %}
+                {{ objeto.nome_equipamento }}
+            {% else %}
+                {{ objeto.codigo }}
+            {% endif %}
+        </strong> 
+        está com a calibração programada para breve.
     </p>
     
-   <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; margin-top: 20px;">
-    <thead>
-        <tr style="background-color: #6A1B9A; color: #ffffff; text-align: left;">
-            <th style="padding: 10px; font-size: 16px; text-transform: uppercase;">Campo</th>
-            <th style="padding: 10px; font-size: 16px; text-transform: uppercase;">Informação</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr style="background-color: #F3E5F5;">
-            <th style="padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #ddd;">Código</th>
-            <td style="padding: 10px; font-size: 14px; border-bottom: 1px solid #ddd;">{{ equipamento.codigo }}</td>
-        </tr>
-        <tr style="background-color: #FFFFFF;">
-            <th style="padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #ddd;">Nome</th>
-            <td style="padding: 10px; font-size: 14px; border-bottom: 1px solid #ddd;">{{ equipamento.nome_equipamento }}</td>
-        </tr>
-        <tr style="background-color: #F3E5F5;">
-            <th style="padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #ddd;">Fabricante</th>
-            <td style="padding: 10px; font-size: 14px; border-bottom: 1px solid #ddd;">{{ equipamento.fabricante }}</td>
-        </tr>
-        <tr style="background-color: #FFFFFF;">
-            <th style="padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #ddd;">Número de Série</th>
-            <td style="padding: 10px; font-size: 14px; border-bottom: 1px solid #ddd;">{{ equipamento.numero_serie }}</td>
-        </tr>
-        <tr style="background-color: #F3E5F5;">
-            <th style="padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #ddd;">Responsável</th>
-            <td style="padding: 10px; font-size: 14px; border-bottom: 1px solid #ddd;">{{ equipamento.responsavel }}</td>
-        </tr>
-        <tr style="background-color: #FFFFFF;">
-            <th style="padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #ddd;">Localização</th>
-            <td style="padding: 10px; font-size: 14px; border-bottom: 1px solid #ddd;">{{ equipamento.localizacao }}</td>
-        </tr>
-        <tr style="background-color: #F3E5F5;">
-            <th style="padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #ddd;">Data da Última Calibração</th>
-            <td style="padding: 10px; font-size: 14px; border-bottom: 1px solid #ddd;">{{ equipamento.data_ultima_calibracao }}</td>
-        </tr>
-        <tr style="background-color: #FFFFFF;">
-            <th style="padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #ddd;">Próxima Calibração</th>
-            <td style="padding: 10px; font-size: 14px; border-bottom: 1px solid #ddd;">{{ proxima_calibracao }}</td>
-        </tr>
-        <tr style="background-color: #F3E5F5;">
-            <th style="padding: 10px; text-align: left; font-size: 14px;">Proprietário</th>
-            <td style="padding: 10px; font-size: 14px;">{{ equipamento.proprietario }}</td>
-        </tr>
-    </tbody>
-</table>
+    
+    <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; margin-top: 20px;">
+        <thead>
+            <tr style="background-color: #6A1B9A; color: #ffffff; text-align: left;">
+                <th style="padding: 10px; font-size: 16px; text-transform: uppercase;">Campo</th>
+                <th style="padding: 10px; font-size: 16px; text-transform: uppercase;">Informação</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="background-color: #F3E5F5;">
+                <th style="padding: 10px; text-align: left; font-size: 14px;">Código</th>
+                <td style="padding: 10px; font-size: 14px;">{{ objeto.codigo }}</td>
+            </tr>
+            {% if tipo == "equipamentos" %}
+            <tr style="background-color: #FFFFFF;">
+                <th style="padding: 10px; text-align: left; font-size: 14px;">Nome</th>
+                <td style="padding: 10px; font-size: 14px;">{{ objeto.nome_equipamento }}</td>
+            </tr>
+            <tr style="background-color: #F3E5F5;">
+                <th style="padding: 10px; text-align: left; font-size: 14px;">Fabricante</th>
+                <td style="padding: 10px; font-size: 14px;">{{ objeto.fabricante }}</td>
+            </tr>
+            {% endif %}
+            <tr style="background-color: #FFFFFF;">
+                <th style="padding: 10px; text-align: left; font-size: 14px;">Próxima Calibração</th>
+                <td style="padding: 10px; font-size: 14px;">{{ proxima_calibracao|date:"d/m/Y" }}</td>
+            </tr>
+            <tr style="background-color: #F3E5F5;">
+                <th style="padding: 10px; text-align: left; font-size: 14px;">Responsável</th>
+                <td style="padding: 10px; font-size: 14px;">{{ objeto.responsavel }}</td>
+            </tr>
+        </tbody>
+    </table>
 
 
     <p class="alerta-content">

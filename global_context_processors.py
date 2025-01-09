@@ -1,57 +1,117 @@
 from datetime import datetime
 
 def global_menu(request):
-    # Definindo menus por módulo
-    menu_metrologia = [
-        {'name': 'Instrumentos', 'url': 'lista_tabelatecnica', 'icon': 'fas fa-ruler-combined'},
-        {'name': 'Calibrações', 'url': 'metrologia_calibracoes', 'icon': 'fas fa-cogs'},
-        {'name': 'Relatórios', 'url': 'metrologia_relatorios', 'icon': 'fas fa-file-alt'},
-        {'name': 'Configurações', 'url': 'metrologia_configuracoes', 'icon': 'fas fa-cog'},
-    ]
+    user = request.user
 
-    menu_recursos_humanos = [ {'name': 'Dashboard', 'url': 'funcionarios_home', 'icon': 'fas fa-tachometer-alt'},
-            {'name': 'Comunicados Internos', 'url': 'lista_comunicados', 'icon': 'fas fa-bullhorn'},
-            {'name': 'Cargos', 'url': 'lista_cargos', 'icon': 'fas fa-briefcase'},
-            {'name': 'Colaboradores', 'url': 'lista_funcionarios', 'icon': 'fas fa-user'},
-            {'name': 'Integrações', 'url': 'lista_integracoes', 'icon': 'bi bi-person-badge'},
-            {'name': 'Treinamentos', 'icon': 'fas fa-graduation-cap', 'submenu': [
-                {'name': 'Lista de Treinamentos', 'url': 'lista_treinamentos'},
-                {'name': 'Lista de Presença', 'url': 'lista_presenca'},
-                {'name': 'Avaliação de Treinamentos', 'url': 'lista_avaliacoes'},
-            ]},
-            {'name': 'Desempenho', 'icon': 'fas fa-chart-line', 'submenu': [
-                {'name': 'Anual', 'url': 'lista_avaliacao_anual'},
-                {'name': 'Experiência', 'url': 'lista_avaliacao_experiencia'},
-            ]},
-            {'name': 'Job Rotation', 'url': 'lista_jobrotation_evaluation', 'icon': 'fas fa-sync-alt'},
-            {'name': 'Matriz de Polivalência', 'icon': 'fas fa-layer-group', 'submenu': [
-                {'name': 'Lista de Atividades', 'url': 'lista_atividades'},
-                {'name': 'Lista de Matriz', 'url': 'lista_matriz_polivalencia'},
-            ]},
-            {'name': 'Relatórios', 'icon': 'fas fa-file-alt', 'submenu': [
-                {'name': 'Indicador de Treinamentos', 'url': 'relatorio_indicador'},
-                {'name': 'Indicador Anual', 'url': 'relatorio_indicador_anual'},
-                {'name': 'Cronograma de Treinamentos', 'url': 'cronograma_treinamentos'},
-                {'name': 'Cronograma de Eficácia', 'url': 'cronograma_avaliacao_eficacia'},
-            ]},
-            {'name': 'Formulários', 'icon': 'fas fa-edit', 'submenu': [
-                {'name': 'Carta de Competência', 'url': 'filtro_funcionario'},
-                {'name': 'Pesquisa de Consciência', 'url': 'formulario_pesquisa_consciencia'},
-                {'name': 'Avaliação de Capacitação Prática', 'url': 'filtro_carta_competencia'},
-            ]},
-            {'name': 'Documentos', 'url': 'lista_documentos', 'icon': 'fas fa-folder-open'},
-            {'name': 'Calendario', 'url': 'calendario', 'icon': 'fas fa-calendar-alt'},
-        ]
+    # Verificar permissões do usuário para os módulos
+    metrologia_permitido = user.has_perm('metrologia.view_calibracaodispositivo') or user.has_perm('metrologia.view_tabelatecnica')
+    recursos_humanos_permitido = user.has_perm('Funcionario.view_funcionario') or user.has_perm('Funcionario.view_treinamento')
 
-    # Definir o menu com base no módulo ativo (pega o primeiro segmento da URL)
+
+    # Menu Metrologia com permissões
+    menu_metrologia = []
+    if user.has_perm('metrologia.view_tabelatecnica'):
+        menu_metrologia.append({
+            'name': 'Cadastros', 'icon': 'fas fa-folder', 'submenu': [
+                {'name': 'Instrumentos', 'url': 'lista_tabelatecnica', 'icon': 'fas fa-ruler-combined'},
+                {'name': 'Dispositivos', 'url': 'lista_dispositivos', 'icon': 'fas fa-cogs'},
+            ]
+        })
+    if user.has_perm('metrologia.view_calibracaodispositivo') or user.has_perm('metrologia.view_calibracao'):
+        menu_metrologia.append({
+            'name': 'Calibrações', 'icon': 'fas fa-cogs', 'submenu': [
+                {'name': 'Calibrações de Instrumentos', 'url': 'calibracoes_instrumentos', 'icon': 'fas fa-tools'},
+                {'name': 'Calibrações de Dispositivos', 'url': 'lista_calibracoes_dispositivos', 'icon': 'fas fa-wrench'},
+            ]
+        })
+    if user.has_perm('metrologia.view_cronograma'):
+        menu_metrologia.append({
+            'name': 'Cronogramas', 'icon': 'fas fa-calendar-alt', 'submenu': [
+                {'name': 'Cronograma de Equipamentos', 'url': 'cronograma_calibracao'},
+                {'name': 'Cronograma de Dispositivos', 'url': 'cronograma_dispositivos'},
+            ]
+        })
+    if user.has_perm('metrologia.view_relatorio'):
+        menu_metrologia.append({
+            'name': 'Relatórios', 'icon': 'fas fa-file-alt', 'submenu': [
+                {'name': 'Equipamentos a Calibrar', 'url': 'relatorio_equipamentos_calibrar', 'icon': 'fas fa-exclamation-circle'},
+                {'name': 'Equipamentos por Funcionário', 'icon': 'fas fa-users', 'url': 'equipamentos_por_funcionario'},
+            ]
+        })
+
+    # Menu Recursos Humanos com permissões
+    menu_recursos_humanos = []
+    if recursos_humanos_permitido:
+
+        if user.has_perm('Funcionario.view_funcionario'):
+            menu_recursos_humanos.extend([
+                {'name': 'Dashboard', 'url': 'funcionarios_home', 'icon': 'fas fa-tachometer-alt'},
+                {'name': 'Comunicados Internos', 'url': 'lista_comunicados', 'icon': 'fas fa-bullhorn'},
+                {'name': 'Cargos', 'url': 'lista_cargos', 'icon': 'fas fa-briefcase'},
+                {'name': 'Colaboradores', 'url': 'lista_funcionarios', 'icon': 'fas fa-user'},
+                {'name': 'Integrações', 'url': 'lista_integracoes', 'icon': 'bi bi-person-badge'},
+            ])
+        if user.has_perm('Funcionario.view_treinamento'):
+            menu_recursos_humanos.append({
+                'name': 'Treinamentos', 'icon': 'fas fa-graduation-cap', 'submenu': [
+                    {'name': 'Lista de Treinamentos', 'url': 'lista_treinamentos'},
+                    {'name': 'Lista de Presença', 'url': 'lista_presenca'},
+                    {'name': 'Avaliação de Treinamentos', 'url': 'lista_avaliacoes'},
+                ]
+            })
+        if user.has_perm('Funcionario.view_avaliacaoanual') or user.has_perm('Funcionario.view_avaliacaoexperiencia'):
+            menu_recursos_humanos.append({
+                'name': 'Desempenho', 'icon': 'fas fa-chart-line', 'submenu': [
+                    {'name': 'Anual', 'url': 'lista_avaliacao_anual'},
+                    {'name': 'Experiência', 'url': 'lista_avaliacao_experiencia'},
+                ]
+            })
+        if user.has_perm('Funcionario.view_jobrotationevaluation'):
+            menu_recursos_humanos.append({
+                'name': 'Job Rotation', 'url': 'lista_jobrotation_evaluation', 'icon': 'fas fa-sync-alt'},
+            )
+        if user.has_perm('Funcionario.view_matrizpolivalencia'):
+            menu_recursos_humanos.append({
+                'name': 'Matriz de Polivalência', 'icon': 'fas fa-layer-group', 'submenu': [
+                    {'name': 'Lista de Atividades', 'url': 'lista_atividades'},
+                    {'name': 'Lista de Matriz', 'url': 'lista_matriz_polivalencia'},
+                ]
+            })
+        if user.has_perm('Funcionario.view_treinamento') or user.has_perm('Funcionario.view_avaliacaotreinamento'):
+            menu_recursos_humanos.append({
+                'name': 'Relatórios', 'icon': 'fas fa-file-alt', 'submenu': [
+                    {'name': 'Indicador de Treinamentos', 'url': 'relatorio_indicador'},
+                    {'name': 'Indicador Anual', 'url': 'relatorio_indicador_anual'},
+                    {'name': 'Cronograma de Treinamentos', 'url': 'cronograma_treinamentos'},
+                    {'name': 'Cronograma de Eficácia', 'url': 'cronograma_avaliacao_eficacia'},
+                ]
+            })
+        if user.has_perm('Funcionario.view_funcionario'):
+            menu_recursos_humanos.append({
+                'name': 'Formulários', 'icon': 'fas fa-edit', 'submenu': [
+                    {'name': 'Carta de Competência', 'url': 'filtro_funcionario'},
+                    {'name': 'Pesquisa de Consciência', 'url': 'formulario_pesquisa_consciencia'},
+                    {'name': 'Avaliação de Capacitação Prática', 'url': 'filtro_carta_competencia'},
+                ]
+            })
+        if user.has_perm('Funcionario.view_documento'):
+            menu_recursos_humanos.append({'name': 'Documentos', 'url': 'lista_documentos', 'icon': 'fas fa-folder-open'})
+        if user.has_perm('Funcionario.view_calendario'):
+            menu_recursos_humanos.append({'name': 'Calendário', 'url': 'calendario', 'icon': 'fas fa-calendar-alt'})
+
+         # Seletor de módulos (apenas os que o usuário pode acessar)
+    modulos_disponiveis = []
+    if metrologia_permitido:
+        modulos_disponiveis.append({'name': 'Metrologia', 'url': 'metrologia_home', 'icon': 'bi bi-rulers'})
+    if recursos_humanos_permitido:
+        modulos_disponiveis.append({'name': 'Recursos Humanos', 'url': 'home', 'icon': 'bi bi-people'})
+
+    # Determinar o menu ativo
     active_module = request.path.split('/')[1]
-
-    if active_module == 'metrologia':
-        menu = menu_metrologia
-    else:
-        menu = menu_recursos_humanos
+    menu = menu_metrologia if active_module == 'metrologia' else menu_recursos_humanos
 
     return {
-        'menu': menu,  # Menu dinâmico para o módulo
+        'menu': menu,  # Menu dinâmico com permissões
+        'modulos_disponiveis': modulos_disponiveis,  # Módulos permitidos
         'ano_atual': datetime.now().year,  # Ano atual
     }

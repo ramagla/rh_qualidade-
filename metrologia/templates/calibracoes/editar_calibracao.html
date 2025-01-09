@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Editar Calibração{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Editar Calibração</h2>
+
+    <!-- Mensagens de erro -->
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Erro ao salvar o formulário:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <!-- Formulário de edição -->
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        <!-- Código e Laboratório -->
+        <div class="col-md-6">
+            <label for="codigo" class="form-label">Código do Equipamento:</label>
+            {{ form.codigo|add_class:"form-select select2" }}
+        </div>
+
+        <div class="col-md-6">
+            <label for="laboratorio" class="form-label">Laboratório:</label>
+            {{ form.laboratorio|add_class:"form-select select2" }}
+        </div>
+
+        <!-- Número do Certificado -->
+        <div class="col-md-6">
+            <label for="numero_certificado" class="form-label">Número do Certificado:</label>
+            {{ form.numero_certificado|add_class:"form-control" }}
+        </div>
+
+        <!-- Data da Calibração -->
+        <div class="col-md-6">
+            <label for="data_calibracao" class="form-label">Data da Calibração:</label>
+            <input type="date" name="data_calibracao" class="form-control" id="id_data_calibracao" value="{{ form.initial.data_calibracao|date:'Y-m-d' }}">
+        </div>
+        
+        
+        
+
+        <!-- Exatidão Requerida e Tipo de Avaliação -->
+        <div class="col-md-6">
+            <label for="tipo_avaliacao" class="form-label">Tipo de Avaliação:</label>
+            <input type="text" id="tipo_avaliacao" class="form-control" readonly value="{{ form.instance.codigo.tipo_avaliacao }}">
+        </div>
+
+        <div class="col-md-6">
+            <label for="exatidao_requerida" class="form-label">Exatidão Requerida (ER):</label>
+            <input type="text" id="exatidao_requerida" class="form-control" readonly value="{{ form.instance.codigo.exatidao_requerida }}">
+        </div>
+
+        <!-- Erro e Incerteza -->
+        <div class="col-md-6">
+            <label for="erro_equipamento" class="form-label">Erro do Equipamento (E):</label>
+            {{ form.erro_equipamento|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="incerteza" class="form-label">Incerteza (I):</label>
+            {{ form.incerteza|add_class:"form-control" }}
+        </div>
+
+        <!-- L e Status -->
+        <div class="col-md-6">
+            <label for="l" class="form-label">L = E + I:</label>
+            <input type="text" id="l" class="form-control" readonly value="{{ form.instance.l }}">
+        </div>
+
+        <div class="col-md-6">
+            <label for="status" class="form-label">Status:</label>
+            <input type="text" id="status" class="form-control" readonly value="{{ form.instance.status }}">
+        </div>
+
+        <!-- Certificado de Calibração -->
+        <div class="col-md-6">
+            <label for="certificado_anexo" class="form-label">Certificado de Calibração:</label>
+            <div class="input-group mb-3">
+                <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_certificado_anexo').click();">Selecionar Arquivo</button>
+                <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="certificado_anexo_filename" readonly>
+            </div>
+            <input type="file" id="id_certificado_anexo" name="certificado_anexo" style="display: none;" onchange="document.getElementById('certificado_anexo_filename').value = this.files[0].name;">
+            {% if form.instance.certificado_anexo %}
+                <div class="mt-2">
+                    <a href="{{ form.instance.certificado_anexo.url }}" class="btn btn-info" download>Baixar Certificado</a>
+                </div>
+            {% endif %}
+        </div>
+        
+
+        <!-- Botões -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-success me-2">
+                <i class="bi bi-save"></i> Atualizar
+            </button>
+            <a href="{% url 'calibracoes_instrumentos' %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Seletores
+        const erroField = document.querySelector('input[name="erro_equipamento"]');
+        const incertezaField = document.querySelector('input[name="incerteza"]');
+        const lField = document.getElementById('l');
+        const statusField = document.getElementById('status');
+        const exatidaoField = document.getElementById('exatidao_requerida');
+
+        // Função para calcular L = E + I e determinar o status
+        function calcularL() {
+            const erro = parseFloat(erroField.value) || 0;
+            const incerteza = parseFloat(incertezaField.value) || 0;
+            const exatidaoRequerida = parseFloat(exatidaoField.value) || 0;
+            const l = erro + incerteza; // Soma do erro e da incerteza
+
+            // Atualizar o campo L
+            lField.value = l.toFixed(4);
+
+            // Determinar o status com base em L e Exatidão Requerida
+            if (l <= exatidaoRequerida) {
+                statusField.value = "Aprovado";
+                statusField.classList.remove('is-invalid');
+                statusField.classList.add('is-valid');
+            } else {
+                statusField.value = "Reprovado";
+                statusField.classList.remove('is-valid');
+                statusField.classList.add('is-invalid');
+            }
+        }
+
+        // Eventos para recalcular L e status ao alterar valores
+        erroField.addEventListener('input', calcularL);
+        incertezaField.addEventListener('input', calcularL);
+
+        // Calcular L e status ao carregar a página
+        calcularL();
+    });
+</script>
+
+{% endblock %}

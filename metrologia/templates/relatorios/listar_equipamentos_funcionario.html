@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Botão de Imprimir -->
+<div class="text-center mb-4 d-print-none">
+    <button onclick="imprimir()" class="btn btn-primary">
+        <i class="fas fa-print"></i> Imprimir
+    </button>
+</div>
+
+<div class="container mt-5 print-container">
+    {% include 'header.html' %}
+
+    <h3 class="text-center">Termo de responsabilidade pela guarda e uso do equipamento</h3>
+
+    <!-- Informações do Funcionário -->
+    <div class="info-section mt-4">
+        <table class="custom-table">
+            <tr>
+                <td style="text-align:left"><strong>Nome do Colaborador:</strong> {{ funcionario.nome }}</td>
+                <td style="text-align:left"><strong>Matrícula:</strong> {{ funcionario.numero_registro }}</td>
+            </tr>
+            <tr>
+                <td style="text-align:left"><strong>Função:</strong> {{ funcionario.cargo_atual }}</td>
+                <td style="text-align:left"><strong>Setor:</strong> {{ funcionario.local_trabalho }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Texto de Declaração -->
+    <div class="declaracao-section mt-4">
+        <p style="text-align: justify; font-size: 12px; line-height: 1.5;">
+            <strong>Declaro que recebi da empresa Bras-Mol Molas & Estampados Ltda., a título de empréstimo e para uso exclusivo nas atividades de trabalho, os equipamentos especificados abaixo, comprometendo-me a mantê-los em perfeito estado de conservação e ficando ciente de que:</strong>
+        </p>
+        <ol style="font-size: 12px; line-height: 1.5; margin-top: 10px;">
+            <li>Se o equipamento for danificado ou inutilizado por emprego inadequado, mau uso, negligência ou extravio, a empresa cobrará do funcionário o valor de um equipamento de mesma marca e modelo ou equivalente;</li>
+            <li>Em caso de dano, inutilização ou extravio do equipamento ou em caso de troca de setor do funcionário, deverei comunicar imediatamente ao setor de Gestão da Qualidade;</li>
+            <li>Em caso de rescisão do contrato de trabalho, devolverei o equipamento completo e em perfeito estado de conservação, considerando-se o tempo do uso do equipamento, ao setor de Gestão da Qualidade;</li>
+            <li>Estando os equipamentos em minha posse, estarei sujeito a inspeções sem prévio aviso.</li>
+        </ol>
+    </div>
+
+    <!-- Lista de Equipamentos -->
+    <div class="mt-4">
+        <h5 style="text-align: left;">Equipamentos Emprestados:</h5>
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Fabricante</th>
+                    <th>Modelo/Resolução</th>
+                    <th>Data da Última Calibração</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for equipamento in equipamentos %}
+                <tr>
+                    <td>{{ equipamento.codigo }}</td>
+                    <td>{{ equipamento.nome_equipamento }}</td>
+                    <td>{{ equipamento.fabricante }}</td>
+                    <td>{{ equipamento.modelo }}/{{ equipamento.resolucao }}</td>
+                    <td>{{ equipamento.data_ultima_calibracao|date:"d/m/Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">Nenhum equipamento encontrado para este funcionário.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Assinaturas -->
+    <div class="assinaturas mt-5">
+        <table class="custom-table" style="width: 100%;">
+            <tr>
+                <td style="text-align: center;">
+                    <p><strong>Assinatura do Colaborador</strong></p>
+                    <div style="border-top: 1px dashed;"></div>
+                    <div><strong>{{ funcionario.nome }}</strong></div>
+                    <div><em>Data:</em> {{ data_atual|date:"d/m/Y" }}</div>
+                </td>
+                <td style="text-align: center;">
+                    <p><strong>Assinatura do Gestor</strong></p>
+                    <div style="border-top: 1px dashed;"></div>
+                    <div><strong>{{ funcionario.responsavel }}</strong></div>
+                    <div><em>Data:</em> {{ data_atual|date:"d/m/Y" }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Seção de Devolução -->
+    <div class="devolucao mt-4">
+        <table class="custom-table" style="width: 100%; border-collapse: collapse; border: 1px solid black;">
+            <thead>
+                <tr>
+                    <th style="text-align: center; padding: 8px;">Devolução</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; text-align: left; font-size: 12px;">
+                        <p>Atesto que o equipamento foi devolvido nas seguintes condições:</p>
+                        <label><input type="checkbox" style="margin-right: 5px;"> Em perfeito estado;</label><br>
+                        <label><input type="checkbox" style="margin-right: 5px;"> Apresentando defeito;</label><br>
+                        <label><input type="checkbox" style="margin-right: 5px;"> Faltando peças ou acessórios;</label><br>
+                        <label>
+                            <input type="checkbox" style="margin-right: 5px;"> Outros:
+                            <div style="display: block; width: 100%; margin-top: 5px;">
+                                <div style="border-bottom: 1px solid black; height: 30px; margin-bottom: 5px; width: 100%;"></div>
+                                <div style="border-bottom: 1px solid black; height: 30px; width: 100%;"></div>
+                            </div>
+                        </label>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Assinaturas de Devolução -->
+    <div class="assinaturas mt-4">
+        <table class="custom-table" style="width: 100%;">
+            <tr>
+                <td style="text-align: center;">
+                    <p><strong>Assinatura do Colaborador</strong></p>
+                    <div style="border-top: 1px dashed;"></div>
+                    <div><strong>{{ funcionario.nome }}</strong></div>
+                    <div><em>Data:</em> {{ data_atual|date:"d/m/Y" }}</div>
+                </td>
+                <td style="text-align: center;">
+                    <p><strong>Assinatura do Gestor</strong></p>
+                    <div style="border-top: 1px dashed;"></div>
+                    <div><strong>{{ funcionario.responsavel }}</strong></div>
+                    <div><em>Data:</em> {{ data_atual|date:"d/m/Y" }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- Número do Formulário (visível apenas na impressão) -->
+<div class="numero-formulario d-none d-print-block">
+    F198 Rev.01
+</div>
+<style>
+    @media print {
+        .d-print-none { display: none !important; }
+        .numero-formulario {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #333;
+        }
+</style>
+
+<style>
+    .custom-table { width: 100%; border-collapse: collapse; }
+    .custom-table th, .custom-table td { border: 1px solid #000; padding: 6px; text-align: center; }
+    .info-section td { text-align: left; }
+    .assinaturas td { padding: 10px; }
+</style>
+
+<script>
+    function imprimir() {
+        const conteudo = document.querySelector('.print-container').innerHTML;
+        const novaJanela = window.open('', '_blank');
+        novaJanela.document.write(`
+            <html>
+                <head>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            font-size: 9px; /* Texto proporcional menor */
+                            line-height: 1.4; /* Ajusta espaçamento entre linhas */
+                            margin: 15px; /* Define margens gerais */
+                        }
+                        .custom-table { 
+                            width: 100%; 
+                            border-collapse: collapse; 
+                            margin-bottom: 10px; /* Espaçamento entre tabelas */
+                        }
+                        .custom-table th, 
+                        .custom-table td { 
+                            border: 1px solid #000; 
+                            padding: 4px; /* Reduz espaço interno */
+                            font-size: 9px; /* Texto menor na tabela */
+                            text-align: center; 
+                        }
+                        .custom-table th {
+                            font-size: 10px; /* Destaca os títulos das colunas */
+                            font-weight: bold; /* Negrito nos títulos */
+                        }
+                        .info-section td, 
+                        .declaracao-section, 
+                        .assinaturas, 
+                        .devolucao {
+                            margin-bottom: 10px; /* Espaçamento entre seções */
+                        }
+                        .assinaturas p, 
+                        .assinaturas div {
+                            font-size: 9px;
+                            text-align: center;
+                        }
+                        .declaracao-section p, 
+                        .declaracao-section ol {
+                            font-size: 9px; /* Texto da declaração ajustado */
+                            text-align: justify; /* Alinha justificadamente */
+                        }
+                        .numero-formulario {
+                        position: fixed;
+                        bottom: 10px;
+                        right: 10px;
+                        font-size: 10px;
+                        color: #333;
+                         }
+                        h3 {
+                            font-size: 11px; /* Título destacado */
+                            text-align: center;
+                            margin-bottom: 8px;
+                        }
+                    </style>
+                </head>
+                <body>${conteudo}<div class="numero-formulario">F0198 Rev.01</div>
+            </html>
+        `);
+        novaJanela.document.close();
+        novaJanela.print();
+    }
+</script>
+
+
+
+{% endblock %}

@@ -10,10 +10,13 @@
 
     <!-- Botões de Ação -->
     <div class="text-end mb-4">
+        {% if request.user|has_permission:'Funcionario.add_documento' %}
         <a href="{% url 'cadastrar_documento' %}" class="btn btn-success me-2">
            <i class="bi bi-plus-circle"></i> Cadastrar Documento
-        </a>      
+        </a>
+        {% endif %}
     </div>
+    
 
     <!-- Formulário de Filtros -->
     <form method="get" class="mb-4">
@@ -155,22 +158,31 @@
                     {% endif %}
                 </td>
                 <td>
+                    {% if request.user|has_permission:'Funcionario.change_documento' %}
                     <a href="{% url 'editar_documento' documento.id %}" class="btn btn-warning btn-sm" title="Editar">
                         <i class="bi bi-pencil-square"></i>
                     </a>
+                    {% endif %}
+                
+                    {% if request.user|has_permission:'Funcionario.view_revisao' %}
                     <a href="{% url 'historico_documentos' documento.id %}" class="btn btn-info btn-sm" title="Histórico de Revisões Doc">
                         <i class="bi bi-clock-history"></i>
                     </a>
-
-                    {% if documento.arquivo %}
-                        <a href="{{ documento.arquivo.url }}" class="btn btn-secondary btn-sm" download title="Baixar Arquivo">
-                            <i class="bi bi-file-earmark-arrow-down"></i>
-                        </a>
                     {% endif %}
-                    {% comment %} <a href="{% url 'excluir_documento' documento.id %}" class="btn btn-danger btn-sm" title="Excluir">
+                
+                    {% if documento.arquivo and request.user|has_permission:'Funcionario.view_documento' %}
+                    <a href="{{ documento.arquivo.url }}" class="btn btn-secondary btn-sm" download title="Baixar Arquivo">
+                        <i class="bi bi-file-earmark-arrow-down"></i>
+                    </a>
+                    {% endif %}
+                
+                    {% if request.user|has_permission:'Funcionario.delete_documento' %}
+                    <a href="{% url 'excluir_documento' documento.id %}" class="btn btn-danger btn-sm" title="Excluir">
                         <i class="bi bi-trash"></i>
-                    </a> {% endcomment %}
+                    </a>
+                    {% endif %}
                 </td>
+                
             </tr>
             {% endfor %}
         </tbody>

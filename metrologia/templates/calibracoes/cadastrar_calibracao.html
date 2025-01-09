@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Calibração{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Cadastrar Calibração</h2>
+
+    <!-- Mensagens de erro -->
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Erro ao salvar o formulário:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <!-- Formulário de cadastro -->
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        <!-- Código e Laboratório -->
+        <div class="col-md-6">
+            <label for="codigo" class="form-label">Código do Equipamento:</label>
+            {{ form.codigo|add_class:"form-select" }}
+        </div>
+        
+        <div class="col-md-6">
+            <label for="laboratorio" class="form-label">Laboratório:</label>
+            {{ form.laboratorio|add_class:"form-select select2" }}
+        </div>
+        
+        
+
+        <!-- Número do Certificado -->
+        <div class="col-md-6">
+            <label for="numero_certificado" class="form-label">Número do Certificado:</label>
+            {{ form.numero_certificado|add_class:"form-control" }}
+        </div>
+
+        <!-- Data da Calibração -->
+        <div class="col-md-6">
+            <label for="data_calibracao" class="form-label">Data da Calibração:</label>
+            {{ form.data_calibracao }}
+        </div>
+        
+        
+        <!-- Exatidão Requerida (ER) -->
+        <div class="col-md-6">
+            <label for="tipo_avaliacao" class="form-label">Tipo de Avaliação:</label>
+            <input type="text" id="tipo_avaliacao" class="form-control" readonly>
+        </div>
+        
+        <div class="col-md-6">
+            <label for="exatidao_requerida" class="form-label">Exatidão Requerida (ER = TP/2):</label>
+            <input type="text" id="exatidao_requerida" class="form-control" readonly>
+        </div>
+        
+        <!-- Erro e Incerteza -->
+        <div class="col-md-6">
+            <label for="erro_equipamento" class="form-label">Erro do Equipamento (E):</label>
+            {{ form.erro_equipamento|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="incerteza" class="form-label">Incerteza (I):</label>
+            {{ form.incerteza|add_class:"form-control" }}
+        </div>
+
+        <!-- L (Campo Calculado) -->
+        <div class="col-md-6">
+            <label for="l" class="form-label">L = E + I:</label>
+            <input type="text" id="l" class="form-control" readonly>
+        </div>
+
+        <!-- Status (Automático) -->
+        <div class="col-md-6">
+            <label for="status" class="form-label">Status:</label>
+            <input type="text" id="status" class="form-control" readonly>
+        </div>
+
+        <!-- Certificado de Calibração -->
+        <div class="col-md-6">
+            <label for="certificado_anexo" class="form-label">Certificado de Calibração:</label>
+            {{ form.certificado_anexo|add_class:"form-control" }}
+        </div>
+
+        <!-- Botões de ação -->
+        <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-save"></i> Salvar
+            </button>
+            <a href="{% url 'calibracoes_instrumentos' %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+            
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Seletores dos campos
+        const codigoField = $('select[name="codigo"]'); // Usando o jQuery para Select2
+        const exatidaoField = document.getElementById('exatidao_requerida');
+        const toleranciaField = document.querySelector('input[name="tolerancia_em_percentual"]');
+        const faixaField = document.querySelector('input[name="faixa"]');
+        const erroField = document.querySelector('input[name="erro_equipamento"]');
+        const incertezaField = document.querySelector('input[name="incerteza"]');
+        const lField = document.getElementById('l');
+        const statusField = document.getElementById('status');
+
+        // Função para buscar a Exatidão Requerida da API
+        function buscarExatidao(codigoId) {
+            if (codigoId) {
+                fetch(`/metrologia/api/exatidao-requerida/${codigoId}/`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Erro na API: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const usaFaixa = data.tipo === 'sim'; // Verifica se usa faixa
+        
+                        // Garantir que os valores existam
+                        const faixa = parseFloat(data.faixa) || 0;
+                        const toleranciaPercentual = parseFloat(data.tolerancia_em_percentual) || 0;
+                        const exatidaoRequerida = parseFloat(data.exatidao_requerida) || 0;
+        
+                        let exatidao;
+        
+                        // Lógica de cálculo
+                        if (usaFaixa && faixa > 0 && toleranciaPercentual > 0) {
+                            exatidao = faixa * (toleranciaPercentual / 100);
+                        } else if (exatidaoRequerida > 0) {
+                            exatidao = exatidaoRequerida;
+                        } else {
+                            throw new Error("Valores insuficientes para calcular a exatidão.");
+                        }
+        
+                        // Atualizar o campo Exatidão Requerida
+                        exatidaoField.value = exatidao.toFixed(4);
+        
+                        // Atualizar o campo Tipo de Avaliação
+                        const tipoAvaliacaoField = document.getElementById("tipo_avaliacao");
+                        if (tipoAvaliacaoField) {
+                            tipoAvaliacaoField.value = data.tipo_avaliacao || "N/A";
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Erro ao buscar Exatidão:", error.message);
+                        exatidaoField.value = "Erro";
+                        faixaField.value = "";
+                        toleranciaField.value = "";
+        
+                        const tipoAvaliacaoField = document.getElementById("tipo_avaliacao");
+                        if (tipoAvaliacaoField) {
+                            tipoAvaliacaoField.value = "Erro";
+                        }
+                    });
+            } else {
+                exatidaoField.value = '';
+                faixaField.value = '';
+                toleranciaField.value = '';
+        
+                const tipoAvaliacaoField = document.getElementById("tipo_avaliacao");
+                if (tipoAvaliacaoField) {
+                    tipoAvaliacaoField.value = '';
+                }
+            }
+        }
+        
+
+        
+
+        // Configuração do Select2
+        codigoField.select2();
+
+        // Evento de mudança no Select2
+        codigoField.on('select2:select', function (e) {
+            const codigoId = e.params.data.id;
+            buscarExatidao(codigoId);
+        });
+
+        // Cálculo de L = E + I
+        function calcularL() {
+            const erro = parseFloat(erroField.value) || 0; // Obter valor do campo de erro
+            const incerteza = parseFloat(incertezaField.value) || 0; // Obter valor do campo de incerteza
+            const exatidaoRequerida = parseFloat(exatidaoField.value) || 0; // Obter valor de exatidão requerida
+            
+            // Calcular L e arredondar para 4 casas decimais
+            const l = parseFloat((erro + incerteza).toFixed(4)); 
+
+            // Atualizar o campo L no formulário
+            lField.value = l.toFixed(4); 
+
+            // Determinar o status com base em L e Exatidão Requerida
+            if (l <= exatidaoRequerida) {
+                statusField.value = "Aprovado"; // Aprovado se L <= Exatidão Requerida
+                statusField.classList.remove('is-invalid'); // Remove a classe de erro
+                statusField.classList.add('is-valid'); // Adiciona a classe de aprovação
+            } else {
+                statusField.value = "Reprovado"; // Reprovado se L > Exatidão Requerida
+                statusField.classList.remove('is-valid'); // Remove a classe de aprovação
+                statusField.classList.add('is-invalid'); // Adiciona a classe de erro
+            }
+        }
+
+
+        // Adicionar eventos para o cálculo
+        erroField.addEventListener('input', calcularL);
+        incertezaField.addEventListener('input', calcularL);
+
+        // Atualizar exatidão ao alterar faixa ou tolerância
+        faixaField.addEventListener('input', function () {
+            const codigoId = codigoField.val();
+            buscarExatidao(codigoId);
+        });
+
+        toleranciaField.addEventListener('input', function () {
+            const codigoId = codigoField.val();
+            buscarExatidao(codigoId);
+        });
+    });
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Feriados{% endblock %}
+{% block content %}
+<div class="container">
+    <h2>Feriados</h2>
+    <ul>
+        {% for feriado in feriados %}
+        <li>{{ feriado.date }} - {{ feriado.name }}</li>
+        {% empty %}
+        <li>Nenhum feriado encontrado.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

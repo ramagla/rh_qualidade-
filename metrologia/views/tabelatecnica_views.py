@@ -80,6 +80,9 @@ def lista_tabelatecnica(request):
         id__in=tabelas.values_list('responsavel_id', flat=True)
     ).distinct().only('id', 'nome')
 
+    # Mapeamento de unidades de medida
+    unidades_medida_choices = dict(TabelaTecnica.UNIDADE_MEDIDA_CHOICES)
+
     paginator = Paginator(tabelas, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -87,7 +90,7 @@ def lista_tabelatecnica(request):
     context = {
         'page_obj': page_obj,
         'equipamentos': tabelas.values_list('nome_equipamento', flat=True).distinct().order_by('nome_equipamento'),
-        'unidades_medida': tabelas.values_list('unidade_medida', flat=True).distinct().order_by('unidade_medida'),
+        'unidades_medida': unidades_medida_choices,  # Passa o mapeamento de unidades para o template
         'codigos': tabelas.values_list('codigo', flat=True).distinct().order_by('codigo'),
         'responsaveis': responsaveis,
         'proprietarios': tabelas.values_list('proprietario', flat=True).distinct().order_by('proprietario'),
@@ -126,19 +129,19 @@ def cadastrar_tabelatecnica(request):
     return render(request, 'tabelatecnica/cadastrar_tabelatecnica.html', {'form': form})
 
 @login_required
-def editar_tabelatecnica(request, id):
-    tabelatecnica = get_object_or_404(TabelaTecnica, id=id)
+def editar_tabelatecnica(request, id):  # Altere 'pk' para 'id'
+    tabela = TabelaTecnica.objects.get(pk=id)  # Use 'id' no filtro
 
-    if request.method == 'POST':
-        form = TabelaTecnicaForm(request.POST, instance=tabelatecnica)
+    if request.method == "POST":
+        form = TabelaTecnicaForm(request.POST, instance=tabela)
         if form.is_valid():
             form.save()
-            return redirect('lista_tabelatecnica')
+            messages.success(request, "Tabela Técnica editada com sucesso!")
+            return redirect("lista_tabelatecnica")
     else:
-        form = TabelaTecnicaForm(instance=tabelatecnica)
+        form = TabelaTecnicaForm(instance=tabela)
 
-    return render(request, 'tabelatecnica/editar_tabelatecnica.html', {'form': form, 'tabelatecnica': tabelatecnica})
-
+    return render(request, "tabelatecnica/editar_tabelatecnica.html", {"form": form})
 
 @login_required
 def visualizar_tabelatecnica(request, id):
@@ -157,12 +160,13 @@ def excluir_tabelatecnica(request, id):
     return redirect('lista_tabelatecnica')
 
 def imprimir_tabelatecnica(request):
-    tabelas = TabelaTecnica.objects.all().order_by('codigo')
+    # Filtra equipamentos com status 'Ativo', ignorando maiúsculas/minúsculas
+    tabelas = TabelaTecnica.objects.filter(status__iexact='Ativo').order_by('codigo')
+    
     context = {
         'tabelas': tabelas,
     }
     return render(request, 'tabelatecnica/imprimir_tabelatecnica.html', context)
-
 
 def enviar_alertas_calibracao():
     today = now().date()

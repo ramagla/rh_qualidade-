@@ -27,11 +27,14 @@
     </div>
 <!-- Botão de Cadastrar Comunicado e Imprimir -->
 <div class="text-end mb-4">
+    {% if request.user|has_permission:"Funcionario.add_comunicado" %}
     <a href="{% url 'cadastrar_comunicado' %}" class="btn btn-success">
         <i class="bi bi-plus-circle"></i> Cadastrar
     </a>
+    {% endif %}
 
    <!-- Botão Dropdown para Imprimir com duas opções de modal -->
+   {% if request.user|has_permission:"Funcionario.print_comunicado" %}
         <div class="btn-group ms-2">
             <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-printer"></i> Imprimir
@@ -41,6 +44,8 @@
                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#imprimirAssinaturasModal">Imprimir Lista de Assinaturas</a></li>
             </ul>
         </div>
+        {% endif %}
+
     </div>
     
 <!-- Filtros -->
@@ -195,15 +200,23 @@
             {% endif %}
         </td>
         <td class="align-middle">
+            {% if request.user|has_permission:"Funcionario.view_comunicado" %}
+
             <a href="{% url 'visualizar_comunicado' comunicado.id %}" class="btn btn-sm btn-light" title="Visualizar">
                 <i class="bi bi-eye"></i>
             </a>
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.change_comunicado" %}
             <a href="{% url 'editar_comunicado' comunicado.id %}" class="btn btn-sm btn-light" title="Editar">
                 <i class="bi bi-pencil-square"></i>
             </a>
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.delete_comunicado" %}
             <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalExcluirComunicado{{ comunicado.id }}">
                 <i class="bi bi-trash"></i>
             </button>
+            {% endif %}
+
         </td>
     </tr>
 

@@ -10,10 +10,13 @@
 
     <!-- Botão para Cadastrar Atividade -->
     <div class="text-end mb-4">
+        {% if request.user|has_permission:'Funcionario.add_atividade' %}
         <a href="{% url 'cadastrar_atividade' %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
+        {% endif %}
     </div>
+    
 
     <!-- Formulário de filtro e limite de visualização -->
     <form method="get" class="mb-4">
@@ -122,17 +125,25 @@
                     <td class="align-middle text-start">{{ atividade.nome }}</td>
                     <td class="align-middle">{{ atividade.departamento }}</td>
                     <td class="align-middle">
+                        {% if request.user|has_permission:'Funcionario.view_atividade' %}
                         <a href="{% url 'visualizar_atividade' atividade.id %}" class="btn btn-sm btn-light" title="Visualizar">
                             <i class="bi bi-eye"></i>
                         </a>
-
+                        {% endif %}
+                    
+                        {% if request.user|has_permission:'Funcionario.change_atividade' %}
                         <a href="{% url 'editar_atividade' atividade.id %}" class="btn btn-sm btn-light" title="Editar">
                             <i class="bi bi-pencil-square"></i>
                         </a>
+                        {% endif %}
+                    
+                        {% if request.user|has_permission:'Funcionario.delete_atividade' %}
                         <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirAtividade{{ atividade.id }}">
                             <i class="bi bi-trash"></i>
                         </button>
+                        {% endif %}
                     </td>
+                    
                 </tr>
 
                 <!-- Modal de confirmação de exclusão -->

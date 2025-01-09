@@ -13,10 +13,18 @@
 
     <!-- Botão de Cadastrar Lista de Presença e Imprimir F013 -->
     <div class="text-end mb-4">
-        <a href="{% url 'cadastrar_lista_presenca' %}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Cadastrar</a>
+        {% if request.user|has_permission:"Funcionario.add_listapresenca" %}
+        <a href="{% url 'cadastrar_lista_presenca' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Cadastrar
+        </a>
+        {% endif %}
+        {% if request.user|has_permission:"Funcionario.print_listapresenca" %}
+
         <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirF013Modal">
             <i class="bi bi-printer"></i> Imprimir
         </button>
+        {% endif %}
+
     </div>
 
     <!-- Formulário de filtro -->
@@ -204,15 +212,25 @@
 
                 <!-- Ações -->
                 <td class="align-middle">
+                    {% if request.user|has_permission:"Funcionario.view_listapresenca" %}
+
                     <a href="{% url 'visualizar_lista_presenca' lista.id %}" class="btn btn-sm btn-light" title="Visualizar">
                         <i class="bi bi-eye"></i>
                     </a>
+                    {% endif %}
+                    {% if request.user|has_permission:"Funcionario.change_listapresenca" %}
+
                      <a href="{% url 'editar_lista_presenca' lista.id %}" class="btn btn-sm btn-light" title="Editar">
                         <i class="bi bi-pencil-square"></i>
                     </a>
-                    {% comment %} <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirLista{{ lista.id }}">
+                    {% endif %}
+                    {% if request.user|has_permission:"Funcionario.delete_listapresenca" %}
+
+                    <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirLista{{ lista.id }}">
                         <i class="bi bi-trash"></i>
-                    </button> {% endcomment %}
+                    </button> 
+                    {% endif %}
+
                 </td>
             </tr>
             <!-- Modal de confirmação de exclusão -->

@@ -11,12 +11,12 @@ from django.db import models
 from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 
 
 
 
-@login_required
 def generate_training_hours_chart_styled(total_horas_por_trimestre, ano):
     # Conteúdo da função para gerar o gráfico
     plt.figure(figsize=(8, 4))
@@ -44,7 +44,7 @@ def generate_training_hours_chart_styled(total_horas_por_trimestre, ano):
     plt.close()
     return graphic
 
-
+@method_decorator(login_required, name='dispatch')
 class RelatorioPlanilhaTreinamentosView(TemplateView):
     template_name = "relatorios/relatorio_planilha_treinamentos.html"
 
@@ -198,7 +198,6 @@ class RelatorioIndicadorAnualView(TemplateView):
         return context
 
 
-    @login_required
     def gerar_grafico(self, dados_por_ano):
         # Obter anos e índices
         anos = list(dados_por_ano.keys())

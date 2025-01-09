@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load tz %}
+{% now "Y-m-d" as hoje %}
+{% load custom_filters %}
+
+<div class="print-container container mt-5">
+    <!-- Cabeçalho -->
+    <div class="header header-table print-header text-center">
+        <table class="custom-header" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+                <td rowspan="2" style="text-align: center; vertical-align: middle; width: 10%; border: 1px solid #ddd;">
+                    <img src="/static/logo.png" alt="Logo" style="width: 50px; height: auto;">
+                </td>
+                <td colspan="5" style="text-align: center; font-weight: bold; font-size: 12px; vertical-align: middle; border: 1px solid #ddd;">
+                    CRONOGRAMA DE CALIBRAÇÃO DOS DISPOSITIVOS
+                </td>
+                <td rowspan="2" style="text-align: center; vertical-align: middle; width: 15%; border: 1px solid #ddd;">
+                    <strong>CR006 - Rev33</strong><br>
+                    <span>{{ data_atual }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
+                    <strong>Ano:</strong> {{ ano|default:"Todos os Anos" }}
+                </td>
+                <td colspan="4" style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
+                    <strong>Atualizado:</strong> Automaticamente
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Botão de Impressão -->
+    <div class="text-center mb-4 d-print-none">
+        <button onclick="imprimir()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <form method="GET" class="row mb-4 d-print-none">
+        <div class="col-md-3 mb-3">
+            <label for="ano" class="form-label">Ano:</label>
+            <select id="ano" name="ano" class="form-select">
+                <option value="">Todos</option>
+                {% for ano in anos_disponiveis %}
+                    <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label for="cliente" class="form-label">Cliente:</label>
+            <select id="cliente" name="cliente" class="form-select">
+                <option value="">Todos</option>
+                {% for cliente in clientes_disponiveis %}
+                    <option value="{{ cliente }}" {% if cliente == request.GET.cliente %}selected{% endif %}>{{ cliente }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end mb-3">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="custom-table table-bordered table-striped text-center align-middle">
+            <thead class="table-primary">
+                <tr>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Código do Dispositivo</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Quantidade</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Cliente</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Descrição</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Estudo Realizado</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Data da Última Calibração</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Próxima Calibração</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Última Saída</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Data de Retorno</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Setor</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Situação</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Observações</th>
+                    <th class="text-center align-middle" style="white-space: pre-line;">Local de Armazenagem</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dispositivo in dispositivos %}
+                <tr>
+                    <td>{{ dispositivo.codigo }}</td>
+                    <td>{{ dispositivo.qtde }}</td>
+                    <td>{{ dispositivo.cliente }}</td>
+                    <td>{{ dispositivo.descricao }}</td>
+                    <td>{{ dispositivo.estudo_realizado }}</td>
+                    <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if dispositivo.data_proxima_calibracao %}
+                            {% with dispositivo.data_proxima_calibracao as data_calibracao %}
+                                {% if data_calibracao < today %}
+                                    <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
+                                {% elif data_calibracao <= today|add_days:31 %}
+                                    <span class="badge bg-warning">{{ data_calibracao|date:"d/m/Y" }}</span>
+                                {% else %}
+                                    <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
+                                {% endif %}
+                            {% endwith %}
+                        {% else %}
+                            <span class="text-muted">Não definida</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ dispositivo.data_ultima_saida|date:"d/m/Y" }}</td>
+                    <td>{{ dispositivo.data_retorno|date:"d/m/Y" }}</td>
+                    <td>{{ dispositivo.setor }}</td>
+                    <td>
+                        {% if dispositivo.situacao %}
+                            {% if dispositivo.situacao == "OK" %}
+                                <span class="badge bg-success">OK</span>
+                            {% else %}
+                                <span class="badge bg-danger">N/OK</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>{{ dispositivo.observacoes | safe }}</td>
+                    <td>{{ dispositivo.local_armazenagem }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <style>
+        /* Tabela customizada */
+        .custom-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            border: 1px solid #ddd; /* Linhas externas da tabela */
+        }
+
+        .custom-table th, .custom-table td {
+            border: 1px solid #ddd; /* Linhas internas da tabela */
+            padding: 5px;
+            text-align: center; /* Centraliza horizontalmente */
+            vertical-align: middle; /* Centraliza verticalmente */
+            font-size: 10px; /* Tamanho consistente */
+        }
+
+        /* Ajuste para cabeçalhos */
+        .custom-table th {
+            background-color: #f5f5f5; /* Fundo para destacar o cabeçalho */
+            font-weight: bold;
+        }
+
+        /* Ajustes para impressão */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact; /* Garante as cores na impressão */
+                color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .d-print-none {
+                display: none !important; /* Esconde elementos desnecessários */
+            }
+
+            .custom-table th, .custom-table td {
+                font-size: 8px; /* Fonte menor para impressão */
+                padding: 3px; /* Reduz espaçamento */
+            }
+        }
+    </style>
+
+    <script>
+        function imprimir() {
+            const conteudo = document.querySelector('.print-container').innerHTML;
+            const novaJanela = window.open('', '_blank', 'width=800,height=600');
+            novaJanela.document.write(`
+                <!DOCTYPE html>
+                <html lang="pt-br">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Cronograma de Dispositivos</title>
+                        <link rel="stylesheet" href="/static/css/styles.css"> <!-- Link para o CSS -->
+                        <style>
+                            @page { size: A4 landscape; margin: 10mm; }
+                            body { margin: 0; padding: 0; }
+                            .d-print-none { display: none !important; } /* Oculta elementos desnecessários */
+                        </style>
+                    </head>
+                    <body>${conteudo}</body>
+                </html>
+            `);
+            novaJanela.document.close();
+            novaJanela.onload = () => {
+                novaJanela.print();
+                novaJanela.close();
+            };
+        }
+    </script>
+    
+{% endblock %}

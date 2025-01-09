@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # URLs de redirecionamento
 LOGIN_URL = '/login/'
-LOGOUT_REDIRECT_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/' 
 LOGIN_REDIRECT_URL = '/' 
 
 # Chave secreta e modo de depuração
@@ -102,6 +102,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'rh_qualidade.middleware.PermissionMiddleware',
+
 ]
 
 # Configuração de URLs e WSGI

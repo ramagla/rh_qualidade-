@@ -35,13 +35,19 @@
     
     <!-- Botões de ações gerais -->
     <div class="text-end mb-4">
+        {% if request.user|has_permission:'Funcionario.add_matrizpolivalencia' %}
         <a href="{% url 'cadastrar_matriz_polivalencia' %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Nova Matriz
         </a>
+        {% endif %}
+    
+        {% if request.user|has_permission:'Funcionario.view_atividade' %}
         <a href="{% url 'lista_atividades' %}" class="btn btn-sm btn-light" title="Gerenciar Atividades">
             <i class="bi bi-tools"></i> Gerenciar Atividades
         </a>
+        {% endif %}
     </div>
+    
 
 
     
@@ -67,17 +73,25 @@
                 <td class="align-middle">{{ matriz.atualizado_em|date:"d/m/Y H:i" }}</td>
 
                 <td class="align-middle">
-                    
+                    {% if request.user|has_permission:'Funcionario.change_matrizpolivalencia' %}
                     <a href="{% url 'editar_matriz_polivalencia' matriz.id %}" class="btn btn-sm btn-light" title="Editar">
                         <i class="bi bi-pencil-square"></i>
                     </a>
+                    {% endif %}
+                
+                    {% if request.user|has_permission:'Funcionario.view_matrizpolivalencia' %}
                     <a href="{% url 'imprimir_matriz' matriz.id %}" class="btn btn-sm btn-info" title="Imprimir">
                         <i class="bi bi-printer"></i>
                     </a>
+                    {% endif %}
+                
+                    {% if request.user|has_permission:'Funcionario.delete_matrizpolivalencia' %}
                     <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirMatriz{{ matriz.id }}">
                         <i class="bi bi-trash"></i>
                     </button>
+                    {% endif %}
                 </td>
+                
             </tr>
             
             <!-- Modal de confirmação de exclusão -->

@@ -4,6 +4,9 @@
 
 {% block content %}
 {% load custom_filters %}
+
+
+
 <div class="container mt-5">
     <h2 class="text-center mb-4">Colaboradores Cadastrados</h2>
     <!-- Toast container para mensagens de alerta no canto inferior direito -->
@@ -29,20 +32,32 @@
 
     <!-- Botões -->
     <div class="d-flex justify-content-end mb-4">
-        <a href="{% url 'cadastrar_funcionario' %}" class="btn btn-success me-2">
-            <i class="bi bi-person-plus"></i> Cadastrar
-        </a>
+        {% if request.user|has_permission:"Funcionario.add_funcionario" %}
+            <a href="{% url 'cadastrar_funcionario' %}" class="btn btn-success me-2">
+                <i class="bi bi-person-plus"></i> Cadastrar
+            </a>
+        {% endif %}
+        
+        {% if request.user|has_permission:"Funcionario.change_funcionario" or request.user|has_permission:"Funcionario.view_funcionario" %}
         <a href="{% url 'organograma' %}" class="btn btn-info me-2">
-            <i class="bi bi-diagram-2"></i> Organograma
-        </a>
+                <i class="bi bi-diagram-2"></i> Organograma
+            </a>
+        {% endif %}
+        
+        {% if request.user|has_permission:"Funcionario.change_funcionario" or request.user|has_permission:"Funcionario.view_funcionario" %}
         <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#modalSelecionarFuncionario">
-        <i class="bi bi-clock-history"></i> Histórico de Cargos
-        </button>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#imprimirModal">
-            <i class="bi bi-printer"></i> Imprimir Ficha
-        </button>        
+                <i class="bi bi-clock-history"></i> Histórico de Cargos
+            </button>
+        {% endif %}
+        
+        {% if request.user|has_permission:"Funcionario.print_funcionario" %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#imprimirModal">
+                <i class="bi bi-printer"></i> Imprimir Ficha
+            </button>
+        {% endif %}
     </div>
-
+    
+    
 
 
     <!-- Modal para Histórico de Cargos -->
@@ -275,13 +290,17 @@
                 <a href="{% url 'visualizar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Visualizar">
                     <i class="bi bi-eye"></i>  
                 </a>
-                <a href="{% url 'editar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Editar">
-                    <i class="bi bi-pencil-square"></i>  
-                </a>
-                {% comment %} <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalExcluirFuncionario{{ funcionario.id }}" title="Excluir">
-                    <i class="bi bi-trash"></i>  
-                </button> {% endcomment %}
-            </td>
+                {% if request.user|has_permission:"Funcionario.change_funcionario" %}
+                    <a href="{% url 'editar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Editar">
+                        <i class="bi bi-pencil-square"></i>  
+                    </a>
+                {% endif %}
+                {% if request.user|has_permission:"Funcionario.delete_funcionario" %}
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalExcluirFuncionario{{ funcionario.id }}" title="Excluir">
+                        <i class="bi bi-trash"></i>  
+                    </button> 
+                {% endif %}
+                
         </tr>
     {% empty %}
         <tr>

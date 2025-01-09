@@ -28,11 +28,19 @@
 
   <!-- Botão de Cadastrar Integração e Imprimir Ficha -->
     <div class="text-end mb-4">
+        {% if request.user|has_permission:"Funcionario.add_integracaofuncionario" %}
+
         <a href="{% url 'cadastrar_integracao' %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
+        {% endif %}
+        {% if request.user|has_permission:"Funcionario.view_integracaofuncionario" %}
+
         <button class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#imprimirModal">
             <i class="bi bi-printer"></i> Imprimir
+        </button>
+        {% endif %}
+
     </div>
 
   <!-- Modal para selecionar integração -->
@@ -55,7 +63,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary">Imprimir</button>
+                    <button type="submit" class="btn btn-primary">Imprimir</button>                   
                 </form>
             </div>
         </div>
@@ -219,15 +227,21 @@
         </td>
 
         <td>
+            {% if request.user|has_permission:"Funcionario.view_integracaofuncionario" %}
             <a href="{% url 'visualizar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Visualizar">
                 <i class="bi bi-eye"></i>
             </a>
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.change_integracaofuncionario" %}
             <a href="{% url 'editar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Editar">
                 <i class="bi bi-pencil-square"></i>
             </a>
-            {% comment %} <button class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirIntegracao{{ integracao.id }}">
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.delete_integracaofuncionario" %}
+            <button class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirIntegracao{{ integracao.id }}">
                 <i class="bi bi-trash"></i>
-            </button> {% endcomment %}
+            </button>
+            {% endif %}
         </td>
     </tr>
         </div>

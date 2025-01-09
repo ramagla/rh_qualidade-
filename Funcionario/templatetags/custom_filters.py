@@ -1,5 +1,9 @@
 from django import template
 import os
+from datetime import timedelta
+from dateutil.relativedelta import relativedelta
+
+
 
 
 register = template.Library()
@@ -99,3 +103,33 @@ def basename(value):
     Retorna apenas o nome do arquivo sem o caminho completo.
     """
     return os.path.basename(value)
+
+@register.filter
+def add_days(value, days):
+    """
+    Adiciona 'days' dias à data fornecida.
+    """
+    if value:
+        return value + timedelta(days=days)
+    return value
+
+@register.filter
+def add_months(date, months):
+    if date:
+        return date + relativedelta(months=months)
+    return None
+
+@register.filter
+def add_attribute(field, args):
+    """
+    Adiciona atributos ao widget de um campo do formulário.
+    Uso no template: {{ field|add_attribute:"key:value" }}
+    """
+    key, value = args.split(':')
+    field.field.widget.attrs[key] = value
+    return field
+
+@register.filter
+def has_permission(user, perm):
+    """Verifica se o usuário possui uma permissão específica."""
+    return user.has_perm(perm)
