@@ -1,5 +1,5 @@
 from django.contrib import admin
-from ckeditor.widgets import CKEditorWidget
+from django_ckeditor_5.widgets import CKEditor5Widget
 from django import forms
 from Funcionario.models import Treinamento, AvaliacaoTreinamento, AtualizacaoSistema, Settings
 
@@ -14,7 +14,7 @@ class AtualizacaoSistemaForm(forms.ModelForm):
         model = AtualizacaoSistema
         fields = '__all__'
         widgets = {
-            'descricao': CKEditorWidget(),  # Aplica CKEditor ao campo 'descricao'
+            'descricao': CKEditor5Widget(),  # Aplica CKEditor ao campo 'descricao'
         }
 
 # Configuração do admin para AtualizacaoSistema

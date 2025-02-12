@@ -33,9 +33,7 @@ INSTALLED_APPS = [
     'xhtml2pdf',
     'django_ckeditor_5',
     'widget_tweaks',
-    'django_select2',
-    'ckeditor',
-    'ckeditor_uploader',
+    'django_select2',    
     'django_celery_beat',
     'alerts',
 
@@ -53,23 +51,6 @@ CELERY_TASK_SERIALIZER = 'json'
 # Configurações do CKEditor
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 CKEDITOR_UPLOAD_PATH = "uploads/"
-CKEDITOR_CONFIGS = {
-    'default': {
-        'toolbar': 'full',  # Define a toolbar completa
-        'height': 300,
-        'width': '100%',
-        'toolbar_Custom': [
-            ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript'],
-            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote'],
-            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
-            ['Link', 'Unlink'],
-            ['Image', 'Table', 'HorizontalRule', 'SpecialChar'],
-            ['Undo', 'Redo'],
-            ['Format', 'Font', 'FontSize'],
-        ],
-    },
-}
-
 CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': [
