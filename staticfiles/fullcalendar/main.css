@@ -1,0 +1,107 @@
+#calendar {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .fc {
+    font-size: 1em;
+  }
+  
+  .fc-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  
+  .fc-button {
+    background-color: #007bff !important;
+    color: white !important;
+    border: none !important;
+    padding: 5px 10px !important;
+    cursor: pointer !important;
+  }
+  
+  .fc-daygrid-day {
+    border: 1px solid #ddd !important;
+    height: 100px !important;
+  }
+  
+  .fc-daygrid-event {
+    background-color: #3788d8 !important;
+    color: white !important;
+    border-radius: 5px !important;
+    padding: 5px !important;
+  }
+  
+  .fc-day-today {
+    background-color: #ffefc1 !important;
+  }
+  
+  .modal-header {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .modal-footer .btn {
+    min-width: 100px;
+  }
+  #calendar {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .fc {
+    font-size: 1em;
+  }
+  
+  .fc-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  
+  .fc-button {
+    background-color: #007bff !important;
+    color: white !important;
+    border: none !important;
+    padding: 5px 10px !important;
+    cursor: pointer !important;
+  }
+  
+  .fc-daygrid-day {
+    border: 1px solid #ddd !important;
+    height: 100px !important;
+  }
+  
+  .fc-daygrid-event {
+    background-color: #3788d8 !important;
+    color: white !important;
+    border-radius: 5px !important;
+    padding: 5px !important;
+  }
+  
+  .fc-day-today {
+    background-color: #ffefc1 !important;
+  }
+  
+  .modal-header {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .modal-footer .btn {
+    min-width: 100px;
+  }
+    

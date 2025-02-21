@@ -10,8 +10,11 @@ from django.core.paginator import Paginator
 from django.db.models import Count 
 from django.db.models import Q
 from ..models.cargo import Cargo
+from django.contrib.auth.decorators import user_passes_test
 
 
+def is_authenticated(user):
+    return user.is_authenticated
 
 
 
@@ -200,13 +203,11 @@ class ImprimirFichaView(View):
         return self.get(request, funcionario_id)
     
 
-@login_required
 def gerar_organograma(funcionario):
     """
     Função recursiva para construir a hierarquia completa.
     Inclui a contagem de subordinados.
     """
-    # Alterando para filtrar pelo id do responsável, em vez de pelo nome
     subordinados = Funcionario.objects.filter(responsavel_id=funcionario.id, status="Ativo")
     estrutura = []
     for subordinado in subordinados:
@@ -215,18 +216,29 @@ def gerar_organograma(funcionario):
             'cargo': subordinado.cargo_atual,
             'foto': subordinado.foto.url if subordinado.foto else None,
             'subordinados': gerar_organograma(subordinado),
-            'quantidade_subordinados': subordinados.count()  # Contagem de subordinados
+            'quantidade_subordinados': subordinados.count()
         })
     return estrutura
 
 
+
 @login_required
 def organograma_view(request):
-    """
-    View para exibir o organograma.
-    Carrega todos os funcionários no topo da hierarquia (sem responsável).
-    """
-    top_funcionarios = Funcionario.objects.filter(responsavel__isnull=True, status="Ativo")
+    print(f"Usuário autenticado: {request.user}")  # Verifica o usuário autenticado
+    print(f"Tipo de request.user: {type(request.user)}")  # Confirmação do tipo do objeto
+
+    # Se o usuário for um superuser, ele pode ver todos os funcionários
+    if request.user.is_superuser:
+        top_funcionarios = Funcionario.objects.filter(responsavel__isnull=True, status="Ativo")
+    else:
+        # Tenta encontrar um funcionário correspondente ao usuário autenticado
+        funcionario = Funcionario.objects.filter(nome=request.user.get_full_name()).first()
+
+        if funcionario:
+            top_funcionarios = Funcionario.objects.filter(responsavel=funcionario, status="Ativo")
+        else:
+            # Se não encontrar, mostra todos os funcionários no topo da hierarquia
+            top_funcionarios = Funcionario.objects.filter(responsavel__isnull=True, status="Ativo")
 
     organograma = []
     for funcionario in top_funcionarios:
@@ -234,10 +246,12 @@ def organograma_view(request):
             'nome': funcionario.nome,
             'cargo': funcionario.cargo_atual,
             'foto': funcionario.foto.url if funcionario.foto else None,
-            'subordinados': gerar_organograma(funcionario)  # Gera a hierarquia completa
+            'subordinados': gerar_organograma(funcionario)
         })
 
     return render(request, 'funcionarios/organograma.html', {'organograma': organograma})
+
+
 
 
 # Listar histórico de cargos

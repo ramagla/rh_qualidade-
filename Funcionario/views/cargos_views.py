@@ -141,10 +141,16 @@ def editar_cargo(request, cargo_id):
         form = CargoForm(request.POST, request.FILES, instance=cargo)
         if form.is_valid():
             form.save()
-            return redirect('lista_cargos')  # Redireciona para a lista de cargos após a edição
+            return redirect('lista_cargos')
     else:
-        form = CargoForm(instance=cargo)
+        # Garantir que as datas estão no formato correto
+        form = CargoForm(instance=cargo, initial={
+            'elaborador_data': cargo.elaborador_data.strftime('%Y-%m-%d') if cargo.elaborador_data else '',
+            'aprovador_data': cargo.aprovador_data.strftime('%Y-%m-%d') if cargo.aprovador_data else '',
+        })
+
     return render(request, 'cargos/editar_cargo.html', {'form': form})
+
 
 def imprimir_cargo(request, cargo_id):
     cargo = get_object_or_404(Cargo, pk=cargo_id)

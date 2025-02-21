@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@fullcalendar/core": "^5.11.5",
+    "@fullcalendar/daygrid": "^5.11.5",
+    "simple-calendar": "^1.0.0",
+    "tui-calendar": "^1.15.3"
+  }
+}

@@ -62,7 +62,13 @@
         <!-- Novos Campos de Elaboração/Revisão e Aprovação -->
         <div class="col-md-6">
             <label for="elaborador" class="form-label">Elaborador:</label>
-            {{ form.elaborador }}
+            <select name="elaborador" id="elaborador" class="form-select select2">
+                {% for funcionario in form.elaborador.field.queryset %}
+                    <option value="{{ funcionario.id }}" {% if funcionario.nome == "Anderson Goveia de Lacerda" %}selected{% endif %}>
+                        {{ funcionario.nome }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
 
         <div class="col-md-6">
@@ -72,7 +78,13 @@
 
         <div class="col-md-6">
             <label for="aprovador" class="form-label">Aprovador:</label>
-            {{ form.aprovador }}
+            <select name="aprovador" id="aprovador" class="form-select select2">
+                {% for funcionario in form.aprovador.field.queryset %}
+                    <option value="{{ funcionario.id }}" {% if funcionario.nome == "Lilian Fernandes" %}selected{% endif %}>
+                        {{ funcionario.nome }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
 
         <div class="col-md-6">

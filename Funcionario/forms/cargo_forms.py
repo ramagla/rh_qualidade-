@@ -43,7 +43,7 @@ class CargoForm(forms.ModelForm):
             'educacao_minima', 
             'treinamento_externo', 
             'treinamento_interno_minimo', 
-            'experiencia_minima',  # VÍRGULA ADICIONADA AQUI
+            'experiencia_minima',
             'elaborador',
             'elaborador_data',
             'aprovador',
@@ -54,29 +54,35 @@ class CargoForm(forms.ModelForm):
             'numero_dc': forms.TextInput(attrs={'class': 'form-control'}),
             'descricao_arquivo': forms.FileInput(attrs={'class': 'form-control'}),
             'departamento': forms.TextInput(attrs={'class': 'form-control'}),
-            'elaborador': forms.Select(attrs={'class': 'form-control'}),
+            'elaborador': Select2Widget(attrs={'class': 'form-select'}),
             'elaborador_data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'aprovador': forms.Select(attrs={'class': 'form-control'}),
+            'aprovador': Select2Widget(attrs={'class': 'form-select'}),
             'aprovador_data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         # Filtrar funcionários ativos e ordenar alfabeticamente
-        self.fields['elaborador'].queryset = Funcionario.objects.filter(
-            status='Ativo'
-        ).order_by('nome')
-        self.fields['aprovador'].queryset = Funcionario.objects.filter(
-            status='Ativo'
-        ).order_by('nome')   
-        
+        self.fields['elaborador'].queryset = Funcionario.objects.filter(status='Ativo').order_by('nome')
+        self.fields['aprovador'].queryset = Funcionario.objects.filter(status='Ativo').order_by('nome')
+
+        # Definir valores padrão se o formulário for novo
+        if not self.instance.pk:
+            try:
+                self.fields['elaborador'].initial = Funcionario.objects.get(nome="Anderson Goveia de Lacerda").id
+            except Funcionario.DoesNotExist:
+                self.fields['elaborador'].initial = None  # Deixa em branco se não encontrar
+
+            try:
+                self.fields['aprovador'].initial = Funcionario.objects.get(nome="Lilian Fernandes").id
+            except Funcionario.DoesNotExist:
+                self.fields['aprovador'].initial = None  # Deixa em branco se não encontrar
+
     def clean_nome(self):
         nome = self.cleaned_data.get('nome', '')
         return nome.title()
-
-    def clean_departamento(self):
-        departamento = self.cleaned_data.get('departamento', '')
-        return departamento.title()
+ 
 
     def clean_numero_dc(self):
         numero_dc = self.cleaned_data.get('numero_dc', '')
