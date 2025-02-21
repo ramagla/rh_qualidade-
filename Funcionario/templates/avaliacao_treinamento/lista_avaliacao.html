@@ -41,47 +41,9 @@
         <a href="{% url 'avaliacao_create' %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
-        {% endif %}
+        {% endif %}    
 
-        {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
-        <!-- Botão de Imprimir Avaliação -->
-        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirAvaliacaoModal">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
-        {% endif %}
-
-
-
-    </div>
-
-
-
-   <!-- Modal para selecionar avaliação e imprimir -->
-<div class="modal fade" id="imprimirAvaliacaoModal" tabindex="-1" aria-labelledby="imprimirAvaliacaoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imprimirAvaliacaoModalLabel">Selecionar Avaliação para Imprimir</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="imprimirAvaliacaoForm" method="GET" action="">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="avaliacao_id" class="form-label">Avaliação:</label>
-                        <select name="avaliacao_id" id="avaliacao_id" class="form-select select2" required>
-                            <option value="">Selecione uma avaliação</option>
-                            {% for avaliacao in avaliacoes_treinamento %}
-                                <option value="{{ avaliacao.id }}">{{ avaliacao.funcionario.nome }} - {{ avaliacao.treinamento.assunto }} - {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Imprimir</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+    </div> 
 
 
     <form method="get" class="mb-4">
@@ -235,19 +197,24 @@
 
         <td class="align-middle">
             {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
-            <a href="{% url 'visualizar_avaliacao' avaliacao.id %}" class="btn btn-light" title="Visualizar">
+            <a href="{% url 'visualizar_avaliacao' avaliacao.id %}" class="btn btn-sm btn-info" title="Visualizar">
                 <i class="bi bi-eye"></i>
             </a>
             {% endif %}
             {% if request.user|has_permission:"Funcionario.change_avaliacaotreinamento" %}
 
-            <a href="{% url 'editar_avaliacao' avaliacao.id %}" class="btn btn-light" title="Editar">
+            <a href="{% url 'editar_avaliacao' avaliacao.id %}" class="btn btn-sm  btn-warning" title="Editar">
                 <i class="bi bi-pencil"></i>
+            </a>
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
+            <a href="{% url 'imprimir_treinamento' avaliacao.id %}" target="_blank" class="btn btn-sm btn-primary" title="Imprimir">
+                <i class="bi bi-printer"></i>
             </a>
             {% endif %}
             {% if request.user|has_permission:"Funcionario.delete_avaliacaotreinamento" %}
 
-             <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}" title="Excluir">
+             <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}" title="Excluir">
                 <i class="bi bi-trash"></i>
             </a> 
             {% endif %}

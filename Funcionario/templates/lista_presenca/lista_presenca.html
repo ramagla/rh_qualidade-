@@ -18,12 +18,7 @@
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
         {% endif %}
-        {% if request.user|has_permission:"Funcionario.print_listapresenca" %}
-
-        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirF013Modal">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
-        {% endif %}
+       
 
     </div>
 
@@ -127,197 +122,148 @@
 
 
     <!-- Lista de Presenças -->
-    <table class="table table-bordered text-center mt-4">
-        <thead>
-            <tr>
-                <th class="align-middle">Assunto</th>
-                <th class="align-middle">Data Início</th>
-                <th class="align-middle">Data Fim</th>
-                <th class="align-middle">Duração</th>
-                <th class="align-middle">Participantes</th>
-                <th class="align-middle">Necessita Avaliação</th>
-                <th class="align-middle">Situação</th>
-                <th class="align-middle">Anexo</th>                
-                <th class="align-middle">Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for lista in listas_presenca %}
-            <tr>
-                <td class="align-middle">{{ lista.assunto }}</td>
-                <td class="align-middle">{{ lista.data_inicio|date:"d/m/Y" }}</td>
-                <td class="align-middle">{{ lista.data_fim|date:"d/m/Y" }}</td>
-                <td class="align-middle">{{ lista.duracao|horas_formatadas }}</td>
+   <!-- Lista de Presenças -->
+<table class="table table-bordered text-center mt-4">
+    <thead>
+        <tr>
+            <th class="align-middle">Assunto</th>
+            <th class="align-middle">Data Início</th>
+            <th class="align-middle">Data Fim</th>
+            <th class="align-middle">Duração</th>
+            <th class="align-middle">Participantes</th>
+            <th class="align-middle">Necessita Avaliação</th>
+            <th class="align-middle">Situação</th>
+            <th class="align-middle">Anexo</th>                
+            <th class="align-middle">Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lista in listas_presenca %}
+        <tr>
+            <td class="align-middle">{{ lista.assunto }}</td>
+            <td class="align-middle">{{ lista.data_inicio|date:"d/m/Y" }}</td>
+            <td class="align-middle">{{ lista.data_fim|date:"d/m/Y" }}</td>
+            <td class="align-middle">{{ lista.duracao|horas_formatadas }}</td>
+
+            <!-- Participantes com ícone de modal -->
+            <td class="align-middle">
+                <a href="#" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#modalParticipantes{{ lista.id }}">
+                    <img src="https://servidor-estaticos-teal-ten.vercel.app/olho.png" alt="Participantes" style="width: 20px; height: 20px;">
+                </a>
+            </td>
+
+            <!-- Necessita Avaliação -->
+            <td class="align-middle">
+                {% if lista.necessita_avaliacao %}
+                    <span class="badge bg-warning text-dark">Sim</span>
+                {% else %}
+                    <span class="badge bg-success text-white">Não</span>
+                {% endif %}
+            </td>
+
+            <!-- Situação -->
+            <td class="align-middle">
+                {% if lista.situacao == 'finalizado' %}
+                    <span class="badge bg-success text-white">Finalizado</span>
+                {% elif lista.situacao == 'em_andamento' %}
+                    <span class="badge bg-warning text-dark">Em Andamento</span>
+                {% elif lista.situacao == 'indefinido' %}
+                    <span class="badge bg-secondary text-white">Indefinido</span>
+                {% endif %}
+            </td>
+
+            <!-- Anexo -->
+            <td class="align-middle">
+                {% if lista.lista_presenca %}
+                    <a href="{{ lista.lista_presenca.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Anexo">
+                        <i class="bi bi-file-earmark-arrow-down"></i>
+                    </a>
+                {% else %}
+                    <span class="text-muted">Nenhum anexo</span>
+                {% endif %}
+            </td>
+
+            <!-- Ações -->
+            <td class="align-middle">
+                {% if request.user|has_permission:"Funcionario.view_listapresenca" %}
+                <a href="{% url 'visualizar_lista_presenca' lista.id %}" class="btn btn-sm btn-info" title="Visualizar">
+                    <i class="bi bi-eye"></i>
+                    </a>
+                {% endif %}
                 
-                <!-- Participantes com ícone de modal -->
-                <td class="align-middle">
-                    <a href="#" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#modalParticipantes{{ lista.id }}">
-                        <img src="https://servidor-estaticos-teal-ten.vercel.app/olho.png" alt="Participantes" style="width: 20px; height: 20px;">
+                {% if request.user|has_permission:"Funcionario.change_listapresenca" %}
+                <a href="{% url 'editar_lista_presenca' lista.id %}" class="btn btn-sm btn-warning text-dark" title="Editar">
+                    <i class="bi bi-pencil-square"></i>
                     </a>
-                </td>
-              <!-- Modal de Participantes -->
-                <div class="modal fade" id="modalParticipantes{{ lista.id }}" tabindex="-1" aria-labelledby="modalParticipantesLabel{{ lista.id }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalParticipantesLabel{{ lista.id }}">Participantes da Lista de Presença</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <ul>
-                    {% for participante in lista.participantes.all %}
-                        <li>{{ participante.nome }}</li> <!-- Apenas o nome -->
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            </div>
-        </div>
-    </div>
-</div>
+                {% endif %}
 
-
-
-
-                <!-- Necessita Avaliação de Eficácia -->
-                <td class="align-middle">
-                    {% if lista.necessita_avaliacao %}
-                        <span class="badge bg-warning text-dark">Sim</span>
-                    {% else %}
-                        <span class="badge bg-success text-white">Não</span>
-                    {% endif %}
-                </td>
-
-                 <!-- Situação -->
-               <td class="align-middle">
-                    {% if lista.situacao == 'finalizado' %}
-                        <span class="badge bg-success text-white">Finalizado</span>
-                    {% elif lista.situacao == 'em_andamento' %}
-                        <span class="badge bg-warning text-dark">Em Andamento</span>
-                    {% elif lista.situacao == 'indefinido' %}
-                        <span class="badge bg-secondary text-white">Indefinido</span>
-                    {% endif %}
-                </td>
-                                <!-- Link para baixar o anexo da lista de presença -->
-                <td class="align-middle">
-                    {% if lista.lista_presenca %}
-                        <a href="{{ lista.lista_presenca.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Anexo">
-                            <i class="bi bi-file-earmark-arrow-down"></i>
-                        </a>
-                    {% else %}
-                        <span class="text-muted">Nenhum anexo</span>
-                    {% endif %}
-                </td>
-
-                <!-- Ações -->
-                <td class="align-middle">
-                    {% if request.user|has_permission:"Funcionario.view_listapresenca" %}
-
-                    <a href="{% url 'visualizar_lista_presenca' lista.id %}" class="btn btn-sm btn-light" title="Visualizar">
-                        <i class="bi bi-eye"></i>
+                {% if request.user|has_permission:"Funcionario.print_listapresenca" %}
+                <a href="{% url 'imprimir_lista_presenca' lista.id %}" class="btn btn-sm btn-primary" title="Imprimir">
+                    <i class="bi bi-printer"></i>
                     </a>
-                    {% endif %}
-                    {% if request.user|has_permission:"Funcionario.change_listapresenca" %}
+                {% endif %}
 
-                     <a href="{% url 'editar_lista_presenca' lista.id %}" class="btn btn-sm btn-light" title="Editar">
-                        <i class="bi bi-pencil-square"></i>
-                    </a>
-                    {% endif %}
-                    {% if request.user|has_permission:"Funcionario.delete_listapresenca" %}
-
-                    <button type="button" class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirLista{{ lista.id }}">
-                        <i class="bi bi-trash"></i>
+                {% if request.user|has_permission:"Funcionario.delete_listapresenca" %}
+                <button type="button" class="btn btn-sm btn-danger" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirLista{{ lista.id }}">
+                    <i class="bi bi-trash"></i>
                     </button> 
-                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
 
-                </td>
-            </tr>
-            <!-- Modal de confirmação de exclusão -->
-                <div class="modal fade" id="modalExcluirLista{{ lista.id }}" tabindex="-1" aria-labelledby="modalExcluirListaLabel{{ lista.id }}" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="modalExcluirListaLabel{{ lista.id }}">Confirmar Exclusão</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Tem certeza de que deseja excluir a lista de presença de <strong>{{ lista.assunto }}</strong> realizada em {{ lista.data_realizacao|date:"d/m/Y" }}?</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <form action="{% url 'excluir_lista_presenca' lista.id %}" method="post" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger">Excluir</button>
-                                </form>
-                            </div>
-                        </div>
+        <!-- Modal de Participantes -->
+        <div class="modal fade" id="modalParticipantes{{ lista.id }}" tabindex="-1" aria-labelledby="modalParticipantesLabel{{ lista.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalParticipantesLabel{{ lista.id }}">Participantes da Lista de Presença</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                </div>
-
-           <!-- Modal para selecionar treinamento e imprimir F013 -->
-            <div class="modal fade" id="imprimirF013Modal" tabindex="-1" aria-labelledby="imprimirF013ModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="imprimirF013ModalLabel">Selecionar Lista de Presença</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="imprimirF013Form" method="GET" action="">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label for="lista_id" class="form-label">Lista de Presença:</label>
-                                    <select name="lista_id" id="lista_id" class="form-select select2" required>
-                                        <option value="">Selecione uma lista</option>
-                                        {% for lista in listas_presenca %}
-                                            <option value="{{ lista.id }}">{{ lista.assunto }}</option>
-                                        {% endfor %}
-                                    </select>
-
-                                </div>
-                                <button type="submit" class="btn btn-primary">Imprimir</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% empty %}
-            <tr>
-                <td colspan="7" class="text-center align-middle">Nenhuma lista de presença encontrada.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-   <!-- Modal para selecionar treinamento e imprimir F013 -->
-<div class="modal fade" id="imprimirF013Modal" tabindex="-1" aria-labelledby="imprimirF013ModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imprimirF013ModalLabel">Selecionar Treinamento para Imprimir F013</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="imprimirF013Form" method="get" action="">
-                    <div class="mb-3">
-                        <label for="treinamento_modal" class="form-label">Treinamento:</label>
-                        <select name="treinamento" id="treinamento_modal" class="form-select" required>
-                            <option value="">Selecione</option>
-                            {% for lista in listas_presenca %}
-                                <option value="{{ lista.id }}">{{ lista.assunto }}</option>
+                    <div class="modal-body">
+                        <ul>
+                            {% for participante in lista.participantes.all %}
+                                <li>{{ participante.nome }}</li>
                             {% endfor %}
-                        </select>
+                        </ul>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" id="submitF013Button" class="btn btn-primary">Imprimir</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+
+        <!-- Modal de Confirmação de Exclusão -->
+        <div class="modal fade" id="modalExcluirLista{{ lista.id }}" tabindex="-1" aria-labelledby="modalExcluirListaLabel{{ lista.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalExcluirListaLabel{{ lista.id }}">Confirmar Exclusão</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza de que deseja excluir a lista de presença de <strong>{{ lista.assunto }}</strong> realizada em {{ lista.data_realizacao|date:"d/m/Y" }}?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form action="{% url 'excluir_lista_presenca' lista.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% empty %}
+        <tr>
+            <td colspan="9" class="text-center align-middle">Nenhuma lista de presença encontrada.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
 
 <!-- Paginação -->
 <nav aria-label="Navegação de página">

@@ -141,7 +141,8 @@
     <!-- Tabela de cargos -->
     <table class="table table-bordered text-center mt-4">
         <thead>
-            <tr>
+            <tr class="align-middle">
+
                 <th>Nome do Cargo</th>
                 <th>Número da DC</th>  <!-- Substituído CBO por Número da DC -->
                 <th>Departamento</th>
@@ -152,7 +153,7 @@
         </thead>
         <tbody>
             {% for cargo in cargos %}
-            <tr>
+            <tr class="align-middle">
                 <td>{{ cargo.nome }}</td>
                 <td>{{ cargo.numero_dc }}</td>  <!-- Atualizado para exibir Número da DC -->
                 <td>{{ cargo.departamento }}</td>
@@ -180,7 +181,7 @@
                         <i class="bi bi-clock-history"></i>
                     </a>
 
-                     <a href="{% url 'imprimir_cargo' cargo.id %}" class="btn btn-secondary btn-sm" title="Imprimir Descrição">
+                     <a href="{% url 'imprimir_cargo' cargo.id %}" class="btn btn-success btn-sm" title="Imprimir Descrição">
                         <i class="bi bi-printer"></i> 
                     </a>
                     <!-- Verifica se o arquivo de descrição está presente -->

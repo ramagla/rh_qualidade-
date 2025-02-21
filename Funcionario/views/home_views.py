@@ -3,6 +3,8 @@ from Funcionario.models import Comunicado, AtualizacaoSistema, Settings,Evento, 
 from django.contrib.auth.decorators import login_required
 import requests
 from datetime import datetime
+import json
+from django.core.serializers import serialize
 
 from django.shortcuts import render, get_object_or_404
 from Funcionario.forms import EventoForm
@@ -88,140 +90,85 @@ def login_view(request):
 
 from django.core import serializers
 
-@login_required
 def calendario_view(request):
-    # Captura o ano da query string ou usa o ano atual como padrão
     ano = str(request.GET.get('ano', datetime.now().year))
 
-    # Obtenha todos os eventos do banco de dados
-    eventos = Evento.objects.all()
-    eventos_json = serializers.serialize('json', eventos)
+    # Buscar eventos do banco de dados
+    eventos = Evento.objects.all().values("id", "titulo", "descricao", "data_inicio", "data_fim", "cor", "tipo")
+    
+    # 🔥 ✅ Convertendo os objetos de data para string antes da serialização JSON
+    eventos_list = [
+        {
+            "id": evento["id"],
+            "titulo": evento["titulo"],
+            "descricao": evento["descricao"],
+            "data_inicio": evento["data_inicio"].strftime("%Y-%m-%d") if evento["data_inicio"] else None,
+            "data_fim": evento["data_fim"].strftime("%Y-%m-%d") if evento["data_fim"] else None,
+            "cor": evento["cor"],
+            "tipo": evento["tipo"]
+        }
+        for evento in eventos
+    ]
 
-    # Lista de anos para o filtro no template
-    lista_anos = [str(y) for y in range(2020, 2031)]
-
-    # Requisição de feriados nacionais para o ano selecionado
+    # Buscar feriados da API externa
     url = f'https://brasilapi.com.br/api/feriados/v1/{ano}'
     feriados = []
     try:
         response = requests.get(url)
         if response.status_code == 200:
             feriados = response.json()
-            # Formate os feriados para o formato JSON necessário
-            feriados = [
-                {
-                    "name": feriado["name"],
-                    "date": feriado["date"]
-                }
-                for feriado in feriados
-            ]
     except Exception as e:
-        print("Erro ao carregar feriados: ", e)
+        print("Erro ao carregar feriados:", e)
+
+    # Se for uma requisição AJAX, retorna JSON, senão renderiza o template
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({"eventos": eventos_list, "feriados": feriados}, safe=False)
 
     return render(request, 'calendario/calendario.html', {
-        'eventos': eventos_json,
-        'feriados': feriados,  # Passa os feriados para o template
-        'ano': ano,  # Passa o ano selecionado para o template
-        'lista_anos': lista_anos,  # Passa a lista de anos para o template
+        "eventos_json": json.dumps(eventos_list),
+        "feriados_json": json.dumps(feriados),
+        "ano": ano
     })
-
-
-from django.utils import timezone
-from datetime import datetime
-
-
 
 @csrf_exempt
 @login_required
 def adicionar_evento(request):
     if request.method == 'POST':
-        print("Recebendo requisição POST para adicionar evento")
-        print("Dados recebidos:", request.POST)
-        
-        # Recebe os dados do formulário
         titulo = request.POST.get('titulo')
-        descricao = request.POST.get('descricao')
+        data_inicio = request.POST.get('data_inicio')
+        data_fim = request.POST.get('data_fim')
         cor = request.POST.get('cor')
-        tipo = request.POST.get('tipo')
-
-        # Recebe e converte as datas de início e fim
-        data_inicio_str = request.POST.get('data_inicio')
-        data_fim_str = request.POST.get('data_fim')
-
-        if not data_inicio_str or not data_fim_str:
-            return JsonResponse({"error": "Data de início ou fim não foi fornecida"}, status=400)
 
         try:
-            # Converte strings para date (sem horário)
-            data_inicio = datetime.strptime(data_inicio_str, "%Y-%m-%d").date()
-            data_fim = datetime.strptime(data_fim_str, "%Y-%m-%d").date()
-
-            # Cria o evento sem horário
-            evento = Evento(
+            evento = Evento.objects.create(
                 titulo=titulo,
-                descricao=descricao,
-                cor=cor,
-                tipo=tipo,
-                data_inicio=data_inicio,
-                data_fim=data_fim
+                data_inicio=datetime.strptime(data_inicio, "%Y-%m-%dT%H:%M"),
+                data_fim=datetime.strptime(data_fim, "%Y-%m-%dT%H:%M"),
+                cor=cor
             )
-            evento.save()
-
-            print("Evento criado com sucesso:", evento)
             return JsonResponse({"status": "Evento criado com sucesso!"}, status=201)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
 
-        except ValueError as e:
-            print("Erro ao processar as datas:", e)
-            return JsonResponse({"error": "Erro ao processar as datas"}, status=400)
-
-    return JsonResponse({"error": "Erro ao criar o evento"}, status=400)
+@csrf_exempt
 @login_required
 def excluir_evento(request, evento_id):
-    if request.method == 'DELETE':
-        evento = get_object_or_404(Evento, id=evento_id)
-        evento.delete()
-        return JsonResponse({"status": "Evento excluído com sucesso!"}, status=200)
-    else:
-        return JsonResponse({"error": "Método não permitido"}, status=405)
+    evento = get_object_or_404(Evento, id=evento_id)
+    evento.delete()
+    return JsonResponse({"status": "Evento excluído com sucesso!"}, status=200)
 
 @csrf_exempt
 @login_required
 def editar_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id)
     if request.method == 'POST':
-        form = EventoForm(request.POST, instance=evento)
-        if form.is_valid():
-            form.save()
-            return JsonResponse({"status": "Evento atualizado com sucesso!"})
-        else:
-            print("Erros do formulário de edição:", form.errors)  # Log de erros de validação no editar_evento
+        evento.titulo = request.POST.get('titulo')
+        evento.data_inicio = datetime.strptime(request.POST.get('data_inicio'), "%Y-%m-%dT%H:%M")
+        evento.data_fim = datetime.strptime(request.POST.get('data_fim'), "%Y-%m-%dT%H:%M")
+        evento.cor = request.POST.get('cor')
+        evento.save()
+        return JsonResponse({"status": "Evento atualizado com sucesso!"})
     return JsonResponse({"error": "Erro ao atualizar o evento"}, status=400)
-
-# views.py
-from django.http import HttpResponse
-from icalendar import Calendar, Event
-import pytz
-@login_required
-def exportar_calendario(request):
-    cal = Calendar()
-    cal.add('prodid', '-//Your Calendar//')
-    cal.add('version', '2.0')
-
-    eventos = Evento.objects.all()
-    timezone = pytz.timezone("America/Sao_Paulo")  # Ajuste para o seu fuso horário
-
-    for evento in eventos:
-        event = Event()
-        event.add('summary', evento.titulo)
-        event.add('description', evento.descricao)
-        event.add('dtstart', timezone.localize(evento.data_inicio))
-        event.add('dtend', timezone.localize(evento.data_fim))
-        event.add('location', 'Local do Evento')  # Se houver um campo de localização
-        cal.add_component(event)
-
-    response = HttpResponse(cal.to_ical(), content_type='text/calendar')
-    response['Content-Disposition'] = 'attachment; filename="calendario.ics"'
-    return response
 
 import requests
 from django.shortcuts import render
@@ -265,4 +212,65 @@ def imprimir_calendario(request):
         'eventos': eventos_combinados,
         'ano': ano,
         'anos_disponiveis': anos_disponiveis
+        
     })
+
+
+from icalendar import Calendar, Event
+import pytz
+from django.http import HttpResponse
+
+
+
+
+@login_required
+def exportar_calendario(request):
+    cal = Calendar()
+    cal.add('prodid', '-//Your Calendar//')
+    cal.add('version', '2.0')
+
+    eventos = Evento.objects.all()
+    timezone = pytz.timezone("America/Sao_Paulo")  # Ajuste para o seu fuso horário
+
+    for evento in eventos:
+        event = Event()
+        event.add('summary', evento.titulo)
+        event.add('description', evento.descricao)
+        event.add('dtstart', timezone.localize(evento.data_inicio))
+        event.add('dtend', timezone.localize(evento.data_fim))
+        event.add('location', 'Local do Evento')  # Se houver um campo de localização
+        cal.add_component(event)
+
+    response = HttpResponse(cal.to_ical(), content_type='text/calendar')
+    response['Content-Disposition'] = 'attachment; filename="calendario.ics"'
+    return response
+
+@login_required
+def eventos_json(request):
+    ano = str(request.GET.get('ano', datetime.now().year))
+    eventos = Evento.objects.all().values("id", "titulo", "descricao", "data_inicio", "data_fim", "cor", "tipo")
+    
+    eventos_list = [
+        {
+            "id": evento["id"],
+            "titulo": evento["titulo"],
+            "descricao": evento["descricao"],
+            "data_inicio": evento["data_inicio"].strftime("%Y-%m-%d") if evento["data_inicio"] else None,
+            "data_fim": evento["data_fim"].strftime("%Y-%m-%d") if evento["data_fim"] else None,
+            "cor": evento["cor"],
+            "tipo": evento["tipo"]
+        }
+        for evento in eventos
+    ]
+    
+    # Buscar feriados da API externa
+    url = f'https://brasilapi.com.br/api/feriados/v1/{ano}'
+    feriados = []
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            feriados = response.json()
+    except Exception as e:
+        print("Erro ao carregar feriados:", e)
+    
+    return JsonResponse({"eventos": eventos_list, "feriados": feriados}, safe=False)

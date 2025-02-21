@@ -34,42 +34,11 @@
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
         {% endif %}
-        {% if request.user|has_permission:"Funcionario.view_integracaofuncionario" %}
-
-        <button class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#imprimirModal">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
-        {% endif %}
+      
 
     </div>
 
-  <!-- Modal para selecionar integração -->
-<div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imprimirModalLabel">Selecionar Integração do Colaborador</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="imprimirForm" method="GET" action="">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="integracao_id" class="form-label">Integração:</label>
-                        <select name="integracao_id" id="integracao_id" class="form-select select2" required>
-                            <option value="">Selecione uma integração</option>
-                            {% for integracao in integracoes %}
-                                <option value="{{ integracao.id }}">{{ integracao.funcionario.nome }} - {{ integracao.data_integracao|date:"d/m/Y" }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Imprimir</button>                   
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
+  
 
 
 
@@ -197,10 +166,10 @@
       <tbody>
     {% for integracao in integracoes %}
     <tr>
-        <td>{{ integracao.funcionario.nome }}</td>
-        <td>{{ integracao.data_integracao|date:"d/m/Y" }}</td>
-        <td>{{ integracao.funcionario.local_trabalho }}</td>
-         <td>
+        <td class="align-middle">{{ integracao.funcionario.nome }}</td>
+        <td class="align-middle">{{ integracao.data_integracao|date:"d/m/Y" }}</td>
+        <td class="align-middle">{{ integracao.funcionario.local_trabalho }}</td>
+         <td class="align-middle">
                 {% if integracao.grupo_whatsapp %}
                     <span class="badge bg-success text-white">Sim</span>
                 {% else %}
@@ -209,14 +178,14 @@
             </td>
 
             <!-- Requer Treinamento com Badge -->
-            <td>
+            <td class="align-middle"> 
                 {% if integracao.requer_treinamento %}
                     <span class="badge bg-warning text-dark">Sim</span>
                 {% else %}
                     <span class="badge bg-secondary">Não</span>
                 {% endif %}
             </td>
-        <td>
+        <td class="align-middle">
             {% if integracao.pdf_integracao %}
                 <a href="{{ integracao.pdf_integracao.url }}" class="btn btn-light" target="_blank">
                     <i class="bi bi-filetype-pdf"></i> 
@@ -226,19 +195,25 @@
             {% endif %}
         </td>
 
-        <td>
+        <td class="align-middle">
             {% if request.user|has_permission:"Funcionario.view_integracaofuncionario" %}
-            <a href="{% url 'visualizar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Visualizar">
+            <a href="{% url 'visualizar_integracao' integracao.id %}" class="btn btn-sm btn-info" title="Visualizar">
                 <i class="bi bi-eye"></i>
             </a>
             {% endif %}
             {% if request.user|has_permission:"Funcionario.change_integracaofuncionario" %}
-            <a href="{% url 'editar_integracao' integracao.id %}" class="btn btn-sm btn-light" title="Editar">
+            <a href="{% url 'editar_integracao' integracao.id %}" class="btn btn-sm btn-warning" title="Editar">
                 <i class="bi bi-pencil-square"></i>
             </a>
             {% endif %}
+            {% if request.user|has_permission:"Funcionario.view_integracaofuncionario" %}
+            <a href="{% url 'imprimir_integracao' integracao.id %}" target="_blank" class="btn btn-sm btn-primary" title="Imprimir">
+                <i class="bi bi-printer"></i>
+            </a>
+
+            {% endif %}
             {% if request.user|has_permission:"Funcionario.delete_integracaofuncionario" %}
-            <button class="btn btn-sm btn-light" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirIntegracao{{ integracao.id }}">
+            <button class="btn btn-sm btn-danger" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirIntegracao{{ integracao.id }}">
                 <i class="bi bi-trash"></i>
             </button>
             {% endif %}

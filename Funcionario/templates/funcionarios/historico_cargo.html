@@ -19,8 +19,8 @@
     <tbody>
       {% for historico in historicos %}
       <tr>
-        <td>{{ historico.cargo.nome }}</td>
-        <td>{{ historico.data_atualizacao|date:"d/m/Y" }}</td>
+        <td class="align-middle">{{ historico.cargo.nome }}</td>
+        <td class="align-middle">{{ historico.data_atualizacao|date:"d/m/Y" }}</td>
         <td>
           <!-- Botão para abrir a modal de exclusão -->
           <button

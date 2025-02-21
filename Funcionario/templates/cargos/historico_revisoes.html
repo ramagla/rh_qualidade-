@@ -21,7 +21,7 @@
                 <td>
                     <!-- Botão para abrir a modal de descrição -->
                     {% if request.user|has_permission:"Funcionario.view_revisao" %}
-                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ revisao.id }}">
+                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ revisao.id }}">
                         <i class="bi bi-eye"></i>
                     </button>
                     {% endif %}

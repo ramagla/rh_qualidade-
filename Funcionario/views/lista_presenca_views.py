@@ -7,6 +7,8 @@ from Funcionario.templatetags.conversores import horas_formatadas
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
 
 
 import openpyxl
@@ -17,7 +19,7 @@ import openpyxl
 # Função lista_presenca
 @login_required
 def lista_presenca(request):
-    listas_presenca = ListaPresenca.objects.all().order_by('assunto')  # Ordenar por assunto
+    listas_presenca = ListaPresenca.objects.all().order_by('-data_inicio')  # Ordenar por assunto
 
 
     
@@ -66,8 +68,31 @@ def lista_presenca(request):
 
 @login_required
 def cadastrar_lista_presenca(request):
-    # Verifica os treinamentos que precisam de avaliação
+    # Obtém treinamentos da categoria 'treinamento'
     treinamentos = Treinamento.objects.filter(categoria='treinamento')
+
+    # Obtém funcionários ativos para exibição no dropdown de filtro
+    todos_funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
+
+    # Obtém locais de trabalho distintos para o dropdown de filtro
+    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct().order_by('local_trabalho')
+
+    # Inicia a lista de funcionários com todos os ativos
+    funcionarios = todos_funcionarios
+
+    # Aplicação de filtros via GET
+    filtro_nome = request.GET.get('filtro_nome')
+    filtro_local_trabalho = request.GET.get('filtro_local_trabalho')
+
+    if filtro_nome:
+        funcionarios = funcionarios.filter(id=filtro_nome)
+    if filtro_local_trabalho:
+        funcionarios = funcionarios.filter(local_trabalho=filtro_local_trabalho)
+
+    # Paginação para melhorar a exibição de funcionários
+    paginator = Paginator(funcionarios, 20)  # Exibe 20 funcionários por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     if request.method == 'POST':
         form = ListaPresencaForm(request.POST, request.FILES)
@@ -75,6 +100,10 @@ def cadastrar_lista_presenca(request):
             with transaction.atomic():
                 lista_presenca = form.save()
 
+                # Inicializa `treinamento_existente` para evitar erro de referência
+                treinamento_existente = None  
+
+                # Se a lista de presença estiver finalizada, cria um treinamento correspondente
                 if lista_presenca.situacao == 'finalizado':
                     treinamento_existente = Treinamento.objects.filter(
                         nome_curso=lista_presenca.assunto,
@@ -85,7 +114,7 @@ def cadastrar_lista_presenca(request):
                     ).first()
 
                     if not treinamento_existente:
-                        # Cria o treinamento se não existir
+                        # Cria um novo treinamento caso não exista
                         treinamento_existente = Treinamento.objects.create(
                             tipo='interno',
                             categoria='treinamento',
@@ -97,14 +126,15 @@ def cadastrar_lista_presenca(request):
                             carga_horaria=lista_presenca.duracao,
                             descricao=lista_presenca.descricao,
                             situacao='aprovado',
-                            planejado='sim',  # Definindo "Sim" no campo planejado
+                            planejado='sim',
                         )
 
+                    # Associa os participantes ao treinamento criado
                     for participante in lista_presenca.participantes.all():
                         treinamento_existente.funcionarios.add(participante)
 
-                 # Verifica se é necessário criar avaliação de eficácia
-                if lista_presenca.necessita_avaliacao:
+                # Criando avaliações de eficácia apenas se necessário e se o treinamento existir
+                if lista_presenca.necessita_avaliacao and treinamento_existente:
                     for participante in lista_presenca.participantes.all():
                         AvaliacaoTreinamento.objects.create(
                             funcionario=participante,
@@ -113,50 +143,69 @@ def cadastrar_lista_presenca(request):
                             pergunta_1=1,
                             pergunta_2=1,
                             pergunta_3=1,
-                            periodo_avaliacao=60,  # Valor padrão
-                            responsavel_1=participante.responsavel,  # Campo 'responsavel' do modelo Funcionario
+                            periodo_avaliacao=60,  
+                            responsavel_1=participante.responsavel,  
                             descricao_melhorias="Aguardando avaliação",
                             avaliacao_geral=1
                         )
-
 
                 return redirect('lista_presenca')
     else:
         form = ListaPresencaForm()
 
-    funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
-    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct().order_by('local_trabalho')
-
-
     return render(request, 'lista_presenca/cadastrar_lista_presenca.html', {
         'form': form,
-        'funcionarios': funcionarios,
-        'treinamentos': treinamentos,  # Passando os treinamentos para o template
-        'locais_trabalho': locais_trabalho,  # Passando os locais de trabalho
-
+        'todos_funcionarios': todos_funcionarios,  # Lista para dropdown de funcionários
+        'treinamentos': treinamentos,  # Treinamentos disponíveis
+        'locais_trabalho': locais_trabalho,  # Locais de trabalho para filtro
+        'page_obj': page_obj,  # Lista paginada de funcionários
+        'filtro_nome': filtro_nome,  # Manter valores dos filtros no template
+        'filtro_local_trabalho': filtro_local_trabalho,  # Manter valores dos filtros
     })
 
 
 
 
-# Função editar_lista_presenca
 @login_required
 def editar_lista_presenca(request, id):
     lista = get_object_or_404(ListaPresenca, id=id)
-
     treinamentos = Treinamento.objects.all()
+    
+    # Obtém funcionários ativos para exibição no dropdown de filtro
+    todos_funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
+    
+    # Obtém locais de trabalho distintos para o dropdown de filtro
+    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct().order_by('local_trabalho')
 
-    funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')
+    # Inicia a lista de funcionários com todos os ativos
+    funcionarios = todos_funcionarios
 
+    # Aplicação de filtros via GET
+    filtro_nome = request.GET.get('filtro_nome')
+    filtro_local_trabalho = request.GET.get('filtro_local_trabalho')
+
+    if filtro_nome and filtro_nome.isdigit():  # Garante que seja um número válido
+        funcionarios = funcionarios.filter(id=int(filtro_nome))
+
+    if filtro_local_trabalho:
+        funcionarios = funcionarios.filter(local_trabalho__icontains=filtro_local_trabalho)  # Permite busca parcial
+
+    # Paginação para melhorar a exibição de funcionários
+    paginator = Paginator(funcionarios, 20)  # Exibe 20 funcionários por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     if request.method == 'POST':
         form = ListaPresencaForm(request.POST, request.FILES, instance=lista)
         if form.is_valid():
             with transaction.atomic():
-                lista = form.save()                
+                lista = form.save()
+                lista.participantes.set(request.POST.getlist('participantes'))  # Define os funcionários selecionados
+
+
+                treinamento_existente = None  # Definir a variável antes do uso
 
                 if lista.situacao == 'finalizado':
-                    # Verifica se já existe um treinamento com os mesmos atributos
                     treinamento_existente = Treinamento.objects.filter(
                         nome_curso=lista.assunto,
                         data_inicio=lista.data_inicio,
@@ -166,7 +215,6 @@ def editar_lista_presenca(request, id):
                     ).first()
 
                     if not treinamento_existente:
-                        # Cria o treinamento se não existir
                         treinamento_existente = Treinamento.objects.create(
                             tipo='interno',
                             categoria='treinamento',
@@ -181,22 +229,18 @@ def editar_lista_presenca(request, id):
                             planejado='sim', 
                         )
 
-                    # Atualiza os participantes do treinamento
-                    treinamento_existente.funcionarios.clear()  # Remove os participantes antigos
+                    treinamento_existente.funcionarios.clear()
                     for participante in lista.participantes.all():
                         treinamento_existente.funcionarios.add(participante)
 
-                # Verifica se é necessário criar ou atualizar avaliações de eficácia
-                if lista.necessita_avaliacao:
+                if lista.necessita_avaliacao and treinamento_existente:
                     for participante in lista.participantes.all():
-                        # Verifica se já existe uma avaliação para o participante e treinamento
                         avaliacao_existente = AvaliacaoTreinamento.objects.filter(
                             funcionario=participante,
                             treinamento=treinamento_existente,
                         ).first()
 
                         if not avaliacao_existente:
-                            # Cria uma nova avaliação se não existir
                             AvaliacaoTreinamento.objects.create(
                                 funcionario=participante,
                                 treinamento=treinamento_existente,
@@ -204,13 +248,12 @@ def editar_lista_presenca(request, id):
                                 pergunta_1=1,
                                 pergunta_2=1,
                                 pergunta_3=1,
-                                periodo_avaliacao=60,  # Valor padrão
-                                responsavel_1=participante.responsavel,  # Campo 'responsavel' do modelo Funcionario
+                                periodo_avaliacao=60,
+                                responsavel_1=participante.responsavel,
                                 descricao_melhorias="Aguardando avaliação",
                                 avaliacao_geral=1
                             )
                         else:
-                            # Atualiza os dados da avaliação existente
                             avaliacao_existente.data_avaliacao = lista.data_inicio or date.today()
                             avaliacao_existente.pergunta_1 = 1
                             avaliacao_existente.pergunta_2 = 1
@@ -219,21 +262,20 @@ def editar_lista_presenca(request, id):
                             avaliacao_existente.descricao_melhorias = "Aguardando avaliação"
                             avaliacao_existente.avaliacao_geral = 1
                             avaliacao_existente.save()
-                    
 
                 return redirect('lista_presenca')
     else:      
-
         form = ListaPresencaForm(instance=lista)
-
-    locais_trabalho = Funcionario.objects.values_list('local_trabalho', flat=True).distinct().order_by('local_trabalho')
 
     return render(request, 'lista_presenca/edit_lista_presenca.html', {
         'form': form,
-        'treinamentos': treinamentos,
-        'funcionarios': funcionarios,  # Passando os funcionários filtrados para o template
-
-        'locais_trabalho': locais_trabalho,
+        'todos_funcionarios': todos_funcionarios,  # Lista para dropdown de funcionários
+        'treinamentos': treinamentos,  # Treinamentos disponíveis
+        'locais_trabalho': locais_trabalho,  # Locais de trabalho para filtro
+        'page_obj': page_obj,  # Lista paginada de funcionários
+        'filtro_nome': filtro_nome,  # Manter valores dos filtros no template
+        'filtro_local_trabalho': filtro_local_trabalho,  # Manter valores dos filtros
+        'lista': lista,  # Passa a lista de presença para verificar os participantes já adicionados
     })
 
 

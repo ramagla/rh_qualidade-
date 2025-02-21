@@ -41,13 +41,8 @@
         <a href="{% url 'cadastrar_avaliacao_experiencia' %}" class="btn btn-primary me-2">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
-        {% endif %}
-    
-        {% if request.user|has_permission:'Funcionario.view_avaliacaoexperiencia' %}
-        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#imprimirModal">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
-        {% endif %}
+        {% endif %}   
+      
     </div>
     
 
@@ -80,34 +75,7 @@
         </div>
     </form>
 
-  <!-- Modal de impressão -->
-<div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imprimirModalLabel">Selecionar Avaliação para Imprimir</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="imprimirForm">
-                    <div class="mb-3">
-                        <label for="avaliacao_modal" class="form-label">Avaliação:</label>
-                        <select name="avaliacao" id="avaliacao_modal" class="form-select select2" required>
-                            <option value="">Selecione</option>
-                            {% for avaliacao in avaliacoes %}
-                                <option value="{{ avaliacao.id }}">{{ avaliacao.funcionario.nome }} - {{ avaliacao.data_avaliacao|date:"d/m/Y" }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" id="submitImprimirButton" class="btn btn-primary">Imprimir</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+ 
 
 <div class="d-flex flex-wrap justify-content-between mb-4 mt-4">
     <!-- Total de Avaliações -->
@@ -204,19 +172,24 @@
                 </td>
                 <td class="align-middle">
                     {% if request.user|has_permission:'Funcionario.view_avaliacaoexperiencia' %}
-                    <a href="{% url 'visualizar_avaliacao_experiencia' avaliacao.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                    <a href="{% url 'visualizar_avaliacao_experiencia' avaliacao.id %}" class="btn btn-sm btn-info" title="Visualizar">
                         <i class="bi bi-eye"></i>
                     </a>
                     {% endif %}
                 
                     {% if request.user|has_permission:'Funcionario.change_avaliacaoexperiencia' %}
-                    <a href="{% url 'editar_avaliacao_experiencia' avaliacao.id %}" class="btn btn-light" title="Editar">
+                    <a href="{% url 'editar_avaliacao_experiencia' avaliacao.id %}" class="btn btn-warning btn-sm " title="Editar">
                         <i class="bi bi-pencil-square"></i>
+                    </a>
+                    {% endif %}
+                    {% if request.user|has_permission:'Funcionario.view_avaliacaoexperiencia' %}
+                    <a href="{% url 'imprimir_avaliacao_experiencia' avaliacao.id %}" target="_blank" class="btn btn-sm btn-primary" title="Imprimir">
+                        <i class="bi bi-printer"></i>
                     </a>
                     {% endif %}
                 
                     {% if request.user|has_permission:'Funcionario.delete_avaliacaoexperiencia' %}
-                    <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}" title="Excluir">
+                    <a href="#" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}" title="Excluir">
                         <i class="bi bi-trash"></i>
                     </a>
                     {% endif %}

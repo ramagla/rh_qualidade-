@@ -11,7 +11,7 @@ from django.shortcuts import render, get_object_or_404
 from Funcionario import views
 
 # Import das views organizadas por funcionalidade
-from .views.home_views import home,calendario_view,adicionar_evento,editar_evento,excluir_evento,exportar_calendario,imprimir_calendario
+from .views.home_views import home,calendario_view,adicionar_evento,editar_evento,excluir_evento,exportar_calendario,imprimir_calendario,eventos_json
 from .views.funcionario_views import (
     lista_funcionarios,
     cadastrar_funcionario,
@@ -296,6 +296,8 @@ urlpatterns = [
     path('calendario/excluir/<int:evento_id>/', excluir_evento, name='excluir_evento'),
     path('exportar_calendario/', exportar_calendario, name='exportar_calendario'),
     path('imprimir_calendario/', imprimir_calendario, name='imprimir_calendario'),
+    path("calendario/eventos_json/", eventos_json, name="eventos_json"),
+
 
 
      # Matriz de Polivalência

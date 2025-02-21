@@ -41,13 +41,8 @@
         <a href="{% url 'cadastrar_jobrotation_evaluation' %}" class="btn btn-success me-2">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
-        {% endif %}
-    
-        {% if request.user|has_permission:'Funcionario.view_jobrotationevaluation' %}
-        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#imprimirJobRotationModal">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
-        {% endif %}
+        {% endif %}   
+       
     </div>
     
 
@@ -81,37 +76,7 @@
     </form>
 
 
-  <!-- Modal para Selecionar Avaliação e Imprimir -->
-<div class="modal fade" id="imprimirJobRotationModal" tabindex="-1" aria-labelledby="imprimirJobRotationModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imprimirJobRotationModalLabel">Selecionar Avaliação para Imprimir</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="imprimirJobRotationForm" method="GET" action="">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="avaliacao_id" class="form-label">Avaliação:</label>
-                        <select name="avaliacao_id" id="avaliacao_id" class="form-select select2" required>
-                            <option value="">Selecione uma avaliação</option>
-                            {% for evaluation in evaluations %}
-                                <option value="{{ evaluation.id }}">
-                                    {{ evaluation.funcionario.nome }} - {{ evaluation.data_inicio|date:"d/m/Y" }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Imprimir</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+ 
 
 <style>
 #imprimirJobRotationModal .select2-container--default .select2-selection--single {
@@ -223,20 +188,25 @@
             </td>
             <td class="align-middle">
                 {% if request.user|has_permission:'Funcionario.view_jobrotationevaluation' %}
-                <a href="{% url 'visualizar_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                <a href="{% url 'visualizar_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-info" title="Visualizar">
                     <i class="bi bi-eye"></i>
                 </a>
                 {% endif %}
             
                 {% if request.user|has_permission:'Funcionario.change_jobrotationevaluation' %}
-                <a href="{% url 'editar_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-light" title="Editar">
+                <a href="{% url 'editar_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-warning" title="Editar">
                     <i class="bi bi-pencil-square"></i>
+                </a>
+                {% endif %}
+                {% if request.user|has_permission:'Funcionario.view_jobrotationevaluation' %}
+                <a href="{% url 'imprimir_jobrotation_evaluation' evaluation.id %}" target="_blank" class="btn btn-sm btn-primary" title="Imprimir">
+                    <i class="bi bi-printer"></i>
                 </a>
                 {% endif %}
             
                 {% if request.user|has_permission:'Funcionario.delete_jobrotationevaluation' %}
                 <!-- Botão para abrir modal de exclusão -->
-                <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#deleteModal{{ evaluation.id }}" title="Excluir">
+                <button type="button" class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#deleteModal{{ evaluation.id }}" title="Excluir">
                     <i class="bi bi-trash"></i>
                 </button>
                 {% endif %}

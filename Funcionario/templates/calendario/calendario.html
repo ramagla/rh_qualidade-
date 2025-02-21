@@ -1,267 +1,387 @@
 {% extends 'base.html' %}
-
 {% block title %}Calendário de Eventos{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="text-center mb-4">Calendário de Eventos</h2>
-    <div id="calendar"></div>
+  <h2 class="text-center mb-4">Calendário de Eventos</h2>
+  <!-- Cabeçalho com navegação e botões -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <button id="btnPrev" class="btn btn-secondary">← Anterior</button>
+      <button id="btnNext" class="btn btn-secondary">Próximo →</button>
+    </div>
+    <h4 id="currentMonth" class="text-center"></h4>
+    <div>
+      <button id="btnGerenciarEventos" class="btn btn-info">Gerenciar Eventos</button>
+      <button id="btnExportPdf" class="btn btn-danger">Exportar PDF</button>
+      <a href="{% url 'exportar_calendario' %}" class="btn btn-primary">Exportar iCal</a>
+      <a href="{% url 'imprimir_calendario' %}" class="btn btn-success">Imprimir</a>
+    </div>
+  </div>
+  <div id="calendar" style="height: 800px;"></div>
 </div>
 
-<!-- Modal para Adicionar, Editar e Excluir Evento -->
-<div class="modal fade" id="eventoModal" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="eventoModalLabel">Adicionar Evento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="eventoForm">
-                    <input type="hidden" id="evento_id"> <!-- ID do evento para edição -->
-                    <div class="mb-3">
-                        <label for="titulo" class="form-label">Título</label>
-                        <input type="text" class="form-control" id="titulo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="descricao" class="form-label">Descrição</label>
-                        <textarea class="form-control" id="descricao" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="tipo" class="form-label">Tipo de Evento</label>
-                        <select id="tipo" class="form-control">
-                            <option value="avaliacao_desempenho">Avaliação de Desempenho</option>
-                            <option value="feriado">Feriado</option>
-                            <option value="ponte">Ponte</option>
-                            <option value="confraternizacao">Confraternização</option>
-                            <option value="recesso">Recesso</option>
-                            <option value="auditoria_sgs">Auditoria SGS</option>
-                            <option value="auditoria_interna">Auditoria Interna</option>
-                            <option value="sipat">SIPAT</option>
-                            <option value="inventario">Inventário</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="cor" class="form-label">Cor</label>
-                        <input type="color" class="form-control form-control-color" id="cor" value="#0000FF">
-                    </div>
-                    <div class="mb-3">
-                        <label for="data_inicio" class="form-label">Data Início</label>
-                        <input type="date" class="form-control" id="data_inicio" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="data_fim" class="form-label">Data Fim</label>
-                        <input type="date" class="form-control" id="data_fim" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" id="excluirEvento" style="display: none;">Excluir</button>
-                <button type="button" class="btn btn-primary" id="salvarEvento">Salvar</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            </div>
-        </div>
+<!-- Modal Gerenciar Eventos (Lista de eventos com opção de adicionar) -->
+<div class="modal fade" id="gerenciarModal" tabindex="-1" aria-labelledby="gerenciarModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="gerenciarModalLabel">Gerenciar Eventos do Mês</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <button id="btnAdicionarNovoEvento" class="btn btn-success mb-3">Adicionar Novo Evento</button>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Data Início</th>
+              <th>Data Fim</th>
+              <th>Tipo</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="listaEventos">
+            <!-- Lista de eventos será preenchida via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
     </div>
+  </div>
 </div>
+
+<!-- Modal Cadastrar/Editar Evento -->
+<div class="modal fade" id="eventoModal" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="eventoModalLabel">Adicionar Evento</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="eventoForm">
+          <input type="hidden" id="evento_id">
+          <div class="mb-3">
+            <label for="titulo" class="form-label">Título</label>
+            <input type="text" class="form-control" id="titulo" required>
+          </div>
+          <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição</label>
+            <textarea class="form-control" id="descricao" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="tipo" class="form-label">Tipo de Evento</label>
+            <select id="tipo" class="form-control">
+              <option value="avaliacao_desempenho">Avaliação de Desempenho</option>
+              <option value="feriado">Feriado</option>
+              <option value="ponte">Ponte</option>
+              <option value="confraternizacao">Confraternização</option>
+              <option value="recesso">Recesso</option>
+              <option value="auditoria_sgs">Auditoria SGS</option>
+              <option value="auditoria_interna">Auditoria Interna</option>
+              <option value="sipat">SIPAT</option>
+              <option value="inventario">Inventário</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="cor" class="form-label">Cor</label>
+            <input type="color" class="form-control form-control-color" id="cor" value="#0000FF">
+          </div>
+          <div class="mb-3">
+            <label for="data_inicio" class="form-label">Data Início</label>
+            <input type="date" class="form-control" id="data_inicio" required>
+          </div>
+          <div class="mb-3">
+            <label for="data_fim" class="form-label">Data Fim</label>
+            <input type="date" class="form-control" id="data_fim" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="excluirEvento" style="display: none;">Excluir</button>
+        <button type="button" class="btn btn-primary" id="salvarEvento">Salvar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TUI Calendar e dependências (v2) -->
+<link rel="stylesheet" href="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.css">
+<script src="https://uicdn.toast.com/tui-code-snippet/latest/tui-code-snippet.min.js"></script>
+<script src="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.js"></script>
+
+<!-- jQuery (para manipulação da modal, se precisar) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bibliotecas para exportar PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
-        var eventos = {{ eventos|safe }};
-        var feriados = {{ feriados|safe }};
-        
-        // Inicializa o calendário com botões personalizados
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            locale: 'pt-br',
-            initialView: 'dayGridMonth',
-            editable: true,
-            selectable: true,
-            headerToolbar: {
-                left: 'prev,next today exportButton printButton',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            customButtons: {
-                exportButton: {
-                    text: 'Exportar Calendário',
-                    click: function() {
-                        window.location.href = "{% url 'exportar_calendario' %}";
-                    }
-                },
-                printButton: {
-                    text: 'Imprimir',
-                    click: function() {
-                        window.location.href = "{% url 'imprimir_calendario' %}"; // Redireciona para o template de impressão
+document.addEventListener("DOMContentLoaded", function () {
+  // 1) Inicializa o TUI Calendar (v2)
+  var calendarContainer = document.getElementById("calendar");
+  var calendar = new tui.Calendar(calendarContainer, {
+    defaultView: 'month',
+    useDetailPopup: false,
+    useFormPopup: false
+  });
 
-                    }
-                }
-            },
-            events: [
-                ...eventos.map(evento => ({
-                    id: evento.pk,
-                    title: evento.fields.titulo,
-                    start: evento.fields.data_inicio,
-                    end: evento.fields.data_fim,
-                    backgroundColor: getColorByTipo(evento.fields.tipo),
-                    borderColor: getColorByTipo(evento.fields.tipo),
-                    extendedProps: {
-                        descricao: evento.fields.descricao,
-                        tipo: evento.fields.tipo
-                    }
-                })),
-                ...feriados.map(feriado => ({
-                    title: feriado.name,
-                    start: feriado.date,
-                    backgroundColor: '#CC99FF',
-                    borderColor: '#CC99FF',
-                    extendedProps: { tipo: 'feriado' }
-                }))
-            ],
-            eventContent: function(info) {
-                return { html: info.event.title };
-            },
-            select: function(info) {
-                $('#eventoModal').modal('show');
-                document.getElementById('eventoModalLabel').innerText = 'Adicionar Evento';
-                document.getElementById('salvarEvento').innerText = 'Salvar';
-                document.getElementById('excluirEvento').style.display = 'none';
-                document.getElementById('evento_id').value = '';
-                document.getElementById('titulo').value = '';
-                document.getElementById('descricao').value = '';
-                document.getElementById('cor').value = '#0000FF';
-                document.getElementById('data_inicio').value = info.startStr;
-                document.getElementById('data_fim').value = info.endStr;
-                document.getElementById('tipo').value = '';
-            },
-            eventClick: function(info) {
-                $('#eventoModal').modal('show');
-                document.getElementById('eventoModalLabel').innerText = 'Editar Evento';
-                document.getElementById('salvarEvento').innerText = 'Salvar Alterações';
-                document.getElementById('excluirEvento').style.display = 'inline-block';
-                document.getElementById('evento_id').value = info.event.id;
-                document.getElementById('titulo').value = info.event.title;
-                document.getElementById('descricao').value = info.event.extendedProps.descricao || '';
-                document.getElementById('cor').value = info.event.backgroundColor;
-                document.getElementById('data_inicio').value = info.event.startStr;
-                document.getElementById('data_fim').value = info.event.endStr;
-                document.getElementById('tipo').value = info.event.extendedProps.tipo;
-            }
-        });
-        calendar.render();
+  // 2) Atualiza rótulo do mês
+  function atualizarMesAtual() {
+    var currentDate = calendar.getDate();
+    var monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    document.getElementById("currentMonth").textContent = monthNames[currentDate.getMonth()] + " de " + currentDate.getFullYear();
+  }
+  atualizarMesAtual();
 
-        // Função para recarregar a página
-        function recarregarPagina() {
-            window.location.reload();
-        }
+  // Botões de navegação
+  document.getElementById("btnPrev").addEventListener("click", function(){
+    calendar.prev();
+    atualizarMesAtual();
+  });
+  document.getElementById("btnNext").addEventListener("click", function(){
+    calendar.next();
+    atualizarMesAtual();
+  });
 
-        // Função para salvar o evento
-        document.getElementById('salvarEvento').addEventListener('click', function() {
-            var eventoData = new FormData();
-            eventoData.append('titulo', document.getElementById('titulo').value);
-            eventoData.append('descricao', document.getElementById('descricao').value);
-            eventoData.append('cor', document.getElementById('cor').value);
-            eventoData.append('tipo', document.getElementById('tipo').value);
-            eventoData.append('data_inicio', document.getElementById('data_inicio').value);
-            eventoData.append('data_fim', document.getElementById('data_fim').value);
-
-            // Envia os dados via fetch com FormData
-            fetch("{% url 'adicionar_evento' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: eventoData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "Evento criado com sucesso!") {
-                    $('#eventoModal').modal('hide');
-                    recarregarPagina();
-                } else {
-                    console.error("Erro ao criar evento:", data.error);
-                }
-            })
-            .catch(error => console.error("Erro na requisição:", error));
-        });
-
-        // Função para excluir o evento
-        document.getElementById('excluirEvento').addEventListener('click', function() {
-            var eventoId = document.getElementById('evento_id').value;
-
-            // Envia uma requisição DELETE para excluir o evento
-            fetch(`/calendario/excluir/${eventoId}/`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "Evento excluído com sucesso!") {
-                    $('#eventoModal').modal('hide');
-                    recarregarPagina();
-                } else {
-                    console.error("Erro ao excluir evento:", data.error);
-                }
-            })
-            .catch(error => console.error("Erro na requisição:", error));
-        });
-
-        // Função para definir cores baseadas no tipo
-        function getColorByTipo(tipo) {
-            switch(tipo) {
-                case 'avaliacao_desempenho': return '#00FF00';
-                case 'feriado': return '#CC99FF';
-                case 'ponte': return '#FF3300';
-                case 'confraternizacao': return '#E6B8B7';
-                case 'recesso': return '#A6A6A6';
-                case 'auditoria_sgs': return '#8DB4E2';
-                case 'auditoria_interna': return '#FFC000';
-                case 'sipat': return '#C4D79B';
-                case 'inventario': return '#CCCC00';
-                default: return '#3788d8';
-            }
-        }
-
-        // Função para gerar lista de eventos para impressão
-        function gerarListaParaImpressao() {
-            var printWindow = window.open('', '', 'width=800,height=600');
-            printWindow.document.write('<html><head><title>Calendário Anual</title></head><body>');
-            printWindow.document.write('<h2>Calendário Anual</h2>');
-            printWindow.document.write('<ul>');
-            eventos.forEach(evento => {
-                const cor = getColorByTipo(evento.fields.tipo);
-                printWindow.document.write(`
-                    <li>
-                        <span style="color: ${cor}; font-weight: bold;">${evento.fields.titulo}</span> - 
-                        ${evento.fields.data_inicio} até ${evento.fields.data_fim} 
-                        (${evento.fields.tipo})
-                    </li>
-                `);
-            });
-            printWindow.document.write('</ul>');
-            printWindow.document.write('<h3>Legenda de Tipos</h3>');
-            printWindow.document.write(`
-                <ul>
-                    <li style="color: #00FF00;">Avaliação de Desempenho</li>
-                    <li style="color: #CC99FF;">Feriado</li>
-                    <li style="color: #FF3300;">Ponte</li>
-                    <li style="color: #E6B8B7;">Confraternização</li>
-                    <li style="color: #A6A6A6;">Recesso</li>
-                    <li style="color: #8DB4E2;">Auditoria SGS</li>
-                    <li style="color: #FFC000;">Auditoria Interna</li>
-                    <li style="color: #C4D79B;">SIPAT</li>
-                    <li style="color: #CCCC00;">Inventário</li>
-                </ul>
-            `);
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.print();
-        }
+  // Exportar PDF
+  document.getElementById("btnExportPdf").addEventListener("click", function(){
+    html2canvas(document.getElementById("calendar")).then(function(canvas) {
+      var imgData = canvas.toDataURL("image/png");
+      var doc = new jspdf.jsPDF("landscape");
+      doc.addImage(imgData, "PNG", 10, 10, 280, 190);
+      doc.save("calendario.pdf");
     });
+  });
+
+  // 3) Função para definir cor conforme o tipo
+  function getColorByTipo(tipo) {
+    switch(tipo) {
+      case 'avaliacao_desempenho': return '#00FF00';
+      case 'feriado': return '#CC99FF';
+      case 'ponte': return '#FF3300';
+      case 'confraternizacao': return '#E6B8B7';
+      case 'recesso': return '#A6A6A6';
+      case 'auditoria_sgs': return '#8DB4E2';
+      case 'auditoria_interna': return '#FFC000';
+      case 'sipat': return '#C4D79B';
+      case 'inventario': return '#CCCC00';
+      default: return '#3788d8';
+    }
+  }
+
+  // 4) Carrega eventos e feriados do backend
+  function carregarEventos() {
+    fetch("/calendario/eventos_json/", {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.eventos || !Array.isArray(data.eventos)) {
+        console.error("Estrutura de dados inesperada", data);
+        return;
+      }
+      // Limpa os eventos atuais (v2 usa clearEvents())
+      calendar.clearEvents();
+
+      // Monta array de eventos no padrão v2
+      let allEvents = [];
+
+      // 4.1) Mapeia os eventos do backend
+      data.eventos.forEach(function(evt) {
+        allEvents.push({
+          id: evt.id,
+          calendarId: '1',
+          title: evt.titulo,
+          category: 'allday', // ou "time", se quiser exibir horário
+          start: evt.data_inicio,
+          end: evt.data_fim,
+          isAllDay: true,
+          backgroundColor: evt.cor,
+          borderColor: evt.cor,
+          raw: {
+            descricao: evt.descricao,
+            tipo: evt.tipo
+          }
+        });
+      });
+
+      // 4.2) Mapeia os feriados
+      if (data.feriados && Array.isArray(data.feriados)) {
+        data.feriados.forEach(function(feriado) {
+          allEvents.push({
+            id: 'feriado-' + feriado.date,
+            calendarId: '2',
+            title: feriado.name,
+            category: 'allday',
+            start: feriado.date,
+            end: feriado.date,
+            isAllDay: true,
+            backgroundColor: '#CC99FF',
+            borderColor: '#CC99FF',
+            raw: { tipo: 'feriado' }
+          });
+        });
+      }
+
+      // 4.3) Cria todos os eventos de uma só vez
+      calendar.createEvents(allEvents);
+
+      // 4.4) Atualiza a tabela do modal "Gerenciar Eventos"
+      atualizarTabelaEventos(allEvents);
+    })
+    .catch(error => console.error("Erro ao carregar eventos:", error));
+  }
+  carregarEventos();
+
+  // 5) Atualiza a tabela do modal Gerenciar Eventos
+  function atualizarTabelaEventos(allEvents) {
+    var tbody = document.getElementById("listaEventos");
+    tbody.innerHTML = "";
+    // Filtra somente os eventos (calendarId '1'), ignorando feriados (calendarId '2')
+    allEvents.filter(ev => ev.calendarId === '1').forEach(function(ev) {
+      let tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${ev.title}</td>
+        <td>${ev.start}</td>
+        <td>${ev.end}</td>
+        <td>${ev.raw.tipo || ''}</td>
+        <td>
+          <button class="btn btn-warning btn-sm btnEditar" data-id="${ev.id}">Editar</button>
+          <button class="btn btn-danger btn-sm btnExcluir" data-id="${ev.id}">Excluir</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    // Atribui os event listeners nos botões
+    document.querySelectorAll(".btnEditar").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var id = this.getAttribute("data-id");
+        var ev = allEvents.find(e => e.id == id);
+        if(ev) {
+          openModalForEdit(ev);
+          $('#gerenciarModal').modal('hide');
+        }
+      });
+    });
+    document.querySelectorAll(".btnExcluir").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var id = this.getAttribute("data-id");
+        if(confirm("Tem certeza que deseja excluir este evento?")) {
+          excluirEvento(id);
+        }
+      });
+    });
+  }
+
+  // 6) Ao clicar num evento no calendário, abre modal para edição (exceto feriados)
+  calendar.on('clickEvent', function(e) {
+    var ev = e.event;
+    if(ev.calendarId === '2') return; // feriado
+    openModalForEdit(ev);
+  });
+
+  // 6.1) Abre modal para editar
+  function openModalForEdit(ev) {
+    $('#eventoModal').modal('show');
+    document.getElementById('eventoModalLabel').innerText = 'Editar Evento';
+    document.getElementById('salvarEvento').innerText = 'Salvar Alterações';
+    document.getElementById('excluirEvento').style.display = 'inline-block';
+    document.getElementById('evento_id').value = ev.id;
+    document.getElementById('titulo').value = ev.title;
+    document.getElementById('descricao').value = ev.raw.descricao || '';
+    document.getElementById('cor').value = ev.backgroundColor;
+    document.getElementById('data_inicio').value = ev.start;
+    document.getElementById('data_fim').value = ev.end;
+    document.getElementById('tipo').value = ev.raw.tipo || '';
+  }
+
+  // 7) Botão para abrir modal Gerenciar Eventos
+  document.getElementById("btnGerenciarEventos").addEventListener("click", function(){
+    $('#gerenciarModal').modal('show');
+  });
+
+  // 7.1) Botão "Adicionar Novo Evento" no gerenciador
+  document.getElementById("btnAdicionarNovoEvento").addEventListener("click", function(){
+    $('#gerenciarModal').modal('hide');
+    openModalForNew();
+  });
+
+  // Abre modal para criar novo evento
+  function openModalForNew() {
+    $('#eventoModal').modal('show');
+    document.getElementById('eventoModalLabel').innerText = 'Adicionar Evento';
+    document.getElementById('salvarEvento').innerText = 'Salvar';
+    document.getElementById('excluirEvento').style.display = 'none';
+    document.getElementById('evento_id').value = '';
+    document.getElementById('titulo').value = '';
+    document.getElementById('descricao').value = '';
+    document.getElementById('cor').value = '#0000FF';
+    document.getElementById('data_inicio').value = '';
+    document.getElementById('data_fim').value = '';
+    document.getElementById('tipo').value = '';
+  }
+
+  // 8) Salva o evento (adicionar ou editar) via AJAX
+  document.getElementById("salvarEvento").addEventListener("click", function(){
+    var formData = new FormData();
+    formData.append("titulo", document.getElementById("titulo").value);
+    formData.append("descricao", document.getElementById("descricao").value);
+    formData.append("cor", document.getElementById("cor").value);
+    formData.append("tipo", document.getElementById("tipo").value);
+    formData.append("data_inicio", document.getElementById("data_inicio").value);
+    formData.append("data_fim", document.getElementById("data_fim").value);
+    
+    var eventoId = document.getElementById("evento_id").value;
+    var url = eventoId ? `/calendario/editar_evento/${eventoId}/` : "{% url 'adicionar_evento' %}`;
+    
+    fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": "{{ csrf_token }}" },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if(data.status) {
+        $('#eventoModal').modal('hide');
+        carregarEventos();
+      } else {
+        console.error("Erro ao salvar evento:", data.error);
+      }
+    })
+    .catch(error => console.error("Erro na requisição:", error));
+  });
+
+  // 9) Excluir evento via AJAX
+  function excluirEvento(id) {
+    fetch(`/calendario/excluir_evento/${id}/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": "{{ csrf_token }}" }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if(data.status) {
+        carregarEventos();
+      } else {
+        console.error("Erro ao excluir evento:", data.error);
+      }
+    })
+    .catch(error => console.error("Erro na requisição:", error));
+  }
+
+  // 9.1) Botão "Excluir" dentro do modal de edição
+  document.getElementById("excluirEvento").addEventListener("click", function(){
+    var id = document.getElementById("evento_id").value;
+    if(!id) return;
+    if(!confirm("Tem certeza que deseja excluir este evento?")) return;
+    excluirEvento(id);
+    $('#eventoModal').modal('hide');
+  });
+});
 </script>
-
-
-
-
 {% endblock %}

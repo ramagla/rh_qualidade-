@@ -6,14 +6,17 @@
 {% block content %}
 
 <head>
-        {{ form.media }}
+    {{ form.media }}
 </head>
+
 <div class="container mt-5">
     <h2 class="text-center mb-4">{{ form.instance.id|default:"Cadastrar" }} Lista de Presença</h2>
 
-    <form method="post" enctype="multipart/form-data" class="row g-3">
+    <!-- FORMULÁRIO PRINCIPAL (POST) -->
+    <form method="post" enctype="multipart/form-data" class="row g-3" id="cadastroForm">
         {% csrf_token %}
-
+        
+        <!-- Exibe erros de validação, se houver -->
         {% if form.errors %}
             <div class="alert alert-danger">
                 <strong>Erro!</strong> Por favor, corrija os seguintes erros:
@@ -27,145 +30,211 @@
             </div>
         {% endif %}
 
-        <!-- Tipo (Caixa de Seleção Estilizada com Bootstrap) -->
+        <!-- CAMPOS DO FORMULÁRIO -->
         <div class="col-md-6">
             <label for="treinamento" class="form-label">Tipo:</label>
             {{ form.treinamento|add_class:"form-select" }}
         </div>
 
-       <div class="col-md-6">
-    <label for="data_inicio" class="form-label">Data de Início:</label>
-    <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
-</div>
+        <div class="col-md-6">
+            <label for="data_inicio" class="form-label">Data de Início:</label>
+            <input type="date" id="data_inicio" name="data_inicio" class="form-control" 
+                   value="{{ data_inicio }}">
+        </div>
 
-<div class="col-md-6">
-    <label for="data_fim" class="form-label">Data de Fim:</label>
-    <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
-</div>
-        <!-- Horário de Início -->
+        <div class="col-md-6">
+            <label for="data_fim" class="form-label">Data de Fim:</label>
+            <input type="date" id="data_fim" name="data_fim" class="form-control" 
+                   value="{{ data_fim }}">
+        </div>
+
         <div class="col-md-3">
             <label for="horario_inicio" class="form-label">Horário Início:</label>
             {{ form.horario_inicio|add_class:"form-control" }}
         </div>
 
-        <!-- Horário de Fim -->
         <div class="col-md-3">
             <label for="horario_fim" class="form-label">Horário Fim:</label>
             {{ form.horario_fim|add_class:"form-control" }}
         </div>
 
-        <!-- Duração (Calculada automaticamente) -->
         <div class="col-md-6">
             <label for="duracao" class="form-label">Duração (em horas):</label>
-            <input type="text" id="duracao" name="duracao" class="form-control" value="{{ form.instance.duracao }}" readonly>
+            <input type="text" id="duracao" name="duracao" class="form-control" 
+                   value="{{ form.instance.duracao }}" readonly>
         </div>
 
-        <!-- Situação -->
         <div class="col-md-6">
             <label for="situacao" class="form-label">Situação:</label>
             {{ form.situacao|add_class:"form-select" }}
         </div>
 
-        <!-- Assunto do Treinamento -->
         <div class="col-md-6">
             <label for="assunto" class="form-label">Assunto:</label>
             {{ form.assunto|add_class:"form-control" }}
         </div>
 
-        <!-- Descrição do Treinamento -->
         <div class="col-md-12">
             <label for="descricao" class="form-label">Descrição:</label>
             {{ form.descricao }}
         </div>
 
-        <!-- Instrutor (Campo de seleção) -->
         <div class="col-md-6">
             <label for="instrutor" class="form-label">Instrutor:</label>
             {{ form.instrutor|add_class:"form-control" }}
         </div>
 
-        <!-- Necessita Avaliação de Eficácia? (Botões Sim/Não) -->
-       <div class="col-md-6">
+        <div class="col-md-6">
             <label class="form-label">Necessita Avaliação de Eficácia?</label>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="necessita_avaliacao" id="avaliacaoSim" value="True"
-                    {% if form.necessita_avaliacao.value == 'True' %}checked{% endif %} onclick="toggleTreinamentoSelect(true)">
+                <input class="form-check-input" type="radio" name="necessita_avaliacao" 
+                       id="avaliacaoSim" value="True"
+                       {% if form.necessita_avaliacao.value == 'True' %}checked{% endif %} 
+                       onclick="toggleTreinamentoSelect(true)">
                 <label class="form-check-label" for="avaliacaoSim">Sim</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="necessita_avaliacao" id="avaliacaoNao" value="False"
-                    {% if form.necessita_avaliacao.value == 'False' %}checked{% endif %} onclick="toggleTreinamentoSelect(false)">
+                <input class="form-check-input" type="radio" name="necessita_avaliacao" 
+                       id="avaliacaoNao" value="False"
+                       {% if form.necessita_avaliacao.value == 'False' %}checked{% endif %} 
+                       onclick="toggleTreinamentoSelect(false)">
                 <label class="form-check-label" for="avaliacaoNao">Não</label>
             </div>
         </div>
 
-     {% comment %} <!-- Campo de Seleção de Treinamento -->
-<div id="treinamentoSelect" class="mb-3" style="display: none;">
-    <label for="treinamento_id" class="form-label d-block">Selecionar Treinamento para Avaliação:</label>
-<select id="treinamento_id" name="treinamento_id" class="form-select select2" style="width: 50%;">
-        <option value="">Selecione um treinamento</option>
-        {% for treinamento in treinamentos %}
-            {% if treinamento.categoria == 'treinamento' %}
-                <option value="{{ treinamento.id }}">
-                    {{ treinamento.nome_curso }} - {{ treinamento.data_inicio|date:"d/m/Y" }}
-                </option>
-            {% endif %}
-        {% endfor %}
-    </select>
-</div> {% endcomment %}
+        {# Campo opcional de seleção de treinamento (comentado) #}
+        {% comment %}
+        <div id="treinamentoSelect" class="mb-3" style="display: none;">
+            <label for="treinamento_id" class="form-label d-block">Selecionar Treinamento para Avaliação:</label>
+            <select id="treinamento_id" name="treinamento_id" class="form-select select2" style="width: 50%;">
+                <option value="">Selecione um treinamento</option>
+                {% for treinamento in treinamentos %}
+                    {% if treinamento.categoria == 'treinamento' %}
+                        <option value="{{ treinamento.id }}">
+                            {{ treinamento.nome_curso }} - {{ treinamento.data_inicio|date:"d/m/Y" }}
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        {% endcomment %}
 
-
-
-        <!-- Anexar Lista de Presença (PDF) -->
         <div class="col-md-6">
             <label for="lista_presenca" class="form-label">Anexar Lista de Presença (PDF):</label>
             {{ form.lista_presenca|add_class:"form-control" }}
         </div>
 
-        <!-- Filtro por Local de Trabalho -->
-        <div class="col-md-12">
-    <label for="filtro_local_trabalho" class="form-label">Filtrar por Local de Trabalho:</label>
-    <select id="filtro_local_trabalho" class="form-select">
-        <option value="">Selecione o Local de Trabalho</option>
-        {% for local in locais_trabalho %}
-            <option value="{{ local }}">{{ local }}</option>
-        {% endfor %}
-    </select>
-</div>
+        <hr class="my-4" />
+        <h3>Seleção de Funcionários</h3>
 
+        <!-- CONTROLES DE FILTRO (SEM ABRIR OUTRO <form>) -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label for="filtro_nome" class="form-label">Filtrar por Nome:</label>
+                <select id="filtro_nome" class="form-select select2">
+                    <option value="">Selecione um funcionário</option>
+                    {% for funcionario in todos_funcionarios %}
+                        <option value="{{ funcionario.id }}">
+                            {{ funcionario.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="filtro_local_trabalho" class="form-label">Filtrar por Local de Trabalho:</label>
+                <select id="filtro_local_trabalho" class="form-select select2">
+                    <option value="">Selecione um local</option>
+                    {% for local in locais_trabalho %}
+                        <option value="{{ local }}">
+                            {{ local }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="text-end mt-3">
+                <!-- Botão normal, não "submit", para não submeter o POST -->
+                <button type="button" class="btn btn-primary" id="btnFiltrar">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+            </div>
+        </div>
 
-        <!-- Listagem de Funcionários com Checkbox -->
-        <div class="col-md-12">
-            <label class="form-label">Colaboradores Participantes:</label>
-            <table class="table table-bordered">
+        <!-- TABELA DE FUNCIONÁRIOS (CHECKBOXES) -->
+        <div id="employeeTable">
+            <table class="table table-bordered text-center">
                 <thead>
                     <tr>
-                        <th>Selecionar</th>
-                        <th>Colaborador</th>
-                        <th>Local de Trabalho</th>
+                        <th class="align-middle">Selecionar</th>
+                        <th class="align-middle">Colaborador</th>
+                        <th class="align-middle">Local de Trabalho</th>
                     </tr>
                 </thead>
                 <tbody id="lista_funcionarios">
-    {% for funcionario in funcionarios %}
-    <tr data-local-trabalho="{{ funcionario.local_trabalho }}">  <!-- Adicionando o atributo data-local-trabalho -->
-        <td><input type="checkbox" name="participantes" value="{{ funcionario.id }}" {% if funcionario in form.instance.participantes.all %}checked{% endif %}></td>
-        <td>{{ funcionario.nome }}</td>
-        <td>{{ funcionario.local_trabalho }}</td>
-    </tr>
-    {% endfor %}
-</tbody>
-
+                    {% for funcionario in page_obj %}
+                        <tr data-nome="{{ funcionario.nome }}" data-local-trabalho="{{ funcionario.local_trabalho }}">
+                            <td><input type="checkbox" name="participantes" value="{{ funcionario.id }}"></td>
+                            <td>{{ funcionario.nome }}</td>
+                            <td>{{ funcionario.local_trabalho }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center">Nenhum funcionário encontrado.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
             </table>
+
+            <!-- PAGINAÇÃO -->
+            <nav aria-label="Navegação de página">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Primeira">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Anterior">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Próxima">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Última">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
 
-      <!-- Botões de Cadastrar e Cancelar -->
-        <div class="col-12 text-center">
-        <button type="submit" class="btn btn-primary">
+        <!-- BOTÕES DE Cadastrar e Cancelar -->
+        <div class="col-12 text-center my-4">
+            <button type="submit" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> {{ form.instance.id|default:"Cadastrar" }}
-            </button>    <a href="{% url 'lista_presenca' %}" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
+            </button>
+            <a href="{% url 'lista_presenca' %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
         </div>
-
-
+    </form>
+</div>
 
 <style>
     .cke_textarea_inline {
@@ -175,95 +244,68 @@
 </style>
 
 <script>
-function toggleTreinamentoSelect(show) {
-    const treinamentoSelect = document.getElementById('treinamentoSelect');
-    if (show) {
-        treinamentoSelect.style.display = 'block';
-    } else {
-        treinamentoSelect.style.display = 'none';
-        document.getElementById('treinamento_id').value = ""; // Limpa o valor selecionado
-    }
-}
-
-// Inicialização baseada no valor atual
-document.addEventListener("DOMContentLoaded", function() {
-    const necessitaAvaliacao = document.querySelector('input[name="necessita_avaliacao"]:checked');
-    if (necessitaAvaliacao) {
-        toggleTreinamentoSelect(necessitaAvaliacao.value === "True");
-    }
-
-    // Adiciona eventos para os botões de rádio
-    document.querySelectorAll('input[name="necessita_avaliacao"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            toggleTreinamentoSelect(this.value === "True");
+    document.addEventListener("DOMContentLoaded", function() {
+        // Inicializa o Select2 para os filtros
+        $('#filtro_nome, #filtro_local_trabalho').select2({
+            placeholder: "Selecione uma opção",
+            allowClear: true,
+            width: "100%"
         });
-    });
-});
-</script>
 
-
-<!-- Script para Filtro de Funcionários por Local de Trabalho -->
-<script>
-document.getElementById('filtro_local_trabalho').addEventListener('change', function() {
-    var localTrabalho = this.value;
-    var funcionarios = document.querySelectorAll('#lista_funcionarios tr');
-
-    funcionarios.forEach(function(row) {
-        if (localTrabalho === "" || row.getAttribute('data-local-trabalho') === localTrabalho) {
-            row.style.display = "";
-        } else {
-            row.style.display = "none";
-        }
-    });
-});
-
-// Script para calcular a duração com base no horário de início e fim
-document.getElementById('id_horario_fim').addEventListener('change', calcularDuracao);
-document.getElementById('id_horario_inicio').addEventListener('change', calcularDuracao);
-
-function calcularDuracao() {
-    var inicio = document.getElementById('id_horario_inicio').value;
-    var fim = document.getElementById('id_horario_fim').value;
-
-    if (inicio && fim) {
-        var inicioDate = new Date('1970-01-01T' + inicio + 'Z');
-        var fimDate = new Date('1970-01-01T' + fim + 'Z');
-        var diff = (fimDate - inicioDate) / (1000 * 60 * 60); // diferença em horas
-
-        if (diff >= 0) {
-            document.getElementById('duracao').value = diff.toFixed(2);
-        } else {
-            alert('Horário de fim deve ser posterior ao horário de início.');
-            document.getElementById('duracao').value = '';
-        }
-    }
-}
-
-
-// Inicialização baseada no valor atual
-document.addEventListener("DOMContentLoaded", function() {
-    const necessitaAvaliacao = document.querySelector('input[name="necessita_avaliacao"]:checked').value === "True";
-    toggleTreinamentoSelect(necessitaAvaliacao);
-});
-
-</script>
-<script>
-    document.getElementById('filtro_local_trabalho').addEventListener('change', function() {
-        var localTrabalho = this.value;
-        var funcionarios = document.querySelectorAll('#lista_funcionarios tr');  // Obtendo todas as linhas da tabela
-
-        funcionarios.forEach(function(row) {
-            var local = row.getAttribute('data-local-trabalho');  // Obtendo o local de trabalho do atributo data
-
-            // Mostra ou esconde as linhas de acordo com a seleção
-            if (localTrabalho === "" || local === localTrabalho) {
-                row.style.display = "";  // Exibe
-            } else {
-                row.style.display = "none";  // Oculta
+        // Cálculo automático da duração
+        function calcularDuracao() {
+            var inicio = document.getElementById('id_horario_inicio').value;
+            var fim = document.getElementById('id_horario_fim').value;
+            if (inicio && fim) {
+                var inicioDate = new Date('1970-01-01T' + inicio + 'Z');
+                var fimDate = new Date('1970-01-01T' + fim + 'Z');
+                var diff = (fimDate - inicioDate) / (1000 * 60 * 60);
+                if (diff >= 0) {
+                    document.getElementById('duracao').value = diff.toFixed(2);
+                } else {
+                    alert('Horário de fim deve ser posterior ao horário de início.');
+                    document.getElementById('duracao').value = '';
+                }
             }
+        }
+        document.getElementById('id_horario_inicio').addEventListener('change', calcularDuracao);
+        document.getElementById('id_horario_fim').addEventListener('change', calcularDuracao);
+
+        // Ao clicar no botão "Filtrar", fazemos AJAX para não recarregar a página
+        document.getElementById('btnFiltrar').addEventListener('click', function() {
+            // Captura os valores selecionados
+            const filtroNome = document.getElementById('filtro_nome').value;
+            const filtroLocal = document.getElementById('filtro_local_trabalho').value;
+
+            // Monta a URL de GET (pode ser a mesma URL, com parâmetros)
+            let url = window.location.pathname + '?ajax=1';
+            if (filtroNome) {
+                url += '&filtro_nome=' + filtroNome;
+            }
+            if (filtroLocal) {
+                url += '&filtro_local_trabalho=' + filtroLocal;
+            }
+
+            // Requisição AJAX usando fetch()
+            fetch(url, {
+                method: 'GET',
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Extrai apenas o trecho da tabela (#employeeTable) do HTML retornado
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTable = doc.querySelector('#employeeTable');
+
+                // Substitui a tabela atual
+                document.querySelector('#employeeTable').innerHTML = newTable.innerHTML;
+            })
+            .catch(err => {
+                alert('Ocorreu um erro ao filtrar funcionários.');
+                console.error(err);
+            });
         });
     });
 </script>
-
 
 {% endblock %}

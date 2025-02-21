@@ -7,7 +7,7 @@
 
 
 
-<div class="container mt-5">
+<div class="container-fluid mt-5">
     <h2 class="text-center mb-4">Colaboradores Cadastrados</h2>
     <!-- Toast container para mensagens de alerta no canto inferior direito -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
@@ -245,7 +245,7 @@
     
 
     <!-- Lista de Colaboradores -->
-    <table class="table table-bordered text-center mt-4">
+    <table class="table table-bordered text-center mt-4" style="width: 100%;">
         <thead>
             <tr>
                 <th style="vertical-align: middle;">Foto</th>  
@@ -287,19 +287,19 @@
                 {% endif %}
             </td>
             <td style="vertical-align: middle;">
-                <a href="{% url 'visualizar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Visualizar">
+                <a href="{% url 'visualizar_funcionario' funcionario.id %}" class="btn btn-sm btn-info" title="Visualizar">
                     <i class="bi bi-eye"></i>  
                 </a>
                 {% if request.user|has_permission:"Funcionario.change_funcionario" %}
-                    <a href="{% url 'editar_funcionario' funcionario.id %}" class="btn btn-sm btn-light" title="Editar">
+                    <a href="{% url 'editar_funcionario' funcionario.id %}" class="btn btn-sm btn-warning mt-1" title="Editar">
                         <i class="bi bi-pencil-square"></i>  
                     </a>
                 {% endif %}
-                {% if request.user|has_permission:"Funcionario.delete_funcionario" %}
-                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalExcluirFuncionario{{ funcionario.id }}" title="Excluir">
+                {% comment %} {% if request.user|has_permission:"Funcionario.delete_funcionario" %}
+                    <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#modalExcluirFuncionario{{ funcionario.id }}" title="Excluir">
                         <i class="bi bi-trash"></i>  
                     </button> 
-                {% endif %}
+                {% endif %} {% endcomment %}
                 
         </tr>
     {% empty %}
