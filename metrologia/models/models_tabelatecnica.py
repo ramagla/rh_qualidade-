@@ -18,8 +18,10 @@ class TabelaTecnica(models.Model):
         ('UR', 'Unidade Relativa'),
         ('HRC', 'HRC'),
         ('HRB', 'HRB'),
+        ('HV', 'Dureza Vickers'),  # Adicionando HV para Dureza Vickers
+        ('mN', 'MiliNewton'),  # Adicionando miliNewton
         ('%', "Percentual"),
-        ('kg', "Kilograma")
+        ('kg', "Kilograma"),
     ]
 
     STATUS_CHOICES = [
