@@ -22,6 +22,9 @@ class TabelaTecnica(models.Model):
         ('mN', 'MiliNewton'),  # Adicionando miliNewton
         ('%', "Percentual"),
         ('kg', "Kilograma"),
+        ('min', 'Minutos'),
+        ('s', 'Segundos'),
+        ('h', 'Horas'),
     ]
 
     STATUS_CHOICES = [
