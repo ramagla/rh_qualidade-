@@ -4,7 +4,6 @@
 {% block title %}Cadastrar Lista de Presença{% endblock %}
 
 {% block content %}
-
 <head>
     {{ form.media }}
 </head>
@@ -16,7 +15,6 @@
     <form method="post" enctype="multipart/form-data" class="row g-3" id="cadastroForm">
         {% csrf_token %}
         
-        <!-- Exibe erros de validação, se houver -->
         {% if form.errors %}
             <div class="alert alert-danger">
                 <strong>Erro!</strong> Por favor, corrija os seguintes erros:
@@ -30,7 +28,6 @@
             </div>
         {% endif %}
 
-        <!-- CAMPOS DO FORMULÁRIO -->
         <div class="col-md-6">
             <label for="treinamento" class="form-label">Tipo:</label>
             {{ form.treinamento|add_class:"form-select" }}
@@ -39,13 +36,13 @@
         <div class="col-md-6">
             <label for="data_inicio" class="form-label">Data de Início:</label>
             <input type="date" id="data_inicio" name="data_inicio" class="form-control" 
-                   value="{{ data_inicio }}">
+                   value="{{ form.data_inicio.value|default:'' }}">
         </div>
 
         <div class="col-md-6">
             <label for="data_fim" class="form-label">Data de Fim:</label>
             <input type="date" id="data_fim" name="data_fim" class="form-control" 
-                   value="{{ data_fim }}">
+                   value="{{ form.data_fim.value|default:'' }}">
         </div>
 
         <div class="col-md-3">
@@ -102,23 +99,6 @@
             </div>
         </div>
 
-        {# Campo opcional de seleção de treinamento (comentado) #}
-        {% comment %}
-        <div id="treinamentoSelect" class="mb-3" style="display: none;">
-            <label for="treinamento_id" class="form-label d-block">Selecionar Treinamento para Avaliação:</label>
-            <select id="treinamento_id" name="treinamento_id" class="form-select select2" style="width: 50%;">
-                <option value="">Selecione um treinamento</option>
-                {% for treinamento in treinamentos %}
-                    {% if treinamento.categoria == 'treinamento' %}
-                        <option value="{{ treinamento.id }}">
-                            {{ treinamento.nome_curso }} - {{ treinamento.data_inicio|date:"d/m/Y" }}
-                        </option>
-                    {% endif %}
-                {% endfor %}
-            </select>
-        </div>
-        {% endcomment %}
-
         <div class="col-md-6">
             <label for="lista_presenca" class="form-label">Anexar Lista de Presença (PDF):</label>
             {{ form.lista_presenca|add_class:"form-control" }}
@@ -126,38 +106,6 @@
 
         <hr class="my-4" />
         <h3>Seleção de Funcionários</h3>
-
-        <!-- CONTROLES DE FILTRO (SEM ABRIR OUTRO <form>) -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <label for="filtro_nome" class="form-label">Filtrar por Nome:</label>
-                <select id="filtro_nome" class="form-select select2">
-                    <option value="">Selecione um funcionário</option>
-                    {% for funcionario in todos_funcionarios %}
-                        <option value="{{ funcionario.id }}">
-                            {{ funcionario.nome }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="filtro_local_trabalho" class="form-label">Filtrar por Local de Trabalho:</label>
-                <select id="filtro_local_trabalho" class="form-select select2">
-                    <option value="">Selecione um local</option>
-                    {% for local in locais_trabalho %}
-                        <option value="{{ local }}">
-                            {{ local }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="text-end mt-3">
-                <!-- Botão normal, não "submit", para não submeter o POST -->
-                <button type="button" class="btn btn-primary" id="btnFiltrar">
-                    <i class="bi bi-funnel"></i> Filtrar
-                </button>
-            </div>
-        </div>
 
         <!-- TABELA DE FUNCIONÁRIOS (CHECKBOXES) -->
         <div id="employeeTable">
@@ -170,7 +118,7 @@
                     </tr>
                 </thead>
                 <tbody id="lista_funcionarios">
-                    {% for funcionario in page_obj %}
+                    {% for funcionario in todos_funcionarios %}
                         <tr data-nome="{{ funcionario.nome }}" data-local-trabalho="{{ funcionario.local_trabalho }}">
                             <td><input type="checkbox" name="participantes" value="{{ funcionario.id }}"></td>
                             <td>{{ funcionario.nome }}</td>
@@ -183,45 +131,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-
-            <!-- PAGINAÇÃO -->
-            <nav aria-label="Navegação de página">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Primeira">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Anterior">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Próxima">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Última">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
         </div>
 
         <!-- BOTÕES DE Cadastrar e Cancelar -->
@@ -245,12 +154,39 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Inicializa o Select2 para os filtros
-        $('#filtro_nome, #filtro_local_trabalho').select2({
-            placeholder: "Selecione uma opção",
-            allowClear: true,
-            width: "100%"
+        // Gerenciamento Global da Seleção
+        let selectedEmployees = [];
+        if (localStorage.getItem('selectedEmployees')) {
+            try {
+                selectedEmployees = JSON.parse(localStorage.getItem('selectedEmployees'));
+            } catch (e) {
+                selectedEmployees = [];
+            }
+        }
+        function saveSelectedEmployees() {
+            localStorage.setItem('selectedEmployees', JSON.stringify(selectedEmployees));
+        }
+        document.addEventListener('change', function(event) {
+            if (event.target.matches("input[name='participantes']")) {
+                const empId = event.target.value;
+                if (event.target.checked) {
+                    if (!selectedEmployees.includes(empId)) {
+                        selectedEmployees.push(empId);
+                    }
+                } else {
+                    selectedEmployees = selectedEmployees.filter(id => id !== empId);
+                }
+                saveSelectedEmployees();
+            }
         });
+        function restoreCheckboxSelection() {
+            document.querySelectorAll("input[name='participantes']").forEach(function(checkbox) {
+                if (selectedEmployees.includes(checkbox.value)) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+        restoreCheckboxSelection();
 
         // Cálculo automático da duração
         function calcularDuracao() {
@@ -271,41 +207,47 @@
         document.getElementById('id_horario_inicio').addEventListener('change', calcularDuracao);
         document.getElementById('id_horario_fim').addEventListener('change', calcularDuracao);
 
-        // Ao clicar no botão "Filtrar", fazemos AJAX para não recarregar a página
-        document.getElementById('btnFiltrar').addEventListener('click', function() {
-            // Captura os valores selecionados
-            const filtroNome = document.getElementById('filtro_nome').value;
-            const filtroLocal = document.getElementById('filtro_local_trabalho').value;
-
-            // Monta a URL de GET (pode ser a mesma URL, com parâmetros)
-            let url = window.location.pathname + '?ajax=1';
-            if (filtroNome) {
-                url += '&filtro_nome=' + filtroNome;
-            }
-            if (filtroLocal) {
-                url += '&filtro_local_trabalho=' + filtroLocal;
-            }
-
-            // Requisição AJAX usando fetch()
-            fetch(url, {
-                method: 'GET',
-            })
-            .then(response => response.text())
-            .then(html => {
-                // Extrai apenas o trecho da tabela (#employeeTable) do HTML retornado
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const newTable = doc.querySelector('#employeeTable');
-
-                // Substitui a tabela atual
-                document.querySelector('#employeeTable').innerHTML = newTable.innerHTML;
-            })
-            .catch(err => {
-                alert('Ocorreu um erro ao filtrar funcionários.');
-                console.error(err);
+        // Persistência dos dados do formulário via localStorage
+        function saveFormData() {
+            let formData = {};
+            document.querySelectorAll("input, select, textarea").forEach(function(input) {
+                if (input.type === "checkbox") {
+                    formData[input.name] = input.checked.toString();
+                } else if (input.type === "radio") {
+                    if (input.checked) {
+                        formData[input.name] = input.value;
+                    }
+                } else {
+                    formData[input.name] = input.value;
+                }
             });
+            localStorage.setItem('formData', JSON.stringify(formData));
+        }
+        document.querySelectorAll("input, select, textarea").forEach(function(input) {
+            input.addEventListener("input", saveFormData);
+            input.addEventListener("change", saveFormData);
+        });
+        let savedData = localStorage.getItem('formData');
+        if (savedData) {
+            savedData = JSON.parse(savedData);
+            Object.keys(savedData).forEach(function(key) {
+                let input = document.querySelector(`[name="${key}"]`);
+                if (input) {
+                    if (input.type === "checkbox") {
+                        input.checked = savedData[key] === "true";
+                    } else if (input.type === "radio") {
+                        let radioOption = document.querySelector(`[name="${key}"][value="${savedData[key]}"]`);
+                        if (radioOption) radioOption.checked = true;
+                    } else {
+                        input.value = savedData[key];
+                    }
+                }
+            });
+        }
+        document.getElementById("cadastroForm").addEventListener("submit", function() {
+            localStorage.removeItem('formData');
+            localStorage.removeItem('selectedEmployees');
         });
     });
 </script>
-
 {% endblock %}

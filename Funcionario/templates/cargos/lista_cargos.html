@@ -173,20 +173,20 @@
                 </td>
                 <td>
                     {% if request.user|has_permission:"Funcionario.change_cargo" %}
-                    <a href="{% url 'editar_cargo' cargo.id %}" class="btn btn-warning btn-sm" title="Editar">
+                    <a href="{% url 'editar_cargo' cargo.id %}" class="btn btn-warning btn-sm mt-1" title="Editar">
                         <i class="bi bi-pencil-square"></i>  <!-- Ícone de Editar -->
                     </a>
                     {% endif %}
-                    <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm" title="Histórico de Revisões">
+                    <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm mt-1" title="Histórico de Revisões">
                         <i class="bi bi-clock-history"></i>
                     </a>
 
-                     <a href="{% url 'imprimir_cargo' cargo.id %}" class="btn btn-success btn-sm" title="Imprimir Descrição">
+                     <a href="{% url 'imprimir_cargo' cargo.id %}" class="btn btn-success btn-sm mt-1" title="Imprimir Descrição">
                         <i class="bi bi-printer"></i> 
                     </a>
                     <!-- Verifica se o arquivo de descrição está presente -->
                     {% if cargo.descricao_arquivo %}
-                        <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-secondary btn-sm" download title="Baixar Descrição">
+                        <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-secondary btn-sm mt-1" download title="Baixar Descrição">
                             <i class="bi bi-file-earmark-pdf"></i>
   <!-- Ícone de Word -->
                         </a>
