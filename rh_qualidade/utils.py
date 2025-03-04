@@ -6,11 +6,11 @@ def title_case(text):
     exceptions = [
         'a', 'o', 'as', 'os', 'uma', 'um', 'umas', 'uns',  # Artigos em português
         'e', 'ou', 'nem', 'mas', 'por', 'para', 'com', 'sem', 'de', 'do', 'da', 'dos', 'das', 'entre', 
-        'sob', 'sobre', 'até', 'como', 'quando', 'quanto', 'que', 'porque', 'pois'
+        'sob', 'sobre', 'até', 'como', 'quando', 'quanto', 'que', 'porque', 'pois','em'
     ]
 
     # Lista de abreviações para manter em maiúsculas, incluindo prefixos que podem ter números
-    abbreviations = ['CEO', 'USA', 'UN', 'EU', 'UNESCO', 'FEMEA', 'APQP', 'POQ', 'PQ', 'SAC', 'CQI','GLP','LGPD','PPP','DP','IMDS','VDA','AIAG','CEP','MSA','PPAP','NR','NBR','ISO','IATF','CIP','PPRS','TS','PPCP']
+    abbreviations = ['CEO', 'USA', 'UN', 'EU', 'UNESCO', 'FEMEA', 'APQP', 'POQ', 'PQ', 'SAC', 'CQI','GLP','LGPD','PPP','DP','IMDS','VDA','AIAG','CEP','MSA','PPAP','NR','NBR','ISO','IATF','CIP','PPRS','TS','PPCP','IO','SGI']
 
     # Expressão regular para detectar abreviações seguidas de números (ex: POQ001, PQ002)
     abbreviation_pattern = re.compile(r'([A-Z]+)(\d+)$', re.IGNORECASE)
