@@ -1,6 +1,8 @@
 from django import forms
 from ..models import Comunicado
 from django_ckeditor_5.widgets import CKEditor5Widget
+from rh_qualidade.utils import title_case
+
 
 class ComunicadoForm(forms.ModelForm):
     descricao = forms.CharField(widget=CKEditor5Widget(config_name='default'))
@@ -19,14 +21,16 @@ class ComunicadoForm(forms.ModelForm):
 
         }
 
+      
     def clean_assunto(self):
         assunto = self.cleaned_data.get('assunto')
         if assunto:
-            return assunto.title()
+            return title_case(assunto)  # Aplica a função title_case personalizada
         return assunto
 
+       
     def clean_departamento_responsavel(self):
-        departamento_responsavel = self.cleaned_data.get('departamento_responsavel')
-        if departamento_responsavel:
-            return departamento_responsavel.title()
-        return departamento_responsavel
+            departamento_responsavel = self.cleaned_data.get('departamento_responsavel')
+            if departamento_responsavel:
+                return title_case(departamento_responsavel)  # Aplica a função title_case personalizada
+            return departamento_responsavel

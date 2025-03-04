@@ -32,7 +32,8 @@ def home(request):
     # Consulta ao banco de dados para funcionários com avaliação baixa
     funcionarios_avaliacao_baixa = [
         {
-            "id": avaliacao.funcionario.id,
+            "id": avaliacao.id,
+            "funcionario_id": avaliacao.funcionario.id,  # Ainda pode ser útil para exibição
             "nome": avaliacao.funcionario.nome,
             "foto": avaliacao.funcionario.foto.url if avaliacao.funcionario.foto else None,
             "classificacao": classificacao['percentual'],

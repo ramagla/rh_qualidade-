@@ -76,6 +76,7 @@ CKEDITOR_5_CONFIGS = {
 
 # Middlewares
 MIDDLEWARE = [
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

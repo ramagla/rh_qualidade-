@@ -1,8 +1,92 @@
 {% extends 'base.html' %}
 {% block title %}Permissões de Acesso{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2>Permissões de Acesso</h2>
-    <p>Configuração das permissões será exibida aqui.</p>
+<div class="container-fluid mt-3">
+    <h2 class="mb-3">Permissões de Acesso</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <h4 class="mb-3">
+                <i class="fas fa-user-shield"></i> {{ usuario.username }}
+                <small class="text-muted">({{ usuario.get_full_name }})</small>
+            </h4>
+
+            <div class="row">
+                <!-- Lista de módulos e permissões -->
+                <div class="col-md-4">
+                    <ul id="treeview"></ul>
+                </div>
+
+                <!-- Permissões do módulo selecionado -->
+                <div class="col-md-8">
+                    <h5 id="modulo-selecionado" class="mb-3">Selecione um módulo</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <button class="btn btn-sm btn-primary" id="marcar-todos">Marcar Todos</button>
+                        <button class="btn btn-sm btn-warning" id="desmarcar-todos">Desmarcar Todos</button>
+                    </div>
+                    <div id="permissoes-lista" class="border p-3 rounded bg-light">
+                        <p class="text-muted">Nenhuma permissão carregada.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3 text-end">
+                <button class="btn btn-success" id="salvar-permissoes">
+                    <i class="fas fa-save"></i> Gravar
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Script para carregar árvore de permissões -->
+<script>
+    $(document).ready(function() {
+        var permissoesData = {{ usuarios_permissoes_json|safe }};
+        console.log("🔹 JSON carregado:", permissoesData);
+
+        if (!Array.isArray(permissoesData) || permissoesData.length === 0) {
+            console.error("❌ Erro: JSON de permissões está vazio ou inválido.");
+            return;
+        }
+
+        var listaModulos = $('#treeview');
+
+        permissoesData.forEach(function(modulo) {
+            var moduloNode = $('<li>').text(modulo.text).addClass('modulo-item').attr('data-id', modulo.text);
+            listaModulos.append(moduloNode);
+
+            moduloNode.click(function() {
+                carregarPermissoes(modulo);
+            });
+        });
+
+        function carregarPermissoes(modulo) {
+            $('#modulo-selecionado').text("Permissões do Módulo: " + modulo.text);
+            $('#permissoes-lista').html('');
+
+            modulo.nodes.forEach(function(perm) {
+                $('#permissoes-lista').append(`
+                    <div class="form-check">
+                        <input class="form-check-input permissao-checkbox" type="checkbox" id="${perm.id}" ${perm.ativo ? 'checked' : ''}>
+                        <label class="form-check-label" for="${perm.id}">${perm.text}</label>
+                    </div>
+                `);
+            });
+        }
+
+        $('#marcar-todos').click(function() {
+            $('.permissao-checkbox').prop('checked', true);
+        });
+
+        $('#desmarcar-todos').click(function() {
+            $('.permissao-checkbox').prop('checked', false);
+        });
+    });
+</script>
+
 {% endblock %}

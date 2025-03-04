@@ -151,7 +151,10 @@ class RelatorioIndicadorAnualView(TemplateView):
         avaliacoes = AvaliacaoAnual.objects.all()
 
         # Obter anos distintos
-        anos = avaliacoes.values_list('data_avaliacao__year', flat=True).distinct()
+        anos = sorted(set(avaliacoes.values_list('data_avaliacao__year', flat=True)))
+
+        # Filtrar para mostrar apenas os últimos 5 anos
+        anos = anos[-5:] if len(anos) > 5 else anos
 
         # Calcular o índice anual por ano
         dados_por_ano = {}
@@ -200,8 +203,8 @@ class RelatorioIndicadorAnualView(TemplateView):
 
     def gerar_grafico(self, dados_por_ano):
         # Obter anos e índices
-        anos = list(dados_por_ano.keys())
-        indices = list(dados_por_ano.values())
+        anos = sorted(dados_por_ano.keys())
+        indices = [dados_por_ano[ano] for ano in anos]
         meta = [70] * len(anos)  # Meta fixa de 70%
 
         # Configurar o gráfico
@@ -268,9 +271,14 @@ def cronograma_treinamentos(request):
 
     return render(request, 'relatorios/cronograma_treinamentos.html', context)
 
+from datetime import datetime, timedelta
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from Funcionario.models import AvaliacaoTreinamento, Funcionario
+
 @login_required
 def cronograma_avaliacao_eficacia(request):
-    # Obtém os filtros
+    # Obtém os filtros da URL
     ano = request.GET.get('ano', None)
     departamento = request.GET.get('departamento', None)
 
@@ -292,9 +300,27 @@ def cronograma_avaliacao_eficacia(request):
     # Gerar os meses dinamicamente com base no ano filtrado
     meses = [datetime(ano, mes, 1).strftime("%b/%y").capitalize() for mes in range(1, 13)]
 
+    # Processar avaliações para definir o mês correto no cronograma
+    avaliacoes_processadas = []
+    for avaliacao in avaliacoes:
+        if avaliacao.data_avaliacao and avaliacao.periodo_avaliacao:
+            data_final = avaliacao.data_avaliacao + timedelta(days=avaliacao.periodo_avaliacao)
+            mes_final = data_final.strftime("%b/%y").capitalize()
+        else:
+            data_final = None
+            mes_final = None  # Caso não tenha data
+
+        # Adiciona a propriedade mes_final para cada avaliação
+        avaliacoes_processadas.append({
+            'avaliacao': avaliacao,
+            'data_final': data_final,  # Adiciona para uso direto no template
+            'mes_final': mes_final,
+            'periodo_avaliacao': avaliacao.periodo_avaliacao,  # Inclui para evitar erro
+        })
+
     # Monta o contexto para o template
     context = {
-        'avaliacoes': avaliacoes,
+        'avaliacoes': avaliacoes_processadas,
         'anos_disponiveis': anos_disponiveis,
         'departamentos': departamentos,
         'ano': ano,

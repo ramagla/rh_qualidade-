@@ -17,6 +17,7 @@ def global_menu(request):
                 {'name': 'Dispositivos', 'url': 'lista_dispositivos', 'icon': 'fas fa-cogs'},
             ]
         })
+
     if user.has_perm('metrologia.view_calibracaodispositivo') or user.has_perm('metrologia.view_calibracao'):
         menu_metrologia.append({
             'name': 'Calibrações', 'icon': 'fas fa-cogs', 'submenu': [
@@ -38,6 +39,10 @@ def global_menu(request):
                 {'name': 'Equipamentos por Funcionário', 'icon': 'fas fa-users', 'url': 'equipamentos_por_funcionario'},
             ]
         })
+
+   # Adicionando Documentos ao menu de Metrologia (também considerando a permissão para documentos)
+        if user.has_perm('Funcionario.view_documento'):
+            menu_metrologia.append({'name': 'Documentos', 'url': 'lista_documentos', 'icon': 'fas fa-folder-open'})
 
     # Menu Recursos Humanos com permissões
     menu_recursos_humanos = []

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load custom_filters %} 
 
 {% block title %}Lista de Calibrações de Dispositivos{% endblock %}
 
@@ -27,12 +28,18 @@
 
      <!-- Botões -->
     <div class="d-flex justify-content-end mb-4">
+        {% if request.user|has_permission:"metrologia.add_calibracaodispositivo" %}
         <a href="{% url 'cadastrar_calibracao_dispositivo' %}" class="btn btn-success me-2">
             <i class="bi bi-plus-circle"></i> Nova Calibração
         </a>
+        {% endif %}
+        {% if request.user|has_permission:"metrologia.view_calibracaodispositivo" %}
+
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#imprimirModal">
             <i class="bi bi-printer"></i> Imprimir
         </button>
+        {% endif %}
+
     </div>
 
    <!-- Modal para Seleção de Dispositivo -->
@@ -210,12 +217,16 @@
                 </div>
             </td>
             <td>
+                {% if request.user|has_permission:"metrologia.change_calibracaodispositivo" %}
                 <a href="{% url 'editar_calibracao_dispositivo' calibracao.id %}" class="btn btn-sm btn-primary small-icon" title="Editar">
                     <i class="bi bi-pencil"></i>
                 </a>
+                {% endif %}
+                {% if request.user|has_permission:"metrologia.delete_calibracaodispositivo" %}
                 <a href="#" class="btn btn-sm btn-danger small-icon" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ calibracao.id }}" title="Excluir">
                     <i class="bi bi-trash"></i>
-                </a>                    
+                </a>     
+                {% endif %}               
             </td>
         </tr>
         <!-- Modal de Exclusão -->

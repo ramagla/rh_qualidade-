@@ -1,6 +1,7 @@
 from django import forms
 from ..models import Funcionario, Cargo
 from django_select2.forms import Select2Widget
+from rh_qualidade.utils import title_case
 
 
 class FuncionarioForm(forms.ModelForm):
@@ -100,18 +101,27 @@ class FuncionarioForm(forms.ModelForm):
             'data-allow-clear': 'true'
         })
 
-        # Métodos para limpar e formatar os campos
-        def clean_nome(self):
-            nome = self.cleaned_data.get('nome', '')
-            return nome.title()  # Converte para Title Case
+     
+    def clean_nome(self):
+        nome = self.cleaned_data.get('nome')
+        if nome:
+            return title_case(nome)  # Aplica a função title_case personalizada
+        return nome
+ 
+    
+    def clean_local_trabalho(self):
+        local_trabalho = self.cleaned_data.get('local_trabalho')
+        if local_trabalho:
+            return title_case(local_trabalho)  # Aplica a função title_case personalizada
+        return local_trabalho
 
-        def clean_local_trabalho(self):
-            local_trabalho = self.cleaned_data.get('local_trabalho', '')
-            return local_trabalho.title()  # Converte para Title Case
-
-        def clean_responsavel(self):
+    def clean_responsavel(self):
             responsavel = self.cleaned_data.get('responsavel', None)
-            return responsavel  # Não altera mais o nome do responsável diretamente
+            return responsavel  # Não altera mais o nome do responsável diretamente   
+    
+         
+
+       
 
         # Método save para preencher o cargo_responsavel automaticamente
     def save(self, commit=True):

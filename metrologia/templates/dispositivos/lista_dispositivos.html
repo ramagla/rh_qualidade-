@@ -11,9 +11,13 @@
 
     <!-- Botão para cadastrar novo dispositivo -->
     <div class="d-flex justify-content-end mb-4">
+        {% if request.user|has_permission:"metrologia.add_dispositivo" %}
+
         <a href="{% url 'cadastrar_dispositivo' %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Novo Dispositivo
         </a>
+        {% endif %}
+
     </div>
 
     <form method="get" class="row g-3 mb-4 align-items-end">
@@ -157,15 +161,24 @@
                 {% endif %}
             </td>
             <td>
+                {% if request.user|has_permission:"metrologia.view_dispositivo" %}
                 <a href="{% url 'visualizar_dispositivo' dispositivo.id %}" class="btn btn-sm btn-secondary small-icon" title="Visualizar">
                     <i class="bi bi-eye"></i>
                 </a>
+                {% endif %}
+                {% if request.user|has_permission:"metrologia.change_dispositivo" %}
+
                 <a href="{% url 'editar_dispositivo' dispositivo.id %}" class="btn btn-sm btn-primary small-icon" title="Editar">
                     <i class="bi bi-pencil"></i>
                 </a>
+                {% endif %}
+                {% if request.user|has_permission:"metrologia.view_controleentradasaida" %}
+
                 <a href="{% url 'historico_movimentacoes' dispositivo.id %}" class="btn btn-sm btn-info small-icon" title="Registrar Entrada/Saída">
                     <i class="bi bi-box-arrow-in-right"></i>
                 </a>
+                {% endif %}
+
             </td>
         </tr>
         {% empty %}

@@ -5,6 +5,8 @@
 {% load static %}
 
 {% block content %}
+{% block errors %}
+{% endblock %}
 <div class="container mt-5">
     <h2 class="text-center mb-4">Editar Avaliação de Job Rotation</h2>
     <form method="POST" action="{% url 'editar_jobrotation_evaluation' evaluation.id %}" class="row g-3" id="jobRotationForm">

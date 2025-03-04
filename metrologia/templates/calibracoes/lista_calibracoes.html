@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load custom_filters %} 
 
 {% block title %}Lista de Calibrações{% endblock %}
 
@@ -27,9 +28,11 @@
 
     <!-- Botão para cadastrar nova calibração -->
     <div class="d-flex justify-content-end mb-4">
+        {% if request.user|has_permission:"metrologia.add_calibracao" %}
         <a href="{% url 'cadastrar_calibracao' %}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Nova Calibração
         </a>
+        {% endif %}
     </div>
 
     <!-- Filtros -->
@@ -188,23 +191,25 @@
 
             <!-- Ações -->
             <td>
+                {% if request.user|has_permission:"metrologia.change_calibracao" %}
                 <a href="{% url 'editar_calibracao' calibracao.id %}" class="btn btn-sm btn-primary small-icon" title="Editar">
                     <i class="bi bi-pencil"></i>
                 </a>
-                
+                {% endif %}
+                {% if request.user|has_permission:"metrologia.delete_calibracao" %}
                 <a href="#" class="btn btn-sm btn-danger small-icon" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ calibracao.id }}" title="Excluir">
                     <i class="bi bi-trash"></i>
                 </a>
-                
-                {% if calibracao.certificado_anexo %}
+                {% endif %}
+                {% if calibracao.certificado_anexo and request.user|has_permission:"metrologia.view_calibracao" %}
                 <a href="{{ calibracao.certificado_anexo.url }}" class="btn btn-sm btn-info small-icon" download title="Certificado">
                     <i class="bi bi-award"></i>
-                    <!-- Novo ícone de certificado -->
                 </a>
                 {% endif %}
             </td>
         </tr>
         <!-- Modal de Exclusão -->
+         
         <div class="modal fade" id="modalExcluir{{ calibracao.id }}" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">

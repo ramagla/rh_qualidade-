@@ -32,3 +32,41 @@ def feriados(request):
     except Exception as e:
         feriados = []
     return render(request, 'configuracoes/feriados.html', {'feriados': feriados})
+
+import json
+from django.contrib.auth.models import User, Permission
+from django.apps import apps
+from django.shortcuts import render, get_object_or_404
+from django.utils.encoding import force_str
+
+def permissoes_acesso(request, usuario_id=None):
+    usuario = get_object_or_404(User, id=usuario_id) if usuario_id else request.user
+
+    permissoes_json = []
+    modulos = apps.get_app_configs()
+
+    for modulo in modulos:
+        permissoes = Permission.objects.filter(content_type__app_label=modulo.label)
+        permissoes_lista = [
+            {
+                "id": p.id,
+                "text": force_str(p.name),  
+                "ativo": usuario.has_perm(f"{p.content_type.app_label}.{p.codename}")
+            }
+            for p in permissoes
+        ]
+        if permissoes_lista:
+            permissoes_json.append({
+                "text": force_str(modulo.verbose_name),  
+                "nodes": permissoes_lista
+            })
+
+    # Depuração: Exibir JSON gerado no terminal do servidor
+    print("🔹 JSON de permissões:", json.dumps(permissoes_json, indent=4, ensure_ascii=False))
+
+    context = {
+        "usuarios_permissoes_json": json.dumps(permissoes_json, ensure_ascii=False),
+        "usuario": usuario
+    }
+
+    return render(request, "configuracoes/permissoes_acesso.html", context)

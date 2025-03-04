@@ -4,25 +4,13 @@
 
 {% block content %}
 {% load custom_filters %}
+{% block errors %}
+{% endblock %}
 
 <div class="container mt-5">
     <h2 class="text-center mb-4">Edição de Avaliação de Treinamentos</h2>
 
-    <!-- Validação de Erros do Formulário -->
-    {% if form.errors %}
-    <div class="alert alert-danger">
-        <strong>Erro!</strong> Por favor, corrija os seguintes erros:
-        <ul>
-            {% for field, errors in form.errors.items %}
-                {% for error in errors %}
-                    <li>
-                        {{ field|capfirst }}: {{ error }}
-                    </li>
-                {% endfor %}
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+   
 
     <form method="post" action="{% url 'editar_avaliacao' avaliacao.id %}" class="row g-3">
         {% csrf_token %}

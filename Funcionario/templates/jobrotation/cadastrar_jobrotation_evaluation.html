@@ -4,6 +4,8 @@
 {% block title %}Cadastrar Avaliação de Job Rotation{% endblock %}
 {% load static %}
 {% block content %}
+{% block errors %}
+{% endblock %}
 <div class="container mt-5">
     <h2 class="text-center mb-4">Cadastrar Avaliação de Job Rotation</h2>
     <form method="POST" action="{% url 'cadastrar_jobrotation_evaluation' %}" class="row g-3" id="jobRotationForm">

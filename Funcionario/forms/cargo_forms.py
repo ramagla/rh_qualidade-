@@ -2,6 +2,8 @@ from django import forms
 from ..models import Cargo, Revisao, Funcionario
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django_select2.forms import Select2Widget
+from rh_qualidade.utils import title_case
+
 
 
 class CargoForm(forms.ModelForm):
@@ -78,10 +80,14 @@ class CargoForm(forms.ModelForm):
                 self.fields['aprovador'].initial = Funcionario.objects.get(nome="Lilian Fernandes").id
             except Funcionario.DoesNotExist:
                 self.fields['aprovador'].initial = None  # Deixa em branco se não encontrar
+    
 
     def clean_nome(self):
-        nome = self.cleaned_data.get('nome', '')
-        return nome.title()
+        nome = self.cleaned_data.get('nome','')
+        if nome:
+            return title_case(nome)  # Aplica a função title_case personalizada
+        return nome
+    
  
 
     def clean_numero_dc(self):

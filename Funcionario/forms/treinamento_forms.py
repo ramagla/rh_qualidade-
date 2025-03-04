@@ -1,6 +1,8 @@
 from django import forms
 from ..models import Treinamento
 from django_ckeditor_5.widgets import CKEditor5Widget
+from rh_qualidade.utils import title_case
+
 
 class TreinamentoForm(forms.ModelForm):
     descricao = forms.CharField(
@@ -35,16 +37,19 @@ class TreinamentoForm(forms.ModelForm):
             raise forms.ValidationError({'situacao': 'A situação é obrigatória quando o status é "Requerido".'})
         return cleaned_data
 
+        
     def clean_nome_curso(self):
         nome_curso = self.cleaned_data.get('nome_curso')
         if nome_curso:
-            return nome_curso.title()
+            return title_case(nome_curso)  # Aplica a função title_case personalizada
         return nome_curso
-
+   
+    
     def clean_instituicao_ensino(self):
         instituicao_ensino = self.cleaned_data.get('instituicao_ensino')
         if instituicao_ensino:
-            return instituicao_ensino.title()
+            return title_case(instituicao_ensino)  # Aplica a função title_case personalizada
         return instituicao_ensino
+
 
    

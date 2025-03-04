@@ -1,4 +1,4 @@
-from django.db.models import F, Value, ExpressionWrapper, DateField, DurationField
+from django.db.models import F, Value, ExpressionWrapper, DateField, IntegerField
 from django.db.models.functions import Coalesce
 from django.utils.timezone import now
 from metrologia.models.models_tabelatecnica import TabelaTecnica
@@ -15,13 +15,13 @@ def lista_equipamentos_a_calibrar(request):
     today = now().date()
     range_end = today + timedelta(days=30)
 
-    # Adiciona a anotação para calcular 'proxima_calibracao'
+    # Adiciona a anotação para calcular a próxima calibração com o uso de relativedelta
     tabelas = TabelaTecnica.objects.annotate(
         proxima_calibracao=ExpressionWrapper(
-            Coalesce(F('data_ultima_calibracao'), Value(today)) +
+            Coalesce(F('data_ultima_calibracao'), Value(today)) + 
             ExpressionWrapper(
-                Coalesce(F('frequencia_calibracao'), Value(1)) * Value(30),
-                output_field=DurationField()
+                Coalesce(F('frequencia_calibracao'), Value(1), output_field=IntegerField()) * Value(30),
+                output_field=DateField()
             ),
             output_field=DateField()
         )

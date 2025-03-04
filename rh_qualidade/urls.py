@@ -16,10 +16,12 @@ urlpatterns = [
     path('metrologia/', include('metrologia.urls')),  # Inclui as URLs do app Metrologia
     path("ckeditor5/", include("django_ckeditor_5.urls")),
     path('acesso_negado/', acesso_negado, name='acesso_negado'),
-    path('permissoes-acesso/', permissoes_acesso, name='permissoes_acesso'),
+    path('permissoes-acesso/<int:usuario_id>/', permissoes_acesso, name='permissoes_acesso'),
+    path('permissoes-acesso/', permissoes_acesso, name='permissoes_acesso_lista'),  # Para listar todos
     path('logs/', logs, name='logs'),
     path('alertas-email/', alertas_emails, name='alertas_emails'),
     path('feriados/', feriados, name='feriados'),
+
 
 
 

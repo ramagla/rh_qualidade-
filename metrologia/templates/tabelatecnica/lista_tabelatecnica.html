@@ -29,12 +29,19 @@
 
     <!-- Botão para cadastrar novo equipamento -->
     <div class="d-flex justify-content-end mb-4">
+        {% if request.user|has_permission:"metrologia.add_tabelatecnica" %}
+
         <a href="{% url 'cadastrar_tabelatecnica' %}" class="btn btn-success me-2">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
+        {% endif %}
+        {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
+
         <a href="{% url 'imprimir_tabelatecnica' %}" class="btn btn-primary me-2" target="_blank">
         <i class="bi bi-printer"></i> Imprimir
     </a>
+    {% endif %}
+
     </div>
 
     
@@ -222,15 +229,25 @@
 
 
 <td style="vertical-align: middle;">
+    {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
+
     <a href="{% url 'visualizar_tabelatecnica' tabela.id %}" class="btn btn-info btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;">
         <i class="bi bi-eye"></i>
     </a>
+    {% endif %}
+    {% if request.user|has_permission:"metrologia.change_tabelatecnica" %}
+
     <a href="{% url 'editar_tabelatecnica' tabela.id %}" class="btn btn-primary btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;">
         <i class="bi bi-pencil"></i>
     </a>
-    {% comment %} <button class="btn btn-danger btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#modalExcluirTabelaTecnica{{ tabela.id }}">
+    {% endif %}
+    {% if request.user|has_permission:"metrologia.delete_tabelatecnica" %}
+
+     <button class="btn btn-danger btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#modalExcluirTabelaTecnica{{ tabela.id }}">
         <i class="bi bi-trash"></i>
-    </button> {% endcomment %}
+    </button> 
+    {% endif %}
+
 </td>
 
         </tr>

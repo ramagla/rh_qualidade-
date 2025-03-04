@@ -2,6 +2,8 @@ from django import forms
 from Funcionario.models import Documento, RevisaoDoc
 from django_select2.forms import Select2Widget
 from django_ckeditor_5.widgets import CKEditor5Widget
+from rh_qualidade.utils import title_case
+
 
 class DocumentoForm(forms.ModelForm):
     class Meta:
@@ -15,9 +17,12 @@ class DocumentoForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
 
+    
     def clean_nome(self):
-        nome = self.cleaned_data.get('nome', '')
-        return nome.title()  
+        nome = self.cleaned_data.get('nome')
+        if nome:
+            return title_case(nome)  # Aplica a função title_case personalizada
+        return nome
 
 
 class RevisaoDocForm(forms.ModelForm):

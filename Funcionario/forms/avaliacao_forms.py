@@ -1,6 +1,7 @@
 from django import forms
 from ..models import AvaliacaoTreinamento, AvaliacaoExperiencia, AvaliacaoAnual,Treinamento,ListaPresenca,Funcionario
 from django_ckeditor_5.widgets import CKEditor5Widget
+from rh_qualidade.utils import title_case
 
 class AvaliacaoForm(forms.ModelForm):
      descricao_melhorias = forms.CharField(widget=CKEditor5Widget(), required=True,label="Descreva as melhorias obtidas/resultados")
@@ -140,10 +141,7 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
         # Filtrar funcionários ativos e ordenar por nome
         self.fields['funcionario'].queryset = Funcionario.objects.filter(status='Ativo').order_by('nome')
 
-    def clean_gerencia(self):
-        gerencia = self.cleaned_data.get('gerencia', '')
-        return gerencia.title()  # Converte o texto para Title Case
-
+   
 
 class AvaliacaoAnualForm(forms.ModelForm):
     avaliacao_global_avaliador = forms.CharField(
@@ -169,5 +167,5 @@ class AvaliacaoAnualForm(forms.ModelForm):
     def clean_centro_custo(self):
         centro_custo = self.cleaned_data.get('centro_custo')
         if centro_custo:
-            return centro_custo.title()  # Converte para Title Case
+            return title_case(centro_custo)  # Aplica a função title_case personalizada
         return centro_custo

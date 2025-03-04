@@ -3,30 +3,16 @@
 {% block title %}Cadastro de Avaliação de Experiência{% endblock %}
 
 {% block content %}
+{% block errors %}
+{% endblock %}
+
 <div class="container mt-5">
     <h2 class="text-center mb-4">Cadastro de Avaliação de Experiência</h2>
 
     <form method="post" action="{% url 'cadastrar_avaliacao_experiencia' %}" class="row g-3">
         {% csrf_token %}
 
-          <!-- Exibição de Erros -->
-            {% if form.errors %}
-                <div class="alert alert-danger">
-                    <ul>
-                        {% for field in form %}
-                            {% if field.errors %}
-                                <li>{{ field.label }}: {{ field.errors|join:", " }}</li>
-                            {% endif %}
-                        {% endfor %}
-                        {% for error in form.non_field_errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-
-
-
+        
         <!-- Data da Avaliação -->
         <div class="col-md-6">
             <label for="data_avaliacao" class="form-label">Data da Avaliação:</label>

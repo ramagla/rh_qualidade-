@@ -87,17 +87,17 @@
             {% for avaliacao in avaliacoes %}
             <tr>
                 <!-- Nome do treinamento -->
-                <td>{{ avaliacao.treinamento.nome_curso }}</td>
-
+                <td>{{ avaliacao.avaliacao.treinamento.nome_curso }}</td>
+        
                 <!-- Meses -->
                 {% for mes in meses %}
                 <td class="
-                    {% if mes in avaliacao.treinamento.meses_agendados %}
-                        {% if avaliacao.treinamento.status == 'concluido' %}
+                    {% if mes == avaliacao.mes_final %}
+                        {% if avaliacao.avaliacao.treinamento.status == 'concluido' %}
                             bg-success text-white
-                        {% elif avaliacao.treinamento.status == 'requerido' and avaliacao.treinamento.situacao == 'reprovado' %}
+                        {% elif avaliacao.avaliacao.treinamento.status == 'requerido' and avaliacao.avaliacao.treinamento.situacao == 'reprovado' %}
                             bg-danger text-white
-                        {% elif avaliacao.treinamento.get_planejado_display == 'Sim' %}
+                        {% elif avaliacao.avaliacao.treinamento.get_planejado_display == 'Sim' %}
                             bg-warning text-dark
                         {% else %}
                             bg-light text-dark
@@ -106,12 +106,12 @@
                         bg-white text-dark
                     {% endif %}
                 ">
-                    {% if mes in avaliacao.treinamento.meses_agendados %}
-                        {% if avaliacao.treinamento.status == 'concluido' %}
+                    {% if mes == avaliacao.mes_final %}
+                        {% if avaliacao.avaliacao.treinamento.status == 'concluido' %}
                             <span style="color: white;">✔</span> <!-- Concluído -->
-                        {% elif avaliacao.treinamento.status == 'requerido' and avaliacao.treinamento.situacao == 'reprovado' %}
+                        {% elif avaliacao.avaliacao.treinamento.status == 'requerido' and avaliacao.avaliacao.treinamento.situacao == 'reprovado' %}
                             <span style="color: white;">✘</span> <!-- Reprovado -->
-                        {% elif avaliacao.treinamento.get_planejado_display == 'Sim' %}
+                        {% elif avaliacao.avaliacao.treinamento.get_planejado_display == 'Sim' %}
                             <span style="color: black;">▲</span> <!-- Planejado -->
                         {% else %}
                             <span style="color: black;">○</span> <!-- Outro Status -->
@@ -121,37 +121,37 @@
                     {% endif %}
                 </td>
                 {% endfor %}
-
+        
                 <!-- Participantes -->
                 <td>
-                    {% for participante in avaliacao.treinamento.funcionarios.all %}
+                    {% for participante in avaliacao.avaliacao.treinamento.funcionarios.all %}
                         {{ participante.nome|primeiro_nome }}{% if not forloop.last %}, {% endif %}
                     {% endfor %}
                 </td>
-
+        
                 <!-- Responsável -->
                 <td>
-                    {% if avaliacao.responsavel_1 %}
-                        {{ avaliacao.responsavel_1.nome|primeiro_nome }}
+                    {% if avaliacao.avaliacao.responsavel_1 %}
+                        {{ avaliacao.avaliacao.responsavel_1.nome|primeiro_nome }}
                     {% endif %}
                 </td>
-
+        
                 <!-- Status da Avaliação -->
                 <td class="align-middle">
-                    {% if avaliacao.avaliacao_geral == 1 %}
+                    {% if avaliacao.avaliacao.avaliacao_geral == 1 %}
                         <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Pouco Eficaz</span>
-                    {% elif avaliacao.avaliacao_geral == 2 %}
+                    {% elif avaliacao.avaliacao.avaliacao_geral == 2 %}
                         <span class="badge bg-primary"><i class="bi bi-check-circle"></i> Eficaz</span>
-                    {% elif avaliacao.avaliacao_geral == 5 %}
+                    {% elif avaliacao.avaliacao.avaliacao_geral == 5 %}
                         <span class="badge bg-success"><i class="bi bi-star-fill"></i> Muito Eficaz</span>
                     {% else %}
-                        <span class="badge bg-warning">{{ avaliacao.get_avaliacao_geral_display }}</span>
+                        <span class="badge bg-warning">{{ avaliacao.avaliacao.get_avaliacao_geral_display }}</span>
                     {% endif %}
                 </td>
-
+        
                 <!-- Status do Prazo -->
                 <td class="align-middle">
-                    {% if avaliacao.get_status_prazo == "Dentro do Prazo" %}
+                    {% if avaliacao.avaliacao.get_status_prazo == "Dentro do Prazo" %}
                         <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Dentro do Prazo</span>
                     {% else %}
                         <span class="badge bg-danger"><i class="bi bi-exclamation-circle"></i> Em Atraso</span>
@@ -160,6 +160,7 @@
             </tr>
             {% endfor %}
         </tbody>
+        
     </table>
 </div>
 

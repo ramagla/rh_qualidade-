@@ -113,25 +113,25 @@
 
 
     <!-- Tabela de Documentos -->
-    <table class="table table-bordered text-center mt-4">
+    <table class="table table-bordered text-center mt-4 style="width: 100%;"">
         <thead>
             <tr>
-                <th>Nome</th>
-                <th>Código</th>
-                <th>Responsável pela Recuperação</th>
-                <th>Status</th>
-                <th>Última Revisão</th>
-                <th>Última Atualização</th>
-                <th>Ações</th>
+                <th style="vertical-align: middle;">Nome</th>
+                <th style="vertical-align: middle;">Código</th>
+                <th style="vertical-align: middle;">Responsável pela Recuperação</th>
+                <th style="vertical-align: middle;">Status</th>
+                <th style="vertical-align: middle;">Última Revisão</th>
+                <th style="vertical-align: middle;">Última Atualização</th>
+                <th style="vertical-align: middle;">Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for documento in documentos %}
             <tr>
-                <td>{{ documento.nome }}</td>
-                <td>{{ documento.codigo }}</td>
-                <td>{{ documento.responsavel_recuperacao.nome }}</td>
-                <td>
+                <td style="vertical-align: middle;">{{ documento.nome }}</td>
+                <td style="vertical-align: middle;">{{ documento.codigo }}</td>
+                <td style="vertical-align: middle;">{{ documento.responsavel_recuperacao.nome }}</td>
+                <td style="vertical-align: middle;">
                     {% if documento.status == 'aprovado' %}
                         <span class="badge bg-success">{{ documento.get_status_display }}</span>
                     {% elif documento.status == 'em_revisao' %}
@@ -143,21 +143,21 @@
                     {% endif %}
                 </td>
 
-                <td>
+                <td style="vertical-align: middle;">
                     {% if documento.revisoes.last %}
                         {{ documento.revisoes.last.numero_revisao }}
                     {% else %}
                         Sem revisão
                     {% endif %}
                 </td>
-                <td>
+                <td style="vertical-align: middle;">
                     {% if documento.revisoes.last %}
                         {{ documento.revisoes.last.data_revisao|date:"d/m/Y" }}
                     {% else %}
                         Sem atualização
                     {% endif %}
                 </td>
-                <td>
+                <td style="vertical-align: middle;">
                     {% if request.user|has_permission:'Funcionario.change_documento' %}
                     <a href="{% url 'editar_documento' documento.id %}" class="btn btn-warning btn-sm" title="Editar">
                         <i class="bi bi-pencil-square"></i>
