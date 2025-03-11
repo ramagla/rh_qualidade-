@@ -10,7 +10,7 @@ def title_case(text):
     ]
 
     # Lista de abreviações para manter em maiúsculas, incluindo prefixos que podem ter números
-    abbreviations = ['CEO', 'USA', 'UN', 'EU', 'UNESCO', 'FMEA', 'APQP', 'POQ', 'PQ', 'SAC', 'CQI','GLP','LGPD','PPP','DP','RH','IMDS','VDA','AIAG','CEP','MSA','PPAP','NR','NBR','ISO','IATF','CLP','PPRS','TS','PPCP','IO','SGI','CNC','EPIs','II','III','PIST', 'PIPC']
+    abbreviations = ['CEO', 'USA', 'UN', 'EU', 'UNESCO', 'FMEA', 'APQP', 'POQ', 'PQ', 'SAC', 'CQI','GLP','LGPD','PPP','DP','RH','IMDS','VDA','AIAG','CEP','MSA','PPAP','NR','NBR','ISO','IATF','CLP','PPRS','TS','PPCP','IO','SGI','CNC','EPIs','II','III','PIST', 'PIPC', 'SGS','SGQ']
 
     # Expressão regular para detectar abreviações seguidas de números (ex: POQ001, PQ002)
     abbreviation_pattern = re.compile(r'([A-Z]+)(\d+)$', re.IGNORECASE)
