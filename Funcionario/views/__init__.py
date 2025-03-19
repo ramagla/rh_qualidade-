@@ -1,14 +1,13 @@
 # Funcionario/views/__init__.py
 
+from .api_views import get_competencias
+from .cargos_views import excluir_cargo  # Certifique-se de que esta linha está presente
 from .cargos_views import (
-    lista_cargos,
+    adicionar_revisao,
     cadastrar_cargo,
     editar_cargo,
-    excluir_cargo,  # Certifique-se de que esta linha está presente
+    excluir_revisao,
     historico_revisoes,
-    adicionar_revisao,
-    excluir_revisao,   
+    lista_cargos,
 )
-
 from .home_views import sucesso_view
-from .api_views import get_competencias

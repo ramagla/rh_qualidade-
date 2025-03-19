@@ -1,31 +1,33 @@
-from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from Funcionario.models import Comunicado, Funcionario
-from Funcionario.forms import ComunicadoForm
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+
+from Funcionario.forms import ComunicadoForm
+from Funcionario.models import Comunicado, Funcionario
 
 
 @login_required
 def lista_comunicados(request):
-    comunicados = Comunicado.objects.all().order_by('-id')
-    departamentos = Comunicado.objects.values_list('departamento_responsavel', flat=True).distinct()
+    comunicados = Comunicado.objects.all().order_by("-id")
+    departamentos = Comunicado.objects.values_list(
+        "departamento_responsavel", flat=True
+    ).distinct()
 
     # Obtenção dos tipos cadastrados no banco
-    tipos_cadastrados = (
-        Comunicado.objects.values_list('tipo', flat=True)
-        .distinct()
-    )
+    tipos_cadastrados = Comunicado.objects.values_list("tipo", flat=True).distinct()
 
     # Filtrar TIPO_CHOICES com base nos tipos cadastrados
-    tipo_choices = [choice for choice in Comunicado.TIPO_CHOICES if choice[0] in tipos_cadastrados]
+    tipo_choices = [
+        choice for choice in Comunicado.TIPO_CHOICES if choice[0] in tipos_cadastrados
+    ]
 
     # Obtenção dos filtros
-    tipo = request.GET.get('tipo', '')
-    departamento = request.GET.get('departamento', '')
-    data_inicio = request.GET.get('data_inicio', '')
-    data_fim = request.GET.get('data_fim', '')
+    tipo = request.GET.get("tipo", "")
+    departamento = request.GET.get("departamento", "")
+    data_inicio = request.GET.get("data_inicio", "")
+    data_fim = request.GET.get("data_fim", "")
 
     # Filtros com condicional
     if tipo:
@@ -41,82 +43,99 @@ def lista_comunicados(request):
 
     # Paginação
     paginator = Paginator(comunicados, 10)  # 10 comunicados por página
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     # Dados para os cards
     total_comunicados = comunicados.count()
     comunicados_por_tipo = (
-        comunicados.values('tipo')
-        .annotate(total=Count('tipo'))
-        .order_by('tipo')
+        comunicados.values("tipo").annotate(total=Count("tipo")).order_by("tipo")
     )
 
     # Contexto do template com os filtros aplicados
     context = {
-        'comunicados': page_obj,
-        'page_obj': page_obj,
-        'departamentos': departamentos,
-        'tipo': tipo,
-        'departamento': departamento,
-        'data_inicio': data_inicio,
-        'data_fim': data_fim,
-        'total_comunicados': total_comunicados,
-        'comunicados_por_tipo': comunicados_por_tipo,
-        'tipo_choices': tipo_choices,  # Apenas tipos cadastrados
+        "comunicados": page_obj,
+        "page_obj": page_obj,
+        "departamentos": departamentos,
+        "tipo": tipo,
+        "departamento": departamento,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "total_comunicados": total_comunicados,
+        "comunicados_por_tipo": comunicados_por_tipo,
+        "tipo_choices": tipo_choices,  # Apenas tipos cadastrados
     }
 
-    return render(request, 'comunicados/lista_comunicados.html', context)
+    return render(request, "comunicados/lista_comunicados.html", context)
 
-@login_required  
+
+@login_required
 def imprimir_comunicado(request, id):
     comunicado = get_object_or_404(Comunicado, id=id)  # Alterado para buscar por 'id'
-    return render(request, 'comunicados/imprimir_comunicado.html', {'comunicado': comunicado})
+    return render(
+        request, "comunicados/imprimir_comunicado.html", {"comunicado": comunicado}
+    )
+
+
 @login_required
 def cadastrar_comunicado(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = ComunicadoForm(request.POST, request.FILES)  # Inclua request.FILES aqui
         if form.is_valid():
             form.save()
             messages.success(request, "Comunicado cadastrado com sucesso!")
-            return redirect('lista_comunicados')
+            return redirect("lista_comunicados")
     else:
         form = ComunicadoForm()
-    return render(request, 'comunicados/cadastrar_comunicado.html', {'form': form})
+    return render(request, "comunicados/cadastrar_comunicado.html", {"form": form})
+
 
 @login_required
 def visualizar_comunicado(request, id):  # Alterado para 'id'
     comunicado = get_object_or_404(Comunicado, id=id)  # Alterado para 'id'
-    return render(request, 'comunicados/visualizar_comunicado.html', {'comunicado': comunicado})
+    return render(
+        request, "comunicados/visualizar_comunicado.html", {"comunicado": comunicado}
+    )
+
+
 @login_required
 def editar_comunicado(request, id):
     comunicado = get_object_or_404(Comunicado, id=id)
-    
-    if request.method == 'POST':
-        form = ComunicadoForm(request.POST, request.FILES, instance=comunicado)  # Inclua request.FILES aqui
+
+    if request.method == "POST":
+        form = ComunicadoForm(
+            request.POST, request.FILES, instance=comunicado
+        )  # Inclua request.FILES aqui
         if form.is_valid():
             form.save()
-            return redirect('lista_comunicados')
+            return redirect("lista_comunicados")
     else:
-        form = ComunicadoForm(instance=comunicado)  # Carrega os dados existentes do banco
+        # Carrega os dados existentes do banco
+        form = ComunicadoForm(instance=comunicado)
 
-    return render(request, 'comunicados/editar_comunicado.html', {'form': form, 'comunicado': comunicado})
+    return render(
+        request,
+        "comunicados/editar_comunicado.html",
+        {"form": form, "comunicado": comunicado},
+    )
+
 
 @login_required
 def excluir_comunicado(request, id):
     comunicado = get_object_or_404(Comunicado, id=id)
-    if request.method == 'POST':
+    if request.method == "POST":
         comunicado.delete()
         messages.success(request, "Comunicado excluído com sucesso!")
-        return redirect('lista_comunicados')  # Redireciona para a lista de comunicados após a exclusão
-    return render(request, 'comunicados/excluir_comunicado.html', {'comunicado': comunicado})
+    # Redireciona sempre para a lista de comunicados, pois a confirmação já foi feita via modal
+    return redirect("lista_comunicados")
 
 
 @login_required
 def imprimir_assinaturas(request, id):
     comunicado = get_object_or_404(Comunicado, id=id)
-    funcionarios_ativos = Funcionario.objects.filter(status='Ativo').order_by('nome')
-    return render(request, 'comunicados/imprimir_assinaturas.html', {
-        'comunicado': comunicado,
-        'funcionarios_ativos': funcionarios_ativos
-    })
+    funcionarios_ativos = Funcionario.objects.filter(status="Ativo").order_by("nome")
+    return render(
+        request,
+        "comunicados/imprimir_assinaturas.html",
+        {"comunicado": comunicado, "funcionarios_ativos": funcionarios_ativos},
+    )

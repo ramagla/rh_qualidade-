@@ -1,7 +1,10 @@
 import os
+
 from django.db import models
 from django.utils import timezone
+
 from .funcionario import Funcionario
+
 
 class IntegracaoFuncionario(models.Model):
     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
@@ -9,7 +12,12 @@ class IntegracaoFuncionario(models.Model):
     requer_treinamento = models.BooleanField(default=False)
     treinamentos_requeridos = models.TextField(blank=True, null=True)
     data_integracao = models.DateField(default=timezone.now)
-    pdf_integracao = models.FileField(upload_to='integracoes/', blank=True, null=True, verbose_name='PDF da Integração Assinada')
+    pdf_integracao = models.FileField(
+        upload_to="integracoes/",
+        blank=True,
+        null=True,
+        verbose_name="PDF da Integração Assinada",
+    )
 
     @property
     def departamento(self):

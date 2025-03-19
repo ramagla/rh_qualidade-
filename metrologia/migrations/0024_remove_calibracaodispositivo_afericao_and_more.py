@@ -6,21 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metrologia', '0023_alter_afericao_status'),
+        ("metrologia", "0023_alter_afericao_status"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='calibracaodispositivo',
-            name='afericao',
+            model_name="calibracaodispositivo",
+            name="afericao",
         ),
         migrations.RemoveField(
-            model_name='calibracaodispositivo',
-            name='instrumento_medicao',
+            model_name="calibracaodispositivo",
+            name="instrumento_medicao",
         ),
         migrations.AlterField(
-            model_name='calibracaodispositivo',
-            name='status',
-            field=models.CharField(blank=True, choices=[('Aprovado', 'Aprovado'), ('Reprovado', 'Reprovado')], max_length=10, null=True, verbose_name='Status'),
+            model_name="calibracaodispositivo",
+            name="status",
+            field=models.CharField(
+                blank=True,
+                choices=[("Aprovado", "Aprovado"), ("Reprovado", "Reprovado")],
+                max_length=10,
+                null=True,
+                verbose_name="Status",
+            ),
         ),
     ]

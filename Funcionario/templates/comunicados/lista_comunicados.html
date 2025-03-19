@@ -202,7 +202,7 @@
         <td class="align-middle">
             {% if request.user|has_permission:"Funcionario.view_comunicado" %}
 
-            <a href="{% url 'visualizar_comunicado' comunicado.id %}" class="btn btn-sm btn-info" title="Visualizar">
+            <a href="{% url 'visualizar_comunicado' comunicado.id %}" class="btn btn-sm btn-info mt-1" title="Visualizar">
                 <i class="bi bi-eye"></i>
             </a>
             {% endif %}

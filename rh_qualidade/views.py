@@ -1,29 +1,45 @@
-from django.shortcuts import render
-from django.http import HttpResponseForbidden
+import json
 from datetime import datetime
-import requests
-from django.http import JsonResponse
 
+import requests
+from django.apps import apps
+from django.contrib.auth.models import Permission, User
+from django.http import HttpResponseForbidden, JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.utils.encoding import force_str
 
 
 def acesso_negado(request):
     current_time = datetime.now()
-    return render(request, 'acesso_negado.html', {'user': request.user, 'current_time': current_time})
+    return render(
+        request,
+        "acesso_negado.html",
+        {"user": request.user, "current_time": current_time},
+    )
 
 
 # View para Permissões de Acesso
 def permissoes_acesso(request):
-    return render(request, 'configuracoes/permissoes_acesso.html')
+    return render(request, "configuracoes/permissoes_acesso.html")
+
 
 # View para Logs
+
+
 def logs(request):
-    return render(request, 'configuracoes/logs.html')
+    return render(request, "configuracoes/logs.html")
+
 
 # View para Alertas de E-mails
+
+
 def alertas_emails(request):
-    return render(request, 'configuracoes/alertas_emails.html')
+    return render(request, "configuracoes/alertas_emails.html")
+
 
 # View para Feriados
+
+
 def feriados(request):
     # Usando a API de Feriados para obter dados
     try:
@@ -31,13 +47,8 @@ def feriados(request):
         feriados = response.json()
     except Exception as e:
         feriados = []
-    return render(request, 'configuracoes/feriados.html', {'feriados': feriados})
+    return render(request, "configuracoes/feriados.html", {"feriados": feriados})
 
-import json
-from django.contrib.auth.models import User, Permission
-from django.apps import apps
-from django.shortcuts import render, get_object_or_404
-from django.utils.encoding import force_str
 
 def permissoes_acesso(request, usuario_id=None):
     usuario = get_object_or_404(User, id=usuario_id) if usuario_id else request.user
@@ -50,23 +61,25 @@ def permissoes_acesso(request, usuario_id=None):
         permissoes_lista = [
             {
                 "id": p.id,
-                "text": force_str(p.name),  
-                "ativo": usuario.has_perm(f"{p.content_type.app_label}.{p.codename}")
+                "text": force_str(p.name),
+                "ativo": usuario.has_perm(f"{p.content_type.app_label}.{p.codename}"),
             }
             for p in permissoes
         ]
         if permissoes_lista:
-            permissoes_json.append({
-                "text": force_str(modulo.verbose_name),  
-                "nodes": permissoes_lista
-            })
+            permissoes_json.append(
+                {"text": force_str(modulo.verbose_name), "nodes": permissoes_lista}
+            )
 
     # Depuração: Exibir JSON gerado no terminal do servidor
-    print("🔹 JSON de permissões:", json.dumps(permissoes_json, indent=4, ensure_ascii=False))
+    print(
+        "🔹 JSON de permissões:",
+        json.dumps(permissoes_json, indent=4, ensure_ascii=False),
+    )
 
     context = {
         "usuarios_permissoes_json": json.dumps(permissoes_json, ensure_ascii=False),
-        "usuario": usuario
+        "usuario": usuario,
     }
 
     return render(request, "configuracoes/permissoes_acesso.html", context)

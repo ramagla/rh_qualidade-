@@ -1,1 +1,1 @@
-default_app_config = 'Funcionario.apps.FuncionarioConfig'
+default_app_config = "Funcionario.apps.FuncionarioConfig"

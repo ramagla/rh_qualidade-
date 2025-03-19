@@ -1,28 +1,30 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse
-from django.contrib import messages
-from django.http import JsonResponse
-from django.db.models import Count, Q
-from django.core.paginator import Paginator
-
-
 # Configurar o backend antes de importar pyplot
 import matplotlib
-matplotlib.use('Agg')  # Backend para renderização sem GUI
 import matplotlib.pyplot as plt
-
-
-from ..models.matriz_polivalencia import MatrizPolivalencia, Atividade, Nota
-from ..models.funcionario import Funcionario
-from ..forms.matriz_polivalencia_forms import MatrizPolivalenciaForm, AtividadeForm, NotaForm
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+
+from ..forms.matriz_polivalencia_forms import (
+    AtividadeForm,
+    MatrizPolivalenciaForm,
+    NotaForm,
+)
+from ..models.funcionario import Funcionario
+from ..models.matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
+
+matplotlib.use("Agg")  # Backend para renderização sem GUI
 
 
 @login_required
 def lista_matriz_polivalencia(request):
-    departamento = request.GET.get('departamento')
-    data_inicio = request.GET.get('data_inicio')
-    data_fim = request.GET.get('data_fim')
+    departamento = request.GET.get("departamento")
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
 
     # Filtrando as matrizes
     matrizes = MatrizPolivalencia.objects.all()
@@ -30,8 +32,6 @@ def lista_matriz_polivalencia(request):
     # Filtrando matrizes por departamento
     if departamento:
         matrizes = matrizes.filter(departamento=departamento)
-
-   
 
     # Filtro de datas
     if data_inicio:
@@ -41,23 +41,24 @@ def lista_matriz_polivalencia(request):
         matrizes = matrizes.filter(atualizado_em__lte=data_fim)
 
     # Recuperando os departamentos disponíveis
-    departamentos = MatrizPolivalencia.objects.values_list('departamento', flat=True).distinct()
+    departamentos = MatrizPolivalencia.objects.values_list(
+        "departamento", flat=True
+    ).distinct()
 
     # Paginação
     paginator = Paginator(matrizes, 10)  # 10 itens por página
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-
-    return render(request, 'matriz_polivalencia/matriz_polivalencia_lista.html', {
-        'matrizes': page_obj,
-        'page_obj': page_obj,
-        'departamentos': departamentos
-    })
+    return render(
+        request,
+        "matriz_polivalencia/matriz_polivalencia_lista.html",
+        {"matrizes": page_obj, "page_obj": page_obj, "departamentos": departamentos},
+    )
 
 
 @login_required
-def gerar_grafico_icone(nota):    
+def gerar_grafico_icone(nota):
     icones = {
         0: "icons/barra_0.png",
         1: "icons/barra_1.png",
@@ -66,6 +67,7 @@ def gerar_grafico_icone(nota):
         4: "icons/barra_4.png",
     }
     return icones.get(nota, "icons/barra_1.png")
+
 
 @login_required
 def imprimir_matriz(request, **kwargs):
@@ -82,11 +84,14 @@ def imprimir_matriz(request, **kwargs):
             for atividade in atividades
         }
 
-    for nota in Nota.objects.filter(funcionario__in=colaboradores, atividade__in=atividades):
+    for nota in Nota.objects.filter(
+        funcionario__in=colaboradores, atividade__in=atividades
+    ):
         notas_por_funcionario[nota.funcionario.id][nota.atividade.id] = {
             "pontuacao": nota.pontuacao,
             "suplente": nota.suplente,
-            "grafico": gerar_grafico_icone(nota.pontuacao),  # Usa o ícone com base na pontuação
+            # Usa o ícone com base na pontuação
+            "grafico": gerar_grafico_icone(nota.pontuacao),
         }
 
     # Transformar para lista plana para uso no template
@@ -108,7 +113,8 @@ def imprimir_matriz(request, **kwargs):
             "id": colaborador.id,
             "nome": colaborador.nome,
             "suplente": any(
-                nota["suplente"] for nota in notas_por_funcionario[colaborador.id].values()
+                nota["suplente"]
+                for nota in notas_por_funcionario[colaborador.id].values()
             ),
         }
         for colaborador in colaboradores
@@ -124,13 +130,18 @@ def imprimir_matriz(request, **kwargs):
 
     return render(request, "matriz_polivalencia/imprimir_matriz.html", context)
 
+
 @login_required
 def cadastrar_matriz_polivalencia(request):
-    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")  # Funcionários ativos ordenados
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by(
+        "nome"
+    )  # Funcionários ativos ordenados
     atividades = Atividade.objects.all()  # Todas as atividades
-    departamentos = Atividade.objects.values_list("departamento", flat=True).distinct()  # Departamentos únicos
+    departamentos = Atividade.objects.values_list(
+        "departamento", flat=True
+    ).distinct()  # Departamentos únicos
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = MatrizPolivalenciaForm(request.POST)
         if form.is_valid():
             matriz = form.save()
@@ -143,30 +154,45 @@ def cadastrar_matriz_polivalencia(request):
                     nota_value = request.POST.get(nota_key)
 
                     # Converter nota para número inteiro e validar
-                    nota_value = int(nota_value) if nota_value is not None and nota_value.isdigit() else None
+                    nota_value = (
+                        int(nota_value)
+                        if nota_value is not None and nota_value.isdigit()
+                        else None
+                    )
                     suplente_value = request.POST.get(suplente_key, "off") == "on"
 
-                    if nota_value is not None:  # Verifica se a nota foi fornecida, incluindo 0
+                    if (
+                        nota_value is not None
+                    ):  # Verifica se a nota foi fornecida, incluindo 0
                         Nota.objects.update_or_create(
                             funcionario=funcionario,
                             atividade=atividade,
-                            defaults={"pontuacao": nota_value, "suplente": suplente_value},
+                            defaults={
+                                "pontuacao": nota_value,
+                                "suplente": suplente_value,
+                            },
                         )
 
             messages.success(request, "Matriz de Polivalência cadastrada com sucesso!")
             return redirect("lista_matriz_polivalencia")
         else:
-            messages.error(request, "Erro ao cadastrar a Matriz de Polivalência. Verifique os dados.")
+            messages.error(
+                request,
+                "Erro ao cadastrar a Matriz de Polivalência. Verifique os dados.",
+            )
     else:
         form = MatrizPolivalenciaForm()
 
-    return render(request, 'matriz_polivalencia/cadastrar_matriz.html', {
-        'form': form,
-        'funcionarios': funcionarios,
-        'atividades': atividades,
-        'departamentos': departamentos,
-    })
-
+    return render(
+        request,
+        "matriz_polivalencia/cadastrar_matriz.html",
+        {
+            "form": form,
+            "funcionarios": funcionarios,
+            "atividades": atividades,
+            "departamentos": departamentos,
+        },
+    )
 
 
 # Editar uma matriz de polivalência
@@ -174,7 +200,10 @@ def cadastrar_matriz_polivalencia(request):
 def editar_matriz_polivalencia(request, id):
     # Pré-carregar as relações para otimizar o acesso aos dados relacionados
     matriz = get_object_or_404(
-        MatrizPolivalencia.objects.select_related("elaboracao", "coordenacao", "validacao"), id=id
+        MatrizPolivalencia.objects.select_related(
+            "elaboracao", "coordenacao", "validacao"
+        ),
+        id=id,
     )
 
     # Obter lista de funcionários ativos
@@ -198,7 +227,9 @@ def editar_matriz_polivalencia(request, id):
         }
 
     # Preencher com os valores das notas existentes
-    for nota in Nota.objects.filter(funcionario__in=funcionarios, atividade__in=atividades):
+    for nota in Nota.objects.filter(
+        funcionario__in=funcionarios, atividade__in=atividades
+    ):
         notas_por_funcionario[nota.funcionario.id][nota.atividade.id] = {
             "pontuacao": nota.pontuacao,
             "suplente": nota.suplente,
@@ -209,7 +240,7 @@ def editar_matriz_polivalencia(request, id):
         form = MatrizPolivalenciaForm(request.POST, instance=matriz)
         if form.is_valid():
             matriz = form.save(commit=False)
-            
+
             # Certificar que o departamento não seja sobrescrito ou apagado
             matriz.departamento = departamento_selecionado
             matriz.save()
@@ -226,13 +257,19 @@ def editar_matriz_polivalencia(request, id):
                         Nota.objects.update_or_create(
                             funcionario=funcionario,
                             atividade=atividade,
-                            defaults={"pontuacao": nota_value, "suplente": suplente_value},
+                            defaults={
+                                "pontuacao": nota_value,
+                                "suplente": suplente_value,
+                            },
                         )
 
             messages.success(request, "Matriz de Polivalência atualizada com sucesso.")
             return redirect("lista_matriz_polivalencia")
         else:
-            messages.error(request, "Erro ao atualizar a Matriz de Polivalência. Verifique os dados.")
+            messages.error(
+                request,
+                "Erro ao atualizar a Matriz de Polivalência. Verifique os dados.",
+            )
     else:
         # Instanciar o formulário com a matriz existente
         form = MatrizPolivalenciaForm(instance=matriz)
@@ -250,18 +287,19 @@ def editar_matriz_polivalencia(request, id):
     ]
 
     # Retornar o template de edição com todos os dados necessários
-    return render(request, "matriz_polivalencia/editar_matriz.html", {
-        "form": form,
-        "matriz": matriz,
-        "funcionarios": funcionarios,
-        "atividades": atividades,
-        "departamentos": departamentos,
-        "notas_lista": notas_lista,
-        "departamento_selecionado": departamento_selecionado,  # Informação fixa do departamento
-    })
-
-
-
+    return render(
+        request,
+        "matriz_polivalencia/editar_matriz.html",
+        {
+            "form": form,
+            "matriz": matriz,
+            "funcionarios": funcionarios,
+            "atividades": atividades,
+            "departamentos": departamentos,
+            "notas_lista": notas_lista,
+            "departamento_selecionado": departamento_selecionado,  # Informação fixa do departamento
+        },
+    )
 
 
 # Excluir uma matriz de polivalência
@@ -270,16 +308,19 @@ def excluir_matriz_polivalencia(request, id):
     matriz = get_object_or_404(MatrizPolivalencia, id=id)
     if request.method == "POST":
         matriz.delete()  # O método sobrescrito cuidará de excluir as notas relacionadas
-        messages.success(request, "Matriz de Polivalência e suas notas relacionadas foram excluídas com sucesso.")
-        return redirect('lista_matriz_polivalencia')
-    return render(request, 'matriz_polivalencia/excluir.html', {'matriz': matriz})
+        messages.success(
+            request,
+            "Matriz de Polivalência e suas notas relacionadas foram excluídas com sucesso.",
+        )
+        return redirect("lista_matriz_polivalencia")
+    return render(request, "matriz_polivalencia/excluir.html", {"matriz": matriz})
 
 
 def lista_atividades(request):
     # Pega os filtros do GET
-    departamento = request.GET.get('departamento', '')
-    nome = request.GET.get('nome', '')
-   
+    departamento = request.GET.get("departamento", "")
+    nome = request.GET.get("nome", "")
+
     # Filtrando as atividades
     atividades = Atividade.objects.all()
 
@@ -290,56 +331,73 @@ def lista_atividades(request):
         atividades = atividades.filter(nome__icontains=nome)
 
     # Adicionando uma ordenação para evitar o erro de "UnorderedObjectListWarning"
-    atividades = atividades.order_by('nome')  # Ou qualquer outro campo desejado
+    atividades = atividades.order_by("nome")  # Ou qualquer outro campo desejado
 
     # Paginação
     paginator = Paginator(atividades, 10)  # 10 itens por página
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     # Dados para os cards e acordions
     total_atividades = atividades.count()
-    
+
     # Quantidade de atividades por departamento
     atividades_por_departamento = (
-        Atividade.objects.values('departamento')
-        .annotate(total=Count('departamento'))
-        .order_by('departamento')
+        Atividade.objects.values("departamento")
+        .annotate(total=Count("departamento"))
+        .order_by("departamento")
     )
 
+    return render(
+        request,
+        "matriz_polivalencia/lista_atividades.html",
+        {
+            "page_obj": page_obj,  # Objeto de paginação
+            # Listagem de nomes para filtro
+            "nomes_atividades": Atividade.objects.values_list(
+                "nome", flat=True
+            ).distinct(),
+            # Listagem de departamentos para filtro
+            "departamentos": Atividade.objects.values_list(
+                "departamento", flat=True
+            ).distinct(),
+            "total_atividades": total_atividades,  # Total de atividades
+            "atividades_por_departamento": atividades_por_departamento,  # Atividades por departamento
+        },
+    )
 
-    return render(request, 'matriz_polivalencia/lista_atividades.html', {
-        'page_obj': page_obj,  # Objeto de paginação
-        'nomes_atividades': Atividade.objects.values_list('nome', flat=True).distinct(),  # Listagem de nomes para filtro
-        'departamentos': Atividade.objects.values_list('departamento', flat=True).distinct(),  # Listagem de departamentos para filtro
-        'total_atividades': total_atividades,  # Total de atividades
-        'atividades_por_departamento': atividades_por_departamento,  # Atividades por departamento
-    })
 
 @login_required
 def cadastrar_atividade(request):
     # Obter todos os departamentos únicos
-    departamentos = Funcionario.objects.values('local_trabalho').distinct()
+    departamentos = Funcionario.objects.values("local_trabalho").distinct()
 
     # Obter todos os funcionários ativos
-    funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome')  
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = AtividadeForm(request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, "Atividade cadastrada com sucesso!")
-            return redirect('lista_atividades')  
+            return redirect("lista_atividades")
     else:
         form = AtividadeForm()
 
-    return render(request, 'matriz_polivalencia/cadastrar_atividade.html', {
-        'form': form,
-        'funcionarios': funcionarios,  # Passa os funcionários para o template
-        'departamentos': departamentos  # Passa os departamentos únicos para o template
-    })
+    return render(
+        request,
+        "matriz_polivalencia/cadastrar_atividade.html",
+        {
+            "form": form,
+            "funcionarios": funcionarios,  # Passa os funcionários para o template
+            "departamentos": departamentos,  # Passa os departamentos únicos para o template
+        },
+    )
+
 
 # Gerenciar notas (adicionar/editar/excluir)
+
+
 @login_required
 def gerenciar_notas(request, id):
     atividade = get_object_or_404(Atividade, id=id)
@@ -350,43 +408,56 @@ def gerenciar_notas(request, id):
             nota.atividade = atividade
             nota.save()
             messages.success(request, "Nota adicionada/atualizada com sucesso.")
-            return redirect('visualizar_matriz_polivalencia', id=atividade.departamento)
+            return redirect("visualizar_matriz_polivalencia", id=atividade.departamento)
     else:
         form = NotaForm()
     notas = atividade.notas.all()
-    return render(request, 'matriz_polivalencia/gerenciar_notas.html', {
-        'form': form,
-        'notas': notas,
-        'atividade': atividade,
-    })
-
-
+    return render(
+        request,
+        "matriz_polivalencia/gerenciar_notas.html",
+        {
+            "form": form,
+            "notas": notas,
+            "atividade": atividade,
+        },
+    )
 
 
 @login_required
 def visualizar_atividade(request, id):
     atividade = get_object_or_404(Atividade, id=id)
-    return render(request, 'matriz_polivalencia/visualizar_atividade.html', {'atividade': atividade})
+    return render(
+        request,
+        "matriz_polivalencia/visualizar_atividade.html",
+        {"atividade": atividade},
+    )
+
 
 @login_required
 def editar_atividade(request, id):
     atividade = get_object_or_404(Atividade, id=id)
-    departamentos = Funcionario.objects.values('local_trabalho').distinct()  # Lista de departamentos únicos
+    departamentos = Funcionario.objects.values(
+        "local_trabalho"
+    ).distinct()  # Lista de departamentos únicos
 
     if request.method == "POST":
         form = AtividadeForm(request.POST, instance=atividade)
         if form.is_valid():
             form.save()
             messages.success(request, "Atividade atualizada com sucesso.")
-            return redirect('lista_atividades')
+            return redirect("lista_atividades")
     else:
         form = AtividadeForm(instance=atividade)
 
-    return render(request, 'matriz_polivalencia/editar_atividade.html', {
-        'form': form,
-        'atividade': atividade,
-        'departamentos': departamentos,  # Passa os departamentos como contexto
-    })
+    return render(
+        request,
+        "matriz_polivalencia/editar_atividade.html",
+        {
+            "form": form,
+            "atividade": atividade,
+            "departamentos": departamentos,  # Passa os departamentos como contexto
+        },
+    )
 
 
 @login_required
@@ -395,30 +466,43 @@ def excluir_atividade(request, id):
     if request.method == "POST":
         atividade.delete()
         messages.success(request, "Atividade excluída com sucesso.")
-        return redirect('lista_atividades')  # Redireciona para a lista de atividades
-    return render(request, 'matriz_polivalencia/excluir_atividade.html', {'atividade': atividade})
+        return redirect("lista_atividades")  # Redireciona para a lista de atividades
+    return render(
+        request, "matriz_polivalencia/excluir_atividade.html", {"atividade": atividade}
+    )
+
+
 @login_required
 def get_atividades_por_departamento(request):
-    departamento = request.GET.get('departamento')  # Obtém o departamento selecionado
-    atividades = Atividade.objects.filter(departamento=departamento)  # Filtra atividades pelo departamento
-    atividade_list = [{'id': atividade.id, 'nome': atividade.nome} for atividade in atividades]
-    return JsonResponse({'atividades': atividade_list})
+    departamento = request.GET.get("departamento")  # Obtém o departamento selecionado
+    # Filtra atividades pelo departamento
+    atividades = Atividade.objects.filter(departamento=departamento)
+    atividade_list = [
+        {"id": atividade.id, "nome": atividade.nome} for atividade in atividades
+    ]
+    return JsonResponse({"atividades": atividade_list})
+
 
 @login_required
 def get_atividades_e_funcionarios_por_departamento(request):
-    departamento = request.GET.get('departamento')
+    departamento = request.GET.get("departamento")
 
     if departamento:
         # Obter as atividades associadas ao departamento
-        atividades = Atividade.objects.filter(departamento=departamento).values('id', 'nome')
+        atividades = Atividade.objects.filter(departamento=departamento).values(
+            "id", "nome"
+        )
 
         # Obter todos os funcionários ativos, ordenados alfabeticamente
-        funcionarios = Funcionario.objects.filter(status='Ativo').order_by('nome').values('id', 'nome')
+        funcionarios = (
+            Funcionario.objects.filter(status="Ativo")
+            .order_by("nome")
+            .values("id", "nome")
+        )
 
         # Retornar as atividades e funcionários em formato JSON
-        return JsonResponse({
-            'atividades': list(atividades),
-            'funcionarios': list(funcionarios)
-        })
+        return JsonResponse(
+            {"atividades": list(atividades), "funcionarios": list(funcionarios)}
+        )
 
-    return JsonResponse({'error': 'Departamento não encontrado'}, status=400)
+    return JsonResponse({"error": "Departamento não encontrado"}, status=400)

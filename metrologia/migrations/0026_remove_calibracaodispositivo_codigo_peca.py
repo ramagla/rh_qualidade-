@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metrologia', '0025_alter_cota_valor_maximo_alter_cota_valor_minimo'),
+        ("metrologia", "0025_alter_cota_valor_maximo_alter_cota_valor_minimo"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='calibracaodispositivo',
-            name='codigo_peca',
+            model_name="calibracaodispositivo",
+            name="codigo_peca",
         ),
     ]

@@ -1,13 +1,15 @@
 import os
+
 import django
+from dateutil.relativedelta import relativedelta
+from django.utils.timezone import now
+
+from metrologia.models.models_tabelatecnica import TabelaTecnica
 
 # Configurar o Django settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rh_qualidade.settings")
 django.setup()
 
-from metrologia.models.models_tabelatecnica import TabelaTecnica
-from django.utils.timezone import now
-from dateutil.relativedelta import relativedelta
 
 # Obtém a data atual
 today = now().date()
@@ -22,7 +24,9 @@ if equipamento:
 
     # Cálculo da próxima calibração
     if equipamento.data_ultima_calibracao and equipamento.frequencia_calibracao:
-        proxima_calibracao = equipamento.data_ultima_calibracao + relativedelta(months=equipamento.frequencia_calibracao)
+        proxima_calibracao = equipamento.data_ultima_calibracao + relativedelta(
+            months=equipamento.frequencia_calibracao
+        )
     else:
         proxima_calibracao = today  # Caso não tenha uma data definida
 

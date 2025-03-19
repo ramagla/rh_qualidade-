@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
         ("Funcionario", "0053_integracaofuncionario_pdf_integracao_and_more"),
     ]
 
-    operations = [       
+    operations = [
         migrations.AddField(
             model_name="treinamento",
             name="descricao",

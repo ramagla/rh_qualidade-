@@ -12,55 +12,165 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-treeview/1.5/jquery.treeview.min.css">
 
-
-
     {% load static %}
     {{ form.media }}
 
-
     <style>
-        body { font-family: Arial, sans-serif; }
-        .sidebar { height: 100vh; background-color: #2b2b2b; width: 220px; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; justify-content: space-between; color: #fff; transition: width 0.3s; }
-        .sidebar.collapsed { width: 60px; }
-        .sidebar.collapsed .sidebar-text { display: none; }
-        .sidebar.collapsed .logo-container img { max-width: 40px; }
-        .sidebar a { color: white; display: flex; align-items: center; padding: 10px 15px; text-decoration: none; transition: all 0.3s; }
-        .sidebar.collapsed a { justify-content: center; padding: 10px 0; }
-        .sidebar i { margin-right: 10px; font-size: 1.2em; }
-        .sidebar.collapsed i { margin-right: 0; }
-        .sidebar .sidebar-text { font-size: 1em; }
-        .content { margin-left: 220px; padding: 20px; width: calc(100% - 220px); transition: margin-left 0.3s, width 0.3s; }
-        .content.collapsed { margin-left: 60px; width: calc(100% - 60px); }
-        .navbar-brand { color: white; }
-        .logo-container { display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; cursor: pointer; }
-        .logo-container img { max-width: 100px; height: auto; transition: max-width 0.3s; }
-        .sidebar-footer { padding: 10px; background-color: #1f1f1f; font-size: 12px; color: #888; display: flex; align-items: center; justify-content: space-between; }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            height: 100vh;
+            background-color: #2b2b2b;
+            width: 220px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            transition: width 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 60px;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .sidebar.collapsed .logo-container img {
+            max-width: 40px;
+        }
+        .sidebar a {
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .sidebar.collapsed a {
+            justify-content: center;
+            padding: 10px 0;
+        }
+        .sidebar i {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        .sidebar.collapsed i {
+            margin-right: 0;
+        }
+        .sidebar .sidebar-text {
+            font-size: 1em;
+        }
+        .content {
+            margin-left: 220px;
+            padding: 20px;
+            width: calc(100% - 220px);
+            transition: margin-left 0.3s, width 0.3s;
+        }
+        .content.collapsed {
+            margin-left: 60px;
+            width: calc(100% - 60px);
+        }
+        .navbar-brand {
+            color: white;
+        }
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 15px;
+            cursor: pointer;
+        }
+        .logo-container img {
+            max-width: 100px;
+            height: auto;
+            transition: max-width 0.3s;
+        }
+        .sidebar-footer {
+            padding: 10px;
+            background-color: #1f1f1f;
+            font-size: 12px;
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* ============================
+           Ajustes para o Select2
+           ============================ */
+        /* Garante que o campo ocupe toda a largura do container */
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-container--default .select2-selection--single {
+            /* Para conseguirmos posicionar o X e a seta */
+            position: relative;
+            height: 38px;
+            padding: 6px 12px; /* Ajuste se precisar mais ou menos espaço */
+            display: flex;     /* Para alinhar o texto verticalmente */
+            align-items: center;
+            border: 1px solid #ced4da; /* Borda padrão do Bootstrap */
+            border-radius: 0.25rem;    /* Raio padrão do Bootstrap */
+        }
+        /* Move o X (clear) para a esquerda */
+        .select2-container--default .select2-selection--single .select2-selection__clear {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            cursor: pointer;
+            z-index: 99;
+        }
+        /* Centraliza o texto horizontalmente + espaçamento p/ X e seta */
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            margin-left: 2rem;  /* espaço para o X */
+            margin-right: 2rem; /* espaço para a seta */
+            text-align: center; 
+            line-height: normal;
+            width: calc(100% - 4rem); /* garante que texto não fique sob X ou seta */
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis; /* caso o texto seja muito grande */
+        }
+        /* Mantém a seta no canto direito */
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+        }
     </style>
 </head>
 <body>
     <div class="d-flex">
         {% block errors %}
-    {% if form.errors %}
-        <div class="alert alert-danger">
-            <ul>
-                {% for field in form %}
-                    {% if field.errors %}
-                        <li><strong>{{ field.label }}:</strong>
-                            <ul>
-                                {% for error in field.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        </li>
-                    {% endif %}
-                {% endfor %}
-                {% for error in form.non_field_errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
-{% endblock %}
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <ul>
+                        {% for field in form %}
+                            {% if field.errors %}
+                                <li><strong>{{ field.label }}:</strong>
+                                    <ul>
+                                        {% for error in field.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endblock %}
 
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
@@ -72,7 +182,7 @@
                         <img src="{% static 'logo_branco.png' %}" alt="Logo Padrão">
                     {% endif %}
                 </div>
-                 <!-- Renderizar os itens do menu -->
+                <!-- Renderizar os itens do menu -->
                 {% for item in menu %}
                     {% if item.submenu %}
                         <div class="dropdown">
@@ -226,20 +336,19 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Select2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/i18n/pt-BR.min.js"></script>
 
-
+    <!-- CKEditor -->
     <script src="https://cdn.jsdelivr.net/npm/@ckeditor/ckeditor5-build-classic/build/ckeditor.js"></script>
 
+    <!-- jQuery Treeview -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-treeview/1.5/jquery.treeview.min.js"></script>
-
-
 
     <script>
         function toggleSidebar() {
@@ -276,6 +385,5 @@
         });
     </script>
 
-    
 </body>
 </html>

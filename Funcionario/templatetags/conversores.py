@@ -2,6 +2,7 @@ from django import template
 
 register = template.Library()
 
+
 @register.filter
 def horas_formatadas(duracao_decimal):
     horas = int(duracao_decimal)

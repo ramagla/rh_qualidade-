@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Evento(models.Model):
     TIPOS_EVENTO = [
         ("avaliacao_desempenho", "Avaliação de Desempenho"),
@@ -16,8 +17,10 @@ class Evento(models.Model):
     descricao = models.TextField(blank=True, null=True)
     data_inicio = models.DateField()
     data_fim = models.DateField()
-    cor = models.CharField(max_length=7, default='#3788d8')
-    tipo = models.CharField(max_length=20, choices=TIPOS_EVENTO, default="avaliacao_desempenho")
+    cor = models.CharField(max_length=7, default="#3788d8")
+    tipo = models.CharField(
+        max_length=20, choices=TIPOS_EVENTO, default="avaliacao_desempenho"
+    )
 
     def __str__(self):
         return self.titulo

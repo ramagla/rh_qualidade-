@@ -10,12 +10,12 @@ else:
 from celery import Celery
 
 # Configuração do Django para o Celery
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rh_qualidade.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rh_qualidade.settings")
 
-app = Celery('rh_qualidade')
+app = Celery("rh_qualidade")
 
 # Lê configurações do Django
-app.config_from_object('django.conf:settings', namespace='CELERY')
+app.config_from_object("django.conf:settings", namespace="CELERY")
 
 # Descobre automaticamente tarefas registradas nos apps
 app.autodiscover_tasks()
@@ -27,14 +27,13 @@ app.conf.update(
 )
 
 app.conf.beat_schedule = {
-    'test_task': {
-        'task': 'alerts.tasks.enviar_alertas_calibracao',
-        'schedule': 60.0,  # Executar a cada 60 segundos
+    "test_task": {
+        "task": "alerts.tasks.enviar_alertas_calibracao",
+        "schedule": 60.0,  # Executar a cada 60 segundos
     },
 }
 
 
-
 @app.task(bind=True)
 def debug_task(self):
-    print(f'Request: {self.request!r}')
+    print(f"Request: {self.request!r}")

@@ -1,11 +1,13 @@
 from django.db import models
 from django.utils.timezone import now
+
 from .funcionario import Funcionario
 
 
 class Atividade(models.Model):
     nome = models.CharField(max_length=255, verbose_name="Nome da Atividade")
-    departamento = models.CharField(max_length=100, verbose_name="Departamento")  # Relacionado ao local_trabalho
+    # Relacionado ao local_trabalho
+    departamento = models.CharField(max_length=100, verbose_name="Departamento")
 
     def __str__(self):
         return f"{self.nome} ({self.departamento})"
@@ -25,9 +27,15 @@ class Nota(models.Model):
         (False, "Não"),
     ]
 
-    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name="notas")
-    atividade = models.ForeignKey(Atividade, on_delete=models.CASCADE, related_name="notas")
-    pontuacao = models.PositiveSmallIntegerField(choices=PONTUACAO_CHOICES, verbose_name="Pontuação")
+    funcionario = models.ForeignKey(
+        Funcionario, on_delete=models.CASCADE, related_name="notas"
+    )
+    atividade = models.ForeignKey(
+        Atividade, on_delete=models.CASCADE, related_name="notas"
+    )
+    pontuacao = models.PositiveSmallIntegerField(
+        choices=PONTUACAO_CHOICES, verbose_name="Pontuação"
+    )
     suplente = models.BooleanField(default=False, verbose_name="É Suplente")
 
     class Meta:
@@ -35,16 +43,23 @@ class Nota(models.Model):
 
     def __str__(self):
         return f"{self.funcionario.nome} - {self.atividade.nome}: {self.get_pontuacao_display()}"
-    
+
     @staticmethod
     def get_notas_dict(atividades, funcionarios):
-        notas = Nota.objects.filter(atividade__in=atividades, funcionario__in=funcionarios)
-        notas_dict = {f"{nota.funcionario.id}_{nota.atividade.id}": nota.pontuacao for nota in notas}
+        notas = Nota.objects.filter(
+            atividade__in=atividades, funcionario__in=funcionarios
+        )
+        notas_dict = {
+            f"{nota.funcionario.id}_{nota.atividade.id}": nota.pontuacao
+            for nota in notas
+        }
         return notas_dict
 
 
 class MatrizPolivalencia(models.Model):
-    departamento = models.CharField(max_length=100, verbose_name="Departamento", blank=True, null=True)
+    departamento = models.CharField(
+        max_length=100, verbose_name="Departamento", blank=True, null=True
+    )
     elaboracao = models.ForeignKey(
         Funcionario,
         on_delete=models.SET_NULL,
@@ -80,7 +95,7 @@ class MatrizPolivalencia(models.Model):
         if self.departamento:
             return Atividade.objects.filter(departamento=self.departamento)
         return Atividade.objects.none()
-    
+
     @property
     def funcionarios(self):
         # Filtra os funcionários com notas vinculadas às atividades deste departamento
@@ -104,9 +119,11 @@ class MatrizPolivalencia(models.Model):
         for nota in notas:
             if nota.funcionario.id not in notas_por_funcionario:
                 notas_por_funcionario[nota.funcionario.id] = {}
-            notas_por_funcionario[nota.funcionario.id][nota.atividade.id] = nota.pontuacao
+            notas_por_funcionario[nota.funcionario.id][
+                nota.atividade.id
+            ] = nota.pontuacao
         return notas_por_funcionario
-    
+
     def delete(self, *args, **kwargs):
         # Exclui todas as notas relacionadas às atividades desta matriz
         Nota.objects.filter(atividade__departamento=self.departamento).delete()

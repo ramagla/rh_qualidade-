@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="listapresenca",
             name="data_realizacao",
-            field=models.DateField(default='2024-01-01'),
+            field=models.DateField(default="2024-01-01"),
             preserve_default=False,
         ),
     ]

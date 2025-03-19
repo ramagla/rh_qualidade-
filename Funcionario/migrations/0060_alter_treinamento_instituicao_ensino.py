@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Funcionario', '0059_remove_listapresenca_data_realizacao_and_more'),
+        ("Funcionario", "0059_remove_listapresenca_data_realizacao_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='treinamento',
-            name='instituicao_ensino',
-            field=models.CharField(default='Bras-Mol', max_length=255),
+            model_name="treinamento",
+            name="instituicao_ensino",
+            field=models.CharField(default="Bras-Mol", max_length=255),
         ),
     ]

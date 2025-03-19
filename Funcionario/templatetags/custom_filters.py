@@ -1,14 +1,11 @@
-from django import template
 import os
 from datetime import timedelta
+from urllib.parse import parse_qs, urlencode
+
 from dateutil.relativedelta import relativedelta
-
-
-
+from django import template
 
 register = template.Library()
-from urllib.parse import urlencode, parse_qs
-
 
 
 @register.filter
@@ -19,10 +16,9 @@ def dict_get(d, key):
         return None
 
 
-
 @register.filter
 def add_class(field, css_class):
-    return field.as_widget(attrs={'class': css_class})
+    return field.as_widget(attrs={"class": css_class})
 
 
 @register.filter
@@ -32,6 +28,7 @@ def get_nested_item(dictionary, keys):
         return dictionary.get(key1, {}).get(key2)
     except (ValueError, AttributeError):
         return None
+
 
 @register.filter
 def auto_breaks(value, max_length=20):
@@ -45,7 +42,7 @@ def auto_breaks(value, max_length=20):
     for word in words:
         # Adiciona a palavra à linha atual, respeitando o limite de comprimento
         if len(current_line) + len(word) + 1 <= max_length:
-            current_line += (word + " ")
+            current_line += word + " "
         else:
             lines.append(current_line.strip())  # Adiciona a linha completa
             current_line = word + " "  # Inicia nova linha com a palavra atual
@@ -57,9 +54,11 @@ def auto_breaks(value, max_length=20):
     # Junta as linhas com <br> para quebras no HTML
     return "<br>".join(lines)
 
+
 @register.filter
 def sum_values(queryset, field_name):
     return sum(getattr(obj, field_name, 0) for obj in queryset)
+
 
 @register.filter
 def get_item(dictionary, key):
@@ -68,7 +67,7 @@ def get_item(dictionary, key):
 
 @register.filter
 def dict(value, key):
-    return value.get(key, '')
+    return value.get(key, "")
 
 
 @register.filter
@@ -76,17 +75,20 @@ def primeiro_nome(nome_completo):
     """Retorna apenas o primeiro nome de um nome completo."""
     return nome_completo.split()[0] if nome_completo else ""
 
+
 @register.filter
 def default_if_none(value, default="Não informado"):
     """Retorna um valor padrão se o valor for None ou vazio"""
     return value if value else default
 
+
 @register.filter
 def split_by_comma(value):
     """Divide uma string por vírgulas e retorna uma lista"""
     if value:
-        return value.split(',')
+        return value.split(",")
     return []
+
 
 @register.filter
 def remove_query_param(querystring, param):
@@ -97,12 +99,14 @@ def remove_query_param(querystring, param):
     query_dict.pop(param, None)  # Remove o parâmetro, se existir
     return urlencode(query_dict, doseq=True)
 
+
 @register.filter
 def basename(value):
     """
     Retorna apenas o nome do arquivo sem o caminho completo.
     """
     return os.path.basename(value)
+
 
 @register.filter
 def add_days(value, days):
@@ -113,11 +117,13 @@ def add_days(value, days):
         return value + timedelta(days=days)
     return value
 
+
 @register.filter
 def add_months(date, months):
     if date:
         return date + relativedelta(months=months)
     return None
+
 
 @register.filter
 def add_attribute(field, args):
@@ -125,9 +131,10 @@ def add_attribute(field, args):
     Adiciona atributos ao widget de um campo do formulário.
     Uso no template: {{ field|add_attribute:"key:value" }}
     """
-    key, value = args.split(':')
+    key, value = args.split(":")
     field.field.widget.attrs[key] = value
     return field
+
 
 @register.filter
 def has_permission(user, perm):

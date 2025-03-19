@@ -1,11 +1,14 @@
+from datetime import timedelta
+
 from django.db import models
 from django.utils import timezone
-from datetime import timedelta
+
 from .funcionario import Funcionario
+
 
 class AvaliacaoExperiencia(models.Model):
     data_avaliacao = models.DateField()
-    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)    
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
     gerencia = models.CharField(max_length=100, blank=True, null=True)
 
     # Campos específicos para o questionário de experiência
@@ -34,4 +37,6 @@ class AvaliacaoExperiencia(models.Model):
         return "Dentro do Prazo" if data_limite >= hoje else "Em Atraso"
 
     def __str__(self):
-        return f"Avaliação de Experiência de {self.funcionario} em {self.data_avaliacao}"
+        return (
+            f"Avaliação de Experiência de {self.funcionario} em {self.data_avaliacao}"
+        )

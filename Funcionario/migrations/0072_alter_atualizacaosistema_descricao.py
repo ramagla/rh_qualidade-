@@ -3,7 +3,6 @@ from django.db import migrations
 from django_ckeditor_5.fields import CKEditor5Field  # Import correto do CKEditor 5
 
 
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -15,6 +14,5 @@ class Migration(migrations.Migration):
             model_name="atualizacaosistema",
             name="descricao",
             field=CKEditor5Field("default"),
-
         ),
     ]

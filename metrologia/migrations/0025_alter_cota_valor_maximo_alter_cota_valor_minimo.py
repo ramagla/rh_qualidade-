@@ -6,18 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metrologia', '0024_remove_calibracaodispositivo_afericao_and_more'),
+        ("metrologia", "0024_remove_calibracaodispositivo_afericao_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='cota',
-            name='valor_maximo',
-            field=models.DecimalField(decimal_places=3, max_digits=10, verbose_name='Valor Máximo'),
+            model_name="cota",
+            name="valor_maximo",
+            field=models.DecimalField(
+                decimal_places=3, max_digits=10, verbose_name="Valor Máximo"
+            ),
         ),
         migrations.AlterField(
-            model_name='cota',
-            name='valor_minimo',
-            field=models.DecimalField(decimal_places=3, max_digits=10, verbose_name='Valor Mínimo'),
+            model_name="cota",
+            name="valor_minimo",
+            field=models.DecimalField(
+                decimal_places=3, max_digits=10, verbose_name="Valor Mínimo"
+            ),
         ),
     ]

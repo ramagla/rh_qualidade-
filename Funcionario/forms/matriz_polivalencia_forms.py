@@ -1,10 +1,12 @@
 from django import forms
-from ..models.matriz_polivalencia import MatrizPolivalencia, Atividade, Nota
+
+from ..models.matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
+
 
 class MatrizPolivalenciaForm(forms.ModelForm):
     class Meta:
         model = MatrizPolivalencia
-        fields = '__all__'
+        fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -12,13 +14,14 @@ class MatrizPolivalenciaForm(forms.ModelForm):
         for field in self.fields.values():
             field.required = False
 
+
 class AtividadeForm(forms.ModelForm):
     class Meta:
         model = Atividade
-        fields = '__all__'
-        
+        fields = "__all__"
+
     def clean_nome(self):
-        nome = self.cleaned_data.get('nome')
+        nome = self.cleaned_data.get("nome")
         if nome:
             return nome.title()  # Aplica Title Case apenas no campo nome
         return nome
@@ -27,4 +30,4 @@ class AtividadeForm(forms.ModelForm):
 class NotaForm(forms.ModelForm):
     class Meta:
         model = Nota
-        fields = '__all__'
+        fields = "__all__"

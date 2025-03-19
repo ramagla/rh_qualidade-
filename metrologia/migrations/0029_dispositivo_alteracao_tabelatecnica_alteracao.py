@@ -6,18 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metrologia', '0028_dispositivo_updated_at_tabelatecnica_updated_at'),
+        ("metrologia", "0028_dispositivo_updated_at_tabelatecnica_updated_at"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dispositivo',
-            name='alteracao',
-            field=models.TextField(blank=True, null=True, verbose_name='Última Alteração'),
+            model_name="dispositivo",
+            name="alteracao",
+            field=models.TextField(
+                blank=True, null=True, verbose_name="Última Alteração"
+            ),
         ),
         migrations.AddField(
-            model_name='tabelatecnica',
-            name='alteracao',
-            field=models.TextField(blank=True, null=True, verbose_name='Última Alteração'),
+            model_name="tabelatecnica",
+            name="alteracao",
+            field=models.TextField(
+                blank=True, null=True, verbose_name="Última Alteração"
+            ),
         ),
     ]
