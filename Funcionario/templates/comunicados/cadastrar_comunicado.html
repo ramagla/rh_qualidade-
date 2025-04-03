@@ -25,8 +25,14 @@
 
         <div class="mb-3">
             <label for="descricao" class="form-label">Descrição</label>
-            {{ form.descricao }}
+            <div class="d-flex align-items-center">
+                {{ form.descricao }}
+                <button type="button" class="btn btn-outline-secondary ms-2" id="aprimorar-btn">
+                    <i class="bi bi-magic"></i> Aprimorar
+                </button>
+            </div>
         </div>
+
 
 
         <div class="col-md-6">
@@ -53,4 +59,23 @@
         </div>
     </form>
 </div>
+<script>
+    document.getElementById("aprimorar-btn").addEventListener("click", async function () {
+        const editorInstance = window.editor; // CKEditor 5 instance global
+        const textoOriginal = editorInstance.getData();
+
+        const response = await fetch("/aprimorar-texto/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify({ texto: textoOriginal }),
+        });
+
+        const data = await response.json();
+        editorInstance.setData(data.texto_aprimorado);
+    });
+</script>
+
 {% endblock %}

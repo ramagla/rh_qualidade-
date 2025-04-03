@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tz %} {# Se necessário para a data atual #}
+
+{% block title %}Visualização do Fornecedor{% endblock %}
+
+{% block content %}
+<style>
+  /* Estilos para simular um layout de PDF */
+  .pdf-container {
+    width: 210mm;
+    margin: 0 auto;
+    padding: 20mm;
+    background: #fff;
+    border: 1px solid #ccc;
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+  }
+  .pdf-header, .pdf-footer {
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+  }
+  .pdf-footer {
+    border-top: 1px solid #ccc;
+    margin-top: 20px;
+    padding-top: 10px;
+  }
+  .pdf-content {
+    margin-top: 20px;
+  }
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .info-table th, .info-table td {
+    border: 1px solid #ccc;
+    padding: 5px;
+    text-align: left;
+  }
+  /* Estilo para impressão */
+  @media print {
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .pdf-container {
+      border: none;
+      width: auto;
+      margin: 0;
+      padding: 0;
+    }
+  }
+</style>
+
+<div class="pdf-container">
+  <div class="pdf-header">
+    <h1>Fornecedor Qualificado</h1>
+    <p>Relatório de Dados</p>
+  </div>
+
+  <div class="pdf-content">
+    <table class="info-table">
+      <tr>
+        <th>Nome</th>
+        <td>{{ fornecedor.nome }}</td>
+      </tr>
+      <tr>
+        <th>Produto/Serviço</th>
+        <td>{{ fornecedor.produto_servico }}</td>
+      </tr>
+      <tr>
+        <th>Data de Homologação</th>
+        <td>{{ fornecedor.data_homologacao|date:"d/m/Y" }}</td>
+      </tr>
+      <tr>
+        <th>Tipo de Certificação</th>
+        <td>{{ fornecedor.tipo_certificacao }}</td>
+      </tr>
+      <tr>
+        <th>Vencimento da Certificação</th>
+        <td>
+          {% if fornecedor.vencimento_certificacao %}
+            {{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Risco</th>
+        <td>{{ fornecedor.risco }}</td>
+      </tr>
+      <tr>
+        <th>Data da Avaliação de Risco</th>
+        <td>
+          {% if fornecedor.data_avaliacao_risco %}
+            {{ fornecedor.data_avaliacao_risco|date:"d/m/Y" }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Próxima Avaliação de Risco</th>
+        <td>
+          {% if fornecedor.proxima_avaliacao_risco %}
+            {{ fornecedor.proxima_avaliacao_risco|date:"d/m/Y" }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Tipo de Auditoria</th>
+        <td>{{ fornecedor.tipo_formulario }}</td>
+      </tr>
+      <tr>
+        <th>Data da Auditoria</th>
+        <td>
+          {% if fornecedor.data_auditoria %}
+            {{ fornecedor.data_auditoria|date:"d/m/Y" }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Próxima Auditoria</th>
+        <td>
+          {% if fornecedor.proxima_auditoria %}
+            {{ fornecedor.proxima_auditoria|date:"d/m/Y" }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Nota da Auditoria</th>
+        <td>
+          {% if fornecedor.nota_auditoria %}
+            {{ fornecedor.nota_auditoria }}%
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Classe / Frequência</th>
+        <td>{{ fornecedor.classe_frequencia }}</td>
+      </tr>
+      <tr>
+        <th>Status</th>
+        <td>{{ fornecedor.status }}</td>
+      </tr>
+      <tr>
+        <th>Score</th>
+        <td>{{ fornecedor.score }}</td>
+      </tr>
+      <tr>
+        <th>Especialista</th>
+        <td>{{ fornecedor.especialista_nome }}</td>
+      </tr>
+      <tr>
+        <th>Contato do Especialista</th>
+        <td>{{ fornecedor.especialista_contato }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="pdf-footer">
+    <p>Gerado em: {{ now|date:"d/m/Y H:i" }}</p>
+  </div>
+</div>
+{% endblock %}

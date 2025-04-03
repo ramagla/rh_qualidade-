@@ -598,6 +598,7 @@ urlpatterns = [
         name="excluir_historico_cargo",
     ),
     path("avaliacao-anual/", cadastrar_type_avaliacao, name="cadastrar_type_avaliacao"),
+
 ]
 
 # Adiciona URLs para servir arquivos de mídia durante o desenvolvimento

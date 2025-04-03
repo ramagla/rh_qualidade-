@@ -1,0 +1,1 @@
+from .fornecedor_forms import FornecedorQualificadoForm as FornecedorForm

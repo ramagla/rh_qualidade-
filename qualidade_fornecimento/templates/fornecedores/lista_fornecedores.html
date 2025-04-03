@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Fornecedores Qualificados{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+  <h2 class="text-center mb-4">Fornecedores Qualificados</h2>
+
+  <!-- Toast de Mensagens -->
+  {% if messages %}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      {% for message in messages %}
+        <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert">
+          <div class="d-flex">
+            <div class="toast-body">{{ message }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Filtros em Card -->
+  <div class="card mb-4">
+    <div class="card-header">
+      Filtros
+    </div>
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-3">
+          <label for="data_inicial" class="form-label">Data Inicial</label>
+          <input type="date" class="form-control" id="data_inicial" name="data_inicial" value="{{ request.GET.data_inicial }}">
+        </div>
+        <div class="col-md-3">
+          <label for="data_final" class="form-label">Data Final</label>
+          <input type="date" class="form-control" id="data_final" name="data_final" value="{{ request.GET.data_final }}">
+        </div>
+        <div class="col-md-2">
+          <label for="produto" class="form-label">Produto/Serviço</label>
+          <select class="form-select" id="produto" name="produto">
+            <option value="">Todos</option>
+            {% for prod in filter_produtos %}
+              <option value="{{ prod }}" {% if request.GET.produto == prod %}selected{% endif %}>{{ prod }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label for="certificacao" class="form-label">Certificação</label>
+          <select class="form-select" id="certificacao" name="certificacao">
+            <option value="">Todas</option>
+            {% for cert in filter_certificacoes %}
+              <option value="{{ cert }}" {% if request.GET.certificacao == cert %}selected{% endif %}>{{ cert }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label for="status" class="form-label">Status</label>
+          <select class="form-select" id="status" name="status">
+            <option value="">Todos</option>
+            {% for stat in filter_status %}
+              <option value="{{ stat }}" {% if request.GET.status == stat %}selected{% endif %}>{{ stat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-12 text-end">
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Botão para Cadastrar -->
+  <div class="d-flex justify-content-end mb-4">
+  <a href="{% url 'cadastrar_fornecedor' %}" class="btn btn-success">
+    <i class="bi bi-plus-circle"></i> Cadastrar Fornecedor
+  </a>
+  <a href="{% url 'importar_excel_fornecedores' %}" class="btn btn-secondary ms-2">
+    <i class="bi bi-file-earmark-excel"></i> Importar Excel
+  </a>
+</div>
+
+
+  <!-- Cards com Indicadores -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-white bg-success">
+        <div class="card-header text-center">Total de Fornecedores</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ total_fornecedores }}</h5>
+          <p class="card-text">Cadastrados no sistema.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-danger">
+        <div class="card-header text-center">Certificações Vencidas</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ total_vencidas }}</h5>
+          <p class="card-text">Certificados expirados.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-warning">
+        <div class="card-header text-center">Certificações Próx.Vencimento</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ total_proximas }}</h5>
+          <p class="card-text">Até 30 dias para vencer.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+  <div class="card text-white" style="background-color: #ff6600;">
+    <div class="card-header text-center">Alto Risco</div>
+    <div class="card-body text-center">
+      <h5 class="card-title">{{ total_alto_risco }}</h5>
+      <p class="card-text">Classificados com risco alto.</p>
+    </div>
+  </div>
+</div>
+
+  </div>
+
+  <!-- Lista de Fornecedores -->
+  {% if fornecedores_paginados %}
+    <table class="table table-hover table-bordered text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Nome</th>
+          <th>Produto</th>
+          <th>Certificação</th>
+          <th>Vencimento</th>
+          <th>Risco</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fornecedor in fornecedores_paginados %}
+          <tr>
+            <td class="text-start">{{ fornecedor.nome }}</td>
+            <td>{{ fornecedor.produto_servico }}</td>
+            <td>{{ fornecedor.tipo_certificacao }}</td>
+            <td>
+              {% if fornecedor.vencimento_certificacao < current_date %}
+                <span class="text-danger">{{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}</span>
+              {% elif fornecedor.vencimento_certificacao <= current_date_plus_30 %}
+                <span class="text-warning">{{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}</span>
+              {% else %}
+                {{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}
+              {% endif %}
+            </td>
+            <td>
+              {% if fornecedor.risco == "Alto" %}
+                <span class="text-danger">{{ fornecedor.risco }}</span>
+              {% elif fornecedor.risco == "Baixo" %}
+                <span class="text-success">{{ fornecedor.risco }}</span>
+              {% else %}
+                {{ fornecedor.risco }}
+              {% endif %}
+            </td>
+            <td>
+              {% if fornecedor.status == "Reprovado" %}
+                <span class="text-danger">{{ fornecedor.status }}</span>
+              {% elif fornecedor.status == "Qualificado Condicional" %}
+                <span class="text-warning">{{ fornecedor.status }}</span>
+              {% elif fornecedor.status == "Qualificado" %}
+                <span class="text-success">{{ fornecedor.status }}</span>
+              {% else %}
+                {{ fornecedor.status }}
+              {% endif %}
+            </td>
+            <td>
+  <a href="{% url 'visualizar_fornecedor' fornecedor.id %}" class="btn btn-sm btn-secondary" title="Visualizar">
+    <i class="bi bi-eye"></i>
+  </a>
+  <a href="{% url 'editar_fornecedor' fornecedor.id %}" class="btn btn-sm btn-warning" title="Editar">
+    <i class="bi bi-pencil"></i>
+  </a>
+  {% if fornecedor.certificado_anexo %}
+    <a href="{{ fornecedor.certificado_anexo.url }}" class="btn btn-sm btn-info" title="Download Certificado" download>
+      <i class="bi bi-download"></i>
+    </a>
+  {% endif %}
+  <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ fornecedor.id }}" data-nome="{{ fornecedor.nome }}" title="Excluir">
+    <i class="bi bi-trash"></i>
+  </button>
+</td>
+
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="text-center">Nenhum fornecedor encontrado.</p>
+  {% endif %}
+
+  <!-- Paginação -->
+  <nav aria-label="Navegação de páginas">
+    <ul class="pagination justify-content-center">
+      {% if fornecedores_paginados.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1">&laquo;&laquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ fornecedores_paginados.previous_page_number }}">&laquo;</a></li>
+      {% endif %}
+      {% for num in fornecedores_paginados.paginator.page_range %}
+        {% if fornecedores_paginados.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > fornecedores_paginados.number|add:'-3' and num < fornecedores_paginados.number|add:'3' %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+      {% endfor %}
+      {% if fornecedores_paginados.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ fornecedores_paginados.next_page_number }}">&raquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ fornecedores_paginados.paginator.num_pages }}">&raquo;&raquo;</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+
+<!-- Modal de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="deleteForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Excluir Fornecedor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p>Tem certeza que deseja excluir o fornecedor <strong id="deleteNome"></strong>?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Excluir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Preenche o formulário do modal de exclusão
+  var deleteModal = document.getElementById('deleteModal');
+  deleteModal.addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget;
+    var fornecedorId = button.getAttribute('data-id');
+    var fornecedorNome = button.getAttribute('data-nome');
+    document.getElementById('deleteNome').textContent = fornecedorNome;
+    document.getElementById('deleteForm').action = "{% url 'excluir_fornecedor' 0 %}".replace('0', fornecedorId);
+  });
+</script>
+{% endblock %}

@@ -145,6 +145,26 @@
             transform: translateY(-50%);
             color: #555;
         }
+
+        /* Chatbot */
+#chat-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    z-index: 1000;
+}
+#chatbox-container {
+    display: none;
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 350px;
+    max-height: 500px;
+    z-index: 1000;
+}
+
     </style>
 </head>
 <body>
@@ -308,6 +328,28 @@
                 {% endblock %}
             </div>
         </div>
+        <!-- Botão de Chat -->
+<button id="chat-toggle" class="btn btn-primary rounded-circle">
+    <i class="fas fa-comments"></i>
+</button>
+
+<!-- Janela de Chat -->
+<div id="chatbox-container" class="card shadow">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <span>Assistente Virtual</span>
+        <button type="button" class="btn-close btn-close-white btn-sm" id="chatbox-close"></button>
+    </div>
+    <div class="card-body" id="chatbox-body" style="overflow-y: auto; height: 300px; background-color: #f8f9fa;"></div>
+    <div class="card-footer p-2">
+        <form id="chat-form" class="d-flex">
+            <input type="text" id="question" class="form-control me-2" placeholder="Digite sua pergunta...">
+            <button type="submit" class="btn btn-primary">Enviar</button>
+        </form>
+    </div>
+</div>
+
+
+        
     </div>
 
     <!-- Modal de Informações da Versão -->
@@ -383,7 +425,71 @@
                     });
             });
         });
-    </script>
+    </script>,
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+    const chatToggle = document.getElementById('chat-toggle');
+    const chatBoxContainer = document.getElementById('chatbox-container');
+    const chatBoxClose = document.getElementById('chatbox-close');
+
+    chatToggle.addEventListener('click', function () {
+        chatBoxContainer.style.display = chatBoxContainer.style.display === 'none' ? 'block' : 'none';
+    });
+
+    chatBoxClose.addEventListener('click', function () {
+        chatBoxContainer.style.display = 'none';
+    });
+
+    $('#chat-form').on('submit', function (e) {
+        e.preventDefault();
+
+        const userQuestion = $('#question').val().trim();
+        if (!userQuestion) return;
+
+        appendMessage('Você', userQuestion);
+        $('#question').val('');
+
+        $.ajax({
+            url: '/chat-gpt/',
+            type: 'POST',
+            headers: {},  // remove o csrf temporariamente
+            data: { 'question': userQuestion },
+            beforeSend: function () {
+                appendMessage('Assistente', 'Digitando...', true);
+                scrollChatToBottom();
+            },
+            success: function (response) {
+                removeTypingIndicator();
+                appendMessage('Assistente', response.answer);
+                scrollChatToBottom();
+            },
+            error: function () {
+                removeTypingIndicator();
+                appendMessage('Erro', 'Houve um problema ao obter resposta.');
+                scrollChatToBottom();
+            }
+        });
+    });
+
+    function appendMessage(sender, message, typing = false) {
+        const chatBody = document.getElementById('chatbox-body');
+        const div = document.createElement('div');
+        div.classList.add('mb-2');
+        if (typing) div.classList.add('typing-indicator');
+        div.innerHTML = `<strong>${sender}:</strong> ${message}`;
+        chatBody.appendChild(div);
+    }
+
+    function removeTypingIndicator() {
+        document.querySelectorAll('.typing-indicator').forEach(el => el.remove());
+    }
+
+    function scrollChatToBottom() {
+        const chatBody = document.getElementById('chatbox-body');
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+});
+</script>
 
 </body>
 </html>

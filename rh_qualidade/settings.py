@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+from decouple import config
+
 
 import dj_database_url
 
@@ -15,6 +17,10 @@ LOGIN_REDIRECT_URL = "/"
 # Chave secreta e modo de depuração
 SECRET_KEY = "-i@@0^twl)tb4ivcjrrt9mi5s)+ar@88ofqfmxav%7=4%v$z01"
 DEBUG = True
+
+
+GEMINI_API_KEY = config('GEMINI_API_KEY')
+
 
 # Lista de hosts permitidos
 ALLOWED_HOSTS = ["*", "192.168.0.139", "127.0.0.1", "localhost"]
@@ -36,6 +42,7 @@ INSTALLED_APPS = [
     "django_select2",
     "django_celery_beat",
     "alerts",
+    "qualidade_fornecimento",
 ]
 
 DATE_FORMAT = "d 'de' F 'de' Y"
@@ -139,14 +146,17 @@ CSRF_FAILURE_VIEW = "django.views.csrf.csrf_failure"
 
 # Configurações de segurança
 SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = not DEBUG
+
 X_FRAME_OPTIONS = "ALLOWALL"
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost",
     "http://127.0.0.1",
-    "http://192.168.0.139" "http://127.0.0.1:8000",
+    "http://192.168.0.139",
+    "http://127.0.0.1:8000",
     "http://localhost:8000",
 ]
+
 
 
 # Configurações de banco de dados
