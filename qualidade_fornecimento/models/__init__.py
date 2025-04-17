@@ -1,7 +1,6 @@
-from .AnaliseRiscoPreliminar import AnaliseRiscoPreliminar
-from .avaliacao_mp import AvaliacaoFornecedorMP
-from .avaliacao_servico import AvaliacaoFornecedorServico
-from .composicao_quimica import ComposicaoQuimica
 from .fornecedor import FornecedorQualificado
-from .materia_prima import  MateriaPrima
-from .servico_externo import ServicoExterno
+from .materiaPrima import RelacaoMateriaPrima
+from .materiaPrima_catalogo import MateriaPrimaCatalogo  # Certifique-se de que essa importação esteja correta
+from .rolo import RelacaoMateriaPrima
+from .norma import NormaComposicaoElemento, NormaTecnica, NormaTracao
+from .f045 import RelatorioF045

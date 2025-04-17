@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Importar Matéria-Prima{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Importar Matérias-Primas do Excel</h2>
+  
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="excel_file" class="form-label">Selecione o arquivo Excel (.xlsx)</label>
+      <input type="file" name="excel_file" id="excel_file" class="form-control" required>
+    </div>
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary">Importar</button>
+      <a href="{% url 'materiaprima_catalogo_list' %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+
+  <div class="card mt-4">
+    <div class="card-header">Modelo Esperado</div>
+    <div class="card-body">
+      <p>O arquivo deve conter ao menos as colunas: <code>codigo</code> e <code>descricao</code>.</p>
+      <p>Coluna opcional: <code>localizacao</code>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

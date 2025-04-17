@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+{% load static widget_tweaks %}
+{% load static widget_tweaks custom_filters %}
+
+{% block title %}Relatório F‑045 – Inspeção de Material{% endblock %}
+
+{% block content %}
+<div class="container-lg mt-4">
+  <h3 class="text-center mb-4">Relatório de Inspeção de Material – F‑045</h3>
+{# mostra primeiro os erros "não relacionados a campo específico" #}
+{% if form.non_field_errors %}
+  <div class="alert alert-danger mt-2">
+    <strong>Erros gerais:</strong>
+    <ul class="mb-0">
+      {% for err in form.non_field_errors %}
+        <li>{{ err }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+{# agora percorre cada campo e exibe seus erros #}
+{% for field in form %}
+  {% if field.errors %}
+    <div class="alert alert-danger mt-2">
+      <strong>{{ field.label }}:</strong>
+      <ul class="mb-0">
+        {% for err in field.errors %}
+          <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+{% endfor %}
+
+
+
+  <form method="post" class="row g-3" onsubmit="atualizarStatusGeral()">
+  {% csrf_token %}
+  {{ formset.management_form }}
+  {% for form in formset.forms %}
+    {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+    {% endfor %}
+  {% endfor %}
+
+
+
+
+    {# --- CABEÇALHO SOMENTE LEITURA --- #}
+    <div class="col-12">
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Nro Relatório</label>
+          <input type="text" class="form-control" readonly value="{{ form.instance.nro_relatorio|default_if_none:'-' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Fornecedor</label>
+          <input type="text" class="form-control" readonly value="{{ form.instance.fornecedor|default_if_none:'-' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Nota Fiscal</label>
+          <input type="text" class="form-control" readonly value="{{ form.instance.nota_fiscal|default_if_none:'-' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Certificado</label>
+          <input type="text" class="form-control" readonly value="{{ form.instance.numero_certificado|default_if_none:'-' }}">
+        </div>
+      </div>
+      <div class="row mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Material</label>
+          <input type="text" class="form-control" readonly value="{{ form.instance.material|default_if_none:'-' }}">
+        </div>
+        <div class="col-md-2 mt-3">
+          <label class="form-label">Bitola</label>
+          <input type="text" class="form-control text-center bg-light" 
+                value="{% if form.instance.bitola and form.instance.relacao.materia_prima.largura %}{{ form.instance.bitola }}x{{ form.instance.relacao.materia_prima.largura }}{% else %}{{ form.instance.bitola }}{% endif %}" 
+                readonly>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Qtd Rolos</label>
+          <input type="text" class="form-control" readonly value="{{ form.instance.qtd_rolos|default_if_none:'-' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Massa Líquida (kg)</label>
+          <input type="text" class="form-control" readonly value="{{ form.instance.massa_liquida|default_if_none:'-' }}">
+        </div>
+      </div>
+    </div>
+
+    {# --- CAMPOS EDITÁVEIS --- #}
+    <div class="col-md-2 mt-3">
+      {{ form.qtd_carreteis.label_tag }}
+      {{ form.qtd_carreteis|add_class:"form-control" }}
+    </div>
+    <div class="col-md-4 mt-3">
+      {{ form.pedido_compra.label_tag }}
+      {{ form.pedido_compra|add_class:"form-control" }}
+    </div>
+
+    {# --- 05 – COMPOSIÇÃO QUÍMICA --- #}
+    <h5 class="mt-4">05 – Características de Composição Química (%)</h5>
+<div class="table-responsive">
+  <table class="table table-bordered text-center align-middle">
+    <thead class="table-light">
+      <tr><th>Sigla</th><th>Mín</th><th>Máx</th><th>Encontrado</th><th>Laudo</th></tr>
+    </thead>
+    <tbody>
+      {% for item in chemical_list %}
+      {% with min=item.min|stringformat:"f" max=item.max|stringformat:"f" %}
+      <tr>
+        <td class="text-uppercase fw-bold">{{ item.sigla|upper }}</td>
+        <td class="min">{{ min }}</td>
+        <td class="max">{{ max }}</td>
+        <td>
+  {{ item.field }}
+  <input type="hidden" class="min-hidden" value="{{ item.min }}">
+  <input type="hidden" class="max-hidden" value="{{ item.max }}">
+</td>
+
+<td class="laudo fw-bold text-center">—</td>
+
+      </tr>
+      {% endwith %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{# Validação do FormSet de RoloMateriaPrima #}
+{% if formset.non_form_errors %}
+  <div class="alert alert-danger">
+    <strong>Erros nos dados dos rolos:</strong>
+    <ul>
+      {% for error in formset.non_form_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+{% for form in formset.forms %}
+  {% if form.errors %}
+    <div class="alert alert-warning">
+      <strong>Erro no rolo:</strong>
+      <ul>
+        {% for field, errors in form.errors.items %}
+          <li><strong>{{ field }}</strong>: {{ errors|join:", " }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+{% endfor %}
+
+
+ <h5 class="mt-4">06 – Características Inspecionadas Internamente</h5>
+
+<div class="form-check form-switch mb-2">
+  <input class="form-check-input"
+         type="checkbox"
+         id="switchMpa"
+         name="switchMpa"
+         onchange="toggleUnidadeTracao(this)">
+  <label class="form-check-label" for="switchMpa">
+    Valores informados em MPa
+  </label>
+</div>
+
+
+<div class="table-responsive">
+  <table class="table table-bordered align-middle text-center">
+    <thead class="table-light">
+      <tr class="text-center">
+        <th>Rolo</th>
+        <th style="display:none;">Massa (kg)</th>
+        <th>Tolerância</th>
+        <th>Bitola (mm)</th>
+        <th style="display:none;">B. Mín</th>
+        <th style="display:none;">B. Máx</th>
+        <th id="th_rmin">R. Mín (Kgf/mm²)</th>
+        <th id="th_rmax">R. Máx (Kgf/mm²)</th>
+        <th>02 – Resistência à Tração</th>
+        <th>Dureza ({{ dureza_padrao_header|default:"—" }})</th>
+        <th>Enrolamento</th>
+        <th>Dobramento</th>
+        <th>Torção Residual</th>
+        <th>Aspecto Visual</th>
+        <th>Alongamento</th>   {# novo #}
+        <th>Flechamento</th>   {# novo #}
+        <th>Laudo</th>
+      </tr>
+    </thead>
+    <tbody>
+  {% for rolo, rolo_form in tracoes_com_forms %}
+    <tr>
+      {% for hidden in rolo_form.hidden_fields %}
+        {{ hidden }}
+      {% endfor %}
+
+      <td>{{ rolo.nro_rolo }}</td>
+
+      <td style="display:none;">{{ rolo_form.peso }}</td>
+
+      <td>
+        {% if rolo.tb050.materia_prima.tolerancia_largura %}
+          {{ rolo.tb050.materia_prima.tolerancia }} - {{ rolo.tb050.materia_prima.tolerancia_largura }}
+        {% else %}
+          {{ rolo.tb050.materia_prima.tolerancia|default:"—" }}
+        {% endif %}
+      </td>
+
+      <td class="p-1" style="min-width: 160px;">
+        <div class="d-flex gap-1">
+          <input name="bitola_espessura_{{ rolo.id }}" id="bitola_espessura_{{ rolo.id }}" type="text"
+                 class="form-control text-center"
+                 value="{{ rolo.bitola_espessura|default_if_none:'' }}"
+                 oninput="validarBitolaETracao({{ rolo.id }})"
+                 placeholder="Esp.">
+
+          {% if rolo.tb050.materia_prima.largura %}
+            <input name="bitola_largura_{{ rolo.id }}" id="bitola_largura_{{ rolo.id }}" type="text"
+                   class="form-control text-center"
+                   value="{{ rolo.bitola_largura|default_if_none:'' }}"
+                   oninput="validarBitolaETracao({{ rolo.id }})"
+                   placeholder="Larg.">
+          {% endif %}
+        </div>
+
+        <input type="hidden" id="bitola_nominal_{{ rolo.id }}" value="{{ bitola_nominal|default_if_none:'0' }}">
+        <input type="hidden" id="largura_nominal_{{ rolo.id }}" value="{{ largura_nominal|default_if_none:'0' }}">
+        <input type="hidden" id="tolerancia_espessura_{{ rolo.id }}" value="{{ rolo.tb050.materia_prima.tolerancia|default_if_none:'0' }}">
+        <input type="hidden" id="tolerancia_largura_{{ rolo.id }}" value="{{ rolo.tb050.materia_prima.tolerancia_largura|default_if_none:'0' }}">
+      </td>
+
+      <td id="rmin_{{ rolo.id }}">
+        {{ res_min|default:"—" }}
+        <input type="hidden" id="rmin_valor_{{ rolo.id }}" value="{{ res_min|default:0 }}">
+      </td>
+
+      <td id="rmax_{{ rolo.id }}">
+        {{ res_max|default:"—" }}
+        <input type="hidden" id="rmax_valor_{{ rolo.id }}" value="{{ res_max|default:0 }}">
+      </td>
+
+      <td>
+        <input name="tracao_{{ rolo.id }}" id="tracao_{{ rolo.id }}" type="text"
+               class="form-control text-center"
+               value="{{ rolo.tracao|default_if_none:'' }}"
+               oninput="validarBitolaETracao({{ rolo.id }})">
+      </td>
+
+      <td>
+        <input name="dureza_{{ rolo.id }}" id="dureza_{{ rolo.id }}" type="text"
+               class="form-control text-center"
+               value="{{ rolo.dureza|default_if_none:'' }}"
+               data-dureza-norma="{{ dureza_padrao|floatformat:2|default:'' }}"
+               oninput="validarBitolaETracao({{ rolo.id }})">
+      </td>
+
+      <td>{{ rolo_form.enrolamento }}</td>
+      <td>{{ rolo_form.dobramento }}</td>
+      <td>{{ rolo_form.torcao_residual }}</td>
+      <td>{{ rolo_form.aspecto_visual }}</td>
+      <td>{{ rolo_form.alongamento }}</td>   {# novo #}
+      <td>{{ rolo_form.flechamento }}</td>   {# novo #}
+      <td id="laudo_{{ rolo.id }}">—</td>
+    </tr>
+  {% endfor %}
+</tbody>
+
+  </table>
+</div>
+
+
+
+
+<h5 class="mt-4">Outras características identificadas no certificado do fornecedor</h5>
+<div class="row g-2">
+  <div class="col-md-2">
+    {{ form.resistencia_tracao.label_tag }}
+    {{ form.resistencia_tracao }}
+  </div>
+  <div class="col-md-2">
+    {{ form.escoamento.label_tag }}
+    {{ form.escoamento }}
+  </div>
+  <div class="col-md-2">
+    {{ form.alongamento.label_tag }}
+    {{ form.alongamento }}
+  </div>
+  <div class="col-md-2">
+    {{ form.estriccao.label_tag }}
+    {{ form.estriccao }}
+  </div>
+  <div class="col-md-2">
+    {{ form.torcao_certificado.label_tag }}
+    {{ form.torcao_certificado }}
+  </div>
+  <div class="col-md-2">
+    {{ form.dureza_certificado.label_tag }}
+    {{ form.dureza_certificado }}
+  </div>
+</div>
+
+<hr class="mt-4">
+<h5>Status Geral do Relatório</h5>
+
+<div class="row mb-3">
+  <div class="col-md-4">
+    <label class="form-label">Status Geral</label>
+    <div id="status_geral" class="form-control fw-bold text-center">—</div>
+    <!-- Campo oculto para enviar o status ao backend -->
+    <input type="hidden" name="status_geral_hidden" id="status_geral_hidden" value="—">
+  </div>
+  <div class="col-md-4 d-flex align-items-end">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="switchStatusManual" name="switchStatusManual" onchange="toggleStatusManual(this)">
+      <label class="form-check-label" for="switchStatusManual">Aprovação condicional</label>
+    </div>
+  </div>
+</div>
+
+
+<div id="campoObsManual" style="display: none;">
+  <label for="observacoes_manual" class="form-label">Observações sobre a aprovação condicional</label>
+  <textarea id="observacoes_manual" name="observacoes" class="form-control" rows="3" placeholder="...">{{ form.observacoes.value|default_if_none:"" }}</textarea>
+</div>
+
+
+
+
+
+
+
+
+
+
+    <div class="col-12 text-end mt-3 d-flex justify-content-between">
+  <a href="{% url 'tb050_list' %}" class="btn btn-secondary">Cancelar</a>
+
+  <div>
+    <button type="submit" class="btn btn-success me-2">
+      <i class="bi bi-save"></i> Salvar
+    </button>
+
+    {% if relacao.id %}
+  <a href="{% url 'gerar_pdf_f045' relacao.id %}" class="btn btn-danger" target="_blank">
+    <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+  </a>
+{% endif %}
+
+<a href="{% url 'visualizar_pdf_f045' relacao.id %}" class="btn btn-outline-primary" target="_blank">
+  <i class="bi bi-eye"></i> Visualizar PDF
+</a>
+
+  </div>
+</div>
+
+  </form>
+</div>
+
+<script src="{% static 'f045/utils.js' %}"></script>
+<script src="{% static 'f045/validar_bitola_tracao.js' %}"></script>
+<script src="{% static 'f045/toggle_unidade_tracao.js' %}"></script>
+<script src="{% static 'f045/atualizar_status_geral.js' %}"></script>
+<script src="{% static 'f045/toggle_status_manual.js' %}"></script>
+<script src="{% static 'f045/init_eventos_f045.js' %}"></script>
+
+
+{% endblock %}

@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page {
+      size: 100mm 75mm;
+      margin: 0;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      font-size: 8pt;
+      line-height: 1.0;
+    }
+    .etiqueta {
+      position: relative; /* Fundamental para o rodapé absoluto */
+      width: 100mm;
+      height: 75mm;
+      box-sizing: border-box;
+      padding: 2px;
+      border: 1px solid #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .tabela-etiqueta {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .tabela-etiqueta td {
+      border: 1px solid #000;
+      padding: 1px 2px;
+      vertical-align: top;
+      white-space: normal;
+      word-wrap: break-word;
+      font-size: 8pt;
+    }
+    .campo {
+      font-weight: bold;
+    }
+    .azul {
+      color: #003366;
+      font-weight: bold;
+    }
+    .aprovado {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: bold;
+      display: inline-block;
+    }
+    .reprovado {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: bold;
+      display: inline-block;
+    }
+    .logo {
+      max-width: 90px;
+      max-height: 40px;
+    }
+    .seguranca {
+      max-width: 35px;
+      max-height: 35px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .qrcode {
+      text-align: center;
+    }
+    .qrcode img {
+      max-width: 40px;
+      max-height: 40px;
+    }
+    .rodape {
+      position: absolute;
+      bottom: 3mm;  /* Espaço de 5mm acima da borda inferior */
+      right: 2mm;
+      font-size: 6pt;
+      /* Sem margin-top */
+    }
+    .material-cliente {
+      font-size: 8pt;
+      font-weight: bold;
+      color: red;
+      text-align: center;
+      padding: 2px 0;
+    }
+  </style>
+</head>
+<body>
+{% for rolo in rolos %}
+<div class="etiqueta">
+  <table class="tabela-etiqueta">
+    <!-- Linha 1: Logo, Ícone de Segurança e Fornecedor -->
+    <tr>
+      <!-- Logo: ocupa 2 colunas -->
+      <td colspan="2" style="text-align:center; vertical-align:middle;">
+        <img src="{{ logo_url }}" class="logo" alt="Logo">
+      </td>
+      <!-- Ícone de Segurança: ocupa 1 coluna -->
+      <td colspan="1" style="text-align:center; vertical-align:middle;">
+        {% if registro.item_seguranca %}
+          <img src="{% static 'seguranca.png' %}" class="seguranca" alt="Segurança">
+        {% endif %}
+      </td>
+      <!-- Fornecedor: ocupa 3 colunas -->
+      <td colspan="3" style="text-align:center; vertical-align:middle;">
+        <span class="campo">Fornecedor:</span><br>
+        {{ registro.fornecedor.nome }}
+      </td>
+    </tr>
+    <!-- Linha 2: Responsável (única linha, alinhado à esquerda) -->
+    <tr>
+      <td colspan="6" style="text-align:left; vertical-align:middle;">
+        <span class="campo">Responsável:</span> {{ request.user.get_full_name|default:request.user.username }}
+      </td>
+    </tr>
+    <!-- Linha 3: Data e Nota Fiscal -->
+    <tr>
+      <td colspan="3" style="text-align:center; vertical-align:middle;">
+        <span class="campo">Data:</span><br>
+        {{ data_atual }}
+      </td>
+      <td colspan="3" style="text-align:center; vertical-align:middle;">
+        <span class="campo">Nota Fiscal:</span><br>
+        {{ registro.nota_fiscal }}
+      </td>
+    </tr>
+    <!-- Linha 4: Nº Rolo e Código -->
+    <tr>
+      <td colspan="3" style="text-align:center; vertical-align:middle;">
+        <span class="campo">Nº Rolo:</span><br>
+        {{ rolo.nro_rolo }}
+      </td>
+      <td colspan="3" style="text-align:center; vertical-align:middle;">
+        <span class="campo">Código:</span><br>
+        {{ registro.materia_prima.codigo }}
+      </td>
+    </tr>
+    <!-- Linha 5: Descrição -->
+    <tr>
+      <td colspan="6" style="text-align:center; vertical-align:middle; padding:0; margin:0;">
+        <span class="campo">Descrição:</span><br>
+        <div style="display:flex; align-items:center; justify-content:center; height:2.4em;">
+          {{ registro.materia_prima.descricao }}
+        </div>
+      </td>
+    </tr>
+    <!-- Linha 6: Dimensão, Peso e Localização -->
+    <tr>
+      <td colspan="2" style="text-align:center; vertical-align:middle;">
+  {% if registro.materia_prima.largura %}
+    <span class="campo">Fita Esp / Larg:</span><br>
+    {% if registro.materia_prima.bitola and registro.materia_prima.largura %}
+      {{ registro.materia_prima.bitola }} x {{ registro.materia_prima.largura }}
+    {% else %}
+      —
+    {% endif %}
+  {% else %}
+    <span class="campo">Bitola (mm):</span><br>
+    {{ registro.materia_prima.bitola|default:"-" }}
+  {% endif %}
+</td>
+
+
+
+      <td colspan="2" style="text-align:center; vertical-align:middle;">
+        <span class="campo">Peso:</span><br>
+        {{ rolo.peso|floatformat:1 }} <span style="font-size:8pt;">kg</span>
+      </td>
+      <td colspan="2" style="text-align:center; vertical-align:middle;">
+        <span class="campo">Localização:</span><br>
+        {{ registro.materia_prima.localizacao|default:"-" }}
+      </td>
+    </tr>
+    <!-- Linha 7: Relatório, Status e QR Code -->
+    <tr>
+      <td colspan="2" style="text-align:center; vertical-align:middle; padding:0; margin:0;">
+        <span class="campo">Relatório:</span><br>
+        <div style="display:flex; align-items:center; justify-content:center; height:3em;">
+          {{ registro.nro_relatorio }}
+        </div>
+      </td>
+      <td colspan="2" style="text-align:center; vertical-align:middle; padding:0; margin:0;">
+        <span class="campo">Status:</span><br>
+        <div style="display:flex; align-items:center; justify-content:center; height:3em;">
+        {% if registro.status == "Aprovado" %}
+  <span class="aprovado">Aprovado</span>
+{% elif registro.status == "Aprovado Condicionalmente" %}
+  <span class="aprovado" style="background-color: #fff3cd; color: #856404;">Aprovado Condicionalmente</span>
+{% elif registro.status == "Aguardando F045" %}
+  <span class="reprovado" style="background-color: #e2e3e5; color: #383d41;">Aguardando F045</span>
+{% else %}
+  <span class="reprovado">Reprovado</span>
+{% endif %}
+
+
+
+
+        </div>
+      </td>
+      <td colspan="2" style="text-align:center; vertical-align:middle; padding:0; margin:0;">
+        <!-- QR Code sem rótulo -->
+        <div style="display:flex; align-items:center; justify-content:center; height:6em;">
+          {% if rolo.qrcode_url %}
+            <img src="{{ rolo.qrcode_url }}" alt="QR Code" style="max-width:60px; max-height:60px;">
+          {% else %}
+            <span style="font-size:6pt; color:gray;">N/A</span>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    <!-- Linha 8: Material do Cliente (opcional) -->
+    {% if registro.material_cliente %}
+    <tr>
+      <td colspan="6" style="padding:0; margin:0;">
+        <div style="height:2em; display:flex; align-items:center; justify-content:center;">
+          <span style="font-size:1em; color:red; margin-right:4px;">&#9888;</span>
+          <span style="font-size:1em;">MATERIAL DO CLIENTE</span>
+        </div>
+      </td>
+    </tr>
+    {% endif %}
+  </table>
+  <div class="rodape">F222_Rev.02</div>
+</div>
+{% if not forloop.last %}
+<div style="page-break-after: always;"></div>
+{% endif %}
+{% endfor %}
+</body>
+</html>

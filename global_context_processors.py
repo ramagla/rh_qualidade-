@@ -145,17 +145,37 @@ def global_menu(request):
             })
 
         # Menu Qualidade de Fornecimento com permissões
-    menu_qualidade_fornecimento = []
-    if user.has_perm("qualidadefornecimento.view_fornecedorqualificado"):
+        menu_qualidade_fornecimento = []
+
         menu_qualidade_fornecimento.append({
             "name": "Dashboard",
             "url": "qualidadefornecimento_home",
             "icon": "fas fa-industry",
         })
+
         menu_qualidade_fornecimento.append({
             "name": "Fornecedores",
             "url": "lista_fornecedores",
             "icon": "fas fa-truck",
+        })
+
+        menu_qualidade_fornecimento.append({
+            "name": "TB050 - Relação de Matérias-Primas",
+            "url": "tb050_list",
+            "icon": "fas fa-boxes",
+        })
+
+        menu_qualidade_fornecimento.append({
+            "name": "Catálogo de Matéria-Prima",
+            "url": "materiaprima_catalogo_list",
+            "icon": "fas fa-tags",
+        })
+
+        # ✅ Novo item: Normas Técnicas
+        menu_qualidade_fornecimento.append({
+            "name": "Normas Técnicas",
+            "url": "lista_normas",
+            "icon": "fas fa-file-alt",  # Ícone de documento
         })
 
     # Módulos disponíveis no seletor superior

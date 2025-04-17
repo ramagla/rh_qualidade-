@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Editar TB050 - Relação de Matérias-Primas{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Editar Relação de Matérias-Primas (TB050)</h2>
+
+  {% if messages %}
+    <div class="col-12">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {% csrf_token %}
+
+    <!-- Formulário principal -->
+    <div class="col-md-4">
+      <label for="id_nro_relatorio" class="form-label">N° do Relatório:</label>
+      {{ form.nro_relatorio|add_class:"form-control" }}
+    </div>
+    <div class="col-md-4">
+      <label for="id_atraso_em_dias" class="form-label">Atraso em Dias:</label>
+      {{ form.atraso_em_dias|add_class:"form-control" }}
+    </div>
+    <div class="col-md-4">
+      <label for="id_demerito_ip" class="form-label">Demérito (IP):</label>
+      {{ form.demerito_ip|add_class:"form-control" }}
+    </div>
+
+    <div class="col-md-4">
+      <label for="id_data_entrada" class="form-label">Data de Entrada:</label>
+      {{ form.data_entrada }}
+    </div>
+    <div class="col-md-4">
+      <label for="id_fornecedor" class="form-label">Fornecedor:</label>
+      {{ form.fornecedor|add_class:"form-select select2" }}
+    </div>
+    <div class="col-md-4">
+      <label for="id_nota_fiscal" class="form-label">N. Fiscal:</label>
+      {{ form.nota_fiscal|add_class:"form-control" }}
+    </div>
+    <div class="col-md-4">
+      <label for="id_numero_certificado" class="form-label">N° do Certificado:</label>
+      {{ form.numero_certificado|add_class:"form-control" }}
+    </div>
+    <!-- Novos campos -->
+    <div class="col-md-4">
+      <label for="id_item_seguranca" class="form-label">Item Segurança:</label>
+      {{ form.item_seguranca|add_class:"form-select" }}
+    </div>
+    <div class="col-md-4">
+      <label for="id_material_cliente" class="form-label">Material do Cliente:</label>
+      {{ form.material_cliente|add_class:"form-select" }}
+    </div>
+    <div class="col-md-6">
+      <label for="id_materia_prima" class="form-label">Matéria-Prima:</label>
+      {{ form.materia_prima|add_class:"form-select select2" }}
+    </div>
+    <div class="col-md-4">
+      <label for="id_status" class="form-label">Status:</label>
+      {{ form.status|add_class:"form-select" }}
+    </div>
+    <div class="col-md-4">
+      <label for="id_data_prevista_entrega" class="form-label">Data Prevista de Entrega:</label>
+      {{ form.data_prevista_entrega }}
+    </div>
+    <div class="col-md-4">
+      <label for="id_data_renegociada_entrega" class="form-label">Data Renegociada de Entrega:</label>
+      {{ form.data_renegociada_entrega }}
+    </div>
+    <div class="col-md-6">
+      <label for="id_anexo_certificado" class="form-label">Anexo do Certificado:</label>
+      <div class="input-group">
+        <button class="btn btn-outline-secondary" type="button"
+                onclick="document.getElementById('id_anexo_certificado').click();">
+          Selecionar Arquivo
+        </button>
+        <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="filename_display" readonly>
+      </div>
+      {{ form.anexo_certificado|add_class:"d-none" }}
+    </div>
+
+    <!-- Rolo -->
+    <div class="col-12">
+      <h4>Rolos</h4>
+      {{ formset.management_form }}
+
+      {% if formset.non_form_errors %}
+        <div class="alert alert-danger">
+          {{ formset.non_form_errors }}
+        </div>
+      {% endif %}
+
+      <div id="rolo-formset">
+        {% for rolo_form in formset %}
+          <div class="card mb-3 p-3 rolo-form">
+            {{ rolo_form.id }}
+            {{ rolo_form.non_field_errors }}
+            <div class="row">
+              <div class="col-md-4">
+                <label class="form-label">N° do Rolo:</label>
+                {{ rolo_form.nro_rolo|add_class:"form-control" }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Peso:</label>
+                {{ rolo_form.peso|add_class:"form-control" }}
+              </div>
+              <div class="col-md-2 align-self-center">
+                <label class="form-label">Excluir?</label>
+                {{ rolo_form.DELETE|add_class:"form-check-input mt-2" }}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <button type="button" class="btn btn-outline-primary" id="add-rolo">Adicionar Rolo</button>
+    </div>
+
+    <!-- Botões -->
+    <div class="col-12 text-center mt-4">
+      <button type="submit" class="btn btn-warning me-2">
+        <i class="bi bi-save"></i> Atualizar
+      </button>
+      <a href="{% url 'tb050_list' %}" class="btn btn-secondary ms-2">
+        <i class="bi bi-arrow-left"></i> Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Script de manipulação dos rolos e do arquivo -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const formsetDiv = document.getElementById("rolo-formset");
+    const addRoloBtn = document.getElementById("add-rolo");
+    const totalFormsInput = document.querySelector("#id_rolos-TOTAL_FORMS");
+
+    addRoloBtn.addEventListener("click", function () {
+      const totalForms = parseInt(totalFormsInput.value);
+      const newForm = formsetDiv.querySelector(".rolo-form").cloneNode(true);
+
+      // Limpa os campos e atualiza os atributos name e id
+      newForm.querySelectorAll("input").forEach((input) => {
+        const name = input.name.replace(/\d+/, totalForms);
+        const id = "id_" + name;
+        input.name = name;
+        input.id = id;
+        input.value = "";
+        if (!input.classList.contains("form-control")) {
+          input.classList.add("form-control");
+        }
+      });
+
+      formsetDiv.appendChild(newForm);
+      totalFormsInput.value = totalForms + 1;
+    });
+
+    // Atualiza nome do arquivo selecionado
+    const inputFile = document.getElementById("id_anexo_certificado");
+    const displayField = document.getElementById("filename_display");
+
+    inputFile.addEventListener("change", function () {
+      const fileName = inputFile.files.length > 0 ? inputFile.files[0].name : "Nenhum arquivo selecionado";
+      displayField.value = fileName;
+    });
+  });
+</script>
+{% endblock %}

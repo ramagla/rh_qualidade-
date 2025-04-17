@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Normas Técnicas{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+  <h2 class="text-center mb-4">Normas Técnicas</h2>
+
+  <!-- Toast de Mensagens -->
+  {% if messages %}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      {% for message in messages %}
+        <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert">
+          <div class="d-flex">
+            <div class="toast-body">{{ message }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Filtro -->
+  <div class="card mb-4">
+    <div class="card-header">Filtros</div>
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-6">
+          <label for="nome_norma" class="form-label">Nome da Norma</label>
+          <select id="nome_norma" name="nome_norma" class="form-select">
+            <option value="">Todas</option>
+            {% for nome in lista_normas %}
+              <option value="{{ nome }}" {% if nome == nome_norma %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6 d-flex align-items-end justify-content-end">
+          <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Cards Resumo -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card text-white bg-success">
+        <div class="card-header text-center">Total de Normas</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ total_normas }}</h5>
+          <p class="card-text">Normas cadastradas no sistema.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-white bg-secondary">
+        <div class="card-header text-center">Com Arquivo</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ normas_com_arquivo }}</h5>
+          <p class="card-text">Normas com PDF vinculado.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-white bg-warning">
+        <div class="card-header text-center">Sem Vinculação</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ normas_sem_vinculo }}</h5>
+          <p class="card-text">Normas sem vínculo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão de Cadastro -->
+  <div class="d-flex justify-content-end mb-3">
+    <a href="{% url 'cadastrar_norma' %}" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Nova Norma
+    </a>
+  </div>
+
+  <!-- Tabela -->
+  {% if normas %}
+    <table class="table table-hover table-bordered text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Norma</th>
+          <th>Norma Vinculada</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for norma in normas %}
+          <tr>
+            <td class="text-center align-middle">{{ norma.nome_norma }}</td>
+            <td class="text-center align-middle">
+              {% if norma.vinculo_norma %}
+                {{ norma.vinculo_norma }}
+              {% else %}
+                <span class="text-muted">Nenhuma</span>
+              {% endif %}
+            </td>
+            <td class="text-center align-middle">
+              <a href="{% url 'visualizar_norma' norma.pk %}" class="btn btn-sm btn-secondary" title="Visualizar">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="{% url 'editar_norma' norma.pk %}" class="btn btn-sm btn-warning" title="Editar">
+                <i class="bi bi-pencil"></i>
+              </a>
+              {% if norma.arquivo_norma %}
+                <a href="{{ norma.arquivo_norma.url }}" class="btn btn-sm btn-info" title="Download PDF" download>
+                  <i class="bi bi-download"></i>
+                </a>
+              {% endif %}
+              <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ norma.pk }}" title="Excluir">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+
+          <!-- Modal de Exclusão -->
+          <div class="modal fade" id="modalExcluir{{ norma.pk }}" tabindex="-1" aria-labelledby="modalExcluirLabel{{ norma.pk }}" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <form method="post" action="{% url 'excluir_norma' norma.pk %}">
+                  {% csrf_token %}
+                  <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="modalExcluirLabel{{ norma.pk }}">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    Deseja realmente excluir a norma <strong>{{ norma.nome_norma }}</strong>?
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="text-center">Nenhuma norma cadastrada.</p>
+  {% endif %}
+
+  <!-- Paginação -->
+  <nav aria-label="Paginação">
+    <ul class="pagination justify-content-center">
+      {% if normas.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1">&laquo;&laquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ normas.previous_page_number }}">&laquo;</a></li>
+      {% endif %}
+      {% for num in normas.paginator.page_range %}
+        {% if normas.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > normas.number|add:'-3' and num < normas.number|add:'3' %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+      {% endfor %}
+      {% if normas.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ normas.next_page_number }}">&raquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ normas.paginator.num_pages }}">&raquo;&raquo;</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+{% endblock %}

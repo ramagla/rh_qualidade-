@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}TB050 - Relação de Matérias‑Primas{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <h2 class="text-center mb-4">TB050 - Relação de Matérias‑Primas</h2>
+
+  {# ---------------- TOAST de Mensagens ---------------- #}
+  {% if messages %}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      {% for message in messages %}
+        <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert">
+          <div class="d-flex">
+            <div class="toast-body">{{ message }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {# ----------------- CARD de Filtros ------------------ #}
+  <div class="card mb-4">
+    <div class="card-header">Filtros</div>
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-2">
+          <label for="data_inicial" class="form-label">Data Inicial</label>
+          <input type="date" class="form-control" id="data_inicial" name="data_inicial"
+                 value="{{ data_inicial|default_if_none:'' }}">
+        </div>
+
+        <div class="col-md-2">
+          <label for="data_final" class="form-label">Data Final</label>
+          <input type="date" class="form-control" id="data_final" name="data_final"
+                 value="{{ data_final|default_if_none:'' }}">
+        </div>
+
+        <div class="col-md-2">
+          <label for="status" class="form-label">Status</label>
+          <select class="form-select" id="status" name="status">
+            <option value="">-- Todos --</option>
+            {% for st in filter_status %}
+              <option value="{{ st }}" {% if status_filter == st %}selected{% endif %}>{{ st }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label for="nro_rolo" class="form-label">Nº Rolo</label>
+          <input type="text" class="form-control" id="nro_rolo" name="nro_rolo"
+                 value="{{ request.GET.nro_rolo }}">
+        </div>
+
+        <div class="col-md-2">
+          <label for="nro_relatorio" class="form-label">Nº Relatório</label>
+          <input type="text" class="form-control" id="nro_relatorio" name="nro_relatorio"
+                 value="{{ request.GET.nro_relatorio }}">
+        </div>
+
+        <div class="col-md-2">
+          <label for="nro_certificado" class="form-label">Nº Certificado</label>
+          <input type="text" class="form-control" id="nro_certificado" name="nro_certificado"
+                 value="{{ request.GET.nro_certificado }}">
+        </div>
+
+        <div class="col-md-3">
+          <label for="fornecedor" class="form-label">Fornecedor</label>
+          <select class="form-select select2" id="fornecedor" name="fornecedor">
+            <option value="">-- Todos --</option>
+            {% for forn in lista_fornecedores %}
+              <option value="{{ forn.pk }}"
+                      {% if request.GET.fornecedor == forn.pk|stringformat:"s" %}selected{% endif %}>
+                {{ forn.nome }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label for="materia_prima" class="form-label">Matéria‑Prima</label>
+          <select class="form-select select2" id="materia_prima" name="materia_prima">
+            <option value="">-- Todas --</option>
+            {% for mp in lista_materiasprimas %}
+              <option value="{{ mp.pk }}"
+                      {% if request.GET.materia_prima == mp.pk|stringformat:"s" %}selected{% endif %}>
+                {{ mp.codigo }} - {{ mp.descricao }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# ----------------- Botões de Ação ------------------- #}
+  <div class="d-flex justify-content-end mb-4 gap-2">
+    <a href="{% url 'tb050_cadastrar' %}" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Novo
+    </a>
+
+    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalF045">
+      <i class="bi bi-file-earmark-text"></i> Gerar F045
+    </button>
+  </div>
+
+  {# ---------------- Cards de Indicadores -------------- #}
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-white bg-info">
+        <div class="card-header text-center">Total de Registros</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ total_registros }}</h5>
+          <p class="card-text">Cadastrados no sistema.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-success">
+        <div class="card-header text-center">Aprovados</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ total_aprovados }}</h5>
+          <p class="card-text">Materiais aprovados.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-danger">
+        <div class="card-header text-center">Reprovados</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ total_reprovados }}</h5>
+          <p class="card-text">Materiais reprovados.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-warning">
+        <div class="card-header text-center">Atrasados</div>
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ total_atrasados }}</h5>
+          <p class="card-text">Matérias‑primas em atraso.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# --------------- TABELA de Resultados --------------- #}
+  {% if materias_primas_paginadas %}
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered text-center align-middle">
+        <thead class="table-light">
+          <tr>
+          <th class="text-center align-middle">Relatório</th>
+          <th class="text-center align-middle">Data Entrada</th>
+          <th class="text-center align-middle">Fornecedor</th>
+          <th class="text-center align-middle">Matéria‑Prima</th>
+          <th class="text-center align-middle">Nº Certificado</th>
+          <th class="text-center align-middle">Status</th>
+          <th class="text-center align-middle">Atraso (dias)</th>
+          <th class="text-center align-middle">Rolos</th>
+          <th class="text-center align-middle">Ações</th>
+        </tr>
+
+
+        </thead>
+        <tbody>
+          {% for item in materias_primas_paginadas %}
+            <tr>
+              <td>{{ item.nro_relatorio }}</td>
+              <td>{{ item.data_entrada|date:"d/m/Y" }}</td>
+              <td>{{ item.fornecedor.nome }}</td>
+              <td>{{ item.materia_prima.codigo }} - {{ item.materia_prima.descricao }}</td>
+              <td>{{ item.numero_certificado|default:"-" }}</td>
+              <td>
+  {% if item.status == "Aprovado" %}
+    <span class="badge bg-success text-white px-2 py-1">
+      <i class="bi bi-check-circle me-1"></i>{{ item.status }}
+    </span>
+
+  {% elif item.status == "Reprovado" %}
+    <span class="badge bg-danger text-white px-2 py-1">
+      <i class="bi bi-x-circle me-1"></i>{{ item.status }}
+    </span>
+
+  {% elif item.status == "Aprovado Condicionalmente" %}
+    <span class="badge bg-warning text-dark px-2 py-1">
+      <i class="bi bi-exclamation-triangle me-1"></i>{{ item.status }}
+    </span>
+
+  {% elif item.status == "Aguardando F045" %}
+    <span class="badge bg-secondary text-white px-2 py-1">
+      <i class="bi bi-hourglass-split me-1"></i>{{ item.status }}
+    </span>
+
+  {% else %}
+    <span class="text-muted">—</span>
+  {% endif %}
+</td>
+              <td>{{ item.atraso_em_dias|default:"0" }}</td>
+
+              {# -------- Coluna Rolos (modal) -------- #}
+              <td>
+                {% if item.rolos.count > 0 %}
+                  <button class="btn btn-sm btn-info" data-bs-toggle="modal"
+                          data-bs-target="#modalRolos{{ item.pk }}">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+
+              {# --------------- AÇÕES ---------------- #}
+             <td class="text-center align-middle">
+                <div class="d-inline-flex flex-wrap justify-content-center gap-1">
+
+                <a href="{% url 'tb050_visualizar' item.pk %}" class="btn btn-sm btn-secondary" title="Visualizar">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'tb050_editar' item.pk %}" class="btn btn-sm btn-warning" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'tb050_selecionar_etiquetas' item.pk %}" class="btn btn-sm btn-info" title="Imprimir Etiquetas">
+                  <i class="bi bi-printer"></i>
+                </a>
+
+                {% if item.f045 %}
+                  <a href="/media/f045/{{ item.nro_relatorio }}.pdf" target="_blank"
+                    class="btn btn-sm btn-outline-primary" title="Visualizar F045 em PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                  </a>
+                {% endif %}
+
+
+                {% if item.anexo_certificado %}
+                  <a href="{{ item.anexo_certificado.url }}" target="_blank"
+                    class="btn btn-sm btn-outline-success" title="Download do Certificado do Fornecedor">
+                    <i class="bi bi-paperclip"></i>
+                  </a>
+                {% endif %}
+
+
+                <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                        data-bs-target="#modalExcluir{{ item.pk }}" title="Excluir">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            {# -------- Modal Exclusão -------- #}
+            <div class="modal fade" id="modalExcluir{{ item.pk }}" tabindex="-1"
+                 aria-labelledby="modalExcluirLabel{{ item.pk }}" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="post" action="{% url 'tb050_excluir' item.pk %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-danger text-white">
+                      <h5 class="modal-title" id="modalExcluirLabel{{ item.pk }}">Confirmar Exclusão</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      Deseja realmente excluir o Relatório <strong>#{{ item.nro_relatorio }}</strong>?
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                      <button type="submit" class="btn btn-danger">Excluir</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+              </div>
+
+            {# -------- Modal Rolos -------- #}
+            <div class="modal fade" id="modalRolos{{ item.pk }}" tabindex="-1"
+                 aria-labelledby="modalRolosLabel{{ item.pk }}" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                  <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalRolosLabel{{ item.pk }}">
+                      Rolos do Relatório #{{ item.nro_relatorio }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    {% if item.rolos.all %}
+                      <ul class="list-group">
+                        {% for rolo in item.rolos.all %}
+                          <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Rolo: <strong>{{ rolo.nro_rolo }}</strong>
+                            <span class="badge bg-primary rounded-pill">
+                              Peso: {{ rolo.peso }} kg
+                            </span>
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      <p class="text-muted">Não há rolos cadastrados para este relatório.</p>
+                    {% endif %}
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-center">Nenhum registro encontrado.</p>
+  {% endif %}
+
+  {# --------------- Paginação -------------------------- #}
+  {% if materias_primas_paginadas.has_other_pages %}
+    <nav aria-label="Navegação de páginas">
+      <ul class="pagination justify-content-center">
+        {# ... blocos de paginação sem alteração ... #}
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+
+{# =============== MODAL “Gerar F045” ================== #}
+<div class="modal fade" id="modalF045" tabindex="-1" aria-labelledby="modalF045Label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title" id="modalF045Label">Gerar Relatório F045</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label for="relacaoSelect" class="form-label">Selecione o nº do Relatório</label>
+        <select id="relacaoSelect" class="form-select select2" style="width:100%;">
+          {% for rel in relacoes %}
+            <option value="{{ rel.id }}">
+              #{{ rel.nro_relatorio }} – {{ rel.materia_prima.descricao|truncatechars:40 }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button id="btnContinuarF045" class="btn btn-primary" onclick="continuarGeracaoF045()">
+  Continuar
+</button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .btn-hover-outline {
+    background-color: white;
+    color: inherit;
+    border: 1px solid transparent;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-hover-outline:hover {
+    color: #fff !important;
+    transform: scale(1.05);
+  }
+
+  .btn-outline-secondary.btn-hover-outline:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+
+  .btn-outline-warning.btn-hover-outline:hover {
+    background-color: #ffc107;
+    border-color: #ffc107;
+  }
+
+  .btn-outline-info.btn-hover-outline:hover {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+  }
+
+  .btn-outline-danger.btn-hover-outline:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  .btn-outline-primary.btn-hover-outline:hover {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+  }
+
+  .btn-outline-success.btn-hover-outline:hover {
+    background-color: #198754;
+    border-color: #198754;
+  }
+</style>
+
+
+
+{# ------------ Select2 para campos + modal ------------ #}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Só carrega o select2 dos filtros normais na página
+    $('#fornecedor, #materia_prima').select2({
+      width: '100%',
+      allowClear: true,
+      placeholder: 'Selecione...'
+    });
+
+    // Agora escuta a abertura da modal
+    $('#modalF045').on('shown.bs.modal', function () {
+      $('#relacaoSelect').select2({
+        dropdownParent: $('#modalF045'), // Agora o parent existe na hora
+        width: '100%',
+        allowClear: true,
+        placeholder: 'Selecione...'
+      });
+    });
+
+    // Permitir ENTER para continuar
+    $(document).on('keypress', '#relacaoSelect', function (e) {
+      if (e.which === 13) { // Enter key
+        e.preventDefault();
+        document.getElementById('btnContinuarF045').click();
+      }
+    });
+
+    // Permitir ao selecionar direto
+    $(document).on('select2:select', '#relacaoSelect', function () {
+      document.getElementById('btnContinuarF045').click();
+    });
+  });
+
+  function continuarGeracaoF045() {
+    const id = document.getElementById('relacaoSelect').value;
+    if (id) {
+      const url = '{% url "tb050_f045" 0 %}'.replace('/0/', '/' + id + '/');
+      window.location.href = url;
+    } else {
+      alert("Selecione um relatório válido!");
+    }
+  }
+</script>
+
+
+
+{% endblock %}

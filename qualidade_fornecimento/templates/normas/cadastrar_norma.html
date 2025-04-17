@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}
+  {% if editar %}Editar Norma Técnica{% else %}Cadastrar Norma Técnica{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 1200px;">
+  <h2 class="text-center mb-4">
+    {% if editar %}Editar Norma Técnica{% else %}Cadastrar Norma Técnica{% endif %}
+  </h2>
+  {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+
+  {% if form.errors or elementos_formset.non_form_errors or tracao_formset.non_form_errors %}
+    <div class="alert alert-danger">
+      <strong>Erros no envio:</strong>
+      {{ form.errors }}{{ elementos_formset.non_form_errors }}{{ tracao_formset.non_form_errors }}
+    </div>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data" class="card shadow p-4">
+    {% csrf_token %}
+
+    {# ---------- 1) Cabeçalho ---------- #}
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">{{ form.nome_norma.label }}</label>
+        {{ form.nome_norma|add_class:"form-select select2-norma" }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">{{ form.vinculo_norma.label }}</label>
+        {{ form.vinculo_norma|add_class:"form-select select2-norma" }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">{{ form.arquivo_norma.label }}</label>
+        {% if editar and form.instance.arquivo_norma %}
+          <div class="d-flex gap-2 align-items-center">
+            <a class="btn btn-sm btn-outline-primary" target="_blank"
+               href="{{ form.instance.arquivo_norma.url }}">📄 Ver atual</a>
+            {{ form.arquivo_norma|add_class:"form-control" }}
+          </div>
+        {% else %}
+          {{ form.arquivo_norma|add_class:"form-control" }}
+        {% endif %}
+      </div>
+    </div>
+
+    <hr class="my-4"/>
+
+    {# ---------- 2) Composição Química ---------- #}
+    <h4 class="mb-3">Composição Química</h4>
+    {{ elementos_formset.management_form }}
+    <div class="table-responsive">
+      <table class="table table-bordered text-center align-middle" id="tblComposicao">
+        <thead class="table-light">
+          <tr>
+            <th rowspan="2" style="width:130px;">Tipo ABNT</th>
+            <th colspan="2">C</th><th colspan="2">Mn</th><th colspan="2">Si</th>
+            <th colspan="2">P</th><th colspan="2">S</th><th colspan="2">Cr</th>
+            <th colspan="2">Ni</th><th colspan="2">Cu</th><th colspan="2">Al</th>
+            <th rowspan="2" style="width:70px;">Excluir</th>
+          </tr>
+          <tr>
+            {% for _ in "123456789" %}<th>Min</th><th>Max</th>{% endfor %}
+          </tr>
+        </thead>
+
+        <tbody>
+        {% for formE in elementos_formset %}
+          <tr>
+            <td>{{ formE.tipo_abnt|add_class:"form-select select2-abnt" }}</td>
+            {% for fld in formE.visible_fields %}
+              {% if fld.name != 'tipo_abnt' and fld.name != 'DELETE' %}
+                <td>{{ fld|add_class:"form-control" }}</td>
+              {% endif %}
+            {% endfor %}
+            <td>
+              {% if elementos_formset.can_delete %}
+                {{ formE.DELETE }}<button type="button" class="btn btn-sm btn-danger del-row">x</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% if formE.errors %}
+            <tr><td colspan="21" class="text-danger text-start">{{ formE.errors }}</td></tr>
+          {% endif %}
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <button type="button" id="addElem" class="btn btn-info mb-4">Adicionar Linha</button>
+
+    {# ---------- 3) Tração ---------- #}
+<h4 class="mb-3">Resistência à Tração</h4>
+{{ tracao_formset.management_form }}
+<div class="table-responsive">
+  <table class="table table-bordered text-center align-middle" id="tblTracao">
+    <thead class="table-light">
+      <tr>
+        <th>Bitola Min (mm)</th>
+        <th>Bitola Max (mm)</th>
+        <th>R. Min (Kgf/mm²)</th>
+        <th>R. Max (Kgf/mm²)</th>
+        <th>Dureza (HR)</th>
+        <th style="width:70px;">Excluir</th>
+      </tr>
+    </thead>
+    <tbody>
+     {% for formT in tracao_formset %}
+  <tr>
+    {{ formT.id }} {# Campo oculto obrigatório para edição #}
+    <td>{{ formT.bitola_minima|add_class:"form-control" }}</td>
+    <td>{{ formT.bitola_maxima|add_class:"form-control" }}</td>
+    <td>{{ formT.resistencia_min|add_class:"form-control" }}</td>
+    <td>{{ formT.resistencia_max|add_class:"form-control" }}</td>
+    <td>
+  {{ formT.dureza|add_class:"form-control" }}
+</td>
+
+    <td>
+      {% if tracao_formset.can_delete %}
+        {{ formT.DELETE }}
+        <button type="button" class="btn btn-sm btn-danger del-row">x</button>
+      {% endif %}
+    </td>
+  </tr>
+  {% if formT.errors %}
+    <tr>
+      <td colspan="6" class="text-danger text-start">{{ formT.errors }}</td>
+    </tr>
+  {% endif %}
+{% endfor %}
+
+    </tbody>
+  </table>
+</div>
+<button type="button" id="addTracao" class="btn btn-success">Adicionar Linha</button>
+
+<hr>
+<div class="d-flex justify-content-between">
+  <a class="btn btn-secondary" href="{% url 'lista_normas' %}">Voltar</a>
+  <button class="btn btn-primary" type="submit">
+    {% if editar %}Salvar Alterações{% else %}Salvar{% endif %}
+  </button>
+</div>
+
+
+{# ---------- Template oculto p/ nova linha ---------- #}
+<script type="text/template" id="newRowTemplate">
+<tr>
+  <td>
+    <select name="elem-__prefix__-tipo_abnt"
+            id="id_elem-__prefix__-tipo_abnt"
+            class="form-select select2-abnt">
+      <option value="">—</option>
+    </select>
+  </td>
+  {% for campo in campos_comp %}
+    <td><input type="number" step="0.001"
+               name="elem-__prefix__-{{ campo }}"
+               id="id_elem-__prefix__-{{ campo }}"
+               class="form-control"></td>
+  {% endfor %}
+  <td>
+    <input type="checkbox" name="elem-__prefix__-DELETE"
+           id="id_elem-__prefix__-DELETE" style="display:none;">
+    <button type="button" class="btn btn-sm btn-danger del-row">x</button>
+  </td>
+</tr>
+</script>
+
+<style>
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
+  input[type=number]{ -moz-appearance:textfield }
+  .table-responsive .form-control{ min-width:70px }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link  href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link  href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.2.2/dist/css/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(function(){
+
+  $('.select2-norma').select2({theme:'bootstrap-5'});
+  $('.select2-abnt').select2({theme:'bootstrap-5'});
+
+  function atualizarSelectTipoABNT($select){
+    const nomeNorma = $('#id_nome_norma').val();
+    const url = "{% url 'get_tipos_abnt' %}?nome_norma="+encodeURIComponent(nomeNorma);
+    $.getJSON(url,function(data){
+      const val = $select.val() || '';
+      if($select.hasClass('select2-hidden-accessible')) $select.select2('destroy');
+      $select.empty().append($('<option>',{value:'',text:'—'}));
+      $.each(data.tipos,(_,t)=>$select.append($('<option>',{value:t,text:t})));
+      $select.val(data.tipos.includes(val)?val:'').select2({theme:'bootstrap-5'});
+    });
+  }
+
+  $('#id_nome_norma').on('change',()=>$('select.select2-abnt').each(function(){atualizarSelectTipoABNT($(this));}));
+
+  function addNewRow(prefix,tableID){
+    const total = $("input[name='"+prefix+"-TOTAL_FORMS']");
+    const idx   = +total.val();
+    const row   = $('#newRowTemplate').html().replace(/__prefix__/g,idx);
+    total.val(idx+1);
+    $(tableID+' tbody').append(row);
+    const $sel = $('#id_elem-'+idx+'-tipo_abnt').select2({theme:'bootstrap-5'});
+    atualizarSelectTipoABNT($sel);
+  }
+  $('#addElem').on('click',()=>addNewRow('elem','#tblComposicao'));
+
+  function cloneRow($table,prefix){
+    const $row = $table.find('tbody tr:first').clone(true,true);
+    $row.find('input').val('');
+    $table.find('tbody').append($row);
+    const total = $("input[name='"+prefix+"-TOTAL_FORMS']");
+    total.val(+total.val()+1);
+  }
+  $('#addTracao').on('click',()=>cloneRow($('#tblTracao'),'trac'));
+
+  $('tbody').on('click','.del-row',function(){
+    $(this).closest('tr').hide().find('input[type=checkbox]').prop('checked',true);
+  });
+});
+</script>
+{% endblock %}

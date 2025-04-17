@@ -116,3 +116,5 @@ def title_case(text):
 # Teste
 text = "o projeto poq001 foi enviado para a pq002 e aprovado pelo ceo"
 print(title_case(text))
+
+
