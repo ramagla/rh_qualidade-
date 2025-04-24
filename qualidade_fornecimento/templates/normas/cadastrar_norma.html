@@ -24,7 +24,13 @@
     </div>
   {% endif %}
 
-  <form method="POST" enctype="multipart/form-data" class="card shadow p-4">
+    <form
+    method="POST"
+    enctype="multipart/form-data"
+    class="card shadow p-4"
+    action="{% if editar %}{% url 'editar_norma' id=form.instance.pk %}{% else %}{% url 'cadastrar_norma' %}{% endif %}"
+  >
+
     {% csrf_token %}
 
     {# ---------- 1) Cabeçalho ---------- #}

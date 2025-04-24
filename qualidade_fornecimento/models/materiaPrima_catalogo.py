@@ -54,4 +54,4 @@ class MateriaPrimaCatalogo(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.codigo} - {self.classe or 'Sem Classe'}"
+        return f"{self.codigo} - {self.descricao[:50]}"  # Se quiser limitar para 50 caracteres

@@ -1,9 +1,17 @@
 import os
 from pathlib import Path
 from decouple import config
+import platform
 
+if platform.system() == "Windows":
+    # No Windows apontamos para o Redis local
+    CELERY_BROKER_URL = "redis://localhost:6379/0"
+else:
+    # Em Linux/produção também
+    CELERY_BROKER_URL = "redis://localhost:6379/0"
 
 import dj_database_url
+
 
 # Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,9 +56,10 @@ INSTALLED_APPS = [
 DATE_FORMAT = "d 'de' F 'de' Y"
 
 # Configurações Celery
-CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_TASK_ALWAYS_EAGER = False
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
 
 
 # Configurações do CKEditor

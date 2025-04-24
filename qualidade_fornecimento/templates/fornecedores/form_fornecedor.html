@@ -1,0 +1,527 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+  {% if modo == "Cadastro" %}
+    Cadastrar Fornecedor
+  {% else %}
+    Editar Fornecedor
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+  <h2 class="text-center mb-4">
+    {% if modo == "Cadastro" %}
+      Cadastrar Fornecedor Qualificado
+    {% else %}
+      Editar Fornecedor Qualificado
+    {% endif %}
+  </h2>
+
+  <!-- Validador de erros -->
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if messages %}
+  <div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+      {% for message in messages %}
+        <div class="toast align-items-center text-bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="d-flex">
+            <div class="toast-body">
+              {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {% csrf_token %}
+
+ <!-- Campos Automáticos -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingCamposAuto">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCamposAuto" aria-expanded="false" aria-controls="collapseCamposAuto" aria-label="Expandir Campos Automáticos">
+  <i class="bi bi-gear-fill me-2" aria-hidden="true"></i> Campos Automáticos
+</button>
+
+  </h2>
+  <div id="collapseCamposAuto" class="accordion-collapse collapse" aria-labelledby="headingCamposAuto" data-bs-parent="#accordionFornecedor">
+    <div class="accordion-body row g-3">
+
+      <!-- Próxima Avaliação de Risco -->
+      <div class="col-md-6">
+        <label for="id_proxima_avaliacao_risco" class="form-label fw-bold">
+          <i class="bi bi-shield-check me-1"></i> Próxima Avaliação de Risco:
+        </label>
+        <div class="input-group">
+          <input type="text"
+                 id="id_proxima_avaliacao_risco"
+                 class="form-control bg-light text-muted"
+                 value="{{ form.instance.proxima_avaliacao_risco }}"
+                 readonly
+                 title="Preenchimento automático">
+<span class="input-group-text bg-light text-muted" title="Preenchimento automático" aria-label="Campo preenchido automaticamente com bloqueio">🔒</span>
+        </div>
+      </div>
+
+      <!-- Próxima Auditoria -->
+      <div class="col-md-6">
+        <label for="id_proxima_auditoria" class="form-label fw-bold">
+          <i class="bi bi-calendar-check me-1"></i> Próxima Auditoria:
+        </label>
+        <div class="input-group">
+          <input type="text"
+                 id="id_proxima_auditoria"
+                 class="form-control bg-light text-muted"
+                 value="{{ form.instance.proxima_auditoria }}"
+                 readonly
+                 title="Preenchimento automático">
+          <span class="input-group-text bg-light text-muted" title="Preenchimento automático">🔒</span>
+        </div>
+      </div>
+
+      <!-- Classe / Frequência -->
+      <div class="col-md-4">
+        <label for="classe_frequencia" class="form-label fw-bold">
+          <i class="bi bi-list-task me-1"></i> Classe / Frequência:
+        </label>
+        <div class="input-group">
+          <input type="text"
+                 id="classe_frequencia"
+                 class="form-control bg-light text-muted"
+                 value="{{ form.instance.classe_frequencia }}"
+                 readonly
+                 title="Preenchimento automático">
+          <span class="input-group-text bg-light text-muted" title="Preenchimento automático">🔒</span>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="col-md-4">
+        <label for="status" class="form-label fw-bold">
+          <i class="bi bi-info-circle me-1"></i> Status:
+        </label>
+        <div class="input-group">
+          <input type="text"
+                 id="status"
+                 class="form-control bg-light text-muted"
+                 value="{{ form.instance.status }}"
+                 readonly
+                 title="Preenchimento automático">
+          <span class="input-group-text bg-light text-muted" title="Preenchimento automático">🔒</span>
+        </div>
+      </div>
+
+      <!-- Score -->
+      <div class="col-md-4">
+        <label for="score" class="form-label fw-bold">
+          <i class="bi bi-speedometer2 me-1"></i> Score:
+        </label>
+        <div class="input-group">
+          <input type="text"
+                 id="score"
+                 class="form-control bg-light text-muted"
+                 value="{{ form.instance.score }}"
+                 readonly
+                 title="Preenchimento automático">
+          <span class="input-group-text bg-light text-muted" title="Preenchimento automático">🔒</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Dados Gerais -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingDadosGerais">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDadosGerais" aria-expanded="false" aria-controls="collapseDadosGerais">
+      <i class="bi bi-journal-text me-2"></i> Dados Gerais
+    </button>
+  </h2>
+  <div id="collapseDadosGerais" class="accordion-collapse collapse" aria-labelledby="headingDadosGerais" data-bs-parent="#accordionFornecedor">
+    <div class="accordion-body row g-3">
+      
+      <!-- Nome do Fornecedor -->
+      <div class="col-md-6">
+        <label for="id_nome" class="form-label fw-bold">
+          <i class="bi bi-person-fill me-1"></i> Nome do Fornecedor
+        </label>
+        {{ form.nome|add_class:"form-control" }}
+
+      </div>
+
+      <!-- Produto ou Serviço -->
+      <div class="col-md-6">
+        <label for="id_produto_servico" class="form-label fw-bold">
+          <i class="bi bi-box-seam me-1"></i> Produto ou Serviço
+        </label>
+        {{ form.produto_servico|add_class:"form-select select2" }}
+      </div>
+
+      <!-- Tipo de Certificação -->
+      <div class="col-md-6">
+        <label for="id_tipo_certificacao" class="form-label fw-bold">
+          <i class="bi bi-award-fill me-1"></i> Tipo de Certificação
+        </label>
+        {{ form.tipo_certificacao|add_class:"form-select select2" }}
+      </div>
+
+      <!-- Data de Homologação -->
+      <div class="col-md-6">
+        <label for="id_data_homologacao" class="form-label fw-bold">
+          <i class="bi bi-calendar-check-fill me-1"></i> Data de Homologação
+        </label>
+        {{ form.data_homologacao|add_class:"form-control" }}
+      </div>
+
+      <!-- Lead Time -->
+      <div class="col-md-4">
+        <label for="id_lead_time" class="form-label fw-bold">
+          <i class="bi bi-clock-history me-1"></i> Lead Time (dias)
+        </label>
+        {{ form.lead_time|add_class:"form-control" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="alert-calibracao-nbr" class="alert alert-info small d-none">
+  <i class="bi bi-info-circle me-1"></i>
+  Alguns campos e seções foram ocultados devido à seleção de <strong>Calibração + NBR-ISO 17025 RBC</strong>.
+</div>
+
+
+<!-- Auditoria -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingAuditoria">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuditoria" aria-expanded="false" aria-controls="collapseAuditoria">
+      <i class="bi bi-clipboard-check me-2"></i> Auditoria
+    </button>
+  </h2>
+  <div id="collapseAuditoria" class="accordion-collapse collapse" aria-labelledby="headingAuditoria" data-bs-parent="#accordionFornecedor">
+    <div class="accordion-body row g-3">
+      
+      <!-- Data da Auditoria -->
+      <div class="col-md-6 hide-when-calibracao-nbr">
+        <label for="id_data_auditoria" class="form-label fw-bold">
+          <i class="bi bi-calendar-event-fill me-1"></i> Data da Auditoria
+        </label>
+        {{ form.data_auditoria|add_class:"form-control" }}
+      </div>
+
+      <!-- Tipo de Auditoria (Formulário) -->
+      <div class="col-md-6 hide-when-calibracao-nbr">
+        <label for="id_tipo_formulario" class="form-label fw-bold">
+          <i class="bi bi-file-earmark-text-fill me-1"></i> Tipo de Auditoria
+        </label>
+        {{ form.tipo_formulario|add_class:"form-select select2" }}
+      </div>
+
+      <!-- Nota da Auditoria -->
+      <div class="col-md-6 hide-when-calibracao-nbr">
+        <label for="id_nota_auditoria" class="form-label fw-bold">
+<i class="bi bi-speedometer2 me-1" aria-label="Ícone de pontuação"></i> Nota da Auditoria (%)
+        </label>
+        {{ form.nota_auditoria|add_class:"form-control" }}
+      </div>
+
+      <!-- Vencimento da Certificação -->
+      <div class="col-md-6 hide-when-calibracao-nbr">
+        <label for="id_vencimento_certificacao" class="form-label fw-bold">
+          <i class="bi bi-clock-history me-1"></i> Vencimento da Certificação
+        </label>
+        {{ form.vencimento_certificacao|add_class:"form-control" }}
+      </div>
+
+      <!-- Risco -->
+      <div class="col-md-6 hide-when-calibracao-nbr">
+        <label for="id_risco" class="form-label fw-bold">
+          <i class="bi bi-shield-exclamation-fill me-1"></i> Risco
+        </label>
+        {{ form.risco|add_class:"form-select select2" }}
+      </div>
+
+      <!-- Data de Avaliação de Risco -->
+      <div class="col-md-6 hide-when-calibracao-nbr">
+        <label for="id_data_avaliacao_risco" class="form-label fw-bold">
+          <i class="bi bi-calendar2-plus-fill me-1"></i> Avaliação de Risco
+        </label>
+        {{ form.data_avaliacao_risco|add_class:"form-control" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- Especialista -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingEspecialista">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEspecialista" aria-expanded="false" aria-controls="collapseEspecialista">
+      <i class="bi bi-person-badge me-2"></i> Especialista de Segurança
+    </button>
+  </h2>
+  <div id="collapseEspecialista" class="accordion-collapse collapse" aria-labelledby="headingEspecialista" data-bs-parent="#accordionFornecedor">
+    <div class="accordion-body row g-3">
+
+      <!-- Nome do Especialista -->
+      <div class="col-md-6 hide-when-calibracao-nbr">
+        <label for="id_especialista_nome" class="form-label fw-bold">
+          <i class="bi bi-person-badge-fill me-1"></i> Nome do Especialista de Segurança
+        </label>
+        {{ form.especialista_nome|add_class:"form-control" }}
+      </div>
+
+      <!-- Cargo do Especialista -->
+      <div class="col-md-6 hide-when-calibracao-nbr">
+        <label for="id_especialista_cargo" class="form-label fw-bold">
+          <i class="bi bi-briefcase-fill me-1"></i> Cargo do Especialista de Segurança
+        </label>
+        {{ form.especialista_cargo|add_class:"form-control" }}
+      </div>
+
+      <!-- Contato do Especialista -->
+      <div class="col-md-6 hide-when-calibracao-nbr">
+        <label for="id_especialista_contato" class="form-label fw-bold">
+          <i class="bi bi-envelope-fill me-1"></i> Contato do Especialista
+        </label>
+        {{ form.especialista_contato|add_class:"form-control" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Anexos -->
+<!-- Anexos -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingAnexos">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnexos" aria-expanded="false" aria-controls="collapseAnexos">
+      <i class="bi bi-paperclip me-2"></i> Anexos
+    </button>
+  </h2>
+  <div id="collapseAnexos" class="accordion-collapse collapse" aria-labelledby="headingAnexos" data-bs-parent="#accordionFornecedor">
+    <div class="accordion-body row g-3">
+
+      <!-- Certificado Anexo -->
+      <div class="col-md-12">
+        <label for="id_certificado_anexo" class="form-label fw-bold">
+          <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Certificado Anexo
+        </label>
+
+        <div class="input-group mb-2">
+          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_certificado_anexo').click();" aria-label="Selecionar certificado para upload">
+            Selecionar Arquivo
+          </button>
+
+          <input type="text" class="form-control text-muted" placeholder="Nenhum arquivo selecionado" id="certificado_filename" readonly>
+        </div>
+
+        <!-- Campo real oculto manualmente -->
+        <input type="file" name="certificado_anexo" id="id_certificado_anexo" class="d-none">
+
+        <!-- Exibição se já existir arquivo -->
+        {% if form.instance.certificado_anexo %}
+          <div class="alert alert-secondary p-2 d-flex align-items-center justify-content-between small">
+            <div>
+              📎 <strong>
+                <a href="{{ form.instance.certificado_anexo.url }}" target="_blank">
+                  {{ form.instance.certificado_anexo.name|cut:'certificados/fornecedores/' }}
+                </a>
+              </strong>
+            </div>
+            <div>
+              <input type="checkbox" name="certificado_anexo-clear" id="id_certificado_anexo-clear">
+              <label for="id_certificado_anexo-clear" class="text-muted">Limpar</label>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+
+
+    <!-- Botões -->
+    <div class="col-12 text-center mt-4">
+      <button type="submit" class="btn btn-primary me-2">
+        <i class="bi bi-save"></i> Salvar
+      </button>
+      <a href="{% url 'lista_fornecedores' %}" class="btn btn-secondary ms-2">
+        <i class="bi bi-arrow-left"></i> Cancelar
+      </a>
+    </div>
+
+  </form>
+<pre class="text-danger">{{ form.errors }}</pre>
+
+</div>
+
+
+
+
+<!-- Scripts -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  $('#id_produto_servico, #id_tipo_certificacao, #id_risco, #id_tipo_formulario').select2({
+    placeholder: "Selecione uma opção",
+    allowClear: true,
+    width: '100%'
+  });
+
+  $('#id_certificado_anexo').on('change', function () {
+  const file = this.files[0];
+  const display = $('#certificado_filename');
+
+  if (file) {
+    let icon = '📎'; // você pode mudar para outro ícone se quiser
+    display.val(`${icon} ${file.name}`);
+  } else {
+    display.val('Nenhum arquivo selecionado');
+  }
+});
+
+
+  $('#id_tipo_certificacao').on('change', function () {
+    let tipo = $(this).val();
+    let score = 80;
+    if (tipo === "ISO 9001") { score = 90; }
+    else if (tipo === "IATF16949") { score = 100; }
+    $('#score').val(score);
+    toggleCalibracaoNBR();
+  });
+
+  $('#id_nota_auditoria').on('input', recalcAuditoria);
+  $('#id_data_auditoria').on('change', recalcAuditoria);
+  $('#id_tipo_formulario').on('change', recalcAuditoria);
+  $('#id_produto_servico, #id_tipo_certificacao').on('change', toggleCalibracaoNBR);
+
+  $('#id_tipo_certificacao').trigger('change');
+  recalcAuditoria();
+  toggleCalibracaoNBR();
+
+  function recalcAuditoria() {
+    let nota = parseFloat($('#id_nota_auditoria').val());
+    let dataAuditoria = $('#id_data_auditoria').val();
+    let tipoFormulario = $('#id_tipo_formulario').val();
+    let classe = "", status = "", deltaDays = 0;
+
+    if (["CQI-11", "CQI-12", "CQI-9"].includes(tipoFormulario)) {
+      classe = "C"; status = "Qualificado"; deltaDays = 365;
+    } else if (!isNaN(nota)) {
+      if (nota >= 90) { classe = "A"; status = "Qualificado"; deltaDays = 1095; }
+      else if (nota >= 50) { classe = "B"; status = "Qualificado Condicional"; deltaDays = 730; }
+      else { classe = "C"; status = "Reprovado"; deltaDays = 365; }
+    }
+
+    $('#classe_frequencia').val(classe);
+    $('#status').val(status);
+
+    if (dataAuditoria) {
+      let audDate = new Date(dataAuditoria);
+      audDate.setDate(audDate.getDate() + deltaDays);
+      let nextDate = `${('0'+audDate.getDate()).slice(-2)}/${('0'+(audDate.getMonth()+1)).slice(-2)}/${audDate.getFullYear()}`;
+      $('#id_proxima_auditoria').val(nextDate);
+      $('#id_proxima_avaliacao_risco').val(nextDate);
+    }
+  }
+
+  function toggleCalibracaoNBR() {
+  let produto = $('#id_produto_servico').val();
+  let certificacao = $('#id_tipo_certificacao').val();
+  let isCalibracaoNBR = (produto === "Calibração" && certificacao === "NBR-ISO 17025 RBC");
+
+  const accordionsToHide = ['#headingAuditoria', '#headingEspecialista', '#headingAnexos'];
+
+  if (isCalibracaoNBR) {
+    // Oculta os campos com classe e os acordeões inteiros
+    $('.hide-when-calibracao-nbr').each(function () {
+      $(this).hide().find('input, select').prop('disabled', true);
+    });
+    accordionsToHide.forEach(id => $(id).closest('.accordion-item').hide());
+    $('#alert-calibracao-nbr').removeClass('d-none');
+  } else {
+    // Exibe tudo normalmente
+    $('.hide-when-calibracao-nbr').each(function () {
+      $(this).show().find('input, select').prop('disabled', false);
+    });
+    accordionsToHide.forEach(id => $(id).closest('.accordion-item').show());
+    $('#alert-calibracao-nbr').addClass('d-none');
+  }
+}
+ // =========================
+  // Validação dinâmica visual
+  // =========================
+  const form = document.querySelector("form");
+
+  form.querySelectorAll("input, select, textarea").forEach(function (field) {
+    field.addEventListener("blur", function () {
+      validarCampo(field);
+    });
+  });
+
+  form.addEventListener("submit", function (event) {
+    let valido = true;
+    form.querySelectorAll("input, select, textarea").forEach(function (field) {
+      if (!validarCampo(field)) {
+        valido = false;
+      }
+    });
+
+    if (!valido) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+
+  function validarCampo(field) {
+    const required = field.hasAttribute("required");
+    const value = field.value.trim();
+
+    if (required && !value) {
+      field.classList.add("is-invalid");
+
+      if (!field.nextElementSibling || !field.nextElementSibling.classList.contains("invalid-feedback")) {
+        const feedback = document.createElement("div");
+        feedback.className = "invalid-feedback";
+        feedback.textContent = "Este campo é obrigatório.";
+        field.parentNode.appendChild(feedback);
+      }
+      return false;
+    } else {
+      field.classList.remove("is-invalid");
+      if (field.nextElementSibling && field.nextElementSibling.classList.contains("invalid-feedback")) {
+        field.nextElementSibling.remove();
+      }
+      return true;
+    }
+  }
+});
+</script>
+{% endblock %}

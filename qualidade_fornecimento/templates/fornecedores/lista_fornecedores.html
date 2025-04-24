@@ -6,7 +6,28 @@
 
 {% block content %}
 <div class="container-fluid mt-5">
-  <h2 class="text-center mb-4">Fornecedores Qualificados</h2>
+<h2 class="text-center mb-4">
+  <i class="bi bi-clipboard2-check-fill me-2" aria-hidden="true"></i>
+  <span class="visually-hidden">📋</span>
+  Fornecedores Qualificados
+</h2>
+<style>
+.card-status {
+  opacity: 0.92;
+  transition: all 0.3s ease-in-out;
+}
+.card-status:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+
+.zebra-tabela tbody tr:hover {
+  background-color: #f8f9fa !important;
+  cursor: pointer;
+}
+</style>
+  
 
   <!-- Toast de Mensagens -->
   {% if messages %}
@@ -64,28 +85,32 @@
             {% endfor %}
           </select>
         </div>
-        <div class="col-md-12 text-end">
-          <button type="submit" class="btn btn-primary">Filtrar</button>
+        <div class="col-12 text-center">
+          <button type="submit" class="btn btn-primary">
+            🔍 Filtrar
+          </button>
         </div>
+
       </form>
     </div>
   </div>
 
   <!-- Botão para Cadastrar -->
-  <div class="d-flex justify-content-end mb-4">
-  <a href="{% url 'cadastrar_fornecedor' %}" class="btn btn-success">
-    <i class="bi bi-plus-circle"></i> Cadastrar Fornecedor
+  <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+  <a href="{% url 'cadastrar_fornecedor' %}" class="btn btn-success" aria-label="Cadastrar novo fornecedor">
+    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar Fornecedor
   </a>
-  <a href="{% url 'importar_excel_fornecedores' %}" class="btn btn-secondary ms-2">
-    <i class="bi bi-file-earmark-excel"></i> Importar Excel
+  <a href="{% url 'importar_excel_fornecedores' %}" class="btn btn-secondary" aria-label="Importar fornecedores via Excel">
+    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Importar Excel
   </a>
 </div>
+
 
 
   <!-- Cards com Indicadores -->
   <div class="row mb-4">
     <div class="col-md-3">
-      <div class="card text-white bg-success">
+<div class="card text-white bg-success border-0 shadow-sm card-status">
         <div class="card-header text-center">Total de Fornecedores</div>
         <div class="card-body text-center">
           <h5 class="card-title">{{ total_fornecedores }}</h5>
@@ -94,7 +119,7 @@
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card text-white bg-danger">
+<div class="card text-white bg-danger border-0 shadow-sm card-status">
         <div class="card-header text-center">Certificações Vencidas</div>
         <div class="card-body text-center">
           <h5 class="card-title">{{ total_vencidas }}</h5>
@@ -103,7 +128,7 @@
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card text-white bg-warning">
+<div class="card text-white bg-warning border-0 shadow-sm card-status">
         <div class="card-header text-center">Certificações Próx.Vencimento</div>
         <div class="card-body text-center">
           <h5 class="card-title">{{ total_proximas }}</h5>
@@ -112,7 +137,7 @@
       </div>
     </div>
     <div class="col-md-3">
-  <div class="card text-white" style="background-color: #ff6600;">
+<div class="card text-white border-0 shadow-sm card-status" style="background-color: #ff6600;">
     <div class="card-header text-center">Alto Risco</div>
     <div class="card-body text-center">
       <h5 class="card-title">{{ total_alto_risco }}</h5>
@@ -124,8 +149,14 @@
   </div>
 
   <!-- Lista de Fornecedores -->
-  {% if fornecedores_paginados %}
-    <table class="table table-hover table-bordered text-center align-middle">
+  <!-- Lista de Fornecedores -->
+{% if fornecedores_paginados %}
+<h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
+    📄 Lista de Fornecedores
+  </h5>
+  <div class="table-responsive">
+<table class="table zebra-tabela table-hover table-bordered text-center align-middle">
       <thead class="table-light">
         <tr>
           <th>Nome</th>
@@ -144,14 +175,19 @@
             <td>{{ fornecedor.produto_servico }}</td>
             <td>{{ fornecedor.tipo_certificacao }}</td>
             <td>
-              {% if fornecedor.vencimento_certificacao < current_date %}
-                <span class="text-danger">{{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}</span>
-              {% elif fornecedor.vencimento_certificacao <= current_date_plus_30 %}
-                <span class="text-warning">{{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}</span>
-              {% else %}
-                {{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}
-              {% endif %}
-            </td>
+  {% if fornecedor.vencimento_certificacao < current_date %}
+    <span class="text-danger" title="Certificado vencido">
+      ⚠️ {{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}
+    </span>
+  {% elif fornecedor.vencimento_certificacao <= current_date_plus_30 %}
+    <span class="text-warning" title="Vence em breve">
+      ⚠️ {{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}
+    </span>
+  {% else %}
+    {{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}
+  {% endif %}
+</td>
+
             <td>
               {% if fornecedor.risco == "Alto" %}
                 <span class="text-danger">{{ fornecedor.risco }}</span>
@@ -162,31 +198,60 @@
               {% endif %}
             </td>
             <td>
-              {% if fornecedor.status == "Reprovado" %}
-                <span class="text-danger">{{ fornecedor.status }}</span>
-              {% elif fornecedor.status == "Qualificado Condicional" %}
-                <span class="text-warning">{{ fornecedor.status }}</span>
-              {% elif fornecedor.status == "Qualificado" %}
-                <span class="text-success">{{ fornecedor.status }}</span>
-              {% else %}
-                {{ fornecedor.status }}
-              {% endif %}
-            </td>
-            <td>
-  <a href="{% url 'visualizar_fornecedor' fornecedor.id %}" class="btn btn-sm btn-secondary" title="Visualizar">
-    <i class="bi bi-eye"></i>
-  </a>
-  <a href="{% url 'editar_fornecedor' fornecedor.id %}" class="btn btn-sm btn-warning" title="Editar">
-    <i class="bi bi-pencil"></i>
-  </a>
-  {% if fornecedor.certificado_anexo %}
-    <a href="{{ fornecedor.certificado_anexo.url }}" class="btn btn-sm btn-info" title="Download Certificado" download>
-      <i class="bi bi-download"></i>
-    </a>
+  {% if fornecedor.status == "Reprovado" %}
+    <span class="badge bg-danger">Reprovado</span>
+  {% elif fornecedor.status == "Qualificado Condicional" %}
+    <span class="badge bg-warning text-dark">Qualificado Condicional</span>
+  {% elif fornecedor.status == "Qualificado" %}
+    <span class="badge bg-success">Qualificado</span>
+  {% else %}
+    <span class="badge bg-secondary">{{ fornecedor.status }}</span>
   {% endif %}
-  <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ fornecedor.id }}" data-nome="{{ fornecedor.nome }}" title="Excluir">
-    <i class="bi bi-trash"></i>
-  </button>
+</td>
+
+            <td>
+  <a href="{% url 'visualizar_fornecedor' fornecedor.id %}" 
+   class="btn btn-sm btn-secondary" 
+   data-bs-toggle="tooltip" 
+   title="Visualizar fornecedor" 
+   aria-label="Visualizar fornecedor">
+  <i class="bi bi-eye" aria-hidden="true"></i>
+</a>
+
+<a href="{% url 'editar_fornecedor' fornecedor.id %}" 
+   class="btn btn-sm btn-warning" 
+   data-bs-toggle="tooltip" 
+   title="Editar fornecedor" 
+   aria-label="Editar fornecedor">
+  <i class="bi bi-pencil" aria-hidden="true"></i>
+</a>
+
+{% if fornecedor.certificado_anexo %}
+  <a href="{{ fornecedor.certificado_anexo.url }}" 
+     class="btn btn-sm btn-info" 
+     data-bs-toggle="tooltip" 
+     title="Baixar certificado em PDF" 
+     aria-label="Baixar certificado em PDF" 
+     download>
+    <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+  </a>
+{% endif %}
+
+
+
+<button type="button" 
+        class="btn btn-sm btn-danger" 
+        data-bs-toggle="modal" 
+        data-bs-target="#deleteModal" 
+        data-id="{{ fornecedor.id }}" 
+        data-nome="{{ fornecedor.nome }}" 
+        data-bs-toggle="tooltip" 
+        title="Excluir fornecedor" 
+        aria-label="Excluir fornecedor">
+  <i class="bi bi-trash" aria-hidden="true"></i>
+</button>
+
+
 </td>
 
           </tr>
@@ -198,35 +263,53 @@
   {% endif %}
 
   <!-- Paginação -->
-  <nav aria-label="Navegação de páginas">
-    <ul class="pagination justify-content-center">
-      {% if fornecedores_paginados.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page=1">&laquo;&laquo;</a></li>
-        <li class="page-item"><a class="page-link" href="?page={{ fornecedores_paginados.previous_page_number }}">&laquo;</a></li>
+  <nav aria-label="Paginação de fornecedores">
+  <ul class="pagination justify-content-center">
+    {% if fornecedores_paginados.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page=1" title="Primeira página" aria-label="Primeira página">&laquo;&laquo;</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ fornecedores_paginados.previous_page_number }}" title="Página anterior" aria-label="Página anterior">&laquo;</a>
+      </li>
+    {% endif %}
+
+    {% for num in fornecedores_paginados.paginator.page_range %}
+      {% if fornecedores_paginados.number == num %}
+        <li class="page-item active">
+          <span class="page-link" aria-current="page">{{ num }}</span>
+        </li>
+      {% elif num > fornecedores_paginados.number|add:'-3' and num < fornecedores_paginados.number|add:'3' %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ num }}" title="Página {{ num }}" aria-label="Página {{ num }}">{{ num }}</a>
+        </li>
       {% endif %}
-      {% for num in fornecedores_paginados.paginator.page_range %}
-        {% if fornecedores_paginados.number == num %}
-          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-        {% elif num > fornecedores_paginados.number|add:'-3' and num < fornecedores_paginados.number|add:'3' %}
-          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-        {% endif %}
-      {% endfor %}
-      {% if fornecedores_paginados.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ fornecedores_paginados.next_page_number }}">&raquo;</a></li>
-        <li class="page-item"><a class="page-link" href="?page={{ fornecedores_paginados.paginator.num_pages }}">&raquo;&raquo;</a></li>
-      {% endif %}
-    </ul>
-  </nav>
+    {% endfor %}
+
+    {% if fornecedores_paginados.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ fornecedores_paginados.next_page_number }}" title="Próxima página" aria-label="Próxima página">&raquo;</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ fornecedores_paginados.paginator.num_pages }}" title="Última página" aria-label="Última página">&raquo;&raquo;</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+
 </div>
 
 <!-- Modal de Exclusão -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-describedby="deleteNome" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <form id="deleteForm" method="post">
         {% csrf_token %}
         <div class="modal-header">
-          <h5 class="modal-title" id="deleteModalLabel">Excluir Fornecedor</h5>
+<h5 class="modal-title" id="deleteModalLabel">
+  <i class="bi bi-exclamation-triangle text-warning me-2" aria-hidden="true"></i>
+  Excluir Fornecedor
+</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body">
@@ -242,14 +325,30 @@
 </div>
 
 <script>
+  // Inicializa os tooltips para todos os elementos com data-bs-toggle="tooltip"
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+    new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+
   // Preenche o formulário do modal de exclusão
   var deleteModal = document.getElementById('deleteModal');
-  deleteModal.addEventListener('show.bs.modal', function (event) {
-    var button = event.relatedTarget;
-    var fornecedorId = button.getAttribute('data-id');
-    var fornecedorNome = button.getAttribute('data-nome');
-    document.getElementById('deleteNome').textContent = fornecedorNome;
-    document.getElementById('deleteForm').action = "{% url 'excluir_fornecedor' 0 %}".replace('0', fornecedorId);
+deleteModal.addEventListener('show.bs.modal', function (event) {
+  var button = event.relatedTarget;
+  var fornecedorId = button.getAttribute('data-id');
+  var fornecedorNome = button.getAttribute('data-nome');
+  document.getElementById('deleteNome').textContent = fornecedorNome;
+  document.getElementById('deleteForm').action = "{% url 'excluir_fornecedor' 0 %}".replace('0', fornecedorId);
+});
+
+// 🆕 Reaplica tooltips ao exibir o modal
+deleteModal.addEventListener('shown.bs.modal', function () {
+  const modalTooltips = [].slice.call(deleteModal.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  modalTooltips.forEach(function (tooltipTriggerEl) {
+    new bootstrap.Tooltip(tooltipTriggerEl);
   });
+});
+
 </script>
+
 {% endblock %}

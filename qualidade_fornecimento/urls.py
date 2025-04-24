@@ -14,8 +14,11 @@ from qualidade_fornecimento.views import materiaprima_catalogo_views as mp_views
 
 from qualidade_fornecimento.views import norma_views
 
-from qualidade_fornecimento.views.f045_views import gerar_f045
+from qualidade_fornecimento.views.f045_views import gerar_f045,f045_status
 from qualidade_fornecimento.views.f045_pdf import gerar_pdf_f045, visualizar_f045_pdf
+from qualidade_fornecimento.views.controle_servico_externo_views import cadastrar_controle_servico_externo, listar_controle_servico_externo, api_leadtime,editar_controle_servico_externo,excluir_controle_servico_externo
+from qualidade_fornecimento.views.inspecao_servico_externo_views import cadastrar_inspecao_servico_externo, editar_inspecao_servico_externo,selecionar_servico_para_inspecao,inspecao_status
+from qualidade_fornecimento.views.relatorio_avaliacao import relatorio_avaliacao_view
 
 urlpatterns = [
     # Home
@@ -59,10 +62,21 @@ urlpatterns = [
 
     path("qualidade/tb050/<int:relacao_id>/f045/pdf/", gerar_pdf_f045, name="gerar_pdf_f045"),
     path("tb050/<int:relacao_id>/f045/pdf/preview/", visualizar_f045_pdf, name="visualizar_pdf_f045"),
+    path("f045_status/<int:f045_id>/", f045_status, name="f045_status"),
+    path('controle-servico-externo/', listar_controle_servico_externo, name='listar_controle_servico_externo'),
+    path('controle-servico-externo/cadastrar/', cadastrar_controle_servico_externo, name='cadastrar_controle_servico_externo'),
+    path('controle-servico-externo/editar/<int:id>/', editar_controle_servico_externo, name='editar_controle_servico_externo'),  # ✅ NOVA
+    path('controle-servico-externo/excluir/<int:id>/', excluir_controle_servico_externo, name='excluir_controle_servico_externo'), # ✅ NOVA
+
+    # urls.py
+    path("api/fornecedor/<int:pk>/leadtime/", api_leadtime, name="api_leadtime"),
 
 
-
-
+    path('controle-servico-externo/inspecao/cadastrar/<int:servico_id>/', cadastrar_inspecao_servico_externo, name="cadastrar_inspecao_servico_externo"),
+    path('controle-servico-externo/inspecao/editar/<int:id>/', editar_inspecao_servico_externo, name="editar_inspecao_servico_externo"),
+    path('controle-servico-externo/inspecao/', selecionar_servico_para_inspecao, name='selecionar_servico_para_inspecao'),
+    path('inspecao/status/<int:servico_id>/', inspecao_status, name='inspecao_status'),
+    path("relatorio-avaliacao/", relatorio_avaliacao_view, name="relatorio_avaliacao"),
 
 
 

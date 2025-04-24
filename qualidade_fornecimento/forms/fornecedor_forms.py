@@ -19,7 +19,9 @@ class FornecedorQualificadoForm(forms.ModelForm):
             'nota_auditoria',
             'especialista_nome',
             'especialista_contato',
+            'especialista_cargo',
             'certificado_anexo',
+            'lead_time',
         ]
         widgets = {
             'produto_servico': forms.Select(attrs={'class': 'form-select'}),
@@ -39,7 +41,10 @@ class FornecedorQualificadoForm(forms.ModelForm):
                 'max': '100'
             }),
             'especialista_nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'especialista_cargo': forms.TextInput(attrs={'class': 'form-control'}),
             'especialista_contato': forms.TextInput(attrs={'class': 'form-control'}),
+            'lead_time': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+
         }
 
     def __init__(self, *args, **kwargs):

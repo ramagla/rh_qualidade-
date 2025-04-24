@@ -38,29 +38,109 @@
     padding: 5px;
     text-align: left;
   }
-  /* Estilo para impressão */
+  
+  
+</style>
+<style>
   @media print {
-    body {
-      margin: 0;
-      padding: 0;
+    @page {
+          size: A4 portrait;
+          margin: 15mm;
+        }
+
+     * {
+      box-sizing: border-box;
     }
+
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      overflow: visible !important;
+      background: white !important;
+    }
+
+    
+
+    .sidebar, .navbar, .d-print-none, .btn, .btn-group, .text-end {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }
+
+    .main, .container, .container-fluid, .content, .page-content, .pdf-container {
+      margin-left: 0 !important;
+      padding-left: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
     .pdf-container {
-      border: none;
-      width: auto;
-      margin: 0;
-      padding: 0;
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
+      border: none !important;
+      display: block !important;
+      float: none !important;
+      position: relative !important;
+      left: 0 !important;
+      transform: none !important;
+    }
+
+
+    .container,
+    .container-fluid,
+    .main,
+    .content,
+    .page-content,
+    main {
+      all: unset !important;
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      position: static !important;
+      float: none !important;
+    }
+
+    .table {
+      font-size: 10pt !important;
+      width: 100% !important;
+    }
+
+    info-table th,
+    .info-table td {
+      padding: 6px !important;
+      text-align: left !important;
     }
   }
 </style>
 
+
+
+<div class="text-end mb-3 d-print-none">
+  <button class="btn btn-outline-primary" onclick="window.print()" aria-label="Imprimir relatório">
+    🖨️ Imprimir
+  </button>
+</div>
+
+<div id="relatorio-area">
 <div class="pdf-container">
   <div class="pdf-header">
-    <h1>Fornecedor Qualificado</h1>
+    <h1>
+      📄 Fornecedor Qualificado
+    </h1>
     <p>Relatório de Dados</p>
   </div>
 
   <div class="pdf-content">
-    <table class="info-table">
+      <div class="table-responsive">
+
+<table class="table table-bordered table-striped">
       <tr>
         <th>Nome</th>
         <td>{{ fornecedor.nome }}</td>
@@ -82,9 +162,10 @@
         <td>
           {% if fornecedor.vencimento_certificacao %}
             {{ fornecedor.vencimento_certificacao|date:"d/m/Y" }}
-          {% else %}
-            -
+         {% else %}
+            <span class="text-muted">-</span>
           {% endif %}
+
         </td>
       </tr>
       <tr>
@@ -94,12 +175,12 @@
       <tr>
         <th>Data da Avaliação de Risco</th>
         <td>
-          {% if fornecedor.data_avaliacao_risco %}
-            {{ fornecedor.data_avaliacao_risco|date:"d/m/Y" }}
-          {% else %}
-            -
-          {% endif %}
-        </td>
+  {% if fornecedor.data_avaliacao_risco %}
+    {{ fornecedor.data_avaliacao_risco|date:"d/m/Y" }}
+  {% else %}
+    <span class="text-muted">-</span>
+  {% endif %}
+</td>
       </tr>
       <tr>
         <th>Próxima Avaliação de Risco</th>
@@ -151,7 +232,18 @@
       </tr>
       <tr>
         <th>Status</th>
-        <td>{{ fornecedor.status }}</td>
+       <td>
+  {% if fornecedor.status == "Reprovado" %}
+    <span class="fw-bold text-danger border border-danger px-2 py-1 d-inline-block">Reprovado</span>
+  {% elif fornecedor.status == "Qualificado Condicional" %}
+    <span class="fw-bold text-warning border border-warning px-2 py-1 d-inline-block">Qualificado Condicional</span>
+  {% elif fornecedor.status == "Qualificado" %}
+    <span class="fw-bold text-success border border-success px-2 py-1 d-inline-block">Qualificado</span>
+  {% else %}
+    <span class="fw-bold text-muted border border-secondary px-2 py-1 d-inline-block">{{ fornecedor.status }}</span>
+  {% endif %}
+</td>
+
       </tr>
       <tr>
         <th>Score</th>
@@ -168,8 +260,23 @@
     </table>
   </div>
 
-  <div class="pdf-footer">
-    <p>Gerado em: {{ now|date:"d/m/Y H:i" }}</p>
-  </div>
+  <div class="pdf-footer border-top pt-3 mt-4 text-center text-muted small">
+  <p class="mb-1">
+    <i class="bi bi-clock me-1" aria-hidden="true"></i>
+    Relatório gerado automaticamente em {{ now|date:"d/m/Y H:i" }}
+  </p>
+  <p class="mb-0">
+    <span class="fst-italic">Sistema de Qualidade – Bras-Mol Molas e Estampados Ltda</span>
+  </p>
 </div>
+</div>
+</div>
+<script>
+  if (window.location.search.includes('imprimir=1')) {
+    setTimeout(() => window.print(), 500);
+  }
+</script>
+
+
+
 {% endblock %}

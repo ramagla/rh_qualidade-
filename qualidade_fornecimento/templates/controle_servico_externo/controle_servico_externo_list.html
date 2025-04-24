@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Controle de Serviço Externo{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+  <h2 class="text-center mb-4">Controle de Serviço Externo</h2>
+
+  {% if messages %}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      {% for message in messages %}
+        <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert">
+          <div class="d-flex">
+            <div class="toast-body">{{ message }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="card mb-4">
+    <div class="card-header">Filtros</div>
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-2">
+          <label class="form-label">Pedido</label>
+          <input type="text" class="form-control" name="pedido" value="{{ request.GET.pedido }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Código BM</label>
+          <input type="text" class="form-control" name="codigo_bm" value="{{ request.GET.codigo_bm }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Fornecedor</label>
+          <input type="text" class="form-control" name="fornecedor" value="{{ request.GET.fornecedor }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Status2</label>
+          <select class="form-select" name="status2">
+            <option value="">-- Todos --</option>
+            <option value="OK" {% if request.GET.status2 == "OK" %}selected{% endif %}>OK</option>
+            <option value="Atenção Saldo" {% if request.GET.status2 == "Atenção Saldo" %}selected{% endif %}>Atenção Saldo</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end mb-4 gap-2">
+  <a href="{% url 'cadastrar_controle_servico_externo' %}" class="btn btn-success">
+    <i class="bi bi-plus-circle"></i> Novo Serviço Externo
+  </a>
+
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaInspecao">
+    <i class="bi bi-clipboard-check"></i> Nova Inspeção
+  </button>
+</div>
+
+<div class="modal fade" id="modalNovaInspecao" tabindex="-1" aria-labelledby="modalNovaInspecaoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalNovaInspecaoLabel">Selecionar Serviço para Inspeção</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label for="servicoSelect" class="form-label">Selecione o Serviço</label>
+        <select id="servicoSelect" class="form-select select2" style="width:100%;">
+          {% for servico in servicos_disponiveis %}
+            <option value="{{ servico.id }}">
+              Pedido {{ servico.pedido }} – {{ servico.fornecedor.nome }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button id="btnContinuarInspecao" class="btn btn-primary" onclick="continuarInspecao()">Continuar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  <div class="row mb-4">
+    <div class="col-md-3"><div class="card text-white bg-info"><div class="card-header text-center">Total Enviados</div><div class="card-body text-center"><h5>{{ total_enviados }}</h5><p>Pedidos registrados</p></div></div></div>
+    <div class="col-md-3"><div class="card text-white bg-success"><div class="card-header text-center">Total OK</div><div class="card-body text-center"><h5>{{ total_ok }}</h5><p>Pedidos concluídos</p></div></div></div>
+    <div class="col-md-3"><div class="card text-white bg-danger"><div class="card-header text-center">Pendentes</div><div class="card-body text-center"><h5>{{ total_pendentes }}</h5><p>Pedidos com saldo</p></div></div></div>
+    <div class="col-md-3"><div class="card text-white bg-warning"><div class="card-header text-center">Com Atraso</div><div class="card-body text-center"><h5>{{ total_atrasados }}</h5><p>Entregas atrasadas</p></div></div></div>
+  </div>
+
+  {% if servicos_paginados %}
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered text-center align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Pedido</th>
+            <th>Código BM</th>
+            <th>Fornecedor</th>
+            <th>Entrega</th>
+            <th>Total (kg/peças)</th>
+            <th>Status</th>
+            <th>Status Inspeção</th>
+            <th>Atraso (dias)</th>
+            <th>IP</th>
+            <th>Data Envio</th>
+            <th>Data Retorno</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+  {% for servico in servicos_paginados %}
+    <tr>
+      <td>{{ servico.pedido }}</td>
+      <td>{{ servico.codigo_bm.codigo }}</td>
+      <td>{{ servico.fornecedor.nome }}</td>
+      <td>
+        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ servico.id }}">
+          <i class="bi bi-truck"></i>
+        </button>
+      </td>
+      <td>{{ servico.quantidade_enviada|default:"-" }}</td>
+
+      <td>
+        {% if servico.status2 == "OK" %}
+          <span class="badge bg-success">OK</span>
+        {% elif servico.status2 == "Atenção Saldo" %}
+          <span class="badge bg-warning text-dark">Atenção Saldo</span>
+        {% else %}
+          <span class="badge bg-secondary">-</span>
+        {% endif %}
+      </td>
+        <td>
+          {% if servico.inspecao %}
+            {% if servico.inspecao.status_geral == "Aprovado" %}
+              <span class="badge bg-success">Aprovado</span>
+            {% elif servico.inspecao.status_geral == "Reprovado" %}
+              <span class="badge bg-danger">Reprovado</span>
+            {% elif servico.inspecao.status_geral == "Aprovado Condicionalmente" %}
+              <span class="badge bg-warning text-dark">Aprovado Condicionalmente</span>
+            {% else %}
+              <span class="badge bg-secondary">-</span>
+            {% endif %}
+         {% else %}
+  <span class="badge bg-secondary">Aguardando Inspeção</span>
+{% endif %}
+
+        </td>
+      <td>{{ servico.atraso_em_dias|default:"0" }}</td>
+      <td>{{ servico.ip|default:"0" }}</td>
+      <td>{{ servico.data_envio|date:"d/m/Y" }}</td>
+      <td>{{ servico.data_retorno|date:"d/m/Y" }}</td>
+      <td class="text-center align-middle">
+  <div class="d-inline-flex flex-wrap justify-content-center gap-1">
+    
+    <a href="{% url 'editar_controle_servico_externo' servico.id %}" class="btn btn-sm btn-primary" title="Editar">
+      <i class="bi bi-pencil-square"></i>
+    </a>
+
+    {% if servico.inspecao and servico.inspecao.pdf %}
+  <a href="{{ servico.inspecao.pdf.url }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Visualizar PDF Inspeção">
+    <i class="bi bi-file-earmark-pdf"></i>
+  </a>
+{% endif %}
+
+
+    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ servico.id }}">
+      <i class="bi bi-trash"></i>
+    </button>
+
+  </div>
+</td>
+
+    </tr>
+
+    {# Modal de Entregas para este serviço #}
+    <div class="modal fade" id="modalEntrega{{ servico.id }}" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              Entregas do Pedido {{ servico.pedido }} / NF {{ servico.nota_fiscal }}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            {% for retorno in servico.retornos.all %}
+              <p><strong>{{ retorno.data|date:"d/m/Y" }}</strong>: {{ retorno.quantidade|floatformat:2 }} kg/peças</p>
+            {% empty %}
+              <p class="text-muted">Nenhuma entrega registrada.</p>
+            {% endfor %}
+          </div>
+          <div class="modal-footer">
+            <a href="#" class="btn btn-outline-primary btn-sm">Visualizar Detalhes</a>
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Modal de Exclusão para este serviço #}
+    <div class="modal fade" id="modalExcluir{{ servico.id }}" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">Confirmar Exclusão</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            Tem certeza que deseja excluir o serviço do pedido <strong>{{ servico.pedido }}</strong>?
+          </div>
+          <div class="modal-footer">
+            <form method="post" action="{% url 'excluir_controle_servico_externo' servico.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  {% endfor %}
+</tbody>
+
+      </table>
+    </div>
+  {% else %}
+    <p class="text-center">Nenhum serviço encontrado.</p>
+  {% endif %}
+
+  {# Paginação #}
+  {% if servicos_paginados.has_other_pages %}
+    <nav aria-label="Navegação">
+      <ul class="pagination justify-content-center">
+        {% if servicos_paginados.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ servicos_paginados.previous_page_number }}">&laquo;</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+        {% endif %}
+
+        {% for num in servicos_paginados.paginator.page_range %}
+          {% if servicos_paginados.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% else %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+
+        {% if servicos_paginados.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ servicos_paginados.next_page_number }}">&raquo;</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Inicializar select2
+    $('#servicoSelect').select2({
+      dropdownParent: $('#modalNovaInspecao'),
+      width: '100%',
+      allowClear: true,
+      placeholder: 'Selecione...'
+    });
+  });
+
+  function continuarInspecao() {
+    const id = document.getElementById('servicoSelect').value;
+    if (id) {
+      const url = '{% url "cadastrar_inspecao_servico_externo" 0 %}'.replace('/0/', '/' + id + '/');
+      window.location.href = url;
+    } else {
+      alert("Selecione um serviço válido!");
+    }
+  }
+</script>
+
+{% if request.session.inspecao_pending %}
+<script>
+(function pollInspecaoPDF(){
+  fetch("{% url 'inspecao_status' request.session.inspecao_pending %}")
+    .then(res => res.json())
+    .then(data => {
+      if (data.ready) {
+        alert("PDF da Inspeção de Serviço Externo está pronto!\nClique aqui para baixar: " + data.url);
+      } else {
+        setTimeout(pollInspecaoPDF, 5000);
+      }
+    })
+    .catch(console.error);
+})();
+</script>
+{% endif %}
+
+
+{% endblock %}

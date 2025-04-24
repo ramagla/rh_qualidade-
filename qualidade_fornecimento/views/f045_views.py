@@ -8,7 +8,23 @@ from qualidade_fornecimento.forms.relatorio_f045 import RelatorioF045Form
 from qualidade_fornecimento.models.f045 import RelatorioF045
 from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
 from qualidade_fornecimento.models.norma import NormaTecnica, NormaComposicaoElemento, NormaTracao
-from qualidade_fornecimento.services.gerar_pdf_f045 import gerar_pdf_e_salvar
+from django.http import JsonResponse
+from qualidade_fornecimento.tasks import gerar_pdf_f045_background
+
+
+
+@login_required
+def f045_status(request, f045_id):
+    """
+    Retorna {"ready": true, "url": "<pdf_url>"} quando o PDF estiver gravado.
+    """
+    try:
+        f045 = RelatorioF045.objects.get(pk=f045_id)
+        if f045.pdf:  # ou checar se o arquivo existe
+            return JsonResponse({"ready": True, "url": f045.pdf.url})
+    except RelatorioF045.DoesNotExist:
+        pass
+    return JsonResponse({"ready": False})
 
 def parse_decimal(value):
     try:
@@ -195,11 +211,12 @@ def gerar_f045(request, relacao_id):
 
             updated_f045.save(limites_quimicos=limites, aprovado_manual=switch_manual)
 
-            gerar_pdf_e_salvar(updated_f045)
+            
 
             relacao.status = updated_f045.status_geral
             relacao.save(update_fields=["status"])
-
+            gerar_pdf_f045_background.delay(updated_f045.pk)
+            request.session['f045_pending'] = updated_f045.pk
             return redirect("tb050_list")
 
 
@@ -218,4 +235,6 @@ def gerar_f045(request, relacao_id):
         "bitola_nominal": bitola_nominal,
         "largura_nominal": largura_nominal,
     })
+from django.http import JsonResponse
+
 

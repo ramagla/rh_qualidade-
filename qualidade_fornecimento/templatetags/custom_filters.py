@@ -1,4 +1,6 @@
 from django import template
+from datetime import timedelta
+
 
 register = template.Library()
 
@@ -40,3 +42,11 @@ register = template.Library()
 @register.filter
 def calc_peso_total(rolos):
     return sum([rolo.peso or 0 for rolo in rolos])
+
+
+@register.filter
+def add_days(date, days):
+    try:
+        return date + timedelta(days=int(days))
+    except Exception:
+        return date

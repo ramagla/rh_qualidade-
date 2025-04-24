@@ -63,10 +63,14 @@ class FornecedorQualificado(models.Model):
 
     # Especialista de Segurança do Produto
     especialista_nome = models.CharField(max_length=100, blank=True)
+    especialista_cargo = models.CharField(max_length=100, blank=True)
     especialista_contato = models.CharField(max_length=100, blank=True)
+
    
     # Certificados    
     certificado_anexo = models.FileField(upload_to='certificados/fornecedores/', blank=True, null=True)
+    lead_time = models.PositiveIntegerField(blank=True, null=True, verbose_name="Lead Time (dias)")
+
 
     atualizado_em = models.DateTimeField(auto_now=True)
 

@@ -6,6 +6,8 @@ from django.utils.timezone import now, localtime
 from django.template.loader import render_to_string
 from django.templatetags.static import static
 from weasyprint import HTML
+from django.core.files.base import ContentFile  
+
 
 from qualidade_fornecimento.models.norma import NormaTecnica, NormaComposicaoElemento, NormaTracao
 
@@ -50,10 +52,19 @@ def gerar_pdf_e_salvar(f045):
         for sigla, nome, vmin, vmax, valor in elementos:
             try:
                 val = Decimal(str(valor).replace(",", ".")) if valor is not None else None
-                ok = vmin <= val <= vmax if val is not None and vmin is not None and vmax is not None else False
-            except:
+
+                # >>> Regra: se intervalo for 0–0, considera automaticamente aprovado
+                if vmin == 0 and vmax == 0:
+                    ok = True
+                elif val is not None and vmin is not None and vmax is not None:
+                    ok = vmin <= val <= vmax
+                else:
+                    ok = False
+
+            except Exception:
                 val = valor
                 ok = False
+
             encontrados.append({
                 "sigla": sigla,
                 "nome_elemento": nome,
@@ -62,6 +73,7 @@ def gerar_pdf_e_salvar(f045):
                 "valor": val,
                 "ok": ok
             })
+
 
     # Assinatura
     assinatura_nome = f045.usuario.get_full_name() or f045.usuario.username
@@ -88,12 +100,22 @@ def gerar_pdf_e_salvar(f045):
     html = HTML(string=html_string, base_url=dominio)
     pdf_bytes = html.write_pdf()
 
-    # Salvar o PDF em /media/f045/
-    caminho_pasta = os.path.join(settings.MEDIA_ROOT, "f045")
-    os.makedirs(caminho_pasta, exist_ok=True)
+    # # Salvar o PDF em /media/f045/
+    # caminho_pasta = os.path.join(settings.MEDIA_ROOT, "f045")
+    # os.makedirs(caminho_pasta, exist_ok=True)
 
-    caminho_pdf = os.path.join(caminho_pasta, f"{f045.relacao.nro_relatorio}.pdf")
-    with open(caminho_pdf, "wb") as f:
-        f.write(pdf_bytes)
+    # caminho_pdf = os.path.join(caminho_pasta, f"{f045.relacao.nro_relatorio}.pdf")
+    # with open(caminho_pdf, "wb") as f:
+    #     f.write(pdf_bytes)
 
-    return f"/media/f045/{f045.relacao.nro_relatorio}.pdf"
+    # return f"/media/f045/{f045.relacao.nro_relatorio}.pdf"
+
+    filename = f"F045_Relatorio_{f045.nro_relatorio}.pdf"
+    f045.pdf.save(
+        filename,
+        ContentFile(pdf_bytes),
+        save=True
+    )
+
+    # >>> ADICIONADO: retorna a URL pública do PDF gerado
+    return f045.pdf.url

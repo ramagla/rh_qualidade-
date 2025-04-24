@@ -1,0 +1,184 @@
+{% load static custom_filters %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { size: A4 portrait; margin: 12mm; }
+    body { font-family: Arial, sans-serif; font-size: 9pt; }
+
+    h3, h4 { margin: 14pt 0 4pt; text-align: left; }
+    table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 8pt; }
+    th, td { border: 1px solid #000; padding: 4px; text-align: center; }
+
+    .logo { max-height: 50px; }
+    .assinatura { font-size: 8pt; margin-top: 12pt; line-height: 1.2; }
+    .rodape {
+      display: flex;
+      justify-content: space-between;
+      font-size: 7pt;
+      border-top: 1px solid #000;
+      padding-top: 8px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+    .badge-aprovado { color: green; font-weight: bold; }
+    .badge-condicional { color: orange; font-weight: bold; }
+    .badge-reprovado { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<!-- Cabeçalho -->
+<table style="margin-bottom: 12px;">
+  <tr>
+    <td style="width: 20%;">
+      <img src="{{ logo_url }}" class="logo">
+    </td>
+
+    <td style="width: 60%; text-align: center;">
+      <div style="font-weight: bold; font-size: 12pt;">
+        Relatório de Inspeção de Serviço Externo
+      </div>
+    </td>
+
+    <td style="width: 20%; text-align: center;">
+      <div style="font-weight: bold; font-size: 10pt;">
+        Pedido:
+      </div>
+      <div style="font-size: 10pt;">
+        {{ servico.pedido }}
+      </div>
+    </td>
+  </tr>
+</table>
+
+
+
+
+<!-- Dados Gerais -->
+<h4 class="titulo-central" style="margin-top: 16px;">📦 Dados do Serviço</h4>
+<table style="margin-bottom: 12px;">
+  <tr>
+    <td><strong>OP:</strong><br>{{ servico.op }}</td>
+    <td><strong>Nota Fiscal:</strong><br>{{ servico.nota_fiscal }}</td>
+    <td><strong>Data Envio:</strong><br>{{ servico.data_envio|date:"d/m/Y" }}</td>
+    <td>
+      <strong>Previsão de Entrega:</strong><br>
+      {% if servico.data_envio and servico.lead_time %}
+        {% with previsao=servico.data_envio|add_days:servico.lead_time %}
+          {{ previsao|date:"d/m/Y" }}
+        {% endwith %}
+      {% else %}
+        —
+      {% endif %}
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2"><strong>Fornecedor:</strong><br>{{ servico.fornecedor.nome }}</td>
+    <td colspan="2"><strong>Código BM / Descrição:</strong><br>{{ servico.codigo_bm.codigo }} - {{ servico.codigo_bm.descricao }}</td>
+  </tr>
+  <tr>
+    <td><strong>Lead Time:</strong><br>{{ servico.lead_time }} dias</td>
+    <td><strong>Data de Retorno:</strong><br>{{ servico.data_retorno|date:"d/m/Y" }}</td>
+    <td><strong>Atraso:</strong><br>{{ servico.atraso_em_dias }} dia(s)</td>
+    <td><strong>Demérito IP:</strong><br>{{ servico.ip }}</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Quantidade Enviada:</strong><br>{{ servico.quantidade_enviada }}</td>
+  </tr>
+</table>
+
+
+<!-- Retornos Diários -->
+<h4 class="titulo-central">🔢 Controle de Retornos Diários</h4>
+<table>
+  <thead>
+    <tr><th>Data</th><th>Quantidade Retornada</th></tr>
+  </thead>
+  <tbody>
+    {% for retorno in servico.retornos.all %}
+      <tr>
+        <td>{{ retorno.data|date:"d/m/Y" }}</td>
+        <td>{{ retorno.quantidade }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="2">Sem registros</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Resultados da Inspeção -->
+<h4 class="titulo-central">📈 Resultados da Inspeção</h4>
+<table>
+  <thead>
+    <tr>
+      <th>Inspeção Visual</th>
+      <th>Espessura da Camada</th>
+      <th>Salt Spray</th>
+      <th>Status Geral</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ inspecao.inspecao_visual }}</td>
+      <td>{{ inspecao.espessura_camada }}</td>
+      <td>{{ inspecao.salt_spray }}</td>
+      <td>
+        {% if inspecao.status_geral == "Aprovado" %}<span class="badge-aprovado">Aprovado ✔️</span>{% endif %}
+        {% if inspecao.status_geral == "Reprovado" %}<span class="badge-reprovado">Reprovado ❌</span>{% endif %}
+        {% if inspecao.status_geral == "Aprovado Condicionalmente" %}<span class="badge-condicional">Aprovação Condicional ⚠️</span>{% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Observações Gerais -->
+{% if servico.observacao %}
+  <h4 class="titulo-central" style="text-align: center; margin-top: 18px;">📃 Observações do Serviço</h4>
+  <p style="margin-bottom: 10px;">{{ servico.observacao }}</p>
+{% endif %}
+
+
+{% if inspecao.aprovado_condicionalmente and inspecao.observacoes %}
+  <h4 class="titulo-central">📃 Observações da Aprovação Condicional</h4>
+  <p>{{ inspecao.observacoes|linebreaks }}</p>
+{% endif %}
+
+
+<!-- Assinatura -->
+<h4 class="titulo-central">🧾 Responsável Técnico</h4>
+<div class="assinatura" style="text-align: left;">
+  Assinado digitalmente por <strong>{{ assinatura_nome }}</strong><br>
+  ND: OU=Controle de Qualidade, o=Bras-Mol Molas e Estampados Ltda, CN={{ assinatura_email }}<br>
+  Razão: Aprovação do relatório de inspeção<br>
+  Local: Itaquaquecetuba - SP<br>
+  Data: {{ assinatura_data }}
+</div>
+
+
+<!-- Legenda -->
+<div class="rodape">
+  <div><strong>Sistema de Qualidade - Bras-Mol Molas e Estampados Ltda</strong></div>
+  <div>
+    <strong>Legenda:</strong>
+    <span style="color: green;">✔️</span> Aprovado |
+    <span style="color: red;">❌</span> Reprovado |
+    <span style="color: orange;">⚠️</span> Aprovado Condicionalmente
+  </div>
+  <div><strong>F001 – Rev. 04</strong></div>
+</div>
+
+<style>
+  .titulo-central {
+    text-align: center;
+    margin-top: 18px;
+    margin-bottom: 8px;
+  }
+</style>
+
+</body>
+</html>

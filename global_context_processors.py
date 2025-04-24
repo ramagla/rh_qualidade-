@@ -145,38 +145,65 @@ def global_menu(request):
             })
 
         # Menu Qualidade de Fornecimento com permissões
-        menu_qualidade_fornecimento = []
+            menu_qualidade_fornecimento = []
 
-        menu_qualidade_fornecimento.append({
-            "name": "Dashboard",
-            "url": "qualidadefornecimento_home",
-            "icon": "fas fa-industry",
-        })
+            menu_qualidade_fornecimento.append({
+                "name": "Dashboard",
+                "url": "qualidadefornecimento_home",
+                "icon": "fas fa-industry",
+            })
 
-        menu_qualidade_fornecimento.append({
-            "name": "Fornecedores",
-            "url": "lista_fornecedores",
-            "icon": "fas fa-truck",
-        })
+            # Menu com submenu de cadastros
+            menu_qualidade_fornecimento.append({
+                "name": "Cadastros",
+                "icon": "fas fa-folder-open",
+                "submenu": [
+                    {
+                        "name": "Fornecedores",
+                        "url": "lista_fornecedores",
+                        "icon": "fas fa-truck",
+                    },
+                    {
+                        "name": "Catálogo de Matéria-Prima",
+                        "url": "materiaprima_catalogo_list",
+                        "icon": "fas fa-tags",
+                    },
+                    {
+                        "name": "Normas Técnicas",
+                        "url": "lista_normas",
+                        "icon": "fas fa-file-alt",
+                    },
+                ],
+            })
 
-        menu_qualidade_fornecimento.append({
-            "name": "TB050 - Relação de Matérias-Primas",
-            "url": "tb050_list",
-            "icon": "fas fa-boxes",
-        })
+            menu_qualidade_fornecimento.append({
+                "name": "TB050 - Relação de Matérias-Primas",
+                "url": "tb050_list",
+                "icon": "fas fa-boxes",
+            })
 
-        menu_qualidade_fornecimento.append({
-            "name": "Catálogo de Matéria-Prima",
-            "url": "materiaprima_catalogo_list",
-            "icon": "fas fa-tags",
-        })
+            # Novo item do menu abrindo diretamente a lista
+            menu_qualidade_fornecimento.append({
+                "name": "Controle de Serviço Externo",
+                "url": "listar_controle_servico_externo",
+                "icon": "fas fa-external-link-alt",
+            })
 
-        # ✅ Novo item: Normas Técnicas
-        menu_qualidade_fornecimento.append({
-            "name": "Normas Técnicas",
-            "url": "lista_normas",
-            "icon": "fas fa-file-alt",  # Ícone de documento
-        })
+            menu_qualidade_fornecimento.append({
+                "name": "Relatórios",
+                "icon": "fas fa-file-alt",
+                "submenu": [
+                    {
+                        "name": "Avaliação Semestral",
+                        "url": "relatorio_avaliacao",
+                        "icon": "fas fa-chart-line"
+                    },
+                ]
+            })
+
+
+       
+
 
     # Módulos disponíveis no seletor superior
     modulos_disponiveis = []

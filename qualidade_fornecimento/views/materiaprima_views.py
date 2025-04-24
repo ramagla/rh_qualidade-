@@ -101,6 +101,8 @@ def lista_tb050(request):
         # .filter(f045__isnull=True)   # opcional
     )
 
+    f045_pending = request.session.pop('f045_pending', None)
+
     # ------------------ 7. Contexto -----------------------
     context = {
         'materias_primas_paginadas': page_obj,
@@ -117,6 +119,7 @@ def lista_tb050(request):
         'lista_fornecedores'  : lista_fornecedores,
         'lista_materiasprimas': lista_materiasprimas,
         'relacoes'            : relacoes,      # para o modal
+        'f045_pending': f045_pending,
     }
 
     return render(request, 'tb050/lista_tb050.html', context)

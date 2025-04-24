@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Serviço Externo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Cadastrar Serviço Externo</h2>
+
+  {% if messages %}
+    <div class="col-12">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+
+    {# --------- Campos Automáticos --------- #}
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-gear-fill me-2"></i> Campos Automáticos</div>
+      <div class="card-body row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Lead Time (dias):</label>
+          {{ form.lead_time|add_class:"form-control bg-light text-muted" | attr:"id:id_lead_time" }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Total Recebido:</label>
+          <input type="text" id="total_recebido_auto" class="form-control bg-light text-muted" readonly>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Status2:</label>
+          <input type="text" id="status2_auto" class="form-control bg-light text-muted" readonly>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Prev. Entrega:</label>
+          <input type="text" id="prev_entrega_auto" class="form-control bg-light text-muted" readonly>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Atraso em Dias:</label>
+          <input type="text" id="atraso_dias_auto" class="form-control bg-light text-muted" readonly>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">IP:</label>
+          <input type="text" id="ip_auto" class="form-control bg-light text-muted" readonly>
+        </div>
+      </div>
+    </div>
+
+    {# --------- Dados Principais --------- #}
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-journal-text me-2"></i> Dados do Serviço Externo</div>
+      <div class="card-body row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Pedido (Guia de Banho):</label>
+          {{ form.pedido|add_class:"form-control" }}
+        </div>
+
+        <div class="col-md-6">
+  <label class="form-label">Ordem de Produção (OP):</label>
+  {{ form.op|add_class:"form-control" }}
+</div>
+<div class="col-md-4">
+  <label class="form-label">Nota Fiscal:</label>
+  {{ form.nota_fiscal|add_class:"form-control" }}
+</div>
+
+        <div class="col-md-6">
+          <label class="form-label">Fornecedor:</label>
+          {{ form.fornecedor|add_class:"form-select select2" }}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Código BM (Tratamento):</label>
+          {{ form.codigo_bm|add_class:"form-select select2" }}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Quantidade Enviada:</label>
+          {{ form.quantidade_enviada|add_class:"form-control" }}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Data de Envio:</label>
+          {{ form.data_envio|add_class:"form-control" }}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Data de Retorno:</label>
+          {{ form.data_retorno|add_class:"form-control bg-light text-muted" }}
+        </div>
+
+       <div class="col-md-3">
+        <label class="form-label">IQF:</label>
+        <input type="text" id="iqf_auto" class="form-control bg-light text-muted" readonly>
+      </div>
+
+
+        <div class="col-12">
+          <label class="form-label">Observações:</label>
+          {{ form.observacao|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+
+    {# --------- Controle de Retornos --------- #}
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-boxes me-2"></i> Controle de Retornos Diários</div>
+      <div class="card-body">
+        {{ formset.management_form }}
+        <div id="retorno-formset">
+          {% for retorno_form in formset %}
+            <div class="card mb-3 p-3">
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="form-label">Data:</label>
+                  {{ retorno_form.data|add_class:"form-control" }}
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Quantidade Retornada:</label>
+                  {{ retorno_form.quantidade|add_class:"form-control" }}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <button type="button" class="btn btn-outline-primary mt-3" id="add-retorno">
+          <i class="bi bi-plus-circle"></i> Adicionar Retorno
+        </button>
+      </div>
+    </div>
+
+    {# --------- Botões --------- #}
+    <div class="col-12 text-center mt-4">
+      <button type="submit" class="btn btn-primary me-2">
+        <i class="bi bi-save"></i> Salvar
+      </button>
+      <a href="{% url 'listar_controle_servico_externo' %}" class="btn btn-secondary ms-2">
+        <i class="bi bi-arrow-left"></i> Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+
+{# --------- Formulário escondido para adicionar retornos --------- #}
+<div id="empty-form-template" class="d-none">
+  <div class="card mb-3 p-3">
+    <div class="row">
+      <div class="col-md-6">
+        <label class="form-label">Data:</label>
+        <input type="date" name="retornos-__prefix__-data" class="form-control" id="id_retornos-__prefix__-data">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Quantidade Retornada:</label>
+        <input type="number" step="0.01" name="retornos-__prefix__-quantidade" class="form-control" id="id_retornos-__prefix__-quantidade">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const servicoInspecaoStatus = "{{ status_inspecao|default:'' }}"; // <-- pega do Django context!!
+
+  // Ativar Select2 nos campos
+  $('#id_fornecedor, #id_codigo_bm').select2({
+    placeholder: "Selecione...",
+    width: '100%',
+    allowClear: true
+  });
+
+  // Corrigir o carregamento do Lead Time via Select2
+  $('#id_fornecedor').on('select2:select', function (e) {
+    const fornecedorId = e.params.data.id;
+
+    if (fornecedorId) {
+      fetch(`/qualidade/api/fornecedor/${fornecedorId}/leadtime/`)
+        .then(res => res.json())
+        .then(data => {
+          const leadTimeInput = document.getElementById('id_lead_time');
+          if (leadTimeInput) {
+            leadTimeInput.removeAttribute('readonly');
+            leadTimeInput.value = data.lead_time ?? '';
+            leadTimeInput.setAttribute('readonly', 'readonly');
+            calcularCamposAutomaticos();
+          }
+        })
+        .catch(() => {
+          const leadTimeInput = document.getElementById('id_lead_time');
+          if (leadTimeInput) leadTimeInput.value = '';
+        });
+    } else {
+      const leadTimeInput = document.getElementById('id_lead_time');
+      if (leadTimeInput) leadTimeInput.value = '';
+    }
+  });
+
+  // Botão para adicionar novos retornos
+  const addButton = document.getElementById("add-retorno");
+  const formsetContainer = document.getElementById("retorno-formset");
+  const totalFormsInput = document.getElementById("id_retornos-TOTAL_FORMS");
+
+  addButton.addEventListener("click", function () {
+    const currentFormCount = parseInt(totalFormsInput.value);
+    const template = document.getElementById("empty-form-template").innerHTML;
+    const newFormHtml = template.replace(/__prefix__/g, currentFormCount);
+    formsetContainer.insertAdjacentHTML("beforeend", newFormHtml);
+    totalFormsInput.value = currentFormCount + 1;
+    setTimeout(() => {
+      calcularCamposAutomaticos();
+      atualizarDataRetorno();
+    }, 300);
+  });
+
+  // Atualizar cálculos ao alterar valores
+  formsetContainer.addEventListener('input', function() {
+    calcularCamposAutomaticos();
+    atualizarDataRetorno();
+  });
+
+  document.getElementById('id_quantidade_enviada').addEventListener('input', calcularCamposAutomaticos);
+  document.getElementById('id_data_envio').addEventListener('change', calcularCamposAutomaticos);
+
+  function atualizarDataRetorno() {
+    const datas = [...document.querySelectorAll('input[name$="-data"]')].map(el => el.value).filter(Boolean);
+    if (datas.length) {
+      const ultimaData = datas.sort().reverse()[0];
+      document.getElementById('id_data_retorno').value = ultimaData;
+    }
+  }
+
+  function calcularCamposAutomaticos() {
+    let total = 0;
+    document.querySelectorAll('input[name$="-quantidade"]').forEach(input => {
+      total += parseFloat(input.value.replace(",", ".")) || 0;
+    });
+    document.getElementById("total_recebido_auto").value = total.toFixed(2);
+
+    const enviada = parseFloat(document.getElementById("id_quantidade_enviada").value.replace(",", ".")) || 0;
+    const lead = parseInt(document.getElementById("id_lead_time").value) || 0;
+    const dataEnvio = document.getElementById("id_data_envio").value;
+    const dataRetorno = document.getElementById("id_data_retorno").value;
+    const statusField = document.getElementById("status2_auto");
+    const iqfField = document.getElementById("iqf_auto"); // <-- novo campo!
+
+    // Atualiza Status2
+    if (enviada) {
+      if (total < enviada) {
+        statusField.value = "Atenção Saldo";
+      } else if (total === enviada) {
+        statusField.value = "OK";
+      } else {
+        statusField.value = "Saldo maior que o enviado";
+      }
+    } else {
+      statusField.value = "";
+    }
+
+    // Atualiza Prev. Entrega
+    if (dataEnvio && lead > 0) {
+      const data = new Date(dataEnvio);
+      data.setDate(data.getDate() + lead);
+      document.getElementById("prev_entrega_auto").value = data.toISOString().slice(0, 10);
+    } else {
+      document.getElementById("prev_entrega_auto").value = "";
+    }
+
+    // Atualiza Atraso/IP
+    if (dataRetorno && document.getElementById("prev_entrega_auto").value) {
+      const retorno = new Date(dataRetorno);
+      const previsto = new Date(document.getElementById("prev_entrega_auto").value);
+      const atraso = Math.max(0, Math.round((retorno - previsto) / (1000 * 60 * 60 * 24)));
+      document.getElementById("atraso_dias_auto").value = atraso;
+
+      let ip = 0;
+      if (atraso >= 21) ip = 30;
+      else if (atraso >= 16) ip = 20;
+      else if (atraso >= 11) ip = 15;
+      else if (atraso >= 7) ip = 10;
+      else if (atraso >= 4) ip = 5;
+      else if (atraso >= 1) ip = 2;
+      document.getElementById("ip_auto").value = ip;
+    } else {
+      document.getElementById("atraso_dias_auto").value = "";
+      document.getElementById("ip_auto").value = "";
+    }
+
+    // Atualiza o IQF baseado no Status da Inspeção
+    if (iqfField) {
+      if (servicoInspecaoStatus === "Aprovado") {
+        iqfField.value = "Aprovado";
+      } else if (servicoInspecaoStatus === "Aprovado Condicionalmente") {
+        iqfField.value = "Aprovado Condicionalmente";
+      } else if (servicoInspecaoStatus === "Reprovado") {
+        iqfField.value = "Reprovado";
+      } else {
+        iqfField.value = "—";
+      }
+    }
+  }
+
+  calcularCamposAutomaticos(); // Atualizar ao carregar página
+
+});
+</script>
+
+
+{% endblock %}

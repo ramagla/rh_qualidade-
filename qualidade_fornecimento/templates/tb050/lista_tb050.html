@@ -231,12 +231,13 @@
                   <i class="bi bi-printer"></i>
                 </a>
 
-                {% if item.f045 %}
-                  <a href="/media/f045/{{ item.nro_relatorio }}.pdf" target="_blank"
-                    class="btn btn-sm btn-outline-primary" title="Visualizar F045 em PDF">
-                    <i class="bi bi-file-earmark-pdf"></i>
-                  </a>
-                {% endif %}
+                {% if item.f045 and item.f045.pdf %}
+                    <a href="{{ item.f045.pdf.url }}" target="_blank"
+                      class="btn btn-sm btn-outline-primary" title="Visualizar F045 em PDF">
+                      <i class="bi bi-file-earmark-pdf"></i>
+                    </a>
+                  {% endif %}
+
 
 
                 {% if item.anexo_certificado %}
@@ -448,6 +449,24 @@
     }
   }
 </script>
+
+{% if f045_pending %}
+<script>
+(function pollF045(){
+  fetch("{% url 'f045_status' f045_pending %}")
+    .then(res=>res.json())
+    .then(data=>{
+      if(data.ready){
+        alert("PDF do F045 está pronto!\nBaixe em: " + data.url);
+      } else {
+        setTimeout(pollF045, 5000);
+      }
+    })
+    .catch(console.error);
+})();
+</script>
+{% endif %}
+
 
 
 

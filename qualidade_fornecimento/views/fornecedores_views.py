@@ -85,19 +85,17 @@ def cadastrar_fornecedor(request):
                 messages.success(request, "Fornecedor cadastrado com sucesso!")
                 return redirect("lista_fornecedores")
             except Exception as e:
-                # Loga o erro para depuração
                 logger.error("Erro ao salvar o fornecedor: %s", e, exc_info=True)
-                # Exibe uma mensagem de erro detalhada para o usuário (ou uma mensagem genérica, conforme sua política)
                 messages.error(request, f"Erro ao salvar o fornecedor: {e}")
         else:
-            # Se o formulário não for válido, agregue os erros de cada campo
             error_messages = []
             for field, errors in form.errors.items():
                 error_messages.append(f"{field}: {', '.join(errors)}")
             messages.error(request, "Erro ao cadastrar o fornecedor. " + " | ".join(error_messages))
     else:
         form = FornecedorForm()
-    return render(request, "fornecedores/cadastrar_fornecedor.html", {"form": form})
+
+    return render(request, "fornecedores/form_fornecedor.html", {"form": form, "modo": "Cadastro"})
 
 
 
@@ -115,14 +113,15 @@ def editar_fornecedor(request, id):
                 logger.error("Erro ao salvar o fornecedor: %s", e, exc_info=True)
                 messages.error(request, f"Erro ao salvar o fornecedor: {e}")
         else:
-            # Agrega erros de cada campo para ajudar na depuração
             error_messages = []
             for field, errors in form.errors.items():
                 error_messages.append(f"{field}: {', '.join(errors)}")
             messages.error(request, "Erro ao atualizar o fornecedor. " + " | ".join(error_messages))
     else:
         form = FornecedorForm(instance=fornecedor)
-    return render(request, "fornecedores/editar_fornecedor.html", {"form": form})
+
+    return render(request, "fornecedores/form_fornecedor.html", {"form": form, "modo": "Edição"})
+
 
 @login_required
 def excluir_fornecedor(request, id):

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}
+  {% if modo == "Cadastro" %}
+    Cadastrar Inspeção de Serviço Externo
+  {% else %}
+    Editar Inspeção de Serviço Externo
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center mb-4">
+    {% if modo == "Cadastro" %}
+      Cadastrar Inspeção para Pedido {{ servico.pedido }}
+    {% else %}
+      Editar Inspeção para Pedido {{ servico.pedido }}
+    {% endif %}
+  </h2>
+
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      <strong>Erros encontrados:</strong>
+      <ul>
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {% csrf_token %}
+
+    <div class="col-md-4">
+      <label class="form-label">Número do Certificado:</label>
+      {{ form.certificado_numero|add_class:"form-control" }}
+    </div>
+
+    <div class="col-md-8">
+      <label class="form-label">Anexo do Certificado (PDF):</label>
+      {{ form.certificado_anexo|add_class:"form-control" }}
+    </div>
+
+    <hr class="mt-4">
+    <h5 class="mt-3">Resultados de Inspeção:</h5>
+
+    <div class="col-md-4">
+      <label class="form-label">Inspeção Visual:</label>
+      {{ form.inspecao_visual|add_class:"form-select" }}
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Espessura da Camada:</label>
+      {{ form.espessura_camada|add_class:"form-select" }}
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Salt Spray:</label>
+      {{ form.salt_spray|add_class:"form-select" }}
+    </div>
+
+    <hr class="mt-4">
+
+    <h5 class="mt-4">Status Geral da Inspeção</h5>
+
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <label class="form-label">Status Geral</label>
+        <div id="status_geral" class="form-control fw-bold text-center">—</div>
+        <input type="hidden" name="status_geral_hidden" id="status_geral_hidden" value="—">
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <div class="form-check form-switch">
+          {{ form.aprovado_condicionalmente|add_class:"form-check-input" }}
+          <label class="form-check-label" for="{{ form.aprovado_condicionalmente.id_for_label }}">
+            Aprovação Condicional
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div id="campoObsManual" style="display: none;">
+      <label for="id_observacoes" class="form-label">Observações da Aprovação Condicional:</label>
+      {{ form.observacoes|add_class:"form-control" }}
+    </div>
+
+    <div class="col-12 text-center mt-4">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save"></i> Salvar Inspeção
+      </button>
+      <a href="{% url 'listar_controle_servico_externo' %}" class="btn btn-secondary ms-2">
+        <i class="bi bi-arrow-left"></i> Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  
+  function atualizarStatusGeral() {
+    const visual = document.getElementById("id_inspecao_visual").value;
+    const camada = document.getElementById("id_espessura_camada").value;
+    const spray = document.getElementById("id_salt_spray").value;
+    const condicional = document.getElementById("id_aprovado_condicionalmente").checked;
+
+    const statusField = document.getElementById("status_geral");
+    const hiddenField = document.getElementById("status_geral_hidden");
+
+    if (condicional) {
+      statusField.innerHTML = "Aprovado Condicionalmente ⚠️";
+      statusField.className = "form-control fw-bold text-center text-warning";
+      hiddenField.value = "Aprovado Condicionalmente";
+    } else if (visual === "OK" && camada === "OK" && spray === "OK") {
+      statusField.innerHTML = "Aprovado ✅";
+      statusField.className = "form-control fw-bold text-center text-success";
+      hiddenField.value = "Aprovado";
+    } else {
+      statusField.innerHTML = "Reprovado ❌";
+      statusField.className = "form-control fw-bold text-center text-danger";
+      hiddenField.value = "Reprovado";
+    }
+  }
+
+  ["id_inspecao_visual", "id_espessura_camada", "id_salt_spray", "id_aprovado_condicionalmente"].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("change", atualizarStatusGeral);
+    }
+  });
+
+  const switchCondicional = document.getElementById("id_aprovado_condicionalmente");
+  if (switchCondicional) {
+    switchCondicional.addEventListener("change", function() {
+      const campoObs = document.getElementById("campoObsManual");
+      if (this.checked) {
+        campoObs.style.display = "block";
+      } else {
+        campoObs.style.display = "none";
+      }
+      atualizarStatusGeral();
+    });
+  }
+
+  atualizarStatusGeral();
+});
+</script>
+{% endblock %}
