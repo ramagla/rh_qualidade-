@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Catálogo de Matérias-Primas{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <h2 class="text-center mb-3">
+  <i class="bi bi-archive-fill me-2" aria-hidden="true"></i>
+  <span class="visually-hidden">📦</span>
+  Catálogo de Matérias-Primas
+</h2>
+
+
+{% include "partials/_toast_mensagens.html" %}
+
+
+  <!-- Filtros -->
+<!-- Filtros -->
+<div class="card mb-4">
+  <div class="card-header">Filtros</div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Código</label>
+          <div class="input-group flex-nowrap">
+            <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+            <select class="form-select select2" name="codigo" data-placeholder="Selecione o código...">
+              <option></option>
+              {% for c in codigos_disponiveis %}
+                <option value="{{ c }}" {% if request.GET.codigo == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Descrição</label>
+          <div class="input-group flex-nowrap">
+            <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+            <select class="form-select select2" name="descricao" data-placeholder="Selecione a descrição...">
+              <option></option>
+              {% for d in descricoes_disponiveis %}
+                <option value="{{ d }}" {% if request.GET.descricao == d %}selected{% endif %}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Norma</label>
+          <div class="input-group flex-nowrap">
+            <span class="input-group-text"><i class="bi bi-journal-text"></i></span>
+            <select class="form-select select2" name="norma" data-placeholder="Selecione a norma...">
+              <option></option>
+              {% for n in normas_disponiveis %}
+                <option value="{{ n }}" {% if request.GET.norma == n %}selected{% endif %}>{{ n }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Tipo de Material</label>
+          <div class="input-group flex-nowrap">
+            <span class="input-group-text"><i class="bi bi-diagram-3"></i></span>
+            <select class="form-select select2" name="classe" data-placeholder="Selecione a classe...">
+              <option></option>
+              {% for c in classes_disponiveis %}
+                {% if c %}
+                  <option value="{{ c }}" {% if request.GET.classe == c %}selected{% endif %}>{{ c }}</option>
+                {% else %}
+                  <option value="" {% if request.GET.classe == "" %}selected{% endif %}>Sem Classe</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Tipo de Cadastro</label>
+          <div class="input-group flex-nowrap">
+            <span class="input-group-text"><i class="bi bi-tags"></i></span>
+            <select class="form-select select2" name="tipo" data-placeholder="Selecione o tipo...">
+              <option></option>
+              <option value="Materia-Prima" {% if request.GET.tipo == "Materia-Prima" %}selected{% endif %}>Matéria-Prima</option>
+              <option value="Tratamento" {% if request.GET.tipo == "Tratamento" %}selected{% endif %}>Tratamento</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-12 text-center mt-2">
+          <button type="submit" class="btn btn-primary d-inline-flex align-items-center">
+            <i class="bi bi-funnel-fill me-2"></i> Filtrar
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end gap-2 mb-4">
+  <a href="{% url 'materiaprima_catalogo_create' %}" class="btn btn-success">
+    <i class="bi bi-plus-circle me-1"></i> Novo Cadastro
+  </a>
+  <a href="{% url 'materiaprima_importar' %}" class="btn btn-outline-primary">
+    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Importar do Excel
+  </a>
+</div>
+
+
+  <!-- Cards -->
+  <div class="row mb-4">
+  <div class="col-sm-6 col-md-3">
+    <div class="card text-white bg-primary border-0 shadow-sm rounded-4 card-status">
+      <div class="card-header text-center">Total de Registros</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ total_registros }}</h5>
+        <p class="card-text">Matérias cadastradas</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-md-3">
+    <div class="card text-white bg-success border-0 shadow-sm rounded-4 card-status">
+      <div class="card-header text-center">Tipo: Carbono</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ total_carbono }}</h5>
+        <p class="card-text">Materiais Carbono</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-md-3">
+    <div class="card text-white bg-info border-0 shadow-sm rounded-4 card-status">
+      <div class="card-header text-center">Tipo: Inox</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ total_inox }}</h5>
+        <p class="card-text">Materiais Inox</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-md-3">
+    <div class="card text-white bg-warning border-0 shadow-sm rounded-4 card-status">
+      <div class="card-header text-center">Outros</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ total_outros }}</h5>
+        <p class="card-text">Não Definidos</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Tabela -->
+  {% if lista_materias %}
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered text-center align-middle">
+       <thead class="table-light">
+  <tr>
+    <th class="py-2">
+      <i class="bi bi-upc-scan me-1" data-bs-toggle="tooltip" title="Código da matéria-prima"></i> Código
+    </th>
+    <th class="py-2">
+      <i class="bi bi-card-text me-1" data-bs-toggle="tooltip" title="Descrição completa do item"></i> Descrição
+    </th>
+    <th class="py-2">
+      <i class="bi bi-diagram-3 me-1" data-bs-toggle="tooltip" title="Classe ou grupo do material"></i> Tipo
+    </th>
+    <th class="py-2">
+      <i class="bi bi-journal-text me-1" data-bs-toggle="tooltip" title="Norma técnica do material"></i> Norma
+    </th>
+    <th class="py-2">
+      <i class="bi bi-rulers me-1" data-bs-toggle="tooltip" title="Espessura ou dimensão da matéria-prima"></i> Bitola
+    </th>
+    <th class="py-2">
+      <i class="bi bi-geo-alt me-1" data-bs-toggle="tooltip" title="Local onde está armazenada"></i> Localização
+    </th>
+    <th class="py-2">
+      <i class="bi bi-gear-fill me-1" data-bs-toggle="tooltip" title="Editar ou excluir item"></i> Ações
+    </th>
+  </tr>
+</thead>
+
+
+        <tbody>
+          {% for mp in lista_materias %}
+          <tr>
+            <td>{{ mp.codigo }}</td>
+            <td>{{ mp.descricao }}</td>
+            <td>{{ mp.classe }}</td>
+            <td>{{ mp.norma }}</td>
+            <td>{{ mp.bitola }}</td>
+            <td>{{ mp.localizacao }}</td>
+            <td>
+              <a href="{% url 'materiaprima_visualizar' mp.pk %}" 
+   class="btn btn-sm btn-secondary" 
+   title="Visualizar" 
+   data-bs-toggle="tooltip" 
+   aria-label="Visualizar matéria-prima">
+  <i class="bi bi-eye"></i>
+</a>
+
+               <a href="{% url 'materiaprima_editar' mp.pk %}"
+     class="btn btn-sm btn-warning"
+     data-bs-toggle="tooltip"
+     title="Editar matéria-prima"
+     aria-label="Editar matéria-prima">
+    <i class="bi bi-pencil"></i>
+  </a>
+           <button class="btn btn-sm btn-danger"
+          data-bs-toggle="modal"
+          data-bs-target="#modalExcluir{{ mp.pk }}"
+          data-bs-toggle="tooltip"
+          title="Excluir matéria-prima"
+          aria-label="Excluir matéria-prima">
+    <i class="bi bi-trash"></i>
+  </button>
+
+  {% include 'partials/_modal_exclusao.html' with objeto=mp url_excluir='materiaprima_deletar' %}
+</td>
+          </tr>   
+
+          {% endfor %}
+          
+        </tbody>
+      </table>
+    </div>
+
+
+  {% else %}
+{% include "partials/_sem_resultados.html" %}
+  {% endif %}
+  <!-- Paginação -->
+{% include "partials/_paginacao.html" with page_obj=lista_materias %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(btn => {
+      btn.addEventListener("click", () => {
+        console.log("Abrindo modal para:", btn.dataset.bsTarget);
+      });
+    });
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.modal').forEach(modal => {
+      console.log("Modal carregado:", modal.id);
+    });
+  });
+</script>
+
+
+{% endblock %}

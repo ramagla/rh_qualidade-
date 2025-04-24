@@ -16,7 +16,7 @@ def cadastrar_materia_prima_catalogo(request):
     else:
         form = MateriaPrimaCatalogoForm()
 
-    return render(request, 'tb050/cadastrar_materia_prima.html', {'form': form})
+    return render(request, 'cadastro_materia_prima/form_materia_prima.html', {'form': form})
 
 from django.core.paginator import Paginator
 
@@ -78,7 +78,7 @@ def listar_materia_prima_catalogo(request):
         'request': request,
     }
 
-    return render(request, 'tb050/listar_materiaprima.html', context)
+    return render(request, 'cadastro_materia_prima/listar_materiaprima.html', context)
 
 
 
@@ -138,7 +138,7 @@ def importar_materia_prima_excel(request):
     else:
         messages.warning(request, "Nenhum arquivo foi enviado.")
 
-    return render(request, 'tb050/importar_excel_materia_prima.html')
+    return render(request, 'cadastro_materia_primatb050/importar_excel_materia_prima.html')
 
 
 
@@ -163,13 +163,28 @@ def editar_materia_prima(request, pk):
     else:
         form = MateriaPrimaCatalogoForm(instance=materia_prima)
 
-    return render(request, 'tb050/cadastrar_materia_prima.html', {'form': form, 'editar': True})
+    return render(request, 'cadastro_materia_prima/form_materia_prima.html', {'form': form, 'editar': True})
 
+from django.db.models import ProtectedError
 
 def deletar_materia_prima(request, pk):
     materia_prima = get_object_or_404(MateriaPrimaCatalogo, pk=pk)
+    
     if request.method == 'POST':
-        materia_prima.delete()
-        messages.success(request, 'Matéria-prima deletada com sucesso!')
+        try:
+            materia_prima.delete()
+            messages.success(request, 'Matéria-prima deletada com sucesso!')
+        except ProtectedError as e:
+            messages.error(request, '❌ Não é possível excluir esta matéria-prima pois ela está vinculada a registros em uso.')
         return redirect('materiaprima_catalogo_list')
-    return render(request, 'tb050/deletar_materia_prima.html', {'materia_prima': materia_prima})
+
+    return render(request, 'cadastro_materia_prima/deletar_materia_prima.html', {'materia_prima': materia_prima})
+from django.utils.timezone import now
+
+def visualizar_materia_prima(request, pk):
+    materia = get_object_or_404(MateriaPrimaCatalogo, pk=pk)
+    context = {
+        'materia': materia,
+        'now': now(),
+    }
+    return render(request, 'cadastro_materia_prima/visualizar_materiaprima.html', context)

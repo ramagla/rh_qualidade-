@@ -28,72 +28,82 @@
 }
 </style>
   
+{% include "partials/_toast_mensagens.html" %}
 
-  <!-- Toast de Mensagens -->
-  {% if messages %}
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      {% for message in messages %}
-        <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert">
-          <div class="d-flex">
-            <div class="toast-body">{{ message }}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
 
   <!-- Filtros em Card -->
-  <div class="card mb-4">
-    <div class="card-header">
-      Filtros
-    </div>
-    <div class="card-body">
-      <form method="get" class="row g-3">
+<div class="card mb-4">
+  <div class="card-header">Filtros</div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
+
         <div class="col-md-3">
           <label for="data_inicial" class="form-label">Data Inicial</label>
-          <input type="date" class="form-control" id="data_inicial" name="data_inicial" value="{{ request.GET.data_inicial }}">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+            <input type="date" class="form-control" id="data_inicial" name="data_inicial" value="{{ request.GET.data_inicial }}">
+          </div>
         </div>
+
         <div class="col-md-3">
           <label for="data_final" class="form-label">Data Final</label>
-          <input type="date" class="form-control" id="data_final" name="data_final" value="{{ request.GET.data_final }}">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
+            <input type="date" class="form-control" id="data_final" name="data_final" value="{{ request.GET.data_final }}">
+          </div>
         </div>
+
         <div class="col-md-2">
           <label for="produto" class="form-label">Produto/Serviço</label>
-          <select class="form-select" id="produto" name="produto">
-            <option value="">Todos</option>
-            {% for prod in filter_produtos %}
-              <option value="{{ prod }}" {% if request.GET.produto == prod %}selected{% endif %}>{{ prod }}</option>
-            {% endfor %}
-          </select>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
+            <select class="form-select" id="produto" name="produto">
+              <option value="">Todos</option>
+              {% for prod in filter_produtos %}
+                <option value="{{ prod }}" {% if request.GET.produto == prod %}selected{% endif %}>{{ prod }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
+
         <div class="col-md-2">
           <label for="certificacao" class="form-label">Certificação</label>
-          <select class="form-select" id="certificacao" name="certificacao">
-            <option value="">Todas</option>
-            {% for cert in filter_certificacoes %}
-              <option value="{{ cert }}" {% if request.GET.certificacao == cert %}selected{% endif %}>{{ cert }}</option>
-            {% endfor %}
-          </select>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-award"></i></span>
+            <select class="form-select" id="certificacao" name="certificacao">
+              <option value="">Todas</option>
+              {% for cert in filter_certificacoes %}
+                <option value="{{ cert }}" {% if request.GET.certificacao == cert %}selected{% endif %}>{{ cert }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
+
         <div class="col-md-2">
           <label for="status" class="form-label">Status</label>
-          <select class="form-select" id="status" name="status">
-            <option value="">Todos</option>
-            {% for stat in filter_status %}
-              <option value="{{ stat }}" {% if request.GET.status == stat %}selected{% endif %}>{{ stat }}</option>
-            {% endfor %}
-          </select>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-check2-square"></i></span>
+            <select class="form-select" id="status" name="status">
+              <option value="">Todos</option>
+              {% for stat in filter_status %}
+                <option value="{{ stat }}" {% if request.GET.status == stat %}selected{% endif %}>{{ stat }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
-        <div class="col-12 text-center">
-          <button type="submit" class="btn btn-primary">
-            🔍 Filtrar
+
+        <div class="col-12 text-center mt-2">
+          <button type="submit" class="btn btn-primary d-inline-flex align-items-center">
+            <i class="bi bi-search me-2"></i> Filtrar
           </button>
         </div>
 
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
+</div>
+
 
   <!-- Botão para Cadastrar -->
   <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
@@ -158,16 +168,17 @@
   <div class="table-responsive">
 <table class="table zebra-tabela table-hover table-bordered text-center align-middle">
       <thead class="table-light">
-        <tr>
-          <th>Nome</th>
-          <th>Produto</th>
-          <th>Certificação</th>
-          <th>Vencimento</th>
-          <th>Risco</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="py-2"><i class="bi bi-person me-1"></i> Nome</th>
+    <th class="py-2"><i class="bi bi-box-seam me-1"></i> Produto</th>
+    <th class="py-2"><i class="bi bi-patch-check me-1"></i> Certificação</th>
+    <th class="py-2"><i class="bi bi-calendar-event me-1"></i> Vencimento</th>
+    <th class="py-2"><i class="bi bi-activity me-1"></i> Risco</th>
+    <th class="py-2"><i class="bi bi-shield-check me-1"></i> Status</th>
+    <th class="py-2"><i class="bi bi-gear-fill me-1"></i> Ações</th>
+  </tr>
+</thead>
+
       <tbody>
         {% for fornecedor in fornecedores_paginados %}
           <tr>
@@ -239,17 +250,10 @@
 
 
 
-<button type="button" 
-        class="btn btn-sm btn-danger" 
-        data-bs-toggle="modal" 
-        data-bs-target="#deleteModal" 
-        data-id="{{ fornecedor.id }}" 
-        data-nome="{{ fornecedor.nome }}" 
-        data-bs-toggle="tooltip" 
-        title="Excluir fornecedor" 
-        aria-label="Excluir fornecedor">
-  <i class="bi bi-trash" aria-hidden="true"></i>
+<button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ fornecedor.pk }}">
+  <i class="bi bi-trash"></i>
 </button>
+{% include 'partials/_modal_exclusao.html' with objeto=fornecedor url_excluir='excluir_fornecedor' %}
 
 
 </td>
@@ -259,70 +263,15 @@
       </tbody>
     </table>
   {% else %}
-    <p class="text-center">Nenhum fornecedor encontrado.</p>
+{% include "partials/_sem_resultados.html" %}
   {% endif %}
 
   <!-- Paginação -->
-  <nav aria-label="Paginação de fornecedores">
-  <ul class="pagination justify-content-center">
-    {% if fornecedores_paginados.has_previous %}
-      <li class="page-item">
-        <a class="page-link" href="?page=1" title="Primeira página" aria-label="Primeira página">&laquo;&laquo;</a>
-      </li>
-      <li class="page-item">
-        <a class="page-link" href="?page={{ fornecedores_paginados.previous_page_number }}" title="Página anterior" aria-label="Página anterior">&laquo;</a>
-      </li>
-    {% endif %}
+  {% include "partials/_paginacao.html" with page_obj=fornecedores_paginados %}
 
-    {% for num in fornecedores_paginados.paginator.page_range %}
-      {% if fornecedores_paginados.number == num %}
-        <li class="page-item active">
-          <span class="page-link" aria-current="page">{{ num }}</span>
-        </li>
-      {% elif num > fornecedores_paginados.number|add:'-3' and num < fornecedores_paginados.number|add:'3' %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ num }}" title="Página {{ num }}" aria-label="Página {{ num }}">{{ num }}</a>
-        </li>
-      {% endif %}
-    {% endfor %}
-
-    {% if fornecedores_paginados.has_next %}
-      <li class="page-item">
-        <a class="page-link" href="?page={{ fornecedores_paginados.next_page_number }}" title="Próxima página" aria-label="Próxima página">&raquo;</a>
-      </li>
-      <li class="page-item">
-        <a class="page-link" href="?page={{ fornecedores_paginados.paginator.num_pages }}" title="Última página" aria-label="Última página">&raquo;&raquo;</a>
-      </li>
-    {% endif %}
-  </ul>
-</nav>
 
 </div>
 
-<!-- Modal de Exclusão -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-describedby="deleteNome" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form id="deleteForm" method="post">
-        {% csrf_token %}
-        <div class="modal-header">
-<h5 class="modal-title" id="deleteModalLabel">
-  <i class="bi bi-exclamation-triangle text-warning me-2" aria-hidden="true"></i>
-  Excluir Fornecedor
-</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-        <div class="modal-body">
-          <p>Tem certeza que deseja excluir o fornecedor <strong id="deleteNome"></strong>?</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-danger">Excluir</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 
 <script>
   // Inicializa os tooltips para todos os elementos com data-bs-toggle="tooltip"

@@ -1,0 +1,33 @@
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalExcluir{{ objeto.pk }}" tabindex="-1" aria-labelledby="modalExcluirLabel{{ objeto.pk }}" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header bg-danger text-white rounded-top-4">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="modalExcluirLabel{{ objeto.pk }}">
+          <i class="bi bi-exclamation-triangle-fill"></i> Confirmação de Exclusão
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body text-center px-4">
+        <p class="mb-0 fs-6">
+          Você tem certeza que deseja excluir o registro <br>
+          <strong class="text-danger">{{ objeto.codigo }}</strong>?
+        </p>
+        <small class="text-muted d-block mt-2">Esta ação não poderá ser desfeita.</small>
+      </div>
+
+      <div class="modal-footer border-0 d-flex justify-content-center gap-3 pb-4">
+        <form method="POST" action="{% url url_excluir objeto.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger shadow-sm d-flex align-items-center gap-2">
+            <i class="bi bi-trash-fill"></i> Confirmar
+          </button>
+        </form>
+        <button type="button" class="btn btn-outline-secondary shadow-sm d-flex align-items-center gap-2" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

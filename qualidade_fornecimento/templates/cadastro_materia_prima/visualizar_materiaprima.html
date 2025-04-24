@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tz %}
+
+{% block title %}Visualização da Matéria-Prima{% endblock %}
+
+{% block content %}
+<style>
+  .pdf-container {
+    width: 210mm;
+    margin: 0 auto;
+    padding: 20mm;
+    background: #fff;
+    border: 1px solid #ccc;
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+  }
+  .pdf-header, .pdf-footer {
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+  }
+  .pdf-footer {
+    border-top: 1px solid #ccc;
+    margin-top: 20px;
+    padding-top: 10px;
+  }
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .info-table th, .info-table td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: left;
+  }
+</style>
+
+<style>
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 15mm;
+    }
+
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: white !important;
+    }
+
+    .sidebar, .navbar, .d-print-none, .btn, .btn-group {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .container, .container-fluid, .main, .content, .page-content, .pdf-container {
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
+      border: none !important;
+    }
+
+    .info-table {
+      font-size: 10pt !important;
+    }
+
+    .info-table th, .info-table td {
+      padding: 6px !important;
+    }
+  }
+</style>
+
+<div class="text-end mb-3 d-print-none">
+  <button class="btn btn-outline-primary" onclick="window.print()" aria-label="Imprimir matéria-prima">
+    🖨️ Imprimir
+  </button>
+</div>
+
+<div class="pdf-container">
+  <div class="pdf-header">
+    <h1>📄 Matéria-Prima</h1>
+    <p>Detalhes Técnicos do Cadastro</p>
+  </div>
+
+  <table class="info-table">
+    <tr><th>Código</th><td>{{ materia.codigo }}</td></tr>
+    <tr><th>Descrição</th><td>{{ materia.descricao }}</td></tr>
+    <tr><th>Tipo</th><td>{{ materia.tipo }}</td></tr>
+    <tr><th>Classe</th><td>{{ materia.classe }}</td></tr>
+    <tr><th>Norma</th><td>{{ materia.norma }}</td></tr>
+    <tr><th>Bitola (Espessura)</th><td>{{ materia.bitola }}</td></tr>
+    <tr><th>Largura</th><td>{{ materia.largura|default:"-" }}</td></tr>
+    <tr><th>Tolerância</th><td>{{ materia.tolerancia|default:"-" }}</td></tr>
+    <tr><th>Tolerância Largura</th><td>{{ materia.tolerancia_largura|default:"-" }}</td></tr>
+    <tr><th>Tipo ABNT</th><td>{{ materia.tipo_abnt|default:"-" }}</td></tr>
+    <tr><th>Localização</th><td>{{ materia.localizacao|default:"-" }}</td></tr>
+  </table>
+
+  <div class="pdf-footer text-muted small">
+    <p class="mb-1"><i class="bi bi-clock me-1"></i>Gerado em {{ now|date:"d/m/Y H:i" }}</p>
+    <p class="mb-0 fst-italic">Sistema de Qualidade – Bras-Mol Molas e Estampados Ltda</p>
+  </div>
+</div>
+
+<script>
+  if (window.location.search.includes('imprimir=1')) {
+    setTimeout(() => window.print(), 500);
+  }
+</script>
+{% endblock %}

@@ -45,6 +45,8 @@ urlpatterns = [
     path('materia-prima/importar/', mp_views.importar_materia_prima_excel, name='materiaprima_importar'),
     path('materia-prima/editar/<int:pk>/', mp_views.editar_materia_prima, name='materiaprima_editar'),
     path('materia-prima/deletar/<int:pk>/', mp_views.deletar_materia_prima, name='materiaprima_deletar'),
+    path('materia-prima/visualizar/<int:pk>/', mp_views.visualizar_materia_prima, name='materiaprima_visualizar'),
+
      path("tb050/<int:id>/selecionar-etiquetas/", selecionar_etiquetas_tb050, name="tb050_selecionar_etiquetas"),
     path("tb050/<int:id>/imprimir-etiquetas/", imprimir_etiquetas_tb050, name="tb050_imprimir_etiquetas"),
     path('tb050/get-rolos-peso/<int:id>/', get_rolos_peso, name='get_rolos_peso'),
@@ -77,6 +79,7 @@ urlpatterns = [
     path('controle-servico-externo/inspecao/', selecionar_servico_para_inspecao, name='selecionar_servico_para_inspecao'),
     path('inspecao/status/<int:servico_id>/', inspecao_status, name='inspecao_status'),
     path("relatorio-avaliacao/", relatorio_avaliacao_view, name="relatorio_avaliacao"),
+
 
 
 

@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Matéria-Prima{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  {% if messages %}
+  <div class="toast-container position-fixed top-0 end-0 p-3">
+    {% for message in messages %}
+      <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">{{ message }}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+  <h2 class="text-center mb-2">
+  <span aria-hidden="true">📦</span> Cadastrar Matéria-Prima
+</h2>
+<p class="text-center text-muted small mt-n2 mb-4">
+  Preencha os dados da matéria-prima para cadastro no sistema.
+</p>
+
+
+
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {% csrf_token %}
+
+    {% if form.errors %}
+  <div class="alert alert-danger">
+    <ul>
+      {% for field, errors in form.errors.items %}
+        <li><strong>{{ field }}</strong>: {{ errors|join:", " }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+
+    <div class="accordion" id="accordionMateriaPrima">
+
+  <!-- 📌 Identificação -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingIdentificacao">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentificacao" aria-expanded="true" aria-controls="collapseIdentificacao">
+        <i class="bi bi-tag me-2"></i> Identificação
+      </button>
+    </h2>
+    <div id="collapseIdentificacao" class="accordion-collapse collapse show" aria-labelledby="headingIdentificacao" data-bs-parent="#accordionMateriaPrima">
+<div class="accordion-body row g-3 bg-light-subtle rounded-3 py-3">
+        <div class="col-md-4">
+          <label for="id_tipo" class="form-label">Tipo</label>
+              {% if form.tipo.errors %}
+                {{ form.tipo|add_class:"form-select is-invalid" }}
+              {% else %}
+                {{ form.tipo|add_class:"form-select" }}
+              {% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label for="id_codigo" class="form-label">Código</label>
+          {{ form.codigo|add_class:"form-control"|attr:"placeholder:Ex: AACSØ1,20-02" }}
+        </div>
+        <div class="col-md-8">
+          <label for="id_descricao" class="form-label">Descrição</label>
+          {{ form.descricao|add_class:"form-control"|attr:"placeholder:Ex: ARAME DIN 17223 B Ø1,20 ± 0,025" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📏 Dimensões -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingDimensoes">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDimensoes" aria-expanded="false" aria-controls="collapseDimensoes">
+        <i class="bi bi-arrows-expand me-2"></i> Dimensões
+      </button>
+    </h2>
+    <div id="collapseDimensoes" class="accordion-collapse collapse" aria-labelledby="headingDimensoes" data-bs-parent="#accordionMateriaPrima">
+<div class="accordion-body row g-3 bg-light-subtle rounded-3 py-3">
+       <div class="col-md-4" id="field_bitola">
+<label for="id_bitola" class="form-label" data-bs-toggle="tooltip" title="Espessura da matéria-prima em milímetros">Bitola Ø (mm)</label>
+          {% if form.bitola.errors %}
+            {{ form.bitola|add_class:"form-control is-invalid"|attr:"placeholder:Ex: 1,20" }}
+          {% else %}
+            {{ form.bitola|add_class:"form-control"|attr:"placeholder:Ex: 1,20" }}
+          {% endif %}       
+ </div>
+
+        <div class="col-md-4">
+          <label for="id_largura" class="form-label">Largura (mm)</label>
+          {{ form.largura|add_class:"form-control"|attr:"placeholder:Ex: 43,30" }}
+        </div>
+        <div class="col-md-4">
+          <label for="id_tolerancia" class="form-label" data-bs-toggle="tooltip" title="Desvio permitido para a bitola medida">Tolerância (mm)</label>
+          {{ form.tolerancia|add_class:"form-control"|attr:"placeholder:Ex: ±0,05" }}
+        </div>
+        <div class="col-md-4">
+<label for="id_tolerancia_largura" class="form-label" data-bs-toggle="tooltip" title="Variação máxima admitida na largura em caso de Fitas">Tolerância Largura (mm)</label>
+          {{ form.tolerancia_largura|add_class:"form-control"|attr:"placeholder:Ex: ±0,30" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📚 Normas e Propriedades -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingNormas">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNormas" aria-expanded="false" aria-controls="collapseNormas">
+        <i class="bi bi-journal me-2"></i> Normas e Propriedades
+      </button>
+    </h2>
+    <div id="collapseNormas" class="accordion-collapse collapse" aria-labelledby="headingNormas" data-bs-parent="#accordionMateriaPrima">
+<div class="accordion-body row g-3 bg-light-subtle rounded-3 py-3">
+
+        <div class="col-md-4" id="field_norma">
+<label for="id_norma" class="form-label" data-bs-toggle="tooltip" title="Norma técnica associada à especificação do material">Norma</label>
+            {% if form.norma.errors %}
+              {{ form.norma|add_class:"form-control is-invalid"|attr:"placeholder:Ex: NBR 13366" }}
+            {% else %}
+              {{ form.norma|add_class:"form-control"|attr:"placeholder:Ex: NBR 13366" }}
+            {% endif %}
+        </div>       
+        <div class="col-md-4">
+<label for="id_tipo_abnt" class="form-label" data-bs-toggle="tooltip" title="Classificação conforme norma">Tipo ABNT / Classe</label>
+          {{ form.tipo_abnt|add_class:"form-control"|attr:"placeholder:Ex: 302" }}
+        </div>
+        <div class="col-md-4">
+          <label for="id_classe" class="form-label">Tipo de Material</label>
+          {{ form.classe|add_class:"form-control"|attr:"placeholder:Ex: Inox" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🗂️ Localização -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingLocalizacao">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLocalizacao" aria-expanded="false" aria-controls="collapseLocalizacao">
+        <i class="bi bi-geo-alt me-2"></i> Localização
+      </button>
+    </h2>
+    <div id="collapseLocalizacao" class="accordion-collapse collapse" aria-labelledby="headingLocalizacao" data-bs-parent="#accordionMateriaPrima">
+<div class="accordion-body row g-3 bg-light-subtle rounded-3 py-3">
+        <div class="col-md-4">
+          <label for="id_localizacao" class="form-label">Localização</label>
+          {{ form.localizacao|add_class:"form-control"|attr:"placeholder:Ex: C-01" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+    <div class="col-12 mt-4">
+  <div class="d-flex flex-wrap justify-content-center gap-2">
+  <!-- BOTÃO -->
+<button type="submit" class="btn btn-primary" name="salvar" id="btnSalvar" aria-label="Salvar matéria-prima">
+  <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true" id="spinnerSalvar"></span>
+  <span id="textoSalvar"><i class="bi bi-save me-1"></i> Salvar</span>
+</button>
+
+
+
+    {% if editar %}
+      <button type="submit" class="btn btn-outline-primary" name="salvar_proximo" aria-label="Salvar e ir para próxima matéria-prima">
+        <i class="bi bi-arrow-right-circle me-1"></i> Salvar e próximo
+      </button>
+    {% endif %}
+
+    <a href="{% url 'materiaprima_catalogo_list' %}" class="btn btn-secondary" aria-label="Voltar para a lista de matérias-primas">
+      <i class="bi bi-arrow-left me-1"></i> Voltar
+    </a>
+  </div>
+</div>
+
+
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Feedback visual de erro (back e frontend)
+  const form = document.querySelector("form");
+  form.querySelectorAll("input, select, textarea").forEach(function (field) {
+    if (field.classList.contains("is-invalid")) {
+      const parent = field.closest('.form-group, .col-md-4, .col-md-6, .mb-3');
+      if (parent && !parent.querySelector('.invalid-feedback')) {
+        const feedback = document.createElement('div');
+        feedback.classList.add('invalid-feedback');
+        feedback.textContent = "Este campo é obrigatório ou está incorreto.";
+        field.after(feedback);
+      }
+    }
+
+    // Validação onBlur
+    field.addEventListener("blur", function () {
+      const value = field.value.trim();
+      const required = field.hasAttribute("required");
+      const hasFeedback = field.nextElementSibling?.classList.contains("invalid-feedback");
+
+      if (required && !value) {
+        field.classList.add("is-invalid");
+        if (!hasFeedback) {
+          const feedback = document.createElement("div");
+          feedback.className = "invalid-feedback";
+          feedback.textContent = "Este campo é obrigatório.";
+          field.parentNode.appendChild(feedback);
+        }
+      } else {
+        field.classList.remove("is-invalid");
+        if (hasFeedback) {
+          field.nextElementSibling.remove();
+        }
+      }
+    });
+  });
+
+  // Elementos de controle
+  const tipoSelect = document.getElementById("id_tipo");
+  const descricaoInput = document.getElementById("id_descricao");
+  const larguraTolerancia = document.getElementById("id_tolerancia_largura");
+  const tipoMaterial = document.getElementById("id_classe");
+
+  // IDs de campos que se ocultam quando tipo é Tratamento
+  const camposTratamento = [
+    "field_localizacao",
+    "field_norma",
+    "field_bitola",
+    "field_classe",
+    "field_tipo_abnt",
+    "field_tolerancia",
+    "field_tolerancia_largura"
+  ];
+
+  const acordeonsExtras = [
+    "headingDimensoes",
+    "headingNormas",
+    "headingLocalizacao"
+  ];
+
+  // Alterna campos e acordeons com base no tipo
+  function toggleCampos() {
+    const isTratamento = tipoSelect.value === "Tratamento";
+    const isFita = descricaoInput.value.toLowerCase().includes("fita");
+
+    camposTratamento.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (id === "field_tolerancia_largura") {
+        el.classList.toggle("d-none", isTratamento || !isFita);
+      } else {
+        el.classList.toggle("d-none", isTratamento);
+      }
+    });
+
+    acordeonsExtras.forEach(id => {
+      const card = document.getElementById(id)?.closest(".accordion-item");
+      if (card) card.classList.toggle("d-none", isTratamento);
+    });
+  }
+
+  tipoSelect.addEventListener("change", toggleCampos);
+  descricaoInput.addEventListener("input", toggleCampos);
+  toggleCampos();
+
+  // Abertura de próximo accordion quando o último campo da seção for preenchido
+  descricaoInput.addEventListener("blur", function () {
+    if (descricaoInput.value.trim()) {
+      new bootstrap.Collapse(document.getElementById('collapseDimensoes'), { toggle: true });
+      new bootstrap.Collapse(document.getElementById('collapseIdentificacao'), { toggle: false });
+    }
+  });
+
+  larguraTolerancia?.addEventListener("blur", function () {
+    if (larguraTolerancia.value.trim()) {
+      new bootstrap.Collapse(document.getElementById('collapseNormas'), { toggle: true });
+      new bootstrap.Collapse(document.getElementById('collapseDimensoes'), { toggle: false });
+    }
+  });
+
+  tipoMaterial?.addEventListener("blur", function () {
+    if (tipoMaterial.value.trim()) {
+      new bootstrap.Collapse(document.getElementById('collapseLocalizacao'), { toggle: true });
+      new bootstrap.Collapse(document.getElementById('collapseNormas'), { toggle: false });
+    }
+  });
+  form.addEventListener("submit", function () {
+  const btn = document.getElementById("btnSalvar");
+  const spinner = document.getElementById("spinnerSalvar");
+  const texto = document.getElementById("textoSalvar");
+
+  // Desativa o botão para evitar múltiplos envios
+  btn.disabled = true;
+  spinner.classList.remove("d-none");
+  texto.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Salvando...';
+});
+
+
+});
+</script>
+
+
+
+
+{% endblock %}
