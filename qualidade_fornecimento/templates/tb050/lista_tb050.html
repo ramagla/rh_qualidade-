@@ -5,8 +5,12 @@
 {% block title %}TB050 - Relação de Matérias‑Primas{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-  <h2 class="text-center mb-4">TB050 - Relação de Matérias‑Primas</h2>
+<h2 class="text-center mb-4">
+  <i class="bi bi-archive-fill me-2" aria-hidden="true"></i>
+  <span class="visually-hidden">📦</span>
+  TB050 - Relação de Matérias-Primas
+</h2>
+
 
   {# ---------------- TOAST de Mensagens ---------------- #}
   {% if messages %}
@@ -23,24 +27,31 @@
   {% endif %}
 
   {# ----------------- CARD de Filtros ------------------ #}
-  <div class="card mb-4">
-    <div class="card-header">Filtros</div>
-    <div class="card-body">
-      <form method="get" class="row g-3">
-        <div class="col-md-2">
-          <label for="data_inicial" class="form-label">Data Inicial</label>
-          <input type="date" class="form-control" id="data_inicial" name="data_inicial"
-                 value="{{ data_inicial|default_if_none:'' }}">
-        </div>
+<div class="card mb-4">
+  <div class="card-header">Filtros</div>
+  <div class="card-body">
+    <form method="get" class="row g-3">
 
-        <div class="col-md-2">
-          <label for="data_final" class="form-label">Data Final</label>
-          <input type="date" class="form-control" id="data_final" name="data_final"
-                 value="{{ data_final|default_if_none:'' }}">
+      <div class="col-md-2">
+        <label for="data_inicial" class="form-label">Data Inicial</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar-date" aria-hidden="true"></i></span>
+          <input type="date" class="form-control" id="data_inicial" name="data_inicial" value="{{ data_inicial|default_if_none:'' }}">
         </div>
+      </div>
 
-        <div class="col-md-2">
-          <label for="status" class="form-label">Status</label>
+      <div class="col-md-2">
+        <label for="data_final" class="form-label">Data Final</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar-check" aria-hidden="true"></i></span>
+          <input type="date" class="form-control" id="data_final" name="data_final" value="{{ data_final|default_if_none:'' }}">
+        </div>
+      </div>
+
+      <div class="col-md-2">
+        <label for="status" class="form-label">Status</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-check2-square" aria-hidden="true"></i></span>
           <select class="form-select" id="status" name="status">
             <option value="">-- Todos --</option>
             {% for st in filter_status %}
@@ -48,128 +59,182 @@
             {% endfor %}
           </select>
         </div>
+      </div>
 
-        <div class="col-md-2">
-          <label for="nro_rolo" class="form-label">Nº Rolo</label>
-          <input type="text" class="form-control" id="nro_rolo" name="nro_rolo"
-                 value="{{ request.GET.nro_rolo }}">
-        </div>
-
-        <div class="col-md-2">
-          <label for="nro_relatorio" class="form-label">Nº Relatório</label>
-          <input type="text" class="form-control" id="nro_relatorio" name="nro_relatorio"
-                 value="{{ request.GET.nro_relatorio }}">
-        </div>
-
-        <div class="col-md-2">
-          <label for="nro_certificado" class="form-label">Nº Certificado</label>
-          <input type="text" class="form-control" id="nro_certificado" name="nro_certificado"
-                 value="{{ request.GET.nro_certificado }}">
-        </div>
-
-        <div class="col-md-3">
-          <label for="fornecedor" class="form-label">Fornecedor</label>
-          <select class="form-select select2" id="fornecedor" name="fornecedor">
-            <option value="">-- Todos --</option>
-            {% for forn in lista_fornecedores %}
-              <option value="{{ forn.pk }}"
-                      {% if request.GET.fornecedor == forn.pk|stringformat:"s" %}selected{% endif %}>
-                {{ forn.nome }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-md-3">
-          <label for="materia_prima" class="form-label">Matéria‑Prima</label>
-          <select class="form-select select2" id="materia_prima" name="materia_prima">
-            <option value="">-- Todas --</option>
-            {% for mp in lista_materiasprimas %}
-              <option value="{{ mp.pk }}"
-                      {% if request.GET.materia_prima == mp.pk|stringformat:"s" %}selected{% endif %}>
-                {{ mp.codigo }} - {{ mp.descricao }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-md-3 d-flex align-items-end">
-          <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-        </div>
-      </form>
-    </div>
+      <div class="col-md-2">
+  <label for="nro_rolo" class="form-label">Nº Rolo</label>
+  <div class="input-group">
+    <span class="input-group-text"><i class="bi bi-upc-scan" aria-hidden="true"></i></span>
+    <input type="text" class="form-control" id="nro_rolo" name="nro_rolo"
+           placeholder="Ex: 12345" value="{{ request.GET.nro_rolo }}">
   </div>
+</div>
+
+<div class="col-md-2">
+  <label for="nro_relatorio" class="form-label">Nº Relatório</label>
+  <div class="input-group">
+    <span class="input-group-text"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></span>
+    <input type="text" class="form-control" id="nro_relatorio" name="nro_relatorio"
+           placeholder="Ex: 2025-0001" value="{{ request.GET.nro_relatorio }}">
+  </div>
+</div>
+
+<div class="col-md-2">
+  <label for="nro_certificado" class="form-label">Nº Certificado</label>
+  <div class="input-group">
+    <span class="input-group-text"><i class="bi bi-award" aria-hidden="true"></i></span>
+    <input type="text" class="form-control" id="nro_certificado" name="nro_certificado"
+           placeholder="Ex: CERT-1234" value="{{ request.GET.nro_certificado }}">
+  </div>
+</div>
+
+
+      <div class="col-md-3">
+  <label for="fornecedor" class="form-label">
+    <i class="bi bi-truck me-1" aria-hidden="true"></i> Fornecedor
+  </label>
+  <select class="form-select select2" id="fornecedor" name="fornecedor">
+    <option value="">-- Todos --</option>
+    {% for forn in lista_fornecedores %}
+      <option value="{{ forn.pk }}" {% if request.GET.fornecedor == forn.pk|stringformat:"s" %}selected{% endif %}>
+        {{ forn.nome }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="col-md-3">
+  <label for="materia_prima" class="form-label">
+    <i class="bi bi-boxes me-1" aria-hidden="true"></i> Matéria‑Prima
+  </label>
+  <select class="form-select select2" id="materia_prima" name="materia_prima">
+    <option value="">-- Todas --</option>
+    {% for mp in lista_materiasprimas %}
+      <option value="{{ mp.pk }}" {% if request.GET.materia_prima == mp.pk|stringformat:"s" %}selected{% endif %}>
+        {{ mp.codigo }} - {{ mp.descricao }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+
+      <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" id="btnFiltrar" class="btn btn-primary w-100">
+          <span id="spinnerFiltrar" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+          Filtrar
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
 
   {# ----------------- Botões de Ação ------------------- #}
   <div class="d-flex justify-content-end mb-4 gap-2">
-    <a href="{% url 'tb050_cadastrar' %}" class="btn btn-success">
-      <i class="bi bi-plus-circle"></i> Novo
-    </a>
+   <a href="{% url 'tb050_cadastrar' %}"
+   class="btn btn-success d-inline-flex align-items-center"
+   aria-label="Cadastrar nova relação de matérias‑primas"
+   data-bs-toggle="tooltip"
+   title="Cadastrar nova relação de matérias‑primas">
+  <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
+  <span>Novo</span>
+</a>
 
-    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalF045">
-      <i class="bi bi-file-earmark-text"></i> Gerar F045
-    </button>
+<button type="button"
+        class="btn btn-warning d-inline-flex align-items-center"
+        data-bs-toggle="modal"
+        data-bs-target="#modalF045"
+        aria-label="Gerar relatório F045"
+        title="Gerar relatório F045">
+  <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>
+  <span>Gerar F045</span>
+</button>
+
   </div>
 
   {# ---------------- Cards de Indicadores -------------- #}
   <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card text-white bg-info">
-        <div class="card-header text-center">Total de Registros</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ total_registros }}</h5>
-          <p class="card-text">Cadastrados no sistema.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-white bg-success">
-        <div class="card-header text-center">Aprovados</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ total_aprovados }}</h5>
-          <p class="card-text">Materiais aprovados.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-white bg-danger">
-        <div class="card-header text-center">Reprovados</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ total_reprovados }}</h5>
-          <p class="card-text">Materiais reprovados.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-white bg-warning">
-        <div class="card-header text-center">Atrasados</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ total_atrasados }}</h5>
-          <p class="card-text">Matérias‑primas em atraso.</p>
-        </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-info card-status">
+      <div class="card-header text-center">Total de Registros</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ total_registros }}</h5>
+        <p class="card-text">Cadastrados no sistema.</p>
       </div>
     </div>
   </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-success card-status">
+      <div class="card-header text-center">Aprovados</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ total_aprovados }}</h5>
+        <p class="card-text">Materiais aprovados.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-danger card-status">
+      <div class="card-header text-center">Reprovados</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ total_reprovados }}</h5>
+        <p class="card-text">Materiais reprovados.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-warning card-status">
+      <div class="card-header text-center">Atrasados</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ total_atrasados }}</h5>
+        <p class="card-text">Matérias‑primas em atraso.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 
   {# --------------- TABELA de Resultados --------------- #}
   {% if materias_primas_paginadas %}
+  <h5 class="mb-3">
+  <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
+  📄 Lista de Materiais
+</h5>
+
     <div class="table-responsive">
-      <table class="table table-hover table-bordered text-center align-middle">
+<table class="table table-bordered table-hover zebra-tabela text-center align-middle">
         <thead class="table-light">
-          <tr>
-          <th class="text-center align-middle">Relatório</th>
-          <th class="text-center align-middle">Data Entrada</th>
-          <th class="text-center align-middle">Fornecedor</th>
-          <th class="text-center align-middle">Matéria‑Prima</th>
-          <th class="text-center align-middle">Nº Certificado</th>
-          <th class="text-center align-middle">Status</th>
-          <th class="text-center align-middle">Atraso (dias)</th>
-          <th class="text-center align-middle">Rolos</th>
-          <th class="text-center align-middle">Ações</th>
-        </tr>
+  <tr>
+    <th class="text-center align-middle">
+      <i class="bi bi-file-earmark-text me-1 text-muted" aria-hidden="true"></i> Relatório
+    </th>
+    <th class="text-center align-middle">
+      <i class="bi bi-calendar-date me-1 text-muted" aria-hidden="true"></i> Data Entrada
+    </th>
+    <th class="text-center align-middle">
+      <i class="bi bi-truck me-1 text-muted" aria-hidden="true"></i> Fornecedor
+    </th>
+    <th class="text-center align-middle">
+      <i class="bi bi-boxes me-1 text-muted" aria-hidden="true"></i> Matéria-Prima
+    </th>
+    <th class="text-center align-middle">
+      <i class="bi bi-award me-1 text-muted" aria-hidden="true"></i> Nº Certificado
+    </th>
+    <th class="text-center align-middle">
+      <i class="bi bi-info-circle me-1 text-muted" aria-hidden="true"></i> Status
+    </th>
+    <th class="text-center align-middle">
+      <i class="bi bi-clock-history me-1 text-muted" aria-hidden="true"></i> Atraso (dias)
+    </th>
+    <th class="text-center align-middle">
+      <i class="bi bi-upc me-1 text-muted" aria-hidden="true"></i> Rolos
+    </th>
+    <th class="text-center align-middle">
+      <i class="bi bi-gear-fill me-1 text-muted" aria-hidden="true"></i> Ações
+    </th>
+  </tr>
+</thead>
 
-
-        </thead>
         <tbody>
           {% for item in materias_primas_paginadas %}
             <tr>
@@ -180,28 +245,29 @@
               <td>{{ item.numero_certificado|default:"-" }}</td>
               <td>
   {% if item.status == "Aprovado" %}
-    <span class="badge bg-success text-white px-2 py-1">
-      <i class="bi bi-check-circle me-1"></i>{{ item.status }}
-    </span>
+  <span class="badge bg-success text-white badge-status">
+    <i class="bi bi-check-circle me-1" aria-hidden="true"></i>{{ item.status }}
+  </span>
 
-  {% elif item.status == "Reprovado" %}
-    <span class="badge bg-danger text-white px-2 py-1">
-      <i class="bi bi-x-circle me-1"></i>{{ item.status }}
-    </span>
+{% elif item.status == "Reprovado" %}
+  <span class="badge bg-danger text-white badge-status">
+    <i class="bi bi-x-circle me-1" aria-hidden="true"></i>{{ item.status }}
+  </span>
 
-  {% elif item.status == "Aprovado Condicionalmente" %}
-    <span class="badge bg-warning text-dark px-2 py-1">
-      <i class="bi bi-exclamation-triangle me-1"></i>{{ item.status }}
-    </span>
+{% elif item.status == "Aprovado Condicionalmente" %}
+  <span class="badge bg-warning text-dark badge-status">
+    <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ item.status }}
+  </span>
 
-  {% elif item.status == "Aguardando F045" %}
-    <span class="badge bg-secondary text-white px-2 py-1">
-      <i class="bi bi-hourglass-split me-1"></i>{{ item.status }}
-    </span>
+{% elif item.status == "Aguardando F045" %}
+  <span class="badge bg-secondary text-white badge-status">
+    <i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>{{ item.status }}
+  </span>
 
-  {% else %}
-    <span class="text-muted">—</span>
-  {% endif %}
+{% else %}
+  <span class="text-muted">—</span>
+{% endif %}
+
 </td>
               <td>{{ item.atraso_em_dias|default:"0" }}</td>
 
@@ -219,64 +285,74 @@
 
               {# --------------- AÇÕES ---------------- #}
              <td class="text-center align-middle">
-                <div class="d-inline-flex flex-wrap justify-content-center gap-1">
+  <div class="d-inline-flex flex-wrap justify-content-center gap-1">
 
-                <a href="{% url 'tb050_visualizar' item.pk %}" class="btn btn-sm btn-secondary" title="Visualizar">
-                  <i class="bi bi-eye"></i>
-                </a>
-                <a href="{% url 'tb050_editar' item.pk %}" class="btn btn-sm btn-warning" title="Editar">
-                  <i class="bi bi-pencil"></i>
-                </a>
-                <a href="{% url 'tb050_selecionar_etiquetas' item.pk %}" class="btn btn-sm btn-info" title="Imprimir Etiquetas">
-                  <i class="bi bi-printer"></i>
-                </a>
+    <a href="{% url 'tb050_visualizar' item.pk %}"
+       class="btn btn-sm btn-secondary"
+       data-bs-toggle="tooltip"
+       data-bs-placement="top"
+       title="Visualizar relatório"
+       aria-label="Visualizar relatório">
+      <i class="bi bi-eye" aria-hidden="true"></i>
+    </a>
 
-                {% if item.f045 and item.f045.pdf %}
-                    <a href="{{ item.f045.pdf.url }}" target="_blank"
-                      class="btn btn-sm btn-outline-primary" title="Visualizar F045 em PDF">
-                      <i class="bi bi-file-earmark-pdf"></i>
-                    </a>
-                  {% endif %}
+    <a href="{% url 'tb050_editar' item.pk %}"
+       class="btn btn-sm btn-warning"
+       data-bs-toggle="tooltip"
+       data-bs-placement="top"
+       title="Editar relatório"
+       aria-label="Editar relatório">
+      <i class="bi bi-pencil" aria-hidden="true"></i>
+    </a>
+
+    <a href="{% url 'tb050_selecionar_etiquetas' item.pk %}"
+       class="btn btn-sm btn-info"
+       data-bs-toggle="tooltip"
+       data-bs-placement="top"
+       title="Imprimir etiquetas"
+       aria-label="Imprimir etiquetas">
+      <i class="bi bi-printer" aria-hidden="true"></i>
+    </a>
+
+    {% if item.f045 and item.f045.pdf %}
+      <a href="{{ item.f045.pdf.url }}" target="_blank"
+         class="btn btn-sm btn-outline-primary"
+         data-bs-toggle="tooltip"
+         data-bs-placement="top"
+         title="Visualizar F045 em PDF"
+         aria-label="Visualizar F045 em PDF">
+        <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+      </a>
+    {% endif %}
+
+    {% if item.anexo_certificado %}
+      <a href="{{ item.anexo_certificado.url }}" target="_blank"
+         class="btn btn-sm btn-outline-success"
+         data-bs-toggle="tooltip"
+         data-bs-placement="top"
+         title="Download do certificado"
+         aria-label="Download do certificado">
+        <i class="bi bi-paperclip" aria-hidden="true"></i>
+      </a>
+    {% endif %}
+
+    <button type="button"
+            class="btn btn-sm btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#modalExcluir{{ item.pk }}"
+            data-bs-placement="top"
+            title="Excluir relatório"
+            aria-label="Excluir relatório">
+      <i class="bi bi-trash" aria-hidden="true"></i>
+    </button>
+
+  </div>
+</td>
+</tr>
+
+{% include 'partials/_modal_exclusao.html' with objeto=item url_excluir='tb050_excluir' %}
 
 
-
-                {% if item.anexo_certificado %}
-                  <a href="{{ item.anexo_certificado.url }}" target="_blank"
-                    class="btn btn-sm btn-outline-success" title="Download do Certificado do Fornecedor">
-                    <i class="bi bi-paperclip"></i>
-                  </a>
-                {% endif %}
-
-
-                <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#modalExcluir{{ item.pk }}" title="Excluir">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-
-            {# -------- Modal Exclusão -------- #}
-            <div class="modal fade" id="modalExcluir{{ item.pk }}" tabindex="-1"
-                 aria-labelledby="modalExcluirLabel{{ item.pk }}" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <form method="post" action="{% url 'tb050_excluir' item.pk %}">
-                    {% csrf_token %}
-                    <div class="modal-header bg-danger text-white">
-                      <h5 class="modal-title" id="modalExcluirLabel{{ item.pk }}">Confirmar Exclusão</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                      Deseja realmente excluir o Relatório <strong>#{{ item.nro_relatorio }}</strong>?
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                      <button type="submit" class="btn btn-danger">Excluir</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
               </div>
 
             {# -------- Modal Rolos -------- #}
@@ -321,23 +397,22 @@
   {% endif %}
 
   {# --------------- Paginação -------------------------- #}
-  {% if materias_primas_paginadas.has_other_pages %}
-    <nav aria-label="Navegação de páginas">
-      <ul class="pagination justify-content-center">
-        {# ... blocos de paginação sem alteração ... #}
-      </ul>
-    </nav>
-  {% endif %}
-</div>
 
+  {% include "partials/_paginacao.html" with page_obj=materias_primas_paginadas %}
+
+  
 {# =============== MODAL “Gerar F045” ================== #}
 <div class="modal fade" id="modalF045" tabindex="-1" aria-labelledby="modalF045Label" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-warning">
-        <h5 class="modal-title" id="modalF045Label">Gerar Relatório F045</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-warning border-2 shadow">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="modalF045Label">
+          <i class="bi bi-file-earmark-text-fill me-2"></i>
+          Gerar Relatório F045
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
+
       <div class="modal-body">
         <label for="relacaoSelect" class="form-label">Selecione o nº do Relatório</label>
         <select id="relacaoSelect" class="form-select select2" style="width:100%;">
@@ -348,16 +423,19 @@
           {% endfor %}
         </select>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button id="btnContinuarF045" class="btn btn-primary" onclick="continuarGeracaoF045()">
-  Continuar
-</button>
 
+      <div class="modal-footer justify-content-end">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Cancelar
+        </button>
+        <button id="btnContinuarF045" class="btn btn-primary" onclick="continuarGeracaoF045()">
+          <i class="bi bi-check2-circle me-1"></i> Continuar
+        </button>
       </div>
     </div>
   </div>
 </div>
+
 
 <style>
   .btn-hover-outline {
@@ -401,6 +479,30 @@
     background-color: #198754;
     border-color: #198754;
   }
+  .card-status {
+  opacity: 0.92;
+  transition: all 0.3s ease-in-out;
+}
+.card-status:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+.badge-status {
+  padding: 0.4rem 0.75rem !important;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  border-radius: 0.5rem;
+}
+.zebra-tabela tbody tr:nth-child(odd) {
+  background-color: #f9f9f9;
+}
+.zebra-tabela tbody tr:hover {
+  background-color: #f1f1f1 !important;
+  cursor: pointer;
+}
+
+
 </style>
 
 
@@ -465,6 +567,54 @@
     .catch(console.error);
 })();
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+  const formFiltrar = document.getElementById('btnFiltrar').closest('form');
+  const btnFiltrar = document.getElementById('btnFiltrar');
+  const spinnerFiltrar = document.getElementById('spinnerFiltrar');
+
+  formFiltrar.addEventListener('submit', function (e) {
+    btnFiltrar.disabled = true;
+    spinnerFiltrar.classList.remove('d-none');
+
+    // Aguarda resposta da requisição
+    const formAction = formFiltrar.getAttribute('action') || window.location.href;
+    const formData = new FormData(formFiltrar);
+
+    fetch(formAction + '?' + new URLSearchParams(formData), {
+      method: 'GET'
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Erro na resposta do servidor');
+      }
+      return response.text();
+    })
+    .then(html => {
+      document.documentElement.innerHTML = html; // substitui página
+    })
+    .catch(error => {
+      console.error(error);
+      // Se der erro, reabilita o botão e some o spinner
+      btnFiltrar.disabled = false;
+      spinnerFiltrar.classList.add('d-none');
+      alert("Erro ao tentar filtrar. Verifique sua conexão ou tente novamente.");
+    });
+
+    e.preventDefault(); // evita o submit tradicional
+  });
+});
+
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+    new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+});
+</script>
+
 {% endif %}
 
 

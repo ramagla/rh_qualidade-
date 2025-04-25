@@ -7,14 +7,12 @@
 
 {% block content %}
 <div class="container mt-4" style="max-width: 1200px;">
-  <h2 class="text-center mb-4">
-    {% if editar %}Editar Norma Técnica{% else %}Cadastrar Norma Técnica{% endif %}
-  </h2>
-  {% if messages %}
-  {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-  {% endfor %}
-{% endif %}
+  <h2 class="text-center mb-3">
+  <i class="bi bi-rulers me-2" aria-hidden="true"></i>
+  {% if editar %}Editar{% else %}Cadastrar{% endif %} Norma Técnica
+</h2>
+
+  {% include "partials/_toast_mensagens.html" %}
 
 
   {% if form.errors or elementos_formset.non_form_errors or tracao_formset.non_form_errors %}
@@ -36,46 +34,72 @@
     {# ---------- 1) Cabeçalho ---------- #}
     <div class="row g-3">
       <div class="col-md-4">
-        <label class="form-label">{{ form.nome_norma.label }}</label>
-        {{ form.nome_norma|add_class:"form-select select2-norma" }}
+<label class="form-label">
+  <i class="bi bi-card-list me-1 text-muted" aria-hidden="true"></i>
+  {{ form.nome_norma.label }}
+</label>
+{{ form.nome_norma|add_class:"select2-norma form-control" }}
       </div>
       <div class="col-md-4">
-        <label class="form-label">{{ form.vinculo_norma.label }}</label>
-        {{ form.vinculo_norma|add_class:"form-select select2-norma" }}
+<label class="form-label">
+  <i class="bi bi-link-45deg me-1 text-muted" aria-hidden="true"></i>
+  {{ form.vinculo_norma.label }}
+</label>
+{{ form.vinculo_norma|add_class:"select2-norma form-control" }}
       </div>
       <div class="col-md-4">
-        <label class="form-label">{{ form.arquivo_norma.label }}</label>
-        {% if editar and form.instance.arquivo_norma %}
-          <div class="d-flex gap-2 align-items-center">
-            <a class="btn btn-sm btn-outline-primary" target="_blank"
-               href="{{ form.instance.arquivo_norma.url }}">📄 Ver atual</a>
-            {{ form.arquivo_norma|add_class:"form-control" }}
-          </div>
-        {% else %}
-          {{ form.arquivo_norma|add_class:"form-control" }}
-        {% endif %}
+        <label class="form-label">
+  <i class="bi bi-file-earmark-pdf-fill text-danger me-1" aria-hidden="true"></i>
+  {{ form.arquivo_norma.label }}
+</label>
+{% if editar and form.instance.arquivo_norma %}
+  <div class="d-flex gap-2 align-items-center">
+    <a class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+       target="_blank" href="{{ form.instance.arquivo_norma.url }}">
+      <i class="bi bi-file-earmark-pdf"></i> Ver atual
+    </a>
+    {{ form.arquivo_norma|add_class:"form-control" }}
+  </div>
+{% else %}
+  {{ form.arquivo_norma|add_class:"form-control" }}
+{% endif %}
+
       </div>
     </div>
 
-    <hr class="my-4"/>
+<div class="border-top pt-4 mt-4"></div>
 
     {# ---------- 2) Composição Química ---------- #}
-    <h4 class="mb-3">Composição Química</h4>
+    <h4 class="mb-3">
+      <i class="bi bi-sliders me-2" aria-hidden="true"></i>
+      Composição Química
+    </h4>
+
     {{ elementos_formset.management_form }}
     <div class="table-responsive">
-      <table class="table table-bordered text-center align-middle" id="tblComposicao">
+<table class="table table-bordered table-hover table-striped text-center align-middle" id="tblComposicao">
         <thead class="table-light">
-          <tr>
-            <th rowspan="2" style="width:130px;">Tipo ABNT</th>
-            <th colspan="2">C</th><th colspan="2">Mn</th><th colspan="2">Si</th>
-            <th colspan="2">P</th><th colspan="2">S</th><th colspan="2">Cr</th>
-            <th colspan="2">Ni</th><th colspan="2">Cu</th><th colspan="2">Al</th>
-            <th rowspan="2" style="width:70px;">Excluir</th>
-          </tr>
-          <tr>
-            {% for _ in "123456789" %}<th>Min</th><th>Max</th>{% endfor %}
-          </tr>
-        </thead>
+  <tr>
+<th rowspan="2" class="text-nowrap" style="width:130px;">
+  Tipo ABNT
+  <i class="bi bi-question-circle-fill text-info ms-1"
+     data-bs-toggle="tooltip"
+     data-bs-placement="top"
+     title="Tipo de material segundo a classificação ABNT. Ex: SAE 1045, AISI 304 etc."></i>
+</th>
+    <th colspan="2" class="text-nowrap">C</th><th colspan="2" class="text-nowrap">Mn</th><th colspan="2" class="text-nowrap">Si</th>
+    <th colspan="2" class="text-nowrap">P</th><th colspan="2" class="text-nowrap">S</th><th colspan="2" class="text-nowrap">Cr</th>
+    <th colspan="2" class="text-nowrap">Ni</th><th colspan="2" class="text-nowrap">Cu</th><th colspan="2" class="text-nowrap">Al</th>
+    <th rowspan="2" class="text-nowrap" style="width:70px;">Excluir</th>
+  </tr>
+  <tr>
+    {% for _ in "123456789" %}
+      <th class="text-nowrap">Min</th>
+      <th class="text-nowrap">Max</th>
+    {% endfor %}
+  </tr>
+</thead>
+
 
         <tbody>
         {% for formE in elementos_formset %}
@@ -87,10 +111,18 @@
               {% endif %}
             {% endfor %}
             <td>
-              {% if elementos_formset.can_delete %}
-                {{ formE.DELETE }}<button type="button" class="btn btn-sm btn-danger del-row">x</button>
-              {% endif %}
-            </td>
+  {% if elementos_formset.can_delete %}
+    {{ formE.DELETE|add_class:"d-none" }}
+    <button type="button"
+            class="btn btn-sm btn-danger del-row"
+            aria-label="Excluir linha"
+            data-bs-toggle="tooltip"
+            title="Excluir linha">
+      <i class="bi bi-trash"></i>
+    </button>
+  {% endif %}
+</td>
+
           </tr>
           {% if formE.errors %}
             <tr><td colspan="21" class="text-danger text-start">{{ formE.errors }}</td></tr>
@@ -99,41 +131,55 @@
         </tbody>
       </table>
     </div>
-    <button type="button" id="addElem" class="btn btn-info mb-4">Adicionar Linha</button>
+<button type="button" id="addElem" class="btn btn-outline-info mb-4" aria-label="Adicionar linha na composição química">
+  <i class="bi bi-plus-circle text-info me-1"></i> Adicionar Linha
+</button>
 
     {# ---------- 3) Tração ---------- #}
-<h4 class="mb-3">Resistência à Tração</h4>
+<h4 class="mb-3">
+  <i class="bi bi-graph-up-arrow me-2" aria-hidden="true"></i>
+  Resistência à Tração
+</h4>
 {{ tracao_formset.management_form }}
 <div class="table-responsive">
-  <table class="table table-bordered text-center align-middle" id="tblTracao">
+<table class="table table-bordered table-hover table-striped text-center align-middle" id="tblTracao">
     <thead class="table-light">
-      <tr>
-        <th>Bitola Min (mm)</th>
-        <th>Bitola Max (mm)</th>
-        <th>R. Min (Kgf/mm²)</th>
-        <th>R. Max (Kgf/mm²)</th>
-        <th>Dureza (HR)</th>
-        <th style="width:70px;">Excluir</th>
-      </tr>
-    </thead>
+  <tr>
+    <th title="Bitola mínima (mm)" data-bs-toggle="tooltip">Bitola Min (mm)</th>
+    <th title="Bitola máxima (mm)" data-bs-toggle="tooltip">Bitola Max (mm)</th>
+    <th title="Resistência mínima à tração (Kgf/mm²)" data-bs-toggle="tooltip">R. Min (Kgf/mm²)</th>
+    <th title="Resistência máxima à tração (Kgf/mm²)" data-bs-toggle="tooltip">R. Max (Kgf/mm²)</th>
+    <th title="Dureza Rockwell (HR)" data-bs-toggle="tooltip">Dureza (HR)</th>
+    <th title="Excluir linha" data-bs-toggle="tooltip" style="width:70px;">Excluir</th>
+  </tr>
+</thead>
+
     <tbody>
      {% for formT in tracao_formset %}
   <tr>
-    {{ formT.id }} {# Campo oculto obrigatório para edição #}
-    <td>{{ formT.bitola_minima|add_class:"form-control" }}</td>
-    <td>{{ formT.bitola_maxima|add_class:"form-control" }}</td>
-    <td>{{ formT.resistencia_min|add_class:"form-control" }}</td>
-    <td>{{ formT.resistencia_max|add_class:"form-control" }}</td>
-    <td>
-  {{ formT.dureza|add_class:"form-control" }}
-</td>
+  {{ formT.id }} {# Campo oculto obrigatório para edição #}
+  <td>{{ formT.bitola_minima|add_class:"form-control"|attr:"placeholder:0.000" }}</td>
+  <td>{{ formT.bitola_maxima|add_class:"form-control"|attr:"placeholder:0.000" }}</td>
+  <td>{{ formT.resistencia_min|add_class:"form-control"|attr:"placeholder:0.000" }}</td>
+  <td>{{ formT.resistencia_max|add_class:"form-control"|attr:"placeholder:0.000" }}</td>
+  <td>
+    {{ formT.dureza|add_class:"form-control"|attr:"placeholder:0.000" }}
+  </td>
+
 
     <td>
-      {% if tracao_formset.can_delete %}
-        {{ formT.DELETE }}
-        <button type="button" class="btn btn-sm btn-danger del-row">x</button>
-      {% endif %}
-    </td>
+  {% if tracao_formset.can_delete %}
+    {{ formT.DELETE|add_class:"d-none" }}
+    <button type="button"
+        class="btn btn-sm btn-danger del-row"
+        aria-label="Excluir linha"
+        data-bs-toggle="tooltip"
+        title="Excluir linha">
+  <i class="bi bi-trash text-white"></i>
+</button>
+  {% endif %}
+</td>
+
   </tr>
   {% if formT.errors %}
     <tr>
@@ -145,15 +191,22 @@
     </tbody>
   </table>
 </div>
-<button type="button" id="addTracao" class="btn btn-success">Adicionar Linha</button>
+<button type="button" id="addTracao" class="btn btn-outline-success" aria-label="Adicionar linha na resistência à tração">
+  <i class="bi bi-plus-circle me-1"></i> Adicionar Linha
+</button>
 
 <hr>
 <div class="d-flex justify-content-between">
-  <a class="btn btn-secondary" href="{% url 'lista_normas' %}">Voltar</a>
-  <button class="btn btn-primary" type="submit">
-    {% if editar %}Salvar Alterações{% else %}Salvar{% endif %}
+  <a class="btn btn-outline-secondary d-flex align-items-center gap-2"
+     href="{% url 'lista_normas' %}" 
+     aria-label="Voltar para a lista de normas">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+  <button class="btn btn-primary d-flex align-items-center gap-2" type="submit" aria-label="Salvar norma técnica">
+    <i class="bi bi-save"></i> {% if editar %}Salvar Alterações{% else %}Salvar{% endif %}
   </button>
 </div>
+
 
 
 {# ---------- Template oculto p/ nova linha ---------- #}
@@ -185,6 +238,14 @@
   input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
   input[type=number]{ -moz-appearance:textfield }
   .table-responsive .form-control{ min-width:70px }
+  .select2-container--default .select2-selection--single {
+  height: 38px !important;
+  border-radius: 0.25rem !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 6px 12px !important;
+}
+
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

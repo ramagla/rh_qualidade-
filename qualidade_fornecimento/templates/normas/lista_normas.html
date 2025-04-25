@@ -5,92 +5,111 @@
 
 {% block content %}
 <div class="container-fluid mt-5">
-  <h2 class="text-center mb-4">Normas Técnicas</h2>
+<h2 class="text-center mb-4">
+  <i class="bi bi-journal-text-fill me-2" aria-hidden="true"></i>
+  <span class="visually-hidden">📚</span>
+  Normas Técnicas
+</h2>
 
-  <!-- Toast de Mensagens -->
-  {% if messages %}
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      {% for message in messages %}
-        <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert">
-          <div class="d-flex">
-            <div class="toast-body">{{ message }}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
+  {% include "partials/_toast_mensagens.html" %}
+<style>
+  .card-status {
+  opacity: 0.92;
+  transition: all 0.3s ease-in-out;
+}
+.card-status:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+
+.zebra-tabela tbody tr:hover {
+  background-color: #f8f9fa !important;
+  cursor: pointer;
+}
+
+</style>
 
   <!-- Filtro -->
   <div class="card mb-4">
     <div class="card-header">Filtros</div>
     <div class="card-body">
       <form method="get" class="row g-3">
-        <div class="col-md-6">
-          <label for="nome_norma" class="form-label">Nome da Norma</label>
-          <select id="nome_norma" name="nome_norma" class="form-select">
-            <option value="">Todas</option>
-            {% for nome in lista_normas %}
-              <option value="{{ nome }}" {% if nome == nome_norma %}selected{% endif %}>{{ nome }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-6 d-flex align-items-end justify-content-end">
-          <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-        </div>
+        <div class="col-md-4">
+  <label for="nome_norma" class="form-label">Nome da Norma</label>
+  <div class="input-group">
+    <span class="input-group-text"><i class="bi bi-file-earmark-text"></i></span>
+    <select id="nome_norma" name="nome_norma" class="form-select">
+      <option value="">Todas</option>
+      {% for nome in lista_normas %}
+        <option value="{{ nome }}" {% if nome == nome_norma %}selected{% endif %}>{{ nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+
+        <div class="col-md-3 d-flex align-items-end justify-content-center">
+  <button type="submit" class="btn btn-primary w-100" aria-label="Aplicar filtros">
+    <i class="bi bi-search me-1" aria-hidden="true"></i> Filtrar
+  </button>
+</div>
+
       </form>
     </div>
   </div>
 
   <!-- Cards Resumo -->
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card text-white bg-success">
-        <div class="card-header text-center">Total de Normas</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ total_normas }}</h5>
-          <p class="card-text">Normas cadastradas no sistema.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card text-white bg-secondary">
-        <div class="card-header text-center">Com Arquivo</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ normas_com_arquivo }}</h5>
-          <p class="card-text">Normas com PDF vinculado.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card text-white bg-warning">
-        <div class="card-header text-center">Sem Vinculação</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ normas_sem_vinculo }}</h5>
-          <p class="card-text">Normas sem vínculo.</p>
-        </div>
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card text-white bg-success border-0 shadow-sm card-status">
+      <div class="card-header text-center">Total de Normas</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ total_normas }}</h5>
+        <p class="card-text">Normas cadastradas no sistema.</p>
       </div>
     </div>
   </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-secondary border-0 shadow-sm card-status">
+      <div class="card-header text-center">Com Arquivo</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ normas_com_arquivo }}</h5>
+        <p class="card-text">Normas com PDF vinculado.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-warning border-0 shadow-sm card-status">
+      <div class="card-header text-center">Sem Vinculação</div>
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ normas_sem_vinculo }}</h5>
+        <p class="card-text">Normas sem vínculo.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 
   <!-- Botão de Cadastro -->
-  <div class="d-flex justify-content-end mb-3">
-    <a href="{% url 'cadastrar_norma' %}" class="btn btn-success">
-      <i class="bi bi-plus-circle"></i> Nova Norma
-    </a>
-  </div>
+  <div class="d-flex justify-content-end gap-2 mb-3">
+  <a href="{% url 'cadastrar_norma' %}" class="btn btn-success" aria-label="Cadastrar nova norma técnica">
+    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Nova Norma
+  </a>
+</div>
+
 
   <!-- Tabela -->
   {% if normas %}
-    <table class="table table-hover table-bordered text-center align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Norma</th>
-          <th>Norma Vinculada</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
+    <div class="table-responsive">
+  <table class="table zebra-tabela table-hover table-bordered text-center align-middle">
+    <thead class="table-light">
+      <tr>
+        <th><i class="bi bi-file-earmark-text me-1"></i> Norma</th>
+        <th><i class="bi bi-link-45deg me-1"></i> Vinculada</th>
+        <th><i class="bi bi-gear me-1"></i> Ações</th>
+      </tr>
+    </thead>
+    <tbody>
         {% for norma in normas %}
           <tr>
             <td class="text-center align-middle">{{ norma.nome_norma }}</td>
@@ -102,70 +121,60 @@
               {% endif %}
             </td>
             <td class="text-center align-middle">
-              <a href="{% url 'visualizar_norma' norma.pk %}" class="btn btn-sm btn-secondary" title="Visualizar">
-                <i class="bi bi-eye"></i>
-              </a>
-              <a href="{% url 'editar_norma' norma.pk %}" class="btn btn-sm btn-warning" title="Editar">
-                <i class="bi bi-pencil"></i>
-              </a>
-              {% if norma.arquivo_norma %}
-                <a href="{{ norma.arquivo_norma.url }}" class="btn btn-sm btn-info" title="Download PDF" download>
-                  <i class="bi bi-download"></i>
-                </a>
-              {% endif %}
-              <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ norma.pk }}" title="Excluir">
-                <i class="bi bi-trash"></i>
-              </button>
+              <a href="{% url 'visualizar_norma' norma.pk %}"
+   class="btn btn-sm btn-secondary"
+   data-bs-toggle="tooltip"
+   title="Visualizar norma"
+   aria-label="Visualizar norma">
+  <i class="bi bi-eye" aria-hidden="true"></i>
+</a>
+
+<a href="{% url 'editar_norma' norma.pk %}"
+   class="btn btn-sm btn-warning"
+   data-bs-toggle="tooltip"
+   title="Editar norma"
+   aria-label="Editar norma">
+  <i class="bi bi-pencil" aria-hidden="true"></i>
+</a>
+
+{% if norma.arquivo_norma %}
+  <a href="{{ norma.arquivo_norma.url }}"
+     class="btn btn-sm btn-info"
+     data-bs-toggle="tooltip"
+     title="Baixar norma em PDF"
+     aria-label="Baixar norma em PDF"
+     download>
+    <i class="bi bi-download" aria-hidden="true"></i>
+  </a>
+{% endif %}
+
+<button type="button"
+        class="btn btn-sm btn-danger"
+        title="Excluir norma"
+        aria-label="Excluir norma"
+        data-bs-toggle="modal"
+        data-bs-target="#modalExcluir{{ norma.pk }}">
+  <i class="bi bi-trash" aria-hidden="true"></i>
+</button>
+{% include 'partials/_modal_exclusao.html' with objeto=norma url_excluir='excluir_norma' %}
+
             </td>
           </tr>
 
-          <!-- Modal de Exclusão -->
-          <div class="modal fade" id="modalExcluir{{ norma.pk }}" tabindex="-1" aria-labelledby="modalExcluirLabel{{ norma.pk }}" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <form method="post" action="{% url 'excluir_norma' norma.pk %}">
-                  {% csrf_token %}
-                  <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="modalExcluirLabel{{ norma.pk }}">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-                  <div class="modal-body">
-                    Deseja realmente excluir a norma <strong>{{ norma.nome_norma }}</strong>?
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Excluir</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
+
         {% endfor %}
       </tbody>
     </table>
   {% else %}
-    <p class="text-center">Nenhuma norma cadastrada.</p>
+{% include 'partials/_sem_resultados.html' %}
   {% endif %}
 
-  <!-- Paginação -->
-  <nav aria-label="Paginação">
-    <ul class="pagination justify-content-center">
-      {% if normas.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page=1">&laquo;&laquo;</a></li>
-        <li class="page-item"><a class="page-link" href="?page={{ normas.previous_page_number }}">&laquo;</a></li>
-      {% endif %}
-      {% for num in normas.paginator.page_range %}
-        {% if normas.number == num %}
-          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-        {% elif num > normas.number|add:'-3' and num < normas.number|add:'3' %}
-          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-        {% endif %}
-      {% endfor %}
-      {% if normas.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ normas.next_page_number }}">&raquo;</a></li>
-        <li class="page-item"><a class="page-link" href="?page={{ normas.paginator.num_pages }}">&raquo;&raquo;</a></li>
-      {% endif %}
-    </ul>
-  </nav>
+  {% include 'partials/_paginacao.html' with page_obj=normas %}
+
 </div>
+<script>
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+</script>
+
 {% endblock %}

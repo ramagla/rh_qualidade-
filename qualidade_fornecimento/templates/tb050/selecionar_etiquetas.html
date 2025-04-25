@@ -4,94 +4,164 @@
 {% block title %}Selecionar Etiquetas{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <h3 class="mb-4 text-center">Selecionar Etiquetas para Impressão</h3>
+<div class="container-fluid mt-5">
+  <h3 class="mb-4 text-center">
+    <i class="bi bi-printer me-2" aria-hidden="true"></i>
+    <span class="visually-hidden">📄</span>
+    Selecionar Etiquetas para Impressão
+  </h3>
 
-  <!-- Form que envia diretamente para 'tb050_imprimir_etiquetas' -->
   <form method="post" action="{% url 'tb050_imprimir_etiquetas' registro.id %}">
     {% csrf_token %}
-    <table class="table table-bordered table-hover align-middle">
-      <thead class="table-light text-center">
-        <tr>
-          <th>Selecionar</th>
-          <th>N° do Rolo</th>
-          <th>Peso (kg)</th>
-          <th>Qtd. de Etiquetas</th>
-        </tr>
-      </thead>
-      <tbody id="rolos-table-body">
-        <!-- Preenchido dinamicamente via JavaScript -->
-      </tbody>
-    </table>
+
+    <div class="table-responsive">
+  <table class="table table-sm table-bordered table-hover align-middle mx-auto">
+    <caption class="visually-hidden">Tabela de seleção de rolos para impressão de etiquetas</caption>
+    <thead class="table-light text-center">
+      <tr>
+        <th>Selecionar</th>
+        <th>N° do Rolo</th>
+        <th>Peso (kg)</th>
+        <th>Qtd. de Etiquetas</th>
+      </tr>
+    </thead>
+    <tbody id="rolos-table-body">
+      <!-- Preenchido dinamicamente via JavaScript -->
+    </tbody>
+  </table>
+</div>
+
 
     <div class="text-center mt-4">
-      <!-- Botão de submit que envia o POST para gerar o PDF -->
-      <button type="submit" class="btn btn-dark">
+      <button type="submit" id="btnGerarPdf" class="btn btn-dark">
+        <span id="spinnerPdf" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
         <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
       </button>
 
-      <a href="{% url 'tb050_list' %}" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Cancelar
-      </a>
+      <a href="{% url 'tb050_list' %}" class="btn btn-secondary" aria-label="Cancelar e voltar à lista de etiquetas">
+  <i class="bi bi-arrow-left"></i> Cancelar
+</a>
+
     </div>
   </form>
 </div>
 
+
 <script>
-  function carregarRolos(id) {
-    fetch(`/qualidade/tb050/get-rolos-peso/${id}/`)
-      .then(response => response.json())
-      .then(data => {
-        const tbody = document.getElementById("rolos-table-body");
-        tbody.innerHTML = ''; // Limpa antes de renderizar
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.querySelector("form");
+  const btnGerarPdf = document.getElementById("btnGerarPdf");
+  const spinnerPdf = document.getElementById("spinnerPdf");
+  const registroId = "{{ registro.id }}";
 
-        data.rolos.forEach(rolo => {
-          const tr = document.createElement("tr");
-          tr.classList.add("text-center");
-          tr.innerHTML = `
-            <td><input type="checkbox" name="rolos" value="${rolo.id}" checked></td>
-            <td>${rolo.nro_rolo}</td>
-            <td>
-              <div class="d-flex justify-content-center align-items-center">
-                <input type="number" 
-                       name="peso_${rolo.id}" 
-                       value="${parseFloat(rolo.peso).toFixed(2)}" 
-                       step="0.01" 
-                       min="0"
-                       class="form-control text-center peso-input"
-                       style="max-width: 100px;" 
-                       id="peso-input-${rolo.id}" 
-                       readonly>
-                <button type="button" class="btn btn-outline-secondary btn-sm ms-2 editar-peso-btn"
-                        onclick="habilitarEdicao('${rolo.id}')">
-                  Editar
-                </button>
-              </div>
-            </td>
-            <td>
-              <input type="number" name="quantidade_${rolo.id}" value="1" min="1"
-                     class="form-control mx-auto" style="max-width: 100px;">
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      })
-      .catch(error => console.error('Erro ao carregar rolos:', error));
-  }
+  carregarRolos(registroId);
 
-  function habilitarEdicao(roloId) {
-    const input = document.getElementById(`peso-input-${roloId}`);
-    if (input.hasAttribute("readonly")) {
-      input.removeAttribute("readonly");
-      input.focus();
-    } else {
-      input.setAttribute("readonly", true);
+  // Validação e spinner ao enviar formulário
+  form.addEventListener("submit", function (e) {
+    const checkboxes = form.querySelectorAll('input[name="rolos"]:checked');
+    if (checkboxes.length === 0) {
+      e.preventDefault();
+      alert("Selecione pelo menos um rolo para gerar o PDF.");
+      return;
     }
+
+    btnGerarPdf.disabled = true;
+    spinnerPdf.classList.remove("d-none");
+  });
+});
+
+// Função para carregar rolos
+function carregarRolos(id) {
+  fetch(`/qualidade/tb050/get-rolos-peso/${id}/`)
+    .then(response => response.json())
+    .then(data => {
+      const tbody = document.getElementById("rolos-table-body");
+      tbody.innerHTML = ''; // Limpa antes de renderizar
+
+      data.rolos.forEach(rolo => {
+        const tr = document.createElement("tr");
+        tr.classList.add("text-center");
+        tr.innerHTML = `
+          <td><input type="checkbox" name="rolos" value="${rolo.id}" checked></td>
+          <td>${rolo.nro_rolo}</td>
+          <td>
+            <div class="d-flex justify-content-center align-items-center">
+              <input type="number"
+       name="peso_${rolo.id}"
+       value="${parseFloat(rolo.peso).toFixed(2)}"
+       step="0.01"
+       min="0"
+       class="form-control text-center peso-input"
+       style="max-width: 100px;"
+       id="peso-input-${rolo.id}"
+       readonly
+       placeholder="Ex: 120.00">
+
+              <button type="button"
+                      id="btn-editar-${rolo.id}"
+                      class="btn btn-outline-secondary btn-sm ms-2 editar-peso-btn"
+                      onclick="habilitarEdicao('${rolo.id}')"
+                      aria-pressed="false"
+                      data-bs-toggle="tooltip"
+                      title="Editar peso do rolo">
+                Editar
+              </button>
+            </div>
+          </td>
+          <td>
+            <input type="number"
+                   name="quantidade_${rolo.id}"
+                   value="1"
+                   min="1"
+                   class="form-control mx-auto"
+                   style="max-width: 100px;"
+                   placeholder="Ex: 2">
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Reaplica tooltips após montar tabela
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    })
+    .catch(error => console.error('Erro ao carregar rolos:', error));
+}
+
+// Função para habilitar edição do peso
+function habilitarEdicao(roloId) {
+  const input = document.getElementById(`peso-input-${roloId}`);
+  const btn = document.getElementById(`btn-editar-${roloId}`);
+
+  if (input.hasAttribute("readonly")) {
+    input.removeAttribute("readonly");
+    input.focus();
+    btn.innerHTML = 'Salvar';
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('btn-success');
+    btn.setAttribute('aria-pressed', 'true'); // Atualiza aria-pressed para true
+    btn.setAttribute('title', 'Salvar peso do rolo'); // Atualiza o title para "Salvar"
+  } else {
+    input.setAttribute("readonly", true);
+    btn.innerHTML = 'Editar';
+    btn.classList.remove('btn-success');
+    btn.classList.add('btn-outline-secondary');
+    btn.setAttribute('aria-pressed', 'false'); // Atualiza aria-pressed para false
+    btn.setAttribute('title', 'Editar peso do rolo'); // Atualiza o title para "Editar"
   }
 
-  document.addEventListener("DOMContentLoaded", function() {
-    const registroId = "{{ registro.id }}";
-    carregarRolos(registroId);
-  });
+  // Atualizar o tooltip manualmente para refletir a nova ação
+  const tooltip = bootstrap.Tooltip.getInstance(btn);
+  if (tooltip) {
+    tooltip.dispose();
+    new bootstrap.Tooltip(btn);
+  }
+}
+
+
 </script>
+
+
 {% endblock %}

@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+  {{ titulo_pagina }}
+{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4 d-flex align-items-center justify-content-center gap-2">
+  <i class="bi bi-archive-fill" aria-hidden="true"></i> {{ titulo_pagina }}
+</h2>
+
+
+{% include "partials/_toast_mensagens.html" %}
+
+
+
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {% csrf_token %}
+
+   <div class="accordion mb-4" id="accordionFormulario">
+
+  <!-- Acordeão - Controle de Entrega e Atraso -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingEntregaAtraso">
+    <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEntregaAtraso" aria-expanded="true" aria-controls="collapseEntregaAtraso">
+      <i class="bi bi-clock-history me-2"></i> Controle de Entrega e Atraso
+    </button>
+  </h2>
+  <div id="collapseEntregaAtraso" class="accordion-collapse collapse show" aria-labelledby="headingEntregaAtraso">
+    <div class="accordion-body row g-3">
+
+      <div class="col-12 col-md-4">
+        <label for="id_nro_relatorio" class="form-label">N° do Relatório:</label>
+        {{ form.nro_relatorio|add_class:"form-control" }}
+      </div>
+
+
+      <div class="col-12 col-md-4">
+
+        <label for="id_atraso_em_dias" class="form-label">Atraso em Dias:</label>
+        {{ form.atraso_em_dias|add_class:"form-control"|attr:"placeholder:Número de dias de atraso" }}
+      </div>
+
+      <div class="col-12 col-md-4">
+
+        <label for="id_demerito_ip" class="form-label">Demérito (IP):</label>
+        {{ form.demerito_ip|add_class:"form-control"|attr:"placeholder:Valor do demérito (IP)" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+  <!-- Acordeão - Dados de Recebimento -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingRecebimento">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRecebimento" aria-expanded="false" aria-controls="collapseRecebimento">
+        <i class="bi bi-box-seam me-2"></i> Dados de Recebimento
+      </button>
+    </h2>
+    <div id="collapseRecebimento" class="accordion-collapse collapse" aria-labelledby="headingRecebimento" data-bs-parent="#accordionFormulario">
+      <div class="accordion-body row g-3">
+        
+        <div class="col-12 col-md-4">
+
+          <label for="id_data_entrada" class="form-label">Data de Entrada: <span class="text-danger">*</span></label>
+          {{ form.data_entrada|add_class:"form-control"|attr:"required" }}
+        </div>
+
+        <div class="col-12 col-md-4">
+
+          <label for="id_fornecedor" class="form-label">Fornecedor: <span class="text-danger">*</span></label>
+          {{ form.fornecedor|add_class:"form-select select2"|attr:"required" }}
+        </div>
+
+        <div class="col-12 col-md-4">
+
+          <label for="id_nota_fiscal" class="form-label">N. Fiscal: <span class="text-danger">*</span></label>
+          {{ form.nota_fiscal|add_class:"form-control"|attr:"placeholder:Digite o número da nota fiscal"|attr:"required" }}
+        </div>
+
+        <div class="col-12 col-md-4">
+
+          <label for="id_numero_certificado" class="form-label">N° do Certificado: <span class="text-danger">*</span></label>
+          {{ form.numero_certificado|add_class:"form-control"|attr:"required" }}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Acordeão - Características do Material -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingMaterial">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMaterial" aria-expanded="false" aria-controls="collapseMaterial">
+        <i class="bi bi-tags me-2"></i> Características do Material
+      </button>
+    </h2>
+    <div id="collapseMaterial" class="accordion-collapse collapse" aria-labelledby="headingMaterial" data-bs-parent="#accordionFormulario">
+      <div class="accordion-body row g-3">
+
+        <div class="col-12 col-md-4">
+
+          <label for="id_item_seguranca" class="form-label">Item Segurança:</label>
+          {{ form.item_seguranca|add_class:"form-select" }}
+        </div>
+
+        <div class="col-12 col-md-4">
+
+          <label for="id_material_cliente" class="form-label">Material do Cliente:</label>
+          {{ form.material_cliente|add_class:"form-select" }}
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label for="id_materia_prima" class="form-label">Matéria-Prima: <span class="text-danger">*</span></label>
+          {{ form.materia_prima|add_class:"form-select select2"|attr:"required" }}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Acordeão - Datas de Entrega e Anexo -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingEntregaAnexo">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEntregaAnexo" aria-expanded="false" aria-controls="collapseEntregaAnexo">
+      <i class="bi bi-calendar-event me-2" aria-hidden="true"></i> Datas de Entrega e Anexos
+    </button>
+  </h2>
+  <div id="collapseEntregaAnexo" class="accordion-collapse collapse" aria-labelledby="headingEntregaAnexo" data-bs-parent="#accordionFormulario">
+    <div class="accordion-body row g-3">
+
+      <div class="col-12 col-md-4">
+        <label for="id_data_prevista_entrega" class="form-label">Data Prevista de Entrega:</label>
+        {{ form.data_prevista_entrega }}
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label for="id_data_renegociada_entrega" class="form-label">Data Renegociada de Entrega:</label>
+        {{ form.data_renegociada_entrega }}
+      </div>
+
+      <div class="col-12 col-md-6">
+  <label for="id_anexo_certificado" class="form-label fw-bold">
+    <i class="bi bi-paperclip me-1" aria-hidden="true"></i> Anexo do Certificado:
+  </label>
+
+  <div class="input-group mb-2">
+    <button class="btn btn-outline-secondary d-flex align-items-center" type="button" onclick="document.getElementById('id_anexo_certificado').click();" aria-label="Selecionar arquivo para upload">
+      <i class="bi bi-upload me-2" aria-hidden="true"></i> Selecionar Arquivo
+    </button>
+    <input type="text" class="form-control text-muted" placeholder="Nenhum arquivo selecionado" id="filename_display" readonly>
+  </div>
+
+  <!-- Campo real oculto manualmente -->
+  <input type="file" name="anexo_certificado" id="id_anexo_certificado" class="d-none">
+
+  {% if form.instance.anexo_certificado %}
+    <div class="alert alert-secondary p-2 d-flex align-items-center justify-content-between small">
+      <div>
+        📎 <strong>
+          <a href="{{ form.instance.anexo_certificado.url }}" target="_blank">
+            {{ form.instance.anexo_certificado.name|cut:'certificados/materia_prima/' }}
+          </a>
+        </strong>
+      </div>
+      <div>
+        <input type="checkbox" name="anexo_certificado-clear" id="id_anexo_certificado-clear">
+        <label for="id_anexo_certificado-clear" class="text-muted">Limpar</label>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+
+    </div>
+  </div>
+</div>
+
+
+  <!-- Acordeão - Controle de Rolos -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingRolos">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRolos" aria-expanded="false" aria-controls="collapseRolos">
+      <i class="bi bi-boxes me-2" aria-hidden="true"></i> Controle de Rolos
+    </button>
+  </h2>
+  <div id="collapseRolos" class="accordion-collapse collapse" aria-labelledby="headingRolos" data-bs-parent="#accordionFormulario">
+    <div class="accordion-body">
+
+      {{ formset.management_form }}
+
+      <div id="rolo-formset" class="row g-3">
+        {% for rolo_form in formset %}
+          <div class="col-12 col-md-6">
+  <div class="card mb-3 p-3 shadow-sm position-relative">
+    {{ rolo_form.non_field_errors }}
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <label class="form-label">N° do Rolo:</label>
+        {{ rolo_form.nro_rolo|add_class:"form-control"|attr:"placeholder:Informe o número do rolo" }}
+      </div>
+      <div class="col-12 col-md-6">
+        <label class="form-label">Peso:</label>
+        {{ rolo_form.peso|add_class:"form-control"|attr:"placeholder:Informe o peso do rolo em kg" }}
+      </div>
+    </div>
+
+    {% if rolo_form.instance.pk %}
+  <div class="mt-3 text-end">
+    <button type="button" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center excluir-rolo"
+            data-checkbox-id="{{ rolo_form.DELETE.id_for_label }}">
+      <i class="bi bi-trash me-1" aria-hidden="true"></i> Excluir
+    </button>
+    <div style="position: absolute; left: -9999px;">
+      {{ rolo_form.DELETE }}
+    </div>
+  </div>
+{% endif %}
+
+  </div>
+</div>
+
+        {% endfor %}
+      </div>
+
+      <hr class="my-4">
+
+      <div class="text-center">
+        <button type="button" class="btn btn-outline-primary d-flex align-items-center justify-content-center" id="add-rolo" aria-label="Adicionar novo rolo">
+          <i class="bi bi-plus-circle me-2" aria-hidden="true"></i> Adicionar Rolo
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+    <div class="d-flex justify-content-center flex-wrap gap-2 mt-4">
+  <button type="submit" class="btn btn-primary mb-2 me-md-2" aria-label="{% if modo == 'Edição' %}Atualizar dados{% else %}Salvar dados{% endif %}">
+    <i class="bi bi-save me-1" aria-hidden="true"></i>
+    {% if modo == "Edição" %} Atualizar {% else %} Salvar {% endif %}
+  </button>
+
+  <a href="{% url 'tb050_list' %}" class="btn btn-secondary mb-2 ms-md-2" aria-label="Cancelar e voltar para a lista">
+    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+    Cancelar
+  </a>
+</div>
+
+  </form>
+</div>
+<style>
+  /* Alinha a altura do Select2 com Bootstrap */
+  .select2-container--default .select2-selection--single {
+    height: 38px !important;
+    padding: 5px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 26px !important;
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+    top: 1px;
+    right: 6px;
+  }
+</style>
+
+<!-- Select2 + Script do Formset + Cálculo de Atraso -->
+{% block extra_scripts %}
+  <!-- Primeiro, tenta carregar o Select2 via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='/static/js/select2.min.css'"/>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" onerror="this.onerror=null;this.src='/static/js/select2.min.js'"></script>
+
+  <!-- Fallback local (se o CDN falhar) -->
+  <link href="/static/js/select2.min.css" rel="stylesheet" />
+  <script src="/static/js/select2.min.js"></script>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Inicializa Select2 para os campos
+    $('#id_materia_prima, #id_fornecedor').select2({
+      placeholder: 'Selecione...',
+      width: '100%',
+      allowClear: true
+    });
+
+    // Ajuste visual para manter a altura igual aos campos form-control
+    $('.select2-selection').css('height', '38px');
+    $('.select2-selection__rendered').css('line-height', '36px');
+    $('.select2-selection__arrow').css('height', '36px');
+
+    // Atualiza nome do arquivo selecionado
+    const inputFile = document.getElementById("id_anexo_certificado");
+    const fileNameDisplay = document.getElementById("filename_display");
+    inputFile.addEventListener("change", function () {
+      const nomeArquivo = this.files[0]?.name || "Nenhum arquivo selecionado";
+      fileNameDisplay.value = nomeArquivo;
+    });
+
+    // Lógica para adicionar rolos dinamicamente
+    const addButton = document.getElementById("add-rolo");
+    const formsetContainer = document.getElementById("rolo-formset");
+    const totalFormsInput = document.getElementById("id_rolos-TOTAL_FORMS");
+
+    addButton.addEventListener("click", function () {
+      const currentFormCount = parseInt(totalFormsInput.value);
+      const emptyFormHtml = document.getElementById("empty-form").innerHTML.replace(/__prefix__/g, currentFormCount);
+      formsetContainer.insertAdjacentHTML("beforeend", emptyFormHtml);
+      totalFormsInput.value = currentFormCount + 1;
+    });
+
+    // Função para verificar se todos os campos de data obrigatórios estão preenchidos
+    const dataEntradaInput = document.getElementById("id_data_entrada");
+    const dataPrevistaInput = document.getElementById("id_data_prevista_entrega");
+    const dataRenegociadaInput = document.getElementById("id_data_renegociada_entrega");
+    const atrasoInput = document.getElementById("id_atraso_em_dias");
+    const demeritoInput = document.getElementById("id_demerito_ip");
+
+    function verificarCamposPreenchidos() {
+      return dataEntradaInput.value && dataPrevistaInput.value; // Apenas "Data de Entrada" e "Data Prevista de Entrega" são obrigatórios
+    }
+
+    // Função de cálculo de atraso
+    function calcularAtraso() {
+      if (!verificarCamposPreenchidos()) return; // Não faz o cálculo se não todos os campos estiverem preenchidos
+
+      const dataEntrada = new Date(dataEntradaInput.value);
+      const dataPrevista = new Date(dataPrevistaInput.value);
+      const dataRenegociada = dataRenegociadaInput.value ? new Date(dataRenegociadaInput.value) : null;
+
+      const base = dataRenegociada || dataPrevista; // Prioriza a data renegociada, se estiver preenchida
+
+      const atraso = Math.floor((dataEntrada - base) / (1000 * 60 * 60 * 24)); // Cálculo de atraso em dias
+      atrasoInput.value = atraso; // Preenche o campo de atraso
+
+      let demerito = 0;
+      if (atraso >= 21) demerito = 30;
+      else if (atraso >= 16) demerito = 20;
+      else if (atraso >= 11) demerito = 15;
+      else if (atraso >= 7) demerito = 10;
+      else if (atraso >= 4) demerito = 5;
+      else if (atraso >= 1) demerito = 2;
+
+      demeritoInput.value = demerito; // Preenche o campo de demérito
+    }
+
+    // Configura o evento de mudança para os campos de data
+    [dataEntradaInput, dataPrevistaInput, dataRenegociadaInput].forEach(input => {
+      input.addEventListener("change", calcularAtraso);
+    });
+  });
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Ativa o checkbox de exclusão quando clicar no botão
+  document.querySelectorAll(".excluir-rolo").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const checkboxId = this.dataset.checkboxId;
+      const checkbox = document.getElementById(checkboxId);
+      if (checkbox) {
+        checkbox.checked = true;
+        checkbox.closest('div').style.display = 'block';  // 🔥 Deixa o checkbox visível para garantir o envio
+        this.closest(".card").classList.add("opacity-50"); // Apenas efeito visual de apagar o card
+      }
+    });
+  });
+});
+</script>
+
+
+
+{% endblock %}
+
+<!-- Template oculto para novo rolo -->
+<div id="empty-form" class="d-none">
+  <div class="card mb-3 p-3">
+    <div class="row">
+      <div class="col-12 col-md-4">
+
+        <label class="form-label">N° do Rolo:</label>
+        {{ formset.empty_form.nro_rolo|add_class:"form-control" }}
+      </div>
+      <div class="col-12 col-md-4">
+
+        <label class="form-label">Peso:</label>
+        {{ formset.empty_form.peso|add_class:"form-control" }}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -5,33 +5,27 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.utils import timezone
-from datetime import date, timedelta
+from datetime import date
 from django.contrib.auth.decorators import login_required
 import logging
 import openpyxl  # se desejar usar a importação via Excel
 
-from qualidade_fornecimento.forms.inline_rolo_formset import RoloFormSet
-from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
 from qualidade_fornecimento.forms.tb050_forms import RelacaoMateriaPrimaForm
 from qualidade_fornecimento.models.rolo import RoloMateriaPrima
 
 logger = logging.getLogger(__name__)
 
 from django.shortcuts import render
-from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
 from qualidade_fornecimento.models import (
     RelacaoMateriaPrima,
     FornecedorQualificado,
     MateriaPrimaCatalogo,
+    
 )
 
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.shortcuts import render
-from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
-from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
-from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
+from qualidade_fornecimento.forms.inline_rolo_formset import RoloFormSet
+from django.forms import inlineformset_factory
+from qualidade_fornecimento.models.rolo import RoloMateriaPrima
 
 @login_required
 def lista_tb050(request):
@@ -125,16 +119,54 @@ def lista_tb050(request):
     return render(request, 'tb050/lista_tb050.html', context)
 
 
-from qualidade_fornecimento.models.f045 import RelatorioF045  
 
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from qualidade_fornecimento.forms.tb050_forms import RelacaoMateriaPrimaForm
-from qualidade_fornecimento.forms.inline_rolo_formset import RoloFormSet
-from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
-from qualidade_fornecimento.models.rolo import RoloMateriaPrima
-from qualidade_fornecimento.models.f045 import RelatorioF045
+def salvar_formulario_tb050(form, formset, registro_existente=None):
+    tb050 = form.save(commit=False)
+
+    if tb050.nro_relatorio:
+        try:
+            from qualidade_fornecimento.models.f045 import RelatorioF045
+            f045 = RelatorioF045.objects.get(nro_relatorio=tb050.nro_relatorio)
+            status = f045.status_geral.strip().lower()
+
+            if status == "aprovado":
+                tb050.status = "Aprovado"
+            elif status in ["aprovado condicional", "aprovação condicional", "aprovado condicionalmente"]:
+                tb050.status = "Aprovado Condicionalmente"
+            elif status == "reprovado":
+                tb050.status = "Reprovado"
+            else:
+                tb050.status = "Aguardando F045"
+        except RelatorioF045.DoesNotExist:
+            tb050.status = "Aguardando F045"
+    else:
+        tb050.status = "Aguardando F045"
+
+    tb050.save()
+
+    # 1️⃣ Salva primeiro os objetos em memória
+    rolos = formset.save(commit=False)
+
+    # 2️⃣ Agora sim: Deleta os que marcaram como excluir
+    if hasattr(formset, 'deleted_forms'):
+        for form in formset.deleted_forms:
+            if form.instance.pk:
+                form.instance.delete()
+
+    # 3️⃣ Depois salva os novos ou editados
+    for rolo in rolos:
+        if not registro_existente and (rolo.nro_rolo == "Será gerado ao salvar" or not rolo.nro_rolo):
+            ultimo = RoloMateriaPrima.objects.order_by('-id').first()
+            ultimo_numero = int(ultimo.nro_rolo) if ultimo and ultimo.nro_rolo.isdigit() else 49999
+            rolo.nro_rolo = str(ultimo_numero + 1)
+        rolo.tb050 = tb050
+        rolo.save()
+
+    formset.save_m2m()
+
+    return tb050
+
+
 
 @login_required
 def cadastrar_tb050(request):
@@ -142,86 +174,23 @@ def cadastrar_tb050(request):
         form = RelacaoMateriaPrimaForm(request.POST, request.FILES)
         formset = RoloFormSet(request.POST)
 
-        # 🛠 Força peso para os rolos do formset
-        for i, rolo_form in enumerate(formset.forms):
-            if rolo_form and hasattr(rolo_form, 'fields') and 'peso' in rolo_form.fields:
-                key_name = f"rolos-{i}-peso"
-                peso_str = request.POST.get(key_name)
-                if peso_str is not None:
-                    rolo_form.data = rolo_form.data.copy()
-                    rolo_form.data[rolo_form.add_prefix('peso')] = peso_str
-
-        form_valid = form.is_valid()
-        formset_valid = formset.is_valid()
-
-        # 🔥 Debug manual
-        print("\n=== DEBUG Cadastro TB050 ===")
-        print("Form principal (RelacaoMateriaPrimaForm):", "VÁLIDO" if form_valid else "INVÁLIDO")
-        print("Formset de Rolos (RoloFormSet):", "VÁLIDO" if formset_valid else "INVÁLIDO")
-        if not form_valid:
-            print("--- ERROS NO FORM PRINCIPAL ---")
-            for field, errors in form.errors.items():
-                print(f"{field}: {errors}")
-        if not formset_valid:
-            print("--- ERROS NO FORMSET DE ROLOS ---")
-            for i, rolo_form in enumerate(formset.forms):
-                if rolo_form.errors:
-                    print(f"Rolo {i}:")
-                    for field, errors in rolo_form.errors.items():
-                        print(f"  {field}: {errors}")
-        print("=== FIM DEBUG ===")
-
-        # ✅ Se tudo OK, salva normalmente
-        if form_valid and formset_valid:
-            tb050 = form.save(commit=False)
-
-            # Atualiza status baseado no F045, se existir
-            if tb050.nro_relatorio:
-                try:
-                    f045 = RelatorioF045.objects.get(nro_relatorio=tb050.nro_relatorio)
-                    status = f045.status_geral.strip().lower()
-                    if status == "aprovado":
-                        tb050.status = "Aprovado"
-                    elif status in ["aprovado condicional", "aprovação condicional", "aprovado condicionalmente"]:
-                        tb050.status = "Aprovado Condicionalmente"
-                    elif status == "reprovado":
-                        tb050.status = "Reprovado"
-                    else:
-                        tb050.status = "Aguardando F045"
-                except RelatorioF045.DoesNotExist:
-                    tb050.status = "Aguardando F045"
-            else:
-                tb050.status = "Aguardando F045"
-
-            tb050.save()
-
-            # Salva os rolos
-            rolos = formset.save(commit=False)
-            for rolo in rolos:
-                if rolo.nro_rolo == "Será gerado ao salvar" or not rolo.nro_rolo:
-                    ultimo = RoloMateriaPrima.objects.order_by('-id').first()
-                    ultimo_numero = int(ultimo.nro_rolo) if ultimo and ultimo.nro_rolo.isdigit() else 49999
-                    rolo.nro_rolo = str(ultimo_numero + 1)
-                rolo.tb050 = tb050
-                rolo.save()
-
-            formset.save_m2m()
-
+        if form.is_valid() and formset.is_valid():
+            salvar_formulario_tb050(form, formset)
             messages.success(request, "Registro da TB050 cadastrado com sucesso!")
             return redirect("tb050_list")
         else:
-            if not form_valid:
-                messages.error(request, "Corrija os erros no formulário principal.")
-            if not formset_valid:
-                messages.error(request, "Corrija os erros nos rolos.")
+            messages.error(request, "Corrija os erros no formulário.")
+
     else:
         form = RelacaoMateriaPrimaForm()
         formset = RoloFormSet()
 
-    return render(request, "tb050/cadastrar_tb050.html", {
+    return render(request, "tb050/form_tb050.html", {
         "form": form,
-        "formset": formset
+        "formset": formset,
+        "titulo_pagina": "Cadastrar Relação de Matérias-Primas (TB050)",
     })
+
 
 
 @login_required
@@ -233,46 +202,23 @@ def editar_tb050(request, id):
         formset = RoloFormSet(request.POST, instance=registro)
 
         if form.is_valid() and formset.is_valid():
-            tb050 = form.save(commit=False)
-
-            if tb050.nro_relatorio:
-                try:
-                    from qualidade_fornecimento.models.f045 import RelatorioF045
-                    f045 = RelatorioF045.objects.get(nro_relatorio=tb050.nro_relatorio)
-                    status = f045.status_geral.strip().lower()
-
-                    if status == "aprovado":
-                        tb050.status = "Aprovado"
-                    elif status in ["aprovado condicional", "aprovação condicional", "aprovado condicionalmente"]:
-                        tb050.status = "Aprovado Condicionalmente"
-                    elif status == "reprovado":
-                        tb050.status = "Reprovado"
-                    else:
-                        tb050.status = "Aguardando F045"
-                except RelatorioF045.DoesNotExist:
-                    tb050.status = "Aguardando F045"
-            else:
-                tb050.status = "Aguardando F045"
-
-            tb050.save()
-            formset.save()
-
+            salvar_formulario_tb050(form, formset, registro_existente=registro)
             messages.success(request, "Registro atualizado com sucesso!")
             return redirect("tb050_list")
         else:
-            if not form.is_valid():
-                messages.error(request, "Corrija os erros no formulário principal.")
-            if not formset.is_valid():
-                messages.error(request, "Corrija os erros nos rolos.")
+            messages.error(request, "Corrija os erros no formulário.")
+
     else:
         form = RelacaoMateriaPrimaForm(instance=registro)
         formset = RoloFormSet(instance=registro)
 
-    return render(request, "tb050/editar_tb050.html", {
+    return render(request, "tb050/form_tb050.html", {
         "form": form,
         "formset": formset,
         "registro": registro,
+        "titulo_pagina": "Editar Relação de Matérias-Primas (TB050)",
     })
+
 
 
 @login_required
