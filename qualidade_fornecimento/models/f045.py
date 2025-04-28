@@ -1,11 +1,14 @@
 from decimal import Decimal, InvalidOperation
-from django.db import models
+
 from django.contrib.auth import get_user_model
+from django.db import models
 
 from qualidade_fornecimento.models.norma import NormaTecnica, NormaTracao
+
 from .materiaPrima import RelacaoMateriaPrima
 
 User = get_user_model()
+
 
 class RelatorioF045(models.Model):
     """
@@ -13,7 +16,9 @@ class RelatorioF045(models.Model):
     """
 
     # ❶ Dados automáticos (copiados da relação no momento da criação)
-    relacao = models.OneToOneField(RelacaoMateriaPrima, on_delete=models.CASCADE, related_name="f045")
+    relacao = models.OneToOneField(
+        RelacaoMateriaPrima, on_delete=models.CASCADE, related_name="f045"
+    )
     nro_relatorio = models.PositiveIntegerField(editable=False)
     fornecedor = models.CharField(max_length=120, editable=False)
     nota_fiscal = models.CharField(max_length=50, editable=False)
@@ -28,15 +33,33 @@ class RelatorioF045(models.Model):
     pedido_compra = models.CharField(max_length=50, null=True, blank=True)
 
     # ❸ Resultados da composição química
-    c_user  = models.DecimalField("C (%)", max_digits=6, decimal_places=3, null=True, blank=True)
-    mn_user = models.DecimalField("Mn (%)", max_digits=6, decimal_places=3, null=True, blank=True)
-    si_user = models.DecimalField("Si (%)", max_digits=6, decimal_places=3, null=True, blank=True)
-    p_user  = models.DecimalField("P (%)", max_digits=6, decimal_places=3, null=True, blank=True)
-    s_user  = models.DecimalField("S (%)", max_digits=6, decimal_places=3, null=True, blank=True)
-    cr_user = models.DecimalField("Cr (%)", max_digits=6, decimal_places=3, null=True, blank=True)
-    ni_user = models.DecimalField("Ni (%)", max_digits=6, decimal_places=3, null=True, blank=True)
-    cu_user = models.DecimalField("Cu (%)", max_digits=6, decimal_places=3, null=True, blank=True)
-    al_user = models.DecimalField("Al (%)", max_digits=6, decimal_places=3, null=True, blank=True)
+    c_user = models.DecimalField(
+        "C (%)", max_digits=6, decimal_places=3, null=True, blank=True
+    )
+    mn_user = models.DecimalField(
+        "Mn (%)", max_digits=6, decimal_places=3, null=True, blank=True
+    )
+    si_user = models.DecimalField(
+        "Si (%)", max_digits=6, decimal_places=3, null=True, blank=True
+    )
+    p_user = models.DecimalField(
+        "P (%)", max_digits=6, decimal_places=3, null=True, blank=True
+    )
+    s_user = models.DecimalField(
+        "S (%)", max_digits=6, decimal_places=3, null=True, blank=True
+    )
+    cr_user = models.DecimalField(
+        "Cr (%)", max_digits=6, decimal_places=3, null=True, blank=True
+    )
+    ni_user = models.DecimalField(
+        "Ni (%)", max_digits=6, decimal_places=3, null=True, blank=True
+    )
+    cu_user = models.DecimalField(
+        "Cu (%)", max_digits=6, decimal_places=3, null=True, blank=True
+    )
+    al_user = models.DecimalField(
+        "Al (%)", max_digits=6, decimal_places=3, null=True, blank=True
+    )
 
     laudo_composicao = models.CharField(
         "Laudo – composição",
@@ -58,12 +81,18 @@ class RelatorioF045(models.Model):
     observacoes = models.TextField(max_length=1200, null=True, blank=True)
 
     # ❺ Outras características do certificado do fornecedor
-    resistencia_tracao = models.CharField(max_length=50, default="N/A", null=True, blank=True)
-    escoamento         = models.CharField(max_length=50, default="N/A", null=True, blank=True)
-    alongamento        = models.CharField(max_length=50, default="N/A", null=True, blank=True)
-    estriccao          = models.CharField(max_length=50, default="N/A", null=True, blank=True)
-    torcao_certificado = models.CharField(max_length=50, default="N/A", null=True, blank=True)
-    dureza_certificado = models.CharField("Dureza (certificado)", max_length=50, default="N/A", null=True, blank=True)
+    resistencia_tracao = models.CharField(
+        max_length=50, default="N/A", null=True, blank=True
+    )
+    escoamento = models.CharField(max_length=50, default="N/A", null=True, blank=True)
+    alongamento = models.CharField(max_length=50, default="N/A", null=True, blank=True)
+    estriccao = models.CharField(max_length=50, default="N/A", null=True, blank=True)
+    torcao_certificado = models.CharField(
+        max_length=50, default="N/A", null=True, blank=True
+    )
+    dureza_certificado = models.CharField(
+        "Dureza (certificado)", max_length=50, default="N/A", null=True, blank=True
+    )
 
     status_geral = models.CharField(max_length=30, blank=True, editable=False)
 
@@ -83,19 +112,18 @@ class RelatorioF045(models.Model):
     def avaliar_composicao(self, limites: dict[str, tuple[Decimal, Decimal]]):
         for sigla, (vmin, vmax) in limites.items():
             valor = getattr(self, f"{sigla}_user")
-            
+
             # >>> [NOVO] Se intervalo for 0–0, ignora a validação (considera aprovado)
             if vmin == 0 and vmax == 0:
                 continue
-            
+
             if valor is None:
                 return "Re"
-            
+
             if not (vmin <= valor <= vmax):
                 return "Re"
-                
-        return "Ap"
 
+        return "Ap"
 
     def avaliar_interno(self):
         rolos = self.relacao.rolos.all()
@@ -103,16 +131,22 @@ class RelatorioF045(models.Model):
             return "Re"
 
         try:
-            norma = NormaTecnica.objects.get(nome_norma=self.relacao.materia_prima.norma)
+            norma = NormaTecnica.objects.get(
+                nome_norma=self.relacao.materia_prima.norma
+            )
             bitola_str = str(self.relacao.materia_prima.bitola).replace(",", ".")
             bitola_val = float(bitola_str)
 
             tracao = NormaTracao.objects.filter(
                 norma=norma,
                 bitola_minima__lte=bitola_val,
-                bitola_maxima__gte=bitola_val
+                bitola_maxima__gte=bitola_val,
             ).first()
-            dureza_limite = Decimal(str(tracao.dureza).replace(",", ".")) if tracao and tracao.dureza else None
+            dureza_limite = (
+                Decimal(str(tracao.dureza).replace(",", "."))
+                if tracao and tracao.dureza
+                else None
+            )
         except Exception:
             dureza_limite = None
 
@@ -121,12 +155,16 @@ class RelatorioF045(models.Model):
                 if rolo.dureza > dureza_limite:
                     return "Re"
 
-            for campo in ["enrolamento", "dobramento", "torcao_residual", "aspecto_visual"]:
+            for campo in [
+                "enrolamento",
+                "dobramento",
+                "torcao_residual",
+                "aspecto_visual",
+            ]:
                 if getattr(rolo, campo, "").upper() != "OK":
                     return "Re"
 
         return "Ap"
-
 
     def save(self, *args, **kwargs):
         limites = kwargs.pop("limites_quimicos", None)
@@ -148,5 +186,3 @@ class RelatorioF045(models.Model):
             self.status_geral = "Reprovado"
 
         super().save(*args, **kwargs)
-
-

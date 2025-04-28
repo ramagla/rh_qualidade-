@@ -1,68 +1,70 @@
-from django.db import models
 from datetime import date, timedelta
+
+from django.db import models
+
 from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 
 STATUS_CHOICES = [
-    ('Aguardando F045', 'Aguardando F045'),
-    ('Aprovado', 'Aprovado'),
-    ('Aprovado Condicionalmente', 'Aprovado Condicionalmente'),
-    ('Reprovado', 'Reprovado'),
+    ("Aguardando F045", "Aguardando F045"),
+    ("Aprovado", "Aprovado"),
+    ("Aprovado Condicionalmente", "Aprovado Condicionalmente"),
+    ("Reprovado", "Reprovado"),
 ]
 
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
+
 
 class RelacaoMateriaPrima(models.Model):
     nro_relatorio = models.PositiveIntegerField(unique=True, blank=True, null=True)
 
     materia_prima = models.ForeignKey(
-        MateriaPrimaCatalogo,
-        on_delete=models.PROTECT,
-        verbose_name="Matéria-Prima"
+        MateriaPrimaCatalogo, on_delete=models.PROTECT, verbose_name="Matéria-Prima"
     )
 
     data_entrada = models.DateField("Data de Entrada")
     fornecedor = models.ForeignKey(
-        FornecedorQualificado,
-        on_delete=models.PROTECT,
-        verbose_name="Fornecedor"
+        FornecedorQualificado, on_delete=models.PROTECT, verbose_name="Fornecedor"
     )
     nota_fiscal = models.CharField("N. Fiscal", max_length=50, blank=True, null=True)
-    numero_certificado = models.CharField("N° do Certificado", max_length=100, blank=True, null=True)
-    
+    numero_certificado = models.CharField(
+        "N° do Certificado", max_length=100, blank=True, null=True
+    )
+
     # Novos campos booleanos com opções "Sim" e "Não"
     item_seguranca = models.BooleanField(
-        "Item Segurança",
-        choices=[(True, 'Sim'), (False, 'Não')],
-        default=False
+        "Item Segurança", choices=[(True, "Sim"), (False, "Não")], default=False
     )
     material_cliente = models.BooleanField(
-        "Material do Cliente",
-        choices=[(True, 'Sim'), (False, 'Não')],
-        default=False
+        "Material do Cliente", choices=[(True, "Sim"), (False, "Não")], default=False
     )
 
-    status = models.CharField("Status", max_length=30, choices=STATUS_CHOICES, blank=True, null=True)
+    status = models.CharField(
+        "Status", max_length=30, choices=STATUS_CHOICES, blank=True, null=True
+    )
 
-    data_prevista_entrega = models.DateField("Data Prevista de Entrega", blank=True, null=True)
-    data_renegociada_entrega = models.DateField("Data de Entrega / Renegociação", blank=True, null=True)
+    data_prevista_entrega = models.DateField(
+        "Data Prevista de Entrega", blank=True, null=True
+    )
+    data_renegociada_entrega = models.DateField(
+        "Data de Entrega / Renegociação", blank=True, null=True
+    )
 
     atraso_em_dias = models.IntegerField("Atraso em dias", blank=True, null=True)
     demerito_ip = models.IntegerField("Demérito (IP)", blank=True, null=True)
 
     anexo_certificado = models.FileField(
-        upload_to='certificados/materia_prima/',
+        upload_to="certificados/materia_prima/",
         blank=True,
         null=True,
-        verbose_name="Anexo do Certificado"
+        verbose_name="Anexo do Certificado",
     )
 
     anexo_f045 = models.FileField(
-    upload_to='relatorios/f045/',
-    blank=True,
-    null=True,
-    verbose_name="Relatório F045 Gerado"
-)
-
+        upload_to="relatorios/f045/",
+        blank=True,
+        null=True,
+        verbose_name="Relatório F045 Gerado",
+    )
 
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -105,9 +107,9 @@ class RelacaoMateriaPrima(models.Model):
         # Salva novamente apenas se houver alterações no atraso/demerito
         super().save(update_fields=["atraso_em_dias", "demerito_ip"])
 
-
     def __str__(self):
         return f"Relatório #{self.nro_relatorio}"
+
     @property
     def peso_total(self):
-        return self.rolos.aggregate(total=models.Sum('peso'))['total'] or 0
+        return self.rolos.aggregate(total=models.Sum("peso"))["total"] or 0

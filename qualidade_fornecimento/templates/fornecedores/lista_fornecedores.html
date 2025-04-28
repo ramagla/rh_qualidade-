@@ -6,11 +6,9 @@
 
 {% block content %}
 <div class="container-fluid mt-5">
-<h2 class="text-center mb-4">
-  <i class="bi bi-clipboard2-check-fill me-2" aria-hidden="true"></i>
-  <span class="visually-hidden">📋</span>
-  Fornecedores Qualificados
-</h2>
+
+{% include "partials/global/_header_titulo.html" with titulo="Fornecedores Qualificados" %}
+
 <style>
 .card-status {
   opacity: 0.92;
@@ -28,7 +26,7 @@
 }
 </style>
   
-{% include "partials/_toast_mensagens.html" %}
+{% include "partials/global/_toast_mensagens.html" %}
 
 
   <!-- Filtros em Card -->
@@ -106,14 +104,23 @@
 
 
   <!-- Botão para Cadastrar -->
-  <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+<div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+
+  {% if request.user|has_permission:'qualidade_fornecimento.add_fornecedorqualificado' %}
   <a href="{% url 'cadastrar_fornecedor' %}" class="btn btn-success" aria-label="Cadastrar novo fornecedor">
     <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar Fornecedor
   </a>
+  {% endif %}
+
+  {% if request.user|has_permission:'qualidade_fornecimento.add_fornecedorqualificado' %}
   <a href="{% url 'importar_excel_fornecedores' %}" class="btn btn-secondary" aria-label="Importar fornecedores via Excel">
     <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Importar Excel
   </a>
+  {% endif %}
+
 </div>
+
+
 
 
 
@@ -220,54 +227,66 @@
   {% endif %}
 </td>
 
-            <td>
-  <a href="{% url 'visualizar_fornecedor' fornecedor.id %}" 
-   class="btn btn-sm btn-secondary" 
-   data-bs-toggle="tooltip" 
-   title="Visualizar fornecedor" 
-   aria-label="Visualizar fornecedor">
-  <i class="bi bi-eye" aria-hidden="true"></i>
-</a>
+           <td>
+  <div class="d-inline-flex flex-wrap justify-content-center gap-2">
 
-<a href="{% url 'editar_fornecedor' fornecedor.id %}" 
-   class="btn btn-sm btn-warning" 
-   data-bs-toggle="tooltip" 
-   title="Editar fornecedor" 
-   aria-label="Editar fornecedor">
-  <i class="bi bi-pencil" aria-hidden="true"></i>
-</a>
+    {% if request.user|has_permission:'qualidade_fornecimento.view_fornecedorqualificado' %}
+    <a href="{% url 'visualizar_fornecedor' fornecedor.id %}" 
+       class="btn btn-sm btn-secondary" 
+       data-bs-toggle="tooltip" 
+       title="Visualizar fornecedor" 
+       aria-label="Visualizar fornecedor">
+      <i class="bi bi-eye" aria-hidden="true"></i>
+    </a>
+    {% endif %}
 
-{% if fornecedor.certificado_anexo %}
-  <a href="{{ fornecedor.certificado_anexo.url }}" 
-     class="btn btn-sm btn-info" 
-     data-bs-toggle="tooltip" 
-     title="Baixar certificado em PDF" 
-     aria-label="Baixar certificado em PDF" 
-     download>
-    <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
-  </a>
-{% endif %}
+    {% if request.user|has_permission:'qualidade_fornecimento.change_fornecedorqualificado' %}
+    <a href="{% url 'editar_fornecedor' fornecedor.id %}" 
+       class="btn btn-sm btn-warning" 
+       data-bs-toggle="tooltip" 
+       title="Editar fornecedor" 
+       aria-label="Editar fornecedor">
+      <i class="bi bi-pencil" aria-hidden="true"></i>
+    </a>
+    {% endif %}
 
+    {% if fornecedor.certificado_anexo %}
+    <a href="{{ fornecedor.certificado_anexo.url }}" 
+       class="btn btn-sm btn-info" 
+       data-bs-toggle="tooltip" 
+       title="Baixar certificado em PDF" 
+       aria-label="Baixar certificado em PDF" 
+       download>
+      <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+    </a>
+    {% endif %}
 
+    {% if request.user|has_permission:'qualidade_fornecimento.delete_fornecedorqualificado' %}
+    <button class="btn btn-sm btn-danger" 
+            data-bs-toggle="modal" 
+            data-bs-target="#modalExcluir{{ fornecedor.pk }}"
+            title="Excluir fornecedor" 
+            aria-label="Excluir fornecedor">
+      <i class="bi bi-trash" aria-hidden="true"></i>
+    </button>
 
-<button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ fornecedor.pk }}">
-  <i class="bi bi-trash"></i>
-</button>
-{% include 'partials/_modal_exclusao.html' with objeto=fornecedor url_excluir='excluir_fornecedor' %}
+    {% include 'partials/global/_modal_exclusao.html' with objeto=fornecedor url_excluir='excluir_fornecedor' %}
+    {% endif %}
 
-
+  </div>
 </td>
+
 
           </tr>
         {% endfor %}
       </tbody>
     </table>
   {% else %}
-{% include "partials/_sem_resultados.html" %}
+{% include "partials/global/_sem_resultados.html" %}
   {% endif %}
 
   <!-- Paginação -->
-  {% include "partials/_paginacao.html" with page_obj=fornecedores_paginados %}
+  {% include "partials/global/_paginacao.html" with page_obj=fornecedores_paginados %}
 
 
 </div>

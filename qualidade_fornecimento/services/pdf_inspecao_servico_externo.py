@@ -1,10 +1,11 @@
+from datetime import date
 from io import BytesIO
+
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.template.loader import render_to_string
 from django.templatetags.static import static
-from django.utils.timezone import now, localtime
+from django.utils.timezone import localtime, now
 from weasyprint import HTML
-from datetime import date
 
 
 def gerar_pdf_inspecao_servico_externo(servico):
@@ -16,7 +17,7 @@ def gerar_pdf_inspecao_servico_externo(servico):
     dominio = "http://127.0.0.1:8000"  # Em produção, usar request.build_absolute_uri
     logo_url = dominio + static("logo.png")
 
-    if not hasattr(servico, 'inspecao'):
+    if not hasattr(servico, "inspecao"):
         return None  # Não gera se não existir inspeção vinculada
 
     inspecao = servico.inspecao
@@ -25,6 +26,7 @@ def gerar_pdf_inspecao_servico_externo(servico):
     usuario = getattr(servico, "_usuario", None)
     if not usuario:
         from django.contrib.auth.models import User
+
         usuario = User.objects.first()
 
     assinatura_nome = usuario.get_full_name() or usuario.username
@@ -42,7 +44,9 @@ def gerar_pdf_inspecao_servico_externo(servico):
     }
 
     # 🧾 Renderiza o HTML e converte em PDF
-    html_string = render_to_string("inspecao_servico_externo/inspecao_servico_externo_pdf.html", context)
+    html_string = render_to_string(
+        "inspecao_servico_externo/inspecao_servico_externo_pdf.html", context
+    )
     pdf_io = BytesIO()
     HTML(string=html_string, base_url=dominio).write_pdf(target=pdf_io)
     pdf_io.seek(0)
@@ -53,8 +57,10 @@ def gerar_pdf_inspecao_servico_externo(servico):
     # 💾 Salva no campo FileField, sem gravar fisicamente no disco
     servico.inspecao.pdf.save(
         filename,
-        InMemoryUploadedFile(pdf_io, None, filename, 'application/pdf', pdf_io.getbuffer().nbytes, None),
-        save=True
+        InMemoryUploadedFile(
+            pdf_io, None, filename, "application/pdf", pdf_io.getbuffer().nbytes, None
+        ),
+        save=True,
     )
 
     return servico.inspecao.pdf.url

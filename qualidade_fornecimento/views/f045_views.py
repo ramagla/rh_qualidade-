@@ -1,16 +1,21 @@
 import re
 from decimal import Decimal, InvalidOperation
+
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+
 from qualidade_fornecimento.forms.inline_rolo_formset import RoloFormSet
 from qualidade_fornecimento.forms.relatorio_f045 import RelatorioF045Form
 from qualidade_fornecimento.models.f045 import RelatorioF045
 from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
-from qualidade_fornecimento.models.norma import NormaTecnica, NormaComposicaoElemento, NormaTracao
-from django.http import JsonResponse
+from qualidade_fornecimento.models.norma import (
+    NormaComposicaoElemento,
+    NormaTecnica,
+    NormaTracao,
+)
 from qualidade_fornecimento.tasks import gerar_pdf_f045_background
-
 
 
 @login_required
@@ -26,11 +31,13 @@ def f045_status(request, f045_id):
         pass
     return JsonResponse({"ready": False})
 
+
 def parse_decimal(value):
     try:
         return Decimal(str(value).replace(",", "."))
     except (InvalidOperation, ValueError, AttributeError):
         return None
+
 
 @login_required
 def gerar_f045(request, relacao_id):
@@ -106,9 +113,7 @@ def gerar_f045(request, relacao_id):
         bitola = parse_decimal(relacao.materia_prima.bitola)
         if bitola:
             tracao = NormaTracao.objects.filter(
-                norma=norma_obj,
-                bitola_minima__lte=bitola,
-                bitola_maxima__gte=bitola
+                norma=norma_obj, bitola_minima__lte=bitola, bitola_maxima__gte=bitola
             ).first()
 
             if tracao:
@@ -127,7 +132,9 @@ def gerar_f045(request, relacao_id):
         pass
 
     limites = {e["sigla"].lower(): (e["min"], e["max"]) for e in elementos}
-    form = RelatorioF045Form(request.POST or None, instance=f045, limites_quimicos=limites)
+    form = RelatorioF045Form(
+        request.POST or None, instance=f045, limites_quimicos=limites
+    )
     formset = RoloFormSet(request.POST or None, instance=relacao)
     rolos = relacao.rolos.all()
     tracoes_com_forms = list(zip(rolos, formset.forms))
@@ -136,7 +143,14 @@ def gerar_f045(request, relacao_id):
     for item in elementos:
         sigla = item["sigla"].lower()
         field = form[sigla + "_user"] if sigla + "_user" in form.fields else None
-        chemical_list.append({"sigla": item["sigla"], "min": item["min"], "max": item["max"], "field": field})
+        chemical_list.append(
+            {
+                "sigla": item["sigla"],
+                "min": item["min"],
+                "max": item["max"],
+                "field": field,
+            }
+        )
 
     bitola_nominal = parse_decimal(relacao.materia_prima.bitola)
     largura_nominal = parse_decimal(relacao.materia_prima.largura)
@@ -147,7 +161,9 @@ def gerar_f045(request, relacao_id):
             switch_manual = request.POST.get("switchStatusManual") == "on"
 
             tolerancia = parse_decimal(relacao.materia_prima.tolerancia or "0")
-            tolerancia_largura = parse_decimal(relacao.materia_prima.tolerancia_largura or "0")
+            tolerancia_largura = parse_decimal(
+                relacao.materia_prima.tolerancia_largura or "0"
+            )
             dureza_limite = parse_decimal(dureza_norma)
 
             for form_rolo in formset.forms:
@@ -162,8 +178,12 @@ def gerar_f045(request, relacao_id):
                 bitola_unica = request.POST.get(f"bitola_{rolo_id}")
 
                 if bitola_espessura is not None or bitola_largura is not None:
-                    rolo.bitola_espessura = parse_decimal(bitola_espessura) if bitola_espessura else None
-                    rolo.bitola_largura = parse_decimal(bitola_largura) if bitola_largura else None
+                    rolo.bitola_espessura = (
+                        parse_decimal(bitola_espessura) if bitola_espessura else None
+                    )
+                    rolo.bitola_largura = (
+                        parse_decimal(bitola_largura) if bitola_largura else None
+                    )
                 elif bitola_unica is not None:
                     rolo.bitola_espessura = parse_decimal(bitola_unica)
                     rolo.bitola_largura = None
@@ -172,15 +192,25 @@ def gerar_f045(request, relacao_id):
                     rolo.tracao *= Decimal("0.10197")
 
                 rolo.save()
-                rolo.aprova_rolo(bitola_nominal, largura_nominal, tolerancia, tolerancia_largura, res_min, res_max, dureza_limite)
+                rolo.aprova_rolo(
+                    bitola_nominal,
+                    largura_nominal,
+                    tolerancia,
+                    tolerancia_largura,
+                    res_min,
+                    res_max,
+                    dureza_limite,
+                )
                 rolo.save()
 
             # >>>>> AQUI entra a avaliação dos químicos
             quimicos_aprovados = True
             for elemento in elementos:
                 sigla = elemento["sigla"].lower()
-                encontrado_raw = request.POST.get(f"encontrado_{sigla}", "").replace(",", ".")
-                
+                encontrado_raw = request.POST.get(f"encontrado_{sigla}", "").replace(
+                    ",", "."
+                )
+
                 try:
                     encontrado = Decimal(encontrado_raw)
                 except (InvalidOperation, ValueError):
@@ -190,7 +220,7 @@ def gerar_f045(request, relacao_id):
                 maximo = elemento["max"]
 
                 if encontrado is not None:
-                    if (minimo in [None, 0] and maximo in [None, 0]):
+                    if minimo in [None, 0] and maximo in [None, 0]:
                         aprovado = True
                     elif minimo is not None and maximo is not None:
                         aprovado = minimo <= encontrado <= maximo
@@ -211,30 +241,30 @@ def gerar_f045(request, relacao_id):
 
             updated_f045.save(limites_quimicos=limites, aprovado_manual=switch_manual)
 
-            
-
             relacao.status = updated_f045.status_geral
             relacao.save(update_fields=["status"])
             gerar_pdf_f045_background.delay(updated_f045.pk)
-            request.session['f045_pending'] = updated_f045.pk
+            request.session["f045_pending"] = updated_f045.pk
             return redirect("tb050_list")
 
+    return render(
+        request,
+        "f045/f045_form.html",
+        {
+            "form": form,
+            "formset": formset,
+            "tracoes_com_forms": tracoes_com_forms,
+            "chemical_list": chemical_list,
+            "dureza_padrao_header": dureza_norma,
+            "dureza_certificado": f045.dureza_certificado or "N/A",
+            "relacao": relacao,
+            "res_min": res_min,
+            "res_max": res_max,
+            "dureza_padrao": dureza_norma,
+            "bitola_nominal": bitola_nominal,
+            "largura_nominal": largura_nominal,
+        },
+    )
 
 
-    return render(request, "f045/f045_form.html", {
-        "form": form,
-        "formset": formset,
-        "tracoes_com_forms": tracoes_com_forms,
-        "chemical_list": chemical_list,
-        "dureza_padrao_header": dureza_norma,
-        "dureza_certificado": f045.dureza_certificado or "N/A",
-        "relacao": relacao,
-        "res_min": res_min,
-        "res_max": res_max,
-        "dureza_padrao": dureza_norma,
-        "bitola_nominal": bitola_nominal,
-        "largura_nominal": largura_nominal,
-    })
 from django.http import JsonResponse
-
-

@@ -6,8 +6,10 @@
 
 {% block content %}
 <div class="container-lg mt-4">
-  <h3 class="text-center mb-4">Relatório de Inspeção de Material – F‑045</h3>
-{# mostra primeiro os erros "não relacionados a campo específico" #}
+ <h3 class="text-center mb-4">
+    <i class="bi bi-file-earmark-text me-2" title="Relatório de Inspeção de Material"></i>
+    Relatório de Inspeção de Material – F045
+  </h3>{# mostra primeiro os erros "não relacionados a campo específico" #}
 {% if form.non_field_errors %}
   <div class="alert alert-danger mt-2">
     <strong>Erros gerais:</strong>
@@ -47,89 +49,172 @@
 
 
 
-    {# --- CABEÇALHO SOMENTE LEITURA --- #}
-    <div class="col-12">
-      <div class="row">
-        <div class="col-md-3">
-          <label class="form-label">Nro Relatório</label>
-          <input type="text" class="form-control" readonly value="{{ form.instance.nro_relatorio|default_if_none:'-' }}">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Fornecedor</label>
-          <input type="text" class="form-control" readonly value="{{ form.instance.fornecedor|default_if_none:'-' }}">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Nota Fiscal</label>
-          <input type="text" class="form-control" readonly value="{{ form.instance.nota_fiscal|default_if_none:'-' }}">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Certificado</label>
-          <input type="text" class="form-control" readonly value="{{ form.instance.numero_certificado|default_if_none:'-' }}">
+    <div class="accordion mt-4" id="accordionF045">
+
+  <!-- Cabeçalho Somente Leitura -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingCabecalho">
+      <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCabecalho" aria-expanded="true" aria-controls="collapseCabecalho">
+        📋 Cabeçalho (Informações Gerais)
+      </button>
+    </h2>
+    <div id="collapseCabecalho" class="accordion-collapse collapse show" aria-labelledby="headingCabecalho" data-bs-parent="#accordionF045">
+      <div class="accordion-body">
+        <div class="col-12">
+          <div class="row">
+            <div class="col-md-3">
+              <label class="form-label">Nro Relatório</label>
+              <div class="input-group">
+                <input type="text" class="form-control" readonly value="{{ form.instance.nro_relatorio|default_if_none:'-' }}">
+                <span class="input-group-text bg-light text-muted" title="Bloqueado">🔒</span>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Fornecedor</label>
+              <div class="input-group">
+                <input type="text" class="form-control" readonly value="{{ form.instance.fornecedor|default_if_none:'-' }}">
+                <span class="input-group-text bg-light text-muted" title="Bloqueado">🔒</span>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Nota Fiscal</label>
+              <div class="input-group">
+                <input type="text" class="form-control" readonly value="{{ form.instance.nota_fiscal|default_if_none:'-' }}">
+                <span class="input-group-text bg-light text-muted" title="Bloqueado">🔒</span>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Certificado</label>
+              <div class="input-group">
+                <input type="text" class="form-control" readonly value="{{ form.instance.numero_certificado|default_if_none:'-' }}">
+                <span class="input-group-text bg-light text-muted" title="Bloqueado">🔒</span>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-md-4">
+              <label class="form-label">Material</label>
+              <div class="input-group">
+                <input type="text" class="form-control" readonly value="{{ form.instance.material|default_if_none:'-' }}">
+                <span class="input-group-text bg-light text-muted" title="Bloqueado">🔒</span>
+              </div>
+            </div>
+            <div class="col-md-2 mt-3">
+              <label class="form-label">Bitola</label>
+              <div class="input-group">
+                <input type="text" class="form-control text-center bg-light" 
+                       value="{% if form.instance.bitola and form.instance.relacao.materia_prima.largura %}{{ form.instance.bitola }}x{{ form.instance.relacao.materia_prima.largura }}{% else %}{{ form.instance.bitola }}{% endif %}" 
+                       readonly>
+                <span class="input-group-text bg-light text-muted" title="Bloqueado">🔒</span>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Qtd Rolos</label>
+              <div class="input-group">
+                <input type="text" class="form-control" readonly value="{{ form.instance.qtd_rolos|default_if_none:'-' }}">
+                <span class="input-group-text bg-light text-muted" title="Bloqueado">🔒</span>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Massa Líquida (kg)</label>
+              <div class="input-group">
+                <input type="text" class="form-control" readonly value="{{ form.instance.massa_liquida|default_if_none:'-' }}">
+                <span class="input-group-text bg-light text-muted" title="Bloqueado">🔒</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="row mt-2">
-        <div class="col-md-4">
-          <label class="form-label">Material</label>
-          <input type="text" class="form-control" readonly value="{{ form.instance.material|default_if_none:'-' }}">
-        </div>
+    </div>
+  </div>
+
+  <!-- Campos Editáveis -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingCamposEditaveis">
+      <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCamposEditaveis" aria-expanded="false" aria-controls="collapseCamposEditaveis">
+        ✏️ Campos Editáveis Principais
+      </button>
+    </h2>
+    <div id="collapseCamposEditaveis" class="accordion-collapse collapse" aria-labelledby="headingCamposEditaveis" data-bs-parent="#accordionF045">
+      <div class="accordion-body">
         <div class="col-md-2 mt-3">
-          <label class="form-label">Bitola</label>
-          <input type="text" class="form-control text-center bg-light" 
-                value="{% if form.instance.bitola and form.instance.relacao.materia_prima.largura %}{{ form.instance.bitola }}x{{ form.instance.relacao.materia_prima.largura }}{% else %}{{ form.instance.bitola }}{% endif %}" 
-                readonly>
+          <label for="{{ form.qtd_carreteis.id_for_label }}" class="form-label">
+            {{ form.qtd_carreteis.label }}
+          </label>
+          <div class="input-group">
+            {{ form.qtd_carreteis|add_class:"form-control"|attr:"placeholder:Ex: 5" }}
+            <span class="input-group-text" title="Campo editável">✔️</span>
+          </div>
         </div>
-        <div class="col-md-2">
-          <label class="form-label">Qtd Rolos</label>
-          <input type="text" class="form-control" readonly value="{{ form.instance.qtd_rolos|default_if_none:'-' }}">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Massa Líquida (kg)</label>
-          <input type="text" class="form-control" readonly value="{{ form.instance.massa_liquida|default_if_none:'-' }}">
+
+        <div class="col-md-4 mt-3">
+          <label for="{{ form.pedido_compra.id_for_label }}" class="form-label">
+            {{ form.pedido_compra.label }} <span class="text-danger">*</span>
+          </label>
+          <div class="input-group">
+            {{ form.pedido_compra|add_class:"form-control"|attr:"placeholder:Ex: 450012345"|attr:"aria-required:true" }}
+            <span class="input-group-text" title="Campo editável">✔️</span>
+          </div>
         </div>
       </div>
     </div>
+  </div>
 
-    {# --- CAMPOS EDITÁVEIS --- #}
-    <div class="col-md-2 mt-3">
-      {{ form.qtd_carreteis.label_tag }}
-      {{ form.qtd_carreteis|add_class:"form-control" }}
-    </div>
-    <div class="col-md-4 mt-3">
-      {{ form.pedido_compra.label_tag }}
-      {{ form.pedido_compra|add_class:"form-control" }}
-    </div>
-
-    {# --- 05 – COMPOSIÇÃO QUÍMICA --- #}
-    <h5 class="mt-4">05 – Características de Composição Química (%)</h5>
-<div class="table-responsive">
-  <table class="table table-bordered text-center align-middle">
-    <thead class="table-light">
-      <tr><th>Sigla</th><th>Mín</th><th>Máx</th><th>Encontrado</th><th>Laudo</th></tr>
-    </thead>
-    <tbody>
-      {% for item in chemical_list %}
-      {% with min=item.min|stringformat:"f" max=item.max|stringformat:"f" %}
-      <tr>
-        <td class="text-uppercase fw-bold">{{ item.sigla|upper }}</td>
-        <td class="min">{{ min }}</td>
-        <td class="max">{{ max }}</td>
-        <td>
-  {{ item.field }}
-  <input type="hidden" class="min-hidden" value="{{ item.min }}">
-  <input type="hidden" class="max-hidden" value="{{ item.max }}">
-</td>
-
-<td class="laudo fw-bold text-center">—</td>
-
-      </tr>
-      {% endwith %}
-      {% endfor %}
-    </tbody>
-  </table>
 </div>
-{# Validação do FormSet de RoloMateriaPrima #}
+
+
+
+
+<div class="accordion mt-4" id="accordionF045">
+
+  <!-- Composição Química -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingComposicaoQuimica">
+      <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseComposicaoQuimica" aria-expanded="false" aria-controls="collapseComposicaoQuimica">
+        🧪 Características de Composição Química (%)
+      </button>
+    </h2>
+    <div id="collapseComposicaoQuimica" class="accordion-collapse collapse" aria-labelledby="headingComposicaoQuimica" data-bs-parent="#accordionF045">
+      <div class="accordion-body">
+        <div class="table-responsive" style="max-width: 95vw;">
+          <table class="table table-bordered text-center align-middle table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>Sigla <i class="bi bi-info-circle" title="Sigla do elemento"></i></th>
+                <th>Mín <i class="bi bi-arrow-down-circle" title="Valor mínimo"></i></th>
+                <th>Máx <i class="bi bi-arrow-up-circle" title="Valor máximo"></i></th>
+                <th>Encontrado <i class="bi bi-search" title="Valor encontrado na análise"></i></th>
+                <th>Laudo <i class="bi bi-file-earmark-text" title="Resultado do laudo"></i></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in chemical_list %}
+                {% with min=item.min|stringformat:"f" max=item.max|stringformat:"f" %}
+                  <tr>
+                    <td class="text-uppercase fw-bold py-2">{{ item.sigla|upper }}</td>
+                    <td class="min py-2">{{ min }}</td>
+                    <td class="max py-2">{{ max }}</td>
+                    <td class="py-2">
+                      {{ item.field }}
+                      <input type="hidden" class="min-hidden" value="{{ item.min }}">
+                      <input type="hidden" class="max-hidden" value="{{ item.max }}">
+                    </td>
+                    <td class="laudo fw-bold text-center py-2">—</td>
+                  </tr>
+                {% endwith %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Erros de Validação Fora dos Acordeões -->
 {% if formset.non_form_errors %}
-  <div class="alert alert-danger">
+  <div class="alert alert-danger mt-3">
     <strong>Erros nos dados dos rolos:</strong>
     <ul>
       {% for error in formset.non_form_errors %}
@@ -141,7 +226,7 @@
 
 {% for form in formset.forms %}
   {% if form.errors %}
-    <div class="alert alert-warning">
+    <div class="alert alert-warning mt-2">
       <strong>Erro no rolo:</strong>
       <ul>
         {% for field, errors in form.errors.items %}
@@ -153,211 +238,356 @@
 {% endfor %}
 
 
- <h5 class="mt-4">06 – Características Inspecionadas Internamente</h5>
 
-<div class="form-check form-switch mb-2">
-  <input class="form-check-input"
-         type="checkbox"
-         id="switchMpa"
-         name="switchMpa"
-         onchange="toggleUnidadeTracao(this)">
-  <label class="form-check-label" for="switchMpa">
-    Valores informados em MPa
-  </label>
-</div>
+<div class="accordion mt-4" id="accordionF045">
 
+  <!-- Características Inspecionadas Internamente -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingInspecaoInterna">
+      <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInspecaoInterna" aria-expanded="false" aria-controls="collapseInspecaoInterna">
+        🔍 Características Inspecionadas Internamente
+      </button>
+    </h2>
+    <div id="collapseInspecaoInterna" class="accordion-collapse collapse" aria-labelledby="headingInspecaoInterna" data-bs-parent="#accordionF045">
+      <div class="accordion-body">
 
-<div class="table-responsive">
-  <table class="table table-bordered align-middle text-center">
-    <thead class="table-light">
-      <tr class="text-center">
-        <th>Rolo</th>
-        <th style="display:none;">Massa (kg)</th>
-        <th>Tolerância</th>
-        <th>Bitola (mm)</th>
-        <th style="display:none;">B. Mín</th>
-        <th style="display:none;">B. Máx</th>
-        <th id="th_rmin">R. Mín (Kgf/mm²)</th>
-        <th id="th_rmax">R. Máx (Kgf/mm²)</th>
-        <th>02 – Resistência à Tração</th>
-        <th>Dureza ({{ dureza_padrao_header|default:"—" }})</th>
-        <th>Enrolamento</th>
-        <th>Dobramento</th>
-        <th>Torção Residual</th>
-        <th>Aspecto Visual</th>
-        <th>Alongamento</th>   {# novo #}
-        <th>Flechamento</th>   {# novo #}
-        <th>Laudo</th>
-      </tr>
-    </thead>
-    <tbody>
-  {% for rolo, rolo_form in tracoes_com_forms %}
-    <tr>
-      {% for hidden in rolo_form.hidden_fields %}
-        {{ hidden }}
-      {% endfor %}
-
-      <td>{{ rolo.nro_rolo }}</td>
-
-      <td style="display:none;">{{ rolo_form.peso }}</td>
-
-      <td>
-        {% if rolo.tb050.materia_prima.tolerancia_largura %}
-          {{ rolo.tb050.materia_prima.tolerancia }} - {{ rolo.tb050.materia_prima.tolerancia_largura }}
-        {% else %}
-          {{ rolo.tb050.materia_prima.tolerancia|default:"—" }}
-        {% endif %}
-      </td>
-
-      <td class="p-1" style="min-width: 160px;">
-        <div class="d-flex gap-1">
-          <input name="bitola_espessura_{{ rolo.id }}" id="bitola_espessura_{{ rolo.id }}" type="text"
-                 class="form-control text-center"
-                 value="{{ rolo.bitola_espessura|default_if_none:'' }}"
-                 oninput="validarBitolaETracao({{ rolo.id }})"
-                 placeholder="Esp.">
-
-          {% if rolo.tb050.materia_prima.largura %}
-            <input name="bitola_largura_{{ rolo.id }}" id="bitola_largura_{{ rolo.id }}" type="text"
-                   class="form-control text-center"
-                   value="{{ rolo.bitola_largura|default_if_none:'' }}"
-                   oninput="validarBitolaETracao({{ rolo.id }})"
-                   placeholder="Larg.">
-          {% endif %}
+        <!-- Switch para valores em MPa -->
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input"
+                 type="checkbox"
+                 id="switchMpa"
+                 name="switchMpa"
+                 aria-describedby="descricao-switch-mpa"
+                 onchange="toggleUnidadeTracao(this)">
+          <label class="form-check-label" for="switchMpa">
+            Valores informados em MPa
+          </label>
+          <small id="descricao-switch-mpa" class="form-text text-muted">
+            Ative para que os valores de tração sejam interpretados em Megapascal (MPa) em vez de Kgf/mm².
+          </small>
         </div>
 
-        <input type="hidden" id="bitola_nominal_{{ rolo.id }}" value="{{ bitola_nominal|default_if_none:'0' }}">
-        <input type="hidden" id="largura_nominal_{{ rolo.id }}" value="{{ largura_nominal|default_if_none:'0' }}">
-        <input type="hidden" id="tolerancia_espessura_{{ rolo.id }}" value="{{ rolo.tb050.materia_prima.tolerancia|default_if_none:'0' }}">
-        <input type="hidden" id="tolerancia_largura_{{ rolo.id }}" value="{{ rolo.tb050.materia_prima.tolerancia_largura|default_if_none:'0' }}">
-      </td>
+        <!-- Tabela das Inspeções Internas -->
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle text-center table-sm">
+            <thead class="table-light">
+              <tr class="text-center">
+                <th>Rolo <i class="bi bi-box" title="Número do rolo"></i></th>
+                <th style="display:none;">Massa (kg) <i class="bi bi-weight" title="Peso do rolo"></i></th>
+                <th>Tolerância <i class="bi bi-arrows-fullscreen" title="Tolerância do rolo"></i></th>
+                <th>Bitola (mm) <i class="bi bi-rulers" title="Bitola do rolo"></i></th>
+                <th style="display:none;">B. Mín <i class="bi bi-arrow-down-circle" title="Bitola mínima"></i></th>
+                <th style="display:none;">B. Máx <i class="bi bi-arrow-up-circle" title="Bitola máxima"></i></th>
+                <th id="th_rmin">R. Mín (Kgf/mm²) <i class="bi bi-graph-up-arrow" title="Resistência mínima"></i></th>
+                <th id="th_rmax">R. Máx (Kgf/mm²) <i class="bi bi-graph-down-arrow" title="Resistência máxima"></i></th>
+                <th>Resistência à Tração <i class="bi bi-bar-chart-line" title="Resistência medida"></i></th>
+                <th>Dureza ({{ dureza_padrao_header|default:"—" }}) <i class="bi bi-shield-lock" title="Dureza do material"></i></th>
+                <th>Enrolamento <i class="bi bi-toggle-on" title="Estado de enrolamento"></i></th>
+                <th>Dobramento <i class="bi bi-arrows-angle-contract" title="Testes de dobramento"></i></th>
+                <th>Torção Residual <i class="bi bi-arrow-repeat" title="Torção residual do rolo"></i></th>
+                <th>Aspecto Visual <i class="bi bi-eye" title="Aspecto visual do rolo"></i></th>
+                <th>Alongamento <i class="bi bi-arrows-expand" title="Alongamento do material"></i></th>
+                <th>Flechamento <i class="bi bi-chevron-double-down" title="Testes de flechamento"></i></th>
+                <th>Laudo <i class="bi bi-file-earmark-text" title="Resultado do laudo"></i></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rolo, rolo_form in tracoes_com_forms %}
+                <tr>
+                  {% for hidden in rolo_form.hidden_fields %}
+                    {{ hidden }}
+                  {% endfor %}
+                  <td>{{ rolo.nro_rolo }}</td>
+                  <td style="display:none;">{{ rolo_form.peso }}</td>
 
-      <td id="rmin_{{ rolo.id }}">
-        {{ res_min|default:"—" }}
-        <input type="hidden" id="rmin_valor_{{ rolo.id }}" value="{{ res_min|default:0 }}">
-      </td>
+                  <td>
+                    {% if rolo.tb050.materia_prima.tolerancia_largura %}
+                      {{ rolo.tb050.materia_prima.tolerancia }} - {{ rolo.tb050.materia_prima.tolerancia_largura }}
+                    {% else %}
+                      {{ rolo.tb050.materia_prima.tolerancia|default:"—" }}
+                    {% endif %}
+                  </td>
 
-      <td id="rmax_{{ rolo.id }}">
-        {{ res_max|default:"—" }}
-        <input type="hidden" id="rmax_valor_{{ rolo.id }}" value="{{ res_max|default:0 }}">
-      </td>
+                  <td class="p-1" style="min-width: 160px;">
+                    <div class="col-md-2 p-1" style="min-width: 160px;">
+                      <div class="d-flex gap-2">
+                        <input name="bitola_espessura_{{ rolo.id }}" id="bitola_espessura_{{ rolo.id }}" type="text"
+                               class="form-control text-center"
+                               value="{{ rolo.bitola_espessura|default_if_none:'' }}"
+                               oninput="validarBitolaETracao({{ rolo.id }})"
+                               placeholder="Esp.">
+                        {% if rolo.tb050.materia_prima.largura %}
+                          <input name="bitola_largura_{{ rolo.id }}" id="bitola_largura_{{ rolo.id }}" type="text"
+                                 class="form-control text-center"
+                                 value="{{ rolo.bitola_largura|default_if_none:'' }}"
+                                 oninput="validarBitolaETracao({{ rolo.id }})"
+                                 placeholder="Larg.">
+                        {% endif %}
+                      </div>
+                    </div>
 
-      <td>
-        <input name="tracao_{{ rolo.id }}" id="tracao_{{ rolo.id }}" type="text"
-               class="form-control text-center"
-               value="{{ rolo.tracao|default_if_none:'' }}"
-               oninput="validarBitolaETracao({{ rolo.id }})">
-      </td>
+                    <input type="hidden" id="bitola_nominal_{{ rolo.id }}" value="{{ bitola_nominal|default_if_none:'0' }}">
+                    <input type="hidden" id="largura_nominal_{{ rolo.id }}" value="{{ largura_nominal|default_if_none:'0' }}">
+                    <input type="hidden" id="tolerancia_espessura_{{ rolo.id }}" value="{{ rolo.tb050.materia_prima.tolerancia|default_if_none:'0' }}">
+                    <input type="hidden" id="tolerancia_largura_{{ rolo.id }}" value="{{ rolo.tb050.materia_prima.tolerancia_largura|default_if_none:'0' }}">
+                  </td>
 
-      <td>
-        <input name="dureza_{{ rolo.id }}" id="dureza_{{ rolo.id }}" type="text"
-               class="form-control text-center"
-               value="{{ rolo.dureza|default_if_none:'' }}"
-               data-dureza-norma="{{ dureza_padrao|floatformat:2|default:'' }}"
-               oninput="validarBitolaETracao({{ rolo.id }})">
-      </td>
+                  <td id="rmin_{{ rolo.id }}">
+                    {{ res_min|default:"—" }}
+                    <input type="hidden" id="rmin_valor_{{ rolo.id }}" value="{{ res_min|default:0 }}">
+                  </td>
 
-      <td>{{ rolo_form.enrolamento }}</td>
-      <td>{{ rolo_form.dobramento }}</td>
-      <td>{{ rolo_form.torcao_residual }}</td>
-      <td>{{ rolo_form.aspecto_visual }}</td>
-      <td>{{ rolo_form.alongamento }}</td>   {# novo #}
-      <td>{{ rolo_form.flechamento }}</td>   {# novo #}
-      <td id="laudo_{{ rolo.id }}">—</td>
-    </tr>
-  {% endfor %}
-</tbody>
+                  <td id="rmax_{{ rolo.id }}">
+                    {{ res_max|default:"—" }}
+                    <input type="hidden" id="rmax_valor_{{ rolo.id }}" value="{{ res_max|default:0 }}">
+                  </td>
 
-  </table>
-</div>
+                  <td>
+                    <input name="tracao_{{ rolo.id }}" id="tracao_{{ rolo.id }}" type="text"
+                           class="form-control text-center"
+                           value="{{ rolo.tracao|default_if_none:'' }}"
+                           oninput="validarBitolaETracao({{ rolo.id }})">
+                  </td>
 
+                  <td>
+                    <input name="dureza_{{ rolo.id }}" id="dureza_{{ rolo.id }}" type="text"
+                           class="form-control text-center"
+                           value="{{ rolo.dureza|default_if_none:'' }}"
+                           data-dureza-norma="{{ dureza_padrao|floatformat:2|default:'' }}"
+                           oninput="validarBitolaETracao({{ rolo.id }})">
+                  </td>
 
+                  <td>{{ rolo_form.enrolamento }}</td>
+                  <td>{{ rolo_form.dobramento }}</td>
+                  <td>{{ rolo_form.torcao_residual }}</td>
+                  <td>{{ rolo_form.aspecto_visual }}</td>
+                  <td>{{ rolo_form.alongamento }}</td>
+                  <td>{{ rolo_form.flechamento }}</td>
+                  <td id="laudo_{{ rolo.id }}">—</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
 
-
-<h5 class="mt-4">Outras características identificadas no certificado do fornecedor</h5>
-<div class="row g-2">
-  <div class="col-md-2">
-    {{ form.resistencia_tracao.label_tag }}
-    {{ form.resistencia_tracao }}
-  </div>
-  <div class="col-md-2">
-    {{ form.escoamento.label_tag }}
-    {{ form.escoamento }}
-  </div>
-  <div class="col-md-2">
-    {{ form.alongamento.label_tag }}
-    {{ form.alongamento }}
-  </div>
-  <div class="col-md-2">
-    {{ form.estriccao.label_tag }}
-    {{ form.estriccao }}
-  </div>
-  <div class="col-md-2">
-    {{ form.torcao_certificado.label_tag }}
-    {{ form.torcao_certificado }}
-  </div>
-  <div class="col-md-2">
-    {{ form.dureza_certificado.label_tag }}
-    {{ form.dureza_certificado }}
-  </div>
-</div>
-
-<hr class="mt-4">
-<h5>Status Geral do Relatório</h5>
-
-<div class="row mb-3">
-  <div class="col-md-4">
-    <label class="form-label">Status Geral</label>
-    <div id="status_geral" class="form-control fw-bold text-center">—</div>
-    <!-- Campo oculto para enviar o status ao backend -->
-    <input type="hidden" name="status_geral_hidden" id="status_geral_hidden" value="—">
-  </div>
-  <div class="col-md-4 d-flex align-items-end">
-    <div class="form-check form-switch">
-      <input class="form-check-input" type="checkbox" id="switchStatusManual" name="switchStatusManual" onchange="toggleStatusManual(this)">
-      <label class="form-check-label" for="switchStatusManual">Aprovação condicional</label>
+      </div>
     </div>
   </div>
-</div>
 
-
-<div id="campoObsManual" style="display: none;">
-  <label for="observacoes_manual" class="form-label">Observações sobre a aprovação condicional</label>
-  <textarea id="observacoes_manual" name="observacoes" class="form-control" rows="3" placeholder="...">{{ form.observacoes.value|default_if_none:"" }}</textarea>
 </div>
 
 
 
 
 
+<div class="accordion mt-4" id="accordionF045">
+
+  <!-- Outras Características Identificadas no Certificado do Fornecedor -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingOutrasCaracteristicas">
+      <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutrasCaracteristicas" aria-expanded="false" aria-controls="collapseOutrasCaracteristicas">
+        📄 Outras Características Identificadas no Certificado do Fornecedor
+      </button>
+    </h2>
+    <div id="collapseOutrasCaracteristicas" class="accordion-collapse collapse" aria-labelledby="headingOutrasCaracteristicas" data-bs-parent="#accordionF045">
+      <div class="accordion-body">
+        <div class="row g-2">
+          <div class="col-md-2">
+            <label for="{{ form.resistencia_tracao.id_for_label }}" class="form-label">
+              <i class="bi bi-bar-chart-line" title="Resistência à Tração"></i> {{ form.resistencia_tracao.label }}
+            </label>
+            {{ form.resistencia_tracao }}
+          </div>
+
+          <div class="col-md-2">
+            <label for="{{ form.escoamento.id_for_label }}" class="form-label">
+              <i class="bi bi-clock-history" title="Escoamento"></i> {{ form.escoamento.label }}
+            </label>
+            {{ form.escoamento }}
+          </div>
+
+          <div class="col-md-2">
+            <label for="{{ form.alongamento.id_for_label }}" class="form-label">
+              <i class="bi bi-arrows-expand" title="Alongamento"></i> {{ form.alongamento.label }}
+            </label>
+            {{ form.alongamento }}
+          </div>
+
+          <div class="col-md-2">
+            <label for="{{ form.estriccao.id_for_label }}" class="form-label">
+              <i class="bi bi-shield-lock" title="Estrição"></i> {{ form.estriccao.label }}
+            </label>
+            {{ form.estriccao }}
+          </div>
+
+          <div class="col-md-2">
+            <label for="{{ form.torcao_certificado.id_for_label }}" class="form-label">
+              <i class="bi bi-arrow-repeat" title="Torção Certificado"></i> {{ form.torcao_certificado.label }}
+            </label>
+            {{ form.torcao_certificado }}
+          </div>
+
+          <div class="col-md-2">
+            <label for="{{ form.dureza_certificado.id_for_label }}" class="form-label">
+              <i class="bi bi-shield-lock" title="Dureza Certificado"></i> {{ form.dureza_certificado.label }}
+            </label>
+            {{ form.dureza_certificado }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<div class="accordion mt-4" id="accordionF045">
+
+  <!-- Status Geral do Relatório -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingStatusGeral">
+      <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStatusGeral" aria-expanded="false" aria-controls="collapseStatusGeral">
+        ✅ Status Geral do Relatório
+      </button>
+    </h2>
+    <div id="collapseStatusGeral" class="accordion-collapse collapse" aria-labelledby="headingStatusGeral" data-bs-parent="#accordionF045">
+      <div class="accordion-body">
+
+        <!-- Linha do Status Geral -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label">
+              <i class="bi bi-file-earmark-check" title="Status Geral"></i> Status Geral
+            </label>
+            <div id="status_geral" class="form-control fw-bold text-center">—</div>
+            <!-- Campo oculto para enviar o status ao backend -->
+            <input type="hidden" name="status_geral_hidden" id="status_geral_hidden" value="—">
+          </div>
+
+          <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="switchStatusManual" name="switchStatusManual" onchange="toggleStatusManual(this)">
+              <label class="form-check-label" for="switchStatusManual">
+                <i class="bi bi-check-circle" title="Aprovação condicional"></i> Aprovação condicional
+              </label>
+            </div>
+          </div>
+        </div>
+<!-- Alerta visual para aprovação condicional -->
+<div id="alertaAprovacaoCondicional" class="alert alert-info mt-3 p-3" role="alert" style="border: 2px solid #17a2b8; background-color: #d1ecf1;">
+  <i class="bi bi-info-circle me-2"></i> <strong>Aprovação Condicional:</strong> Ative a opção para fornecer observações sobre a aprovação condicional.
+</div>
+        <!-- Observações sobre a Aprovação Condicional -->
+        <div id="campoObsManual" style="display: none;">
+          <label for="observacoes_manual" class="form-label">
+            <i class="bi bi-pencil-square" title="Observações"></i> Observações sobre a aprovação condicional <span class="text-danger">*</span>
+          </label>
+          <textarea id="observacoes_manual" name="observacoes" class="form-control" rows="3" placeholder="...">{{ form.observacoes.value|default_if_none:"" }}</textarea>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
 
 
 
 
 
-    <div class="col-12 text-end mt-3 d-flex justify-content-between">
-  <a href="{% url 'tb050_list' %}" class="btn btn-secondary">Cancelar</a>
 
-  <div>
-    <button type="submit" class="btn btn-success me-2">
-      <i class="bi bi-save"></i> Salvar
+
+
+
+
+
+
+
+    <div class="col-12 text-end mt-4">
+  <div class="d-inline-flex gap-2">
+    <!-- Botão de Cancelar -->
+    <a href="{% url 'tb050_list' %}" class="btn btn-secondary" aria-label="Cancelar e voltar para a lista de relatórios">
+      <i class="bi bi-x-circle"></i> Cancelar
+    </a>
+
+    <!-- Botão de Salvar -->
+    <button type="submit" id="btn-salvar" class="btn btn-success" aria-label="Salvar Relatório de Inspeção de Material">
+      <i class="bi bi-save" id="icon-salvar"></i> <span id="texto-botao-salvar">Salvar</span>
     </button>
 
-    {% if relacao.id %}
-  <a href="{% url 'gerar_pdf_f045' relacao.id %}" class="btn btn-danger" target="_blank">
-    <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
-  </a>
-{% endif %}
+    <!-- Botão de Gerar PDF -->
+    <a href="{% url 'gerar_pdf_f045' relacao.id %}" class="btn btn-danger" target="_blank" aria-label="Gerar o PDF do Relatório de Inspeção">
+      <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+    </a>
 
-<a href="{% url 'visualizar_pdf_f045' relacao.id %}" class="btn btn-outline-primary" target="_blank">
-  <i class="bi bi-eye"></i> Visualizar PDF
-</a>
-
+    <!-- Botão de Visualizar PDF -->
+    <a href="{% url 'visualizar_pdf_f045' relacao.id %}" class="btn btn-outline-primary" target="_blank" aria-label="Visualizar o PDF do Relatório de Inspeção">
+      <i class="bi bi-eye"></i> Visualizar PDF
+    </a>
   </div>
 </div>
+
+
 
   </form>
 </div>
+
+  <script>
+document.addEventListener("DOMContentLoaded", function() {
+  
+  // Feedback botão SALVAR
+  const form = document.querySelector("form");
+  const botaoSalvar = document.getElementById("btn-salvar");
+  const textoBotaoSalvar = document.getElementById("texto-botao-salvar");
+  const iconSalvar = document.getElementById("icon-salvar");
+
+  form.addEventListener("submit", function() {
+    botaoSalvar.disabled = true;
+    iconSalvar.className = "spinner-border spinner-border-sm me-2";
+    textoBotaoSalvar.textContent = "Salvando...";
+  });
+
+  // Feedback botão GERAR PDF
+  const btnGerarPDF = document.getElementById("btn-gerar-pdf");
+  if (btnGerarPDF) {
+    btnGerarPDF.addEventListener("click", function() {
+      const icon = document.getElementById("icon-gerar-pdf");
+      const texto = document.getElementById("texto-gerar-pdf");
+      icon.className = "spinner-border spinner-border-sm me-2";
+      texto.textContent = "Gerando PDF...";
+      btnGerarPDF.disabled = true;
+
+      setTimeout(() => {
+        window.open("{% url 'gerar_pdf_f045' relacao.id %}", "_blank");
+        icon.className = "bi bi-file-earmark-pdf me-2";
+        texto.textContent = "Gerar PDF";
+        btnGerarPDF.disabled = false;
+      }, 1000); // ajuste conforme necessário
+    });
+  }
+
+  // Feedback botão VISUALIZAR PDF
+  const btnVisualizarPDF = document.getElementById("btn-visualizar-pdf");
+  if (btnVisualizarPDF) {
+    btnVisualizarPDF.addEventListener("click", function() {
+      const icon = document.getElementById("icon-visualizar-pdf");
+      const texto = document.getElementById("texto-visualizar-pdf");
+      icon.className = "spinner-border spinner-border-sm me-2";
+      texto.textContent = "Abrindo...";
+      btnVisualizarPDF.disabled = true;
+
+      setTimeout(() => {
+        window.open("{% url 'visualizar_pdf_f045' relacao.id %}", "_blank");
+        icon.className = "bi bi-eye me-2";
+        texto.textContent = "Visualizar PDF";
+        btnVisualizarPDF.disabled = false;
+      }, 1000); // ajuste conforme necessário
+    });
+  }
+
+});
+</script>
+
 
 <script src="{% static 'f045/utils.js' %}"></script>
 <script src="{% static 'f045/validar_bitola_tracao.js' %}"></script>

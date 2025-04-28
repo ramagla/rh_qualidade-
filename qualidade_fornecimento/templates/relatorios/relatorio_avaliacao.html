@@ -4,6 +4,8 @@
 {% block title %}Relatório de Avaliação Semestral{% endblock %}
 
 {% block content %}
+
+
 <!-- Formulário (só na tela) -->
 <form method="post" class="mb-4 d-print-none">
   {% csrf_token %}
@@ -14,17 +16,20 @@
     <div class="col-md-2">{{ form.tipo.label_tag }} {{ form.tipo }}</div>
   </div>
   <div class="mt-3 d-flex justify-content-between">
-    <button type="submit" class="btn btn-primary">
-      <i class="fas fa-search"></i> Gerar Relatório
-    </button>
-    <button type="button" onclick="imprimirRelatorio()" class="btn btn-secondary">
-      <i class="fas fa-print"></i> Imprimir
-    </button>
+   <button type="submit" id="btn-gerar-relatorio" class="btn btn-primary" aria-label="Gerar Relatório">
+  <i class="fas fa-search"></i> <span id="texto-botao">Gerar Relatório</span>
+</button>
+
+    <button type="button" onclick="imprimirRelatorio()" id="btn-imprimir-relatorio" class="btn btn-secondary px-4 py-2" aria-label="Imprimir Relatório">
+  <i class="fas fa-print fa-2x me-2"></i> <span class="align-middle" style="font-size: 1.1rem;">Imprimir</span>
+</button>
+
+
   </div>
 </form>
 
 <!-- Conteúdo que será impresso -->
-<div id="relatorio-area">
+<div id="relatorio-area" role="region" aria-label="Área de Relatório">
   <!-- Cabeçalho institucional -->
   <table class="w-100 mb-3">
     <tr>
@@ -32,7 +37,9 @@
         <img src="{% static 'logo.png' %}" alt="Logo" style="max-height:50px;">
       </td>
       <td style="text-align:center">
-        <div style="font-weight:bold; font-size:12pt;">📈 {{ titulo }}</div>
+        <div style="font-weight:bold; font-size:12pt;">
+          <span aria-hidden="true">📈</span> {{ titulo }}
+        </div>
       </td>
     </tr>
   </table>
@@ -41,24 +48,31 @@
     <hr>
     <!-- Dados principais -->
     <table class="table table-sm table-bordered w-100 mb-4" style="font-size:0.9rem">
-      <tbody>
-        <tr><th>Fornecedor</th><td>{{ fornecedor.nome }}</td></tr>
-        <tr><th>Contato</th><td>{{ contato }}</td></tr>
-        <tr><th>Meta</th><td>> 75%</td></tr>
-        <tr><th>IQG (Nota)</th><td>{{ iqg|floatformat:2 }}%</td></tr>
-        <tr><th>Status</th>
-          <td>
-            {% if classificacao == "A" %}
-              <span style="color:green">✔️ A - Qualificado</span>
-            {% elif classificacao == "B" %}
-              <span style="color:orange">⚠️ B - Condicional</span>
-            {% else %}
-              <span style="color:red">❌ C - Não Qualificado</span>
-            {% endif %}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <thead class="table-light">
+    <tr>
+      <th>Campo</th>
+      <th>Valor</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">Fornecedor</th><td>{{ fornecedor.nome }}</td></tr>
+    <tr><th scope="row">Contato</th><td>{{ contato }}</td></tr>
+    <tr><th scope="row">Meta</th><td><span class="badge bg-success">>75%</span></td></tr>
+    <tr><th scope="row">IQG (Nota)</th><td>{{ iqg|floatformat:2 }}%</td></tr>
+    <tr><th scope="row">Status</th>
+      <td>
+        {% if classificacao == "A" %}
+          <span style="color:green">✔️ A - Qualificado</span>
+        {% elif classificacao == "B" %}
+          <span style="color:orange">⚠️ B - Condicional</span>
+        {% else %}
+          <span style="color:red">❌ C - Não Qualificado</span>
+        {% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 
     <p class="mt-3"><span>ℹ️</span> {{ mensagem }}</p>
 
@@ -88,12 +102,14 @@
       </table>
     </div>
 
-    <!-- Gráfico IQG -->
+    
     <!-- Gráfico IQG -->
 <div class="grafico-iqg-wrapper mb-4 text-center">
-  <h6 style="font-weight: bold; margin-bottom: 6px;">
-    <span style="font-size: 1.6rem;">🚀</span> Indicador de Desempenho (IQG)
-  </h6>
+  <h4 class="text-center fw-bold mb-3" style="font-size: 1.4rem;">
+    <span class="me-2" aria-hidden="true" style="font-size: 2rem;">🚀</span> Indicador de Desempenho (IQG)
+  </h4>
+
+
   <img
     src="data:image/png;base64,{{ grafico_base64 }}"
     alt="IQG"
@@ -118,11 +134,13 @@
 
 
    <!-- Classificação e Ações Recomendadas -->
-<div style="font-size:8pt; border-top:1px solid #000; padding-top:6px; margin-top:12px;">
-  <p style="font-weight:bold; font-size:9pt; margin-bottom:4px;">
-    📌 Classificação e Ações Recomendadas
-  </p>
-  <ul style="margin-left:1rem; line-height:1.2; font-size:8pt;">
+<section class="divisor-secao">
+  <header>
+    <h6 class="secao-cabecalho">
+      <span aria-hidden="true">📌</span> Classificação e Ações Recomendadas
+    </h6>
+  </header>
+  <ul class="lista-simples">
     <li>
       <strong style="color:#28a745;">A – 75 – 100 – Qualificado:</strong>
       Continuar monitoramento.
@@ -136,14 +154,16 @@
       Submeter à aprovação da Diretoria e apresentar Plano de Ação para continuidade.
     </li>
   </ul>
-</div>
+</section>
 
-<!-- Índices utilizados -->
-<div style="font-size:8pt; border-top:1px solid #000; padding-top:6px; margin-top:12px;">
-  <p style="font-weight:bold; font-size:9pt; margin-bottom:4px;">
-    📊 Índices utilizados
-  </p>
-  <ul style="margin-left:1rem; line-height:1.2; font-size:8pt;">
+<!-- Índices Utilizados -->
+<section class="divisor-secao">
+  <header>
+    <h6 class="secao-cabecalho">
+      <span aria-hidden="true">📊</span> Índices utilizados
+    </h6>
+  </header>
+  <ul class="lista-simples">
     <li>
       <strong>IQF:</strong> Índice de Qualidade de Fornecimento (qualidade dos materiais e produtos entregues).
     </li>
@@ -154,40 +174,69 @@
       <strong>IQS:</strong> Índice de Qualidade de Sistema (certificado de Sistema de Gestão da Qualidade).
     </li>
     <li>
-      <strong>IQG (Índice de Qualidade Geral) Mensal:</strong> 
+      <strong>IQG (Índice de Qualidade Geral) Mensal:</strong>
       (0,50 × IQF) + (0,30 × IP) + (0,20 × IQS).
     </li>
   </ul>
-</div>
+</section>
 
-<!-- Requisitos específicos Bras-Mol -->
-<p style="font-size:9pt; font-weight:bold; margin-top:12px;">
-  📋 Requisitos específicos Bras-Mol
-</p>
-<ul style="margin-left:1rem; line-height:1.2; font-size:8pt;">
-  <li>
-    <strong>M.Q.F:</strong> Manual da Qualidade para Fornecedores – última versão.
-  </li>
-  <li>
-    <strong>C.E.C:</strong> Código de Ética e Conduta – última versão.
-  </li>
-</ul>
-
+<!-- Requisitos Específicos Bras-Mol -->
+<section class="divisor-secao">
+  <header>
+    <h6 class="secao-cabecalho">
+      <span aria-hidden="true">📋</span> Requisitos específicos Bras-Mol
+    </h6>
+  </header>
+  <ul class="lista-simples">
+    <li>
+      <strong>M.Q.F:</strong> Manual da Qualidade para Fornecedores – última versão.
+    </li>
+    <li>
+      <strong>C.E.C:</strong> Código de Ética e Conduta – última versão.
+    </li>
+  </ul>
+</section>
 
 <!-- Contatos -->
-<div style="font-size:8pt; margin-top:12px;">
-  <p style="font-weight:bold; font-size:9pt; margin-bottom:4px;">
-    📞 Dúvidas ou Questionamentos?
-  </p>
-  <ul style="margin-left:1rem; line-height:1.2; font-size:8pt;">
+<section class="divisor-secao">
+  <header>
+    <h6 class="secao-cabecalho">
+      <span aria-hidden="true">📞</span> Dúvidas ou Questionamentos
+    </h6>
+  </header>
+  <ul class="lista-simples">
     <li>Anderson Goveia – (11) 4648-2611 Ramal 137 – anderson.goveia@brasmol.com.br</li>
     <li>Douglas Pereira – (11) 4648-2611 Ramal 158 – douglas.pereira@brasmol.com.br</li>
   </ul>
-</div>
+</section>
 
+<style>
+  .lista-simples {
+  margin-left: 1rem;
+  line-height: 1.4;
+  font-size: 8pt;
+  padding-left: 0;
+  list-style-position: inside;
+}
+</style>
 
   {% endif %}
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.querySelector("form");
+  const botao = document.getElementById("btn-gerar-relatorio");
+  const textoBotao = document.getElementById("texto-botao");
+
+  form.addEventListener("submit", function() {
+    botao.disabled = true;
+    textoBotao.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Gerando...`;
+  });
+});
+
+
+
+</script>
 
 <script>
 function imprimirRelatorio() {

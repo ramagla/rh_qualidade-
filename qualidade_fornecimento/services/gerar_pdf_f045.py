@@ -1,15 +1,20 @@
-from decimal import Decimal
 import os
 from datetime import date
+from decimal import Decimal
+
 from django.conf import settings
-from django.utils.timezone import now, localtime
+from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
 from django.templatetags.static import static
+from django.utils.timezone import localtime, now
 from weasyprint import HTML
-from django.core.files.base import ContentFile  
 
+from qualidade_fornecimento.models.norma import (
+    NormaComposicaoElemento,
+    NormaTecnica,
+    NormaTracao,
+)
 
-from qualidade_fornecimento.models.norma import NormaTecnica, NormaComposicaoElemento, NormaTracao
 
 def gerar_pdf_e_salvar(f045):
     relacao = f045.relacao
@@ -24,13 +29,26 @@ def gerar_pdf_e_salvar(f045):
     try:
         norma = NormaTecnica.objects.get(nome_norma=relacao.materia_prima.norma)
         composicao = NormaComposicaoElemento.objects.get(norma=norma)
-        bitola = relacao.materia_prima.bitola.replace(",", ".") if relacao.materia_prima.bitola else None
+        bitola = (
+            relacao.materia_prima.bitola.replace(",", ".")
+            if relacao.materia_prima.bitola
+            else None
+        )
         bitola_float = float(bitola) if bitola else None
         norma_tracao = (
-            NormaTracao.objects.filter(norma=norma, bitola_minima__lte=bitola_float, bitola_maxima__gte=bitola_float)
-            .first() if bitola_float else None
+            NormaTracao.objects.filter(
+                norma=norma,
+                bitola_minima__lte=bitola_float,
+                bitola_maxima__gte=bitola_float,
+            ).first()
+            if bitola_float
+            else None
         )
-    except (NormaTecnica.DoesNotExist, NormaComposicaoElemento.DoesNotExist, ValueError):
+    except (
+        NormaTecnica.DoesNotExist,
+        NormaComposicaoElemento.DoesNotExist,
+        ValueError,
+    ):
         composicao = None
         norma_tracao = None
 
@@ -38,20 +56,76 @@ def gerar_pdf_e_salvar(f045):
     encontrados = []
     if composicao:
         elementos = [
-            ("C", "Carbono", composicao.c_min, composicao.c_max, getattr(f045, "c_user", None)),
-            ("Mn", "Manganês", composicao.mn_min, composicao.mn_max, getattr(f045, "mn_user", None)),
-            ("Si", "Silício", composicao.si_min, composicao.si_max, getattr(f045, "si_user", None)),
-            ("P", "Fósforo", composicao.p_min, composicao.p_max, getattr(f045, "p_user", None)),
-            ("S", "Enxofre", composicao.s_min, composicao.s_max, getattr(f045, "s_user", None)),
-            ("Cr", "Cromo", composicao.cr_min, composicao.cr_max, getattr(f045, "cr_user", None)),
-            ("Ni", "Níquel", composicao.ni_min, composicao.ni_max, getattr(f045, "ni_user", None)),
-            ("Cu", "Cobre", composicao.cu_min, composicao.cu_max, getattr(f045, "cu_user", None)),
-            ("Al", "Alumínio", composicao.al_min, composicao.al_max, getattr(f045, "al_user", None)),
+            (
+                "C",
+                "Carbono",
+                composicao.c_min,
+                composicao.c_max,
+                getattr(f045, "c_user", None),
+            ),
+            (
+                "Mn",
+                "Manganês",
+                composicao.mn_min,
+                composicao.mn_max,
+                getattr(f045, "mn_user", None),
+            ),
+            (
+                "Si",
+                "Silício",
+                composicao.si_min,
+                composicao.si_max,
+                getattr(f045, "si_user", None),
+            ),
+            (
+                "P",
+                "Fósforo",
+                composicao.p_min,
+                composicao.p_max,
+                getattr(f045, "p_user", None),
+            ),
+            (
+                "S",
+                "Enxofre",
+                composicao.s_min,
+                composicao.s_max,
+                getattr(f045, "s_user", None),
+            ),
+            (
+                "Cr",
+                "Cromo",
+                composicao.cr_min,
+                composicao.cr_max,
+                getattr(f045, "cr_user", None),
+            ),
+            (
+                "Ni",
+                "Níquel",
+                composicao.ni_min,
+                composicao.ni_max,
+                getattr(f045, "ni_user", None),
+            ),
+            (
+                "Cu",
+                "Cobre",
+                composicao.cu_min,
+                composicao.cu_max,
+                getattr(f045, "cu_user", None),
+            ),
+            (
+                "Al",
+                "Alumínio",
+                composicao.al_min,
+                composicao.al_max,
+                getattr(f045, "al_user", None),
+            ),
         ]
 
         for sigla, nome, vmin, vmax, valor in elementos:
             try:
-                val = Decimal(str(valor).replace(",", ".")) if valor is not None else None
+                val = (
+                    Decimal(str(valor).replace(",", ".")) if valor is not None else None
+                )
 
                 # >>> Regra: se intervalo for 0–0, considera automaticamente aprovado
                 if vmin == 0 and vmax == 0:
@@ -65,15 +139,16 @@ def gerar_pdf_e_salvar(f045):
                 val = valor
                 ok = False
 
-            encontrados.append({
-                "sigla": sigla,
-                "nome_elemento": nome,
-                "min": vmin,
-                "max": vmax,
-                "valor": val,
-                "ok": ok
-            })
-
+            encontrados.append(
+                {
+                    "sigla": sigla,
+                    "nome_elemento": nome,
+                    "min": vmin,
+                    "max": vmax,
+                    "valor": val,
+                    "ok": ok,
+                }
+            )
 
     # Assinatura
     assinatura_nome = f045.usuario.get_full_name() or f045.usuario.username
@@ -111,11 +186,7 @@ def gerar_pdf_e_salvar(f045):
     # return f"/media/f045/{f045.relacao.nro_relatorio}.pdf"
 
     filename = f"F045_Relatorio_{f045.nro_relatorio}.pdf"
-    f045.pdf.save(
-        filename,
-        ContentFile(pdf_bytes),
-        save=True
-    )
+    f045.pdf.save(filename, ContentFile(pdf_bytes), save=True)
 
     # >>> ADICIONADO: retorna a URL pública do PDF gerado
     return f045.pdf.url

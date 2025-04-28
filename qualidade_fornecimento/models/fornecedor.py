@@ -1,39 +1,41 @@
-from django.db import models
 from datetime import timedelta
 
+from django.db import models
+
 TIPO_PRODUTO = [
-    ('Fita de Aço/Inox', 'Fita de Aço/Inox'),
-    ('Aço Inox', 'Aço Inox'),
-    ('Arame de inox', 'Arame de inox'),
-    ('Calibração', 'Calibração'),
-    ('Trat. Superficial', 'Trat. Superficial'),
+    ("Fita de Aço/Inox", "Fita de Aço/Inox"),
+    ("Aço Inox", "Aço Inox"),
+    ("Arame de inox", "Arame de inox"),
+    ("Calibração", "Calibração"),
+    ("Trat. Superficial", "Trat. Superficial"),
 ]
 
 TIPO_CERTIFICACAO = [
-    ('ISO 9001', 'ISO 9001'),
-    ('IATF16949', 'IATF16949'),
-    ('NBR-ISO 17025 RBC', 'NBR-ISO 17025 RBC'),
-    ('AUDITORIA', 'AUDITORIA'),
+    ("ISO 9001", "ISO 9001"),
+    ("IATF16949", "IATF16949"),
+    ("NBR-ISO 17025 RBC", "NBR-ISO 17025 RBC"),
+    ("AUDITORIA", "AUDITORIA"),
 ]
 
 RISCO_AVALIACAO = [
-    ('Baixo', 'Baixo'),
-    ('Alto', 'Alto'),
-    ('N/A', 'N/A'),
+    ("Baixo", "Baixo"),
+    ("Alto", "Alto"),
+    ("N/A", "N/A"),
 ]
 
 TIPO_FORMULARIO = [
-    ('Processo (F154)', 'Processo (F154)'),
-    ('CQI-11', 'CQI-11'),
-    ('CQI-12', 'CQI-12'),
-    ('CQI-9', 'CQI-9'),
-    ('N/A', 'N/A'),
+    ("Processo (F154)", "Processo (F154)"),
+    ("CQI-11", "CQI-11"),
+    ("CQI-12", "CQI-12"),
+    ("CQI-9", "CQI-9"),
+    ("N/A", "N/A"),
 ]
 
 SIM_NAO = [
-    ('Sim', 'Sim'),
-    ('Não', 'Não'),
+    ("Sim", "Sim"),
+    ("Não", "Não"),
 ]
+
 
 class FornecedorQualificado(models.Model):
     # Informações Gerais
@@ -51,14 +53,20 @@ class FornecedorQualificado(models.Model):
     proxima_avaliacao_risco = models.DateField(blank=True, null=True)
 
     # Auditoria de Processo (F154, CQIs)
-    tipo_formulario = models.CharField(max_length=20, choices=TIPO_FORMULARIO, blank=True)
+    tipo_formulario = models.CharField(
+        max_length=20, choices=TIPO_FORMULARIO, blank=True
+    )
     data_auditoria = models.DateField(blank=True, null=True)
     proxima_auditoria = models.DateField(blank=True, null=True)
     nota_auditoria = models.FloatField(blank=True, null=True)
 
     # Cálculos Automáticos
-    classe_frequencia = models.CharField(max_length=10, blank=True)  # A, B, C (automático)
-    status = models.CharField(max_length=30, blank=True)  # Qualificado, Qualificado Condicional, Reprovado
+    classe_frequencia = models.CharField(
+        max_length=10, blank=True
+    )  # A, B, C (automático)
+    status = models.CharField(
+        max_length=30, blank=True
+    )  # Qualificado, Qualificado Condicional, Reprovado
     score = models.FloatField(blank=True, null=True)  # Baseado na certificação
 
     # Especialista de Segurança do Produto
@@ -66,17 +74,22 @@ class FornecedorQualificado(models.Model):
     especialista_cargo = models.CharField(max_length=100, blank=True)
     especialista_contato = models.CharField(max_length=100, blank=True)
 
-   
-    # Certificados    
-    certificado_anexo = models.FileField(upload_to='certificados/fornecedores/', blank=True, null=True)
-    lead_time = models.PositiveIntegerField(blank=True, null=True, verbose_name="Lead Time (dias)")
-
+    # Certificados
+    certificado_anexo = models.FileField(
+        upload_to="certificados/fornecedores/", blank=True, null=True
+    )
+    lead_time = models.PositiveIntegerField(
+        blank=True, null=True, verbose_name="Lead Time (dias)"
+    )
 
     atualizado_em = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         # Condição para "Calibração" com certificação "NBR-ISO 17025 RBC"
-        if self.produto_servico == "Calibração" and self.tipo_certificacao == "NBR-ISO 17025 RBC":
+        if (
+            self.produto_servico == "Calibração"
+            and self.tipo_certificacao == "NBR-ISO 17025 RBC"
+        ):
             self.vencimento_certificacao = None
             self.risco = "N/A"
             self.data_avaliacao_risco = None
@@ -111,7 +124,7 @@ class FornecedorQualificado(models.Model):
                 else:
                     self.classe_frequencia = "C"
                     delta = timedelta(days=365)
-                
+
                 if self.data_auditoria:
                     self.proxima_auditoria = self.data_auditoria + delta
                     self.proxima_avaliacao_risco = self.proxima_auditoria
@@ -133,6 +146,6 @@ class FornecedorQualificado(models.Model):
             self.score = 80
 
         super().save(*args, **kwargs)
-        
+
     def __str__(self):
         return self.nome

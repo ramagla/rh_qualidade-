@@ -2,16 +2,16 @@
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.shortcuts import render
-from qualidade_fornecimento.models.controle_servico_externo import ControleServicoExterno
+from django.shortcuts import get_object_or_404, redirect, render
 
-from django.shortcuts import render, redirect, get_object_or_404
-from qualidade_fornecimento.forms.controle_servico_externo_form import ControleServicoExternoForm
-from qualidade_fornecimento.models.controle_servico_externo import ControleServicoExterno
 from qualidade_fornecimento.forms.controle_servico_externo_form import (
     ControleServicoExternoForm,
-    RetornoDiarioFormSet
+    RetornoDiarioFormSet,
 )
+from qualidade_fornecimento.models.controle_servico_externo import (
+    ControleServicoExterno,
+)
+
 
 @login_required
 def cadastrar_controle_servico_externo(request):
@@ -40,19 +40,19 @@ def cadastrar_controle_servico_externo(request):
 
     # Pega o status da inspeção relacionada, se existir
     status_inspecao = None
-    if 'servico_id' in request.GET:
+    if "servico_id" in request.GET:
         try:
-            servico = ControleServicoExterno.objects.get(pk=request.GET['servico_id'])
-            if hasattr(servico, 'inspecao'):
+            servico = ControleServicoExterno.objects.get(pk=request.GET["servico_id"])
+            if hasattr(servico, "inspecao"):
                 status_inspecao = servico.inspecao.status_geral()
         except ControleServicoExterno.DoesNotExist:
             status_inspecao = None
 
-    return render(request, "controle_servico_externo/controle_servico_externo_form.html", {
-        "form": form,
-        "formset": formset,
-        "status_inspecao": status_inspecao
-    })
+    return render(
+        request,
+        "controle_servico_externo/form_controle_servico_externo.html",
+        {"form": form, "formset": formset, "status_inspecao": status_inspecao},
+    )
 
 
 @login_required
@@ -61,7 +61,9 @@ def editar_controle_servico_externo(request, id):
 
     if request.method == "POST":
         form = ControleServicoExternoForm(request.POST, instance=servico)
-        formset = RetornoDiarioFormSet(request.POST, instance=servico, prefix="retornos")
+        formset = RetornoDiarioFormSet(
+            request.POST, instance=servico, prefix="retornos"
+        )
 
         if form.is_valid() and formset.is_valid():
             servico = form.save(commit=False)
@@ -81,19 +83,21 @@ def editar_controle_servico_externo(request, id):
         form = ControleServicoExternoForm(instance=servico)
         formset = RetornoDiarioFormSet(instance=servico, prefix="retornos")
 
-    return render(request, "controle_servico_externo/controle_servico_externo_form.html", {
-        "form": form,
-        "formset": formset
-    })
+    return render(
+        request,
+        "controle_servico_externo/form_controle_servico_externo.html",
+        {"form": form, "formset": formset},
+    )
+
 
 @login_required
 def listar_controle_servico_externo(request):
-    qs = ControleServicoExterno.objects.all().order_by('-data_envio')
+    qs = ControleServicoExterno.objects.all().order_by("-data_envio")
 
-    pedido     = request.GET.get('pedido')
-    codigo_bm  = request.GET.get('codigo_bm')
-    fornecedor = request.GET.get('fornecedor')
-    status2    = request.GET.get('status2')
+    pedido = request.GET.get("pedido")
+    codigo_bm = request.GET.get("codigo_bm")
+    fornecedor = request.GET.get("fornecedor")
+    status2 = request.GET.get("status2")
 
     if pedido:
         qs = qs.filter(pedido__icontains=pedido)
@@ -108,11 +112,11 @@ def listar_controle_servico_externo(request):
         qs = qs.filter(status2=status2)
 
     paginator = Paginator(qs, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    total_enviados  = qs.count()
-    total_ok        = qs.filter(status2="OK").count()
+    total_enviados = qs.count()
+    total_ok = qs.filter(status2="OK").count()
     total_pendentes = qs.filter(status2="Atenção Saldo").count()
     total_atrasados = qs.filter(atraso_em_dias__gt=0).count()
 
@@ -120,15 +124,17 @@ def listar_controle_servico_externo(request):
     servicos_disponiveis = ControleServicoExterno.objects.filter(inspecao__isnull=True)
 
     context = {
-        'servicos_paginados': page_obj,
-        'total_enviados': total_enviados,
-        'total_ok': total_ok,
-        'total_pendentes': total_pendentes,
-        'total_atrasados': total_atrasados,
-        'servicos_disponiveis': servicos_disponiveis,  # Adicionado para o select2 da modal
+        "servicos_paginados": page_obj,
+        "total_enviados": total_enviados,
+        "total_ok": total_ok,
+        "total_pendentes": total_pendentes,
+        "total_atrasados": total_atrasados,
+        "servicos_disponiveis": servicos_disponiveis,  # Adicionado para o select2 da modal
     }
 
-    return render(request, "controle_servico_externo/controle_servico_externo_list.html", context)
+    return render(
+        request, "controle_servico_externo/lista_controle_servico_externo.html", context
+    )
 
 
 @login_required
@@ -139,17 +145,23 @@ def excluir_controle_servico_externo(request, id):
         servico.delete()
         return redirect("listar_controle_servico_externo")
 
-    return render(request, "controle_servico_externo/controle_servico_externo_confirm_delete.html", {
-        "servico": servico
-    })
+    return render(
+        request,
+        "controle_servico_externo/controle_servico_externo_confirm_delete.html",
+        {"servico": servico},
+    )
+
 
 from django.http import JsonResponse
+
 from qualidade_fornecimento.models import FornecedorQualificado
+
 
 @login_required
 def api_leadtime(request, pk):
     try:
         fornecedor = FornecedorQualificado.objects.get(pk=pk)
-        return JsonResponse({"lead_time": fornecedor.lead_time})
+        lead = fornecedor.lead_time if fornecedor.lead_time is not None else 0
+        return JsonResponse({"lead_time": lead})
     except FornecedorQualificado.DoesNotExist:
-        return JsonResponse({"lead_time": None})
+        return JsonResponse({"lead_time": 0}, status=404)

@@ -1,34 +1,44 @@
-from django import forms
 from decimal import Decimal, InvalidOperation
+
+from django import forms
+
 from qualidade_fornecimento.models.rolo import RoloMateriaPrima
+
 
 class RoloMateriaPrimaForm(forms.ModelForm):
     nro_rolo = forms.CharField(
         disabled=True,
         required=False,
         label="N° do Rolo",
-        widget=forms.TextInput(attrs={'class': 'form-control'})
+        widget=forms.TextInput(attrs={"class": "form-control"}),
     )
 
     class Meta:
         model = RoloMateriaPrima
         fields = [
-            'nro_rolo', 'peso',
-            'bitola_espessura', 'bitola_largura',
-            'tracao', 'dureza',
-            'enrolamento', 'dobramento', 'torcao_residual',
-            'aspecto_visual', 'alongamento', 'flechamento'
+            "nro_rolo",
+            "peso",
+            "bitola_espessura",
+            "bitola_largura",
+            "tracao",
+            "dureza",
+            "enrolamento",
+            "dobramento",
+            "torcao_residual",
+            "aspecto_visual",
+            "alongamento",
+            "flechamento",
         ]
         widgets = {
-            'peso': forms.NumberInput(attrs={'class': 'form-control text-center'}),
-            'tracao': forms.HiddenInput(),
-            'dureza': forms.HiddenInput(),
-            'enrolamento': forms.Select(attrs={'class': 'form-select text-center'}),
-            'dobramento': forms.Select(attrs={'class': 'form-select text-center'}),
-            'torcao_residual': forms.Select(attrs={'class': 'form-select text-center'}),
-            'aspecto_visual': forms.Select(attrs={'class': 'form-select text-center'}),
-            'alongamento': forms.Select(attrs={'class': 'form-select text-center'}),
-            'flechamento': forms.Select(attrs={'class': 'form-select text-center'}),
+            "peso": forms.NumberInput(attrs={"class": "form-control text-center"}),
+            "tracao": forms.HiddenInput(),
+            "dureza": forms.HiddenInput(),
+            "enrolamento": forms.Select(attrs={"class": "form-select text-center"}),
+            "dobramento": forms.Select(attrs={"class": "form-select text-center"}),
+            "torcao_residual": forms.Select(attrs={"class": "form-select text-center"}),
+            "aspecto_visual": forms.Select(attrs={"class": "form-select text-center"}),
+            "alongamento": forms.Select(attrs={"class": "form-select text-center"}),
+            "flechamento": forms.Select(attrs={"class": "form-select text-center"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -38,7 +48,14 @@ class RoloMateriaPrimaForm(forms.ModelForm):
         self.fields["nro_rolo"].initial = inst.nro_rolo or "Será gerado ao salvar"
 
         CHOICES = [("OK", "OK"), ("NOK", "NOK")]
-        for nome in ["enrolamento", "dobramento", "torcao_residual", "aspecto_visual", "alongamento", "flechamento"]:
+        for nome in [
+            "enrolamento",
+            "dobramento",
+            "torcao_residual",
+            "aspecto_visual",
+            "alongamento",
+            "flechamento",
+        ]:
             if nome in self.fields:
                 self.fields[nome].choices = CHOICES
 
@@ -46,13 +63,13 @@ class RoloMateriaPrimaForm(forms.ModelForm):
         cleaned = super().clean()
 
         # Conversão segura de vírgula para ponto nos campos numéricos
-        for field in ['bitola_espessura', 'bitola_largura', 'tracao']:
+        for field in ["bitola_espessura", "bitola_largura", "tracao"]:
             value = cleaned.get(field)
             if value is not None and isinstance(value, str):
                 try:
-                    value = Decimal(value.replace(',', '.'))
+                    value = Decimal(value.replace(",", "."))
                     cleaned[field] = value
                 except (InvalidOperation, AttributeError):
-                    self.add_error(field, 'Informe um número válido.')
+                    self.add_error(field, "Informe um número válido.")
 
         return cleaned

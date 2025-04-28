@@ -1,0 +1,529 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Serviço Externo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Cadastrar Serviço Externo</h2>
+
+  {% if messages %}
+    <div class="col-12">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+
+    <!-- Accordion para Campos Automáticos -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingCamposAuto">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCamposAuto" aria-expanded="false" aria-controls="collapseCamposAuto" aria-pressed="false" id="btn-accordion-campos-auto">
+      <i class="bi bi-gear-fill me-2" aria-hidden="true"></i> Campos Automáticos
+    </button>
+  </h2>
+
+  <div id="collapseCamposAuto" class="accordion-collapse collapse" aria-labelledby="headingCamposAuto" data-bs-parent="#formAccordion">
+    <div class="accordion-body row g-3">
+
+      <!-- Lead Time (dias) -->
+      <div class="col-12 col-sm-6 col-md-4">
+        <label for="id_lead_time" class="form-label fw-bold">
+  <i class="bi bi-clock me-2" aria-hidden="true"></i> Lead Time (dias):
+        </label>
+        <div class="input-group">
+          {{ form.lead_time|add_class:"form-control bg-light text-muted" | attr:"readonly title:Preenchimento automático" }}
+
+          <span class="input-group-text bg-light text-muted" title="Campo automático">🔒</span>
+        </div>
+      </div>
+
+      <!-- Total Recebido -->
+      <div class="col-12 col-sm-6 col-md-4">
+        <label for="total_recebido_auto" class="form-label fw-bold">
+  <i class="bi bi-box-seam me-2" aria-hidden="true"></i> Total Recebido:
+        </label>
+        <div class="input-group">
+          <input type="text" id="total_recebido_auto" class="form-control bg-light text-muted" readonly title="Campo automático">
+          <span class="input-group-text bg-light text-muted" title="Campo automático">🔒</span>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="col-12 col-sm-6 col-md-4">
+        <label for="status2_auto" class="form-label fw-bold">
+  <i class="bi bi-flag me-2" aria-hidden="true"></i> Status:
+        </label>
+        <div class="input-group">
+          <input type="text" id="status2_auto" class="form-control bg-light text-muted" readonly title="Campo automático">
+          <span class="input-group-text bg-light text-muted" title="Campo automático">🔒</span>
+        </div>
+      </div>
+
+      <!-- Prev. Entrega -->
+      <div class="col-12 col-sm-6 col-md-4">
+        <label for="prev_entrega_auto" class="form-label fw-bold">
+  <i class="bi bi-calendar2-week me-2" aria-hidden="true"></i> Prev. Entrega:
+        </label>
+        <div class="input-group">
+<input type="text"
+       id="prev_entrega_auto"
+       class="form-control bg-light text-muted"
+       readonly
+       title="Campo automático"
+       placeholder="dd/mm/aaaa">
+
+                 <span class="input-group-text bg-light text-muted" title="Campo automático">🔒</span>
+        </div>
+      </div>
+
+      <!-- Atraso em Dias -->
+      <div class="col-12 col-sm-6 col-md-4">
+        <label for="atraso_dias_auto" class="form-label fw-bold">
+  <i class="bi bi-alarm me-2" aria-hidden="true"></i> Atraso em Dias:
+        </label>
+        <div class="input-group">
+          <input type="text" id="atraso_dias_auto" class="form-control bg-light text-muted" readonly title="Campo automático">
+          <span class="input-group-text bg-light text-muted" title="Campo automático">🔒</span>
+        </div>
+      </div>
+
+      <!-- IP -->
+      <div class="col-12 col-sm-6 col-md-4">
+        <label for="ip_auto" class="form-label fw-bold">
+            <i class="bi bi-percent me-2" aria-hidden="true"></i> IP (Indice de Pontualidade):
+:
+        </label>
+        <div class="input-group">
+          <input type="text" id="ip_auto" class="form-control bg-light text-muted" readonly title="Campo automático">
+          <span class="input-group-text bg-light text-muted" title="Campo automático">🔒</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+    <!-- Accordion para Dados do Serviço Externo -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDadosServico">
+            <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDadosServico" aria-expanded="false" aria-controls="collapseDadosServico">
+<i class="bi bi-journal-text me-2" aria-hidden="true"></i> Dados do Serviço Externo
+            </button>
+        </h2>
+        <div id="collapseDadosServico" class="accordion-collapse collapse" aria-labelledby="headingDadosServico" data-bs-parent="#formAccordion">
+            <div class="accordion-body row g-3">
+                <div class="col-md-6">
+  <label class="form-label">
+  <i class="bi bi-receipt me-2" aria-hidden="true"></i> Pedido (Guia de Banho): <span class="text-danger">*</span>
+  </label>
+  {{ form.pedido|add_class:"form-control" | attr:"placeholder:Ex: 123456" }}
+  {% if form.pedido.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.pedido.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+
+
+                <div class="col-md-6">
+  <label class="form-label">
+  <i class="bi bi-gear-wide-connected me-2" aria-hidden="true"></i> Ordem de Produção (OP): <span class="text-danger">*</span>
+  </label>
+  {{ form.op|add_class:"form-control" | attr:"placeholder:Ex: 654321" }}
+  {% if form.op.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.op.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+             <div class="col-md-4">
+  <label class="form-label">
+  <i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i> Nota Fiscal: <span class="text-danger">*</span>
+  </label>
+  {{ form.nota_fiscal|add_class:"form-control" | attr:"placeholder:Ex: 987654" }}
+  {% if form.nota_fiscal.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.nota_fiscal.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+
+
+                <div class="col-md-6">
+  <label class="form-label">
+  <i class="bi bi-person-badge me-2" aria-hidden="true"></i> Fornecedor: <span class="text-danger">*</span>
+  </label>
+  {{ form.fornecedor|add_class:"form-select select2" }}
+  {% if form.fornecedor.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.fornecedor.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+
+
+                <div class="col-md-6">
+  <label class="form-label">
+  <i class="bi bi-upc me-2" aria-hidden="true"></i> Código BM (Tratamento): <span class="text-danger">*</span>
+  </label>
+  {{ form.codigo_bm|add_class:"form-select select2" }}
+  {% if form.codigo_bm.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.codigo_bm.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+
+               <div class="col-md-3">
+  <label class="form-label">
+  <i class="bi bi-box2 me-2" aria-hidden="true"></i> Quantidade Enviada: <span class="text-danger">*</span>
+</label>
+
+  {{ form.quantidade_enviada|add_class:"form-control" | attr:"placeholder:Ex: 50,00" }}
+  {% if form.quantidade_enviada.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.quantidade_enviada.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+
+               <div class="col-md-3">
+  <label class="form-label">
+  <i class="bi bi-calendar-event me-2" aria-hidden="true"></i> Data de Envio: <span class="text-danger">*</span>
+</label>
+
+  {{ form.data_envio|add_class:"form-control" }}
+  {% if form.data_envio.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.data_envio.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+               <div class="col-md-3">
+  <label class="form-label">
+    <i class="bi bi-calendar-check me-2" aria-hidden="true"></i> Data de Retorno:
+  </label>
+  {{ form.data_retorno|add_class:"form-control bg-light text-muted" }}
+</div>
+
+
+                <div class="col-md-3">
+  <label class="form-label">
+    <i class="bi bi-award me-2" aria-hidden="true"></i> IQF:
+  </label>
+  <input type="text" id="iqf_auto" class="form-control bg-light text-muted" readonly>
+</div>
+
+
+                <div class="col-12">
+  <label class="form-label">
+  <i class="bi bi-chat-left-text me-2" aria-hidden="true"></i> Observações:
+  </label>
+  {{ form.observacao|add_class:"form-control" | attr:"placeholder:Ex: Informações adicionais sobre o serviço" }}
+  {% if form.observacao.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.observacao.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Accordion para Controle de Retornos -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingControleRetornos">
+            <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseControleRetornos" aria-expanded="false" aria-controls="collapseControleRetornos">
+<i class="bi bi-boxes me-2" aria-hidden="true"></i> Controle de Retornos Diários
+            </button>
+        </h2>
+        <div id="collapseControleRetornos" class="accordion-collapse collapse" aria-labelledby="headingControleRetornos" data-bs-parent="#formAccordion">
+            <div class="accordion-body">
+                {{ formset.management_form }}
+                <div id="retorno-formset">
+  {% for retorno_form in formset %}
+    <div class="card mb-3 shadow-sm" style="border: 1px solid #dee2e6; border-radius: 0.5rem;">
+      <div class="row g-3 p-3">
+        <div class="col-md-6">
+          <i class="bi bi-calendar-check me-2" aria-hidden="true"></i> Data:
+{{ retorno_form.data|add_class:"form-control" | attr:"placeholder:Selecione a data" }}
+
+        </div>
+        <div class="col-md-6">
+  <i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i> Quantidade Retornada:
+          {{ retorno_form.quantidade|add_class:"form-control" | attr:"placeholder:Ex: 50" }}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+                <button type="button" class="btn btn-outline-primary mt-3" id="add-retorno">
+                    <i class="bi bi-plus-circle"></i> Adicionar Retorno
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="col-12 text-center mt-4">
+  <button type="submit" id="btnSalvar" class="btn btn-primary me-2">
+  <span id="spinnerSalvar" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+<i class="bi bi-save" aria-hidden="true"></i> Salvar
+</button>
+
+
+  <a href="{% url 'listar_controle_servico_externo' %}" 
+   id="btnCancelar" 
+   class="btn btn-secondary ms-2" 
+   onclick="desabilitarCancelar()">
+  <span id="spinnerCancelar" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+<i class="bi bi-arrow-left" aria-hidden="true"></i> Cancelar
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+{# --------- Formulário escondido para adicionar retornos --------- #}
+<div id="empty-form-template" class="d-none">
+  <div class="card mb-3 p-3">
+    <div class="row">
+      <div class="col-md-6">
+        <label class="form-label">Data:</label>
+        <input type="date" name="retornos-__prefix__-data" class="form-control" id="id_retornos-__prefix__-data">
+      </div>
+      <div class="col-md-6">
+       <i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i> Quantidade Retornada:
+{{ retorno_form.quantidade|add_class:"form-control" | attr:"placeholder:Ex: 50" }}
+
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function exibirToast(mensagem, tipo) {
+  const toast = document.createElement("div");
+  toast.className = `toast align-items-center text-white bg-${tipo} border-0 show position-fixed bottom-0 end-0 m-3`;
+  toast.role = "alert";
+  toast.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">${mensagem}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+    </div>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const statusInspecao = "{{ status_inspecao|default:'' }}";
+ calcularCamposAutomaticos();
+  atualizarDataRetorno();
+  // Ativa select2
+  $('#id_fornecedor, #id_codigo_bm').select2({
+    placeholder: "Selecione...",
+    width: '100%',
+    allowClear: true
+  });
+
+  // Aria-label no Select2
+  $(document).on('select2:open', function () {
+    document.querySelectorAll('.select2-search__field').forEach(input => {
+      input.setAttribute('aria-label', 'Pesquisar opção');
+    });
+  });
+
+  // Fetch do Lead Time
+  $('#id_fornecedor').on('select2:select', function (e) {
+    const fornecedorId = e.params.data.id;
+
+    fetch(`/qualidade/api/fornecedor/${fornecedorId}/leadtime/`)
+      .then(res => res.json())
+      .then(data => {
+        const leadInput = document.getElementById('id_lead_time');
+        const leadValue = parseInt(data.lead_time);
+
+        if (!isNaN(leadValue) && leadValue > 0) {
+          leadInput.value = leadValue;
+          calcularCamposAutomaticosDebounced();
+          exibirToast("Campos automáticos atualizados com sucesso!", "success");
+        } else {
+          leadInput.value = "";
+          exibirToast("Fornecedor sem Lead Time cadastrado.", "danger");
+        }
+      })
+      .catch(() => {
+        exibirToast("Erro ao buscar Lead Time. Tente novamente.", "danger");
+      });
+  });
+
+  // Debounce genérico
+  function debounce(func, delay) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
+
+  // Cálculo dos campos automáticos
+  function calcularCamposAutomaticos() {
+    const totalRecebido = [...document.querySelectorAll('input[name$="-quantidade"]')]
+      .map(input => parseFloat(input.value.replace(",", ".")) || 0)
+      .reduce((a, b) => a + b, 0);
+
+    const receb = document.getElementById("total_recebido_auto");
+    const enviada = parseFloat(document.getElementById("id_quantidade_enviada")?.value.replace(",", ".")) || 0;
+    const lead = parseInt(document.getElementById("id_lead_time")?.value) || 0;
+    const dataEnvio = document.getElementById("id_data_envio")?.value;
+    const dataRetorno = document.getElementById("id_data_retorno")?.value;
+
+    const status = document.getElementById("status2_auto");
+    const prev = document.getElementById("prev_entrega_auto");
+    const atraso = document.getElementById("atraso_dias_auto");
+    const ip = document.getElementById("ip_auto");
+    const iqf = document.getElementById("iqf_auto");
+
+    if (receb) receb.value = totalRecebido.toFixed(2);
+
+    if (status) {
+      status.value = enviada ? (
+        totalRecebido < enviada ? "Atenção Saldo" :
+        totalRecebido === enviada ? "OK" :
+        "Saldo maior que o enviado"
+      ) : "";
+    }
+
+    if (prev && dataEnvio && lead > 0) {
+      const data = new Date(dataEnvio);
+      data.setDate(data.getDate() + lead);
+      const dia = String(data.getDate()).padStart(2, '0');
+      const mes = String(data.getMonth() + 1).padStart(2, '0');
+      const ano = data.getFullYear();
+      prev.value = `${dia}/${mes}/${ano}`;
+    }
+
+    if (dataRetorno && prev?.value) {
+      const atrasoDias = Math.max(0, Math.round((new Date(dataRetorno) - new Date(prev.value)) / (1000 * 60 * 60 * 24)));
+      if (atraso) atraso.value = atrasoDias;
+
+      if (ip) {
+        let valorIP = 0;
+        if (atrasoDias >= 21) valorIP = 30;
+        else if (atrasoDias >= 16) valorIP = 20;
+        else if (atrasoDias >= 11) valorIP = 15;
+        else if (atrasoDias >= 7) valorIP = 10;
+        else if (atrasoDias >= 4) valorIP = 5;
+        else if (atrasoDias >= 1) valorIP = 2;
+        ip.value = valorIP;
+      }
+    } else {
+      if (atraso) atraso.value = "";
+      if (ip) ip.value = "";
+    }
+
+    if (iqf) {
+      iqf.value = statusInspecao === "Aprovado" ? "Aprovado" :
+                  statusInspecao === "Aprovado Condicionalmente" ? "Aprovado Condicionalmente" :
+                  statusInspecao === "Reprovado" ? "Reprovado" : "—";
+    }
+  }
+
+  const calcularCamposAutomaticosDebounced = debounce(calcularCamposAutomaticos, 300);
+
+  // Campos que disparam cálculos
+  document.getElementById("id_quantidade_enviada")?.addEventListener("input", calcularCamposAutomaticosDebounced);
+  document.getElementById("id_data_envio")?.addEventListener("change", calcularCamposAutomaticosDebounced);
+  document.getElementById("id_data_retorno")?.addEventListener("change", calcularCamposAutomaticosDebounced);
+
+  // Atualiza Data de Retorno com base na última data digitada nos retornos
+function atualizarDataRetorno() {
+  const camposData = document.querySelectorAll('input[name$="-data"]');
+  const datasValidas = [...camposData].map(el => el.value).filter(val => val);
+  if (datasValidas.length === 0) return;
+
+  const ultimaData = datasValidas.sort().reverse()[0];
+  const campoRetorno = document.getElementById('id_data_retorno');
+  if (campoRetorno) {
+    campoRetorno.value = ultimaData;
+  }
+}
+
+// CHAMADA AUTOMÁTICA ao carregar, adicionar ou editar
+document.getElementById("add-retorno")?.addEventListener("click", function () {
+  // ... código para adicionar form ...
+  atualizarDataRetorno();  // ✅ garantir atualização após adicionar
+});
+
+document.getElementById("retorno-formset")?.addEventListener("input", function () {
+  calcularCamposAutomaticosDebounced();
+  atualizarDataRetorno();  // ✅ garantir atualização ao editar
+});
+
+
+  // Botão Adicionar Retorno
+  const btnAdd = document.getElementById("add-retorno");
+  const formsetContainer = document.getElementById("retorno-formset");
+  const totalFormsInput = document.getElementById("id_retornos-TOTAL_FORMS");
+
+  btnAdd?.addEventListener("click", function () {
+    const count = parseInt(totalFormsInput.value);
+    const html = document.getElementById("empty-form-template").innerHTML.replace(/__prefix__/g, count);
+    formsetContainer.insertAdjacentHTML("beforeend", html);
+    totalFormsInput.value = count + 1;
+    calcularCamposAutomaticosDebounced();
+    atualizarDataRetorno();
+  });
+
+  calcularCamposAutomaticos(); // Primeira execução
+
+  // Spinner no botão salvar
+  const form = document.querySelector("form");
+  const btnSalvar = document.getElementById("btnSalvar");
+  const spinnerSalvar = document.getElementById("spinnerSalvar");
+  form?.addEventListener("submit", function () {
+    btnSalvar.disabled = true;
+    spinnerSalvar.classList.remove("d-none");
+  });
+});
+</script>
+
+
+{% endblock %}

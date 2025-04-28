@@ -1,15 +1,18 @@
 import os
 import sys
+
 import django
 
 # Adicione o diretório base do projeto ao sys.path
 # Supondo que o seu manage.py esteja em C:\Projetos\RH-Qualidade\rh_qualidade
 current_dir = os.path.dirname(os.path.abspath(__file__))
-project_path = os.path.join(current_dir, "..")  # sobe um nível para a pasta raiz do projeto
+project_path = os.path.join(
+    current_dir, ".."
+)  # sobe um nível para a pasta raiz do projeto
 sys.path.insert(0, os.path.abspath(project_path))
 
 # Define a variável de ambiente para as configurações do Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rh_qualidade.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rh_qualidade.settings")
 
 # Inicializa o Django
 django.setup()
@@ -19,15 +22,15 @@ from django.contrib.auth.models import User
 from django.test import RequestFactory
 from django.urls import reverse
 
-from qualidade_fornecimento.views.f045_views import gerar_f045
-from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
 from qualidade_fornecimento.models.f045 import RelatorioF045
+from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
+from qualidade_fornecimento.views.f045_views import gerar_f045
 
 # Cria uma instância do RequestFactory para simular requisições
 factory = RequestFactory()
 
 # Obtém um usuário para a requisição (substitua "rafael.almeida" por um usuário existente)
-user = User.objects.get(username='rafael.almeida')
+user = User.objects.get(username="rafael.almeida")
 
 # Escolha um ID de relação existente (por exemplo, 11)
 relacao_id = 11

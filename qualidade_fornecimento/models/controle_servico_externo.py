@@ -1,19 +1,37 @@
 from datetime import timedelta
+
 from django.db import models
-from qualidade_fornecimento.models import FornecedorQualificado
-from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
+
+
 
 class ControleServicoExterno(models.Model):
     pedido = models.CharField(max_length=100)
-    op = models.PositiveIntegerField(verbose_name="Ordem de Produção")  # <-- ADICIONADO AQUI
-    nota_fiscal = models.CharField(max_length=100, verbose_name="Nota Fiscal")  # <-- NOVO
-    fornecedor = models.ForeignKey(FornecedorQualificado, on_delete=models.PROTECT, related_name="servicos_externos")
-    codigo_bm = models.ForeignKey(MateriaPrimaCatalogo, on_delete=models.PROTECT, limit_choices_to={'tipo': 'Tratamento'})
+    op = models.PositiveIntegerField(
+        verbose_name="Ordem de Produção"
+    )  # <-- ADICIONADO AQUI
+    nota_fiscal = models.CharField(
+        max_length=100, verbose_name="Nota Fiscal"
+    )  # <-- NOVO
+    fornecedor = models.ForeignKey(
+    "qualidade_fornecimento.FornecedorQualificado",
+    on_delete=models.PROTECT,
+    related_name="servicos_externos",
+    )
+
+    codigo_bm = models.ForeignKey(
+    "qualidade_fornecimento.MateriaPrimaCatalogo",
+    on_delete=models.PROTECT,
+    limit_choices_to={"tipo": "Tratamento"},
+    )
     quantidade_enviada = models.DecimalField(max_digits=10, decimal_places=2)
     data_envio = models.DateField()
     data_retorno = models.DateField(null=True, blank=True)
     status2 = models.CharField(max_length=50, blank=True)
-    iqf = models.CharField(max_length=10, choices=[('Aprovado', 'Aprovado'), ('Reprovado', 'Reprovado')], blank=True)
+    iqf = models.CharField(
+        max_length=10,
+        choices=[("Aprovado", "Aprovado"), ("Reprovado", "Reprovado")],
+        blank=True,
+    )
     atraso_em_dias = models.IntegerField(null=True, blank=True)
     ip = models.IntegerField(null=True, blank=True)
     observacao = models.TextField(blank=True)
@@ -21,7 +39,6 @@ class ControleServicoExterno(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     atualizado_em = models.DateTimeField(auto_now=True)
-
 
     def calcular_total(self):
         total_dias = sum(ret.quantidade for ret in self.retornos.all())
@@ -66,7 +83,9 @@ class ControleServicoExterno(models.Model):
 
 
 class RetornoDiario(models.Model):
-    servico = models.ForeignKey(ControleServicoExterno, on_delete=models.CASCADE, related_name='retornos')
+    servico = models.ForeignKey(
+        ControleServicoExterno, on_delete=models.CASCADE, related_name="retornos"
+    )
     data = models.DateField()
     quantidade = models.DecimalField(max_digits=10, decimal_places=2)
 

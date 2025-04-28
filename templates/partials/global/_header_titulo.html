@@ -1,0 +1,8 @@
+{# partials/_header_titulo.html #}
+{% with icone=icone|default:"bi bi-clipboard2-check-fill" emoji=emoji|default:"📋" %}
+<h2 class="text-center mb-4">
+  <i class="{{ icone }} me-2" aria-hidden="true"></i>
+  <span class="visually-hidden">{{ emoji }}</span>
+  {{ titulo }}
+</h2>
+{% endwith %}

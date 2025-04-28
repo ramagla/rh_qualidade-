@@ -6,14 +6,12 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
-  <h2 class="text-center mb-3">
-  <i class="bi bi-archive-fill me-2" aria-hidden="true"></i>
-  <span class="visually-hidden">📦</span>
-  Catálogo de Matérias-Primas
-</h2>
+  
+{% include "partials/global/_header_titulo.html" with titulo="Catálogo de Matérias-Primas" %}
 
 
-{% include "partials/_toast_mensagens.html" %}
+
+{% include "partials/global/_toast_mensagens.html" %}
 
 
   <!-- Filtros -->
@@ -104,14 +102,18 @@
 
 
   <!-- Botões -->
-  <div class="d-flex justify-content-end gap-2 mb-4">
-  <a href="{% url 'materiaprima_catalogo_create' %}" class="btn btn-success">
-    <i class="bi bi-plus-circle me-1"></i> Novo Cadastro
-  </a>
-  <a href="{% url 'materiaprima_importar' %}" class="btn btn-outline-primary">
-    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Importar do Excel
-  </a>
+ <div class="d-flex justify-content-end gap-2 mb-4">
+  {% if request.user|has_permission:'qualidade_fornecimento.add_materiaprimacatalogo' %}
+    <a href="{% url 'materiaprima_catalogo_create' %}" class="btn btn-success">
+      <i class="bi bi-plus-circle me-1"></i> Novo Cadastro
+    </a>
+    <a href="{% url 'materiaprima_importar' %}" class="btn btn-outline-primary">
+      <i class="bi bi-file-earmark-spreadsheet me-1"></i> Importar do Excel
+    </a>
+  {% endif %}
 </div>
+
+
 
 
   <!-- Cards -->
@@ -199,34 +201,39 @@
             <td>{{ mp.bitola }}</td>
             <td>{{ mp.localizacao }}</td>
             <td>
-              <a href="{% url 'materiaprima_visualizar' mp.pk %}" 
-   class="btn btn-sm btn-secondary" 
-   title="Visualizar" 
-   data-bs-toggle="tooltip" 
-   aria-label="Visualizar matéria-prima">
-  <i class="bi bi-eye"></i>
-</a>
+  {% if request.user|has_permission:'qualidade_fornecimento.view_materiaprimacatalogo' %}
+    <a href="{% url 'materiaprima_visualizar' mp.pk %}" 
+       class="btn btn-sm btn-secondary" 
+       title="Visualizar" 
+       data-bs-toggle="tooltip" 
+       aria-label="Visualizar matéria-prima">
+      <i class="bi bi-eye"></i>
+    </a>
+  {% endif %}
 
-               <a href="{% url 'materiaprima_editar' mp.pk %}"
-     class="btn btn-sm btn-warning"
-     data-bs-toggle="tooltip"
-     title="Editar matéria-prima"
-     aria-label="Editar matéria-prima">
-    <i class="bi bi-pencil"></i>
-  </a>
-           <button class="btn btn-sm btn-danger"
-          data-bs-toggle="modal"
-          data-bs-target="#modalExcluir{{ mp.pk }}"
-          data-bs-toggle="tooltip"
-          title="Excluir matéria-prima"
-          aria-label="Excluir matéria-prima">
-    <i class="bi bi-trash"></i>
-  </button>
+  {% if request.user|has_permission:'qualidade_fornecimento.change_materiaprimacatalogo' %}
+    <a href="{% url 'materiaprima_editar' mp.pk %}"
+       class="btn btn-sm btn-warning"
+       data-bs-toggle="tooltip"
+       title="Editar matéria-prima"
+       aria-label="Editar matéria-prima">
+      <i class="bi bi-pencil"></i>
+    </a>
+  {% endif %}
 
-  {% include 'partials/_modal_exclusao.html' with objeto=mp url_excluir='materiaprima_deletar' %}
+  {% if request.user|has_permission:'qualidade_fornecimento.delete_materiaprimacatalogo' %}
+    <button class="btn btn-sm btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#modalExcluir{{ mp.pk }}"
+            data-bs-toggle="tooltip"
+            title="Excluir matéria-prima"
+            aria-label="Excluir matéria-prima">
+      <i class="bi bi-trash"></i>
+    </button>
+  {% include 'partials/global/_modal_exclusao.html' with objeto=mp url_excluir='materiaprima_deletar' %}
 </td>
           </tr>   
-
+{%endif%}
           {% endfor %}
           
         </tbody>
@@ -235,10 +242,10 @@
 
 
   {% else %}
-{% include "partials/_sem_resultados.html" %}
+{% include "partials/global/_sem_resultados.html" %}
   {% endif %}
   <!-- Paginação -->
-{% include "partials/_paginacao.html" with page_obj=lista_materias %}
+{% include "partials/global/_paginacao.html" with page_obj=lista_materias %}
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {

@@ -5,11 +5,8 @@
 {% block title %}TB050 - Relação de Matérias‑Primas{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">
-  <i class="bi bi-archive-fill me-2" aria-hidden="true"></i>
-  <span class="visually-hidden">📦</span>
-  TB050 - Relação de Matérias-Primas
-</h2>
+
+{% include "partials/global/_header_titulo.html" with titulo="TB050 - Relação de Matérias-Primas" %}
 
 
   {# ---------------- TOAST de Mensagens ---------------- #}
@@ -131,27 +128,32 @@
 
 
   {# ----------------- Botões de Ação ------------------- #}
-  <div class="d-flex justify-content-end mb-4 gap-2">
-   <a href="{% url 'tb050_cadastrar' %}"
-   class="btn btn-success d-inline-flex align-items-center"
-   aria-label="Cadastrar nova relação de matérias‑primas"
-   data-bs-toggle="tooltip"
-   title="Cadastrar nova relação de matérias‑primas">
-  <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
-  <span>Novo</span>
-</a>
+<div class="d-flex justify-content-end mb-4 gap-2">
 
-<button type="button"
-        class="btn btn-warning d-inline-flex align-items-center"
-        data-bs-toggle="modal"
-        data-bs-target="#modalF045"
-        aria-label="Gerar relatório F045"
-        title="Gerar relatório F045">
-  <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>
-  <span>Gerar F045</span>
-</button>
+  {% if request.user|has_permission:'qualidade_fornecimento.add_tb050' %}
+  <a href="{% url 'tb050_cadastrar' %}"
+     class="btn btn-success d-inline-flex align-items-center"
+     aria-label="Cadastrar nova relação de matérias‑primas"
+     data-bs-toggle="tooltip"
+     title="Cadastrar nova relação de matérias‑primas">
+    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
+    <span>Novo</span>
+  </a>
+  {% endif %}
 
-  </div>
+  {# Botão Gerar F045 não é protegido por permissão, fica liberado para todos os usuários #}
+  <button type="button"
+          class="btn btn-warning d-inline-flex align-items-center"
+          data-bs-toggle="modal"
+          data-bs-target="#modalF045"
+          aria-label="Gerar relatório F045"
+          title="Gerar relatório F045">
+    <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>
+    <span>Gerar F045</span>
+  </button>
+
+</div>
+
 
   {# ---------------- Cards de Indicadores -------------- #}
   <div class="row mb-4">
@@ -245,61 +247,60 @@
               <td>{{ item.numero_certificado|default:"-" }}</td>
               <td>
   {% if item.status == "Aprovado" %}
-  <span class="badge bg-success text-white badge-status">
-    <i class="bi bi-check-circle me-1" aria-hidden="true"></i>{{ item.status }}
-  </span>
-
-{% elif item.status == "Reprovado" %}
-  <span class="badge bg-danger text-white badge-status">
-    <i class="bi bi-x-circle me-1" aria-hidden="true"></i>{{ item.status }}
-  </span>
-
-{% elif item.status == "Aprovado Condicionalmente" %}
-  <span class="badge bg-warning text-dark badge-status">
-    <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ item.status }}
-  </span>
-
-{% elif item.status == "Aguardando F045" %}
-  <span class="badge bg-secondary text-white badge-status">
-    <i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>{{ item.status }}
-  </span>
-
-{% else %}
-  <span class="text-muted">—</span>
-{% endif %}
-
+    <span class="badge bg-success text-white badge-status">
+      <i class="bi bi-check-circle me-1" aria-hidden="true"></i>{{ item.status }}
+    </span>
+  {% elif item.status == "Reprovado" %}
+    <span class="badge bg-danger text-white badge-status">
+      <i class="bi bi-x-circle me-1" aria-hidden="true"></i>{{ item.status }}
+    </span>
+  {% elif item.status == "Aprovado Condicionalmente" %}
+    <span class="badge bg-warning text-dark badge-status">
+      <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ item.status }}
+    </span>
+  {% elif item.status == "Aguardando F045" %}
+    <span class="badge bg-secondary text-white badge-status">
+      <i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>{{ item.status }}
+    </span>
+  {% else %}
+    <span class="text-muted">—</span>
+  {% endif %}
 </td>
-              <td>{{ item.atraso_em_dias|default:"0" }}</td>
 
-              {# -------- Coluna Rolos (modal) -------- #}
-              <td>
-                {% if item.rolos.count > 0 %}
-                  <button class="btn btn-sm btn-info" data-bs-toggle="modal"
-                          data-bs-target="#modalRolos{{ item.pk }}">
-                    <i class="bi bi-eye"></i>
-                  </button>
-                {% else %}
-                  <span class="text-muted">-</span>
-                {% endif %}
-              </td>
+<td>{{ item.atraso_em_dias|default:"0" }}</td>
 
-              {# --------------- AÇÕES ---------------- #}
-             <td class="text-center align-middle">
+{# -------- Coluna Rolos (modal) -------- #}
+<td>
+  {% if item.rolos.count > 0 %}
+    <button class="btn btn-sm btn-info"
+            data-bs-toggle="modal"
+            data-bs-target="#modalRolos{{ item.pk }}"
+            aria-label="Visualizar rolos">
+      <i class="bi bi-eye"></i>
+    </button>
+  {% else %}
+    <span class="text-muted">-</span>
+  {% endif %}
+</td>
+
+{# --------------- AÇÕES ---------------- #}
+<td class="text-center align-middle">
   <div class="d-inline-flex flex-wrap justify-content-center gap-1">
 
+    {% if request.user|has_permission:'qualidade_fornecimento.view_tb050' %}
     <a href="{% url 'tb050_visualizar' item.pk %}"
        class="btn btn-sm btn-secondary"
        data-bs-toggle="tooltip"
-       data-bs-placement="top"
        title="Visualizar relatório"
        aria-label="Visualizar relatório">
       <i class="bi bi-eye" aria-hidden="true"></i>
     </a>
+    {% endif %}
 
+    {% if request.user|has_permission:'qualidade_fornecimento.change_tb050' %}
     <a href="{% url 'tb050_editar' item.pk %}"
        class="btn btn-sm btn-warning"
        data-bs-toggle="tooltip"
-       data-bs-placement="top"
        title="Editar relatório"
        aria-label="Editar relatório">
       <i class="bi bi-pencil" aria-hidden="true"></i>
@@ -308,49 +309,50 @@
     <a href="{% url 'tb050_selecionar_etiquetas' item.pk %}"
        class="btn btn-sm btn-info"
        data-bs-toggle="tooltip"
-       data-bs-placement="top"
        title="Imprimir etiquetas"
        aria-label="Imprimir etiquetas">
       <i class="bi bi-printer" aria-hidden="true"></i>
     </a>
+    {% endif %}
 
     {% if item.f045 and item.f045.pdf %}
-      <a href="{{ item.f045.pdf.url }}" target="_blank"
-         class="btn btn-sm btn-outline-primary"
-         data-bs-toggle="tooltip"
-         data-bs-placement="top"
-         title="Visualizar F045 em PDF"
-         aria-label="Visualizar F045 em PDF">
-        <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
-      </a>
+    <a href="{{ item.f045.pdf.url }}" target="_blank"
+       class="btn btn-sm btn-outline-primary"
+       data-bs-toggle="tooltip"
+       title="Visualizar F045 em PDF"
+       aria-label="Visualizar F045 em PDF">
+      <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+    </a>
     {% endif %}
 
     {% if item.anexo_certificado %}
-      <a href="{{ item.anexo_certificado.url }}" target="_blank"
-         class="btn btn-sm btn-outline-success"
-         data-bs-toggle="tooltip"
-         data-bs-placement="top"
-         title="Download do certificado"
-         aria-label="Download do certificado">
-        <i class="bi bi-paperclip" aria-hidden="true"></i>
-      </a>
+    <a href="{{ item.anexo_certificado.url }}" target="_blank"
+       class="btn btn-sm btn-outline-success"
+       data-bs-toggle="tooltip"
+       title="Download do certificado"
+       aria-label="Download do certificado">
+      <i class="bi bi-paperclip" aria-hidden="true"></i>
+    </a>
     {% endif %}
 
+    {% if request.user|has_permission:'qualidade_fornecimento.delete_tb050' %}
     <button type="button"
             class="btn btn-sm btn-danger"
             data-bs-toggle="modal"
             data-bs-target="#modalExcluir{{ item.pk }}"
-            data-bs-placement="top"
             title="Excluir relatório"
             aria-label="Excluir relatório">
       <i class="bi bi-trash" aria-hidden="true"></i>
     </button>
+    {% include 'partials/global/_modal_exclusao.html' with objeto=item url_excluir='tb050_excluir' %}
+
+    {% endif %}
 
   </div>
 </td>
+
 </tr>
 
-{% include 'partials/_modal_exclusao.html' with objeto=item url_excluir='tb050_excluir' %}
 
 
               </div>
@@ -398,7 +400,7 @@
 
   {# --------------- Paginação -------------------------- #}
 
-  {% include "partials/_paginacao.html" with page_obj=materias_primas_paginadas %}
+  {% include "partials/global/_paginacao.html" with page_obj=materias_primas_paginadas %}
 
   
 {# =============== MODAL “Gerar F045” ================== #}

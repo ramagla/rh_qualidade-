@@ -1,7 +1,10 @@
 from decimal import Decimal
 from typing import Dict, Tuple
+
 from django import forms
+
 from qualidade_fornecimento.models.f045 import RelatorioF045
+
 
 class RelatorioF045Form(forms.ModelForm):
     # Se por algum motivo você ainda quisesse mantê‑lo no form, bastaria:
@@ -22,24 +25,34 @@ class RelatorioF045Form(forms.ModelForm):
             "observacoes",
         ]
         widgets = {
-            "qtd_carreteis":        forms.NumberInput(attrs={"class": "form-control"}),
-            "pedido_compra":         forms.TextInput(attrs={"class": "form-control"}),
-            "resistencia_tracao":    forms.TextInput(attrs={"class": "form-control text-center"}),
-            "escoamento":            forms.TextInput(attrs={"class": "form-control text-center"}),
-            "alongamento":           forms.TextInput(attrs={"class": "form-control text-center"}),
-            "estriccao":             forms.TextInput(attrs={"class": "form-control text-center"}),
-            "torcao_certificado":    forms.TextInput(attrs={"class": "form-control text-center"}),
-            "dureza_certificado":    forms.TextInput(attrs={"class": "form-control text-center"}),
-            "observacoes":           forms.Textarea({
-                                        "class": "form-control",
-                                        "rows": 3,
-                                        "placeholder": "Observações sobre a aprovação condicional..."
-                                     }),
+            "qtd_carreteis": forms.NumberInput(attrs={"class": "form-control"}),
+            "pedido_compra": forms.TextInput(attrs={"class": "form-control"}),
+            "resistencia_tracao": forms.TextInput(
+                attrs={"class": "form-control text-center"}
+            ),
+            "escoamento": forms.TextInput(attrs={"class": "form-control text-center"}),
+            "alongamento": forms.TextInput(attrs={"class": "form-control text-center"}),
+            "estriccao": forms.TextInput(attrs={"class": "form-control text-center"}),
+            "torcao_certificado": forms.TextInput(
+                attrs={"class": "form-control text-center"}
+            ),
+            "dureza_certificado": forms.TextInput(
+                attrs={"class": "form-control text-center"}
+            ),
+            "observacoes": forms.Textarea(
+                {
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Observações sobre a aprovação condicional...",
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         # recebe os limites via view
-        self.limites: Dict[str, Tuple[Decimal, Decimal]] = kwargs.pop("limites_quimicos", {})
+        self.limites: Dict[str, Tuple[Decimal, Decimal]] = kwargs.pop(
+            "limites_quimicos", {}
+        )
         super().__init__(*args, **kwargs)
 
         # geração dinâmica de campos *_user para composição
@@ -50,10 +63,12 @@ class RelatorioF045Form(forms.ModelForm):
                 required=False,
                 max_digits=6,
                 decimal_places=3,
-                widget=forms.NumberInput({
-                    "step": "0.001",
-                    "class": "form-control text-center encontrado-input",
-                })
+                widget=forms.NumberInput(
+                    {
+                        "step": "0.001",
+                        "class": "form-control text-center encontrado-input",
+                    }
+                ),
             )
             # valor inicial vindo da instância
             if getattr(self.instance, campo, None) is not None:
@@ -75,7 +90,7 @@ class RelatorioF045Form(forms.ModelForm):
             if not (vmin <= valor <= vmax):
                 self.add_error(
                     f"{sigla}_user",
-                    f"{sigla.upper()} fora do intervalo {vmin:g} – {vmax:g} %"
+                    f"{sigla.upper()} fora do intervalo {vmin:g} – {vmax:g} %",
                 )
 
         return cleaned

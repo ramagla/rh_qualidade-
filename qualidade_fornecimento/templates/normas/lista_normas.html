@@ -5,13 +5,10 @@
 
 {% block content %}
 <div class="container-fluid mt-5">
-<h2 class="text-center mb-4">
-  <i class="bi bi-journal-text-fill me-2" aria-hidden="true"></i>
-  <span class="visually-hidden">📚</span>
-  Normas Técnicas
-</h2>
 
-  {% include "partials/_toast_mensagens.html" %}
+{% include "partials/global/_header_titulo.html" with titulo="Normas Técnicas" %}
+
+  {% include "partials/global/_toast_mensagens.html" %}
 <style>
   .card-status {
   opacity: 0.92;
@@ -92,10 +89,13 @@
 
   <!-- Botão de Cadastro -->
   <div class="d-flex justify-content-end gap-2 mb-3">
+  {% if request.user|has_permission:'qualidade_fornecimento.add_normatecnica' %}
   <a href="{% url 'cadastrar_norma' %}" class="btn btn-success" aria-label="Cadastrar nova norma técnica">
     <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Nova Norma
   </a>
+  {% endif %}
 </div>
+
 
 
   <!-- Tabela -->
@@ -121,44 +121,55 @@
               {% endif %}
             </td>
             <td class="text-center align-middle">
-              <a href="{% url 'visualizar_norma' norma.pk %}"
-   class="btn btn-sm btn-secondary"
-   data-bs-toggle="tooltip"
-   title="Visualizar norma"
-   aria-label="Visualizar norma">
-  <i class="bi bi-eye" aria-hidden="true"></i>
-</a>
+  <div class="d-inline-flex flex-wrap justify-content-center gap-2">
 
-<a href="{% url 'editar_norma' norma.pk %}"
-   class="btn btn-sm btn-warning"
-   data-bs-toggle="tooltip"
-   title="Editar norma"
-   aria-label="Editar norma">
-  <i class="bi bi-pencil" aria-hidden="true"></i>
-</a>
+    {% if request.user|has_permission:'qualidade_fornecimento.view_normatecnica' %}
+    <a href="{% url 'visualizar_norma' norma.pk %}"
+       class="btn btn-sm btn-secondary"
+       data-bs-toggle="tooltip"
+       title="Visualizar norma"
+       aria-label="Visualizar norma">
+      <i class="bi bi-eye" aria-hidden="true"></i>
+    </a>
+    {% endif %}
 
-{% if norma.arquivo_norma %}
-  <a href="{{ norma.arquivo_norma.url }}"
-     class="btn btn-sm btn-info"
-     data-bs-toggle="tooltip"
-     title="Baixar norma em PDF"
-     aria-label="Baixar norma em PDF"
-     download>
-    <i class="bi bi-download" aria-hidden="true"></i>
-  </a>
-{% endif %}
+    {% if request.user|has_permission:'qualidade_fornecimento.change_normatecnica' %}
+    <a href="{% url 'editar_norma' norma.pk %}"
+       class="btn btn-sm btn-warning"
+       data-bs-toggle="tooltip"
+       title="Editar norma"
+       aria-label="Editar norma">
+      <i class="bi bi-pencil" aria-hidden="true"></i>
+    </a>
+    {% endif %}
 
-<button type="button"
-        class="btn btn-sm btn-danger"
-        title="Excluir norma"
-        aria-label="Excluir norma"
-        data-bs-toggle="modal"
-        data-bs-target="#modalExcluir{{ norma.pk }}">
-  <i class="bi bi-trash" aria-hidden="true"></i>
-</button>
-{% include 'partials/_modal_exclusao.html' with objeto=norma url_excluir='excluir_norma' %}
+    {% if norma.arquivo_norma %}
+    <a href="{{ norma.arquivo_norma.url }}"
+       class="btn btn-sm btn-info"
+       data-bs-toggle="tooltip"
+       title="Baixar norma em PDF"
+       aria-label="Baixar norma em PDF"
+       download>
+      <i class="bi bi-download" aria-hidden="true"></i>
+    </a>
+    {% endif %}
 
-            </td>
+    {% if request.user|has_permission:'qualidade_fornecimento.delete_normatecnica' %}
+    <button type="button"
+            class="btn btn-sm btn-danger"
+            title="Excluir norma"
+            aria-label="Excluir norma"
+            data-bs-toggle="modal"
+            data-bs-target="#modalExcluir{{ norma.pk }}">
+      <i class="bi bi-trash" aria-hidden="true"></i>
+    </button>
+
+    {% include 'partials/global/_modal_exclusao.html' with objeto=norma url_excluir='excluir_norma' %}
+    {% endif %}
+
+  </div>
+</td>
+
           </tr>
 
 
@@ -166,10 +177,10 @@
       </tbody>
     </table>
   {% else %}
-{% include 'partials/_sem_resultados.html' %}
+{% include 'partials/global/_sem_resultados.html' %}
   {% endif %}
 
-  {% include 'partials/_paginacao.html' with page_obj=normas %}
+  {% include 'partials/global/_paginacao.html' with page_obj=normas %}
 
 </div>
 <script>

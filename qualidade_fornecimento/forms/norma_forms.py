@@ -1,11 +1,13 @@
 from django import forms
 from django.forms.models import BaseModelFormSet
+
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 from qualidade_fornecimento.models.norma import (
-    NormaTecnica,
     NormaComposicaoElemento,
+    NormaTecnica,
     NormaTracao,
 )
+
 
 # =====================================================
 # Classe base para formsets que remove o campo "id"
@@ -86,7 +88,9 @@ class ComposicaoQuimicaForm(forms.ModelForm):
         self.fields["tipo_abnt"].choices = [("", "—")] + [(t, t) for t in tipos]
         for fld in self.Meta.element_fields:
             self.fields[fld].required = False
-            self.fields[fld].widget.attrs.update({"class": "form-control", "step": "0.001"})
+            self.fields[fld].widget.attrs.update(
+                {"class": "form-control", "step": "0.001"}
+            )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -98,15 +102,24 @@ class ComposicaoQuimicaForm(forms.ModelForm):
     class Meta:
         model = NormaComposicaoElemento
         element_fields = [
-            "c_min", "c_max",
-            "mn_min", "mn_max",
-            "si_min", "si_max",
-            "p_min",  "p_max",
-            "s_min",  "s_max",
-            "cr_min", "cr_max",
-            "ni_min", "ni_max",
-            "cu_min", "cu_max",
-            "al_min", "al_max",
+            "c_min",
+            "c_max",
+            "mn_min",
+            "mn_max",
+            "si_min",
+            "si_max",
+            "p_min",
+            "p_max",
+            "s_min",
+            "s_max",
+            "cr_min",
+            "cr_max",
+            "ni_min",
+            "ni_max",
+            "cu_min",
+            "cu_max",
+            "al_min",
+            "al_max",
         ]
         fields = ["tipo_abnt", *element_fields]
 
@@ -120,9 +133,7 @@ class TracaoForm(forms.ModelForm):
         for field in self.Meta.fields:
             self.fields[field].required = False
             self.fields[field].widget.attrs.update({"class": "form-control"})
-        self.fields["dureza"].widget.attrs.update({
-            "placeholder": "Ex: HRb 80"
-        })
+        self.fields["dureza"].widget.attrs.update({"placeholder": "Ex: HRb 80"})
 
     def clean(self):
         cleaned_data = super().clean()
@@ -134,16 +145,20 @@ class TracaoForm(forms.ModelForm):
     class Meta:
         model = NormaTracao
         fields = [
-            "bitola_minima", "bitola_maxima",
-            "resistencia_min", "resistencia_max",
-            "dureza"
+            "bitola_minima",
+            "bitola_maxima",
+            "resistencia_min",
+            "resistencia_max",
+            "dureza",
         ]
         widgets = {
             "bitola_minima": forms.NumberInput(attrs={"step": "0.01"}),
             "bitola_maxima": forms.NumberInput(attrs={"step": "0.01"}),
             "resistencia_min": forms.NumberInput(attrs={"step": "0.01"}),
             "resistencia_max": forms.NumberInput(attrs={"step": "0.01"}),
-            "dureza": forms.NumberInput(attrs={"step": "0.01", "class": "form-control"})
+            "dureza": forms.NumberInput(
+                attrs={"step": "0.01", "class": "form-control"}
+            ),
         }
 
 
@@ -151,11 +166,25 @@ class TracaoForm(forms.ModelForm):
 # 4) FormSets
 # ---------------------------------------------------------
 fields_composicao = [
-    "tipo_abnt", "c_min", "c_max",
-    "mn_min", "mn_max", "si_min", "si_max",
-    "p_min", "p_max", "s_min", "s_max",
-    "cr_min", "cr_max", "ni_min", "ni_max",
-    "cu_min", "cu_max", "al_min", "al_max"
+    "tipo_abnt",
+    "c_min",
+    "c_max",
+    "mn_min",
+    "mn_max",
+    "si_min",
+    "si_max",
+    "p_min",
+    "p_max",
+    "s_min",
+    "s_max",
+    "cr_min",
+    "cr_max",
+    "ni_min",
+    "ni_max",
+    "cu_min",
+    "cu_max",
+    "al_min",
+    "al_max",
 ]
 
 ComposicaoFormSet = forms.modelformset_factory(
@@ -168,9 +197,11 @@ ComposicaoFormSet = forms.modelformset_factory(
 )
 
 fields_tracao = [
-    "bitola_minima", "bitola_maxima",
-    "resistencia_min", "resistencia_max",
-    "dureza"
+    "bitola_minima",
+    "bitola_maxima",
+    "resistencia_min",
+    "resistencia_max",
+    "dureza",
 ]
 
 TracaoFormSet = forms.modelformset_factory(
