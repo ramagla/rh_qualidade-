@@ -1,15 +1,15 @@
 {% if page_obj.has_other_pages %}
   <nav aria-label="Paginação da lista">
     <ul class="pagination justify-content-center flex-wrap gap-1">
-      
+
       {% if page_obj.has_previous %}
         <li class="page-item">
-          <a class="page-link shadow-sm rounded" href="?page=1{{ request.GET.urlencode|cut:'page=' }}" title="Primeira página" aria-label="Primeira página">
+          <a class="page-link shadow-sm rounded" href="?page=1&{{ request.GET.urlencode|cut:'page=' }}" title="Primeira página" aria-label="Primeira página">
             <i class="bi bi-chevron-double-left"></i>
           </a>
         </li>
         <li class="page-item">
-          <a class="page-link shadow-sm rounded" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|cut:'page=' }}" title="Página anterior" aria-label="Página anterior">
+          <a class="page-link shadow-sm rounded" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode|cut:'page=' }}" title="Página anterior" aria-label="Página anterior">
             <i class="bi bi-chevron-left"></i>
           </a>
         </li>
@@ -22,7 +22,7 @@
           </li>
         {% elif num > page_obj.number|add:'-2' and num < page_obj.number|add:'2' %}
           <li class="page-item">
-            <a class="page-link text-decoration-none rounded shadow-sm" href="?page={{ num }}{{ request.GET.urlencode|cut:'page=' }}" title="Página {{ num }}" aria-label="Página {{ num }}">
+            <a class="page-link text-decoration-none rounded shadow-sm" href="?page={{ num }}&{{ request.GET.urlencode|cut:'page=' }}" title="Página {{ num }}" aria-label="Página {{ num }}">
               {{ num }}
             </a>
           </li>
@@ -31,12 +31,12 @@
 
       {% if page_obj.has_next %}
         <li class="page-item">
-          <a class="page-link shadow-sm rounded" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|cut:'page=' }}" title="Próxima página" aria-label="Próxima página">
+          <a class="page-link shadow-sm rounded" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode|cut:'page=' }}" title="Próxima página" aria-label="Próxima página">
             <i class="bi bi-chevron-right"></i>
           </a>
         </li>
         <li class="page-item">
-          <a class="page-link shadow-sm rounded" href="?page={{ page_obj.paginator.num_pages }}{{ request.GET.urlencode|cut:'page=' }}" title="Última página" aria-label="Última página">
+          <a class="page-link shadow-sm rounded" href="?page={{ page_obj.paginator.num_pages }}&{{ request.GET.urlencode|cut:'page=' }}" title="Última página" aria-label="Última página">
             <i class="bi bi-chevron-double-right"></i>
           </a>
         </li>

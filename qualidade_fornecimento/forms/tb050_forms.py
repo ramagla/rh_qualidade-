@@ -84,25 +84,20 @@ class RelacaoMateriaPrimaForm(forms.ModelForm):
             FornecedorQualificado.objects.all().order_by("nome")
         )
         self.fields["fornecedor"].label_from_instance = (
-            lambda obj: f"{obj.nome} - {obj.produto_servico}"
+            lambda obj: f"{obj.nome}"
         )
 
         # Inicialização de campos readonly
         if instance.pk:
             self.fields["nro_relatorio"].initial = instance.nro_relatorio
-            self.fields["atraso_em_dias"].initial = instance.atraso_em_dias
-            self.fields["demerito_ip"].initial = instance.demerito_ip
+            self.fields["atraso_em_dias"].initial = max(instance.atraso_em_dias or 0, 0)
+            self.fields["demerito_ip"].initial = instance.demerito_ip or 0
 
-            # Datas formatadas para os campos type="date"
             if instance.data_entrada:
-                self.initial["data_entrada"] = instance.data_entrada.strftime(
-                    "%Y-%m-%d"
-                )
+                self.initial["data_entrada"] = instance.data_entrada.strftime("%Y-%m-%d")
             if instance.data_prevista_entrega:
-                self.initial["data_prevista_entrega"] = (
-                    instance.data_prevista_entrega.strftime("%Y-%m-%d")
-                )
+                self.initial["data_prevista_entrega"] = instance.data_prevista_entrega.strftime("%Y-%m-%d")
             if instance.data_renegociada_entrega:
-                self.initial["data_renegociada_entrega"] = (
-                    instance.data_renegociada_entrega.strftime("%Y-%m-%d")
-                )
+                self.initial["data_renegociada_entrega"] = instance.data_renegociada_entrega.strftime("%Y-%m-%d")
+
+                

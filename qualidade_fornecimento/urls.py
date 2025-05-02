@@ -9,6 +9,7 @@ from qualidade_fornecimento.views.controle_servico_externo_views import (
     editar_controle_servico_externo,
     excluir_controle_servico_externo,
     listar_controle_servico_externo,
+    visualizar_controle_servico_externo
 )
 from qualidade_fornecimento.views.f045_pdf import gerar_pdf_f045, visualizar_f045_pdf
 from qualidade_fornecimento.views.f045_views import f045_status, gerar_f045
@@ -40,11 +41,11 @@ from .views.fornecedores_views import (
     lista_fornecedores,
     visualizar_fornecedor,
 )
-from .views.home_views import home_qualidade
+from qualidade_fornecimento.views.home_views import dashboard_qualidade_view
 
 urlpatterns = [
     # Home
-    path("home/", home_qualidade, name="qualidadefornecimento_home"),
+    path("home/", dashboard_qualidade_view, name="qualidadefornecimento_home"),
     # Fornecedores
     path("fornecedores/", lista_fornecedores, name="lista_fornecedores"),
     path("fornecedores/cadastrar/", cadastrar_fornecedor, name="cadastrar_fornecedor"),
@@ -177,4 +178,11 @@ urlpatterns = [
     ),
     path("inspecao/status/<int:servico_id>/", inspecao_status, name="inspecao_status"),
     path("relatorio-avaliacao/", relatorio_avaliacao_view, name="relatorio_avaliacao"),
+
+    path(
+    "controle-servico-externo/visualizar/<int:id>/",
+    visualizar_controle_servico_externo,
+    name="visualizar_controle_servico_externo",
+    ),
+
 ]

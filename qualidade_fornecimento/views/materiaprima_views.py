@@ -162,14 +162,13 @@ def salvar_formulario_tb050(form, formset, registro_existente=None):
 
     # 3️⃣ Depois salva os novos ou editados
     for rolo in rolos:
-        if not registro_existente and (
-            rolo.nro_rolo == "Será gerado ao salvar" or not rolo.nro_rolo
-        ):
-            ultimo = RoloMateriaPrima.objects.order_by("-id").first()
-            ultimo_numero = (
-                int(ultimo.nro_rolo) if ultimo and ultimo.nro_rolo.isdigit() else 49999
-            )
-            rolo.nro_rolo = str(ultimo_numero + 1)
+     if not rolo.nro_rolo or rolo.nro_rolo.strip() in ["", "Será gerado ao salvar"]:
+        ultimo = RoloMateriaPrima.objects.order_by("-id").first()
+        ultimo_numero = (
+            int(ultimo.nro_rolo) if ultimo and str(ultimo.nro_rolo).isdigit() else 49999
+        )
+        rolo.nro_rolo = str(ultimo_numero + 1)
+
         rolo.tb050 = tb050
         rolo.save()
 
@@ -261,61 +260,61 @@ def visualizar_tb050(request, id):
 
 @login_required
 def importar_excel_tb050(request):
-    """
-    Importa registros da TB050 a partir de um arquivo Excel.
-    (Opcional – adapte a lógica conforme os campos do seu model.)
-    """
     if request.method == "POST":
         excel_file = request.FILES.get("excel_file")
-        if excel_file:
-            try:
-                workbook = openpyxl.load_workbook(excel_file)
-                sheet = workbook.active
-                row_count = sheet.max_row
-                logger.info("Total de linhas no Excel: %s", row_count)
-                for index, row in enumerate(
-                    sheet.iter_rows(min_row=2, values_only=True), start=2
-                ):
-                    if not any(row):
-                        logger.info("Linha %s vazia, pulando", index)
-                        continue
-                    # Exemplo: ajuste a extração de valores conforme a ordem das colunas no Excel
-                    data_entrada = row[0]
-                    fornecedor_id = row[
-                        1
-                    ]  # ou outro identificador para buscar o fornecedor
-                    nota_fiscal = row[2]
-                    numero_certificado = row[3]
-                    codigo = row[4]
-                    classe_especificacao = row[5]
-                    bitola = row[6]
-                    status = row[7]
-                    data_prevista_entrega = row[8]
-                    data_renegociada_entrega = row[9]
-
-                    # Se necessário, busque o fornecedor (exemplo):
-                    # from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
-                    # fornecedor_instance = get_object_or_404(FornecedorQualificado, id=fornecedor_id)
-
-                    RelacaoMateriaPrima.objects.create(
-                        data_entrada=data_entrada,
-                        # fornecedor=fornecedor_instance,  # descomente se buscar o fornecedor
-                        nota_fiscal=nota_fiscal,
-                        numero_certificado=numero_certificado,
-                        codigo=codigo,
-                        classe_especificacao=classe_especificacao,
-                        bitola=bitola,
-                        status=status,
-                        data_prevista_entrega=data_prevista_entrega,
-                        data_renegociada_entrega=data_renegociada_entrega,
-                    )
-                messages.success(request, "Dados importados com sucesso!")
-                return redirect("tb050_list")
-            except Exception as e:
-                logger.error("Erro ao importar TB050: %s", e, exc_info=True)
-                messages.error(request, f"Erro ao importar: {e}")
-        else:
+        if not excel_file:
             messages.error(request, "Selecione um arquivo Excel para importar.")
+            return redirect("tb050_importar_excel")
+
+        try:
+            workbook = openpyxl.load_workbook(excel_file)
+            sheet = workbook.active
+            row_count = sheet.max_row
+            logger.info("Total de linhas no Excel: %s", row_count)
+
+            for index, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+                if not any(row):
+                    continue
+
+                data_entrada = row[0]
+                fornecedor_nome = row[1]
+                nota_fiscal = row[2]
+                numero_certificado = row[3]
+                materia_prima_codigo = row[4]
+                data_prevista_entrega = row[5]
+                data_renegociada_entrega = row[6]
+
+                fornecedor = FornecedorQualificado.objects.filter(
+                    nome__iexact=fornecedor_nome.strip()
+                ).first()
+                if not fornecedor:
+                    messages.warning(request, f"Linha {index}: Fornecedor '{fornecedor_nome}' não encontrado.")
+                    continue
+
+                materia_prima = MateriaPrimaCatalogo.objects.filter(
+                    codigo__iexact=materia_prima_codigo.strip()
+                ).first()
+                if not materia_prima:
+                    messages.warning(request, f"Linha {index}: Matéria-prima com código '{materia_prima_codigo}' não encontrada.")
+                    continue
+
+                RelacaoMateriaPrima.objects.create(
+                    data_entrada=data_entrada,
+                    fornecedor=fornecedor,
+                    nota_fiscal=nota_fiscal,
+                    numero_certificado=numero_certificado,
+                    materia_prima=materia_prima,
+                    data_prevista_entrega=data_prevista_entrega,
+                    data_renegociada_entrega=data_renegociada_entrega,
+                )
+
+            messages.success(request, "Importação concluída com sucesso.")
+            return redirect("tb050_list")
+
+        except Exception as e:
+            logger.error("Erro ao importar TB050: %s", e, exc_info=True)
+            messages.error(request, f"Erro ao importar: {e}")
+
     return render(request, "tb050/importar_excel_tb050.html")
 
 

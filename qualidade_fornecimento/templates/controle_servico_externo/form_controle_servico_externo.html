@@ -5,7 +5,10 @@
 
 {% block content %}
 <div class="container mt-5">
-  <h2 class="text-center mb-4">Cadastrar Serviço Externo</h2>
+  <h2 class="text-center mb-4 d-flex justify-content-center align-items-center gap-2">
+    <i class="bi bi-truck"></i>
+    {% if editar %} Editar Serviço Externo {% else %} Cadastrar Serviço Externo {% endif %}
+  </h2>
 
   {% if messages %}
     <div class="col-12">
@@ -218,7 +221,7 @@
   <i class="bi bi-calendar-event me-2" aria-hidden="true"></i> Data de Envio: <span class="text-danger">*</span>
 </label>
 
-  {{ form.data_envio|add_class:"form-control" }}
+{{ form.data_envio|add_class:"form-control" }}
   {% if form.data_envio.errors %}
     <div class="invalid-feedback">
       {% for error in form.data_envio.errors %}
@@ -228,20 +231,21 @@
   {% endif %}
 </div>
 
-               <div class="col-md-3">
+          <div class="col-md-3">
   <label class="form-label">
     <i class="bi bi-calendar-check me-2" aria-hidden="true"></i> Data de Retorno:
   </label>
-  {{ form.data_retorno|add_class:"form-control bg-light text-muted" }}
+  {{ form.data_retorno|add_class:"form-control" }}
 </div>
 
 
-                <div class="col-md-3">
+
+                {% comment %} <div class="col-md-3">
   <label class="form-label">
     <i class="bi bi-award me-2" aria-hidden="true"></i> IQF:
   </label>
   <input type="text" id="iqf_auto" class="form-control bg-light text-muted" readonly>
-</div>
+</div> {% endcomment %}
 
 
                 <div class="col-12">
@@ -271,24 +275,53 @@
         </h2>
         <div id="collapseControleRetornos" class="accordion-collapse collapse" aria-labelledby="headingControleRetornos" data-bs-parent="#formAccordion">
             <div class="accordion-body">
+              {% if formset.non_form_errors %}
+  <div class="alert alert-danger">
+    <strong>Erros nos retornos:</strong>
+    <ul>
+      {% for error in formset.non_form_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+{% for retorno_form in formset %}
+  {% for field in retorno_form %}
+    {% if field.errors %}
+      <div class="alert alert-danger">
+        <strong>Erro em {{ field.label }}:</strong>
+        {{ field.errors }}
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
                 {{ formset.management_form }}
-                <div id="retorno-formset">
+              <div id="retorno-formset">
   {% for retorno_form in formset %}
     <div class="card mb-3 shadow-sm" style="border: 1px solid #dee2e6; border-radius: 0.5rem;">
       <div class="row g-3 p-3">
+
+        {# ✅ Campos ocultos necessários para o formset funcionar corretamente #}
+        {% for hidden_field in retorno_form.hidden_fields %}
+          {{ hidden_field }}
+        {% endfor %}
+
         <div class="col-md-6">
           <i class="bi bi-calendar-check me-2" aria-hidden="true"></i> Data:
-{{ retorno_form.data|add_class:"form-control" | attr:"placeholder:Selecione a data" }}
-
+          {{ retorno_form.data|add_class:"form-control" | attr:"placeholder:Selecione a data" }}
         </div>
         <div class="col-md-6">
-  <i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i> Quantidade Retornada:
+          <i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i> Quantidade Retornada:
           {{ retorno_form.quantidade|add_class:"form-control" | attr:"placeholder:Ex: 50" }}
         </div>
       </div>
     </div>
   {% endfor %}
 </div>
+
+
 
                 <button type="button" class="btn btn-outline-primary mt-3" id="add-retorno">
                     <i class="bi bi-plus-circle"></i> Adicionar Retorno
@@ -321,20 +354,24 @@
 
 {# --------- Formulário escondido para adicionar retornos --------- #}
 <div id="empty-form-template" class="d-none">
-  <div class="card mb-3 p-3">
-    <div class="row">
+  <div class="card mb-3 p-3" style="border: 1px solid #dee2e6; border-radius: 0.5rem;">
+    <div class="row g-3">
       <div class="col-md-6">
-        <label class="form-label">Data:</label>
-        <input type="date" name="retornos-__prefix__-data" class="form-control" id="id_retornos-__prefix__-data">
+        <label for="id_retornos-__prefix__-data" class="form-label">
+          <i class="bi bi-calendar-check me-2"></i> Data:
+        </label>
+        <input type="date" name="retornos-__prefix__-data" id="id_retornos-__prefix__-data" class="form-control" placeholder="Selecione a data">
       </div>
       <div class="col-md-6">
-       <i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i> Quantidade Retornada:
-{{ retorno_form.quantidade|add_class:"form-control" | attr:"placeholder:Ex: 50" }}
-
+        <label for="id_retornos-__prefix__-quantidade" class="form-label">
+          <i class="bi bi-arrow-repeat me-2"></i> Quantidade Retornada:
+        </label>
+        <input type="number" name="retornos-__prefix__-quantidade" id="id_retornos-__prefix__-quantidade" class="form-control" placeholder="Ex: 50">
       </div>
     </div>
   </div>
 </div>
+
 <script>
 function exibirToast(mensagem, tipo) {
   const toast = document.createElement("div");
@@ -354,8 +391,18 @@ function exibirToast(mensagem, tipo) {
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const statusInspecao = "{{ status_inspecao|default:'' }}";
- calcularCamposAutomaticos();
-  atualizarDataRetorno();
+
+  // ✅ Debounce deve estar fora da função para funcionar globalmente
+  function debounce(func, delay) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
+
+  const calcularCamposAutomaticosDebounced = debounce(calcularCamposAutomaticos, 300);
+
   // Ativa select2
   $('#id_fornecedor, #id_codigo_bm').select2({
     placeholder: "Selecione...",
@@ -363,7 +410,6 @@ document.addEventListener("DOMContentLoaded", function () {
     allowClear: true
   });
 
-  // Aria-label no Select2
   $(document).on('select2:open', function () {
     document.querySelectorAll('.select2-search__field').forEach(input => {
       input.setAttribute('aria-label', 'Pesquisar opção');
@@ -393,15 +439,6 @@ document.addEventListener("DOMContentLoaded", function () {
         exibirToast("Erro ao buscar Lead Time. Tente novamente.", "danger");
       });
   });
-
-  // Debounce genérico
-  function debounce(func, delay) {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), delay);
-    };
-  }
 
   // Cálculo dos campos automáticos
   function calcularCamposAutomaticos() {
@@ -441,7 +478,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (dataRetorno && prev?.value) {
-      const atrasoDias = Math.max(0, Math.round((new Date(dataRetorno) - new Date(prev.value)) / (1000 * 60 * 60 * 24)));
+      const [diaPrev, mesPrev, anoPrev] = prev.value.split('/');
+      const prevDate = new Date(`${anoPrev}-${mesPrev}-${diaPrev}`);
+      const atrasoDias = Math.max(0, Math.round((new Date(dataRetorno) - prevDate) / (1000 * 60 * 60 * 24)));
       if (atraso) atraso.value = atrasoDias;
 
       if (ip) {
@@ -466,37 +505,23 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  const calcularCamposAutomaticosDebounced = debounce(calcularCamposAutomaticos, 300);
-
-  // Campos que disparam cálculos
+  // Disparo automático nos campos
   document.getElementById("id_quantidade_enviada")?.addEventListener("input", calcularCamposAutomaticosDebounced);
   document.getElementById("id_data_envio")?.addEventListener("change", calcularCamposAutomaticosDebounced);
   document.getElementById("id_data_retorno")?.addEventListener("change", calcularCamposAutomaticosDebounced);
 
-  // Atualiza Data de Retorno com base na última data digitada nos retornos
-function atualizarDataRetorno() {
-  const camposData = document.querySelectorAll('input[name$="-data"]');
-  const datasValidas = [...camposData].map(el => el.value).filter(val => val);
-  if (datasValidas.length === 0) return;
+  // Atualiza Data de Retorno com base nos retornos diários
+  function atualizarDataRetorno() {
+    const camposData = document.querySelectorAll('input[name$="-data"]');
+    const datasValidas = [...camposData].map(el => el.value).filter(val => val);
+    if (datasValidas.length === 0) return;
 
-  const ultimaData = datasValidas.sort().reverse()[0];
-  const campoRetorno = document.getElementById('id_data_retorno');
-  if (campoRetorno) {
-    campoRetorno.value = ultimaData;
+    const ultimaData = datasValidas.sort().reverse()[0];
+    const campoRetorno = document.getElementById('id_data_retorno');
+    if (campoRetorno) {
+      campoRetorno.value = ultimaData;
+    }
   }
-}
-
-// CHAMADA AUTOMÁTICA ao carregar, adicionar ou editar
-document.getElementById("add-retorno")?.addEventListener("click", function () {
-  // ... código para adicionar form ...
-  atualizarDataRetorno();  // ✅ garantir atualização após adicionar
-});
-
-document.getElementById("retorno-formset")?.addEventListener("input", function () {
-  calcularCamposAutomaticosDebounced();
-  atualizarDataRetorno();  // ✅ garantir atualização ao editar
-});
-
 
   // Botão Adicionar Retorno
   const btnAdd = document.getElementById("add-retorno");
@@ -512,9 +537,17 @@ document.getElementById("retorno-formset")?.addEventListener("input", function (
     atualizarDataRetorno();
   });
 
-  calcularCamposAutomaticos(); // Primeira execução
+  // Atualização ao editar retornos
+  document.getElementById("retorno-formset")?.addEventListener("input", function () {
+    calcularCamposAutomaticosDebounced();
+    atualizarDataRetorno();
+  });
 
-  // Spinner no botão salvar
+  // Execução inicial
+  calcularCamposAutomaticos();
+  atualizarDataRetorno();
+
+  // Spinner salvar
   const form = document.querySelector("form");
   const btnSalvar = document.getElementById("btnSalvar");
   const spinnerSalvar = document.getElementById("spinnerSalvar");

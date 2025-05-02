@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tz %}
+
+{% block title %}Visualização do Serviço Externo{% endblock %}
+
+{% block content %}
+<style>
+  .pdf-container {
+    width: 210mm;
+    margin: 0 auto;
+    padding: 20mm;
+    background: #fff;
+    border: 1px solid #ccc;
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+  }
+  .pdf-header, .pdf-footer {
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+  }
+  .pdf-footer {
+    border-top: 1px solid #ccc;
+    margin-top: 20px;
+    padding-top: 10px;
+  }
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  .info-table th, .info-table td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: left;
+  }
+
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 15mm;
+    }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: white !important;
+    }
+    .sidebar, .navbar, .d-print-none, .btn, .btn-group {
+      display: none !important;
+    }
+    .pdf-container {
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
+      border: none !important;
+    }
+  }
+</style>
+
+<div class="text-end mb-3 d-print-none">
+  <button class="btn btn-outline-primary" onclick="window.print()">
+    <i class="bi bi-printer"></i> Imprimir
+  </button>
+</div>
+
+<div class="pdf-container">
+  <div class="pdf-header">
+    <h2>📦 Serviço Externo</h2>
+    <p>Resumo do Cadastro de Envio e Retorno</p>
+  </div>
+
+  <table class="info-table">
+    <tr><th>Pedido</th><td>{{ servico.pedido }}</td></tr>
+    <tr><th>Ordem de Produção (OP)</th><td>{{ servico.op }}</td></tr>
+    <tr><th>Nota Fiscal</th><td>{{ servico.nota_fiscal }}</td></tr>
+    <tr><th>Fornecedor</th><td>{{ servico.fornecedor }}</td></tr>
+    <tr><th>Código BM</th><td>{{ servico.codigo_bm }}</td></tr>
+    <tr><th>Quantidade Enviada</th><td>{{ servico.quantidade_enviada }} kg/peças</td></tr>
+    <tr><th>Data de Envio</th><td>{{ servico.data_envio|date:"d/m/Y" }}</td></tr>
+    <tr><th>Data de Retorno</th><td>{{ servico.data_retorno|date:"d/m/Y" }}</td></tr>
+    <tr><th>Status</th><td>{{ servico.status2 }}</td></tr>
+    <tr><th>IP (Pontualidade)</th><td>{{ servico.ip }}</td></tr>
+    <tr><th>Atraso em Dias</th><td>{{ servico.atraso_em_dias }}</td></tr>
+    <tr><th>Lead Time (dias)</th><td>{{ servico.lead_time }}</td></tr>
+    <tr><th>Previsão de Entrega</th><td>{{ servico.previsao_entrega|date:"d/m/Y" }}</td></tr>
+    <tr><th>Observações</th><td>{{ servico.observacao|default:"—" }}</td></tr>
+  </table>
+
+  <h5 class="mt-4">📦 Retornos Diários</h5>
+  {% if servico.retornos.all %}
+  <table class="info-table">
+    <thead>
+      <tr><th>Data</th><th>Quantidade</th></tr>
+    </thead>
+    <tbody>
+      {% for retorno in servico.retornos.all %}
+        <tr>
+          <td>{{ retorno.data|date:"d/m/Y" }}</td>
+          <td>{{ retorno.quantidade }} kg/peças</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="text-muted">Nenhum retorno registrado.</p>
+  {% endif %}
+
+  <div class="pdf-footer text-muted small">
+    <p class="mb-1"><i class="bi bi-clock me-1"></i>Gerado em {{ now|date:"d/m/Y H:i" }}</p>
+    <p class="mb-0 fst-italic">Sistema de Qualidade – Bras-Mol Molas e Estampados Ltda</p>
+  </div>
+</div>
+
+<script>
+  if (window.location.search.includes('imprimir=1')) {
+    setTimeout(() => window.print(), 500);
+  }
+</script>
+
+{% endblock %}

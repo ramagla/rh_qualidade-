@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
+{% load static custom_filters %}
 
 {% block title %}
   {% if editar %}Editar Norma Técnica{% else %}Cadastrar Norma Técnica{% endif %}
@@ -33,20 +34,23 @@
 
     {# ---------- 1) Cabeçalho ---------- #}
     <div class="row g-3">
-      <div class="col-md-4">
-<label class="form-label">
-  <i class="bi bi-card-list me-1 text-muted" aria-hidden="true"></i>
-  {{ form.nome_norma.label }}
-</label>
-{{ form.nome_norma|add_class:"select2-norma form-control" }}
-      </div>
-      <div class="col-md-4">
-<label class="form-label">
-  <i class="bi bi-link-45deg me-1 text-muted" aria-hidden="true"></i>
-  {{ form.vinculo_norma.label }}
-</label>
-{{ form.vinculo_norma|add_class:"select2-norma form-control" }}
-      </div>
+    <div class="col-md-4">
+  <label class="form-label">
+    <i class="bi bi-card-list me-1 text-muted" aria-hidden="true"></i>
+    {{ form.nome_norma.label }}
+  </label>
+  {{ form.nome_norma|add_class:"form-control" }}
+</div>
+
+<div class="col-md-4">
+  <label class="form-label">
+    <i class="bi bi-link-45deg me-1 text-muted" aria-hidden="true"></i>
+    {{ form.vinculo_norma.label }}
+  </label>
+  {{ form.vinculo_norma|add_class:"form-control" }}
+</div>
+
+
       <div class="col-md-4">
         <label class="form-label">
   <i class="bi bi-file-earmark-pdf-fill text-danger me-1" aria-hidden="true"></i>
@@ -80,12 +84,12 @@
 <table class="table table-bordered table-hover table-striped text-center align-middle" id="tblComposicao">
         <thead class="table-light">
   <tr>
-<th rowspan="2" class="text-nowrap" style="width:130px;">
+<th rowspan="2" class="text-nowrap align-middle" style="width:130px;">
   Tipo ABNT
   <i class="bi bi-question-circle-fill text-info ms-1"
      data-bs-toggle="tooltip"
      data-bs-placement="top"
-     title="Tipo de material segundo a classificação ABNT. Ex: SAE 1045, AISI 304 etc."></i>
+     title="Tipo de material segundo a classificação ABNT. Ex: 302, B "></i>
 </th>
     <th colspan="2" class="text-nowrap">C</th><th colspan="2" class="text-nowrap">Mn</th><th colspan="2" class="text-nowrap">Si</th>
     <th colspan="2" class="text-nowrap">P</th><th colspan="2" class="text-nowrap">S</th><th colspan="2" class="text-nowrap">Cr</th>
@@ -101,34 +105,44 @@
 </thead>
 
 
-        <tbody>
-        {% for formE in elementos_formset %}
-          <tr>
-            <td>{{ formE.tipo_abnt|add_class:"form-select select2-abnt" }}</td>
-            {% for fld in formE.visible_fields %}
-              {% if fld.name != 'tipo_abnt' and fld.name != 'DELETE' %}
-                <td>{{ fld|add_class:"form-control" }}</td>
-              {% endif %}
-            {% endfor %}
-            <td>
-  {% if elementos_formset.can_delete %}
-    {{ formE.DELETE|add_class:"d-none" }}
-    <button type="button"
-            class="btn btn-sm btn-danger del-row"
-            aria-label="Excluir linha"
-            data-bs-toggle="tooltip"
-            title="Excluir linha">
-      <i class="bi bi-trash"></i>
-    </button>
-  {% endif %}
-</td>
+      <tbody>
+  {% for formE in elementos_formset %}
+    <tr>
+      {{ formE.id }}  {# Campo oculto obrigatório para edição funcionar corretamente #}
 
-          </tr>
-          {% if formE.errors %}
-            <tr><td colspan="21" class="text-danger text-start">{{ formE.errors }}</td></tr>
-          {% endif %}
-        {% endfor %}
-        </tbody>
+      <td>{{ formE.tipo_abnt|add_class:"form-control" }}</td>
+
+      {% for fld in formE.visible_fields %}
+        {% if fld.name != "tipo_abnt" and fld.name != "DELETE" %}
+          <td>{{ fld|add_class:"form-control" }}</td>
+        {% endif %}
+      {% endfor %}
+
+      <td>
+        {% if elementos_formset.can_delete %}
+          {{ formE.DELETE|add_class:"d-none" }}
+          <button type="button"
+                  class="btn btn-sm btn-danger del-row"
+                  aria-label="Excluir linha"
+                  data-bs-toggle="tooltip"
+                  title="Excluir linha">
+            <i class="bi bi-trash"></i>
+          </button>
+        {% endif %}
+      </td>
+    </tr>
+
+    {% if formE.errors %}
+      <tr>
+        <td colspan="21" class="text-danger text-start">
+          {{ formE.errors }}
+        </td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+</tbody>
+
+
       </table>
     </div>
 <button type="button" id="addElem" class="btn btn-outline-info mb-4" aria-label="Adicionar linha na composição química">
@@ -140,11 +154,31 @@
   <i class="bi bi-graph-up-arrow me-2" aria-hidden="true"></i>
   Resistência à Tração
 </h4>
+<div class="form-check form-switch mb-3">
+  <input class="form-check-input" type="checkbox" id="switchTracaoMPA">
+  <label class="form-check-label" for="switchTracaoMPA">
+    Informar valores em MPa
+    <small class="text-muted d-block">
+      Os valores serão salvos em Kgf/mm². A conversão é apenas visual e segue a relação:
+      <strong>1 MPa ≈ 0,10197162129779 kgf/mm²</strong>, conforme padrão do Sistema Internacional de Unidades (SI).
+    </small>
+  </label>
+</div>
+
+<input type="hidden" name="usar_mpa" id="usar_mpa" value="false">
+<script>
+  document.getElementById("switchTracaoMPA").addEventListener("change", function () {
+    document.getElementById("usar_mpa").value = this.checked ? "true" : "false";
+  });
+</script>
+
+
 {{ tracao_formset.management_form }}
 <div class="table-responsive">
 <table class="table table-bordered table-hover table-striped text-center align-middle" id="tblTracao">
-    <thead class="table-light">
+    <thead class="table-light align-middle">
   <tr>
+    <th title="Tipo ABNT" data-bs-toggle="tooltip">Tipo ABNT</th> 
     <th title="Bitola mínima (mm)" data-bs-toggle="tooltip">Bitola Min (mm)</th>
     <th title="Bitola máxima (mm)" data-bs-toggle="tooltip">Bitola Max (mm)</th>
     <th title="Resistência mínima à tração (Kgf/mm²)" data-bs-toggle="tooltip">R. Min (Kgf/mm²)</th>
@@ -158,13 +192,18 @@
      {% for formT in tracao_formset %}
   <tr>
   {{ formT.id }} {# Campo oculto obrigatório para edição #}
-  <td>{{ formT.bitola_minima|add_class:"form-control"|attr:"placeholder:0.000" }}</td>
-  <td>{{ formT.bitola_maxima|add_class:"form-control"|attr:"placeholder:0.000" }}</td>
-  <td>{{ formT.resistencia_min|add_class:"form-control"|attr:"placeholder:0.000" }}</td>
-  <td>{{ formT.resistencia_max|add_class:"form-control"|attr:"placeholder:0.000" }}</td>
-  <td>
-    {{ formT.dureza|add_class:"form-control"|attr:"placeholder:0.000" }}
-  </td>
+  <td>{{ formT.tipo_abnt }}</td> <!-- NOVO -->
+  <td>{{ formT.bitola_minima }}</td>
+  <td>{{ formT.bitola_maxima }}</td>
+  <td>{{ formT.resistencia_min|add_class:"form-control" }}</td>
+
+<td>
+  {{ formT.resistencia_max|add_class:"form-control" }}
+</td>
+
+
+  <td>{{ formT.dureza }}</td>
+  
 
 
     <td>
@@ -212,18 +251,17 @@
 {# ---------- Template oculto p/ nova linha ---------- #}
 <script type="text/template" id="newRowTemplate">
 <tr>
+  <input type="hidden" name="elem-__prefix__-id" id="id_elem-__prefix__-id">
   <td>
-    <select name="elem-__prefix__-tipo_abnt"
-            id="id_elem-__prefix__-tipo_abnt"
-            class="form-select select2-abnt">
-      <option value="">—</option>
-    </select>
+    <input type="text" name="elem-__prefix__-tipo_abnt" id="id_elem-__prefix__-tipo_abnt" class="form-control" placeholder="Ex: 302">
   </td>
   {% for campo in campos_comp %}
-    <td><input type="number" step="0.001"
-               name="elem-__prefix__-{{ campo }}"
-               id="id_elem-__prefix__-{{ campo }}"
-               class="form-control"></td>
+    <td>
+      <input type="number" step="0.001"
+             name="elem-__prefix__-{{ campo }}"
+             id="id_elem-__prefix__-{{ campo }}"
+             class="form-control">
+    </td>
   {% endfor %}
   <td>
     <input type="checkbox" name="elem-__prefix__-DELETE"
@@ -232,6 +270,31 @@
   </td>
 </tr>
 </script>
+<script type="text/template" id="newTracaoRowTemplate">
+<tr>
+  <input type="hidden" name="trac-__prefix__-id" id="id_trac-__prefix__-id">
+
+  <!-- Tipo ABNT (corrigido aqui!) -->
+  <td><input type="text" name="trac-__prefix__-tipo_abnt" id="id_trac-__prefix__-tipo_abnt" class="form-control" placeholder="Ex: 302"></td>
+
+  <td><input type="number" name="trac-__prefix__-bitola_minima" id="id_trac-__prefix__-bitola_minima" step="0.01" class="form-control" placeholder="Ex: 1,20"></td>
+  <td><input type="number" name="trac-__prefix__-bitola_maxima" id="id_trac-__prefix__-bitola_maxima" step="0.01" class="form-control" placeholder="Ex: 3,00"></td>
+  <td><input type="number" name="trac-__prefix__-resistencia_min" id="id_trac-__prefix__-resistencia_min" step="0.01" class="form-control" placeholder="Ex: 130"></td>
+  <td><input type="number" name="trac-__prefix__-resistencia_max" id="id_trac-__prefix__-resistencia_max" step="0.01" class="form-control" placeholder="Ex: 160"></td>
+  <td><input type="number" name="trac-__prefix__-dureza" id="id_trac-__prefix__-dureza" step="0.01" class="form-control" placeholder="Ex: 80"></td>
+  
+  <!-- Botão Excluir -->
+  <td>
+    <input type="checkbox" name="trac-__prefix__-DELETE" id="id_trac-__prefix__-DELETE" style="display:none;">
+    <button type="button" class="btn btn-sm btn-danger del-row" aria-label="Excluir linha" data-bs-toggle="tooltip" title="Excluir linha">
+      <i class="bi bi-trash text-white"></i>
+    </button>
+  </td>
+</tr>
+</script>
+
+
+
 
 <style>
   input::-webkit-outer-spin-button,
@@ -248,54 +311,21 @@
 
 </style>
 
+<!-- 1) jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link  href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-<link  href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.2.2/dist/css/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+
+<!-- 2) Select2 CSS e tema Bootstrap 5 -->
+<link
+  href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+  rel="stylesheet"
+/>
+<link
+  href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.2.2/dist/css/select2-bootstrap-5-theme.min.css"
+  rel="stylesheet"
+/>
+
+<!-- 3) Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<script>
-$(function(){
-
-  $('.select2-norma').select2({theme:'bootstrap-5'});
-  $('.select2-abnt').select2({theme:'bootstrap-5'});
-
-  function atualizarSelectTipoABNT($select){
-    const nomeNorma = $('#id_nome_norma').val();
-    const url = "{% url 'get_tipos_abnt' %}?nome_norma="+encodeURIComponent(nomeNorma);
-    $.getJSON(url,function(data){
-      const val = $select.val() || '';
-      if($select.hasClass('select2-hidden-accessible')) $select.select2('destroy');
-      $select.empty().append($('<option>',{value:'',text:'—'}));
-      $.each(data.tipos,(_,t)=>$select.append($('<option>',{value:t,text:t})));
-      $select.val(data.tipos.includes(val)?val:'').select2({theme:'bootstrap-5'});
-    });
-  }
-
-  $('#id_nome_norma').on('change',()=>$('select.select2-abnt').each(function(){atualizarSelectTipoABNT($(this));}));
-
-  function addNewRow(prefix,tableID){
-    const total = $("input[name='"+prefix+"-TOTAL_FORMS']");
-    const idx   = +total.val();
-    const row   = $('#newRowTemplate').html().replace(/__prefix__/g,idx);
-    total.val(idx+1);
-    $(tableID+' tbody').append(row);
-    const $sel = $('#id_elem-'+idx+'-tipo_abnt').select2({theme:'bootstrap-5'});
-    atualizarSelectTipoABNT($sel);
-  }
-  $('#addElem').on('click',()=>addNewRow('elem','#tblComposicao'));
-
-  function cloneRow($table,prefix){
-    const $row = $table.find('tbody tr:first').clone(true,true);
-    $row.find('input').val('');
-    $table.find('tbody').append($row);
-    const total = $("input[name='"+prefix+"-TOTAL_FORMS']");
-    total.val(+total.val()+1);
-  }
-  $('#addTracao').on('click',()=>cloneRow($('#tblTracao'),'trac'));
-
-  $('tbody').on('click','.del-row',function(){
-    $(this).closest('tr').hide().find('input[type=checkbox]').prop('checked',true);
-  });
-});
-</script>
+{% include "normas/partials/scripts/_norma_init.html" %}
+{% include "normas/partials/scripts/_tracao_conversion.html" %}
 {% endblock %}

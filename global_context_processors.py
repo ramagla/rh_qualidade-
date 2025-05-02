@@ -164,15 +164,16 @@ def global_menu(request):
                         "icon": "fas fa-truck",
                     },
                     {
-                        "name": "Catálogo de Matéria-Prima",
-                        "url": "materiaprima_catalogo_list",
-                        "icon": "fas fa-tags",
-                    },
-                    {
                         "name": "Normas Técnicas",
                         "url": "lista_normas",
                         "icon": "fas fa-file-alt",
                     },
+                    {
+                        "name": "Catálogo de Matéria-Prima",
+                        "url": "materiaprima_catalogo_list",
+                        "icon": "fas fa-tags",
+                    },
+                    
                 ],
             })
 
@@ -214,17 +215,22 @@ def global_menu(request):
     if qualidade_fornecimento_permitido:
         modulos_disponiveis.append({"name": "Qualidade de Fornecimento", "url": "qualidadefornecimento_home", "icon": "fas fa-industry"})
 
-    # Determinar menu ativo baseado na URL
+    # Determinar módulo ativo baseado na URL
     active_module = request.path.split("/")[1]
     if active_module == "metrologia":
         menu = menu_metrologia
+        modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Metrologia"), None)
     elif active_module == "qualidade":
         menu = menu_qualidade_fornecimento
+        modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Qualidade de Fornecimento"), None)
     else:
         menu = menu_recursos_humanos
+        modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Recursos Humanos"), None)
 
     return {
-        "menu": menu,
-        "modulos_disponiveis": modulos_disponiveis,
-        "ano_atual": datetime.now().year,
-    }
+    "menu": menu,
+    "modulo_ativo": modulo_ativo,
+    "modulos_disponiveis": modulos_disponiveis,
+    "ano_atual": datetime.now().year,
+}
+

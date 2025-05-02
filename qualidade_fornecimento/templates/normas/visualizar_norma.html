@@ -165,6 +165,7 @@
           <table class="info-table">
             <thead>
               <tr>
+                <th>Tipo ABNT</th>
                 <th>Bitola (mm)</th>
                 <th>Resistência à Tração (Kgf/mm²)</th>
               </tr>
@@ -172,6 +173,7 @@
             <tbody>
               {% for trac in norma.tracoes.all %}
                 <tr>
+                  <td>{{ trac.tipo_abnt }}</td>
                   <td>{{ trac.bitola_minima }} - {{ trac.bitola_maxima }}</td>
                   <td>{{ trac.resistencia_min }} - {{ trac.resistencia_max }}</td>
                 </tr>

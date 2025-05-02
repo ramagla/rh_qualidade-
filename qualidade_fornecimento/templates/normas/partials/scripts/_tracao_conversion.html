@@ -1,0 +1,60 @@
+{# templates/partials/scripts/_tracao_conversion.html #}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const fator = 0.10197162129779;
+  const switchMPA = document.getElementById("switchTracaoMPA");
+  const inputs = document.querySelectorAll(
+    '#tblTracao input[name$="-resistencia_min"], ' +
+    '#tblTracao input[name$="-resistencia_max"]'
+  );
+
+  const aplicarConversao = emMpa => {
+    console.group(`Conversão para ${emMpa ? 'MPa' : 'kgf/mm²'}`);
+    inputs.forEach(input => {
+      const valorRaw = input.value.trim();
+      if (!valorRaw) {
+        console.log(`Pulando vazio: ${input.name}`);
+        return;
+      }
+
+      console.log(`Campo: ${input.name}`, `valor atual="${valorRaw}"`, `data-original="${input.dataset.original}"`);
+
+      // Grava original apenas uma vez
+      if (!input.dataset.original) {
+        const num = parseFloat(valorRaw.replace(",", "."));
+        console.log(' → parseFloat do valor digitado:', num);
+        if (!isNaN(num)) {
+          input.dataset.original = num;
+          console.log(` → atribuído data-original=${num}`);
+        }
+      }
+
+      // Converte
+      const original = parseFloat(input.dataset.original);
+      if (!isNaN(original)) {
+        const conv = emMpa ? (original / fator) : original;
+        // Aqui removemos o replace para usar ponto decimal
+        const texto = conv.toFixed(2);
+        console.log(` → convertido: ${texto}`);
+        input.value = texto;
+      } else {
+        console.warn(` → original inválido para ${input.name}:`, input.dataset.original);
+      }
+    });
+    console.groupEnd();
+  };
+
+  // Quando o switch muda
+  switchMPA.addEventListener("change", () => {
+    console.log("Switch MPA agora:", switchMPA.checked);
+    aplicarConversao(switchMPA.checked);
+    // debugger; // descomente se quiser pausar aqui no DevTools
+  });
+
+  // Antes de submeter, garante que volte para kgf/mm²
+  document.querySelector("form").addEventListener("submit", () => {
+    console.log("Submissão: revertendo a kgf/mm²");
+    aplicarConversao(false);
+  });
+});
+</script>

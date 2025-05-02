@@ -61,17 +61,23 @@ def editar_controle_servico_externo(request, id):
 
     if request.method == "POST":
         form = ControleServicoExternoForm(request.POST, instance=servico)
-        formset = RetornoDiarioFormSet(
-            request.POST, instance=servico, prefix="retornos"
-        )
+        formset = RetornoDiarioFormSet(request.POST, instance=servico, prefix="retornos")
+
+        print("POST recebido")
+        print("Form válido?", form.is_valid())
+        print("Formset válido?", formset.is_valid())
+        print("Erros do formset:", formset.errors)
 
         if form.is_valid() and formset.is_valid():
             servico = form.save(commit=False)
             servico.save()
 
-            formset.save()
+            # Salva apenas retornos modificados
+            for retorno_form in formset.forms:
+                if retorno_form.has_changed():
+                    retorno_form.save()
 
-            # Atualizar campos automáticos
+            # Atualiza campos automáticos
             servico.total = servico.calcular_total()
             servico.status2 = servico.calcular_status2()
             servico.atraso_em_dias = servico.calcular_atraso_em_dias()
@@ -79,14 +85,23 @@ def editar_controle_servico_externo(request, id):
             servico.save()
 
             return redirect("listar_controle_servico_externo")
+
     else:
         form = ControleServicoExternoForm(instance=servico)
         formset = RetornoDiarioFormSet(instance=servico, prefix="retornos")
 
+    # 🔧 Preenche status_inspecao (usado no JS para calcular IQF)
+    status_inspecao = servico.inspecao.status_geral() if hasattr(servico, "inspecao") else None
+
     return render(
         request,
         "controle_servico_externo/form_controle_servico_externo.html",
-        {"form": form, "formset": formset},
+        {
+            "form": form,
+            "formset": formset,
+            "editar": True,
+            "status_inspecao": status_inspecao,
+        },
     )
 
 
@@ -94,47 +109,69 @@ def editar_controle_servico_externo(request, id):
 def listar_controle_servico_externo(request):
     qs = ControleServicoExterno.objects.all().order_by("-data_envio")
 
+    # Filtros
     pedido = request.GET.get("pedido")
     codigo_bm = request.GET.get("codigo_bm")
     fornecedor = request.GET.get("fornecedor")
     status2 = request.GET.get("status2")
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
 
     if pedido:
-        qs = qs.filter(pedido__icontains=pedido)
+        qs = qs.filter(pedido=pedido)
 
     if codigo_bm:
-        qs = qs.filter(codigo_bm__codigo__icontains=codigo_bm)
+        qs = qs.filter(codigo_bm__codigo=codigo_bm)
 
     if fornecedor:
-        qs = qs.filter(fornecedor__nome__icontains=fornecedor)
+        qs = qs.filter(fornecedor__nome=fornecedor)
 
     if status2:
         qs = qs.filter(status2=status2)
 
+    if data_inicio:
+        qs = qs.filter(data_envio__gte=data_inicio)
+
+    if data_fim:
+        qs = qs.filter(data_envio__lte=data_fim)
+
+    # Paginação
     paginator = Paginator(qs, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+    # Totais
     total_enviados = qs.count()
     total_ok = qs.filter(status2="OK").count()
     total_pendentes = qs.filter(status2="Atenção Saldo").count()
     total_atrasados = qs.filter(atraso_em_dias__gt=0).count()
 
-    # 🆕 Aqui buscamos somente serviços que ainda NÃO têm inspeção feita
+    # Serviços disponíveis para inspeção
     servicos_disponiveis = ControleServicoExterno.objects.filter(inspecao__isnull=True)
 
-    context = {
-        "servicos_paginados": page_obj,
-        "total_enviados": total_enviados,
-        "total_ok": total_ok,
-        "total_pendentes": total_pendentes,
-        "total_atrasados": total_atrasados,
-        "servicos_disponiveis": servicos_disponiveis,  # Adicionado para o select2 da modal
-    }
+    # Dados para os filtros
+    pedidos = ControleServicoExterno.objects.values_list("pedido", flat=True).distinct().order_by("pedido")
+    codigos_bm = ControleServicoExterno.objects.values_list("codigo_bm__codigo", flat=True).distinct().order_by("codigo_bm__codigo")
+    fornecedores = ControleServicoExterno.objects.values_list("fornecedor__nome", flat=True).distinct().order_by("fornecedor__nome")
 
-    return render(
-        request, "controle_servico_externo/lista_controle_servico_externo.html", context
-    )
+    context = {
+    "servicos_paginados": page_obj,
+    "total_enviados": total_enviados,
+    "total_ok": total_ok,
+    "total_pendentes": total_pendentes,
+    "total_atrasados": total_atrasados,
+    "servicos_disponiveis": servicos_disponiveis,
+    "pedidos": pedidos,
+    "codigos_bm": codigos_bm,
+    "fornecedores": fornecedores,
+}
+
+    # 🧼 Limpa a sessão de sucesso da inspeção (evita modal duplicada após refresh)
+    inspecao_id = request.session.pop("inspecao_pending", None)
+    if inspecao_id:
+        context["inspecao_pending"] = inspecao_id
+
+    return render(request, "controle_servico_externo/lista_controle_servico_externo.html", context)
 
 
 @login_required
@@ -165,3 +202,13 @@ def api_leadtime(request, pk):
         return JsonResponse({"lead_time": lead})
     except FornecedorQualificado.DoesNotExist:
         return JsonResponse({"lead_time": 0}, status=404)
+
+
+@login_required
+def visualizar_controle_servico_externo(request, id):
+    servico = get_object_or_404(ControleServicoExterno, id=id)
+    return render(
+        request,
+        "controle_servico_externo/visualizar_controle_servico_externo.html",
+        {"servico": servico}
+    )

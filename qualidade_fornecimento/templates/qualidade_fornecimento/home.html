@@ -1,8 +1,293 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard da Qualidade{% endblock %}
 
 {% block content %}
-  <div class="container">
-    <h1>Módulo de Qualidade de Fornecimento</h1>
-    <p>Bem-vindo ao novo módulo!</p>
+<div class="container-fluid mt-4">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-graph-up-arrow me-2"></i> Dashboard de Qualidade – F045 e Serviço Externo
+  </h2>
+
+  <!-- KPIs -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-2 col-md-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center h-100">
+        <i class="bi bi-file-earmark-bar-graph fs-4 text-primary mb-2"></i>
+        <h6 class="card-title">Relatórios F045 Gerados</h6>
+        <h3 class="fw-bold text-primary">{{ kpi_f045_total }}</h3>
+      </div>
+    </div>
   </div>
+
+  <div class="col-lg-2 col-md-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center h-100">
+        <i class="bi bi-tools fs-4 text-success mb-2"></i>
+        <h6 class="card-title">Inspeções Serviço Externo</h6>
+        <h3 class="fw-bold text-success">{{ kpi_servico_total }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-2 col-md-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center h-100">
+        <i class="bi bi-file-earmark-pdf fs-4 text-info mb-2"></i>
+        <h6 class="card-title">Relatórios com PDF</h6>
+        <h3 class="fw-bold text-info">{{ kpi_pdf_ok }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-2 col-md-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center h-100">
+        <i class="bi bi-speedometer2 fs-4 text-warning mb-2"></i>
+        <h6 class="card-title">IQG Médio Semestral</h6>
+        <h3 class="fw-bold text-warning">{{ kpi_iqg }}%</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-2 col-md-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center h-100">
+        <i class="bi bi-award fs-4 text-secondary mb-2"></i>
+        <h6 class="card-title">IQF Médio Semestral</h6>
+        <h3 class="fw-bold text-secondary">{{ kpi_iqf }}%</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-2 col-md-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center h-100">
+        <i class="bi bi-clock-history fs-4 text-dark mb-2"></i>
+        <h6 class="card-title">IP Médio Semestral</h6>
+        <h3 class="fw-bold text-dark">{{ kpi_ip }}%</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+  <!-- Gráfico Velocímetro -->
+<div class="row mb-5">
+  <div class="col text-center">
+    <h5 class="mb-3">🚀 Indicador de Desempenho (IQG)</h5>
+    <img src="data:image/png;base64,{{ grafico_velocimetro }}"
+         alt="Gráfico de desempenho IQG"
+         class="img-fluid d-block mx-auto"
+         style="max-width: 400px;">
+  </div>
+</div>
+
+
+<form method="get" class="row g-2 align-items-end mb-3 px-2">
+  <div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-light fw-bold d-flex align-items-center">
+    <i class="bi bi-funnel-fill me-2 text-primary"></i> Filtros Rápidos
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <fieldset>
+        <legend class="visually-hidden">Filtros rápidos para relatórios e inspeções</legend>
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="filtro_periodo" class="form-label d-block pt-1">Período</label>
+            <select id="filtro_periodo" name="periodo" class="form-select form-select-sm">
+              <option value="">Todos</option>
+              <option value="7" {% if request.GET.periodo == '7' %}selected{% endif %}>Últimos 7 dias</option>
+              <option value="30" {% if request.GET.periodo == '30' %}selected{% endif %}>Últimos 30 dias</option>
+              <option value="180" {% if request.GET.periodo == '180' %}selected{% endif %}>Últimos 6 meses</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="filtro_status" class="form-label d-block pt-1">Status</label>
+            <select id="filtro_status" name="status" class="form-select form-select-sm">
+              <option value="">Todos</option>
+              <option value="Aprovado" {% if request.GET.status == 'Aprovado' %}selected{% endif %}>Aprovado</option>
+              <option value="Reprovado" {% if request.GET.status == 'Reprovado' %}selected{% endif %}>Reprovado</option>
+              <option value="Aprovado Condicionalmente" {% if request.GET.status == 'Aprovado Condicionalmente' %}selected{% endif %}>Condicional</option>
+            </select>
+          </div>
+
+          <div class="col-md-auto">
+            <button type="submit" class="btn btn-sm btn-primary w-auto ms-2">
+              <i class="bi bi-filter"></i> Filtrar
+            </button>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+
+
+
+</form>
+
+
+
+
+  <!-- Accordions com Tabelas -->
+<div class="accordion accordion-flush mt-3" id="accordionRelatorios">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="accordion-relatorio-f045-header">
+        <button class="accordion-button fw-bold" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#accordion-relatorio-f045-body"
+                aria-expanded="true"
+                aria-controls="accordion-relatorio-f045-body">
+          <i class="bi bi-file-earmark-text me-2"></i> Últimos Relatórios F045
+        </button>
+      </h2>
+
+<div id="accordion-relatorio-f045-body" class="accordion-collapse collapse show"
+     aria-labelledby="accordion-relatorio-f045-header"
+     data-bs-parent="#accordionRelatorios">
+       <div class="accordion-body p-0">
+          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-hover mb-0">
+                <caption class="visually-hidden">Tabela de Relatórios F045 com status, certificados e PDF</caption>
+
+             <thead class="table-light">
+                <tr>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">Nº Relatório</th>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">Fornecedor</th>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">Status</th>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">Certificado</th>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">Data</th>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">PDF/Certificado</th>
+                </tr>
+              </thead>
+
+
+              <tbody>
+                {% for rel in ultimos_relatorios %}
+                  <tr>
+                    <td>{{ rel.nro_relatorio }}</td>
+                    <td>{{ rel.fornecedor }}</td>
+                      <td>
+                        {% if rel.status_geral == "Aprovado" %}
+                          <span class="badge bg-success">{{ rel.status_geral }}</span>
+                        {% elif rel.status_geral == "Reprovado" %}
+                          <span class="badge bg-danger">{{ rel.status_geral }}</span>
+                        {% elif rel.status_geral == "Aprovado Condicionalmente" %}
+                          <span class="badge bg-warning text-dark">{{ rel.status_geral }}</span>
+                        {% elif rel.status_geral == "Aguardando F045" %}
+                          <span class="badge bg-secondary">{{ rel.status_geral }}</span>
+                        {% else %}
+                          {{ rel.status_geral }}
+                        {% endif %}
+                      </td>
+                    <td>{{ rel.numero_certificado }}</td>
+                    <td>{{ rel.assinado_em|date:'d/m/Y' }}</td>
+                    <td class="d-flex gap-2">
+                      {% if rel.pdf %}
+                        <a href="{{ rel.pdf.url }}"
+                          class="btn btn-sm btn-outline-primary"
+                          target="_blank"
+                          title="Baixar PDF do F045"
+                          aria-label="Baixar PDF do relatório F045 número {{ rel.nro_relatorio }}">
+                          <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+                        </a>
+                      {% endif %}
+                      {% if rel.relacao.anexo_certificado %}
+                          <a href="{{ rel.relacao.anexo_certificado.url }}"
+                            class="btn btn-sm btn-outline-secondary"
+                            target="_blank"
+                            title="Baixar Certificado do Fornecedor"
+                            aria-label="Baixar certificado do fornecedor relacionado ao relatório {{ rel.nro_relatorio }}">
+                            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                          </a>
+                        {% endif %}
+                      {% if not rel.pdf and not rel.relacao.anexo_certificado %}–{% endif %}
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="6" class="text-center text-muted">Nenhum relatório encontrado.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="accordion-inspecao-externo-header">
+  <button class="accordion-button fw-bold collapsed" type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#accordion-inspecao-externo-body"
+          aria-expanded="false"
+          aria-controls="accordion-inspecao-externo-body">
+    <i class="bi bi-tools me-2"></i> Últimas Inspeções de Serviço Externo
+  </button>
+</h2>
+
+<div id="accordion-inspecao-externo-body" class="accordion-collapse collapse"
+     aria-labelledby="accordion-inspecao-externo-header"
+     data-bs-parent="#accordionRelatorios">
+             <div class="accordion-body p-0">
+          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-hover mb-0">
+                <caption class="visually-hidden">Tabela de Inspeções de Serviço Externo com status e PDF</caption>
+
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">Pedido</th>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">Fornecedor</th>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">Status</th>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">Data</th>
+                  <th scope="col" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">PDF</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for inspecao in ultimas_inspecoes %}
+                  <tr>
+                    <td>{{ inspecao.servico.pedido }}</td>
+                    <td>{{ inspecao.servico.fornecedor }}</td>
+                    <td>
+                      {% if inspecao.status_geral == "Aprovado" %}
+                        <span class="badge bg-success">{{ inspecao.status_geral }}</span>
+                      {% elif inspecao.status_geral == "Reprovado" %}
+                        <span class="badge bg-danger">{{ inspecao.status_geral }}</span>
+                      {% elif inspecao.status_geral == "Aprovado Condicionalmente" %}
+                        <span class="badge bg-warning text-dark">{{ inspecao.status_geral }}</span>
+                      {% elif inspecao.status_geral == "Aguardando F045" %}
+                        <span class="badge bg-secondary">{{ inspecao.status_geral }}</span>
+                      {% else %}
+                        {{ inspecao.status_geral }}
+                      {% endif %}
+                    </td>
+                    <td>{{ inspecao.criado_em|date:'d/m/Y' }}</td>
+                    <td>
+                      {% if inspecao.pdf %}
+  <a href="{{ inspecao.pdf.url }}"
+     class="btn btn-sm btn-outline-primary"
+     target="_blank"
+     title="Baixar PDF da Inspeção"
+     aria-label="Baixar PDF da inspeção do pedido {{ inspecao.servico.pedido }}">
+    <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+  </a>
+{% endif %}
+
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5" class="text-center text-muted">Nenhuma inspeção encontrada.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

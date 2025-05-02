@@ -1,7 +1,7 @@
 # qualidade_fornecimento/views/fornecedores_views.py
 from datetime import timedelta
 
-import openpyxl  # ou pandas, conforme sua preferência
+import openpyxl
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -13,7 +13,7 @@ from qualidade_fornecimento.models import FornecedorQualificado
 
 
 def lista_fornecedores(request):
-    fornecedores_qs = FornecedorQualificado.objects.all().order_by("-atualizado_em")
+    fornecedores_qs = FornecedorQualificado.objects.all().order_by("nome")
 
     # Captura os filtros enviados via GET
     data_inicial = request.GET.get("data_inicial")
@@ -158,6 +158,7 @@ def visualizar_fornecedor(request, id):
     return render(request, "fornecedores/visualizar_fornecedor_pdf.html", context)
 
 
+
 @login_required
 def importar_excel_fornecedores(request):
     if request.method == "POST":
@@ -167,70 +168,84 @@ def importar_excel_fornecedores(request):
                 workbook = openpyxl.load_workbook(excel_file)
                 sheet = workbook.active
                 row_count = sheet.max_row
-                logger.info(
-                    "Total de linhas no Excel (incluindo cabeçalho): %s", row_count
-                )
+                logger.info("Total de linhas no Excel (incluindo cabeçalho): %s", row_count)
 
-                # Itera sobre as linhas, ignorando o cabeçalho
-                for index, row in enumerate(
-                    sheet.iter_rows(min_row=2, values_only=True), start=2
-                ):
-                    # Verifica se a linha não está vazia
-                    if not any(row):
-                        logger.info("Linha %s vazia, pulando", index)
-                        continue
-                    # Exemplo de extração de valores:
-                    nome = row[0]
-                    produto_servico = row[1]
-                    data_homologacao = row[2]
-                    tipo_certificacao = row[3]
-                    vencimento_certificacao = row[4]
-                    risco = row[5]
-                    data_avaliacao_risco = row[6]
-                    tipo_formulario = row[7]
-                    data_auditoria = row[8]
-                    nota_auditoria = row[9]
-                    especialista_nome = row[10]
-                    especialista_contato = row[11]
+                erros = []  # Lista para capturar os erros por linha
 
-                    logger.info("Linha %s: %s, %s", index, nome, produto_servico)
+                for index, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+                    try:
+                        # Ignora linhas totalmente vazias
+                        if not any(row):
+                            logger.info("Linha %s vazia, pulando", index)
+                            continue
 
-                    # Aqui você pode criar o objeto. Exemplo simples:
-                    fornecedor, created = FornecedorQualificado.objects.get_or_create(
-                        nome=nome,
-                        defaults={
-                            "produto_servico": produto_servico,
-                            "data_homologacao": data_homologacao,
-                            "tipo_certificacao": tipo_certificacao,
-                            "vencimento_certificacao": vencimento_certificacao,
-                            "risco": risco,
-                            "data_avaliacao_risco": data_avaliacao_risco,
-                            "tipo_formulario": tipo_formulario,
-                            "data_auditoria": data_auditoria,
-                            "nota_auditoria": nota_auditoria,
-                            "especialista_nome": especialista_nome,
-                            "especialista_contato": especialista_contato,
-                        },
-                    )
-                    if not created:
-                        # Se o fornecedor já existe, você pode atualizar os campos se desejar
-                        fornecedor.produto_servico = produto_servico
-                        fornecedor.data_homologacao = data_homologacao
-                        fornecedor.tipo_certificacao = tipo_certificacao
-                        fornecedor.vencimento_certificacao = vencimento_certificacao
-                        fornecedor.risco = risco
-                        fornecedor.data_avaliacao_risco = data_avaliacao_risco
-                        fornecedor.tipo_formulario = tipo_formulario
-                        fornecedor.data_auditoria = data_auditoria
-                        fornecedor.nota_auditoria = nota_auditoria
-                        fornecedor.especialista_nome = especialista_nome
-                        fornecedor.especialista_contato = especialista_contato
-                        fornecedor.save()
-                messages.success(request, "Dados importados com sucesso!")
+                        nome = row[0]
+                        produto_servico = row[1]
+                        data_homologacao = row[2]
+                        tipo_certificacao = row[3]
+                        vencimento_certificacao = row[4] or None
+                        risco = row[5] or None
+                        data_avaliacao_risco = row[6] or None
+                        tipo_formulario = row[7] or None
+                        data_auditoria = row[8] or None
+                        raw_nota_auditoria = row[9]
+                        try:
+                            nota_auditoria = float(raw_nota_auditoria) if raw_nota_auditoria is not None else None
+                        except ValueError:
+                            nota_auditoria = None                        
+                        especialista_nome = row[10] or "Não informado"
+                        especialista_contato = row[11] or "Não informado"
+                        especialista_cargo = row[12] or "Não informado"
+                        fornecedor, created = FornecedorQualificado.objects.get_or_create(
+                            nome=nome,
+                            defaults={
+                                "produto_servico": produto_servico,
+                                "data_homologacao": data_homologacao,
+                                "tipo_certificacao": tipo_certificacao,
+                                "vencimento_certificacao": vencimento_certificacao,
+                                "risco": risco,
+                                "data_avaliacao_risco": data_avaliacao_risco,
+                                "tipo_formulario": tipo_formulario,
+                                "data_auditoria": data_auditoria,
+                                "nota_auditoria": nota_auditoria,
+                                "especialista_nome": especialista_nome,
+                                "especialista_contato": especialista_contato,
+                                "especialista_cargo": especialista_cargo,
+                            },
+                        )
+                        if not created:
+                            fornecedor.produto_servico = produto_servico
+                            fornecedor.data_homologacao = data_homologacao
+                            fornecedor.tipo_certificacao = tipo_certificacao
+                            fornecedor.vencimento_certificacao = vencimento_certificacao
+                            fornecedor.risco = risco
+                            fornecedor.data_avaliacao_risco = data_avaliacao_risco
+                            fornecedor.tipo_formulario = tipo_formulario
+                            fornecedor.data_auditoria = data_auditoria
+                            fornecedor.nota_auditoria = nota_auditoria
+                            fornecedor.especialista_nome = especialista_nome
+                            fornecedor.especialista_contato = especialista_contato
+                            fornecedor.especialista_cargo = especialista_cargo
+                            fornecedor.save()
+
+                    except Exception as linha_erro:
+                        mensagem_erro = f"Linha {index}: erro ao importar - {str(linha_erro)}"
+                        logger.error(mensagem_erro)
+                        erros.append(mensagem_erro)
+
+                if erros:
+                    messages.warning(request, "Algumas linhas não foram importadas corretamente.")
+                    for erro in erros:
+                        messages.warning(request, erro)
+                else:
+                    messages.success(request, "Todos os dados foram importados com sucesso!")
+
                 return redirect("lista_fornecedores")
+
             except Exception as e:
-                logger.error("Erro ao importar dados: %s", e, exc_info=True)
-                messages.error(request, f"Erro ao importar dados: {e}")
+                logger.error("Erro ao importar arquivo: %s", e, exc_info=True)
+                messages.error(request, f"Erro ao importar arquivo: {e}")
         else:
             messages.error(request, "Selecione um arquivo Excel para importar.")
     return render(request, "fornecedores/importar_excel.html")
+

@@ -29,7 +29,9 @@
 
   <form method="post" enctype="multipart/form-data" class="row g-3">
     {% csrf_token %}
-
+  <div id="alertaTipoTratamento" class="alert alert-info d-none mt-2" role="alert">
+      <strong>Atenção:</strong> Campos e seções foram ocultados porque o Tipo selecionado é <strong>Tratamento</strong>.
+    </div>
     {% if form.errors %}
   <div class="alert alert-danger">
     <ul>
@@ -74,68 +76,92 @@
   </div>
 
   <!-- 📏 Dimensões -->
-  <div class="accordion-item">
-    <h2 class="accordion-header" id="headingDimensoes">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDimensoes" aria-expanded="false" aria-controls="collapseDimensoes">
-        <i class="bi bi-arrows-expand me-2"></i> Dimensões
-      </button>
-    </h2>
-    <div id="collapseDimensoes" class="accordion-collapse collapse" aria-labelledby="headingDimensoes" data-bs-parent="#accordionMateriaPrima">
-<div class="accordion-body row g-3 bg-light-subtle rounded-3 py-3">
-       <div class="col-md-4" id="field_bitola">
-<label for="id_bitola" class="form-label" data-bs-toggle="tooltip" title="Espessura da matéria-prima em milímetros">Bitola Ø (mm)</label>
-          {% if form.bitola.errors %}
-            {{ form.bitola|add_class:"form-control is-invalid"|attr:"placeholder:Ex: 1,20" }}
-          {% else %}
-            {{ form.bitola|add_class:"form-control"|attr:"placeholder:Ex: 1,20" }}
-          {% endif %}       
- </div>
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingDimensoes">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDimensoes" aria-expanded="false" aria-controls="collapseDimensoes">
+      <i class="bi bi-arrows-expand me-2"></i> Dimensões
+    </button>
+  </h2>
+  <div id="collapseDimensoes" class="accordion-collapse collapse" aria-labelledby="headingDimensoes" data-bs-parent="#accordionMateriaPrima">
+    <div class="accordion-body row g-3 bg-light-subtle rounded-3 py-3">
 
-        <div class="col-md-4">
-          <label for="id_largura" class="form-label">Largura (mm)</label>
-          {{ form.largura|add_class:"form-control"|attr:"placeholder:Ex: 43,30" }}
-        </div>
-        <div class="col-md-4">
-          <label for="id_tolerancia" class="form-label" data-bs-toggle="tooltip" title="Desvio permitido para a bitola medida">Tolerância (mm)</label>
-          {{ form.tolerancia|add_class:"form-control"|attr:"placeholder:Ex: ±0,05" }}
-        </div>
-        <div class="col-md-4">
-<label for="id_tolerancia_largura" class="form-label" data-bs-toggle="tooltip" title="Variação máxima admitida na largura em caso de Fitas">Tolerância Largura (mm)</label>
-          {{ form.tolerancia_largura|add_class:"form-control"|attr:"placeholder:Ex: ±0,30" }}
-        </div>
+      <!-- 🔵 Alerta Informativo -->
+      <div class="alert alert-info col-12" role="alert">
+        <strong>Importante:</strong> Para materiais tipo <strong>Fita</strong>, preencha também os campos <strong>Largura (mm)</strong> e <strong>Tolerância Largura (mm)</strong>. 
+        <br>O campo <strong>Bitola Ø (mm)</strong> corresponde à espessura da fita.
       </div>
+
+      <div class="col-md-4" id="field_bitola">
+        <label for="id_bitola" class="form-label" data-bs-toggle="tooltip" title="Espessura da matéria-prima em milímetros">Bitola Ø (mm)</label>
+        {% if form.bitola.errors %}
+          {{ form.bitola|add_class:"form-control is-invalid"|attr:"placeholder:Ex: 1,20" }}
+        {% else %}
+          {{ form.bitola|add_class:"form-control"|attr:"placeholder:Ex: 1,20" }}
+        {% endif %}
+      </div>
+
+      <div class="col-md-4">
+        <label for="id_tolerancia" class="form-label" data-bs-toggle="tooltip" title="Desvio permitido para a bitola medida">Tolerância (mm)</label>
+        {{ form.tolerancia|add_class:"form-control"|attr:"placeholder:Ex: ±0,05" }}
+      </div>
+      
+      <div class="col-md-4">
+        <label for="id_largura" class="form-label">Largura (mm)</label>
+        {{ form.largura|add_class:"form-control"|attr:"placeholder:Ex: 43,30" }}
+      </div>
+
+      
+
+      <div class="col-md-4">
+        <label for="id_tolerancia_largura" class="form-label" data-bs-toggle="tooltip" title="Variação máxima admitida na largura em caso de fitas">Tolerância Largura (mm)</label>
+        {{ form.tolerancia_largura|add_class:"form-control"|attr:"placeholder:Ex: ±0,30" }}
+      </div>
+
     </div>
   </div>
+</div>
+
 
   <!-- 📚 Normas e Propriedades -->
-  <div class="accordion-item">
-    <h2 class="accordion-header" id="headingNormas">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNormas" aria-expanded="false" aria-controls="collapseNormas">
-        <i class="bi bi-journal me-2"></i> Normas e Propriedades
-      </button>
-    </h2>
-    <div id="collapseNormas" class="accordion-collapse collapse" aria-labelledby="headingNormas" data-bs-parent="#accordionMateriaPrima">
-<div class="accordion-body row g-3 bg-light-subtle rounded-3 py-3">
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingNormas">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNormas" aria-expanded="false" aria-controls="collapseNormas">
+      <i class="bi bi-journal me-2"></i> Normas e Propriedades
+    </button>
+  </h2>
+  <div id="collapseNormas" class="accordion-collapse collapse" aria-labelledby="headingNormas" data-bs-parent="#accordionMateriaPrima">
+    <div class="accordion-body row g-3 bg-light-subtle rounded-3 py-3">
 
-        <div class="col-md-4" id="field_norma">
-<label for="id_norma" class="form-label" data-bs-toggle="tooltip" title="Norma técnica associada à especificação do material">Norma</label>
-            {% if form.norma.errors %}
-              {{ form.norma|add_class:"form-control is-invalid"|attr:"placeholder:Ex: NBR 13366" }}
-            {% else %}
-              {{ form.norma|add_class:"form-control"|attr:"placeholder:Ex: NBR 13366" }}
-            {% endif %}
-        </div>       
-        <div class="col-md-4">
-<label for="id_tipo_abnt" class="form-label" data-bs-toggle="tooltip" title="Classificação conforme norma">Tipo ABNT / Classe</label>
-          {{ form.tipo_abnt|add_class:"form-control"|attr:"placeholder:Ex: 302" }}
-        </div>
-        <div class="col-md-4">
-          <label for="id_classe" class="form-label">Tipo de Material</label>
-          {{ form.classe|add_class:"form-control"|attr:"placeholder:Ex: Inox" }}
-        </div>
-      </div>
+      <div class="col-md-4" id="field_norma">
+  <label for="id_norma" class="form-label" data-bs-toggle="tooltip" title="Norma técnica associada à especificação do material">Norma</label>
+  {% if form.norma.errors %}
+    {{ form.norma|add_class:"form-select is-invalid"|attr:"id:id_norma" }}
+  {% else %}
+    {{ form.norma|add_class:"form-select"|attr:"id:id_norma" }}
+  {% endif %}
+</div>
+
+<div class="col-md-4" id="field_tipo_abnt">
+  <label for="id_tipo_abnt" class="form-label" data-bs-toggle="tooltip" title="Classificação conforme norma">Tipo ABNT / Classe</label>
+  {% if form.tipo_abnt.errors %}
+    {{ form.tipo_abnt|add_class:"form-select is-invalid"|attr:"id:id_tipo_abnt" }}
+  {% else %}
+    {{ form.tipo_abnt|add_class:"form-select"|attr:"id:id_tipo_abnt" }}
+  {% endif %}
+</div>
+
+
+  <div class="col-md-4" id="field_tipo_material">
+  <label for="id_tipo_material" class="form-label">Tipo de Material</label>
+  {{ form.tipo_material|add_class:"form-control"|attr:"placeholder:Ex: Inox" }}
+</div>
+
+
+
     </div>
   </div>
+</div>
+
 
   <!-- 🗂️ Localização -->
   <div class="accordion-item">
@@ -182,11 +208,62 @@
 
   </form>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  // Feedback visual de erro (back e frontend)
   const form = document.querySelector("form");
+  const tipoSelect = document.getElementById("id_tipo");
+  const descricaoInput = document.getElementById("id_descricao");
+  const larguraTolerancia = document.getElementById("id_tolerancia_largura");
+  const tipoMaterial = document.getElementById("id_classe");
+  const alertaTratamento = document.getElementById("alertaTipoTratamento");
+
+  const camposTratamento = [
+    "field_localizacao",
+    "field_norma",
+    "field_bitola",
+    "field_classe",
+    "field_tipo_abnt",
+    "field_tolerancia",
+    "field_tolerancia_largura"
+  ];
+
+  const acordeonsExtras = [
+    "headingDimensoes",
+    "headingNormas",
+    "headingLocalizacao"
+  ];
+
+  // Função para alternar campos e alertas baseado no tipo selecionado
+  function toggleCampos() {
+    const isTratamento = tipoSelect.value === "Tratamento";
+    const isFita = descricaoInput.value.toLowerCase().includes("fita");
+
+    camposTratamento.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (id === "field_tolerancia_largura") {
+          el.classList.toggle("d-none", isTratamento || !isFita);
+        } else {
+          el.classList.toggle("d-none", isTratamento);
+        }
+      }
+    });
+
+    acordeonsExtras.forEach(id => {
+      const card = document.getElementById(id)?.closest(".accordion-item");
+      if (card) {
+        card.classList.toggle("d-none", isTratamento);
+      }
+    });
+
+    if (alertaTratamento) {
+      alertaTratamento.classList.toggle("d-none", !isTratamento);
+    }
+  }
+
+  // Validação de campos obrigatórios no frontend
   form.querySelectorAll("input, select, textarea").forEach(function (field) {
     if (field.classList.contains("is-invalid")) {
       const parent = field.closest('.form-group, .col-md-4, .col-md-6, .mb-3');
@@ -198,7 +275,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Validação onBlur
     field.addEventListener("blur", function () {
       const value = field.value.trim();
       const required = field.hasAttribute("required");
@@ -221,55 +297,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Elementos de controle
-  const tipoSelect = document.getElementById("id_tipo");
-  const descricaoInput = document.getElementById("id_descricao");
-  const larguraTolerancia = document.getElementById("id_tolerancia_largura");
-  const tipoMaterial = document.getElementById("id_classe");
-
-  // IDs de campos que se ocultam quando tipo é Tratamento
-  const camposTratamento = [
-    "field_localizacao",
-    "field_norma",
-    "field_bitola",
-    "field_classe",
-    "field_tipo_abnt",
-    "field_tolerancia",
-    "field_tolerancia_largura"
-  ];
-
-  const acordeonsExtras = [
-    "headingDimensoes",
-    "headingNormas",
-    "headingLocalizacao"
-  ];
-
-  // Alterna campos e acordeons com base no tipo
-  function toggleCampos() {
-    const isTratamento = tipoSelect.value === "Tratamento";
-    const isFita = descricaoInput.value.toLowerCase().includes("fita");
-
-    camposTratamento.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      if (id === "field_tolerancia_largura") {
-        el.classList.toggle("d-none", isTratamento || !isFita);
-      } else {
-        el.classList.toggle("d-none", isTratamento);
-      }
-    });
-
-    acordeonsExtras.forEach(id => {
-      const card = document.getElementById(id)?.closest(".accordion-item");
-      if (card) card.classList.toggle("d-none", isTratamento);
-    });
-  }
-
-  tipoSelect.addEventListener("change", toggleCampos);
-  descricaoInput.addEventListener("input", toggleCampos);
-  toggleCampos();
-
-  // Abertura de próximo accordion quando o último campo da seção for preenchido
+  // Controle de abertura automática dos accordions
   descricaoInput.addEventListener("blur", function () {
     if (descricaoInput.value.trim()) {
       new bootstrap.Collapse(document.getElementById('collapseDimensoes'), { toggle: true });
@@ -290,21 +318,78 @@ document.addEventListener("DOMContentLoaded", function () {
       new bootstrap.Collapse(document.getElementById('collapseNormas'), { toggle: false });
     }
   });
+
+  // Controle do botão Salvar
   form.addEventListener("submit", function () {
-  const btn = document.getElementById("btnSalvar");
-  const spinner = document.getElementById("spinnerSalvar");
-  const texto = document.getElementById("textoSalvar");
+    const btn = document.getElementById("btnSalvar");
+    const spinner = document.getElementById("spinnerSalvar");
+    const texto = document.getElementById("textoSalvar");
 
-  // Desativa o botão para evitar múltiplos envios
-  btn.disabled = true;
-  spinner.classList.remove("d-none");
-  texto.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Salvando...';
-});
+    btn.disabled = true;
+    spinner.classList.remove("d-none");
+    texto.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Salvando...';
+  });
 
-
+  // Inicializa o comportamento ao carregar a página
+  tipoSelect.addEventListener("change", toggleCampos);
+  descricaoInput.addEventListener("input", toggleCampos);
+  toggleCampos();
 });
 </script>
 
+<script>
+$(document).ready(function() {
+  $('#id_norma').select2({
+    theme: 'bootstrap-5',
+    placeholder: 'Selecione a Norma',
+    allowClear: true,
+    width: '100%'
+  });
+
+  $('#id_tipo_abnt').select2({
+    theme: 'bootstrap-5',
+    placeholder: 'Selecione o Tipo ABNT',
+    allowClear: true,
+    width: '100%'
+  });
+
+  $('#id_norma').on('change', function() {
+    const normaSelecionada = $(this).val();  // PEGA O VALUE, que é o ID da norma
+    const tipoAbntSelect = $('#id_tipo_abnt');
+
+    tipoAbntSelect.empty();
+    tipoAbntSelect.append(new Option('Carregando...', '', true, true)).trigger('change');
+
+    if (!normaSelecionada) {
+      tipoAbntSelect.empty();
+      tipoAbntSelect.append(new Option('Selecione a Norma primeiro', '', true, true));
+      tipoAbntSelect.trigger('change');
+      return;
+    }
+
+    $.ajax({
+      url: "{% url 'get_tipos_abnt' %}",
+      type: "GET",
+      dataType: "json",
+      data: { norma_id: normaSelecionada },  // AGORA ENVIA ID
+      success: function(data) {
+        tipoAbntSelect.empty();
+        tipoAbntSelect.append(new Option('Selecione o Tipo ABNT', '', true, true));
+        data.tipos.forEach(function(tipo) {
+          tipoAbntSelect.append(new Option(tipo, tipo));
+        });
+        tipoAbntSelect.trigger('change');
+      },
+      error: function() {
+        tipoAbntSelect.empty();
+        tipoAbntSelect.append(new Option('Erro ao carregar Tipos ABNT', '', true, true)).trigger('change');
+      }
+    });
+  });
+});
+
+
+</script>
 
 
 

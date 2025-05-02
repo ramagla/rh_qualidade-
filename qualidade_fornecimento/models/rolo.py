@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.db import models
 
@@ -53,15 +53,29 @@ class RoloMateriaPrima(models.Model):
     def aprova_rolo(
         self, bitola, largura, tol_esp, tol_larg, res_min, res_max, dureza_lim
     ):
+        try:
+            bitola = Decimal(str(bitola).replace(",", ".")) if bitola is not None else None
+            tol_esp = Decimal(str(tol_esp).replace(",", ".")) if tol_esp is not None else None
+            largura = Decimal(str(largura).replace(",", ".")) if largura is not None else None
+            tol_larg = Decimal(str(tol_larg).replace(",", ".")) if tol_larg is not None else None
+            res_min = Decimal(str(res_min).replace(",", ".")) if res_min is not None else None
+            res_max = Decimal(str(res_max).replace(",", ".")) if res_max is not None else None
+            dureza_lim = Decimal(str(dureza_lim).replace(",", ".")) if dureza_lim is not None else None
+        except (InvalidOperation, TypeError):
+            self.laudo = "Reprovado"
+            return self.laudo
+
         esp_ok = (
             self.bitola_espessura is not None
             and bitola is not None
+            and tol_esp is not None
             and (bitola - tol_esp) <= self.bitola_espessura <= (bitola + tol_esp)
         )
 
         larg_ok = (
             self.bitola_largura is not None
             and largura is not None
+            and tol_larg is not None
             and (largura - tol_larg) <= self.bitola_largura <= (largura + tol_larg)
         )
 

@@ -4,36 +4,142 @@
 {% block title %}Importar Matéria-Prima{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2 class="text-center mb-4">Importar Matérias-Primas do Excel</h2>
-  
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<main role="main" class="flex-shrink-0">
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">
+      <i class="bi bi-file-earmark-spreadsheet me-2" aria-hidden="true"></i>
+      Importar Matérias-Primas do Excel
+    </h2>
+    
+    {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="excel_file" class="form-label">Selecione o arquivo Excel</label>
+        <input type="file" class="form-control" id="excel_file" name="excel_file" accept=".xlsx,.xls" aria-describedby="fileHelp" required>
+        <small id="fileHelp" class="form-text text-muted">
+          Apenas arquivos Excel (.xlsx ou .xls) são aceitos para importação.
+        </small>
       </div>
-    {% endfor %}
-  {% endif %}
 
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="mb-3">
-      <label for="excel_file" class="form-label">Selecione o arquivo Excel (.xlsx)</label>
-      <input type="file" name="excel_file" id="excel_file" class="form-control" required>
-    </div>
-    <div class="text-center">
-      <button type="submit" class="btn btn-primary">Importar</button>
-      <a href="{% url 'materiaprima_catalogo_list' %}" class="btn btn-secondary">Cancelar</a>
-    </div>
-  </form>
+      <div class="text-center">
+        <button type="submit" id="btn-importar" class="btn btn-primary" aria-label="Importar arquivo Excel">
+          <i class="bi bi-upload me-1" aria-hidden="true"></i> 
+          <span id="btn-importar-texto">Importar</span>
+          <span id="btn-importar-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+        </button>
 
-  <div class="card mt-4">
-    <div class="card-header">Modelo Esperado</div>
-    <div class="card-body">
-      <p>O arquivo deve conter ao menos as colunas: <code>codigo</code> e <code>descricao</code>.</p>
-      <p>Coluna opcional: <code>localizacao</code>.</p>
+        <a href="{% url 'materiaprima_catalogo_list' %}" class="btn btn-secondary" aria-label="Cancelar e voltar à lista de matérias-primas">
+          <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> 
+          Cancelar e Voltar à Lista
+        </a>
+      </div>
+    </form>
+
+    <!-- Card com o modelo visual para importação -->
+    <div class="card mt-5">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="h5 mb-0">
+          <i class="bi bi-table me-2" aria-hidden="true"></i>
+          Modelo Visual para Importação de Dados
+        </h3>
+        <a href="{% static 'arquivos/modelo_importacao_materiaprima.xlsx' %}" 
+           download 
+           class="btn btn-sm btn-outline-primary" 
+           aria-label="Baixar modelo de importação">
+          <i class="bi bi-download me-1" aria-hidden="true"></i> Baixar Modelo
+        </a>
+      </div>
+
+      <div class="card-body">
+        <p>Preencha seu arquivo Excel com as seguintes colunas (somente estes campos são necessários):</p>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+  <thead class="text-center align-middle">
+    <tr>
+      <th scope="col" style="min-width: 150px;">Código <span class="text-danger">*</span></th>
+      <th scope="col" style="min-width: 160px;">Descrição <span class="text-danger">*</span></th>
+      <th scope="col" style="min-width: 140px;">Localização <span class="text-danger">*</span></th>
+      <th scope="col" style="min-width: 140px;">Tipo <span class="text-danger">*</span></th>
+      <th scope="col" style="min-width: 140px;">Bitolo Ø (mm) <span class="text-danger">*</span></th>
+      <th scope="col" style="min-width: 140px;">Largura (mm) <span class="text-danger">*</span></th>
+      <th scope="col" style="min-width: 140px;">Tolerância (mm) <span class="text-danger">*</span></th>
+      <th scope="col" style="min-width: 140px;">Tolerância Largura (mm)</th>
+      <th scope="col" style="min-width: 160px;">Norma <span class="text-danger">*</span></th>
+      <th scope="col" style="min-width: 160px;">Tipo ABNT/Classe <span class="text-danger">*</span></th>
+      <th scope="col" style="min-width: 160px;">Tipo Material <span class="text-danger">*</span></th>
+    </tr>
+  </thead>
+  <tbody class="text-center align-middle">
+    <tr>
+      <td>MP001</td>
+      <td>Aço Inox</td>
+      <td>Galpão A</td>
+      <td>Matéria-Prima</td>
+      <td>10</td>
+      <td>50</td>
+      <td>2</td>
+      <td>1,5</td>
+      <td>ABNT 123</td>
+      <td>302</td>
+      <td>Inox</td>
+    </tr>
+  </tbody>
+</table>
+
+        
+        <footer class="mt-2">
+          <small>
+            <strong>Observação:</strong> Utilize o formato de data DD/MM/AAAA para o campo de localização.
+          </small>
+        </footer>
+      </div>
     </div>
-  </div>
-</div>
+  </div> <!-- fecha .container -->
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.querySelector('form');
+  const btnImportar = document.getElementById('btn-importar');
+  const textoImportar = document.getElementById('btn-importar-texto');
+  const spinnerImportar = document.getElementById('btn-importar-spinner');
+  const inputArquivo = document.getElementById('excel_file');
+
+  form.addEventListener('submit', function(event) {
+    const arquivo = inputArquivo.files[0];
+
+    if (!arquivo) {
+      event.preventDefault();
+      alert('Por favor, selecione um arquivo para importar.');
+      return;
+    }
+
+    const nomeArquivo = arquivo.name.toLowerCase();
+    if (!(nomeArquivo.endsWith('.xls') || nomeArquivo.endsWith('.xlsx'))) {
+      event.preventDefault();
+      alert('Por favor, selecione um arquivo Excel válido (.xls ou .xlsx).');
+      return;
+    }
+
+    // Se passou as validações, agora mostra spinner corretamente
+    btnImportar.disabled = true;
+    textoImportar.textContent = 'Importando...';
+    spinnerImportar.classList.remove('d-none');
+    // NÃO BLOQUEIE o envio! Não chame event.preventDefault()
+    // Deixe o submit seguir normalmente para o backend
+  });
+});
+</script>
+
+
 {% endblock %}

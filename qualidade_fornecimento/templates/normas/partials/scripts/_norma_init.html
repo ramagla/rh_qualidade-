@@ -1,0 +1,58 @@
+{# templates/partials/scripts/_norma_init.html #}
+<script>
+$(function(){
+  // Inicializa todos os selects
+  $('.select2-norma').select2({ theme: 'bootstrap-5' });
+  $('.select2-abnt').select2({ theme: 'bootstrap-5' });
+
+  // Função que busca e repovoa os tipos ABNT
+  function atualizarSelectTipoABNT(){
+    const nomeNorma = $('#id_nome_norma').val();
+    const url = "{% url 'get_tipos_abnt' %}?nome_norma=" + encodeURIComponent(nomeNorma);
+    $.getJSON(url, data => {
+      $('select.select2-abnt').each(function(){
+        const $sel = $(this);
+        const valAtual = $sel.val();
+        if ($sel.hasClass('select2-hidden-accessible')) {
+          $sel.select2('destroy');
+        }
+        $sel.empty().append($('<option>', { value: '', text: '—' }));
+        data.tipos.forEach(tipo => {
+          $sel.append(new Option(tipo, tipo));
+        });
+        $sel.val(data.tipos.includes(valAtual) ? valAtual : '')
+            .select2({ theme: 'bootstrap-5' });
+      });
+    });
+  }
+  $('#id_nome_norma').on('change', atualizarSelectTipoABNT);
+
+  // Adiciona nova linha de Composição Química
+  function addNewRow(prefix, tableID){
+    const total = $("input[name='"+prefix+"-TOTAL_FORMS']");
+    const idx = +total.val();
+    const row = $('#newRowTemplate').html().replace(/__prefix__/g, idx);
+    total.val(idx + 1);
+    $(tableID + ' tbody').append(row);
+    atualizarSelectTipoABNT();
+  }
+  $('#addElem').on('click', () => addNewRow('elem', '#tblComposicao'));
+
+  // Adiciona nova linha de Tração
+  function addNewTracaoRow(prefix, tableID){
+    const total = $("input[name='"+prefix+"-TOTAL_FORMS']");
+    const idx = +total.val();
+    const row = $('#newTracaoRowTemplate').html().replace(/__prefix__/g, idx);
+    total.val(idx + 1);
+    $(tableID + ' tbody').append(row);
+  }
+  $('#addTracao').on('click', () => addNewTracaoRow('trac', '#tblTracao'));
+
+  // Excluir linha
+  $('tbody').on('click', '.del-row', function(){
+    $(this).closest('tr').hide()
+           .find('input[type=checkbox]')
+           .prop('checked', true);
+  });
+});
+</script>

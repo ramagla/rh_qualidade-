@@ -139,6 +139,15 @@
     <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
     <span>Novo</span>
   </a>
+
+  <a href="{% url 'tb050_importar_excel' %}"
+     class="btn btn-secondary d-inline-flex align-items-center"
+     aria-label="Importar Excel"
+     data-bs-toggle="tooltip"
+     title="Importar dados a partir de planilha Excel">
+    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>
+    <span>Importar Excel</span>
+  </a>
   {% endif %}
 
   {# Botão Gerar F045 não é protegido por permissão, fica liberado para todos os usuários #}
@@ -395,7 +404,7 @@
       </table>
     </div>
   {% else %}
-    <p class="text-center">Nenhum registro encontrado.</p>
+{% include 'partials/global/_sem_resultados.html' %}
   {% endif %}
 
   {# --------------- Paginação -------------------------- #}
@@ -555,13 +564,41 @@
 </script>
 
 {% if f045_pending %}
+<!-- Modal de Sucesso F045 -->
+<div class="modal fade" id="modalSucessoF045" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-success shadow">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-check-circle-fill me-2"></i> PDF Gerado com Sucesso!
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>O relatório F045 foi gerado com sucesso.</p>
+        <p class="small text-muted">Clique abaixo para baixar o PDF:</p>
+        <a id="linkDownloadF045" href="#" class="btn btn-outline-primary" target="_blank">
+          <i class="bi bi-file-earmark-pdf me-1"></i> Baixar PDF
+        </a>
+      </div>
+      <div class="modal-footer justify-content-end">
+        <button type="button" class="btn btn-success" onclick="location.reload();">
+          <i class="bi bi-check2-circle me-1"></i> OK
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function pollF045(){
   fetch("{% url 'f045_status' f045_pending %}")
-    .then(res=>res.json())
-    .then(data=>{
-      if(data.ready){
-        alert("PDF do F045 está pronto!\nBaixe em: " + data.url);
+    .then(res => res.json())
+    .then(data => {
+      if (data.ready) {
+        document.getElementById('linkDownloadF045').href = data.url;
+        const modal = new bootstrap.Modal(document.getElementById('modalSucessoF045'));
+        modal.show();
       } else {
         setTimeout(pollF045, 5000);
       }
@@ -569,8 +606,9 @@
     .catch(console.error);
 })();
 </script>
+
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   const formFiltrar = document.getElementById('btnFiltrar').closest('form');
   const btnFiltrar = document.getElementById('btnFiltrar');
   const spinnerFiltrar = document.getElementById('spinnerFiltrar');
@@ -579,7 +617,6 @@
     btnFiltrar.disabled = true;
     spinnerFiltrar.classList.remove('d-none');
 
-    // Aguarda resposta da requisição
     const formAction = formFiltrar.getAttribute('action') || window.location.href;
     const formData = new FormData(formFiltrar);
 
@@ -587,36 +624,32 @@
       method: 'GET'
     })
     .then(response => {
-      if (!response.ok) {
-        throw new Error('Erro na resposta do servidor');
-      }
+      if (!response.ok) throw new Error('Erro na resposta do servidor');
       return response.text();
     })
     .then(html => {
-      document.documentElement.innerHTML = html; // substitui página
+      document.documentElement.innerHTML = html;
     })
     .catch(error => {
       console.error(error);
-      // Se der erro, reabilita o botão e some o spinner
       btnFiltrar.disabled = false;
       spinnerFiltrar.classList.add('d-none');
       alert("Erro ao tentar filtrar. Verifique sua conexão ou tente novamente.");
     });
 
-    e.preventDefault(); // evita o submit tradicional
+    e.preventDefault();
   });
 });
-
 </script>
+
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-    new bootstrap.Tooltip(tooltipTriggerEl);
+  tooltipTriggerList.forEach(function (el) {
+    new bootstrap.Tooltip(el);
   });
 });
 </script>
-
 {% endif %}
 
 

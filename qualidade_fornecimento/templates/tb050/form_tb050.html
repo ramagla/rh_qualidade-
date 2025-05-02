@@ -18,6 +18,34 @@
   <form method="post" enctype="multipart/form-data" class="row g-3">
     {% csrf_token %}
 
+    {% if form.errors %}
+  <div class="alert alert-danger">
+    <strong>Erros no formulário principal:</strong>
+    <ul>
+      {% for field in form %}
+        {% for error in field.errors %}
+          <li><strong>{{ field.label }}</strong>: {{ error }}</li>
+        {% endfor %}
+      {% endfor %}
+      {% for error in form.non_field_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+{% if formset.non_form_errors %}
+  <div class="alert alert-danger">
+    <strong>Erros no(s) rolo(s):</strong>
+    <ul>
+      {% for error in formset.non_form_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+
    <div class="accordion mb-4" id="accordionFormulario">
 
   <!-- Acordeão - Controle de Entrega e Atraso -->
@@ -134,7 +162,7 @@
 
       <div class="col-12 col-md-4">
         <label for="id_data_prevista_entrega" class="form-label">Data Prevista de Entrega:</label>
-        {{ form.data_prevista_entrega }}
+{{ form.data_prevista_entrega|add_class:"form-control"|attr:"required" }}
       </div>
 
       <div class="col-12 col-md-4">
@@ -200,7 +228,12 @@
     <div class="row g-3">
       <div class="col-12 col-md-6">
         <label class="form-label">N° do Rolo:</label>
-        {{ rolo_form.nro_rolo|add_class:"form-control"|attr:"placeholder:Informe o número do rolo" }}
+<div class="mb-2">
+  {{ rolo_form.nro_rolo|add_class:"form-control"|attr:"placeholder:Informe o número do rolo" }}
+  {% for error in rolo_form.nro_rolo.errors %}
+    <div class="text-danger small mt-1">{{ error }}</div>
+  {% endfor %}
+</div>
       </div>
       <div class="col-12 col-md-6">
         <label class="form-label">Peso:</label>
@@ -331,27 +364,28 @@
 
     // Função de cálculo de atraso
     function calcularAtraso() {
-      if (!verificarCamposPreenchidos()) return; // Não faz o cálculo se não todos os campos estiverem preenchidos
+  if (!verificarCamposPreenchidos()) return;
 
-      const dataEntrada = new Date(dataEntradaInput.value);
-      const dataPrevista = new Date(dataPrevistaInput.value);
-      const dataRenegociada = dataRenegociadaInput.value ? new Date(dataRenegociadaInput.value) : null;
+  const dataEntrada = new Date(dataEntradaInput.value);
+  const dataPrevista = new Date(dataPrevistaInput.value);
+  const dataRenegociada = dataRenegociadaInput.value ? new Date(dataRenegociadaInput.value) : null;
 
-      const base = dataRenegociada || dataPrevista; // Prioriza a data renegociada, se estiver preenchida
+  const base = dataRenegociada || dataPrevista;
+  let atraso = Math.floor((dataEntrada - base) / (1000 * 60 * 60 * 24));
+  atraso = Math.max(atraso, 0);  // 🔒 Garante que não fique negativo
+  atrasoInput.value = atraso;
 
-      const atraso = Math.floor((dataEntrada - base) / (1000 * 60 * 60 * 24)); // Cálculo de atraso em dias
-      atrasoInput.value = atraso; // Preenche o campo de atraso
+  let demerito = 0;
+  if (atraso >= 21) demerito = 30;
+  else if (atraso >= 16) demerito = 20;
+  else if (atraso >= 11) demerito = 15;
+  else if (atraso >= 7) demerito = 10;
+  else if (atraso >= 4) demerito = 5;
+  else if (atraso >= 1) demerito = 2;
 
-      let demerito = 0;
-      if (atraso >= 21) demerito = 30;
-      else if (atraso >= 16) demerito = 20;
-      else if (atraso >= 11) demerito = 15;
-      else if (atraso >= 7) demerito = 10;
-      else if (atraso >= 4) demerito = 5;
-      else if (atraso >= 1) demerito = 2;
+  demeritoInput.value = demerito;
+}
 
-      demeritoInput.value = demerito; // Preenche o campo de demérito
-    }
 
     // Configura o evento de mudança para os campos de data
     [dataEntradaInput, dataPrevistaInput, dataRenegociadaInput].forEach(input => {

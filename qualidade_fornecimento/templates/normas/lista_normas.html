@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static custom_filters %}
+
 
 {% block title %}Normas Técnicas{% endblock %}
 
@@ -28,32 +29,62 @@
 </style>
 
   <!-- Filtro -->
-  <div class="card mb-4">
-    <div class="card-header">Filtros</div>
-    <div class="card-body">
-      <form method="get" class="row g-3">
-        <div class="col-md-4">
-  <label for="nome_norma" class="form-label">Nome da Norma</label>
-  <div class="input-group">
-    <span class="input-group-text"><i class="bi bi-file-earmark-text"></i></span>
-    <select id="nome_norma" name="nome_norma" class="form-select">
-      <option value="">Todas</option>
-      {% for nome in lista_normas %}
-        <option value="{{ nome }}" {% if nome == nome_norma %}selected{% endif %}>{{ nome }}</option>
-      {% endfor %}
-    </select>
+<div class="card mb-4">
+  <div class="card-header">Filtros</div>
+  <div class="card-body">
+    <form method="get" class="row g-3">
+      
+      <!-- Nome da Norma -->
+      <div class="col-md-4">
+        <label for="nome_norma" class="form-label">Nome da Norma</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-file-earmark-text"></i></span>
+          <select id="nome_norma" name="nome_norma" class="form-select">
+            <option value="">Todas</option>
+            {% for nome in lista_normas %}
+              <option value="{{ nome }}" {% if nome == nome_norma %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Faixa de Tração Existente -->
+      <div class="col-md-4">
+        <label for="tem_tracao" class="form-label">Possui Faixa de Tração?</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-graph-up"></i></span>
+          <select id="tem_tracao" name="tem_tracao" class="form-select">
+            <option value="">Todas</option>
+            <option value="sim" {% if tem_tracao == 'sim' %}selected{% endif %}>Sim</option>
+            <option value="nao" {% if tem_tracao == 'nao' %}selected{% endif %}>Não</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Composição Existente -->
+      <div class="col-md-4">
+        <label for="tem_composicao" class="form-label">Possui Composição Química?</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-clipboard-data"></i></span>
+          <select id="tem_composicao" name="tem_composicao" class="form-select">
+            <option value="">Todas</option>
+            <option value="sim" {% if tem_composicao == 'sim' %}selected{% endif %}>Sim</option>
+            <option value="nao" {% if tem_composicao == 'nao' %}selected{% endif %}>Não</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Botão de Filtrar -->
+      <div class="col-md-3 d-flex align-items-end justify-content-center">
+        <button type="submit" class="btn btn-primary w-100" aria-label="Aplicar filtros">
+          <i class="bi bi-search me-1" aria-hidden="true"></i> Filtrar
+        </button>
+      </div>
+
+    </form>
   </div>
 </div>
 
-        <div class="col-md-3 d-flex align-items-end justify-content-center">
-  <button type="submit" class="btn btn-primary w-100" aria-label="Aplicar filtros">
-    <i class="bi bi-search me-1" aria-hidden="true"></i> Filtrar
-  </button>
-</div>
-
-      </form>
-    </div>
-  </div>
 
   <!-- Cards Resumo -->
 <div class="row mb-4">

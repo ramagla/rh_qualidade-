@@ -111,27 +111,45 @@ def gerar_f045(request, relacao_id):
             ]
 
         bitola = parse_decimal(relacao.materia_prima.bitola)
-        if bitola:
+        tipo_abnt = relacao.materia_prima.tipo_abnt  # Novo: pega o tipo ABNT do cadastro
+
+        if bitola and tipo_abnt:
             tracao = NormaTracao.objects.filter(
-                norma=norma_obj, bitola_minima__lte=bitola, bitola_maxima__gte=bitola
+                norma=norma_obj,
+                tipo_abnt__iexact=tipo_abnt,
+                bitola_minima__lte=bitola,
+                bitola_maxima__gte=bitola
             ).first()
+        else:
+            tracao = None
 
-            if tracao:
-                res_min = tracao.resistencia_min
-                res_max = tracao.resistencia_max
-                dureza_norma = tracao.dureza
+        if tracao:
+            res_min = tracao.resistencia_min
+            res_max = tracao.resistencia_max
+            dureza_norma = tracao.dureza
 
-                if isinstance(dureza_norma, str):
-                    match = re.search(r"(\d+(?:[.,]\d+)?)", dureza_norma)
-                    if match:
-                        dureza_norma = match.group(1).replace(",", ".")
-                    else:
-                        dureza_norma = ""
+            # Converte se a dureza vier como string do tipo "85 HRB"
+            if isinstance(dureza_norma, str):
+                match = re.search(r"(\d+(?:[.,]\d+)?)", dureza_norma)
+                if match:
+                    dureza_norma = match.group(1).replace(",", ".")
+                else:
+                    dureza_norma = ""
+  
+
 
     except NormaTecnica.DoesNotExist:
         pass
 
-    limites = {e["sigla"].lower(): (e["min"], e["max"]) for e in elementos}
+    limites = {}
+    for e in elementos:
+        sigla = e["sigla"].lower()
+        vmin = parse_decimal(e["min"])
+        vmax = parse_decimal(e["max"])
+        # só inclui se ambos forem Decimal válidos
+        if vmin is not None and vmax is not None:
+            limites[sigla] = (vmin, vmax)
+
     form = RelatorioF045Form(
         request.POST or None, instance=f045, limites_quimicos=limites
     )
@@ -152,8 +170,13 @@ def gerar_f045(request, relacao_id):
             }
         )
 
-    bitola_nominal = parse_decimal(relacao.materia_prima.bitola)
-    largura_nominal = parse_decimal(relacao.materia_prima.largura)
+    bitola_raw = relacao.materia_prima.bitola or "0"
+    largura_raw = relacao.materia_prima.largura or "0"
+
+    bitola_nominal = float(parse_decimal(bitola_raw) or 0)
+    largura_nominal = float(parse_decimal(largura_raw) or 0)
+
+
 
     if request.method == "POST":
         if form.is_valid() and formset.is_valid():
@@ -231,6 +254,7 @@ def gerar_f045(request, relacao_id):
                         quimicos_aprovados = False
 
             # Agora usa laudos + químicos para decidir o status
+            # Agora usa laudos + químicos para decidir o status
             laudos = [rolo.laudo for rolo in relacao.rolos.all()]
             if all(l == "Aprovado" for l in laudos) and quimicos_aprovados:
                 updated_f045.status_geral = "Aprovado"
@@ -239,11 +263,19 @@ def gerar_f045(request, relacao_id):
             else:
                 updated_f045.status_geral = "Reprovado"
 
+            # Salva o relatório com as avaliações
             updated_f045.save(limites_quimicos=limites, aprovado_manual=switch_manual)
 
+            # Atualiza o status da relação com base no F045 salvo
             relacao.status = updated_f045.status_geral
             relacao.save(update_fields=["status"])
+
+            # Só agora chama a task
             gerar_pdf_f045_background.delay(updated_f045.pk)
+
+
+
+
             request.session["f045_pending"] = updated_f045.pk
             return redirect("tb050_list")
 

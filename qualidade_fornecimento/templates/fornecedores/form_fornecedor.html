@@ -12,13 +12,16 @@
 {% block content %}
 <div class="container mt-5">
 
-  <h2 class="text-center mb-4">
-    {% if modo == "Cadastro" %}
-      Cadastrar Fornecedor Qualificado
-    {% else %}
-      Editar Fornecedor Qualificado
-    {% endif %}
-  </h2>
+ <h2 class="text-center mb-4">
+  {% if modo == "Cadastro" %}
+    <i class="bi bi-person-plus-fill me-2" aria-hidden="true"></i> 
+    Cadastrar Fornecedor Qualificado
+  {% else %}
+    <i class="bi bi-pencil-square me-2" aria-hidden="true"></i> 
+    Editar Fornecedor Qualificado
+  {% endif %}
+</h2>
+
 
   <!-- Validador de erros -->
   {% if form.errors %}

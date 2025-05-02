@@ -59,35 +59,48 @@
             </select>
           </div>
         </div>
+<div class="row g-3">
 
-        <div class="col-md-6">
-          <label class="form-label">Tipo de Material</label>
-          <div class="input-group flex-nowrap">
-            <span class="input-group-text"><i class="bi bi-diagram-3"></i></span>
-            <select class="form-select select2" name="classe" data-placeholder="Selecione a classe...">
-              <option></option>
-              {% for c in classes_disponiveis %}
-                {% if c %}
-                  <option value="{{ c }}" {% if request.GET.classe == c %}selected{% endif %}>{{ c }}</option>
-                {% else %}
-                  <option value="" {% if request.GET.classe == "" %}selected{% endif %}>Sem Classe</option>
-                {% endif %}
-              {% endfor %}
-            </select>
-          </div>
-        </div>
+  <div class="col-md-4">
+    <label class="form-label">Tipo de Material</label>
+    <div class="input-group flex-nowrap">
+      <span class="input-group-text"><i class="bi bi-diagram-3"></i></span>
+      <select class="form-select select2" name="tipo_material" data-placeholder="Selecione o tipo de material...">
+        <option></option>
+        {% for tm in tipos_materiais_disponiveis %}
+          <option value="{{ tm }}" {% if request.GET.tipo_material == tm %}selected{% endif %}>{{ tm }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
 
-        <div class="col-md-6">
-          <label class="form-label">Tipo de Cadastro</label>
-          <div class="input-group flex-nowrap">
-            <span class="input-group-text"><i class="bi bi-tags"></i></span>
-            <select class="form-select select2" name="tipo" data-placeholder="Selecione o tipo...">
-              <option></option>
-              <option value="Materia-Prima" {% if request.GET.tipo == "Materia-Prima" %}selected{% endif %}>Matéria-Prima</option>
-              <option value="Tratamento" {% if request.GET.tipo == "Tratamento" %}selected{% endif %}>Tratamento</option>
-            </select>
-          </div>
-        </div>
+  <div class="col-md-4">
+    <label class="form-label">Tipo ABNT/Classe</label>
+    <div class="input-group flex-nowrap">
+      <span class="input-group-text"><i class="bi bi-award"></i></span>
+      <select class="form-select select2" name="tipo_abnt" data-placeholder="Selecione o tipo ABNT/Classe...">
+        <option></option>
+        {% for ta in tipos_abnt_disponiveis %}
+          <option value="{{ ta }}" {% if request.GET.tipo_abnt == ta %}selected{% endif %}>{{ ta }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label">Tipo de Cadastro</label>
+    <div class="input-group flex-nowrap">
+      <span class="input-group-text"><i class="bi bi-tags"></i></span>
+      <select class="form-select select2" name="tipo" data-placeholder="Selecione o tipo...">
+        <option></option>
+        <option value="Materia-Prima" {% if request.GET.tipo == "Materia-Prima" %}selected{% endif %}>Matéria-Prima</option>
+        <option value="Tratamento" {% if request.GET.tipo == "Tratamento" %}selected{% endif %}>Tratamento</option>
+      </select>
+    </div>
+  </div>
+
+</div> <!-- fecha a linha -->
+
 
         <div class="col-12 text-center mt-2">
           <button type="submit" class="btn btn-primary d-inline-flex align-items-center">
@@ -196,7 +209,7 @@
           <tr>
             <td>{{ mp.codigo }}</td>
             <td>{{ mp.descricao }}</td>
-            <td>{{ mp.classe }}</td>
+<td>{{ mp.tipo_material|default:"—" }}</td>
             <td>{{ mp.norma }}</td>
             <td>{{ mp.bitola }}</td>
             <td>{{ mp.localizacao }}</td>

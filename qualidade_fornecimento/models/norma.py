@@ -9,8 +9,12 @@ class NormaTecnica(models.Model):
     """
 
     nome_norma = models.CharField("Nome da Norma", max_length=100)
-    arquivo_norma = models.FileField("Arquivo (PDF)", upload_to="normas/")
-    vinculo_norma = models.CharField("Nome da Norma", max_length=100)
+    arquivo_norma = models.FileField(
+        "Arquivo (PDF)", upload_to="normas/", blank=True, null=True
+    )
+    vinculo_norma = models.CharField(
+        "Norma vinculada (tração)", max_length=100, blank=True, null=True
+    )
 
     class Meta:
         verbose_name = "Norma Técnica"
@@ -113,6 +117,8 @@ class NormaTracao(models.Model):
     norma = models.ForeignKey(
         NormaTecnica, on_delete=models.CASCADE, related_name="tracoes"
     )
+    tipo_abnt = models.CharField("Tipo ABNT", max_length=100, blank=True, null=True)  # NOVO CAMPO
+
     bitola_minima = models.DecimalField(
         "Bitola mín (mm)", max_digits=6, decimal_places=2
     )
@@ -138,3 +144,5 @@ class NormaTracao(models.Model):
             f"{self.norma} – {self.bitola_minima}‑{self.bitola_maxima} mm "
             f"({self.resistencia_min}‑{self.resistencia_max} Kgf/mm²)"
         )
+
+

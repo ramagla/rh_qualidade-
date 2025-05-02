@@ -54,6 +54,7 @@ from qualidade_fornecimento.tasks import (  # 🆕 Importa a task
 def cadastrar_inspecao_servico_externo(request, servico_id):
     servico = get_object_or_404(ControleServicoExterno, id=servico_id)
 
+    # Se já existir uma inspeção para esse serviço, redireciona para a edição
     if hasattr(servico, "inspecao"):
         return redirect("editar_inspecao_servico_externo", id=servico.inspecao.id)
 
@@ -65,10 +66,10 @@ def cadastrar_inspecao_servico_externo(request, servico_id):
             inspecao.servico = servico
             inspecao.save()
 
-            # Gera o PDF em background
+            # Gera o PDF em background via Celery
             gerar_pdf_inspecao_servico_background.delay(servico.id)
 
-            # 🔥 Sinaliza que tem uma inspeção pendente na sessão
+            # 🟢 Sinaliza na sessão para exibir modal de sucesso após redirect
             request.session["inspecao_pending"] = servico.id
 
             return redirect("listar_controle_servico_externo")

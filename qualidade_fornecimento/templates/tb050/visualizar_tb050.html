@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tz %}
+
+{% block title %}Visualização TB050 – Matéria-Prima{% endblock %}
+
+{% block content %}
+<style>
+  .pdf-container {
+    width: 210mm;
+    margin: 0 auto;
+    padding: 20mm;
+    background: #fff;
+    border: 1px solid #ccc;
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+  }
+  .pdf-header, .pdf-footer {
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+  }
+  .pdf-footer {
+    border-top: 1px solid #ccc;
+    margin-top: 20px;
+    padding-top: 10px;
+  }
+  .pdf-content {
+    margin-top: 20px;
+  }
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .info-table th, .info-table td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  @media print {
+    @page { size: A4 portrait; margin: 15mm; }
+    html, body { margin: 0; padding: 0; width: 100%; background: white; }
+    .sidebar, .navbar, .d-print-none, .btn, .btn-group { display: none !important; }
+    .main, .container, .container-fluid, .content, .page-content, .pdf-container {
+      all: unset !important;
+      width: 100% !important;
+      margin: 0 auto !important;
+      display: block !important;
+    }
+    .info-table th, .info-table td {
+      font-size: 10pt !important;
+    }
+  }
+</style>
+
+<div class="text-end mb-3 d-print-none">
+  <button class="btn btn-outline-primary" onclick="window.print()" aria-label="Imprimir relatório">
+    🖨️ Imprimir
+  </button>
+</div>
+
+<div class="pdf-container">
+  <div class="pdf-header">
+    <h1 class="text-primary d-flex align-items-center justify-content-center gap-2">
+      <i class="bi bi-archive-fill" aria-hidden="true"></i>
+      <span class="fw-bold">Relação de Matérias-Primas</span>
+    </h1>
+    <p class="text-muted small fst-italic">Visualização Completa</p>
+  </div>
+
+  <div class="pdf-content">
+    <table class="info-table mb-4">
+      <tr>
+        <th>N° Relatório</th>
+        <td>{{ registro.nro_relatorio }}</td>
+      </tr>
+      <tr>
+        <th>Data de Entrada</th>
+        <td>{{ registro.data_entrada|date:"d/m/Y" }}</td>
+      </tr>
+      <tr>
+        <th>Fornecedor</th>
+        <td>{{ registro.fornecedor }}</td>
+      </tr>
+      <tr>
+        <th>Nota Fiscal</th>
+        <td>{{ registro.nota_fiscal }}</td>
+      </tr>
+      <tr>
+        <th>Certificado</th>
+        <td>{{ registro.numero_certificado }}</td>
+      </tr>
+      <tr>
+        <th>Matéria-Prima</th>
+        <td>{{ registro.materia_prima }}</td>
+      </tr>
+      <tr>
+        <th>Material do Cliente</th>
+        <td>{{ registro.material_cliente|default:"—" }}</td>
+      </tr>
+      <tr>
+        <th>Item de Segurança</th>
+        <td>{{ registro.item_seguranca|default:"—" }}</td>
+      </tr>
+      <tr>
+        <th>Data Prevista</th>
+        <td>{{ registro.data_prevista_entrega|date:"d/m/Y" }}</td>
+      </tr>
+      <tr>
+        <th>Data Renegociada</th>
+        <td>{{ registro.data_renegociada_entrega|date:"d/m/Y"|default:"—" }}</td>
+      </tr>
+      <tr>
+        <th>Atraso (dias)</th>
+        <td>{{ registro.atraso_em_dias|default:"0" }}</td>
+      </tr>
+      <tr>
+        <th>Demérito (IP)</th>
+        <td>{{ registro.demerito_ip|default:"0" }}</td>
+      </tr>
+      <tr>
+        <th>Anexo do Certificado</th>
+        <td>
+          {% if registro.anexo_certificado %}
+            <a href="{{ registro.anexo_certificado.url }}" target="_blank" class="btn btn-link btn-sm">
+              <i class="bi bi-paperclip"></i> Visualizar Certificado
+            </a>
+          {% else %}
+            Nenhum anexo disponível
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+
+    {% if registro.rolos.all %}
+      <h5 class="mt-4 border-bottom pb-1">📦 Rolos Cadastrados</h5>
+      <div class="table-responsive">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>N° do Rolo</th>
+              <th>Peso (kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rolo in registro.rolos.all %}
+              <tr>
+                <td>{{ rolo.nro_rolo }}</td>
+                <td>{{ rolo.peso|floatformat:2 }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted">Nenhum rolo registrado.</p>
+    {% endif %}
+  </div>
+
+  <div class="pdf-footer text-muted small">
+    <p class="mb-1">
+      <i class="bi bi-clock me-1" aria-hidden="true"></i>
+      Relatório gerado automaticamente em {{ now|date:"d/m/Y H:i" }}
+    </p>
+    <p class="mb-0 fst-italic">Sistema de Qualidade – Bras-Mol Molas e Estampados Ltda</p>
+  </div>
+</div>
+
+<script>
+  if (window.location.search.includes('imprimir=1')) {
+    setTimeout(() => window.print(), 500);
+  }
+</script>
+{% endblock %}

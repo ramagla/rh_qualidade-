@@ -84,7 +84,9 @@ class RelacaoMateriaPrima(models.Model):
                 atraso = (self.data_entrada - self.data_renegociada_entrega).days
             else:
                 atraso = (self.data_entrada - self.data_prevista_entrega).days
-        self.atraso_em_dias = atraso if atraso is not None else None
+        self.atraso_em_dias = max(atraso, 0) if atraso is not None else None
+
+
 
         if self.atraso_em_dias is not None:
             if self.atraso_em_dias >= 21:

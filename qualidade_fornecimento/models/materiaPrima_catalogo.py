@@ -12,7 +12,14 @@ class MateriaPrimaCatalogo(models.Model):
     descricao = models.TextField()
     localizacao = models.CharField(max_length=100, blank=True, null=True)
     classe = models.CharField(max_length=50, blank=True, null=True)
-    norma = models.CharField(max_length=100, blank=True, null=True)
+    norma = models.ForeignKey(
+            "qualidade_fornecimento.NormaTecnica",
+            on_delete=models.SET_NULL,
+            blank=True,
+            null=True,
+            verbose_name="Norma",
+            related_name="materias_primas"
+        )    
     bitola = models.CharField(max_length=50, blank=True, null=True)
     largura = models.CharField(
         max_length=20, blank=True, null=True, verbose_name="Largura"
@@ -32,6 +39,11 @@ class MateriaPrimaCatalogo(models.Model):
     tolerancia_largura = models.CharField(
         max_length=50, blank=True, null=True, verbose_name="Tolerância Largura"
     )
+
+    tipo_material = models.CharField(
+    max_length=100, blank=True, null=True, verbose_name="Tipo de Material"
+    )
+
 
     atualizado_em = models.DateTimeField(auto_now=True)
     criado_em = models.DateTimeField(auto_now_add=True)

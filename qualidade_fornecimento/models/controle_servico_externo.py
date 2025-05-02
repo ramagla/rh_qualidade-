@@ -26,16 +26,13 @@ class ControleServicoExterno(models.Model):
     quantidade_enviada = models.DecimalField(max_digits=10, decimal_places=2)
     data_envio = models.DateField()
     data_retorno = models.DateField(null=True, blank=True)
-    status2 = models.CharField(max_length=50, blank=True)
-    iqf = models.CharField(
-        max_length=10,
-        choices=[("Aprovado", "Aprovado"), ("Reprovado", "Reprovado")],
-        blank=True,
-    )
+    status2 = models.CharField(max_length=50, blank=True)    
     atraso_em_dias = models.IntegerField(null=True, blank=True)
     ip = models.IntegerField(null=True, blank=True)
     observacao = models.TextField(blank=True)
     lead_time = models.PositiveIntegerField(null=True, blank=True)
+    previsao_entrega = models.DateField(null=True, blank=True)  # ✅ novo campo
+
     total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -54,7 +51,10 @@ class ControleServicoExterno(models.Model):
             return "Saldo maior que o enviado"
 
     def calcular_prev_entrega(self):
-        return self.data_envio + timedelta(days=self.lead_time)
+        if self.data_envio and self.lead_time:
+            return self.data_envio + timedelta(days=self.lead_time)
+        return None
+
 
     def calcular_atraso_em_dias(self):
         if self.data_retorno:
@@ -77,6 +77,10 @@ class ControleServicoExterno(models.Model):
         elif atraso >= 1:
             return 2
         return 0
+    
+    def save(self, *args, **kwargs):
+        self.previsao_entrega = self.calcular_prev_entrega()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Pedido {self.pedido}"

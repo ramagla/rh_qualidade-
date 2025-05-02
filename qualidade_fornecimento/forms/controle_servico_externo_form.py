@@ -18,40 +18,53 @@ class ControleServicoExternoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Campos Select2
-        self.fields["fornecedor"].queryset = (
-            FornecedorQualificado.objects.all().order_by("nome")
-        )
-        self.fields["fornecedor"].widget.attrs.update(
-            {
-                "class": "form-select select2",
-                "data-placeholder": "Selecione o fornecedor",
-            }
-        )
+        self.fields["fornecedor"].queryset = FornecedorQualificado.objects.all().order_by("nome")
+        self.fields["fornecedor"].widget.attrs.update({
+            "class": "form-select select2",
+            "data-placeholder": "Selecione o fornecedor",
+        })
 
         self.fields["codigo_bm"].queryset = MateriaPrimaCatalogo.objects.filter(
             tipo="Tratamento"
         ).order_by("codigo")
-        self.fields["codigo_bm"].widget.attrs.update(
-            {
-                "class": "form-select select2",
-                "data-placeholder": "Selecione o Código BM",
-            }
-        )
+        self.fields["codigo_bm"].widget.attrs.update({
+            "class": "form-select select2",
+            "data-placeholder": "Selecione o Código BM",
+        })
 
-        # Campos de data
-        for date_field in ["data_envio", "data_retorno"]:
-            if date_field in self.fields:
-                self.fields[date_field].widget = forms.DateInput(
-                    attrs={"type": "date", "class": "form-control"}
-                )
+        if "data_envio" in self.fields:
+            self.fields["data_envio"].widget = forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"type": "date", "class": "form-control"}
+    )
 
-        # Lead Time - Somente readonly, sem disabled
-        self.fields["lead_time"].widget.attrs.update(
-            {"readonly": "readonly", "class": "form-control bg-light"}
-        )
+        if "data_retorno" in self.fields:
+            self.fields["data_retorno"].widget = forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={
+                    "type": "date",
+                    "class": "form-control bg-light text-muted",
+                    "readonly": "readonly",
+                    "title": "Preenchido automaticamente com a última data de retorno"
+                }
+            )
 
-        # IQF
-        self.fields["iqf"].widget.attrs.update({"class": "form-select"})
+        # Apenas leitura
+        if "previsao_entrega" in self.fields:
+            self.fields["previsao_entrega"].widget = forms.DateInput(
+                attrs={
+                    "type": "date",
+                    "readonly": "readonly",
+                    "class": "form-control bg-light text-muted",
+                    "title": "Preenchido automaticamente"
+                }
+            )
+
+        if "lead_time" in self.fields:
+            self.fields["lead_time"].widget.attrs.update({
+                "readonly": "readonly",
+                "class": "form-control bg-light"
+            })
 
 
 class RetornoDiarioForm(forms.ModelForm):
@@ -62,6 +75,7 @@ class RetornoDiarioForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["data"].widget = forms.DateInput(
+            format="%Y-%m-%d",
             attrs={"type": "date", "class": "form-control"}
         )
         self.fields["quantidade"].widget.attrs.update({"class": "form-control"})

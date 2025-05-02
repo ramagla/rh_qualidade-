@@ -4,68 +4,146 @@
 {% block title %}Importar Excel{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2 class="text-center mb-4">Importar Dados do Excel</h2>
+<main role="main" class="flex-shrink-0">
+  <div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-file-earmark-spreadsheet me-2" aria-hidden="true"></i>
+    Importar Dados do Excel
+  </h2>
   
   <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     <div class="mb-3">
       <label for="excel_file" class="form-label">Selecione o arquivo Excel</label>
-      <input type="file" class="form-control" id="excel_file" name="excel_file" required>
+     <input type="file" class="form-control" id="excel_file" name="excel_file" accept=".xlsx,.xls" aria-describedby="fileHelp" required>
+<small id="fileHelp" class="form-text text-muted">
+  Apenas arquivos Excel (.xlsx ou .xls) são aceitos para importação.
+</small>
+
     </div>
     <div class="text-center">
-      <button type="submit" class="btn btn-primary">Importar</button>
-      <a href="{% url 'lista_fornecedores' %}" class="btn btn-secondary">Cancelar</a>
+<button type="submit" id="btn-importar" class="btn btn-primary" aria-label="Importar arquivo Excel">
+  <i class="bi bi-upload me-1" aria-hidden="true"></i> 
+  <span id="btn-importar-texto">Importar</span>
+  <span id="btn-importar-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+</button>
+
+
+
+<a href="{% url 'lista_fornecedores' %}" class="btn btn-secondary" aria-label="Cancelar e voltar à lista de fornecedores">
+  <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> 
+  Cancelar e Voltar à Lista
+</a>
+
     </div>
   </form>
 
   <!-- Card com o modelo visual para importação -->
-  <div class="card mt-4">
-    <div class="card-header">
-      Modelo Visual para Importação de Dados
-    </div>
+<div class="card mt-5">
+ <div class="card-header d-flex justify-content-between align-items-center">
+  <h3 class="h5 mb-0">
+    <i class="bi bi-table me-2" aria-hidden="true"></i>
+    Modelo Visual para Importação de Dados
+  </h3>
+  <a href="{% static 'arquivos/modelo_importacao_fornecedores.xlsx' %}" 
+     download 
+     class="btn btn-sm btn-outline-primary" 
+     aria-label="Baixar modelo de importação">
+    <i class="bi bi-download me-1" aria-hidden="true"></i> Baixar Modelo
+  </a>
+</div>
+
+
+
     <div class="card-body">
       <p>Preencha seu arquivo Excel com as seguintes colunas (somente estes campos são necessários):</p>
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Produto/Serviço</th>
-            <th>Data de Homologação</th>
-            <th>Tipo de Certificação</th>
-            <th>Vencimento da Certificação</th>
-            <th>Risco</th>
-            <th>Data da Avaliação de Risco</th>
-            <th>Tipo de Auditoria</th>
-            <th>Data da Auditoria</th>
-            <th>Nota da Auditoria (%)</th>
-            <th>Especialista</th>
-            <th>Contato do Especialista</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Fornecedor A</td>
-            <td>Aço Inox</td>
-            <td>01/01/2025</td>
-            <td>ISO 9001</td>
-            <td>31/12/2025</td>
-            <td>Baixo</td>
-            <td>05/01/2025</td>
-            <td>Processo (F154)</td>
-            <td>15/02/2025</td>
-            <td>85</td>
-            <td>João Silva</td>
-            <td>joao@exemplo.com</td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="mt-2">
-        <small>
-          <strong>Observação:</strong> Utilize o formato de data DD/MM/AAAA e insira a nota como número entre 0 e 100.
-        </small>
-      </p>
+      <div class="table-responsive">
+  <table class="table table-bordered">
+    <thead class="text-center  align-middle">
+  <tr>
+    <th scope="col" style="min-width: 150px;">Nome <span class="text-danger">*</span></th>
+    <th scope="col" style="min-width: 160px;">Produto/Serviço <span class="text-danger">*</span></th>
+    <th scope="col" style="min-width: 140px;">Data de Homologação <span class="text-danger">*</span></th>
+    <th scope="col" style="min-width: 150px;">Tipo de Certificação</th>
+    <th scope="col" style="min-width: 160px;">Vencimento da Certificação</th>
+    <th scope="col" style="min-width: 100px;">Risco</th>
+    <th scope="col" style="min-width: 170px;">Data da Avaliação de Risco</th>
+    <th scope="col" style="min-width: 150px;">Tipo de Auditoria</th>
+    <th scope="col" style="min-width: 140px;">Data da Auditoria</th>
+    <th scope="col" style="min-width: 110px;">Nota da Auditoria (%)</th>
+    <th scope="col" style="min-width: 160px;">Especialista <span class="text-danger">*</span></th>
+    <th scope="col" style="min-width: 200px;">Contato<span class="text-danger">*</span></th>
+    <th scope="col" style="min-width: 180px;">Cargo<span class="text-danger">*</span></th>
+  </tr>
+</thead>
+
+
+   <tbody class="text-center  align-middle">
+  <tr>
+    <td>Fornecedor A</td>
+    <td>Aço Inox</td>
+    <td>01/01/2025</td>
+    <td>ISO 9001</td>
+    <td>31/12/2025</td>
+    <td>Baixo</td>
+    <td>05/01/2025</td>
+    <td>Processo (F154)</td>
+    <td>15/02/2025</td>
+    <td>85</td>
+    <td>João Silva</td>
+    <td>joao@exemplo.com</td>
+    <td>Engenheiro de Qualidade</td>
+  </tr>
+</tbody>
+
+  </table>
+</div>
+
+      <footer class="mt-2">
+  <small>
+    <strong>Observação:</strong> Utilize o formato de data DD/MM/AAAA e insira a nota como número entre 0 e 100.
+  </small>
+</footer>
+
     </div>
   </div>
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const form = document.querySelector('form');
+    const btnImportar = document.getElementById('btn-importar');
+    const textoImportar = document.getElementById('btn-importar-texto');
+    const spinnerImportar = document.getElementById('btn-importar-spinner');
+    const inputArquivo = document.getElementById('excel_file');
+
+    form.addEventListener('submit', function(event) {
+      const arquivo = inputArquivo.files[0];
+
+      // Validação de seleção de arquivo
+      if (!arquivo) {
+        event.preventDefault();
+        alert('Por favor, selecione um arquivo para importar.');
+        return;
+      }
+
+      // Validação de extensão do arquivo
+      const nomeArquivo = arquivo.name.toLowerCase();
+      if (!(nomeArquivo.endsWith('.xls') || nomeArquivo.endsWith('.xlsx'))) {
+        event.preventDefault();
+        alert('Por favor, selecione um arquivo Excel válido (.xls ou .xlsx).');
+        return;
+      }
+
+      // Se tudo certo: desabilita botão e mostra spinner
+      btnImportar.disabled = true;
+      textoImportar.textContent = 'Importando...';
+      spinnerImportar.classList.remove('d-none');
+    });
+  });
+</script>
+
+
+  </div> <!-- fecha .container -->
+</main>
+
 {% endblock %}
