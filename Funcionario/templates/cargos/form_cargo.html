@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {% if cargo %}Editar Cargo{% else %}Cadastro de Cargos{% endif %}
+{% endblock %}
+
+{% block content %}
+{% load widget_tweaks %}
+
+<div class="container mt-5">
+  {% include "partials/global/_header_titulo.html" with icone="bi bi-briefcase-fill" titulo="Cadastro de Cargos" %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include "partials/global/_form_errors.html" %}
+
+    <div class="accordion" id="accordionCargo">
+      <!-- Seção 1: Dados do Cargo -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDados">
+          <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDados" aria-expanded="true" aria-controls="collapseDados">
+            📄 Dados do Cargo
+          </button>
+        </h2>
+        <div id="collapseDados" class="accordion-collapse collapse show" aria-labelledby="headingDados" data-bs-parent="#accordionCargo">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="nome" class="form-label">
+                <i class="bi bi-person-vcard me-1" aria-hidden="true"></i> Nome:
+                <span class="text-danger" aria-label="obrigatório" data-bs-toggle="tooltip" title="Campo obrigatório">*</span>
+              </label>
+              {{ form.nome }}
+            </div>
+            <div class="col-md-6">
+              <label for="numero_dc" class="form-label">
+                <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i> Número da DC:
+              </label>
+              {{ form.numero_dc }}
+            </div>
+            <div class="col-md-6">
+              <label for="departamento" class="form-label">
+                <i class="bi bi-building me-1" aria-hidden="true"></i> Departamento:
+              </label>
+              {{ form.departamento }}
+            </div>
+            <div class="col-md-6">
+              <label for="descricao_arquivo" class="form-label">
+                <i class="bi bi-upload me-1" aria-hidden="true"></i> Descrição do Cargo Assinada:
+              </label>
+              {{ form.descricao_arquivo }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 2: Requisitos e Formação -->
+      <div class="accordion-item mt-4">
+        <h2 class="accordion-header" id="headingRequisitos">
+          <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRequisitos" aria-expanded="false" aria-controls="collapseRequisitos">
+            🎓 Requisitos e Formação
+          </button>
+        </h2>
+        <div id="collapseRequisitos" class="accordion-collapse collapse" aria-labelledby="headingRequisitos" data-bs-parent="#accordionCargo">
+          <div class="accordion-body row g-3">
+            <div class="col-12">
+              <label for="responsabilidade_atividade_primaria" class="form-label" title="Campo que descreve as atividades principais do cargo">
+                <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>
+                Responsabilidade e Autoridade: (Atividade Primária)
+                <span class="text-danger" aria-label="obrigatório" data-bs-toggle="tooltip" title="Campo obrigatório">*</span>
+              </label>
+              {{ form.responsabilidade_atividade_primaria }}
+            </div>
+            <div class="col-12">
+              <label for="responsabilidade_atividade_secundaria" class="form-label" title="Campo que descreve as atividades secundárias do cargo">
+                <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>
+                Responsabilidade e Autoridade: (Atividade Secundária)
+                <span class="text-danger" aria-label="obrigatório" data-bs-toggle="tooltip" title="Campo obrigatório">*</span>
+              </label>
+              {{ form.responsabilidade_atividade_secundaria }}
+            </div>
+            <div class="col-12">
+              <label for="educacao_minima" class="form-label">
+                <i class="bi bi-mortarboard me-1" aria-hidden="true"></i> Educação mínima:
+              </label>
+              {{ form.educacao_minima }}
+            </div>
+            <div class="col-12">
+              <label for="treinamento_externo" class="form-label">
+                <i class="bi bi-journal-code me-1" aria-hidden="true"></i> Treinamento / Curso (Externo):
+              </label>
+              {{ form.treinamento_externo }}
+            </div>
+            <div class="col-12">
+              <label for="treinamento_interno_minimo" class="form-label">
+                <i class="bi bi-journal-check me-1" aria-hidden="true"></i> Treinamento mínimo (interno):
+              </label>
+              {{ form.treinamento_interno_minimo }}
+            </div>
+            <div class="col-12">
+              <label for="experiencia_minima" class="form-label">
+                <i class="bi bi-award me-1" aria-hidden="true"></i> Experiência mínima:
+              </label>
+              {{ form.experiencia_minima }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 3: Elaboração e Aprovação -->
+      <div class="accordion-item mt-4">
+        <h2 class="accordion-header" id="headingAprovacao">
+          <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAprovacao" aria-expanded="false" aria-controls="collapseAprovacao">
+            ✅ Elaboração e Aprovação
+          </button>
+        </h2>
+        <div id="collapseAprovacao" class="accordion-collapse collapse" aria-labelledby="headingAprovacao" data-bs-parent="#accordionCargo">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="elaborador" class="form-label">
+                <i class="bi bi-person-circle me-1" aria-hidden="true"></i> Elaborador:
+              </label>
+              {{ form.elaborador }}
+            </div>
+            <div class="col-md-6">
+              <label for="elaborador_data" class="form-label">
+                <i class="bi bi-calendar-date me-1" aria-hidden="true"></i> Data de Elaboração:
+              </label>
+              {{ form.elaborador_data }}
+            </div>
+            <div class="col-md-6">
+              <label for="aprovador" class="form-label">
+                <i class="bi bi-person-badge me-1" aria-hidden="true"></i> Aprovador:
+              </label>
+              {{ form.aprovador }}
+            </div>
+            <div class="col-md-6">
+              <label for="aprovador_data" class="form-label">
+                <i class="bi bi-calendar-check me-1" aria-hidden="true"></i> Data de Aprovação:
+              </label>
+              {{ form.aprovador_data }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include "partials/global/_botoes_salvar_cancelar.html" with url_voltar='lista_cargos' %}
+  </form>
+</div>
+{% endblock %}

@@ -1,251 +1,133 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Lista de Cargos{% endblock %}
 
 {% block content %}
-{% load custom_filters %}
-
+{% include "partials/global/_styles_componentes.html" %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Lista de Descrições de Cargos</h2>
+  {% include "partials/global/_header_titulo.html" with titulo="Lista de Descrições de Cargos" icone="bi bi-briefcase-fill" emoji="📄" %}
 
-      <!-- Botões de Ação -->
-    <div class="text-end mb-4">
-        {% if request.user|has_permission:"Funcionario.add_cargo" %}
+  <!-- Botões de Ação -->
+  <div class="text-end mb-4">
+    {% if request.user|has_permission:"Funcionario.add_cargo" %}
+      <a href="{% url 'cadastrar_cargo' %}" class="btn btn-success me-2" aria-label="Cadastrar novo cargo">
+        <i class="bi bi-plus-circle" aria-hidden="true"></i> Cadastrar
+      </a>
+    {% endif %}
+  </div>
 
-        <a href="{% url 'cadastrar_cargo' %}" class="btn btn-success me-2">
-            <i class="bi bi-plus-circle"></i> Cadastrar
-        </a>     
-        {% endif %}
-  
-    </div>
+  {% include "partials/global/_toast_mensagens.html" %}
 
-
-    <!-- Toast container para mensagens de alerta no canto inferior direito -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                    <div class="toast align-items-center border-0" 
-                         style="background-color: #f8d7da; color: #842029;" role="alert" aria-live="assertive" aria-atomic="true">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <h4 class="alert-heading">Atenção!</h4>
-                                <p>{{ message }}</p>
-                                <p class="mb-0">Certifique-se de resolver os vínculos antes de tentar excluir novamente.</p>
-                            </div>
-                        </div>
-                    </div>
-                {% elif message.tags == "success" %}
-                    <div class="toast align-items-center border-0" 
-                         style="background-color: #d1e7dd; color: #0f5132;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <h4 class="alert-heading">Sucesso!</h4>
-                                <p>{{ message }}</p>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
+  <!-- Formulário de filtro -->
+<div class="card mb-4 shadow-sm border-0">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill"></i>
+    <strong>Filtros de Busca</strong>
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row">
+        <div class="col-md-6">
+          <label for="departamento" class="form-label">Filtrar por Departamento:</label>
+          <select name="departamento" id="departamento" class="form-select select2" autocomplete="off">
+            <option value="">Todos</option>
+            {% for dept in departamentos %}
+              <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>{{ dept }}</option>
             {% endfor %}
-        {% endif %}
-    </div>
-
-    <!-- Formulário de filtro -->
-    <form method="get" class="mb-4">
-        <div class="row">
-            <div class="col-md-6">
-                <label for="departamento" class="form-label">Filtrar por Departamento:</label>
-                <select name="departamento" id="departamento" class="form-select select2">
-                    <option value="">Todos</option>
-                    {% for dept in departamentos %}
-                        <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>
-                            {{ dept }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="cargo" class="form-label">Filtrar por Cargo:</label>
-                <select name="cargo" id="cargo" class="form-select select2">
-                    <option value="">Todos</option>
-                    {% for cargo in todos_cargos %}
-                        <option value="{{ cargo.nome }}" {% if request.GET.cargo == cargo.nome %}selected{% endif %}>
-                            {{ cargo.nome }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+          </select>
         </div>
-        <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-funnel"></i> Filtrar
-            </button>
+        <div class="col-md-6">
+          <label for="cargo" class="form-label">Filtrar por Cargo:</label>
+          <select name="cargo" id="cargo" class="form-select select2" autocomplete="off">
+            <option value="">Todos</option>
+            {% for cargo in todos_cargos %}
+              <option value="{{ cargo.nome }}" {% if request.GET.cargo == cargo.nome %}selected{% endif %}>{{ cargo.nome }}</option>
+            {% endfor %}
+          </select>
         </div>
+      </div>
+      {% include "partials/global/_botao_filtrar.html" %}
     </form>
-
-    <div class="row mb-4">
-    <!-- Card: Total de Cargos -->
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-header text-center">
-                <i class="bi bi-briefcase-fill" style="font-size: 1.5rem; margin-right: 5px;"></i> Total de Cargos
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ total_cargos }}</h5>
-                <p class="card-text text-center">Cargos cadastrados no sistema.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Departamento Mais Frequente -->
-    <div class="col-md-3">
-        <div class="card text-white bg-info">
-            <div class="card-header text-center">
-                <i class="bi bi-building" style="font-size: 1.5rem; margin-right: 5px;"></i> Departamento Mais Frequente
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ departamento_mais_frequente }}</h5>
-                <p class="card-text text-center">Departamento com mais cargos.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Última Revisão -->
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-header text-center">
-                <i class="bi bi-clock-history" style="font-size: 1.5rem; margin-right: 5px;"></i> Última Revisão
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ ultima_revisao }}</h5>
-                <p class="card-text text-center">Última revisão registrada.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Cargos Sem Descrição -->
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
-            <div class="card-header text-center">
-                <i class="bi bi-file-earmark-excel" style="font-size: 1.5rem; margin-right: 5px;"></i> Cargos Sem Descrição
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ cargos_sem_descricao }}</h5>
-                <p class="card-text text-center">Cargos sem descrição anexada.</p>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
 
-    <!-- Tabela de cargos -->
-    <table class="table table-bordered text-center mt-4">
-        <thead>
-            <tr class="align-middle">
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with titulo="Total de Cargos" valor=total_cargos subtitulo="Cargos cadastrados no sistema." cor="primary" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Departamento Mais Frequente" valor=departamento_mais_frequente subtitulo="Departamento com mais cargos." cor="info" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Última Revisão" valor=ultima_revisao subtitulo="Última revisão registrada." cor="warning" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Cargos Sem Descrição" valor=cargos_sem_descricao subtitulo="Cargos sem descrição anexada." cor="danger" %}
+  </div>
 
-                <th>Nome do Cargo</th>
-                <th>Número da DC</th>  <!-- Substituído CBO por Número da DC -->
-                <th>Departamento</th>
-                <th>Última Revisão</th>
-                <th>Última Atualização</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for cargo in cargos %}
-            <tr class="align-middle">
-                <td>{{ cargo.nome }}</td>
-                <td>{{ cargo.numero_dc }}</td>  <!-- Atualizado para exibir Número da DC -->
-                <td>{{ cargo.departamento }}</td>
-                <td>
-                    {% if cargo.ultima_revisao %}
-                        {{ cargo.ultima_revisao.numero_revisao }}
-                    {% else %}
-                        Sem revisão
-                    {% endif %}
-                </td>
-                <td>
-                    {% if cargo.ultima_revisao %}
-                        {{ cargo.ultima_revisao.data_revisao|date:"d/m/Y" }}
-                    {% else %}
-                        Sem data
-                    {% endif %}
-                </td>
-                <td>
-                    {% if request.user|has_permission:"Funcionario.change_cargo" %}
-                    <a href="{% url 'editar_cargo' cargo.id %}" class="btn btn-warning btn-sm mt-1" title="Editar">
-                        <i class="bi bi-pencil-square"></i>  <!-- Ícone de Editar -->
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm mt-1" title="Histórico de Revisões">
+  <!-- Tabela -->
+  <table class="table table-bordered table-striped table-hover text-center mt-4">
+    <caption class="visually-hidden">Tabela de cargos cadastrados</caption>
+    <thead class="table-light">
+      <tr class="align-middle">
+        <th><i class="bi bi-person-workspace"></i> Nome do Cargo</th>
+        <th><i class="bi bi-file-earmark-text"></i> Nº DC</th>
+        <th><i class="bi bi-building"></i> Departamento</th>
+        <th><i class="bi bi-clipboard-check"></i> Última Revisão</th>
+        <th><i class="bi bi-calendar-check"></i> Última Atualização</th>
+        <th><i class="bi bi-gear"></i> Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cargo in cargos %}
+      <tr class="align-middle">
+        <td>{{ cargo.nome }}</td>
+        <td>{{ cargo.numero_dc }}</td>
+        <td>{{ cargo.departamento }}</td>
+        <td>
+          {% if cargo.ultima_revisao %}
+            {{ cargo.ultima_revisao.numero_revisao }}
+          {% else %}
+            Sem revisão
+          {% endif %}
+        </td>
+        <td>
+          {% if cargo.ultima_revisao %}
+            {{ cargo.ultima_revisao.data_revisao|date:"d/m/Y" }}
+          {% else %}
+            Sem data
+          {% endif %}
+        </td>
+        <td>
+          {% if request.user|has_permission:"Funcionario.change_cargo" %}
+            {% include "partials/global/_botao_editar.html" with objeto=cargo url_editar='editar_cargo' %}
+          {% endif %}
+ <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm mt-1" title="Histórico de Revisões">
                         <i class="bi bi-clock-history"></i>
-                    </a>
+                    </a>          <a href="{% url 'imprimir_cargo' cargo.id %}" class="btn btn-sm btn-success mt-1" title="Imprimir Descrição" aria-label="Imprimir descrição do cargo">
+            <i class="bi bi-printer" aria-hidden="true"></i>
+          </a>
+          {% if cargo.descricao_arquivo %}
+            <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-sm btn-secondary mt-1" download title="Baixar Descrição" aria-label="Baixar descrição em PDF">
+              <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+            </a>
+          {% endif %}
+          {% include "partials/global/_botao_excluir.html" with objeto=cargo url_excluir='excluir_cargo' label="cargo" %}
+        </td>
+      </tr>
+      {% empty %}
+        {% include "partials/_sem_resultados.html" with item_nome="cargo" %}
+      {% endfor %}
+    </tbody>
+  </table>
 
-                     <a href="{% url 'imprimir_cargo' cargo.id %}" class="btn btn-success btn-sm mt-1" title="Imprimir Descrição">
-                        <i class="bi bi-printer"></i> 
-                    </a>
-                    <!-- Verifica se o arquivo de descrição está presente -->
-                    {% if cargo.descricao_arquivo %}
-                        <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-secondary btn-sm mt-1" download title="Baixar Descrição">
-                            <i class="bi bi-file-earmark-pdf"></i>
-  <!-- Ícone de Word -->
-                        </a>
-                        
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <!-- Paginação -->
+  {% include "partials/global/_paginacao.html" %}
 </div>
-<!-- Paginação -->
-<nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Primeira">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}">{{ num }}</a></li>
-            {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Próxima">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Última">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
-
-
-
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const toasts = document.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            const bootstrapToast = new bootstrap.Toast(toast);
-            bootstrapToast.show();
-        });
+  document.addEventListener('DOMContentLoaded', function () {
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+      const bootstrapToast = new bootstrap.Toast(toast);
+      bootstrapToast.show();
     });
+  });
 </script>
-
 {% endblock %}

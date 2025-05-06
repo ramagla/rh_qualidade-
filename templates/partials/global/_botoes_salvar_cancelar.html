@@ -7,7 +7,7 @@
     {% if edicao %}Atualizar{% else %}Salvar{% endif %}
   </button>
 
-  <a href="{% url url_voltar %}"
+  <a href="{% if param_id %}{% url url_voltar param_id %}{% else %}{% url url_voltar %}{% endif %}"
      class="btn btn-outline-secondary w-100 w-sm-auto d-flex align-items-center justify-content-center gap-2"
      aria-label="Cancelar e voltar para a lista">
     <i class="bi bi-arrow-left" aria-hidden="true"></i> Cancelar

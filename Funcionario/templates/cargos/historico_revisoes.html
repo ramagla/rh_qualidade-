@@ -1,100 +1,91 @@
 {% extends 'base.html' %}
-
-{% block content %}
 {% load custom_filters %}
 
-<div class="container">
-    <h2 class="text-center">Histórico de Revisões - {{ cargo.nome }}</h2>
-    <table class="table table-centered">
-        <thead>
-            <tr>
-                <th>Número da Revisão</th>
-                <th>Data da Revisão</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for revisao in revisoes %}
-            <tr>
-                <td>{{ revisao.numero_revisao }}</td>
-                <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
-                <td>
-                    <!-- Botão para abrir a modal de descrição -->
-                    {% if request.user|has_permission:"Funcionario.view_revisao" %}
-                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ revisao.id }}">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    {% endif %}
+{% block content %}
+{% include 'partials/global/_toast_mensagens.html' %}
 
+<div class="container mt-5">
 
-                    <!-- Botão para abrir a modal de exclusão -->
-                    {% if request.user|has_permission:"Funcionario.delete_revisao" %}
+{% with "Histórico de Revisões - " as titulo_base %}
+  {% include 'partials/global/_header_titulo.html' with titulo=titulo_base|add:cargo.nome icone="bi-clock-history" emoji="🕘" %}
+{% endwith %}
 
-                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirRevisao{{ revisao.id }}">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                    {% endif %}
+  <div class="table-responsive">
+    <table class="table table-centered align-middle">
+      <caption class="visually-hidden">Tabela de histórico de revisões do cargo {{ cargo.nome }}</caption>
+      <thead>
+        <tr>
+          <th scope="col"><i class="bi bi-hash"></i> Número da Revisão</th>
+          <th scope="col"><i class="bi bi-calendar-event"></i> Data da Revisão</th>
+          <th scope="col"><i class="bi bi-gear"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for revisao in revisoes %}
+        <tr>
+          <td>{{ revisao.numero_revisao }}</td>
+          <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
+          <td class="d-flex gap-2">
 
-                </td>
-            </tr>
+            {% if request.user|has_permission:"Funcionario.view_revisao" %}
+            <button class="btn btn-sm btn-info mt-1"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalDescricao{{ revisao.id }}"
+                    title="Visualizar descrição"
+                    aria-label="Visualizar descrição da revisão {{ revisao.numero_revisao }}">
+              <i class="bi bi-eye" aria-hidden="true"></i>
+            </button>
+            {% endif %}
 
-            <!-- Modal de Descrição -->
-            <div class="modal fade" id="modalDescricao{{ revisao.id }}" tabindex="-1" aria-labelledby="modalDescricaoLabel{{ revisao.id }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalDescricaoLabel{{ revisao.id }}">Descrição da Mudança</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            {{ revisao.descricao_mudanca|safe }}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        </div>
-                    </div>
+            {% if request.user|has_permission:"Funcionario.delete_revisao" %}
+            {% include "partials/global/_botao_excluir.html" with objeto=revisao url_excluir="excluir_revisao" label="revisão" %}
+            {% endif %}
+
+          </td>
+        </tr>
+
+        <!-- Modal de Descrição -->
+        <div class="modal fade" id="modalDescricao{{ revisao.id }}" tabindex="-1"
+             aria-labelledby="modalDescricaoLabel{{ revisao.id }}" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+              <div class="modal-header bg-primary text-white rounded-top-4">
+                <h5 class="modal-title d-flex align-items-center gap-2" id="modalDescricaoLabel{{ revisao.id }}">
+                  <i class="bi bi-info-circle-fill"></i> Descrição da Mudança
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+              </div>
+              <div class="modal-body px-4">
+                <div class="text-secondary">
+                  {{ revisao.descricao_mudanca|safe }}
                 </div>
+              </div>
+              <div class="modal-footer border-0 d-flex justify-content-end">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                  <i class="bi bi-x-circle"></i> Fechar
+                </button>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Modal de Exclusão -->
-            <div class="modal fade" id="modalExcluirRevisao{{ revisao.id }}" tabindex="-1" aria-labelledby="modalExcluirRevisaoLabel{{ revisao.id }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalExcluirRevisaoLabel{{ revisao.id }}">Excluir Revisão</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Tem certeza que deseja excluir esta revisão?</p>
-                            <p><strong>Número da Revisão:</strong> {{ revisao.numero_revisao }}</p>
-                            <p><strong>Data:</strong> {{ revisao.data_revisao|date:"d/m/Y" }}</p>
-                        </div>
-                        <div class="modal-footer">
-                            <form method="POST" action="{% url 'excluir_revisao' revisao.id %}">
-                                {% csrf_token %}
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-danger">Excluir</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </tbody>
+        {% endfor %}
+      </tbody>
     </table>
-    
-    <!-- Botões adicionais -->
-    <div class="text-end mb-4">
-        {% if request.user|has_permission:"Funcionario.add_revisao" %}
+  </div>
 
-        <a href="{% url 'adicionar_revisao' cargo.id %}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Adicionar Revisão
-        </a>
-        {% endif %}
+  {% include 'partials/global/_paginacao.html' %}
 
-        <a href="{% url 'lista_cargos' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Retornar
-        </a>
-    </div>
+  <div class="text-end mt-4 d-flex justify-content-end gap-2">
+    {% if request.user|has_permission:"Funcionario.add_revisao" %}
+    <a href="{% url 'adicionar_revisao' cargo.id %}" class="btn btn-success d-flex align-items-center gap-1">
+      <i class="bi bi-plus-circle" aria-hidden="true"></i> Adicionar Revisão
+    </a>
+    {% endif %}
+    <a href="{% url 'lista_cargos' %}" class="btn btn-secondary d-flex align-items-center gap-1">
+      <i class="bi bi-arrow-left" aria-hidden="true"></i> Retornar
+    </a>
+  </div>
+
 </div>
 {% endblock %}

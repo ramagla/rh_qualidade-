@@ -10,23 +10,53 @@ from ..models import Cargo, Funcionario, Revisao
 class CargoForm(forms.ModelForm):
     # Definindo os campos com CKEditor5Widget
     responsabilidade_atividade_primaria = forms.CharField(
-        widget=CKEditor5Widget(config_name="default"), required=True
+    widget=CKEditor5Widget(
+        config_name="default",
+        attrs={"placeholder": "Descreva as principais responsabilidades e autoridade"}
+    ),
+    required=True
     )
+
     responsabilidade_atividade_secundaria = forms.CharField(
-        widget=CKEditor5Widget(config_name="default"), required=True
+        widget=CKEditor5Widget(
+            config_name="default",
+            attrs={"placeholder": "Descreva as responsabilidades secundárias, se houver"}
+        ),
+        required=True
     )
+
     educacao_minima = forms.CharField(
-        widget=CKEditor5Widget(config_name="default"), required=True
+        widget=CKEditor5Widget(
+            config_name="default",
+            attrs={"placeholder": "Informe o grau mínimo de escolaridade exigido"}
+        ),
+        required=True
     )
+
     treinamento_externo = forms.CharField(
-        widget=CKEditor5Widget(config_name="default"), required=True
+        widget=CKEditor5Widget(
+            config_name="default",
+            attrs={"placeholder": "Cursos ou treinamentos externos recomendados"}
+        ),
+        required=True
     )
+
     treinamento_interno_minimo = forms.CharField(
-        widget=CKEditor5Widget(config_name="default"), required=True
+        widget=CKEditor5Widget(
+            config_name="default",
+            attrs={"placeholder": "Formações internas exigidas para a função"}
+        ),
+        required=True
     )
+
     experiencia_minima = forms.CharField(
-        widget=CKEditor5Widget(config_name="default"), required=True
+        widget=CKEditor5Widget(
+            config_name="default",
+            attrs={"placeholder": "Tempo e tipo de experiência mínima necessária"}
+        ),
+        required=True
     )
+
 
     class Meta:
         model = Cargo

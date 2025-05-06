@@ -90,7 +90,7 @@ def cadastrar_cargo(request):
             return redirect("lista_cargos")
     else:
         form = CargoForm()
-    return render(request, "cargos/cadastrar_cargo.html", {"form": form})
+    return render(request, "cargos/form_cargo.html", {"form": form, "cargo": None})
 
 
 def excluir_cargo(request, cargo_id):
@@ -112,6 +112,7 @@ def historico_revisoes(request, cargo_id):
 
 def adicionar_revisao(request, cargo_id):
     cargo = get_object_or_404(Cargo, id=cargo_id)
+
     if request.method == "POST":
         form = RevisaoForm(request.POST)
         if form.is_valid():
@@ -121,9 +122,21 @@ def adicionar_revisao(request, cargo_id):
             return redirect("historico_revisoes", cargo_id=cargo_id)
     else:
         form = RevisaoForm()
+
+    # ✅ variável resolvida no backend para uso direto no template
+    titulo_pagina = f"Adicionar Revisão para {cargo.nome}"
+
     return render(
-        request, "cargos/adicionar_revisao.html", {"form": form, "cargo": cargo}
+        request,
+        "cargos/adicionar_revisao.html",
+        {
+            "form": form,
+            "cargo": cargo,
+            "titulo_pagina": titulo_pagina,
+            "param_id": cargo.id,  # ✅ Adicione esta linha
+        },
     )
+
 
 
 def excluir_revisao(request, revisao_id):
@@ -183,7 +196,7 @@ def editar_cargo(request, cargo_id):
             },
         )
 
-    return render(request, "cargos/editar_cargo.html", {"form": form})
+    return render(request, "cargos/form_cargo.html", {"form": form, "cargo": None})
 
 
 def imprimir_cargo(request, cargo_id):
