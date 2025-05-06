@@ -15,17 +15,21 @@ class ListaPresencaForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             "data_inicio": forms.DateInput(
-                attrs={"type": "date", "class": "form-control"}
+                attrs={"type": "date", "class": "form-control"},
+                format="%Y-%m-%d"
             ),
             "data_fim": forms.DateInput(
-                attrs={"type": "date", "class": "form-control"}
+                attrs={"type": "date", "class": "form-control"},
+                format="%Y-%m-%d"
             ),
             "participantes": forms.SelectMultiple(attrs={"class": "form-select"}),
             "horario_inicio": forms.TimeInput(
-                attrs={"type": "time", "class": "form-control"}
+                attrs={"type": "time", "class": "form-control"},
+                format="%H:%M"
             ),
             "horario_fim": forms.TimeInput(
-                attrs={"type": "time", "class": "form-control"}
+                attrs={"type": "time", "class": "form-control"},
+                format="%H:%M"
             ),
             "duracao": forms.NumberInput(
                 attrs={"class": "form-control", "readonly": "readonly"}
@@ -35,6 +39,13 @@ class ListaPresencaForm(forms.ModelForm):
             "situacao": forms.Select(attrs={"class": "form-select"}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Garante que as datas sejam exibidas corretamente no formato do input type="date"
+        for field in ["data_inicio", "data_fim"]:
+            if self.instance and getattr(self.instance, field):
+                self.initial[field] = getattr(self.instance, field).strftime("%Y-%m-%d")
+
     def clean(self):
         cleaned_data = super().clean()
         data_inicio = cleaned_data.get("data_inicio")
@@ -42,15 +53,12 @@ class ListaPresencaForm(forms.ModelForm):
         horario_inicio = cleaned_data.get("horario_inicio")
         horario_fim = cleaned_data.get("horario_fim")
 
-        # Validação de datas
         if not data_inicio:
             raise ValidationError(
                 {"data_inicio": 'O campo "Data de Início" é obrigatório.'}
             )
 
         if data_inicio and data_fim and data_fim < data_inicio:
-            raise forms.ValidationError(
-                "A data de fim não pode ser anterior à data de início."
-            )
+            raise ValidationError("A data de fim não pode ser anterior à data de início.")
 
         return cleaned_data

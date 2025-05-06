@@ -132,7 +132,7 @@ def cadastrar_lista_presenca(request):
 
     return render(
         request,
-        "lista_presenca/cadastrar_lista_presenca.html",
+        "lista_presenca/form_lista_presenca.html",
         {
             "form": form,
             "todos_funcionarios": funcionarios,
@@ -227,7 +227,7 @@ def editar_lista_presenca(request, id):
 
     return render(
         request,
-        "lista_presenca/edit_lista_presenca.html",
+        "lista_presenca/form_lista_presenca.html",
         {
             "form": form,
             "todos_funcionarios": todos_funcionarios,
@@ -246,16 +246,20 @@ def excluir_lista_presenca(request, id):
     lista.delete()
     return redirect("lista_presenca")
 
+from django.utils.timezone import now
 
 @login_required
 def visualizar_lista_presenca(request, lista_id):
     lista = get_object_or_404(ListaPresenca, id=lista_id)
-    # Criar um formulário baseado no modelo sem campos editáveis
-    ListaPresencaForm = modelform_factory(ListaPresenca, fields="__all__")
-    form = ListaPresencaForm(instance=lista)
     return render(
-        request, "lista_presenca/visualizar_lista_presenca.html", {"form": form}
+        request,
+        "lista_presenca/visualizar_lista_presenca.html",
+        {
+            "lista": lista,
+            "now": now()
+        }
     )
+
 
 
 # Função para imprimir lista de presença

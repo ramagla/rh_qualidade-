@@ -1,83 +1,138 @@
 {% extends 'base.html' %}
-{% load widget_tweaks %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
 
 {% block title %}Visualização da Lista de Presença{% endblock %}
 
 {% block content %}
-{% load widget_tweaks custom_filters %}
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
+  {% include "header.html" %}
 
+  <div id="relatorio-area">
+    <div class="pdf-container">
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>📝 Lista de Presença</h1>
+        <p>Visualização detalhada do registro</p>
+      </div>
 
-<div class="container mt-5">
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white text-center">
-            <h2 class="mb-0">Visualização da Lista de Presença</h2>
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table align-middle">
+            <tr>
+              <th>Tipo</th>
+              <td>{{ lista.treinamento }}</td>
+            </tr>
+            <tr>
+              <th>Assunto</th>
+              <td>{{ lista.assunto }}</td>
+            </tr>
+            <tr>
+              <th>Descrição</th>
+              <td>{{ lista.descricao|safe }}</td>
+            </tr>
+            <tr>
+              <th>Data de Início</th>
+              <td>{{ lista.data_inicio|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+              <th>Data de Fim</th>
+              <td>{{ lista.data_fim|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+  <th class="align-middle">Duração</th>
+  <td class="align-middle">
+    <i class="bi bi-hourglass-split me-1"></i>
+    {{ lista.duracao|formatar_duracao }}
+  </td>
+</tr>
+
+            <tr>
+              <th>Horário Início</th>
+              <td>{{ lista.horario_inicio }}</td>
+            </tr>
+            <tr>
+              <th>Horário Fim</th>
+              <td>{{ lista.horario_fim }}</td>
+            </tr>
+            <tr>
+              <th>Instrutor</th>
+              <td>{{ lista.instrutor }}</td>
+            </tr>
+            <tr>
+              <th>Necessita Avaliação?</th>
+              <td>{{ lista.necessita_avaliacao|yesno:"Sim,Não" }}</td>
+            </tr>
+            <tr>
+  <th class="align-middle">Situação</th>
+  <td class="align-middle">
+    {% if lista.situacao == "planejado" %}
+      <span class="badge bg-warning text-dark">
+        <i class="bi bi-hourglass-split me-1"></i> Planejado
+      </span>
+    {% elif lista.situacao == "em_andamento" %}
+      <span class="badge bg-info text-dark">
+        <i class="bi bi-play-circle me-1"></i> Em Andamento
+      </span>
+    {% elif lista.situacao == "finalizado" %}
+      <span class="badge bg-success">
+        <i class="bi bi-check-circle-fill me-1"></i> Finalizado
+      </span>
+    {% else %}
+      <span class="badge bg-secondary">
+        <i class="bi bi-question-circle me-1"></i> {{ lista.situacao|capfirst }}
+      </span>
+    {% endif %}
+  </td>
+</tr>
+
+            <tr>
+              <th>Arquivo PDF</th>
+              <td>
+                {% if lista.lista_presenca %}
+                  <a href="{{ lista.lista_presenca.url }}" class="btn btn-info btn-sm" download>
+                    <i class="bi bi-download"></i> Baixar Lista
+                  </a>
+                  <span class="small text-muted">({{ lista.lista_presenca.name|basename }})</span>
+                {% else %}
+                  Não disponível
+                {% endif %}
+              </td>
+            </tr>
+          </table>
         </div>
-        <div class="card-body">
-            <!-- Dados da Lista de Presença -->
-            <h5 class="text-primary mb-3">Informações da Lista</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Tipo</label>
-                    <p class="fw-bold">{{ form.instance.treinamento }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Data de Início</label>
-                    <p class="fw-bold">{{ form.instance.data_inicio|date:"d/m/Y" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Data de Fim</label>
-                    <p class="fw-bold">{{ form.instance.data_fim|date:"d/m/Y" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Duração (em horas)</label>
-                    <p class="fw-bold">{{ form.instance.duracao }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Situação</label>
-                    <p class="fw-bold">{{ form.instance.situacao }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Assunto</label>
-                    <p class="fw-bold">{{ form.instance.assunto }}</p>
-                </div>
-            </div>
 
-            <!-- Detalhes adicionais -->
-            <h5 class="text-primary mb-3">Detalhes</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Instrutor</label>
-                    <p class="fw-bold">{{ form.instance.instrutor }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Lista de Presença (PDF)</label>
-                    {% if form.instance.lista_presenca %}
-                        <a href="{{ form.instance.lista_presenca.url }}" class="btn btn-info btn-sm" download>
-                            <i class="bi bi-download"></i> Baixar Lista de Presença
-                        </a>
-                        <p class="mt-2 text-muted"><strong>Arquivo:</strong> {{ form.instance.lista_presenca.name|basename }}</p>
-                    {% else %}
-                        <p class="fw-bold">Não disponível</p>
-                    {% endif %}
-                </div>
-            </div>
+        <!-- Participantes -->
+        <h5 class="text-primary mt-4">👥 Participantes</h5>
+        <ul class="list-group mt-2">
+          {% for participante in lista.participantes.all %}
+            <li class="list-group-item">{{ participante.nome }} – {{ participante.local_trabalho }}</li>
+          {% empty %}
+            <li class="list-group-item text-muted">Nenhum participante registrado.</li>
+          {% endfor %}
+        </ul>
+      </div>
 
-            <!-- Participantes -->
-            <h5 class="text-primary mb-3">Colaboradores Participantes</h5>
-            <ul class="list-group">
-                {% for participante in form.instance.participantes.all %}
-                    <li class="list-group-item">{{ participante.nome }} - {{ participante.local_trabalho }}</li>
-                {% endfor %}
-            </ul>
-        </div>
+      <!-- Rodapé -->
+      <div class="text-center text-muted small mt-4">
+  <i class="bi bi-clock me-1"></i>
+  Relatório gerado em {{ now|date:"d/m/Y H:i" }}
 
-        <!-- Botão de Voltar -->
-        <div class="card-footer text-center">
-            <a href="{% url 'lista_presenca' %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left-circle"></i> Voltar
-            </a>
-        </div>
+        </p>
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
     </div>
-</div>
 
+    <!-- Botão Voltar -->
+    <div class="text-center mt-4 d-print-none">
+      <a href="{% url 'lista_presenca' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left-circle"></i> Voltar
+      </a>
+    </div>
+  </div>
 {% endblock %}

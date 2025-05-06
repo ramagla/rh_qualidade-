@@ -19,6 +19,26 @@ def dict_get(d, key):
     return ""
 
 @register.filter
+def duracao_em_horas(valor):
+    try:
+        horas = int(valor)
+        minutos = round((valor - horas) * 60)
+        return f"{horas:02d}:{minutos:02d}"
+    except:
+        return valor
+    
+@register.filter
+def formatar_duracao(valor):
+    try:
+        total_minutos = int(float(valor) * 60)
+        horas = total_minutos // 60
+        minutos = total_minutos % 60
+        return f"{horas:02d}:{minutos:02d}"
+    except (TypeError, ValueError):
+        return "-"
+
+
+@register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
 

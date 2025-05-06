@@ -3,383 +3,206 @@
 {% block title %}Listas de Presença{% endblock %}
 
 {% block content %}
-
 {% load conversores %}
 {% load custom_filters %}
 
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Listas de Presença</h2>
 
-    <!-- Botão de Cadastrar Lista de Presença e Imprimir F013 -->
-    <div class="text-end mb-4">
-        {% if request.user|has_permission:"Funcionario.add_listapresenca" %}
-        <a href="{% url 'cadastrar_lista_presenca' %}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Cadastrar
-        </a>
-        {% endif %}
-       
+  {% include 'partials/global/_header_titulo.html' with titulo="Listas de Presença" icone="bi bi-journal-check" emoji="📝" %}
 
-    </div>
+  <!-- Botão de Cadastro -->
+  <div class="text-end mb-4 d-print-none">
+    {% if request.user|has_permission:"Funcionario.add_listapresenca" %}
+      <a href="{% url 'cadastrar_lista_presenca' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Cadastrar
+      </a>
+    {% endif %}
+  </div>
 
-    <!-- Formulário de filtro -->
-    <form method="get" class="mb-4">
-        <div class="row">
-            <!-- Filtro por Instrutor -->
-            <div class="col-md-4">
-                <label for="instrutor" class="form-label">Instrutor:</label>
-                <select name="instrutor" id="instrutor" class="form-select select2">
-    <option value="">Selecione</option>
-    {% for instrutor in instrutores %}
-        <option value="{{ instrutor }}" {% if request.GET.instrutor == instrutor %}selected{% endif %}>
-            {{ instrutor }}
-        </option>
-    {% endfor %}
-</select>
+  <!-- Filtros de Lista de Presença -->
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+    <strong class="text-primary">Filtros de Listas de Presença</strong>
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
 
-            </div>
-
-            <!-- Filtro por Período -->
-            <div class="col-md-4">
-                <label for="data_inicio" class="form-label">Data Início:</label>
-                <input type="date" name="data_inicio" id="data_inicio" class="form-control">
-            </div>
-            <div class="col-md-4">
-                <label for="data_fim" class="form-label">Data Fim:</label>
-                <input type="date" name="data_fim" id="data_fim" class="form-control">
-            </div>
+        <!-- Instrutor -->
+        <div class="col-md-4">
+          <label for="instrutor" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-person-badge text-secondary"></i> Instrutor
+          </label>
+          <select name="instrutor" id="instrutor" class="form-select select2" aria-label="Filtrar por instrutor">
+            <option value="">Selecione</option>
+            {% for instrutor in instrutores %}
+              <option value="{{ instrutor }}" {% if request.GET.instrutor == instrutor %}selected{% endif %}>{{ instrutor }}</option>
+            {% endfor %}
+          </select>
         </div>
-        
-        <!-- Filtro de Situação -->
-            <div class="col-md-4">
-                <label for="situacao" class="form-label">Situação:</label>
-                <select name="situacao" id="situacao" class="form-select select2">
-                    <option value="">Todas</option>
-                    <option value="finalizado" {% if request.GET.situacao == "finalizado" %}selected{% endif %}>Finalizado</option>
-                    <option value="em_andamento" {% if request.GET.situacao == "em_andamento" %}selected{% endif %}>Em Andamento</option>
-                    <option value="indefinido" {% if request.GET.situacao == "indefinido" %}selected{% endif %}>Indefinido</option>
-                </select>
-            </div>
+
+        <!-- Data Início -->
+        <div class="col-md-4">
+          <label for="data_inicio" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-event text-secondary"></i> Data Início
+          </label>
+          <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
         </div>
-        <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+
+        <!-- Data Fim -->
+        <div class="col-md-4">
+          <label for="data_fim" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-check text-secondary"></i> Data Fim
+          </label>
+          <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
         </div>
+
+        <!-- Situação -->
+        <div class="col-md-4">
+          <label for="situacao" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle text-secondary"></i> Situação
+          </label>
+          <select name="situacao" id="situacao" class="form-select select2" aria-label="Filtrar por situação">
+            <option value="">Todas</option>
+            <option value="finalizado" {% if request.GET.situacao == "finalizado" %}selected{% endif %}>Finalizado</option>
+            <option value="em_andamento" {% if request.GET.situacao == "em_andamento" %}selected{% endif %}>Em Andamento</option>
+            <option value="indefinido" {% if request.GET.situacao == "indefinido" %}selected{% endif %}>Indefinido</option>
+          </select>
+        </div>
+
+        <!-- Botão Filtrar -->
+        {% include 'partials/global/_botao_filtrar.html' %}
+
+      </div>
     </form>
-    
-    <div class="row mb-4 mt-4">
-    <!-- Card: Total de Listas -->
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-header text-center">
-                <i class="bi bi-list-task"></i> Total de Listas
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ total_listas }}</h5>
-                <p class="card-text text-center">Total de listas cadastradas.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Finalizadas -->
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-header text-center">
-                <i class="bi bi-check-circle"></i> Finalizadas
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ listas_finalizadas }}</h5>
-                <p class="card-text text-center">Listas finalizadas.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Em Andamento -->
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-header text-center">
-                <i class="bi bi-hourglass-split"></i> Em Andamento
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ listas_em_andamento }}</h5>
-                <p class="card-text text-center">Listas em andamento.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Indefinidas -->
-    <div class="col-md-3">
-        <div class="card text-white bg-secondary">
-            <div class="card-header text-center">
-                <i class="bi bi-exclamation-circle"></i> Indefinidas
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ listas_indefinidas }}</h5>
-                <p class="card-text text-center">Situação indefinida.</p>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
 
-    <!-- Lista de Presenças -->
-   <!-- Lista de Presenças -->
-<table class="table table-bordered text-center mt-4">
-    <thead>
-        <tr>
-            <th class="align-middle">Assunto</th>
-            <th class="align-middle">Data Início</th>
-            <th class="align-middle">Data Fim</th>
-            <th class="align-middle">Duração</th>
-            <th class="align-middle">Participantes</th>
-            <th class="align-middle">Necessita Avaliação</th>
-            <th class="align-middle">Situação</th>
-            <th class="align-middle">Anexo</th>                
-            <th class="align-middle">Ações</th>
-        </tr>
-    </thead>
+  <!-- Indicadores -->
+  <div class="row mb-4 mt-4">
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Listas" valor=total_listas subtitulo="Total de listas cadastradas" cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Finalizadas" valor=listas_finalizadas subtitulo="Listas finalizadas" cor="success" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Em Andamento" valor=listas_em_andamento subtitulo="Listas em andamento" cor="warning" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Indefinidas" valor=listas_indefinidas subtitulo="Situação indefinida" cor="secondary" %}
+  </div>
+
+ <!-- Título da Tabela -->
+<h5 class="text-center my-4 d-flex align-items-center justify-content-center gap-2">
+  <i class="bi bi-table" aria-hidden="true"></i>
+  <span class="fw-bold text-primary">📄 Tabela de Listas de Presença</span>
+</h5>
+
+<!-- Tabela -->
+<table class="table table-bordered text-center mt-3 align-middle">
+  <thead class="table-light align-middle">
+    <tr>
+      <th scope="col"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Assunto</th>
+      <th scope="col"><i class="bi bi-calendar-event" aria-hidden="true"></i> Data Início</th>
+      <th scope="col"><i class="bi bi-calendar-check" aria-hidden="true"></i> Data Fim</th>
+      <th scope="col"><i class="bi bi-clock-history" aria-hidden="true"></i> Duração</th>
+      <th scope="col"><i class="bi bi-people" aria-hidden="true"></i> Participantes</th>
+      <th scope="col"><i class="bi bi-patch-question" aria-hidden="true"></i> Avaliação</th>
+      <th scope="col"><i class="bi bi-info-circle" aria-hidden="true"></i> Situação</th>
+      <th scope="col"><i class="bi bi-paperclip" aria-hidden="true"></i> Anexo</th>
+      <th scope="col"><i class="bi bi-gear" aria-hidden="true"></i> Ações</th>
+    </tr>
+  </thead>
+
     <tbody>
-        {% for lista in listas_presenca %}
+      {% for lista in listas_presenca %}
         <tr>
-            <td class="align-middle">{{ lista.assunto }}</td>
-            <td class="align-middle">{{ lista.data_inicio|date:"d/m/Y" }}</td>
-            <td class="align-middle">{{ lista.data_fim|date:"d/m/Y" }}</td>
-            <td class="align-middle">{{ lista.duracao|horas_formatadas }}</td>
-
-            <!-- Participantes com ícone de modal -->
-            <td class="align-middle">
-                <a href="#" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#modalParticipantes{{ lista.id }}">
-                    <img src="https://servidor-estaticos-teal-ten.vercel.app/olho.png" alt="Participantes" style="width: 20px; height: 20px;">
-                </a>
-            </td>
-
-            <!-- Necessita Avaliação -->
-            <td class="align-middle">
-                {% if lista.necessita_avaliacao %}
-                    <span class="badge bg-warning text-dark">Sim</span>
-                {% else %}
-                    <span class="badge bg-success text-white">Não</span>
-                {% endif %}
-            </td>
-
-            <!-- Situação -->
-            <td class="align-middle">
-                {% if lista.situacao == 'finalizado' %}
-                    <span class="badge bg-success text-white">Finalizado</span>
-                {% elif lista.situacao == 'em_andamento' %}
-                    <span class="badge bg-warning text-dark">Em Andamento</span>
-                {% elif lista.situacao == 'indefinido' %}
-                    <span class="badge bg-secondary text-white">Indefinido</span>
-                {% endif %}
-            </td>
-
-            <!-- Anexo -->
-            <td class="align-middle">
-                {% if lista.lista_presenca %}
-                    <a href="{{ lista.lista_presenca.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Anexo">
-                        <i class="bi bi-file-earmark-arrow-down"></i>
-                    </a>
-                {% else %}
-                    <span class="text-muted">Nenhum anexo</span>
-                {% endif %}
-            </td>
-
-            <!-- Ações -->
-            <td class="align-middle">
-                {% if request.user|has_permission:"Funcionario.view_listapresenca" %}
-                <a href="{% url 'visualizar_lista_presenca' lista.id %}" class="btn btn-sm btn-info" title="Visualizar">
-                    <i class="bi bi-eye"></i>
-                    </a>
-                {% endif %}
-                
-                {% if request.user|has_permission:"Funcionario.change_listapresenca" %}
-                <a href="{% url 'editar_lista_presenca' lista.id %}" class="btn btn-sm btn-warning text-dark" title="Editar">
-                    <i class="bi bi-pencil-square"></i>
-                    </a>
-                {% endif %}
-
-                {% if request.user|has_permission:"Funcionario.print_listapresenca" %}
-                <a href="{% url 'imprimir_lista_presenca' lista.id %}" class="btn btn-sm btn-primary mt-1" title="Imprimir">
-                    <i class="bi bi-printer"></i>
-                    </a>
-                {% endif %}
-
-                {% if request.user|has_permission:"Funcionario.delete_listapresenca" %}
-                <button type="button" class="btn btn-sm btn-danger mt-1" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirLista{{ lista.id }}">
-                    <i class="bi bi-trash"></i>
-                    </button> 
-                {% endif %}
-            </td>
-        </tr>
-
-        <!-- Modal de Participantes -->
-        <div class="modal fade" id="modalParticipantes{{ lista.id }}" tabindex="-1" aria-labelledby="modalParticipantesLabel{{ lista.id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalParticipantesLabel{{ lista.id }}">Participantes da Lista de Presença</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <ul>
-                            {% for participante in lista.participantes.all %}
-                                <li>{{ participante.nome }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal de Confirmação de Exclusão -->
-        <div class="modal fade" id="modalExcluirLista{{ lista.id }}" tabindex="-1" aria-labelledby="modalExcluirListaLabel{{ lista.id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalExcluirListaLabel{{ lista.id }}">Confirmar Exclusão</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Tem certeza de que deseja excluir a lista de presença de <strong>{{ lista.assunto }}</strong> realizada em {{ lista.data_realizacao|date:"d/m/Y" }}?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <form action="{% url 'excluir_lista_presenca' lista.id %}" method="post" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Excluir</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {% empty %}
-        <tr>
-            <td colspan="9" class="text-center align-middle">Nenhuma lista de presença encontrada.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-
-
-<!-- Paginação -->
-<nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Primeira">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}">{{ num }}</a></li>
+          <td>{{ lista.assunto }}</td>
+          <td>{{ lista.data_inicio|date:"d/m/Y" }}</td>
+          <td>{{ lista.data_fim|date:"d/m/Y" }}</td>
+          <td>{{ lista.duracao|horas_formatadas }}</td>
+          <td>
+            <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#modalParticipantes{{ lista.id }}" aria-label="Visualizar participantes">
+              <i class="bi bi-eye"></i>
+            </button>
+          </td>
+          <td>
+            {% if lista.necessita_avaliacao %}
+              <span class="badge bg-warning text-dark">Sim</span>
+            {% else %}
+              <span class="badge bg-success">Não</span>
             {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Próxima">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Última">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+          </td>
+          <td>
+            {% if lista.situacao == "finalizado" %}
+              <span class="badge bg-success">Finalizado</span>
+            {% elif lista.situacao == "em_andamento" %}
+              <span class="badge bg-warning text-dark">Em Andamento</span>
+            {% elif lista.situacao == "indefinido" %}
+              <span class="badge bg-secondary">Indefinido</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if lista.lista_presenca %}
+              <a href="{{ lista.lista_presenca.url }}" class="btn btn-sm btn-info" title="Baixar Anexo" target="_blank" aria-label="Baixar anexo">
+                <i class="bi bi-file-earmark-arrow-down"></i>
+              </a>
+            {% else %}
+              <span class="text-muted">Nenhum anexo</span>
+            {% endif %}
+          </td>
+          <td>
+            {% include 'partials/global/_botao_visualizar.html' with objeto=lista url_visualizar='visualizar_lista_presenca' %}
+            {% include 'partials/global/_botao_editar.html' with objeto=lista url_editar='editar_lista_presenca' %}
+            {% if request.user|has_permission:"Funcionario.print_listapresenca" %}
+              <a href="{% url 'imprimir_lista_presenca' lista.id %}" class="btn btn-sm btn-primary mt-1" title="Imprimir" aria-label="Imprimir">
+                <i class="bi bi-printer"></i>
+              </a>
+            {% endif %}
+            {% include 'partials/global/_botao_excluir.html' with objeto=lista url_excluir='excluir_lista_presenca' label=lista.assunto %}
+          </td>
+        </tr>
+
+        <!-- Modal Participantes -->
+        <div class="modal fade" id="modalParticipantes{{ lista.id }}" tabindex="-1" aria-labelledby="modalParticipantesLabel{{ lista.id }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modalParticipantesLabel{{ lista.id }}">Participantes da Lista de Presença</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+              </div>
+              <div class="modal-body">
+                <ul>
+                  {% for participante in lista.participantes.all %}
+                    <li>{{ participante.nome }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        {% include 'partials/global/_sem_resultados.html' with item_nome="lista de presença" %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Paginação -->
+  {% include 'partials/global/_paginacao.html' %}
 
 </div>
-<style>
-/* Estilos específicos para Select2 */
-#imprimirF013Modal .select2-container--default .select2-selection--single {
-    height: calc(2.25rem + 2px);
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #212529;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-}
 
-#imprimirF013Modal .select2-container {
-    z-index: 9999 !important;
-    width: 100% !important;
-}
-
-#imprimirF013Modal .select2-dropdown {
-    z-index: 1050;
-}
-</style>
-
-
-   <!-- Script para manipular a modal de impressão F013 -->
+<!-- Scripts -->
 <script>
-document.getElementById('submitF013Button').addEventListener('click', function(event) {
-    event.preventDefault();
-    var treinamentoId = document.getElementById('treinamento_modal').value;
-
-    if (treinamentoId) {
-        // Construindo a URL para a impressão da lista de presença
-        var url = "{% url 'imprimir_lista_presenca' 0 %}".replace('/0/', '/' + treinamentoId + '/');
-        window.location.href = url;  // Redireciona para a URL de impressão
-    } else {
-        alert("Por favor, selecione um treinamento.");
-    }
-});
-</script>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Inicializa os elementos Select2
+  document.addEventListener('DOMContentLoaded', function () {
     $('.select2').select2({
-        placeholder: 'Selecione uma opção',
-        allowClear: true,
-        width: '100%',
+      placeholder: 'Selecione uma opção',
+      allowClear: true,
+      width: '100%',
     });
-
-    // Configura o Select2 para dropdowns dentro da modal
-    $('#imprimirF013Modal').on('shown.bs.modal', function () {
-        $('#lista_id').select2({
-            placeholder: 'Selecione uma lista',
-            allowClear: true,
-            width: '100%',
-            dropdownParent: $('#imprimirF013Modal') // Garante que o dropdown do Select2 fique dentro da modal
-        });
-    });
-
-    // Submissão do formulário de impressão
-    document.getElementById('imprimirF013Form').addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        // Obtém o ID da lista selecionada
-        const listaId = document.getElementById('lista_id').value;
-
-        if (listaId) {
-            // Constrói a URL de impressão com o ID da lista
-            const imprimirUrl = "{% url 'imprimir_lista_presenca' 0 %}".replace('0', listaId);
-            window.open(imprimirUrl, '_blank'); // Abre a URL em uma nova aba
-        } else {
-            alert('Por favor, selecione uma lista.');
-        }
-    });
-});
+  });
 </script>
-
 
 {% endblock %}

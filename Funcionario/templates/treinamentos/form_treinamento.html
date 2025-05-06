@@ -5,13 +5,13 @@
 
 {% block content %}
 {% include 'partials/global/_toast_mensagens.html' %}
-{% include 'partials/global/_form_errors.html' %}
 
 <div class="container mt-5">
   {% include 'partials/global/_header_titulo.html' with titulo="Cadastro de Treinamento" icone="bi bi-journal-richtext" emoji="📚" %}
 
   <form method="post" enctype="multipart/form-data" class="row g-3">
     {% csrf_token %}
+{% include 'partials/global/_form_errors.html' %}
 
     <div class="accordion" id="accordionTreinamento">
 
