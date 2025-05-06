@@ -1,0 +1,16 @@
+{% for subordinado in subordinados %}
+  <li>
+    <div class="box">
+      {% if subordinado.foto %}
+        <img src="{{ subordinado.foto.url }}" alt="Foto de {{ subordinado.nome }}">
+      {% endif %}
+      <strong>{{ subordinado.nome }}</strong><br>
+      <small>{{ subordinado.cargo_atual }}</small>
+    </div>
+    {% if subordinado.funcionarios_gerenciados.all %}
+      <ul>
+        {% include "funcionarios/organograma/_subordinados_recursivos_impressao.html" with subordinados=subordinado.funcionarios_gerenciados.all %}
+      </ul>
+    {% endif %}
+  </li>
+{% endfor %}

@@ -88,6 +88,7 @@ from .views.funcionario_views import (
     listar_historico_cargo,
     organograma_view,
     visualizar_funcionario,
+    imprimir_organograma
 )
 
 # Import das views organizadas por funcionalidade
@@ -598,6 +599,7 @@ urlpatterns = [
         name="excluir_historico_cargo",
     ),
     path("avaliacao-anual/", cadastrar_type_avaliacao, name="cadastrar_type_avaliacao"),
+    path('funcionarios/imprimir-organograma/', imprimir_organograma, name='imprimir_organograma'),
 
 ]
 

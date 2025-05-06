@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<a href="{% url 'imprimir_organograma' %}" class="btn btn-outline-secondary">
+  <i class="bi bi-diagram-3-fill me-1"></i> Versão para impressão
+</a>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Organograma Bras-Mol</h2>
+
+    <div id="tree-container">
+        <ul class="tree">
+            {% for funcionario in organograma %}
+            <li>
+                <div class="tree-node" onclick="toggleSubordinates(this)">
+                    {% if funcionario.foto %}
+                    <img src="{{ funcionario.foto }}" alt="Foto" width="50" height="50" class="img-thumbnail rounded-circle"><br>
+                    {% endif %}
+                    <strong>{{ funcionario.nome }}</strong><br>
+                    {{ funcionario.cargo }}
+                    <br>
+                    <!-- Ícone de subordinados -->
+                    {% if funcionario.subordinados %}
+                    <span title="Quantidade de subordinados">
+                        <i class="fas fa-users"></i> {{ funcionario.subordinados|length }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% if funcionario.subordinados %}
+                <ul class="subordinates hidden">
+                    {% include "funcionarios/organograma/_subordinados_recursivos.html" with subordinados=funcionario.subordinados %}
+                </ul>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+/* Função para alternar a exibição dos subordinados */
+function toggleSubordinates(element) {
+    const subordinates = element.nextElementSibling;
+    if (subordinates && subordinates.classList.contains('subordinates')) {
+        subordinates.classList.toggle('hidden');
+    }
+}
+</script>
+
+<style>
+/* Estilo da árvore */
+.tree {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+}
+
+.tree ul {
+    padding-top: 20px;
+    position: relative;
+    transition: all 0.5s;
+}
+
+.tree li {
+    display: inline-block;
+    text-align: center;
+    vertical-align: top;
+    position: relative;
+    padding: 10px 5px 0 5px;
+}
+
+.tree li .tree-node {
+    display: inline-block;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.tree li .tree-node img {
+    border-radius: 50%;
+    margin-bottom: 5px;
+}
+
+.tree li .tree-node:hover {
+    background-color: #e0f7fa;
+    border-color: #00796b;
+}
+
+.subordinates.hidden {
+    display: none;
+}
+
+.fas {
+    color: #00796b;
+    margin-top: 5px;
+}
+</style>
+
+
+
+
+{% endblock %}

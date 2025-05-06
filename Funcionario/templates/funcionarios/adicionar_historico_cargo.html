@@ -1,27 +1,56 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-{% block errors %}
-{% endblock %}
-<div class="container">
-    <h2 class="text-center">Adicionar Histórico de Cargo</h2>
-    <form method="post">
+<div class="container mt-4">
+  {% include "partials/global/_styles_componentes.html" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <!-- Título com ícone -->
+  {% include "partials/global/_header_titulo.html" with titulo="Adicionar Histórico de Cargo" icone="bi bi-briefcase-fill" emoji="💼" %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <form method="post" class="border p-4 rounded shadow-sm bg-white">
         {% csrf_token %}
-        <div class="mb-3">
-            <label for="cargo" class="form-label">Selecione o Cargo:</label>
-            <select name="cargo" id="cargo" class="form-select" required>
-                <option value="">Selecione um Cargo</option>
-                {% for cargo in cargos %}
-                    <option value="{{ cargo.id }}">{{ cargo.nome }}</option>
-                {% endfor %}
+        <fieldset>
+          <legend class="visually-hidden">Formulário de Histórico</legend>
+
+          <!-- Campo de cargo -->
+          <div class="mb-3">
+            <label for="cargo" class="form-label">
+              Selecione o Cargo: <span class="text-danger">*</span>
+            </label>
+            <select name="cargo" id="cargo" class="form-select" required autofocus aria-label="Cargo">
+              <option value="">Selecione um Cargo</option>
+              {% for cargo in cargos %}
+                <option value="{{ cargo.id }}">{{ cargo.nome }}</option>
+              {% endfor %}
             </select>
+          </div>
+
+          <!-- Campo de data -->
+          <div class="mb-3">
+            <label for="data_atualizacao" class="form-label">
+              Data de Atualização: <span class="text-danger">*</span>
+            </label>
+            <input type="date" name="data_atualizacao" id="data_atualizacao" class="form-control" required aria-label="Data de Atualização">
+            <small class="form-text text-muted">Informe a data em que a alteração de cargo ocorreu.</small>
+          </div>
+
+        </fieldset>
+
+        <!-- Botões -->
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="submit" class="btn btn-primary d-inline-flex align-items-center" aria-label="Adicionar histórico">
+            <i class="bi bi-check-circle me-1" aria-hidden="true"></i> Adicionar
+          </button>
+          <a href="{% url 'listar_historico_cargo' funcionario.id %}" class="btn btn-secondary d-inline-flex align-items-center" aria-label="Cancelar e voltar">
+            <i class="bi bi-x-circle me-1" aria-hidden="true"></i> Cancelar
+          </a>
         </div>
-        <div class="mb-3">
-            <label for="data_atualizacao" class="form-label">Data de Atualização:</label>
-            <input type="date" name="data_atualizacao" id="data_atualizacao" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Adicionar</button>
-        <a href="{% url 'listar_historico_cargo' funcionario.id %}" class="btn btn-secondary">Cancelar</a>
-    </form>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}

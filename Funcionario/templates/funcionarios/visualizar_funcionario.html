@@ -1,112 +1,131 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
 
 {% block title %}Visualização do Colaborador{% endblock %}
 
 {% block content %}
-{% load custom_filters %}
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
 
-<div class="container mt-5">
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white text-center">
-            <h2 class="mb-0">Visualização do Colaborador</h2>
-        </div>
-        <div class="card-body">
-            <!-- Dados do Colaborador -->
-            <h5 class="text-primary mb-3">Informações Pessoais</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Nome</label>
-                    <p class="fw-bold">{{ funcionario.nome }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Número de Registro</label>
-                    <p class="fw-bold">{{ funcionario.numero_registro }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Data de Admissão</label>
-                    <p class="fw-bold">{{ funcionario.data_admissao|date:"d/m/Y" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Status</label>
-                    <p class="fw-bold">{{ funcionario.status }}</p>
-                </div>
-            </div>
+  <div id="relatorio-area">
+    <div class="pdf-container">
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>👤 Colaborador</h1>
+        <p>Visualização detalhada do colaborador</p>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table">
+            <!-- Informações Pessoais -->
+            <tr>
+              <th class="align-middle">Nome</th>
+              <td class="align-middle">{{ funcionario.nome }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Número de Registro</th>
+              <td class="align-middle">{{ funcionario.numero_registro }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Data de Admissão</th>
+              <td class="align-middle">{{ funcionario.data_admissao|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Status</th>
+              <td class="align-middle">{{ funcionario.status }}</td>
+            </tr>
 
             <!-- Dados Profissionais -->
-            <h5 class="text-primary mb-3">Dados Profissionais</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Cargo Inicial</label>
-                    <p class="fw-bold">{{ funcionario.cargo_inicial.nome }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Cargo Atual</label>
-                    <p class="fw-bold">{{ funcionario.cargo_atual.nome }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Local de Trabalho</label>
-                    <p class="fw-bold">{{ funcionario.local_trabalho }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Responsável</label>
-                    <p class="fw-bold">{{ funcionario.responsavel }}</p>
-                </div>
-            </div>
+            <tr>
+              <th class="align-middle">Cargo Inicial</th>
+              <td class="align-middle">{{ funcionario.cargo_inicial.nome }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Cargo Atual</th>
+              <td class="align-middle">{{ funcionario.cargo_atual.nome }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Local de Trabalho</th>
+              <td class="align-middle">{{ funcionario.local_trabalho }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Responsável</th>
+              <td class="align-middle">{{ funcionario.responsavel }}</td>
+            </tr>
 
             <!-- Documentos -->
-            <h5 class="text-primary mb-3">Documentos</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Currículo</label>
-                    {% if funcionario.curriculo %}
-                        <a href="{{ funcionario.curriculo.url }}" class="btn btn-info btn-sm" download>
-                            <i class="bi bi-download"></i> Baixar Currículo
-                        </a>
-                        <p class="mt-2 text-muted"><strong>Arquivo:</strong> {{ funcionario.curriculo.name|basename }}</p>
-                    {% else %}
-                        <p class="fw-bold">Não disponível</p>
-                    {% endif %}
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Certificado de Conclusão de Ensino Médio</label>
-                    {% if funcionario.formulario_f146 %}
-                        <a href="{{ funcionario.formulario_f146.url }}" class="btn btn-info btn-sm" download>
-                            <i class="bi bi-download"></i> Baixar Certificado
-                        </a>
-                        <p class="mt-2 text-muted"><strong>Arquivo:</strong> {{ funcionario.formulario_f146.name|basename }}</p>
-                    {% else %}
-                        <p class="fw-bold">Não disponível</p>
-                    {% endif %}
-                </div>
-            </div>
+            <tr>
+              <th class="align-middle">Currículo</th>
+              <td class="align-middle">
+                {% if funcionario.curriculo %}
+                  <a href="{{ funcionario.curriculo.url }}" class="btn btn-info btn-sm" download>
+                    <i class="bi bi-download"></i> Baixar
+                  </a>
+                  <span class="small text-muted">({{ funcionario.curriculo.name|basename }})</span>
+                {% else %}
+                  Não disponível
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th class="align-middle">Certificado Ensino Médio</th>
+              <td class="align-middle">
+                {% if funcionario.formulario_f146 %}
+                  <a href="{{ funcionario.formulario_f146.url }}" class="btn btn-info btn-sm" download>
+                    <i class="bi bi-download"></i> Baixar
+                  </a>
+                  <span class="small text-muted">({{ funcionario.formulario_f146.name|basename }})</span>
+                {% else %}
+                  Não disponível
+                {% endif %}
+              </td>
+            </tr>
 
             <!-- Foto -->
-            <h5 class="text-primary mb-3">Foto</h5>
-            <div class="text-center">
+            <tr>
+              <th class="align-middle">Foto</th>
+              <td class="align-middle text-center">
                 {% if funcionario.foto %}
-                    <img src="{{ funcionario.foto.url }}" alt="Foto do Colaborador" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;">
+                  <img src="{{ funcionario.foto.url }}"
+                       alt="Foto do Colaborador"
+                       style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
                 {% else %}
-                    <p class="fw-bold">Sem foto cadastrada</p>
+                  Sem foto cadastrada
                 {% endif %}
-            </div>
-        </div>
-        <!-- Assinatura Eletrônica -->
-<h5 class="text-primary mb-3">Assinatura Eletrônica</h5>
-<div class="text-center">
-    {% if funcionario.assinatura_eletronica %}
-        <img src="{{ funcionario.assinatura_eletronica.url }}" alt="Assinatura Eletrônica" style="width: 200px; height: auto; object-fit: contain;">
-    {% else %}
-        <p class="fw-bold">Sem assinatura eletrônica cadastrada</p>
-    {% endif %}
-</div>
+              </td>
+            </tr>
 
-
-        <!-- Botão de Voltar -->
-        <div class="card-footer text-center">
-            <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left-circle"></i> Voltar
-            </a>
+            <!-- Assinatura Eletrônica -->
+            <tr>
+              <th class="align-middle">Assinatura Eletrônica</th>
+              <td class="align-middle text-center">
+                {% if funcionario.assinatura_eletronica %}
+                  <img src="{{ funcionario.assinatura_eletronica.url }}"
+                       alt="Assinatura Eletrônica"
+                       style="width:200px; object-fit:contain;">
+                {% else %}
+                  Sem assinatura eletrônica cadastrada
+                {% endif %}
+              </td>
+            </tr>
+          </table>
         </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="pdf-footer text-center text-muted small">
+        <p class="mb-1">
+          <i class="bi bi-clock me-1" aria-hidden="true"></i>
+          Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+        </p>
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
     </div>
-</div>
+  </div>
 {% endblock %}

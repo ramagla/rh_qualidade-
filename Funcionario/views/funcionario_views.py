@@ -101,6 +101,7 @@ def lista_funcionarios(request):
 
 @login_required
 def visualizar_funcionario(request, funcionario_id):
+    # Busca o colaborador ou retorna 404
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
 
     # Obter o cargo do responsável, caso exista
@@ -108,17 +109,23 @@ def visualizar_funcionario(request, funcionario_id):
     if funcionario.responsavel:
         responsaveis = Funcionario.objects.filter(nome=funcionario.responsavel)
         if responsaveis.exists():
-            # Obtenha o cargo do primeiro registro encontrado
             cargo_responsavel = responsaveis.first().cargo_responsavel
         else:
-            cargo_responsavel = "Cargo não encontrado"  # Ou lidar de outra forma
+            cargo_responsavel = "Cargo não encontrado"
 
+    # Monta o contexto, incluindo a data/hora atual
     context = {
         "funcionario": funcionario,
         "cargo_responsavel": cargo_responsavel,
+        "now": timezone.now(),
     }
-    return render(request, "funcionarios/visualizar_funcionario.html", context)
 
+    # Renderiza o template de visualização
+    return render(
+        request,
+        "funcionarios/visualizar_funcionario.html",
+        context
+    )
 
 @login_required
 def cadastrar_funcionario(request):
@@ -139,7 +146,7 @@ def cadastrar_funcionario(request):
             )
     else:
         form = FuncionarioForm()
-    return render(request, "funcionarios/cadastrar_funcionario.html", {"form": form})
+    return render(request, "funcionarios/form_funcionario.html", {"form": form})
 
 
 @login_required
@@ -187,19 +194,27 @@ def editar_funcionario(request, funcionario_id):
         "responsaveis": responsaveis,  # Adicione isso ao contexto
     }
 
-    return render(request, "funcionarios/editar_funcionario.html", context)
+    return render(request, "funcionarios/form_funcionario.html", context)
 
 
 @login_required
 def excluir_funcionario(request, funcionario_id):
+    # Busca o colaborador ou retorna 404
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-    if Treinamento.objects.filter(funcionario=funcionario).exists():
-        messages.error(
-            request, "Funcionário possui registros associados e não pode ser excluído."
+
+    # Se houver treinamentos vinculados, inativa em vez de excluir
+    if Treinamento.objects.filter(funcionarios=funcionario).exists():
+        funcionario.status = "Inativo"
+        funcionario.save(update_fields=["status"])
+        messages.success(
+            request,
+            "Funcionário possui registros associados e foi marcado como Inativo."
         )
     else:
+        # Caso contrário, exclui de fato
         funcionario.delete()
         messages.success(request, "Funcionário excluído com sucesso.")
+
     return redirect("lista_funcionarios")
 
 
@@ -304,7 +319,7 @@ def organograma_view(request):
         )
 
     return render(
-        request, "funcionarios/organograma.html", {"organograma": organograma}
+        request, "funcionarios/organograma/organograma.html", {"organograma": organograma}
     )
 
 
@@ -363,3 +378,9 @@ def excluir_historico_cargo(request, historico_id):
         )
 
     return redirect("listar_historico_cargo", funcionario_id=historico.funcionario.id)
+
+
+@login_required
+def imprimir_organograma(request):
+    organograma = Funcionario.objects.filter(responsavel__isnull=True).prefetch_related('funcionarios_gerenciados')
+    return render(request, "funcionarios/organograma/organograma_imprimir.html", {"organograma": organograma})

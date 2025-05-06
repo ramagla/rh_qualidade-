@@ -1,87 +1,47 @@
-{% extends 'base.html' %} {% block content %}
-<div class="container">
-  <h2 class="text-center">Histórico de Cargos - {{ funcionario.nome }}</h2>
-  <!-- Botão de Adicionar -->
-  <a
-    href="{% url 'adicionar_historico_cargo' funcionario.id %}"
-    class="btn btn-success"
-  >
-    <i class="bi bi-plus-circle"></i> Adicionar Histórico
-  </a>
-  <table class="table table-centered">
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+  {% include "partials/global/_styles_componentes.html" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <!-- Título com ícone -->
+  {% include "partials/global/_header_titulo.html" with titulo="Histórico de Cargos - "|add:funcionario.nome icone="bi bi-briefcase-fill" emoji="💼" %}
+
+  <!-- Botão de adicionar com alinhamento -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div></div>
+    <a href="{% url 'adicionar_historico_cargo' funcionario.id %}" class="btn btn-success d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Adicionar Histórico
+    </a>
+  </div>
+
+  <!-- Tabela com caption para acessibilidade -->
+  <table class="table table-hover align-middle">
+    <caption class="visually-hidden">Histórico de cargos do colaborador</caption>
     <thead>
       <tr>
-        <th>Cargo</th>
-        <th>Data de Atualização</th>
-        <th>Ações</th>
+        <th><i class="bi bi-person-badge-fill me-1" aria-hidden="true"></i> Cargo</th>
+        <th><i class="bi bi-calendar-event-fill me-1" aria-hidden="true"></i> Data de Atualização</th>
+        <th><i class="bi bi-gear-fill me-1" aria-hidden="true"></i> Ações</th>
       </tr>
     </thead>
     <tbody>
-      {% for historico in historicos %}
-      <tr>
-        <td class="align-middle">{{ historico.cargo.nome }}</td>
-        <td class="align-middle">{{ historico.data_atualizacao|date:"d/m/Y" }}</td>
-        <td>
-          <!-- Botão para abrir a modal de exclusão -->
-          <button
-            class="btn btn-danger"
-            data-bs-toggle="modal"
-            data-bs-target="#modalExcluir{{ historico.id }}"
-          >
-            <i class="bi bi-trash"></i> Excluir
-          </button>
-        </td>
-      </tr>
-
-      <!-- Modal de Exclusão -->
-      <div
-        class="modal fade"
-        id="modalExcluir{{ historico.id }}"
-        tabindex="-1"
-        aria-labelledby="modalExcluirLabel{{ historico.id }}"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="modalExcluirLabel{{ historico.id }}">
-                Excluir Histórico
-              </h5>
-              <button
-                type="button"
-                class="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body">
-              <p>Tem certeza que deseja excluir este registro de histórico?</p>
-              <p><strong>Cargo:</strong> {{ historico.cargo.nome }}</p>
-              <p>
-                <strong>Data:</strong> {{
-                historico.data_atualizacao|date:"d/m/Y" }}
-              </p>
-            </div>
-            <div class="modal-footer">
-              <form
-                method="POST"
-                action="{% url 'excluir_historico_cargo' historico.id %}"
-              >
-                {% csrf_token %}
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                >
-                  Cancelar
-                </button>
-                <button type="submit" class="btn btn-danger">Excluir</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
+      {% if historicos %}
+        {% for historico in historicos %}
+        <tr>
+          <td>{{ historico.cargo.nome }}</td>
+          <td>{{ historico.data_atualizacao|date:"d/m/Y" }}</td>
+          <td class="d-flex gap-1">
+            {% include "partials/global/_botao_excluir.html" with objeto=historico url_excluir='excluir_historico_cargo' label="Histórico do Cargo" %}
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        {% include "partials/global/_sem_resultados.html" with item_nome="histórico de cargo" %}
+      {% endif %}
     </tbody>
   </table>
 </div>

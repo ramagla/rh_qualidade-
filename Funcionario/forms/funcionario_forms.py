@@ -50,14 +50,14 @@ class FuncionarioForm(forms.ModelForm):
         ),
     )
     data_admissao = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         label="Data de Admissão",
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date", "class": "form-control"}
+        ),
+        input_formats=["%Y-%m-%d"],
     )
-    data_integracao = forms.DateField(
-        required=False,  # Torna o campo opcional
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-        label="Data de Integração",
-    )
+    
     escolaridade = forms.ChoiceField(
         choices=ESCOLARIDADE_CHOICES,
         label="Escolaridade",
@@ -118,10 +118,16 @@ class FuncionarioForm(forms.ModelForm):
         if self.instance and self.instance.local_trabalho:
             self.fields["local_trabalho"].initial = self.instance.local_trabalho
 
+        # **Pré-carregar datas no formato ISO (YYYY-MM-DD)**
+        if self.instance and getattr(self.instance, "data_admissao", None):
+            self.initial["data_admissao"] = self.instance.data_admissao.strftime("%Y-%m-%d")
+        if self.instance and getattr(self.instance, "data_integracao", None):
+            self.initial["data_integracao"] = self.instance.data_integracao.strftime("%Y-%m-%d")
+
         # Adicionar classe "form-control" nos campos, exceto Select2Widget
-        for field in self.fields:
-            if not isinstance(self.fields[field].widget, Select2Widget):
-                self.fields[field].widget.attrs.update({"class": "form-control"})
+        for name, field in self.fields.items():
+            if not isinstance(field.widget, Select2Widget):
+                field.widget.attrs.update({"class": "form-control"})
 
         # Adicionar Select2 ao campo "responsavel"
         self.fields["responsavel"].widget.attrs.update(
@@ -131,6 +137,7 @@ class FuncionarioForm(forms.ModelForm):
                 "data-allow-clear": "true",
             }
         )
+
 
     def clean_nome(self):
         nome = self.cleaned_data.get("nome")

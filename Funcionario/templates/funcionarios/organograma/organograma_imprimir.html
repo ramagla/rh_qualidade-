@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao_paisagem.html' %}
+
+<div class="container my-4 pdf-container">
+  <div class="d-print-none text-end mb-3">
+    <button class="btn btn-primary" onclick="window.print()" aria-label="Imprimir organograma">
+      <i class="bi bi-printer-fill me-1"></i> Imprimir Organograma
+    </button>
+  </div>
+
+  <div class="text-center mb-4">
+    <h2 class="mb-1">Organograma Bras-Mol</h2>
+    <p class="mb-0">Revisão: <strong>06</strong> — Data: <strong>04/03/2025</strong></p>
+    <p class="mb-0">Elaborado por: <strong>Anderson Goveia</strong> — Aprovado por: <strong>Lilian Fernandes</strong></p>
+  </div>
+
+  <div class="tree-org text-center">
+    <ul class="tree">
+      {% for funcionario in organograma %}
+        <li>
+          <div class="box">
+            {% if funcionario.foto %}
+              <img src="{{ funcionario.foto.url }}" alt="Foto de {{ funcionario.nome }}">
+            {% endif %}
+            <strong>{{ funcionario.nome }}</strong><br>
+            <small>{{ funcionario.cargo_atual }}</small>
+          </div>
+          {% if funcionario.funcionarios_gerenciados.all %}
+            <ul>
+              {% include "funcionarios/organograma/_subordinados_recursivos_impressao.html" with subordinados=funcionario.funcionarios_gerenciados.all %}
+            </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}
