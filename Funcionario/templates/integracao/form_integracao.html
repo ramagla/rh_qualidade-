@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Integração de Colaborador{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_form_errors.html' %}
+
+<div class="container-xl mt-5">
+  {% include "partials/global/_header_titulo.html" with titulo="Integração de Funcionário" icone="bi bi-person-badge-fill" emoji="🧾" %}
+
+  <form method="post" enctype="multipart/form-data" class="row g-4 align-items-end" id="integracaoForm">
+    {% csrf_token %}
+
+    <!-- Colaborador -->
+    <div class="col-md-6">
+      <label for="funcionario" class="form-label">
+        <i class="bi bi-person-circle me-1 text-primary"></i> Colaborador:
+      </label>
+      {{ form.funcionario|add_class:"form-select select2" }}
+    </div>
+
+    <!-- Data de Integração -->
+    <div class="col-md-6">
+      <label for="data_integracao" class="form-label">
+        <i class="bi bi-calendar-event me-1 text-primary"></i> Data de Integração:
+      </label>
+      {{ form.data_integracao|add_class:"form-control" }}
+    </div>
+
+    <!-- Grupo WhatsApp -->
+    <fieldset class="col-md-6">
+      <legend class="fs-6 mb-1">
+        <i class="bi bi-whatsapp text-success me-1"></i> Grupo WhatsApp:
+      </legend>
+      <div>
+        {% for value, label in form.grupo_whatsapp.field.choices %}
+          <div class="form-check form-check-inline">
+            <input type="radio" id="grupo_whatsapp_{{ forloop.counter }}"
+                   name="grupo_whatsapp" value="{{ value }}"
+                   class="form-check-input"
+                   {% if value|stringformat:"s" == form.grupo_whatsapp.value|stringformat:"s" %}checked{% endif %}>
+            <label for="grupo_whatsapp_{{ forloop.counter }}" class="form-check-label">{{ label }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <!-- Requer Treinamento -->
+    <fieldset class="col-md-6">
+      <legend class="fs-6 mb-1">
+        <i class="bi bi-journal-check text-warning me-1"></i> Requer Treinamento:
+      </legend>
+      <div>
+        {% for value, label in form.requer_treinamento.field.choices %}
+          <div class="form-check form-check-inline">
+            <input type="radio" id="requer_treinamento_{{ forloop.counter }}"
+                   name="requer_treinamento" value="{{ value }}"
+                   class="form-check-input requer-treinamento"
+                   {% if value|stringformat:"s" == form.requer_treinamento.value|stringformat:"s" %}checked{% endif %}>
+            <label for="requer_treinamento_{{ forloop.counter }}" class="form-check-label">{{ label }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <!-- Treinamentos Requeridos -->
+    <div class="col-md-12 d-none" id="treinamentosRequeridosContainer">
+      <label for="id_treinamentos_requeridos" class="form-label">
+        <i class="bi bi-list-check text-info me-1"></i> Treinamentos Requeridos:
+      </label>
+      {{ form.treinamentos_requeridos|add_class:"form-control" }}
+      <div class="invalid-feedback">Por favor, preencha este campo.</div>
+    </div>
+
+    <!-- PDF da Integração Assinada -->
+<div class="col-md-12">
+  <div class="border rounded p-3 bg-light">
+    <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" for="id_pdf_integracao">
+      <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+      PDF da Integração Assinada
+    </label>
+
+    {% if form.instance.pdf_integracao %}
+      <div class="d-flex justify-content-between align-items-center bg-white border rounded px-3 py-2 mb-2">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-paperclip text-muted"></i>
+          <a href="{{ form.instance.pdf_integracao.url }}" target="_blank" class="link-primary text-truncate" style="max-width: 300px;">
+            {{ form.instance.pdf_integracao.name|cut:"integracoes/" }}
+          </a>
+        </div>
+        <div class="form-check mb-0">
+          <input type="checkbox"
+                 name="{{ form.pdf_integracao.html_name }}-clear"
+                 id="id_pdf_integracao-clear"
+                 class="form-check-input">
+          <label class="form-check-label small" for="id_pdf_integracao-clear">Limpar</label>
+        </div>
+      </div>
+    {% endif %}
+
+    <input type="file"
+           name="{{ form.pdf_integracao.html_name }}"
+           id="id_pdf_integracao"
+           class="form-control">
+  </div>
+</div>
+
+
+    <!-- Botões -->
+    <div class="col-12">
+      {% include "partials/global/_botoes_salvar_cancelar.html" with edicao=integracao url_voltar="lista_integracoes" %}
+    </div>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const treinamentosContainer = document.getElementById('treinamentosRequeridosContainer');
+    const treinamentoInput = document.getElementById('id_treinamentos_requeridos');
+    const radioButtons = document.querySelectorAll('.requer-treinamento');
+
+    function toggleTreinamentosRequeridos() {
+      const selected = document.querySelector('.requer-treinamento:checked')?.value;
+      if (selected === "True") {
+        treinamentosContainer.classList.remove('d-none');
+      } else {
+        treinamentosContainer.classList.add('d-none');
+        treinamentoInput?.classList.remove('is-invalid');
+      }
+    }
+
+    radioButtons.forEach(radio => {
+      radio.addEventListener('change', toggleTreinamentosRequeridos);
+    });
+
+    toggleTreinamentosRequeridos();
+
+    document.getElementById('integracaoForm').addEventListener('submit', function (event) {
+      const selected = document.querySelector('.requer-treinamento:checked')?.value;
+      if (selected === "True" && !treinamentoInput?.value.trim()) {
+        event.preventDefault();
+        treinamentoInput.classList.add('is-invalid');
+        treinamentoInput.focus();
+        setTimeout(() => alert("Por favor, preencha o campo de Treinamentos Requeridos."), 100);
+      }
+    });
+  });
+</script>
+{% endblock %}

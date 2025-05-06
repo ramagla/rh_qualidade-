@@ -4,462 +4,261 @@
 
 {% block content %}
 {% load custom_filters %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+{% include 'partials/global/_toast_mensagens.html' %}
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Treinamentos Cadastrados</h2>
-    
-    <!-- Toast container para mensagens de alerta -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                    <div class="toast align-items-center border-0" style="background-color: #f8d7da; color: #842029;">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <h4 class="alert-heading">Atenção!</h4>
-                                <p>{{ message }}</p>
-                            </div>
-                        </div>
-                    </div>
-                {% elif message.tags == "success" %}
-                    <div class="toast align-items-center border-0" style="background-color: #d1e7dd; color: #0f5132;" data-bs-delay="10000">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <h4 class="alert-heading">Sucesso!</h4>
-                                <p>{{ message }}</p>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
+    {% include 'partials/global/_header_titulo.html' with titulo="Treinamentos Cadastrados" icone="bi bi-mortarboard" emoji="🎓" %}
 
-      
-        <div>
-            <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary">
-                <i class="bi bi-download"></i> Exportar para Excel
-            </a>
+    <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
+        <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary d-flex align-items-center">
+            <i class="bi bi-download me-2"></i> Exportar para Excel
+        </a>
+
+        <div class="ms-auto d-flex flex-wrap gap-2">
+            {% if request.user|has_permission:"Funcionario.add_treinamento" %}
+                <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success d-flex align-items-center">
+                    <i class="bi bi-plus-circle me-2"></i> Cadastrar
+                </a>
+            {% endif %}
+
+            {% if request.user|has_permission:"Funcionario.print_treinamento" %}
+                <button type="button" class="btn btn-info d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
+                    <i class="bi bi-printer me-2"></i> Imprimir
+                </button>
+            {% endif %}
+
+            {% if request.user|has_permission:"Funcionario.view_treinamento" %}
+                <a href="{% url 'levantamento_treinamento' %}" class="btn btn-secondary d-flex align-items-center">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> Levantamento de Necessidades
+                </a>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Botão de Cadastrar Treinamento e Imprimir F003 -->
-    <div class="text-end mb-4">
-        {% if request.user|has_permission:"Funcionario.add_treinamento" %}
-
-        <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Cadastrar</a>
-        {% endif %}
-
-        <!-- Botão para abrir a modal de Imprimir F003 -->
-        {% if request.user|has_permission:"Funcionario.print_treinamento" %}
-
-        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
-        {% endif %}
-
-
-         <!-- Botão para Levantamento de Necessidades -->
-         {% if request.user|has_permission:"Funcionario.view_treinamento" %}
-
-    <a href="{% url 'levantamento_treinamento' %}" class="btn btn-secondary ms-2">
-        <i class="bi bi-file-earmark-spreadsheet"></i> Levantamento de Necessidades
-    </a>
-    {% endif %}
-
-    </div>
-
-   <!-- Modal para Selecionar Funcionário -->
-<div class="modal fade" id="imprimirF003Modal" tabindex="-1" aria-labelledby="imprimirF003ModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imprimirF003ModalLabel">Selecionar Colaborador</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="imprimirF003Form" method="GET" action="">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="funcionario_modal" class="form-label">Colaborador:</label>
-                        <select name="funcionario" id="funcionario_modal" class="form-select select2" required>
-                            <option value="">Selecione um Colaborador</option>
+    <!-- Modal de Impressao -->
+    <div class="modal fade" id="imprimirF003Modal" tabindex="-1" aria-labelledby="imprimirF003ModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imprimirF003ModalLabel">Selecionar Colaborador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="imprimirF003Form" method="GET">
+                        {% csrf_token %}
+                        <label for="funcionario_modal" class="form-label">Colaborador</label>
+                        <select name="funcionario" id="funcionario_modal" class="form-select select2" required autofocus>
+                            <option value="">Selecione um colaborador</option>
                             {% for func in funcionarios %}
-                                 <option value="{{ func.id }}">{{ func.nome }}</option>
+                                <option value="{{ func.id }}">{{ func.nome }}</option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Imprimir</button>
-                </form>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-printer me-2"></i> Imprimir</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
+    <!-- Filtros de Treinamento -->
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+    <strong class="text-primary">Filtros de Treinamento</strong>
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
 
-
-    
-
-    <!-- Script para manipular a modal de impressão F003 -->
-    <script>
-    document.getElementById('submitButton').addEventListener('click', function (event) {
-    event.preventDefault();
-    var funcionarioId = document.getElementById('funcionario_modal').value;
-    
-    if (funcionarioId) {
-        var form = document.getElementById('imprimirF003Form');
-        var url = "/treinamentos/imprimir_f003/" + funcionarioId + "/";
-        form.action = url;
-        form.submit();
-    } else {
-        alert("Por favor, selecione um Colaborador.");
-    }
-});
-    </script>
-
-    <!-- Formulário de filtro e lista de treinamentos -->
-    <form method="get" class="mb-4">
-        <div class="row">
-
-           <!-- Filtro de Colaborador -->
-            <div class="col-md-4">
-                <label for="funcionario" class="form-label">Colaborador</label>
-                <select name="funcionario" id="funcionario" class="form-select select2">
-                    <option value="">Todos</option>
-                    {% for func in funcionarios %}
-                        <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Filtro de Tipo de Treinamento -->
-            <div class="col-md-4">
-                <label for="tipo" class="form-label">Tipo de Treinamento</label>
-                <select name="tipo" id="tipo" class="form-select select2">
-                    <option value="">Todos</option>
-                    {% for tipo_choice in tipos_treinamento %}
-                        <option value="{{ tipo_choice.0 }}" {% if request.GET.tipo == tipo_choice.0 %}selected{% endif %}>{{ tipo_choice.1 }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Filtro de Status -->
-            <div class="col-md-4">
-                <label for="status" class="form-label">Status</label>
-                <select name="status" id="status" class="form-select select2">
-                    <option value="">Todos</option>
-                    <option value="cursando" {% if request.GET.status == "cursando" %}selected{% endif %}>Cursando</option>
-                    <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
-                    <option value="trancado" {% if request.GET.status == "trancado" %}selected{% endif %}>Trancado</option>
-                    <option value="requerido" {% if request.GET.status == "requerido" %}selected{% endif %}>Requerido</option>
-                </select>
-            </div>
+        <!-- Filtro: Colaborador -->
+        <div class="col-md-4">
+          <label for="funcionario" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-person-badge text-secondary"></i> Colaborador
+          </label>
+          <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtro por colaborador">
+            <option value="">Todos</option>
+            {% for func in funcionarios %}
+              <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
+            {% endfor %}
+          </select>
         </div>
-        <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+
+        <!-- Filtro: Tipo de Treinamento -->
+        <div class="col-md-4">
+          <label for="tipo" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-journal-bookmark-fill text-secondary"></i> Tipo de Treinamento
+          </label>
+          <select name="tipo" id="tipo" class="form-select select2" aria-label="Filtro por tipo de treinamento">
+            <option value="">Todos</option>
+            {% for tipo_choice in tipos_treinamento %}
+              <option value="{{ tipo_choice.0 }}" {% if request.GET.tipo == tipo_choice.0 %}selected{% endif %}>{{ tipo_choice.1 }}</option>
+            {% endfor %}
+          </select>
         </div>
+
+        <!-- Filtro: Status -->
+        <div class="col-md-4">
+          <label for="status" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-graph-up-arrow text-secondary"></i> Status
+          </label>
+          <select name="status" id="status" class="form-select select2" aria-label="Filtro por status">
+            <option value="">Todos</option>
+            <option value="cursando" {% if request.GET.status == "cursando" %}selected{% endif %}>Cursando</option>
+            <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
+            <option value="trancado" {% if request.GET.status == "trancado" %}selected{% endif %}>Trancado</option>
+            <option value="requerido" {% if request.GET.status == "requerido" %}selected{% endif %}>Requerido</option>
+          </select>
+        </div>
+
+        <!-- Botão Filtrar -->
+        <div class="col-12 text-center mt-2">
+          <button type="submit" class="btn btn-primary d-inline-flex align-items-center">
+            <i class="bi bi-search me-2"></i> Filtrar
+          </button>
+        </div>
+
+      </div>
     </form>
+  </div>
+</div>
 
+
+
+
+
+    <!-- Indicadores -->
     <div class="row mb-4">
-    <!-- Total de Treinamentos -->
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-header text-center">
-                <i class="bi bi-list-task"></i> Total de Treinamentos
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ total_treinamentos }}</h5>
-                <p class="card-text text-center">Todos os treinamentos cadastrados.</p>
-            </div>
-        </div>
+        {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Treinamentos" valor=total_treinamentos subtitulo="Todos os treinamentos cadastrados." %}
+        {% include 'partials/global/_card_indicador.html' with cor="success" titulo="Concluídos" valor=treinamentos_concluidos subtitulo="Treinamentos finalizados." %}
+        {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="Em Andamento" valor=treinamentos_em_andamento subtitulo="Treinamentos em curso." %}
+        {% include 'partials/global/_card_indicador.html' with cor="info" titulo="Requeridos" valor=treinamentos_requeridos subtitulo="Treinamentos planejados." %}
     </div>
-    
-    <!-- Treinamentos Concluídos -->
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-header text-center">
-                <i class="bi bi-check-circle"></i> Concluídos
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ treinamentos_concluidos }}</h5>
-                <p class="card-text text-center">Treinamentos finalizados.</p>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Treinamentos em Andamento -->
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-header text-center">
-                <i class="bi bi-hourglass-split"></i> Em Andamento
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ treinamentos_em_andamento }}</h5>
-                <p class="card-text text-center">Treinamentos cursando.</p>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Treinamentos Requeridos -->
-    <div class="col-md-3">
-        <div class="card text-white bg-info">
-            <div class="card-header text-center">
-                <i class="bi bi-exclamation-circle"></i> Requeridos
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ treinamentos_requeridos }}</h5>
-                <p class="card-text text-center">Treinamentos planejados ou exigidos.</p>
-            </div>
-        </div>
-    </div>
-</div>
 
-
-   <!-- Lista de Treinamentos -->
-<table class="table table-bordered text-center mt-4">
-    <thead>
-        <tr>            
-            <th class="align-middle">Colaboradores</th>
-            <th class="align-middle">Nome do Curso</th>
-            <th class="align-middle">Tipo</th>            
-            <th class="align-middle">Data de Conclusão</th>
-            <th class="align-middle">Carga Horária</th>
-            <th class="align-middle">Status</th>
-            <th class="align-middle">Certificado</th>
-            <th class="align-middle">Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for treinamento in treinamentos %}
-    <tr>            
-        <td class="align-middle">
-            <!-- Botão para abrir a modal -->
-            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalFuncionarios{{ treinamento.id }}">
-                <i class="bi bi-eye"></i>
-            </button>
-        </td>
-        <td class="align-middle">{{ treinamento.nome_curso }}</td>
-        <td class="align-middle">{{ treinamento.tipo|title }}</td>
-        <td class="align-middle">
-            {% if treinamento.data_fim %}
-                {{ treinamento.data_fim|date:"d/m/Y" }}
-            {% else %}
-                -
-            {% endif %}
-        </td>
-        <td class="align-middle">{{ treinamento.carga_horaria }}</td>
-        <td class="align-middle">
-            {% if treinamento.status == 'cursando' %}
-                <span class="badge bg-warning text-dark">Cursando</span>
-            {% elif treinamento.status == 'concluido' %}
-                <span class="badge bg-success text-white">Concluído</span>
-            {% elif treinamento.status == 'trancado' %}
-                <span class="badge bg-danger text-white">Trancado</span>
-            {% elif treinamento.status == 'requerido' %}
-                <span class="badge bg-info text-white">Requerido</span>
-            {% else %}
-                <span class="badge bg-secondary">Indefinido</span>
-            {% endif %}
-        </td>
-        <td class="align-middle">
-            {% if treinamento.anexo %}
-                <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank" title="Baixar Certificado">
-                    <i class="bi bi-patch-check"></i>
-                </a>
-            {% endif %}
-        </td>
-        <td class="align-middle">
-            {% if request.user|has_permission:"Funcionario.view_treinamento" %}
-
-            <a href="{% url 'visualizar_treinamento' treinamento.id %}" class="btn btn-sm btn-info" title="Visualizar">
-                <i class="bi bi-eye"></i>
-            </a>
-            {% endif %}
-            {% if request.user|has_permission:"Funcionario.change_treinamento" %}
-
-            <a href="{% url 'editar_treinamento' treinamento.id %}" class="btn btn-sm btn-warning" title="Editar">
-                <i class="bi bi-pencil-square"></i>
-            </a>
-            {% endif %}
-            {% if request.user|has_permission:"Funcionario.delete_treinamento" %}
-
-            <button type="button" class="btn btn-sm btn-danger" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirTreinamento{{ treinamento.id }}">
-                <i class="bi bi-trash"></i>
-            </button> 
-            {% endif %}
-
-        </td>
+    <!-- Tabela de Treinamentos -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover text-center align-middle">
+  <thead class="table-light">
+    <tr>
+      <th><i class="bi bi-people me-1"></i> Colaboradores</th>
+      <th><i class="bi bi-journal-text me-1"></i> Curso</th>
+      <th><i class="bi bi-bookmark-check me-1"></i> Tipo</th>
+      <th><i class="bi bi-calendar-check me-1"></i> Conclusão</th>
+      <th><i class="bi bi-hourglass-split me-1"></i> Carga Horária</th>
+      <th><i class="bi bi-bar-chart-line me-1"></i> Status</th>
+      <th><i class="bi bi-patch-check me-1"></i> Certificado</th>
+      <th><i class="bi bi-gear-fill me-1"></i> Ações</th>
     </tr>
+  </thead>
 
-        <!-- Modal para listar os funcionários -->
-        <div class="modal fade" id="modalFuncionarios{{ treinamento.id }}" tabindex="-1" aria-labelledby="modalFuncionariosLabel{{ treinamento.id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalFuncionariosLabel{{ treinamento.id }}">Colaboradores do Treinamento</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <ul class="list-group">
-                            {% for funcionario in treinamento.funcionarios.all %}
-                                <li class="list-group-item">{{ funcionario.nome }}</li>
-                            {% empty %}
-                                <li class="list-group-item">Nenhum colaborador cadastrado.</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+
+            <tbody>
+                {% for treinamento in treinamentos %}
+                <tr>
+                    <td>
+                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalFuncionarios{{ treinamento.id }}" title="Ver participantes">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                    <td>{{ treinamento.nome_curso }}</td>
+                    <td>{{ treinamento.tipo|title }}</td>
+                    <td>{% if treinamento.data_fim %}{{ treinamento.data_fim|date:"d/m/Y" }}{% else %}-{% endif %}</td>
+                    <td>{{ treinamento.carga_horaria }}</td>
+                    <td>
+                        {% if treinamento.status == 'cursando' %}
+                            <span class="badge bg-warning text-dark">Cursando</span>
+                        {% elif treinamento.status == 'concluido' %}
+                            <span class="badge bg-success">Concluído</span>
+                        {% elif treinamento.status == 'trancado' %}
+                            <span class="badge bg-danger">Trancado</span>
+                        {% elif treinamento.status == 'requerido' %}
+                            <span class="badge bg-info">Requerido</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Indefinido</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if treinamento.anexo %}
+                            <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank">
+                                <i class="bi bi-patch-check" aria-hidden="true"></i>
+                            </a>
+                        {% endif %}
+                    </td>
+                    <td class="d-flex justify-content-center flex-wrap gap-1">
+                        {% include 'partials/global/_botao_visualizar.html' with objeto=treinamento url_visualizar='visualizar_treinamento' label='treinamento' %}
+                        {% include 'partials/global/_botao_editar.html' with objeto=treinamento url_editar='editar_treinamento' label='treinamento' %}
+                        {% include 'partials/global/_botao_excluir.html' with objeto=treinamento url_excluir='excluir_treinamento' label='treinamento' %}
+                    </td>
+                </tr>
+
+                <!-- Modal de Funcionários -->
+                <div class="modal fade" id="modalFuncionarios{{ treinamento.id }}" tabindex="-1" aria-labelledby="modalFuncionariosLabel{{ treinamento.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalFuncionariosLabel{{ treinamento.id }}">Colaboradores do Treinamento</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <ul class="list-group">
+                                    {% for funcionario in treinamento.funcionarios.all %}
+                                        <li class="list-group-item">{{ funcionario.nome }}</li>
+                                    {% empty %}
+                                        <li class="list-group-item">Nenhum colaborador cadastrado.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+                {% endfor %}
+                {% if not treinamentos %}
+                    {% include 'partials/global/_sem_resultados.html' with item_nome="treinamento" %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
 
-        <!-- Modal de confirmação de exclusão -->
-        <div class="modal fade" id="modalExcluirTreinamento{{ treinamento.id }}" tabindex="-1" aria-labelledby="modalExcluirTreinamentoLabel{{ treinamento.id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalExcluirTreinamentoLabel{{ treinamento.id }}">Confirmar Exclusão</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Tem certeza de que deseja excluir o treinamento <strong>{{ treinamento.nome_curso }}</strong>?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <form action="{% url 'excluir_treinamento' treinamento.id %}" method="post" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Excluir</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <tr>
-            <td colspan="8" class="text-center align-middle">Nenhum treinamento cadastrado.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+    {% include 'partials/global/_paginacao.html' %}
 </div>
-
-
-<!-- Paginação -->
-<nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Primeira">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}">{{ num }}</a></li>
-            {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Próxima">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Última">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
-
-</div>
-
-<style>
-/* Ajustes para o Select2 dentro da Modal */
-#imprimirF003Modal .select2-container--default .select2-selection--single {
-    height: calc(2.25rem + 2px); /* Alinha com o restante dos inputs */
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #212529;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-}
-
-#imprimirF003Modal .select2-container {
-    z-index: 9999 !important; /* Evita que o Select2 fique atrás da modal */
-    width: 100% !important;
-}
-
-#imprimirF003Modal .select2-dropdown {
-    z-index: 1050; /* Faz o dropdown aparecer acima da modal */
-}
-
-#imprimirF003Modal #funcionario_modal + .select2-container {
-    width: 100% !important;
-}
-</style>
-
-
-
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const toasts = document.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            const bootstrapToast = new bootstrap.Toast(toast);
-            bootstrapToast.show();
-        });
-    });
-</script>
-
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Inicializa o Select2
         $('.select2').select2({
             placeholder: 'Selecione uma opção',
             allowClear: true,
             width: '100%',
         });
 
-        // Garante que o Select2 fique funcional na modal
         $('#imprimirF003Modal').on('shown.bs.modal', function () {
             $('#funcionario_modal').select2({
-                placeholder: 'Selecione um colaborador',
-                allowClear: true,
-                dropdownParent: $('#imprimirF003Modal') // Garante que o dropdown fique dentro da modal
+                dropdownParent: $('#imprimirF003Modal')
             });
         });
 
-        // Configura o formulário de impressão
-        document.getElementById('imprimirF003Form').addEventListener('submit', function (event) {
-            event.preventDefault();
+        document.getElementById('imprimirF003Form').addEventListener('submit', function (e) {
+            e.preventDefault();
             const funcionarioId = document.getElementById('funcionario_modal').value;
-
             if (funcionarioId) {
-                // Ajusta a URL para a impressão
                 this.action = `/treinamentos/imprimir_f003/${funcionarioId}/`;
                 this.submit();
             } else {
-                alert('Por favor, selecione um colaborador.');
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-white bg-danger border-0 show';
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+                toast.innerHTML = '<div class="d-flex"><div class="toast-body">Por favor, selecione um colaborador.</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button></div>';
+                document.querySelector('.toast-container')?.appendChild(toast);
             }
         });
     });
 </script>
-
 
 {% endblock %}

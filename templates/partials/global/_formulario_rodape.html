@@ -1,0 +1,41 @@
+<style>
+  @media print {
+    .rodape-institucional, .rodape-formulario {
+      position: fixed;
+      bottom: 10px;
+      font-size: 9pt;
+      color: #555;
+      padding-top: 4px;
+    }
+
+    .rodape-barra {
+      position: fixed;
+      bottom: 28px; /* altura acima do texto do rodapé */
+      left: 10mm;
+      right: 10mm;
+      border-top: 1px solid #000;
+      height: 0;
+    }
+
+    .rodape-institucional {
+      left: 10mm;
+      text-align: left;
+    }
+
+    .rodape-formulario {
+      right: 10mm;
+      text-align: right;
+      font-weight: bold;
+    }
+  }
+</style>
+
+<div class="rodape-barra d-print-block d-none"></div>
+
+<span class="rodape-institucional d-print-block d-none">
+  Sistema de Gestão da Qualidade (SGS) – Bras-Mol Molas e Estampados Ltda
+</span>
+
+<span class="rodape-formulario d-print-block d-none">
+  {{ numero_formulario }}
+</span>

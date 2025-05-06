@@ -90,7 +90,7 @@ def cadastrar_treinamento(request):
 
     return render(
         request,
-        "treinamentos/cadastrar_treinamento.html",
+        "treinamentos/form_treinamento.html",
         {
             "form": form,
             "funcionarios": funcionarios_ativos,  # Envia a lista de funcionários ativos para o template
@@ -115,7 +115,14 @@ def editar_treinamento(request, id):
     if form.instance.data_fim:
         form.initial["data_fim"] = form.instance.data_fim.strftime("%Y-%m-%d")
 
-    return render(request, "treinamentos/editar_treinamento.html", {"form": form})
+    return render(
+        request,
+        "treinamentos/form_treinamento.html",
+        {
+            "form": form,
+            "funcionarios": Funcionario.objects.filter(status="Ativo").order_by("nome"),
+        },
+    )
 
 
 @login_required
@@ -135,7 +142,10 @@ def visualizar_treinamento(request, treinamento_id):
     return render(
         request,
         "treinamentos/visualizar_treinamento.html",
-        {"treinamento": treinamento},
+        {
+            "treinamento": treinamento,
+            "now": timezone.now(),  # adiciona data/hora atual
+        },
     )
 
 
@@ -267,6 +277,7 @@ def exportar_treinamentos_csv(request):
     return response
 
 
+
 @login_required
 def levantamento_treinamento(request):
     filtro_departamento = request.GET.get("departamento", "")
@@ -279,17 +290,17 @@ def levantamento_treinamento(request):
         try:
             ano_inicio = datetime.strptime(filtro_data_inicio, "%Y-%m-%d").year
         except ValueError:
-            ano_inicio = None  # Define como None se o formato for inválido
+            ano_inicio = None
 
-    # Filtros
+    # Filtros de funcionários
     funcionarios = Funcionario.objects.all()
     if filtro_departamento:
         funcionarios = funcionarios.filter(local_trabalho=filtro_departamento)
 
-    # Filtra os treinamentos associados aos funcionários filtrados
+    # Treinamentos requeridos associados aos funcionários filtrados
     treinamentos = Treinamento.objects.filter(
         funcionarios__in=funcionarios,
-        status="requerido",  # Apenas treinamentos com o status "Requerido"
+        status="requerido"
     )
     if filtro_data_inicio:
         treinamentos = treinamentos.filter(data_inicio__gte=filtro_data_inicio)
@@ -301,17 +312,20 @@ def levantamento_treinamento(request):
         funcionarios.first().responsavel if funcionarios.exists() else None
     )
 
-    # Anotação para status da situação
-    treinamentos = treinamentos.annotate(
-        situacao_treinamento=Case(
-            When(status="aprovado", then=Value("APROVADO")),
-            When(status="reprovado", then=Value("REPROVADO")),
-            default=Value("PENDENTE"),
-            output_field=CharField(),
+    # Anota a situação do treinamento e ordena por nome do funcionário
+    treinamentos = (
+        treinamentos
+        .annotate(
+            situacao_treinamento=Case(
+                When(status="aprovado", then=Value("APROVADO")),
+                When(status="reprovado", then=Value("REPROVADO")),
+                default=Value("PENDENTE"),
+                output_field=CharField(),
+            )
         )
+        .order_by("funcionarios__nome")
     )
 
-    # Renderiza o template
     return render(
         request,
         "treinamentos/levantamento_treinamento.html",
@@ -322,7 +336,7 @@ def levantamento_treinamento(request):
             "filtro_departamento": filtro_departamento,
             "filtro_data_inicio": filtro_data_inicio,
             "filtro_data_fim": filtro_data_fim,
-            "ano_inicio": ano_inicio,  # Envia o ano para o template
+            "ano_inicio": ano_inicio,
             "treinamentos": treinamentos,
             "chefia_imediata": chefia_imediata,
         },

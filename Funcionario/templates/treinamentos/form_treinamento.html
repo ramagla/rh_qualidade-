@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Cadastro de Treinamentos{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_form_errors.html' %}
+
+<div class="container mt-5">
+  {% include 'partials/global/_header_titulo.html' with titulo="Cadastro de Treinamento" icone="bi bi-journal-richtext" emoji="📚" %}
+
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {% csrf_token %}
+
+    <div class="accordion" id="accordionTreinamento">
+
+      <!-- 🔹 Seção 1: Dados do Treinamento -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="heading1">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
+            <i class="bi bi-person-lines-fill me-2" aria-hidden="true"></i> Dados do Treinamento
+          </button>
+        </h2>
+        <div id="collapse1" class="accordion-collapse collapse show" aria-labelledby="heading1" data-bs-parent="#accordionTreinamento">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="funcionario" class="form-label"><i class="bi bi-people-fill me-1"></i> Colaboradores:</label>
+              {{ form.funcionarios|add_class:"form-select select2" }}
+            </div>
+            <div class="col-md-6">
+              <label for="tipo" class="form-label"><i class="bi bi-award-fill me-1"></i> Tipo de Treinamento:</label>
+              {{ form.tipo }}
+            </div>
+            <div class="col-md-6">
+              <label for="categoria" class="form-label"><i class="bi bi-tags-fill me-1"></i> Categoria:</label>
+              {{ form.categoria }}
+            </div>
+            <div class="col-md-6">
+              <label for="nome_curso" class="form-label"><i class="bi bi-book-fill me-1"></i> Nome do Curso:</label>
+              {{ form.nome_curso }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🔹 Seção 2: Detalhes do Curso -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="heading2">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+            <i class="bi bi-info-circle me-2" aria-hidden="true"></i> Detalhes do Curso
+          </button>
+        </h2>
+        <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2" data-bs-parent="#accordionTreinamento">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="instituicao_ensino" class="form-label"><i class="bi bi-building me-1"></i> Instituição de Ensino:</label>
+              {{ form.instituicao_ensino }}
+            </div>
+            <div class="col-md-6">
+              <label for="status" class="form-label"><i class="bi bi-flag-fill me-1"></i> Status:</label>
+              {{ form.status }}
+            </div>
+            <div class="col-md-6" id="situacao-container" style="display: none;">
+              <label for="situacao" class="form-label"><i class="bi bi-info-square-fill me-1"></i> Situação:</label>
+              {{ form.situacao }}
+            </div>
+            <div class="col-md-6">
+              <fieldset class="border p-2">
+                <legend class="float-none w-auto px-2 fs-6"><i class="bi bi-calendar2-plus-fill me-1"></i> Planejado? </legend>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="planejado" id="planejado_sim" value="sim" {% if form.planejado.value == 'sim' %}checked{% endif %}>
+                  <label class="form-check-label" for="planejado_sim">Sim</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="planejado" id="planejado_nao" value="nao" {% if form.planejado.value == 'nao' %}checked{% endif %}>
+                  <label class="form-check-label" for="planejado_nao">Não</label>
+                </div>
+              </fieldset>
+            </div>
+          </div>
+        </div>
+      </div>
+
+   <!-- 🔹 Seção 3: Datas e Anexo -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="heading3">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+      <i class="bi bi-calendar-check me-2" aria-hidden="true"></i> Duração e Arquivo
+    </button>
+  </h2>
+  <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="heading3" data-bs-parent="#accordionTreinamento">
+    <div class="accordion-body row g-3">
+
+      <div class="col-md-6">
+        <label for="data_inicio" class="form-label">
+          <i class="bi bi-calendar-event me-1"></i> Data de Início:
+        </label>
+        {{ form.data_inicio }}
+      </div>
+
+      <div class="col-md-6">
+        <label for="data_fim" class="form-label">
+          <i class="bi bi-calendar-check me-1"></i> Data de Término:
+        </label>
+        {{ form.data_fim }}
+      </div>
+
+      <div class="col-md-6">
+        <label for="carga_horaria" class="form-label">
+          <i class="bi bi-clock-fill me-1"></i> Carga Horária:
+        </label>
+        {{ form.carga_horaria }}
+      </div>
+
+      <div class="col-md-12">
+        <div class="border rounded p-3 bg-light">
+          <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" for="id_anexo">
+            <i class="bi bi-paperclip text-primary"></i>
+            Anexo de Certificado ou Lista de Presença
+          </label>
+
+          {% if form.instance.anexo %}
+            <div class="d-flex justify-content-between align-items-center bg-white border rounded px-3 py-2 mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-text text-muted"></i>
+                <a href="{{ form.instance.anexo.url }}" target="_blank" class="link-primary text-truncate" style="max-width: 300px;">
+                  {{ form.instance.anexo.name|cut:"treinamentos/" }}
+                </a>
+              </div>
+              <div class="form-check mb-0">
+                <input type="checkbox"
+                       name="{{ form.anexo.html_name }}-clear"
+                       id="id_anexo-clear"
+                       class="form-check-input">
+                <label class="form-check-label small" for="id_anexo-clear">Limpar</label>
+              </div>
+            </div>
+          {% endif %}
+
+          <input type="file"
+                 name="{{ form.anexo.html_name }}"
+                 id="id_anexo"
+                 class="form-control">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+      <!-- 🔹 Seção 4: Observações -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="heading4">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+            <i class="bi bi-chat-dots me-2" aria-hidden="true"></i> Observações
+          </button>
+        </h2>
+        <div id="collapse4" class="accordion-collapse collapse" aria-labelledby="heading4" data-bs-parent="#accordionTreinamento">
+          <div class="accordion-body">
+            <div class="col-md-12">
+              <label for="descricao" class="form-label"><i class="bi bi-card-text me-1"></i> Descrição (Opcional):</label>
+              {{ form.descricao }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar="lista_treinamentos" %}
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const statusSelect = document.getElementById('id_status');
+    const situacaoContainer = document.getElementById('situacao-container');
+
+    function toggleSituacao() {
+      if (statusSelect.value === 'requerido') {
+        situacaoContainer.style.display = 'block';
+      } else {
+        situacaoContainer.style.display = 'none';
+        const situacaoSelect = document.getElementById('id_situacao');
+        if (situacaoSelect) situacaoSelect.value = '';
+      }
+    }
+
+    if (statusSelect) {
+      statusSelect.addEventListener('change', toggleSituacao);
+      toggleSituacao();
+    }
+
+    const cargaInput = document.getElementById('id_carga_horaria');
+    if (cargaInput) {
+      cargaInput.addEventListener('blur', function () {
+        if (cargaInput.value && !cargaInput.value.endsWith('h')) {
+          cargaInput.value += 'h';
+        }
+      });
+    }
+
+    const anexoInput = document.getElementById('id_anexo');
+    const currentAnexoDiv = document.getElementById('current-anexo');
+    if (anexoInput) {
+      anexoInput.addEventListener('change', function () {
+        if (anexoInput.files.length > 0 && currentAnexoDiv) {
+          currentAnexoDiv.style.display = 'none';
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

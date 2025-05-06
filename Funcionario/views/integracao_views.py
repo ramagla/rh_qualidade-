@@ -72,7 +72,7 @@ def lista_integracoes(request):
     # Não é necessário nenhum ajuste adicional aqui para o PDF, pois será renderizado diretamente no template.
     return render(
         request,
-        "funcionarios/integracao/lista_integracoes.html",
+        "integracao/lista_integracoes.html",
         {
             "integracoes": page_obj,
             "page_obj": page_obj,  # Ordenado pelo nome do funcionário
@@ -87,13 +87,18 @@ def lista_integracoes(request):
 
 
 # View para visualizar uma integração específica
+from django.utils.timezone import now  # Adicione no topo, se ainda não tiver
+
 @login_required
 def visualizar_integracao(request, integracao_id):
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
     return render(
         request,
-        "funcionarios/integracao/visualizar_integracao.html",
-        {"integracao": integracao},
+        "integracao/visualizar_integracao.html",
+        {
+            "integracao": integracao,
+            "now": now(),  # Passa a data e hora atual
+        },
     )
 
 
@@ -108,13 +113,14 @@ def cadastrar_integracao(request):
             integracao = form.save()
             messages.success(request, "Integração cadastrada com sucesso.")
             return redirect(reverse("lista_integracoes"))
-        else:
-            print(form.errors)  # Debug para erros
     else:
         form = IntegracaoFuncionarioForm()
     return render(
-        request, "funcionarios/integracao/cadastrar_integracao.html", {"form": form}
+        request,
+        "integracao/form_integracao.html",
+        {"form": form, "integracao": None},
     )
+
 
 
 # View para excluir uma integração
@@ -142,9 +148,10 @@ def editar_integracao(request, integracao_id):
         form = IntegracaoFuncionarioForm(instance=integracao)
     return render(
         request,
-        "funcionarios/integracao/editar_integracao.html",
+        "integracao/form_integracao.html",
         {"form": form, "integracao": integracao},
     )
+
 
 
 @login_required
@@ -156,6 +163,6 @@ def imprimir_integracao(request, integracao_id):
 
     return render(
         request,
-        "funcionarios/integracao/imprimir_integracao.html",
+        "integracao/imprimir_integracao.html",
         {"integracao": integracao},
     )

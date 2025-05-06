@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Formulário de Integração - {{ integracao.funcionario.nome }}{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'header.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Integração de Funcionário" icone="bi bi-person-badge-fill" emoji="📋" %}
+
+<div class="container pdf-container">
+  <!-- Texto inicial em card estilizado -->
+<div class="card bg-light border-0 shadow-sm mb-4">
+  <div class="card-body text-center py-3 px-4">
+    <div class="mb-2">
+      <i class="bi bi-info-circle-fill fs-2 text-primary" aria-hidden="true"></i>
+
+    </div>
+    <p class="mb-2 fw-semibold">
+      O colaborador ora contratado necessita de informações adequadas que facilitem sua integração na empresa.
+    </p>
+    <p class="mb-0 fw-semibold">
+      Solicitamos a colaboração dos srs. Superiores hierárquicos. Colocando “X” nos itens abaixo, à medida em que os mesmos forem realizados.
+    </p>
+  </div>
+</div>
+
+  <!-- Cartão de Informações da Integração -->
+  <div class="info-card mb-4 d-flex flex-wrap gap-3">
+    <div class="info-column">
+<h5><i class="bi bi-person-fill me-1"></i><strong>Nome do Colaborador:</strong> {{ integracao.funcionario.nome }}</h5>
+<h5><i class="bi bi-diagram-3-fill me-1"></i><strong>Departamento/Setor:</strong> {{ integracao.funcionario.local_trabalho }}</h5>
+    </div>
+  </div>
+
+  <!-- Checklist -->
+  <div class="checklist">
+    <h4><i class="bi bi-check2-square me-2"></i>Integração RH</h4>
+    <ul class="mb-4">
+      <li><input type="checkbox"> Explicação de seus direitos e deveres.</li>
+      <li><input type="checkbox"> Apresentação ao seu superior.</li>
+      <li><input type="checkbox"> Explicação dos benefícios concedidos pela empresa.</li>
+      <li><input type="checkbox"> Explicação da sua descrição de cargo.</li>
+      <li><input type="checkbox"> Política de Qualidade da empresa.</li>
+    </ul>
+
+    <h4><i class="bi bi-check2-square me-2"></i>Integração no Departamento</h4>
+    <ul class="mb-4">
+      <li><input type="checkbox"> Apresentação aos colegas de trabalho.</li>
+      <li><input type="checkbox"> Apresentação ao local de trabalho.</li>
+      <li><input type="checkbox"> Visita à fábrica.</li>
+      <li><input type="checkbox"> Localização de banheiros, vestiários, etc.</li>
+      <li><input type="checkbox"> Entrega de EPIs.</li>
+      <li><input type="checkbox"> Instruções operacionais pertinentes.</li>
+      <li><input type="checkbox"> Regras de segurança no setor.</li>
+      <li><input type="checkbox"> Entrega de ferramentas de trabalho.</li>
+      <li><input type="checkbox"> Entrega do C.E.C.</li>
+      <li><input type="checkbox" {% if integracao.requer_treinamento %}checked{% endif %}> O colaborador requer treinamento?</li>
+    </ul>
+
+    {% if integracao.requer_treinamento and integracao.treinamentos_requeridos %}
+<h5><i class="bi bi-journal-check me-1"></i><strong>Treinamentos Requeridos:</strong></h5>
+      <ul style="list-style-type: square;">
+        <li>{{ integracao.treinamentos_requeridos|safe }}</li>
+      </ul>
+    {% endif %}
+
+<h5><i class="bi bi-whatsapp me-1"></i><strong>Grupo WhatsApp:</strong></h5>
+    <div class="d-flex gap-3 mt-1">
+      <label><input type="checkbox" {% if integracao.grupo_whatsapp %}checked{% endif %}> Sim</label>
+      <label><input type="checkbox" {% if not integracao.grupo_whatsapp %}checked{% endif %}> Não</label>
+    </div>
+
+<h5 class="mt-3"><i class="bi bi-calendar-event-fill me-1"></i><strong>Data de Integração:</strong> {{ integracao.data_integracao|date:"d/m/Y" }}</h5>
+  </div>
+
+  <!-- Assinaturas -->
+  <div class="mt-5">
+    <table class="info-table" style="width: 100%; border: 1px solid #000; border-collapse: collapse;">
+      <tr>
+        <td style="text-align: center; border: 1px solid #000;">
+          <p><strong>Assinatura do Colaborador</strong></p>
+          <div style="border-top: 1px dashed #333; margin-top: 20px;">{{ integracao.funcionario.nome }}</div>
+          <div><em>Data:</em> ___/___/____</div>
+        </td>
+        <td style="text-align: center; border: 1px solid #000;">
+          <p><strong>Assinatura do Gestor</strong></p>
+          <div style="border-top: 1px dashed #333; margin-top: 20px;">{{ integracao.funcionario.responsavel }}</div>
+          <div><em>Data:</em> ___/___/____</div>
+        </td>
+        <td style="text-align: center; border: 1px solid #000;">
+          <p><strong>Assinatura do Responsável R.H.</strong></p>
+          <div style="border-top: 1px dashed #333; margin-top: 20px;">Responsável R.H.</div>
+          <div><em>Data:</em> ___/___/____</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- Rodapé fixo com número do formulário -->
+{% include "partials/global/_formulario_rodape.html" with numero_formulario="F146 Rev.02" %}
+{% endblock %}

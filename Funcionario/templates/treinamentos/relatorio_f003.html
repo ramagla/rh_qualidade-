@@ -1,300 +1,148 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mapeamento de Treinamento - {{ funcionario.nome }}{% endblock %}
 
 {% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
 {% include 'header.html' %}
+<div role="toolbar" class="mb-3">
+  {% include 'partials/global/_botao_impressao.html' %}
+</div>
+{% include 'partials/global/_header_titulo.html' with titulo="Mapeamento de Treinamento" icone="bi bi-person-badge-fill" emoji="🧠" %}
 
-<div class="container mt-5">
-    <!-- Título Centralizado -->
-    <div class="text-center mb-4 d-print-none">
-        <button onclick="imprimir()" class="btn btn-primary">
-            <i class="fas fa-print"></i> Imprimir
-        </button>
+<section class="d-flex flex-wrap gap-3 justify-content-center mb-4 info-cards-pares">
+  <div class="card flex-fill min-w-300 max-w-500" style="flex: 1 1 45%;">
+    <div class="card-header bg-primary text-white fw-bold">
+      <i class="bi bi-person-lines-fill me-1"></i> Dados Pessoais
     </div>
-
-    <!-- Cartão de Informações do Funcionário -->
-    <div class="info-card">
-        <div class="info-column">
-            <h5><strong>Nome:</strong> {{ funcionario.nome }}</h5>
-            <h5><strong>N° do Registro:</strong> {{ funcionario.numero_registro }}</h5>
-            <h5><strong>Data de Admissão:</strong> {{ funcionario.data_admissao|date:"d/m/Y" }}</h5>
-            <h5><strong>Cargo Inicial:</strong> {{ funcionario.cargo_inicial }}</h5>
-            <h5><strong>Cargo Atual:</strong> {{ funcionario.cargo_atual }}</h5>
-        </div>
-        <div class="info-column">
-            <h5><strong>Departamento:</strong> {{ funcionario.local_trabalho }}</h5>
-<h5><strong>Data de Integração:</strong> 
-    
-    {% if integracao %}
-        {{ integracao.data_integracao|date:"d/m/Y" }}
-    {% else %}
-        <span style="color: red;">Não cadastrada</span>
-    {% endif %}
-</h5>
-
-
-
-            <h5><strong>Status:</strong> 
-                {% if funcionario.status == "Inativo" %}
-                    <span style="color: red; font-weight: bold;">{{ funcionario.status }}</span>
-                {% elif funcionario.status == "Ativo" %}
-                    <span style="color: green; font-weight: bold;">{{ funcionario.status }}</span>
-                {% else %}
-                    {{ funcionario.status }}
-                {% endif %}
-            </h5>
-            <h5><strong>Responsável:</strong> {{ funcionario.responsavel }}</h5>
-            <h5><strong>Cargo:</strong> {{ funcionario.cargo_responsavel.nome }}</h5>
-
-        </div>
+    <div class="card-body">
+      <p><strong>Nome:</strong> {{ funcionario.nome }}</p>
+      <p><strong>Nº do Registro:</strong> {{ funcionario.numero_registro }}</p>
+      <p><strong>Data de Admissão:</strong> {{ funcionario.data_admissao|date:"d/m/Y" }}</p>
+      <p><strong>Cargo Inicial:</strong> {{ funcionario.cargo_inicial }}</p>
+      <p><strong>Cargo Atual:</strong> {{ funcionario.cargo_atual|default:"-" }}</p>
     </div>
+  </div>
 
-     <!-- Escolaridade -->
-    <div class="escolaridade mt-4 text-center">
-        <h5><strong>Nível de Escolaridade:</strong> {{ funcionario.escolaridade }}</h5>
+  <div class="card flex-fill min-w-300 max-w-500" style="flex: 1 1 45%;">
+    <div class="card-header bg-secondary text-white fw-bold">
+      <i class="bi bi-briefcase-fill me-1"></i> Dados Corporativos
+
     </div>
-
-    <!-- Seção de Experiência Profissional -->
-    <div class="experiencia-profissional mt-4">
-        <h2 class="section-title">Experiência Profissional</h2>
-        <p >O colaborador possui a experiência profissional comprovada, conforme definido na descrição de cargo ?</p>
-        <p><strong>{{ funcionario.experiencia_profissional }}</strong> 
-            {% if funcionario.experiencia_profissional == "Sim" %}
-                (Anexar Curriculum ou cópia da Carteira Profissional no prontuário)
-            {% else %}
-                (Justificar através da Avaliação Prática da Atividade, devidamente assinada em {{ funcionario.data_avaliacao|date:"d/m/Y" }})
-            {% endif %}
-        </p>
-    </div>
-   
-
-    <!-- Seção de Treinamentos -->
-    <div class="treinamentos-section mt-5">
-    <h2 class="section-title">Treinamentos</h2>
-    <hr style="width: 50px; border: 2px solid #007bff; margin: 0 auto;">
-    <div class="p-4 shadow-lg rounded">
-        {% if funcionario.treinamentos.all %}
-            <table class="custom-table text-center">
-                <thead>
-                    <tr>
-                        <th>Nome do Curso</th>
-                        <th>Tipo de Treinamento</th>
-                        <th>Categoria</th>
-                        <th>Instituição de Ensino</th>                        
-                        <th>Status</th>
-                        <th>Carga Horária</th>                        
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for treinamento in funcionario.treinamentos.all %}
-                        <tr>
-                            <td>{{ treinamento.nome_curso }}</td>
-                            <td>{{ treinamento.get_tipo_display }}</td>
-                            <td>{{ treinamento.get_categoria_display }}</td>
-                            <td>{{ treinamento.instituicao_ensino }}</td>                           
-                            <td>
-                                {% if treinamento.status == 'concluido' %}
-                                    <span style="color: green; font-weight: bold;">{{ treinamento.get_status_display }}</span>
-                                {% elif treinamento.status == 'trancado' %}
-                                    <span style="color: red; font-weight: bold;">{{ treinamento.get_status_display }}</span>
-                                {% else %}
-                                    <span style="color: blue; font-weight: bold;">{{ treinamento.get_status_display }}</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ treinamento.carga_horaria }}</td>                            
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="card-body">
+      <p><strong>Departamento:</strong> {{ funcionario.local_trabalho }}</p>
+      <p><strong>Data de Integração:</strong>
+        {% if integracao %}
+          {{ integracao.data_integracao|date:"d/m/Y" }}
         {% else %}
-            <p class="text-center">Nenhum treinamento cadastrado.</p>
+          <span class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Não cadastrada</span>
         {% endif %}
+      </p>
+      <p><strong>Status:</strong>
+        <span class="fw-bold {% if funcionario.status == 'Ativo' %}text-success{% elif funcionario.status == 'Inativo' %}text-danger{% else %}text-muted{% endif %}">
+          {{ funcionario.status }}
+        </span>
+      </p>
+      <p><strong>Responsável:</strong> {{ funcionario.responsavel|default:"-" }}</p>
+      <p><strong>Cargo:</strong> {{ funcionario.cargo_responsavel.nome|default:"-" }}</p>
     </div>
-</div>
-
-<!-- Número do Formulário (visível apenas na impressão) -->
-<div class="numero-formulario d-none d-print-block">
-    F003 Rev.04
-</div>
+  </div>
+</section>
 
 <style>
-    /* Ajuste geral de layout */
-    .info-card {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
+.info-cards-pares .card {
+  border: 1px solid #dee2e6;
+  box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,.05);
+  margin-bottom: 1rem;
+}
 
-    .info-column {
-        width: 48%; /* Divide em duas colunas */
-    }
+.min-w-300 {
+  min-width: 300px;
+}
+.max-w-500 {
+  max-width: 500px;
+}
 
-      /* Estilos personalizados da tabela sem interferência do Bootstrap */
-    .custom-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .custom-table th, .custom-table td {
-        padding: 4px;
-        border: 1px solid #ddd;
-        font-size: 10px;
-        text-align: center;
-    }
-    .custom-table th {
-        background-color: #e7f1ff;
-        color: #333;
-        font-weight: bold;
-    }
-    .custom-table tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-
-    /* Estilo de impressão */
-    @media print {
-        /* Estilo de fonte menor para impressão */
-        body {
-            font-size: 10px; /* Ajuste o tamanho da fonte conforme necessário */
-        }
-
-          .header {
-            display: flex;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            margin-bottom: 20px;
-            page-break-after: avoid;
-        }
-
-         /* Reduz o tamanho do logotipo para impressão */
-        .left-section img {
-            width: 50px; /* Reduzido para impressão */
-            height: auto;
-            margin-right: 10px;
-        }
-
-        /* Define o texto do cabeçalho em 10px */
-        .center-section {
-            font-size: 10px;
-            color: #4a4a4a;
-            margin-left: 10px;
-        }
-
-        /* Reduz o texto principal da empresa para 10px */
-        .center-section strong {
-            font-size: 10px;
-            color: #333;
-        }
-
-        /* Ajusta a seção da data de impressão */
-        .right-section {
-            font-size: 10px;
-            color: #4a4a4a;
-            margin-left: auto;
-            text-align: right;
-            margin-right: 10px;
-        }
-
-        
-        /* Número do Formulário no canto inferior direito */
-        .numero-formulario {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            font-size: 10px; /* Ajuste o tamanho da fonte conforme necessário */
-            color: #333;
-        }
-
-        /* Remover bordas internas */
-        .info-card {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        /* Estilos gerais */
-        .custom-table th, .custom-table td {
-        padding: 4px;
-        border: 1px solid #ddd;
-        font-size: 10px;
-        text-align: center;
-    }
-
-    .custom-table th {
-        background-color: #e7f1ff;
-        color: #333;
-        font-weight: bold;
-    }
-
-    .custom-table tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
+/* Impressão: manter lado a lado e remover quebra */
+@media print {
+  .info-cards-pares {
+    flex-wrap: nowrap !important;
+    gap: 20px !important;
+    justify-content: space-between !important;
+  }
+  .info-cards-pares .card {
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+}
 
 
-        .section-title, h2 {
-            text-align: center;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        /* Ocultar o botão imprimir */
-        .d-print-none { display: none !important; }
-    }
 </style>
 
-<script>
-function imprimir() {
-    var conteudo = document.querySelector('.container').innerHTML;
-    var novaJanela = window.open('', '_blank', 'width=800,height=600');
-    
-    novaJanela.document.write(`
-        <html>
-            <head>
-                <style>
-                    /* Estilos gerais */
-                    body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }
-                    .info-card { display: flex; gap: 20px; flex-wrap: wrap; }
-                    .info-column { width: 48%; }
-                    .numero-formulario { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #333; }
-                    
-                    /* Estilos da tabela */
-                     /* Estilos da tabela */
-                    th, td {
-                        padding: 4px; /* Compacta o preenchimento */
-                        border: 1px solid #ddd; /* Borda leve */
-                        font-size: 10px; /* Tamanho da fonte */
-                        text-align: center; /* Centraliza o texto */
-                    }
-                    th {
-                        background-color: #e7f1ff; /* Azul claro para o cabeçalho */
-                        color: #333; /* Texto escuro no cabeçalho */
-                        font-weight: bold; /* Negrito no cabeçalho */
-                    }
-                    tr:nth-child(even) {
-                        background-color: #f9f9f9; /* Fundo cinza claro nas linhas pares */
-                    }
-                    
-                    /* Estilos específicos para impressão */
-                    @media print {
-                        /* Ocultar botão de impressão */
-                        .d-print-none { display: none !important; }
-                    }
-                </style>
-            </head>
-            <body>
-                <h2>Mapeamento de Treinamento</h2>
-                ${conteudo}
-                <div class="numero-formulario">F003 Rev.04</div>
-            </body>
-        </html>
-    `);
+  <!-- Escolaridade -->
+  <section class="text-center mt-4">
+    <h5><strong>Nível de Escolaridade:</strong> {{ funcionario.escolaridade }}</h5>
+  </section>
 
-    novaJanela.document.close();
-    novaJanela.print();
-    novaJanela.close();
-}
-</script>
+  <!-- Experiência Profissional -->
+  <section class="mt-4" aria-labelledby="experiencia">
+    <div class="card p-3">
+      <h2 id="experiencia" class="section-title text-center">🧠 Experiência Profissional</h2>
+      <p class="text-center">O colaborador possui a experiência profissional comprovada, conforme definido na descrição de cargo?</p>
+      <p class="text-center">
+        <strong>{{ funcionario.experiencia_profissional }}</strong>
+        {% if funcionario.experiencia_profissional == "Sim" %}
+          (Anexar Curriculum ou cópia da Carteira Profissional no prontuário)
+        {% else %}
+          (Justificar com Avaliação Prática da Atividade assinada em {{ funcionario.data_avaliacao|date:"d/m/Y" }})
+        {% endif %}
+      </p>
+    </div>
+  </section>
 
+  <!-- Treinamentos -->
+  <section class="mt-5" aria-labelledby="treinamentos">
+    <h2 id="treinamentos" class="section-title text-center">📚 Treinamentos</h2>
+    <p class="text-center text-muted">Lista de treinamentos realizados pelo colaborador</p>
+    <div class="p-4 shadow-lg rounded table-responsive">
+      {% if funcionario.treinamentos.exists %}
+        <table class="table custom-table table-bordered text-center">
+          <thead class="table-light">
+            <tr>
+              <th title="Curso"><i class="bi bi-book" aria-hidden="true"></i> Curso</th>
+              <th title="Tipo"><i class="bi bi-sliders" aria-hidden="true"></i> Tipo</th>
+              <th title="Categoria"><i class="bi bi-tags" aria-hidden="true"></i> Categoria</th>
+              <th title="Instituição"><i class="bi bi-building" aria-hidden="true"></i> Instituição</th>
+              <th title="Status"><i class="bi bi-check2-circle" aria-hidden="true"></i> Status</th>
+              <th title="Carga Horária"><i class="bi bi-clock" aria-hidden="true"></i> Carga Horária</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for treinamento in funcionario.treinamentos.all %}
+              <tr>
+                <td>{{ treinamento.nome_curso }}</td>
+                <td>{{ treinamento.get_tipo_display }}</td>
+                <td>{{ treinamento.get_categoria_display }}</td>
+                <td>{{ treinamento.instituicao_ensino }}</td>
+                <td>
+                  <span class="fw-bold {% if treinamento.status == 'concluido' %}text-success{% elif treinamento.status == 'trancado' %}text-danger{% else %}text-primary{% endif %}">
+                    {{ treinamento.get_status_display }}
+                  </span>
+                </td>
+                <td>{{ treinamento.carga_horaria }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        {% include "partials/global/_sem_resultados.html" with item_nome="treinamento" %}
+      {% endif %}
+    </div>
+  </section>
+</div>
 
-
-
-
+<!-- Rodapé com número do formulário -->
+{% include "partials/global/_formulario_rodape.html" with numero_formulario="F003 Rev.04" %}
 {% endblock %}

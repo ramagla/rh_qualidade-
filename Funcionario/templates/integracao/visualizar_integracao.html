@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
+
+{% block title %}Visualização da Integração{% endblock %}
+
+{% block content %}
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
+{% include 'header.html' %}
+
+  <div id="relatorio-area">
+    <div class="pdf-container">
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>📋 Integração</h1>
+        <p>Visualização detalhada da integração do colaborador</p>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table">
+            <!-- Informações da Integração -->
+            <tr>
+              <th class="align-middle">Colaborador</th>
+              <td class="align-middle">{{ integracao.funcionario.nome }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Data de Integração</th>
+              <td class="align-middle">{{ integracao.data_integracao|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Grupo WhatsApp</th>
+              <td class="align-middle">{{ integracao.grupo_whatsapp|yesno:"Sim,Não" }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Requer Treinamento</th>
+              <td class="align-middle">{{ integracao.requer_treinamento|yesno:"Sim,Não" }}</td>
+            </tr>
+
+            <!-- PDF da Integração -->
+            <tr>
+              <th class="align-middle">PDF da Integração Assinada</th>
+              <td class="align-middle">
+                {% if integracao.pdf_integracao %}
+                  <a href="{{ integracao.pdf_integracao.url }}" class="btn btn-info btn-sm" download>
+                    <i class="bi bi-download"></i> Baixar
+                  </a>
+                  <span class="small text-muted">({{ integracao.pdf_integracao.name|basename }})</span>
+                {% else %}
+                  Não disponível
+                {% endif %}
+              </td>
+            </tr>
+
+            <!-- Foto do Colaborador -->
+            <tr>
+              <th class="align-middle">Foto do Colaborador</th>
+              <td class="align-middle text-center">
+                {% if integracao.funcionario.foto %}
+                  <img src="{{ integracao.funcionario.foto.url }}"
+                       alt="Foto do Colaborador"
+                       style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
+                {% else %}
+                  Sem foto cadastrada
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="pdf-footer text-center text-muted small">
+        <p class="mb-1">
+          <i class="bi bi-clock me-1" aria-hidden="true"></i>
+          Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+        </p>
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="text-center mt-4 d-print-none">
+      <a href="{% url 'lista_integracoes' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left-circle"></i> Voltar
+      </a>
+    </div>
+  </div>
+{% endblock %}

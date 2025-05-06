@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Integrações de Funcionários{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+{% include 'partials/global/_toast_mensagens.html' %}
+
+<div class="container mt-5">
+    {% include 'partials/global/_header_titulo.html' with titulo="Integrações dos Colaboradores" icone="bi bi-person-badge-fill" emoji="🧾" %}
+
+    <!-- Botão de Cadastro -->
+    <div class="text-end mb-4">
+        {% if request.user|has_permission:"Funcionario.add_integracaofuncionario" %}
+            <a href="{% url 'cadastrar_integracao' %}" class="btn btn-success d-inline-flex align-items-center gap-2">
+                <i class="bi bi-plus-circle"></i> Nova Integração
+            </a>
+        {% endif %}
+    </div>
+
+     <!-- Filtros -->
+    <div class="card mb-4 shadow-sm border-0">
+      <div class="card-header bg-light d-flex align-items-center gap-2">
+        <i class="bi bi-funnel-fill"></i>
+        <strong>Filtros de Busca</strong>
+      </div>
+      <div class="card-body">
+        <form method="get">
+          <div class="row gx-3 gy-2 align-items-end">
+            <div class="col-md-3">
+              <label for="funcionario" class="form-label">Colaborador:</label>
+              <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtro por colaborador">
+                <option value="">Selecione</option>
+                {% for func in funcionarios %}
+                  <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="departamento" class="form-label">Departamento:</label>
+              <select name="departamento" id="departamento" class="form-select select2" aria-label="Filtro por departamento">
+                <option value="">Selecione</option>
+                {% for dept in departamentos %}
+                  <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="requer_treinamento" class="form-label">Requer Treinamento:</label>
+              <select name="requer_treinamento" id="requer_treinamento" class="form-select select2" aria-label="Filtro por treinamento">
+                <option value="">Selecione</option>
+                <option value="True" {% if request.GET.requer_treinamento == 'True' %}selected{% endif %}>Sim</option>
+                <option value="False" {% if request.GET.requer_treinamento == 'False' %}selected{% endif %}>Não</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="grupo_whatsapp" class="form-label">Grupo WhatsApp:</label>
+              <select name="grupo_whatsapp" id="grupo_whatsapp" class="form-select select2" aria-label="Filtro por grupo WhatsApp">
+                <option value="">Selecione</option>
+                <option value="True" {% if request.GET.grupo_whatsapp == 'True' %}selected{% endif %}>Sim</option>
+                <option value="False" {% if request.GET.grupo_whatsapp == 'False' %}selected{% endif %}>Não</option>
+              </select>
+            </div>
+          </div>
+          {% include 'partials/global/_botao_filtrar.html' %}
+        </form>
+      </div>
+    </div>
+
+    <!-- Cards de Indicadores -->
+    <div class="row mb-4">
+        {% include 'partials/global/_card_indicador.html' with titulo="Total de Integrações" valor=total_integracoes subtitulo="Integrações realizadas." cor="primary" %}
+        {% include 'partials/global/_card_indicador.html' with titulo="Requer Treinamento" valor=total_requer_treinamento subtitulo="Requerem treinamento." cor="warning" %}
+        {% include 'partials/global/_card_indicador.html' with titulo="Grupo WhatsApp" valor=total_grupo_whatsapp subtitulo="Funcionários no grupo." cor="info" %}
+        {% include 'partials/global/_card_indicador.html' with titulo="Sem PDF Anexado" valor=total_sem_pdf subtitulo="Sem PDF vinculado." cor="danger" %}
+    </div>
+
+    <!-- Tabela -->
+<table class="table table-bordered table-striped table-hover text-center mt-4">
+        <caption class="visually-hidden">Tabela de integrações realizadas por colaboradores</caption>
+        <thead>
+            <tr>
+                <th><i class="bi bi-person-fill"></i> Colaborador</th>
+                <th><i class="bi bi-calendar-event"></i> Data</th>
+                <th><i class="bi bi-building"></i> Departamento</th>
+                <th><i class="bi bi bi-whatsapp"></i> Grupo WhatsApp</th>
+                <th><i class="bi bi-journal"></i> Requer Treinamento</th>
+                <th><i class="bi bi-file-earmark-pdf"></i> PDF</th>
+                <th><i class="bi bi-gear"></i> Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for integracao in integracoes %}
+            <tr>
+                <td>{{ integracao.funcionario.nome }}</td>
+                <td>{{ integracao.data_integracao|date:"d/m/Y" }}</td>
+                <td>{{ integracao.funcionario.local_trabalho }}</td>
+                <td>{% if integracao.grupo_whatsapp %}<span class="badge bg-success">Sim</span>{% else %}<span class="badge bg-danger">Não</span>{% endif %}</td>
+                <td>{% if integracao.requer_treinamento %}<span class="badge bg-warning text-dark">Sim</span>{% else %}<span class="badge bg-secondary">Não</span>{% endif %}</td>
+                <td>{% if integracao.pdf_integracao %}<a href="{{ integracao.pdf_integracao.url }}" class="btn btn-light" target="_blank"><i class="bi bi-filetype-pdf"></i></a>{% else %}<span class="text-muted">Não anexado</span>{% endif %}</td>
+                <td class="d-flex justify-content-center gap-2 flex-wrap">
+                    {% include 'partials/global/_botao_visualizar.html' with objeto=integracao url_visualizar='visualizar_integracao' %}
+                    {% include 'partials/global/_botao_editar.html' with objeto=integracao url_editar='editar_integracao' %}
+                    <a href="{% url 'imprimir_integracao' integracao.id %}" target="_blank" class="btn btn-sm btn-primary mt-1" title="Imprimir"><i class="bi bi-printer"></i></a>
+                    {% include 'partials/global/_botao_excluir.html' with objeto=integracao url_excluir='excluir_integracao' label=integracao.funcionario.nome %}
+                </td>
+            </tr>
+        {% empty %}
+            {% include 'partials/global/_sem_resultados.html' with item_nome="integração" %}
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% include 'partials/global/_paginacao.html' %}
+</div>
+
+{% endblock %}

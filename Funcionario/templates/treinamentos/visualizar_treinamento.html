@@ -1,105 +1,131 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
 
 {% block title %}Visualização do Treinamento{% endblock %}
 
 {% block content %}
-{% load widget_tweaks custom_filters %}
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
+{% include 'header.html' %}
 
-<div class="container mt-5">
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white text-center">
-            <h2 class="mb-0">Visualização do Treinamento</h2>
-        </div>
-        <div class="card-body">
-            <!-- Informações Básicas -->
-            <h5 class="text-primary mb-3">Informações do Treinamento</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Nome do Curso</label>
-                    <p class="fw-bold">{{ treinamento.nome_curso }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Instituição de Ensino</label>
-                    <p class="fw-bold">{{ treinamento.instituicao_ensino }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Categoria</label>
-                    <p class="fw-bold">{{ treinamento.get_categoria_display }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Tipo</label>
-                    <p class="fw-bold">{{ treinamento.get_tipo_display }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Status</label>
-                    <p class="fw-bold">{{ treinamento.get_status_display }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Planejado</label>
-                    <p class="fw-bold">{{ treinamento.get_planejado_display }}</p>
-                </div>
-            </div>
+  <div id="relatorio-area">
+    <div class="pdf-container">
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>📘 Treinamento</h1>
+        <p>Visualização detalhada do registro de treinamento</p>
+      </div>
 
-            <!-- Período e Carga Horária -->
-            <h5 class="text-primary mb-3">Período e Carga Horária</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Data de Início</label>
-                    <p class="fw-bold">{{ treinamento.data_inicio|date:"d/m/Y" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Data de Término</label>
-                    <p class="fw-bold">{{ treinamento.data_fim|date:"d/m/Y" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Carga Horária</label>
-                    <p class="fw-bold">{{ treinamento.carga_horaria }}</p>
-                </div>
-            </div>
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table">
+
+            <!-- Dados do Curso -->
+            <tr>
+              <th>Nome do Curso</th>
+              <td>{{ treinamento.nome_curso }}</td>
+            </tr>
+            <tr>
+              <th>Instituição de Ensino</th>
+              <td>{{ treinamento.instituicao_ensino }}</td>
+            </tr>
+            <tr>
+              <th>Categoria</th>
+              <td>{{ treinamento.get_categoria_display }}</td>
+            </tr>
+            <tr>
+              <th>Tipo</th>
+              <td>{{ treinamento.get_tipo_display }}</td>
+            </tr>
+            <tr>
+              <th>Status</th>
+              <td>{{ treinamento.get_status_display }}</td>
+            </tr>
+            <tr>
+              <th>Planejado</th>
+              <td>{{ treinamento.get_planejado_display }}</td>
+            </tr>
+
+            <!-- Período e Carga -->
+            <tr>
+              <th>Data de Início</th>
+              <td>{{ treinamento.data_inicio|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+              <th>Data de Término</th>
+              <td>{{ treinamento.data_fim|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+              <th>Carga Horária</th>
+              <td>{{ treinamento.carga_horaria }}</td>
+            </tr>
 
             <!-- Colaboradores -->
-            <h5 class="text-primary mb-3">Colaboradores</h5>
-            <ul class="list-group mb-3">
-                {% for funcionario in treinamento.funcionarios.all %}
-                    <li class="list-group-item">{{ funcionario.nome }}</li>
-                {% empty %}
-                    <li class="list-group-item">Nenhum colaborador cadastrado.</li>
-                {% endfor %}
-            </ul>
+            <tr>
+              <th>Colaboradores</th>
+              <td>
+                {% if treinamento.funcionarios.all %}
+                  <ul class="mb-0 ps-3">
+                    {% for funcionario in treinamento.funcionarios.all %}
+                      <li>{{ funcionario.nome }}</li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  Nenhum colaborador cadastrado.
+                {% endif %}
+              </td>
+            </tr>
 
-            <!-- Documentos -->
-            <h5 class="text-primary mb-3">Documentos</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Certificado ou Lista de Presença</label>
-                    {% if treinamento.anexo %}
-                        <a href="{{ treinamento.anexo.url }}" class="btn btn-info btn-sm" download>
-                            <i class="bi bi-download"></i> Baixar Documento
-                        </a>
-                        <p class="mt-2 text-muted"><strong>Arquivo:</strong> {{ treinamento.anexo.name|basename }}</p>
-                    {% else %}
-                        <p class="fw-bold">Não disponível</p>
-                    {% endif %}
-                </div>
-            </div>
+            <!-- Anexo -->
+            <tr>
+              <th>Documento (Certificado ou Lista)</th>
+              <td>
+                {% if treinamento.anexo %}
+                  <a href="{{ treinamento.anexo.url }}" class="btn btn-info btn-sm d-print-none" download>
+                    <i class="bi bi-download"></i> Baixar Documento
+                  </a>
+                  <span class="small text-muted">({{ treinamento.anexo.name|basename }})</span>
+                {% else %}
+                  Não disponível
+                {% endif %}
+              </td>
+            </tr>
 
             <!-- Descrição -->
-            <h5 class="text-primary mb-3">Descrição</h5>
-            <div class="mb-3">
+            <tr>
+              <th>Descrição</th>
+              <td>
                 {% if treinamento.descricao %}
-                    <p class="fw-bold">{{ treinamento.descricao|safe }}</p>
+                  {{ treinamento.descricao|safe }}
                 {% else %}
-                    <p class="fw-bold">Não disponível</p>
+                  Não disponível
                 {% endif %}
-            </div>
+              </td>
+            </tr>
+          </table>
         </div>
+      </div>
 
-        <!-- Botão de Voltar -->
-        <div class="card-footer text-center">
-            <a href="{% url 'lista_treinamentos' %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left-circle"></i> Voltar
-            </a>
-        </div>
+      <!-- Rodapé -->
+      <div class="pdf-footer text-center text-muted small">
+        <p class="mb-1">
+          <i class="bi bi-clock me-1" aria-hidden="true"></i>
+          Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+        </p>
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
     </div>
-</div>
+
+    <!-- Botão Voltar -->
+    <div class="text-center mt-4 d-print-none">
+      <a href="{% url 'lista_treinamentos' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left-circle"></i> Voltar
+      </a>
+    </div>
+  </div>
 {% endblock %}
