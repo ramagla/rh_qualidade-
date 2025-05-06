@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from Funcionario.forms import ComunicadoForm
 from Funcionario.models import Comunicado, Funcionario
+from django.utils.timezone import now
 
 
 @login_required
@@ -71,9 +72,14 @@ def lista_comunicados(request):
 
 @login_required
 def imprimir_comunicado(request, id):
-    comunicado = get_object_or_404(Comunicado, id=id)  # Alterado para buscar por 'id'
+    comunicado = get_object_or_404(Comunicado, id=id)
     return render(
-        request, "comunicados/imprimir_comunicado.html", {"comunicado": comunicado}
+        request,
+        "comunicados/imprimir_comunicado.html",
+        {
+            "comunicado": comunicado,
+            "now": now(),  # ✅ adiciona o timestamp
+        },
     )
 
 
@@ -87,14 +93,19 @@ def cadastrar_comunicado(request):
             return redirect("lista_comunicados")
     else:
         form = ComunicadoForm()
-    return render(request, "comunicados/cadastrar_comunicado.html", {"form": form})
+    return render(request, "comunicados/form_comunicado.html", {"form": form})
 
 
 @login_required
-def visualizar_comunicado(request, id):  # Alterado para 'id'
-    comunicado = get_object_or_404(Comunicado, id=id)  # Alterado para 'id'
+def visualizar_comunicado(request, id):
+    comunicado = get_object_or_404(Comunicado, id=id)
     return render(
-        request, "comunicados/visualizar_comunicado.html", {"comunicado": comunicado}
+        request,
+        "comunicados/visualizar_comunicado.html",
+        {
+            "comunicado": comunicado,
+            "now": now(),  # <-- aqui está o ajuste
+        }
     )
 
 
@@ -115,7 +126,7 @@ def editar_comunicado(request, id):
 
     return render(
         request,
-        "comunicados/editar_comunicado.html",
+        "comunicados/form_comunicado.html",
         {"form": form, "comunicado": comunicado},
     )
 
@@ -137,5 +148,11 @@ def imprimir_assinaturas(request, id):
     return render(
         request,
         "comunicados/imprimir_assinaturas.html",
-        {"comunicado": comunicado, "funcionarios_ativos": funcionarios_ativos},
+        {
+            "comunicado": comunicado,
+            "funcionarios_ativos": funcionarios_ativos,
+            "now": now(),  # ✅ adiciona o timestamp
+        },
     )
+
+

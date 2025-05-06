@@ -1,54 +1,62 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load tz %}
 
 {% block title %}Visualização do Comunicado{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white text-center">
-            <h2 class="mb-0">Detalhes do Comunicado</h2>
-        </div>
-        <div class="card-body">
-            <!-- Data e Assunto -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Data</label>
-                    <p class="fw-bold">{{ comunicado.data|date:"d/m/Y" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Assunto</label>
-                    <p class="fw-bold">{{ comunicado.assunto }}</p>
-                </div>
-            </div>
+{% include "partials/global/_estilos_impressao.html" %}
 
-            <!-- Tipo e Departamento -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Tipo de Comunicado</label>
-                    <p class="fw-bold">{{ comunicado.tipo }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Departamento Responsável</label>
-                    <p class="fw-bold">{{ comunicado.departamento_responsavel }}</p>
-                </div>
-            </div>
 
-            <!-- Descrição -->
-            <h5 class="text-primary mb-3">Descrição</h5>
-            <div class="row mb-3">
-                <div class="col-12">
-                    <!-- Adicionando o filtro 'safe' para renderizar HTML formatado -->
-                    <p class="text-muted">{{ comunicado.descricao|safe }}</p>
-                </div>
-            </div>
-        </div>
+{% include "partials/global/_botao_impressao.html" %}
 
-        <!-- Botão de Voltar -->
-        <div class="card-footer text-center">
-            <a href="{% url 'lista_comunicados' %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left-circle"></i> Voltar
-            </a>
-        </div>
+
+<div id="relatorio-area">
+  <div class="pdf-container">
+    <div class="pdf-header">
+      <h1>📢 Comunicado Interno</h1>
+      <p>Visualização detalhada do comunicado</p>
     </div>
+
+   <div class="pdf-content">
+  <div class="table-responsive">
+    <table class="table table-bordered info-table">
+      <tr>
+        <th class="align-middle">Data</th>
+        <td class="align-middle">{{ comunicado.data|date:"d/m/Y" }}</td>
+      </tr>
+      <tr>
+        <th class="align-middle">Assunto</th>
+        <td class="align-middle">{{ comunicado.assunto }}</td>
+      </tr>
+      <tr>
+        <th class="align-middle">Tipo de Comunicado</th>
+        <td class="align-middle">{{ comunicado.tipo }}</td>
+      </tr>
+      <tr>
+        <th class="align-middle">Departamento Responsável</th>
+        <td class="align-middle">{{ comunicado.departamento_responsavel }}</td>
+      </tr>
+      <tr>
+        <th class="align-middle">Descrição</th>
+        <td class="align-middle">{{ comunicado.descricao|safe }}</td>
+      </tr>
+    </table>
+  </div>
 </div>
+
+
+    <div class="pdf-footer text-center text-muted small">
+      <p class="mb-1">
+        <i class="bi bi-clock me-1" aria-hidden="true"></i>
+        Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+      </p>
+      <p class="mb-0 fst-italic">
+{% include "partials/global/_rodape_institucional.html" %}
+      </p>
+    </div>
+  </div>
+</div>
+
+
 {% endblock %}

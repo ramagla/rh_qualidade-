@@ -1,0 +1,10 @@
+<button type="button"
+        class="btn btn-sm btn-danger mt-1"
+        data-bs-toggle="modal"
+        data-bs-target="#modalExcluir{{ objeto.id }}"
+        title="Excluir"
+        aria-label="Excluir {{ label|default:'registro' }}">
+  <i class="bi bi-trash" aria-hidden="true"></i>
+</button>
+
+{% include "partials/global/_modal_exclusao.html" with objeto=objeto url_excluir=url_excluir %}

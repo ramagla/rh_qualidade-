@@ -1,0 +1,11 @@
+<div class="text-end mb-3 d-print-none">
+  <button class="btn btn-outline-primary" onclick="window.print()" aria-label="Imprimir esta página">
+    🖨️ Imprimir
+  </button>
+</div>
+
+<script>
+  if (window.location.search.includes('imprimir=1')) {
+    setTimeout(() => window.print(), 500);
+  }
+</script>

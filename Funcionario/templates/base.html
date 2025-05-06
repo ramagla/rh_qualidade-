@@ -17,8 +17,8 @@
 
     <!-- Custom CSS (Após o CSS externo) -->
     <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+  {% block extra_head %}{% endblock %}
 
-    {{ form.media }}
 </head>
 <body>
     <div class="d-flex">
@@ -137,55 +137,64 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-treeview/1.5/jquery.treeview.min.js"></script>
 
     <script>
-        // Sidebar toggle
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const content = document.querySelector('.content');
-            sidebar.classList.toggle('collapsed');
-            content.classList.toggle('collapsed');
-        }
+  // Sidebar toggle
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const content = document.querySelector('.content');
+    sidebar.classList.toggle('collapsed');
+    content.classList.toggle('collapsed');
+  }
 
-        // Select2 Customization
-        function ajustarEstiloSelect2() {
-            jQuery('.select2-selection--single').css({
-                'height': '38px',
-                'padding': '6px 12px',
-                'line-height': '24px',
-                'border-radius': '0.375rem',
-                'border': '1px solid #ced4da'
-            });
+  // Estilização customizada do Select2
+  function ajustarEstiloSelect2() {
+    jQuery('.select2-selection--single').css({
+      'height': '38px',
+      'padding': '6px 12px',
+      'line-height': '24px',
+      'border-radius': '0.375rem',
+      'border': '1px solid #ced4da'
+    });
 
-            jQuery('.select2-selection__arrow').css({
-                'height': '38px',
-                'top': '0px',
-                'right': '10px'
-            });
-        }
+    jQuery('.select2-selection__arrow').css({
+      'height': '38px',
+      'top': '0px',
+      'right': '10px'
+    });
+  }
 
-        document.addEventListener("DOMContentLoaded", function () {
-            if (typeof jQuery !== "undefined") {
-                jQuery(document).ready(function () {
-                    jQuery('.select2').select2({
-                        placeholder: "Selecione uma opção",
-                        allowClear: true,
-                        width: 'resolve'
-                    });
-
-                    ajustarEstiloSelect2();
-
-                    jQuery('.select2').on('select2:open select2:close', function () {
-                        ajustarEstiloSelect2();
-                    });
-                });
-            } else {
-                console.error('jQuery não está definido.');
-            }
-
-            const editors = document.querySelectorAll('.ckeditor');
-            editors.forEach((editorElement) => {
-                ClassicEditor.create(editorElement).catch(error => console.error('Erro CKEditor:', error));
-            });
+  document.addEventListener("DOMContentLoaded", function () {
+    // Inicialização do Select2
+    if (typeof jQuery !== "undefined") {
+      jQuery(document).ready(function () {
+        jQuery('.select2').select2({
+          placeholder: "Selecione uma opção",
+          allowClear: true,
+          width: 'resolve'
         });
-    </script>
+
+        ajustarEstiloSelect2();
+
+        jQuery('.select2').on('select2:open select2:close', function () {
+          ajustarEstiloSelect2();
+        });
+      });
+    } else {
+      console.error('jQuery não está definido.');
+    }
+
+    // Garantir acesso ao CKEditor se necessário (caso botão "Aprimorar" dependa de window.editor)
+    setTimeout(() => {
+      const ckeditorElement = document.querySelector('.ckeditor');
+      if (ckeditorElement && !window.editor) {
+        if (ckeditorElement.ckeditorInstance) {
+          window.editor = ckeditorElement.ckeditorInstance;
+        } else {
+          console.warn("CKEditor não atribuído automaticamente.");
+        }
+      }
+    }, 1000);
+  });
+</script>
+
 </body>
 </html>

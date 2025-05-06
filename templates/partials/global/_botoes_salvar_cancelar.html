@@ -1,0 +1,15 @@
+<div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-4"
+     style="max-width: 400px; margin-inline: auto;">
+  <button type="submit"
+          class="btn btn-primary w-100 w-sm-auto d-flex align-items-center justify-content-center gap-2"
+          aria-label="{% if edicao %}Atualizar{% else %}Salvar{% endif %} formulário">
+    <i class="bi bi-save" aria-hidden="true"></i>
+    {% if edicao %}Atualizar{% else %}Salvar{% endif %}
+  </button>
+
+  <a href="{% url url_voltar %}"
+     class="btn btn-outline-secondary w-100 w-sm-auto d-flex align-items-center justify-content-center gap-2"
+     aria-label="Cancelar e voltar para a lista">
+    <i class="bi bi-arrow-left" aria-hidden="true"></i> Cancelar
+  </a>
+</div>

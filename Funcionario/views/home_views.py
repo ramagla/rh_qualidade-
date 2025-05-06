@@ -81,7 +81,7 @@ def home(request):
         "settings": settings,  # Inclui settings para acesso aos logos
     }
 
-    return render(request, "funcionarios/home.html", context)
+    return render(request, "dashboard/home.html", context)
 
 
 @login_required

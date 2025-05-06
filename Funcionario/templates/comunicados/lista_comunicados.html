@@ -6,82 +6,98 @@
 {% load custom_filters %}
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Lista de Comunicados</h2>
+{% include "partials/global/_header_titulo.html" with titulo="Comunicados Internos" %}
     
-    <!-- Toast container para mensagens de alerta -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="toast align-items-center border-0"
-                     {% if message.tags == "error" %} style="background-color: #f8d7da; color: #842029;" {% else %} style="background-color: #d1e7dd; color: #0f5132;" {% endif %}
-                     role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <h4 class="alert-heading">{% if message.tags == "error" %}Atenção!{% else %}Sucesso!{% endif %}</h4>
-                            <p>{{ message }}</p>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endif %}
-    </div>
+    {% include "partials/global/_toast_mensagens.html" %}
+
+
 <!-- Botão de Cadastrar Comunicado e Imprimir -->
-<div class="text-end mb-4">
-    {% if request.user|has_permission:"Funcionario.add_comunicado" %}
-    <a href="{% url 'cadastrar_comunicado' %}" class="btn btn-success">
-        <i class="bi bi-plus-circle"></i> Cadastrar
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% if request.user|has_permission:"Funcionario.add_comunicado" %}
+    <a href="{% url 'cadastrar_comunicado' %}" class="btn btn-success d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar
     </a>
-    {% endif %}
+  {% endif %}
 
-   <!-- Botão Dropdown para Imprimir com duas opções de modal -->
-   {% if request.user|has_permission:"Funcionario.print_comunicado" %}
-        <div class="btn-group ms-2">
-            <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-printer"></i> Imprimir
-            </button>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#imprimirComunicadoModal">Imprimir Comunicado</a></li>
-                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#imprimirAssinaturasModal">Imprimir Lista de Assinaturas</a></li>
-            </ul>
-        </div>
-        {% endif %}
-
+  {% if request.user|has_permission:"Funcionario.print_comunicado" %}
+    <div class="btn-group">
+      <button type="button" class="btn btn-info dropdown-toggle d-inline-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-printer me-1" aria-hidden="true"></i> Imprimir
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+      <a class="dropdown-item" href="#" onclick="abrirModalImpressao('comunicado')" aria-label="Abrir modal para imprimir comunicado">
+  <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i> Imprimir Comunicado
+</a>
+        </li>
+        <li>
+  <a class="dropdown-item" href="#" onclick="abrirModalImpressao('assinatura')" aria-label="Abrir modal para imprimir lista de assinaturas">
+  <i class="bi bi-card-checklist me-1" aria-hidden="true"></i> Imprimir Lista de Assinaturas
+</a>
+        </li>
+      </ul>
     </div>
+  {% endif %}
+</div>
+
     
-<!-- Filtros -->
-<form method="get" class="row g-3 mb-4">
-    <div class="col-md-3">
-        <label for="filter_tipo" class="form-label">Tipo de Comunicado</label>
-        <select name="tipo" id="filter_tipo" class="form-select select2">
-            <option value="">Todos</option>
-            {% for valor, nome in tipo_choices %}
-                <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ nome }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-3">
-    <label for="filter_departamento" class="form-label">Departamento</label>
-    <select name="departamento" id="filter_departamento" class="form-select select2">
-        <option value="">Todos</option>
-        {% for dep in departamentos %}
-            <option value="{{ dep }}" {% if departamento == dep %}selected{% endif %}>{{ dep }}</option>
-        {% endfor %}
-        </select>
-    </div>
+<!-- Filtros em Card -->
+<div class="card mb-4">
+  <div class="card-header">
+    <i class="bi bi-funnel me-2" aria-hidden="true"></i> Filtros de Comunicados
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3">
 
-    <div class="col-md-3">
+     <div class="col-md-3">
+  <label for="filter_tipo" class="form-label">
+    <i class="bi bi-tag me-1" aria-hidden="true"></i> Tipo de Comunicado
+  </label>
+  <select name="tipo" id="filter_tipo" class="form-select select2">
+    <option value="">Todos</option>
+    {% for valor, nome in tipo_choices %}
+      <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ nome }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+
+     <div class="col-md-3">
+  <label for="filter_departamento" class="form-label">
+    <i class="bi bi-building me-1" aria-hidden="true"></i> Departamento
+  </label>
+  <select name="departamento" id="filter_departamento" class="form-select select2">
+    <option value="">Todos</option>
+    {% for dep in departamentos %}
+      <option value="{{ dep }}" {% if departamento == dep %}selected{% endif %}>{{ dep }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+      <div class="col-md-3">
         <label for="filter_data_inicio" class="form-label">Data Início</label>
-        <input type="date" name="data_inicio" id="filter_data_inicio" class="form-control" value="{{ data_inicio }}">
-    </div>
-    <div class="col-md-3">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+          <input type="date" name="data_inicio" id="filter_data_inicio" class="form-control" value="{{ data_inicio }}">
+        </div>
+      </div>
+
+      <div class="col-md-3">
         <label for="filter_data_fim" class="form-label">Data Fim</label>
-        <input type="date" name="data_fim" id="filter_data_fim" class="form-control" value="{{ data_fim }}">
-    </div>
-    <div class="col-md-12 d-flex justify-content-end mt-3">
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-funnel"></i> Filtrar</button>
-    </div>
-</form>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
+          <input type="date" name="data_fim" id="filter_data_fim" class="form-control" value="{{ data_fim }}">
+        </div>
+      </div>
+
+      <div class="col-12 text-center mt-2">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+
+    </form>
+  </div>
+</div>
+
 
 
 
@@ -169,165 +185,110 @@
 </script>
 
 
-    <!-- Tabela de Comunicados -->
-    <table class="table table-bordered text-center mt-4">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Data</th>
-                <th>Assunto</th>
-                <th>Tipo</th>
-                <th>Departamento</th>
-                <th>Anexos</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-    {% for comunicado in comunicados %}
-    <tr>
-        <td>{{ comunicado.id }}</td>
-        <td>{{ comunicado.data|date:"d/m/Y" }}</td>
-        <td class="text-start">{{ comunicado.assunto }}</td>
-        <td class="text-start"> {{ comunicado.tipo }}</td>
-        <td class="text-start">{{ comunicado.departamento_responsavel }}</td>
-        <td>
+  <!-- 📄 Título da tabela -->
+<h5 class="mb-3">
+  <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
+  📄 Lista de Comunicados
+</h5>
+
+<!-- Tabela responsiva zebrada -->
+<div class="table-responsive">
+  <table class="table table-bordered zebra-tabela table-hover text-center align-middle">
+    <thead class="table-light">
+      <tr>
+        <th><i class="bi bi-hash me-1" aria-hidden="true"></i> ID</th>
+        <th><i class="bi bi-calendar3 me-1" aria-hidden="true"></i> Data</th>
+        <th><i class="bi bi-chat-left-text me-1" aria-hidden="true"></i> Assunto</th>
+        <th><i class="bi bi-tag me-1" aria-hidden="true"></i> Tipo</th>
+        <th><i class="bi bi-building me-1" aria-hidden="true"></i> Departamento</th>
+        <th><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> Anexos</th>
+        <th><i class="bi bi-gear me-1" aria-hidden="true"></i> Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for comunicado in comunicados %}
+        <tr>
+          <td>{{ comunicado.id }}</td>
+          <td>{{ comunicado.data|date:"d/m/Y" }}</td>
+          <td class="text-start">{{ comunicado.assunto }}</td>
+          <td class="align-middle">{{ comunicado.tipo }}</td>
+          <td class="align-middle">{{ comunicado.departamento_responsavel }}</td>
+          <td>
             {% if comunicado.lista_assinaturas %}
-                <a href="{{ comunicado.lista_assinaturas.url }}" class="btn btn-outline-secondary btn-sm" download>
-            <i class="bi bi-filetype-pdf"></i> Download
-                </a>
+              <a href="{{ comunicado.lista_assinaturas.url }}" class="btn btn-outline-secondary btn-sm" download>
+                <i class="bi bi-filetype-pdf" aria-hidden="true"></i> Download
+              </a>
             {% else %}
-                <span class="text-muted">N/A</span>
+              <span class="text-muted">N/A</span>
             {% endif %}
-        </td>
-        <td class="align-middle">
-            {% if request.user|has_permission:"Funcionario.view_comunicado" %}
+          </td>
+          <td>
+            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+              {% if request.user|has_permission:"Funcionario.view_comunicado" %}
+  {% include "partials/global/_botao_visualizar.html" with objeto=comunicado url_visualizar='visualizar_comunicado' label='comunicado' %}
+{% endif %}
 
-            <a href="{% url 'visualizar_comunicado' comunicado.id %}" class="btn btn-sm btn-info mt-1" title="Visualizar">
-                <i class="bi bi-eye"></i>
-            </a>
-            {% endif %}
-            {% if request.user|has_permission:"Funcionario.change_comunicado" %}
-            <a href="{% url 'editar_comunicado' comunicado.id %}" class="btn btn-sm btn-warning mt-1" title="Editar">
-                <i class="bi bi-pencil-square"></i>
-            </a>
-            {% endif %}
-            {% if request.user|has_permission:"Funcionario.delete_comunicado" %}
-            <button type="button" class="btn btn-danger btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#modalExcluirComunicado{{ comunicado.id }}">
-                <i class="bi bi-trash"></i>
-            </button>
-            {% endif %}
+              {% if request.user|has_permission:"Funcionario.change_comunicado" %}
+  {% include "partials/global/_botao_editar.html" with objeto=comunicado url_editar='editar_comunicado' label='comunicado' %}
+{% endif %}
 
-        </td>
-    </tr>
-
-            <!-- Modal de Confirmação de Exclusão para cada comunicado -->
-            <div class="modal fade" id="modalExcluirComunicado{{ comunicado.id }}" tabindex="-1" aria-labelledby="modalExcluirComunicadoLabel{{ comunicado.id }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalExcluirComunicadoLabel{{ comunicado.id }}">Excluir Comunicado</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Tem certeza que deseja excluir este comunicado?</p>
-                            <p><strong>Assunto:</strong> {{ comunicado.assunto }}</p>
-                            <p><strong>Data:</strong> {{ comunicado.data|date:"d/m/Y" }}</p>
-                        </div>
-                        <div class="modal-footer">
-                            <form method="POST" action="{% url 'excluir_comunicado' comunicado.id %}">
-                                {% csrf_token %}
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-danger">Excluir</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+              {% if request.user|has_permission:"Funcionario.delete_comunicado" %}
+                <button type="button" class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ comunicado.id }}" title="Excluir" aria-label="Excluir comunicado">
+                  <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
+                {% include "partials/global/_modal_exclusao.html" with objeto=comunicado url_excluir='excluir_comunicado' %}
+              {% endif %}
             </div>
-            {% endfor %}
-        </tbody>
-    </table>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
+<style>
+  .zebra-tabela tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+  }
+
+  .zebra-tabela tbody tr:hover {
+    background-color: #f1f1f1;
+    cursor: pointer;
+  }
+</style>
+
 
 </div>
 
-<!-- Modal para Imprimir Comunicado -->
-<div class="modal fade" id="imprimirComunicadoModal" tabindex="-1" aria-labelledby="imprimirComunicadoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imprimirComunicadoModalLabel">Selecionar Comunicado para Imprimir</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <label for="inputComunicadoId" class="form-label">Digite o ID do Comunicado:</label>
-                <input type="number" id="inputComunicadoId" class="form-control" placeholder="Digite o ID..." required>
-                <div id="idFeedback" class="form-text text-danger d-none">ID inválido, tente novamente.</div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="imprimirComunicado()"><i class="bi bi-printer"></i> Imprimir</button>
-            </div>
+<!-- Modal Dinâmico para Impressão -->
+<div class="modal fade" id="modalImpressaoComunicado" tabindex="-1" aria-labelledby="modalImpressaoComunicadoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalImpressaoComunicadoLabel">Selecionar Comunicado</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <label for="inputComunicadoId" class="form-label">Digite o ID do Comunicado:</label>
+        <input type="number" id="inputComunicadoId" class="form-control" placeholder="Digite o ID..." required>
+        <div id="feedbackComunicadoId" class="alert alert-danger mt-2 d-none" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i> ID inválido, tente novamente.
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="button" id="botaoImpressao" class="btn btn-primary">
+          <i class="bi bi-printer"></i> Imprimir
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 
-   <!-- Modal para Imprimir Lista de Assinaturas -->
-<div class="modal fade" id="imprimirAssinaturasModal" tabindex="-1" aria-labelledby="imprimirAssinaturasModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imprimirAssinaturasModalLabel">Selecionar Comunicado para Imprimir Lista de Assinaturas</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <label for="inputAssinaturaComunicadoId" class="form-label">Digite o ID do Comunicado:</label>
-                <input type="number" id="inputAssinaturaComunicadoId" class="form-control" placeholder="Digite o ID..." required>
-                <div id="assinaturaFeedback" class="form-text text-danger d-none">ID inválido, tente novamente.</div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="imprimirAssinaturas()"><i class="bi bi-printer"></i> Imprimir</button>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Paginação -->
-<nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Primeira">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}">{{ num }}</a></li>
-            {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Próxima">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Última">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+{% include "partials/global/_paginacao.html" with page_obj=page_obj %}
+
 
 
 
@@ -415,5 +376,78 @@
         }
     }
 </script>
+<script>
+  // Exibe toasts com animação
+  document.addEventListener('DOMContentLoaded', function () {
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+      const bootstrapToast = new bootstrap.Toast(toast);
+      bootstrapToast.show();
+    });
+  });
+
+  // IDs válidos para validação nas funções de impressão
+  const comunicadosIds = [
+    {% for comunicado in comunicados %}
+      {{ comunicado.id }},
+    {% endfor %}
+  ];
+
+  // Abre modal dinâmica com foco no campo e função de destino
+  function abrirModalImpressao(tipo) {
+    const titulo = tipo === 'comunicado'
+      ? 'Selecionar Comunicado para Imprimir'
+      : 'Selecionar Comunicado para Imprimir Lista de Assinaturas';
+    const funcao = tipo === 'comunicado'
+      ? imprimirComunicado
+      : imprimirAssinaturas;
+
+    document.getElementById('modalImpressaoComunicadoLabel').innerText = titulo;
+    document.getElementById('inputComunicadoId').value = '';
+    document.getElementById('feedbackComunicadoId').classList.add('d-none');
+
+    const botao = document.getElementById('botaoImpressao');
+    botao.onclick = funcao;
+
+    const modalElement = document.getElementById('modalImpressaoComunicado');
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+
+    // Aplica foco ao campo de entrada após exibir modal
+    modalElement.addEventListener('shown.bs.modal', () => {
+      document.getElementById('inputComunicadoId').focus();
+    }, { once: true });
+  }
+
+  // Impressão do comunicado
+  function imprimirComunicado() {
+    const id = parseInt(document.getElementById('inputComunicadoId').value);
+    const feedback = document.getElementById('feedbackComunicadoId');
+
+    if (comunicadosIds.includes(id)) {
+      feedback.classList.add('d-none');
+      const url = "{% url 'imprimir_comunicado' 0 %}".replace('/0/', '/' + id + '/');
+      window.location.href = url;
+    } else {
+      feedback.classList.remove('d-none');
+    }
+  }
+
+  // Impressão da lista de assinaturas
+  function imprimirAssinaturas() {
+    const id = parseInt(document.getElementById('inputComunicadoId').value);
+    const feedback = document.getElementById('feedbackComunicadoId');
+
+    if (comunicadosIds.includes(id)) {
+      feedback.classList.add('d-none');
+      const url = "{% url 'imprimir_assinaturas' 0 %}".replace('/0/', '/' + id + '/');
+      window.location.href = url;
+    } else {
+      feedback.classList.remove('d-none');
+    }
+  }
+</script>
+
+
 
 {% endblock %}

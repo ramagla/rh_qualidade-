@@ -1,5 +1,5 @@
 from django import forms
-from django_ckeditor_5.widgets import CKEditor5Widget
+from django.forms.widgets import Textarea
 
 from rh_qualidade.utils import title_case
 
@@ -7,7 +7,11 @@ from ..models import Comunicado
 
 
 class ComunicadoForm(forms.ModelForm):
-    descricao = forms.CharField(widget=CKEditor5Widget(config_name="default"))
+    descricao = forms.CharField(widget=Textarea(attrs={
+        'class': 'form-control tinymce',
+        'readonly': False,  # redundante, mas previne sobrescrita
+        'disabled': False,
+    }))
 
     class Meta:
         model = Comunicado

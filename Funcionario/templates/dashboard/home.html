@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row row-cols-1 row-cols-lg-3 g-4">
+
+    <!-- 🔊 Comunicados -->
+    <section class="col" aria-labelledby="titulo-comunicados">
+      <h5 id="titulo-comunicados" class="text-center mb-4">
+        <i class="bi bi-megaphone-fill me-1" aria-hidden="true"></i> 📰 Últimos Comunicados
+      </h5>
+      {% if comunicados %}
+        {% for item in comunicados %}
+          <article class="card mb-3" aria-labelledby="comunicado-{{ item.id }}">
+            <div class="card-body">
+              <h6 id="comunicado-{{ item.id }}" class="card-title">{{ item.assunto }}</h6>
+              <p class="card-text">
+                <small class="text-muted">{{ item.data|date:"d/m/Y" }}</small><br>
+                <strong>Departamento:</strong> {{ item.departamento_responsavel }}
+              </p>
+              <button type="button"
+                      class="btn btn-primary btn-sm"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalGenerico"
+                      data-id="{{ item.id }}"
+                      data-titulo="{{ item.assunto }}">
+                <i class="bi bi-eye"></i> Ver Comunicado
+              </button>
+              <template id="conteudo-{{ item.id }}">
+                {{ item.descricao|safe }}
+              </template>
+            </div>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted">Nenhum comunicado recente.</p>
+      {% endif %}
+    </section>
+
+    <!-- 👷 Funcionários -->
+    <section class="col" aria-labelledby="titulo-avaliacoes-baixas">
+      <h5 id="titulo-avaliacoes-baixas" class="text-center mb-4">
+        <i class="bi bi-person-exclamation me-1" aria-hidden="true"></i> 👷 Colaboradores com Avaliação Baixa
+      </h5>
+      {% if funcionarios_avaliacao_baixa %}
+        {% for item in funcionarios_avaliacao_baixa %}
+          <article class="card mb-3" aria-labelledby="funcionario-{{ item.id }}">
+            <div class="row g-0 align-items-center">
+              <div class="col-auto">
+                <figure class="mx-2 my-2 mb-0" style="width: 70px;">
+                  {% if item.foto %}
+                    <img src="{{ item.foto }}" alt="Foto de {{ item.nome }}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 50%; border: 2px solid #ddd;">
+                  {% else %}
+                    <div style="width: 70px; height: 70px; background-color: #f8f9fa; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #ddd;">
+                      <span class="text-muted small">Sem Foto</span>
+                    </div>
+                  {% endif %}
+                  <figcaption class="visually-hidden">{{ item.nome }}</figcaption>
+                </figure>
+              </div>
+              <div class="col">
+                <div class="card-body p-2">
+                  <h6 id="funcionario-{{ item.id }}" class="card-title mb-1">{{ item.nome }}</h6>
+                  <p class="card-text mb-1">
+                    <strong>Classificação:</strong> {{ item.classificacao|floatformat:1 }}%<br>
+                    <strong>Status:</strong>
+                    {% if item.status == 'Ruim' %}
+                      <span class="text-danger">😕 Ruim (0–59%)</span>
+                    {% elif item.status == 'Regular' %}
+                      <span class="text-warning">😊 Regular (60–74%)</span>
+                    {% elif item.status == 'Bom' %}
+                      <span class="text-success">😃 Bom (75–89%)</span>
+                    {% elif item.status == 'Otimo' or item.status == 'Ótimo' %}
+                      <span class="text-primary">🌟 Ótimo (90–100%)</span>
+                    {% else %}
+                      <span class="text-muted">🤔 Indeterminado</span>
+                    {% endif %}
+                  </p>
+                  <button type="button"
+                          class="btn btn-primary btn-sm"
+                          data-bs-toggle="modal"
+                          data-bs-target="#modalGenerico"
+                          data-id="{{ item.id }}"
+                          data-titulo="Avaliação: {{ item.nome }}">
+                    <i class="bi bi-eye"></i> Ver Avaliação
+                  </button>
+                  <template id="conteudo-{{ item.id }}">
+                    <p><strong>Classificação:</strong> {{ item.classificacao|floatformat:1 }}%</p>
+                    <p><strong>Status:</strong> {{ item.status }}</p>
+                    <div class="text-end">
+                      <a href="{% url 'visualizar_avaliacao_anual' item.id %}" class="btn btn-sm btn-outline-primary">Ver Avaliação Completa</a>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted">Nenhum funcionário com avaliação baixa.</p>
+      {% endif %}
+    </section>
+
+    <!-- 🚀 Atualizações -->
+    <section class="col" aria-labelledby="titulo-atualizacoes">
+      <h5 id="titulo-atualizacoes" class="text-center mb-4">
+        <i class="bi bi-rocket-takeoff me-1" aria-hidden="true"></i> 🚀 Próximas Atualizações do Sistema
+      </h5>
+      {% if proximas_atualizacoes %}
+        {% for item in proximas_atualizacoes %}
+          <article class="card mb-3" aria-labelledby="atualizacao-{{ item.id }}">
+            <div class="card-body">
+              <h6 id="atualizacao-{{ item.id }}" class="card-title">{{ item.versao }}</h6>
+              <p class="card-text">
+                <small class="text-muted">Previsão: {{ item.previsao|date:"d/m/Y" }}</small><br>
+                <small class="text-muted">Finalização: {{ item.data_termino|date:"d/m/Y" }}</small><br>
+                <strong>Status:</strong>
+                <span class="badge {% if item.status == 'concluido' %}bg-success{% elif item.status == 'em_andamento' %}bg-warning{% elif item.status == 'cancelado' %}bg-danger{% else %}bg-secondary{% endif %}">{{ item.status|capfirst }}</span>
+              </p>
+              <button type="button"
+                      class="btn btn-primary btn-sm"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalGenerico"
+                      data-id="{{ item.id }}"
+                      data-titulo="Atualização: {{ item.titulo }}">
+                <i class="bi bi-eye"></i> Ver Detalhes da Atualização
+              </button>
+              <template id="conteudo-{{ item.id }}">
+                <p><strong>Versão:</strong> {{ item.versao }}</p>
+                <div>{{ item.descricao|safe }}</div>
+              </template>
+            </div>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted">Nenhuma atualização registrada.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<!-- Modal Reutilizável -->
+<div class="modal fade" id="modalGenerico" tabindex="-1" aria-labelledby="modalGenericoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalGenericoLabel">Título dinâmico</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Carregando conteúdo...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = document.getElementById('modalGenerico');
+
+  modal?.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const titulo = button.getAttribute('data-titulo') || 'Detalhes';
+    const id = button.getAttribute('data-id');
+    const template = document.getElementById('conteudo-' + id);
+    const conteudo = template?.innerHTML || '<p>Conteúdo não disponível.</p>';
+
+    modal.querySelector('.modal-title').textContent = titulo;
+    modal.querySelector('.modal-body').innerHTML = conteudo;
+  });
+});
+</script>
+{% endblock %}

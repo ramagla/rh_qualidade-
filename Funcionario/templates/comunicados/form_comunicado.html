@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro de Comunicado{% endblock %}
+
+{% block content %}
+
+{% load widget_tweaks %}
+{% block errors %}
+{% endblock %}
+
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <h2 class="text-center mb-4 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-megaphone-fill" aria-hidden="true"></i>
+        {% if comunicado %}
+          Editar Comunicado <span class="badge bg-info text-dark fw-normal">Edição</span>
+        {% else %}
+          Cadastro de Comunicado <span class="badge bg-success fw-normal">Novo</span>
+        {% endif %}
+      </h2>
+    </div>
+  </div>
+
+
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-md-6">
+            <label for="data" class="form-label">
+ <i class="bi bi-calendar-event me-1" aria-hidden="true"></i> Data:            <span class="text-danger" aria-label="obrigatório" data-bs-toggle="tooltip" title="Campo obrigatório">*</span>
+            </label>
+            {{ form.data }}
+        </div>
+
+        <div class="col-md-6">
+<label for="assunto" class="form-label">
+  <i class="bi bi-chat-left-text me-1" aria-hidden="true"></i> Assunto:
+  <span class="text-danger" aria-label="obrigatório" data-bs-toggle="tooltip" title="Campo obrigatório">*</span>
+</label>
+            {{ form.assunto }}
+        </div>
+
+       <div class="mb-3">
+  <label for="descricao" class="form-label">
+    <i class="bi bi-journal-text me-1" aria-hidden="true"></i> Descrição
+    <span class="text-danger" aria-hidden="true">*</span>
+  </label>
+  {{ form.descricao|add_class:"form-control" }}
+</div>
+
+
+
+
+
+        <div class="row">
+  <div class="col-md-6">
+    <label for="tipo" class="form-label d-flex align-items-center gap-2">
+      <i class="bi bi-tag" aria-hidden="true"></i> Tipo de Comunicado:
+      <span class="text-danger" aria-label="obrigatório" data-bs-toggle="tooltip" title="Campo obrigatório">*</span>
+    </label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="bi bi-ui-checks-grid" aria-hidden="true"></i></span>
+      {{ form.tipo }}
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <label for="departamento_responsavel" class="form-label d-flex align-items-center gap-2">
+      <i class="bi bi-building" aria-hidden="true"></i> Departamento Responsável:
+      <span class="text-danger" aria-label="obrigatório" data-bs-toggle="tooltip" title="Campo obrigatório">*</span>
+    </label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="bi bi-diagram-3" aria-hidden="true"></i></span>
+      {{ form.departamento_responsavel }}
+    </div>
+  </div>
+</div>
+
+
+
+        <!-- Novo campo para anexar lista de assinaturas -->
+        <div class="col-md-12">
+            <label for="lista_assinaturas" class="form-label">
+  <i class="bi bi-pen me-1" aria-hidden="true"></i> Lista de Assinaturas:
+</label>
+{{ form.lista_assinaturas }}
+<div class="form-text">
+  Anexe a lista de assinaturas em PDF ou imagem (JPG/PNG).
+</div>
+
+
+        </div>
+
+        {% include "partials/global/_botoes_salvar_cancelar.html" with url_voltar='lista_comunicados' %}
+
+
+    </form>
+</div>
+
+
+
+{% block extra_head %}
+  <script src="https://cdn.tiny.cloud/1/bd66eta4dps4wcnrav1yzoougeszk3o4iz9jq1yf4ith4ytl/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      tinymce.init({
+        selector: 'textarea.tinymce',
+        height: 400,
+        menubar: false,
+        plugins: 'lists link image table code fullscreen wordcount',
+        toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | code fullscreen',
+        language: 'pt_BR',
+        readonly: false,  // Garante edição ativa
+        branding: false   // Remove marca d’água “Powered by Tiny”
+      });
+    });
+  </script>
+{% endblock %}
+
+
+
+{% endblock %}

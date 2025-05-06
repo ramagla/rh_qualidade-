@@ -1,205 +1,158 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load tz %}
 
 {% block content %}
-<head>
-    {{ form.media }}
-</head>
+{{ form.media }}
 
-<div class="print-container container mt-5">
-    {% include 'header.html' %}
-
-    <!-- Botão de Imprimir -->
-    <div class="text-center mb-4 d-print-none">
-        <button onclick="imprimir()" class="btn btn-primary">
-            <i class="fas fa-print"></i> Imprimir
-        </button>
-    </div>
-
-    <!-- Informações do Comunicado -->
-    <div class="info-section mt-4">
-        <table class="custom-table" style="width: 100%;">
-            <tr>
-                <td style="padding: 8px; text-align: left;">
-                    <strong>TIPO:</strong> {{ comunicado.tipo }}
-                </td>
-                <td style="padding: 8px; text-align: left;">
-                    <strong>DATA DO COMUNICADO:</strong> {{ comunicado.data|date:"d/m/Y" }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" style="padding: 8px; text-align: left;">
-                    <strong>ASSUNTO:</strong> {{ comunicado.assunto }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" style="padding: 8px; text-align: left;">
-                    <strong>DESCRIÇÃO:</strong> {{ comunicado.descricao|safe }}
-                </td>
-            </tr>
-        </table>
-    </div>
-
-  <div class="participants-section mt-3">
-    <table class="custom-table" style="width: 100%;">
-        <tr>
-            <th style="width: 50%; text-align: left;">NOME</th>
-            <th>SETOR</th>
-            <th>VISTO</th>
-        </tr>
-        {% for participante in funcionarios_ativos %}
-            <tr>
-                <td style="text-align: left;">{{ participante.nome }}</td>
-                <td style="text-align: left;">{{ participante.local_trabalho }}</td>
-                <td>______________________</td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="3" class="text-center">Nenhum participante registrado.</td>
-            </tr>
-        {% endfor %}
-    </table>
+{% include "partials/global/_estilos_impressao.html" %}
+<div class="text-center mb-3 d-print-none">
+  {% include "partials/global/_botao_impressao.html" %}
 </div>
-
-  
-
-<!-- Estilos personalizados e de impressão -->
 <style>
-    /* Ajuste geral de layout */
-    .info-card {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
+.print-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  font-size: 8.5pt;
+  font-family: Arial, sans-serif;
+}
 
-    .info-column {
-        width: 48%; /* Divide em duas colunas */
-    }
+.info-section {
+  margin-top: 20px;
+}
 
-    /* Estilos personalizados da tabela */
-    .custom-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .custom-table th, .custom-table td {
-        padding: 4px;
-        border: 1px solid #ddd;
-        font-size: 10px;
-        text-align: center;
-    }
-    .custom-table th {
-        background-color: #e7f1ff;
-        color: #333;
-        font-weight: bold;
-    }
-    .custom-table tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-    
-    body {
-        counter-reset: page;
-    }
+.custom-table th,
+.custom-table td {
+  border: 1px solid #ddd;
+  padding: 2px 4px;
+  font-size: 8.5pt;
+  text-align: left;
+  vertical-align: middle;
+  line-height: 1.1;
+}
 
-   
+.custom-table tr {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
 
-    /* Estilo de impressão */
-    @media print {
-        body {
-            font-size: 10px;
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            margin-bottom: 20px;
-            page-break-after: avoid;
-        }
-        .numero-formulario {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            font-size: 10px;
-            color: #333;
-        }
-        
-        .d-print-none, .sidebar, .navbar {
-            display: none !important;
-        }
-        .print-container {
-            width: 100%;
-            max-width: 800px; /* Centraliza o conteúdo */
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .custom-table th, .custom-table td {
-            padding: 4px;
-            border: 1px solid #ddd;
-            font-size: 10px;
-            text-align: center;
-        }
-    }
+.custom-table th {
+  background-color: #e7f1ff;
+  font-weight: bold;
+}
+
+.custom-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+@media print {
+  .custom-table th,
+  .custom-table td {
+    padding: 2px 4px !important;
+    font-size: 8.5pt !important;
+  }
+}
+
+@page {
+  size: A4 portrait;
+  margin: 12mm 10mm 15mm 10mm;
+}
 </style>
 
-<!-- Script para impressão -->
-<script>
-function imprimir() {
-    var conteudo = document.querySelector('.print-container').innerHTML;
-    
 
-    var novaJanela = window.open('', '_blank', 'width=800,height=600');
-    
-    novaJanela.document.write(`
-        <html>
-            <head>    
-                <style>
-                    /* Estilos gerais */
-                    body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }
-                    .info-card { display: flex; gap: 20px; flex-wrap: wrap; }
-                    .info-column { width: 48%; }
-                                      
 
-                    .custom-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-                    th, td {
-                        padding: 4px;
-                        border: 1px solid #ddd;
-                        font-size: 10px;
-                        text-align: center;
-                    }
-                    th {
-                        background-color: #e7f1ff;
-                        color: #333;
-                        font-weight: bold;
-                    }
-                    tr:nth-child(even) {
-                        background-color: #f9f9f9;
-                    }
-                    h2 {
-                        text-align: center; /* Centraliza o título */
-                        font-size: 14px;
-                        margin-top: 0;
-                    }
-                    @media print {                       
-                        .d-print-none { display: none !important; }
-                    }
-                </style>
-            </head>
-            <body>
-                <h2>Lista de Assinaturas</h2>
-                ${conteudo}               
-            </body>
-        </html>
-    `);
 
-    novaJanela.document.close();
-    novaJanela.onload = function () {     
 
-        novaJanela.print();
-        novaJanela.close();
-    };
-}
-</script>
+
+<div class="print-container">
+  
+  {% include 'header.html' %}
+
+<!-- Informações do Comunicado -->
+<section class="info-section" role="region" aria-labelledby="info-comunicado">
+  <h2 id="info-comunicado" class="visually-hidden">Informações do Comunicado</h2>
+  <table class="custom-table">
+    <caption class="visually-hidden">Informações do Comunicado</caption>
+    <thead>
+      <tr>
+        <th style="width: 50%;">
+          <i class="bi bi-tag-fill me-1" aria-hidden="true"></i> TIPO
+        </th>
+        <td>{{ comunicado.tipo }}</td>
+      </tr>
+      <tr>
+        <th>
+          <i class="bi bi-calendar-event me-1" aria-hidden="true"></i> DATA DO COMUNICADO
+        </th>
+        <td>{{ comunicado.data|date:"d/m/Y" }}</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td colspan="2">
+          <h2 class="h6 fw-bold">📝 Assunto</h2>
+          {{ comunicado.assunto }}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <h2 class="h6 fw-bold">🗒️ Descrição</h2>
+          <section aria-labelledby="descricao-comunicado">
+            <span id="descricao-comunicado" class="visually-hidden">Descrição do Comunicado</span>
+            {{ comunicado.descricao|safe }}
+          </section>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Participantes -->
+<section class="info-section mt-4" role="region" aria-labelledby="participantes-comunicado">
+  <h2 id="participantes-comunicado" class="h6 fw-bold mb-2">👥 Participantes</h2>
+
+  <table class="custom-table">
+    <caption class="visually-hidden">Tabela de Participantes do Comunicado</caption>
+    <thead>
+      <tr>
+        <th style="width: 35%;">NOME</th>
+        <th style="width: 25%;">SETOR</th>
+        <th style="width: 40%;">VISTO</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for participante in funcionarios_ativos %}
+        <tr>
+          <td class="align-middle">{{ participante.nome }}</td>
+          <td class="align-middle">{{ participante.local_trabalho }}</td>
+          <td class="text-center align-middle" style="padding-top: 20px;">
+<div style="border-top: 1px solid #ccc; margin: 5px auto 0; width: 80%; height: 18px;"></div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="3" class="text-center align-middle">Nenhum participante registrado.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+
+<!-- Rodapé institucional -->
+<div class="pdf-footer text-center text-muted small mt-5">
+  <p class="mb-1">
+    <i class="bi bi-clock me-1" aria-hidden="true"></i>
+    Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+  </p>
+  {% include "partials/global/_rodape_institucional.html" %}
+</div>
 
 {% endblock %}
