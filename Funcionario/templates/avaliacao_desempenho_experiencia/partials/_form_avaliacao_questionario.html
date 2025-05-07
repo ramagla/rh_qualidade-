@@ -1,0 +1,71 @@
+{# partials/global/_form_avaliacao_questionario.html #}
+
+<!-- 🔍 Questionário de Avaliação -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingQuestionario">
+    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuestionario" aria-expanded="false" aria-controls="collapseQuestionario">
+      📝 Questionário da Avaliação
+    </button>
+  </h2>
+  <div id="collapseQuestionario" class="accordion-collapse collapse" aria-labelledby="headingQuestionario" data-bs-parent="#formAccordion">
+    <div class="accordion-body">
+      <div class="row g-3">
+        
+        <!-- Adaptação no Trabalho -->
+        <div class="col-md-6">
+          <label for="adaptacao_trabalho" class="form-label">🔄 Adaptação no Trabalho</label>
+          <select class="form-select" id="adaptacao_trabalho" name="adaptacao_trabalho" required>
+            <option value="">Selecione...</option>
+            <option value="1">Ruim (D) – Mantém comportamento oposto ao solicitado para o cargo.</option>
+            <option value="2">Regular (C) – Esforça-se para se integrar ao ambiente.</option>
+            <option value="3">Bom (B) – Integra-se com facilidade ao ambiente da empresa.</option>
+            <option value="4">Ótimo (A) – Identifica-se plenamente com o cargo e empresa.</option>
+          </select>
+        </div>
+
+        <!-- Interesse -->
+        <div class="col-md-6">
+          <label for="interesse" class="form-label">✨ Interesse</label>
+          <select class="form-select" id="interesse" name="interesse" required>
+            <option value="">Selecione...</option>
+            <option value="1">Ruim (D) – Demonstra desinteresse.</option>
+            <option value="2">Regular (C) – Precisa de estímulo constante.</option>
+            <option value="3">Bom (B) – Demonstra entusiasmo compatível.</option>
+            <option value="4">Ótimo (A) – Muito interessado no trabalho.</option>
+          </select>
+        </div>
+
+        <!-- Relacionamento Social -->
+        <div class="col-md-6">
+          <label for="relacionamento_social" class="form-label">👥 Relacionamento Social</label>
+          <select class="form-select" id="relacionamento_social" name="relacionamento_social" required>
+            <option value="">Selecione...</option>
+            <option value="1">Ruim (D) – Pouca aceitação no grupo.</option>
+            <option value="2">Regular (C) – Esforça-se para se enturmar.</option>
+            <option value="3">Bom (B) – Bem aceito entre colegas.</option>
+            <option value="4">Ótimo (A) – Muito apreciado socialmente.</option>
+          </select>
+        </div>
+
+        <!-- Capacidade de Aprendizagem -->
+        <div class="col-md-6">
+          <label for="capacidade_aprendizagem" class="form-label">📘 Capacidade de Aprendizagem</label>
+          <select class="form-select" id="capacidade_aprendizagem" name="capacidade_aprendizagem" required>
+            <option value="">Selecione...</option>
+            <option value="1">Ruim (D) – Muita dificuldade de aprendizado.</option>
+            <option value="2">Regular (C) – Requer repetição constante.</option>
+            <option value="3">Bom (B) – Aprende com facilidade.</option>
+            <option value="4">Ótimo (A) – Executa com precisão e rapidez.</option>
+          </select>
+        </div>
+
+        <!-- Observações -->
+        <div class="col-12">
+          <label for="observacoes" class="form-label">🗒️ Observações</label>
+          {{ form.observacoes }}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

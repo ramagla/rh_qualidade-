@@ -1,0 +1,79 @@
+<script>
+  function preencherInfoFuncionario() {
+    const cargoInput = document.getElementById("cargo");
+    const departamentoInput = document.getElementById("departamento");
+    const superiorDiretoInput = document.getElementById("superior_direto");
+    const funcionarioSelect = document.getElementById("funcionario");
+
+    function buscarDadosFuncionario(funcionarioId) {
+      if (funcionarioId) {
+        fetch(`/get-cargo/${funcionarioId}/`)
+          .then((response) => response.json())
+          .then((data) => {
+            cargoInput.value = data.cargo || "Cargo não encontrado";
+            departamentoInput.value = data.departamento || "Departamento não encontrado";
+            superiorDiretoInput.value = data.responsavel?.nome || "Responsável não encontrado";
+          })
+          .catch((error) => {
+            console.error("Erro ao buscar informações:", error);
+            cargoInput.value = "Erro ao carregar";
+            departamentoInput.value = "Erro ao carregar";
+            superiorDiretoInput.value = "Erro ao carregar";
+          });
+      }
+    }
+
+    // Preenchimento ao mudar o select
+    $("#funcionario").on("change", function () {
+      buscarDadosFuncionario($(this).val());
+    });
+
+    // Preenchimento automático se for edição
+    const funcionarioSelecionado = funcionarioSelect?.value;
+    if (funcionarioSelecionado) {
+      buscarDadosFuncionario(funcionarioSelecionado);
+    }
+  }
+
+  function calcularStatus() {
+    let total = 0;
+    const campos = ["adaptacao_trabalho", "interesse", "relacionamento_social", "capacidade_aprendizagem"];
+    campos.forEach(id => {
+      const valor = parseInt(document.getElementById(id)?.value || 0);
+      total += valor;
+    });
+
+    const statusInput = document.getElementById("status");
+    const orientacaoInput = document.getElementById("orientacao");
+
+    const percentual = (total / 16) * 100;
+
+    if (percentual >= 85) {
+      statusInput.value = "Ótimo - Efetivar";
+      orientacaoInput.value = "Efetivar";
+    } else if (percentual >= 66) {
+      statusInput.value = "Bom - Efetivar";
+      orientacaoInput.value = "Efetivar";
+    } else if (percentual >= 46) {
+      statusInput.value = "Regular - Treinamento";
+      orientacaoInput.value = "Encaminhar p/ Treinamento";
+    } else {
+      statusInput.value = "Ruim - Desligar";
+      orientacaoInput.value = "Desligar";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    $(".select2").select2({ placeholder: "Selecione o colaborador", width: "100%" });
+
+    preencherInfoFuncionario();
+
+    // Eventos para recálculo de status
+    ["adaptacao_trabalho", "interesse", "relacionamento_social", "capacidade_aprendizagem"].forEach(id => {
+      document.getElementById(id)?.addEventListener("change", calcularStatus);
+    });
+
+    // Recalcular status automaticamente ao carregar se for edição
+    calcularStatus();
+  });
+</script>

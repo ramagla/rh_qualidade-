@@ -116,6 +116,7 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             "data_avaliacao": forms.DateInput(
+                format="%Y-%m-%d",
                 attrs={"type": "date", "class": "form-control"}
             ),
             "adaptacao_trabalho": forms.Select(

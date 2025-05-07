@@ -1,133 +1,87 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
 
 {% block title %}Visualização da Avaliação de Experiência{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white text-center">
-            <h2 class="mb-0">Visualização da Avaliação de Experiência</h2>
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
+  {% include "header.html" %}
+
+  <div id="relatorio-area">
+    <div class="pdf-container">
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>📋 Avaliação de Experiência</h1>
+        <p>Visualização detalhada da avaliação realizada</p>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table align-middle">
+            <tr>
+              <th>Data da Avaliação</th>
+              <td>{{ avaliacao.data_avaliacao|date:'d/m/Y' }}</td>
+            </tr>
+            <tr>
+              <th>Funcionário Avaliado</th>
+              <td>{{ avaliacao.funcionario.nome }}</td>
+            </tr>
+            <tr>
+              <th>Cargo Atual</th>
+              <td>{{ avaliacao.funcionario.cargo_atual.nome }}</td>
+            </tr>
+            <tr>
+              <th>Departamento</th>
+              <td>{{ avaliacao.funcionario.local_trabalho }}</td>
+            </tr>
+            <tr>
+              <th>Superior Direto</th>
+              <td>{{ avaliacao.funcionario.responsavel }}</td>
+            </tr>
+            <tr>
+              <th>Gerência</th>
+              <td>{{ avaliacao.gerencia }}</td>
+            </tr>
+            <tr>
+              <th>Adaptação no Trabalho</th>
+              <td>{{ avaliacao|get_opcao_experiencia:'adaptacao_trabalho' }}</td>
+            </tr>
+            <tr>
+              <th>Interesse</th>
+              <td>{{ avaliacao|get_opcao_experiencia:'interesse' }}</td>
+            </tr>
+            <tr>
+              <th>Relacionamento Social</th>
+              <td>{{ avaliacao|get_opcao_experiencia:'relacionamento_social' }}</td>
+            </tr>
+            <tr>
+              <th>Capacidade de Aprendizagem</th>
+              <td>{{ avaliacao|get_opcao_experiencia:'capacidade_aprendizagem' }}</td>
+            </tr>
+            <tr>
+              <th>Orientação</th>
+              <td><strong>{{ avaliacao.orientacao }}</strong></td>
+            </tr>
+            <tr>
+              <th>Observações</th>
+              <td><div style="white-space: pre-line;">{{ avaliacao.observacoes|safe }}</div></td>
+            </tr>
+          </table>
         </div>
-        <div class="card-body">
-            <!-- Data da Avaliação -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Data da Avaliação</label>
-                    <p class="fw-bold">{{ avaliacao.data_avaliacao|date:'d/m/Y' }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Funcionário Avaliado</label>
-                    <p class="fw-bold">{{ avaliacao.funcionario.nome }}</p>
-                </div>
-            </div>
+      </div>
 
-            <!-- Detalhes do Funcionário -->
-            <h5 class="text-primary mb-3">Detalhes do Funcionário</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Cargo Atual</label>
-                    <p class="fw-bold">{{ avaliacao.funcionario.cargo_atual.nome }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Departamento</label>
-                    <p class="fw-bold">{{ avaliacao.funcionario.local_trabalho }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Superior Direto</label>
-                    <p class="fw-bold">{{ avaliacao.funcionario.responsavel }}</p>
-                </div>               
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Gerência</label>
-                    <p class="fw-bold">{{ avaliacao.gerencia }}</p>
-                </div>
-            </div>
-
-            <!-- Questionário da Avaliação -->
-            <h5 class="text-primary mb-3">Questionário da Avaliação</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Adaptação no Trabalho</label>
-                    <p>
-                        <strong>Resposta:</strong> 
-                        {% if avaliacao.adaptacao_trabalho == 1 %}
-                            Ruim (D) - Mantém um comportamento oposto ao solicitado para seu cargo e demonstra dificuldades de aceitação.
-                        {% elif avaliacao.adaptacao_trabalho == 2 %}
-                            Regular (C) - Precisa de muito esforço para se integrar ao trabalho e aos requisitos da Bras-Mol.
-                        {% elif avaliacao.adaptacao_trabalho == 3 %}
-                            Bom (B) - Faz o possível para integrar-se ao trabalho e às características da Bras-Mol.
-                        {% elif avaliacao.adaptacao_trabalho == 4 %}
-                            Ótimo (A) - Identifica-se plenamente com as atividades do cargo e normas da Bras-Mol.
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Interesse</label>
-                    <p>
-                        <strong>Resposta:</strong> 
-                        {% if avaliacao.interesse == 1 %}
-                            Ruim (D) - Apresenta falta de entusiasmo e vontade de trabalhar.
-                        {% elif avaliacao.interesse == 2 %}
-                            Regular (C) - Necessitará de estímulo constante para se interessar pelo trabalho.
-                        {% elif avaliacao.interesse == 3 %}
-                            Bom (B) - Apresenta entusiasmo adequado para o tempo na Bras-Mol.
-                        {% elif avaliacao.interesse == 4 %}
-                            Ótimo (A) - Demonstra vivo interesse pelo novo trabalho.
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Relacionamento Social</label>
-                    <p>
-                        <strong>Resposta:</strong> 
-                        {% if avaliacao.relacionamento_social == 1 %}
-                            Ruim (D) - Sente-se perdido entre os colegas e parece não ter sido aceito.
-                        {% elif avaliacao.relacionamento_social == 2 %}
-                            Regular (C) - Esforça-se para conseguir maior integração social com os colegas.
-                        {% elif avaliacao.relacionamento_social == 3 %}
-                            Bom (B) - Entrosou-se bem e foi aceito sem resistência.
-                        {% elif avaliacao.relacionamento_social == 4 %}
-                            Ótimo (A) - Demonstra grande habilidade em fazer amigos, sendo muito apreciado.
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Capacidade de Aprendizagem</label>
-                    <p>
-                        <strong>Resposta:</strong> 
-                        {% if avaliacao.capacidade_aprendizagem == 1 %}
-                            Ruim (D) - Parece não ter capacidade mínima para o trabalho.
-                        {% elif avaliacao.capacidade_aprendizagem == 2 %}
-                            Regular (C) - Necessita de muito esforço e repetição para compreender as tarefas.
-                        {% elif avaliacao.capacidade_aprendizagem == 3 %}
-                            Bom (B) - Aprende suas tarefas sem dificuldades.
-                        {% elif avaliacao.capacidade_aprendizagem == 4 %}
-                            Ótimo (A) - Habilitado para o cargo, executa sem falhas.
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
-
-            <!-- Observações -->
-            <h5 class="text-primary mb-3">Observações</h5>
-            <div class="row mb-3">
-                <div class="col-12">
-                    <p class="text-muted">{{ avaliacao.observacoes|safe }}</p>
-                </div>
-            </div>
-
-            <!-- Orientação -->
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Orientação</label>
-                    <p class="fw-bold text-success">{{ avaliacao.orientacao }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Botão de Voltar -->
-        <div class="card-footer text-center">
-            <a href="{% url 'lista_avaliacao_experiencia' %}" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i>  Voltar</a>
-        </div>
+      <!-- Rodapé -->
+      <div class="text-center text-muted small mt-4">
+        <i class="bi bi-clock me-1"></i>
+        Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
     </div>
-</div>
+  </div>
 {% endblock %}

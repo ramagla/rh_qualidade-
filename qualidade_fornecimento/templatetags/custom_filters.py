@@ -187,3 +187,35 @@ def lookup(d, key):
         return d[key]
     except (KeyError, TypeError, AttributeError):
         return None
+
+
+@register.filter
+def get_opcao_experiencia(obj, campo):
+    valor = getattr(obj, campo, None)
+    respostas = {
+        'adaptacao_trabalho': {
+            1: "Ruim (D) - Mantém um comportamento oposto ao solicitado para seu cargo e demonstra dificuldades de aceitação.",
+            2: "Regular (C) - Precisa de muito esforço para se integrar ao trabalho e aos requisitos da Bras-Mol.",
+            3: "Bom (B) - Faz o possível para integrar-se ao trabalho e às características da Bras-Mol.",
+            4: "Ótimo (A) - Identifica-se plenamente com as atividades do cargo e normas da Bras-Mol.",
+        },
+        'interesse': {
+            1: "Ruim (D) - Apresenta falta de entusiasmo e vontade de trabalhar.",
+            2: "Regular (C) - Necessitará de estímulo constante para se interessar pelo trabalho.",
+            3: "Bom (B) - Apresenta entusiasmo adequado para o tempo na Bras-Mol.",
+            4: "Ótimo (A) - Demonstra vivo interesse pelo novo trabalho.",
+        },
+        'relacionamento_social': {
+            1: "Ruim (D) - Sente-se perdido entre os colegas e parece não ter sido aceito.",
+            2: "Regular (C) - Esforça-se para conseguir maior integração social com os colegas.",
+            3: "Bom (B) - Entrosou-se bem e foi aceito sem resistência.",
+            4: "Ótimo (A) - Demonstra grande habilidade em fazer amigos, sendo muito apreciado.",
+        },
+        'capacidade_aprendizagem': {
+            1: "Ruim (D) - Parece não ter capacidade mínima para o trabalho.",
+            2: "Regular (C) - Necessita de muito esforço e repetição para compreender as tarefas.",
+            3: "Bom (B) - Aprende suas tarefas sem dificuldades.",
+            4: "Ótimo (A) - Habilitado para o cargo, executa sem falhas.",
+        }
+    }
+    return respostas.get(campo, {}).get(valor, "Não avaliado")

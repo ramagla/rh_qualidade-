@@ -76,12 +76,16 @@ def cadastrar_avaliacao_experiencia(request):
 
     return render(
         request,
-        "avaliacao_desempenho_experiencia/cadastrar_avaliacao_experiencia.html",
+        "avaliacao_desempenho_experiencia/form_avaliacao_experiencia.html",
         {
             "form": form,
             "funcionarios": Funcionario.objects.filter(status="Ativo").order_by("nome"),
+            "edicao": False,
+            "url_voltar": "lista_avaliacao_experiencia",
+            "param_id": None,
         },
     )
+
 
 
 @login_required
@@ -142,9 +146,17 @@ def editar_avaliacao_experiencia(request, id):
     # Renderiza o template de edição com o formulário preenchido
     return render(
         request,
-        "avaliacao_desempenho_experiencia/editar_avaliacao_experiencia.html",
-        {"form": form, "avaliacao": avaliacao, "funcionarios": funcionarios},
+        "avaliacao_desempenho_experiencia/form_avaliacao_experiencia.html",
+        {
+            "form": form,
+            "avaliacao": avaliacao,
+            "funcionarios": funcionarios,
+            "edicao": True,
+            "url_voltar": "lista_avaliacao_experiencia",
+            "param_id": None,
+        },
     )
+
 
 
 @login_required
@@ -156,18 +168,20 @@ def excluir_avaliacao_experiencia(request, id):
         return redirect("lista_avaliacao_experiencia")
     return redirect("lista_avaliacao_experiencia")
 
+from django.utils.timezone import now
 
 @login_required
 def visualizar_avaliacao_experiencia(request, id):
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=id)
 
-    # Passa o objeto de avaliação para o template
     return render(
         request,
         "avaliacao_desempenho_experiencia/visualizar_avaliacao_experiencia.html",
-        {"avaliacao": avaliacao},
+        {
+            "avaliacao": avaliacao,
+            "now": now(),
+        },
     )
-
 
 @login_required
 def imprimir_avaliacao_experiencia(request, avaliacao_id):
