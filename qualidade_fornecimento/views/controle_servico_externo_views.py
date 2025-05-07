@@ -147,7 +147,7 @@ def listar_controle_servico_externo(request):
     total_atrasados = qs.filter(atraso_em_dias__gt=0).count()
 
     # Serviços disponíveis para inspeção
-    servicos_disponiveis = ControleServicoExterno.objects.filter(inspecao__isnull=True)
+    servicos_disponiveis = ControleServicoExterno.objects.all().order_by("-data_envio")
 
     # Dados para os filtros
     pedidos = ControleServicoExterno.objects.values_list("pedido", flat=True).distinct().order_by("pedido")

@@ -1,5 +1,6 @@
 import re
 from decimal import Decimal, InvalidOperation
+from qualidade_fornecimento.templatetags.custom_filters import parse_decimal_seguro
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
@@ -110,7 +111,7 @@ def gerar_f045(request, relacao_id):
                 {"sigla": "Al", "min": composicao.al_min, "max": composicao.al_max},
             ]
 
-        bitola = parse_decimal(relacao.materia_prima.bitola)
+        bitola = parse_decimal_seguro(relacao.materia_prima.bitola)
         tipo_abnt = relacao.materia_prima.tipo_abnt  # Novo: pega o tipo ABNT do cadastro
 
         if bitola and tipo_abnt:
@@ -173,8 +174,9 @@ def gerar_f045(request, relacao_id):
     bitola_raw = relacao.materia_prima.bitola or "0"
     largura_raw = relacao.materia_prima.largura or "0"
 
-    bitola_nominal = float(parse_decimal(bitola_raw) or 0)
-    largura_nominal = float(parse_decimal(largura_raw) or 0)
+    bitola_nominal = float(parse_decimal_seguro(bitola_raw) or 0)
+    largura_nominal = float(parse_decimal_seguro(largura_raw) or 0)
+
 
 
 
@@ -183,18 +185,18 @@ def gerar_f045(request, relacao_id):
             updated_f045 = form.save(commit=False)
             switch_manual = request.POST.get("switchStatusManual") == "on"
 
-            tolerancia = parse_decimal(relacao.materia_prima.tolerancia or "0")
-            tolerancia_largura = parse_decimal(
-                relacao.materia_prima.tolerancia_largura or "0"
-            )
+            tolerancia = parse_decimal_seguro(relacao.materia_prima.tolerancia or "0")
+            tolerancia_largura = parse_decimal_seguro(relacao.materia_prima.tolerancia_largura or "0")
+
             dureza_limite = parse_decimal(dureza_norma)
 
             for form_rolo in formset.forms:
                 rolo = form_rolo.instance
                 rolo_id = str(rolo.pk)
 
-                rolo.dureza = parse_decimal(request.POST.get(f"dureza_{rolo_id}"))
-                rolo.tracao = parse_decimal(request.POST.get(f"tracao_{rolo_id}"))
+                rolo.dureza = parse_decimal_seguro(request.POST.get(f"dureza_{rolo_id}"))
+                rolo.tracao = parse_decimal_seguro(request.POST.get(f"tracao_{rolo_id}"))
+
 
                 bitola_espessura = request.POST.get(f"bitola_espessura_{rolo_id}")
                 bitola_largura = request.POST.get(f"bitola_largura_{rolo_id}")
@@ -202,8 +204,9 @@ def gerar_f045(request, relacao_id):
 
                 if bitola_espessura is not None or bitola_largura is not None:
                     rolo.bitola_espessura = (
-                        parse_decimal(bitola_espessura) if bitola_espessura else None
+                        parse_decimal_seguro(bitola_espessura) if bitola_espessura else None
                     )
+
                     rolo.bitola_largura = (
                         parse_decimal(bitola_largura) if bitola_largura else None
                     )
@@ -235,7 +238,7 @@ def gerar_f045(request, relacao_id):
                 )
 
                 try:
-                    encontrado = Decimal(encontrado_raw)
+                    encontrado = parse_decimal_seguro(encontrado_raw)
                 except (InvalidOperation, ValueError):
                     encontrado = None
 

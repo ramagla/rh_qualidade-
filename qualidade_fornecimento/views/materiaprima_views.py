@@ -507,3 +507,21 @@ def imprimir_etiquetas_pdf(request, id):
         response = HttpResponse(output.read(), content_type="application/pdf")
         response["Content-Disposition"] = f"filename=etiquetas_lote_{registro.id}.pdf"
         return response
+
+from qualidade_fornecimento.models import RelacaoMateriaPrima, NormaTecnica
+
+@login_required
+def norma_aprovada(request, id):
+    try:
+        relacao = RelacaoMateriaPrima.objects.select_related("materia_prima").get(pk=id)
+        norma_nome = relacao.materia_prima.norma
+
+        norma = NormaTecnica.objects.get(nome_norma=norma_nome)
+
+        if norma.aprovada:
+            return JsonResponse({"aprovada": True})
+        else:
+            return JsonResponse({"aprovada": False, "nome": norma.nome_norma})
+
+    except (NormaTecnica.DoesNotExist, RelacaoMateriaPrima.DoesNotExist):
+        return JsonResponse({"aprovada": False})

@@ -162,11 +162,19 @@ def calc_peso_total(rolos):
     return sum([rolo.peso or 0 for rolo in rolos])
 
 @register.filter
-def parse_decimal(value):
+def parse_decimal_seguro(value):
+    """
+    Converte string em Decimal, tratando 'nan', vazio ou nulo como None.
+    """
     try:
-        return Decimal(str(value).replace(",", "."))
+        if value is None:
+            return None
+        val = str(value).strip().lower()
+        if val in ("", "nan", "none"):
+            return None
+        return Decimal(val.replace(",", "."))
     except (InvalidOperation, ValueError, TypeError):
-        return Decimal("0")
+        return None
 
 
 @register.filter

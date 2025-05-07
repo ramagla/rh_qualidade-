@@ -132,10 +132,11 @@
         <select id="servicoSelect" class="form-select select2" style="width:100%;">
           {% for servico in servicos_disponiveis %}
             <option value="{{ servico.id }}">
-              Pedido {{ servico.pedido }} – {{ servico.fornecedor.nome }}
+              Pedido {{ servico.pedido }} – {{ servico.fornecedor.nome }} ({{ servico.codigo_bm.codigo }})
             </option>
           {% endfor %}
         </select>
+
       </div>
       
       <div class="modal-footer">
@@ -167,6 +168,17 @@
   .zebra-tabela tbody tr:hover {
     background-color: #f1f1f1 !important;
     cursor: pointer;
+  }
+</style>
+<style>
+  /* Corrige os select2 fora da modal */
+  .select2-container {
+    z-index: 1040 !important; /* abaixo da modal (que é 1050) */
+  }
+
+  /* Corrige os select2 DENTRO da modal */
+  #modalNovaInspecao .select2-container {
+    z-index: 1060 !important; /* acima da modal */
   }
 </style>
 
@@ -356,14 +368,17 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // Inicializar select2 dentro da modal
+  const modal = document.getElementById('modalNovaInspecao');
+  modal.addEventListener('shown.bs.modal', function () {
     $('#servicoSelect').select2({
       dropdownParent: $('#modalNovaInspecao'),
       width: '100%',
-      allowClear: true,
-      placeholder: 'Selecione...'
+      placeholder: 'Selecione...',
+      allowClear: true
     });
   });
+});
+
 
   function continuarInspecao() {
     const id = document.getElementById('servicoSelect').value;

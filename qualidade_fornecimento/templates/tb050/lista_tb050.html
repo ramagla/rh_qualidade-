@@ -162,6 +162,29 @@
   </button>
 
 </div>
+<!-- Modal de Alerta para Norma Não Aprovada -->
+<div class="modal fade" id="modalNormaNaoAprovada" tabindex="-1" aria-labelledby="modalNormaNaoAprovadaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-danger shadow">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="modalNormaNaoAprovadaLabel">
+          <i class="bi bi-exclamation-triangle me-2"></i> Norma Não Aprovada
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body text-center">
+    <p>🚫 A norma técnica <strong id="nomeNormaNaoAprovada"></strong> vinculada a esta matéria-prima ainda <strong>não está aprovada</strong>.</p>
+        <p class="mt-2">Entre em contato com o <strong>Departamento Técnico</strong> para verificar a aprovação da norma.</p>
+      </div>
+      <div class="modal-footer justify-content-end">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 
   {# ---------------- Cards de Indicadores -------------- #}
@@ -516,52 +539,92 @@
 
 </style>
 
+<style>
+  .modal-backdrop.show {
+    z-index: 1049 !important; /* abaixo da nova modal */
+  }
+
+  #modalNormaNaoAprovada {
+    z-index: 1065 !important; /* acima do modalF045 (1050) */
+  }
+
+  /* Garante que o dropdown do Select2 fique acima da modal */
+.select2-container--open {
+  z-index: 9999 !important;
+}
+
+.modal .select2-container--open {
+  z-index: 1060 !important; /* acima da .modal-dialog (z-index: 1055) */
+}
+
+</style>
 
 
 {# ------------ Select2 para campos + modal ------------ #}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // Só carrega o select2 dos filtros normais na página
+    // Carrega select2 para filtros
     $('#fornecedor, #materia_prima').select2({
       width: '100%',
       allowClear: true,
       placeholder: 'Selecione...'
     });
 
-    // Agora escuta a abertura da modal
+    // Select2 para a modal de geração F045
     $('#modalF045').on('shown.bs.modal', function () {
       $('#relacaoSelect').select2({
-        dropdownParent: $('#modalF045'), // Agora o parent existe na hora
+        dropdownParent: $('#modalF045'),
         width: '100%',
         allowClear: true,
         placeholder: 'Selecione...'
       });
     });
 
-    // Permitir ENTER para continuar
+    // ENTER também dispara continuar
     $(document).on('keypress', '#relacaoSelect', function (e) {
-      if (e.which === 13) { // Enter key
+      if (e.which === 13) {
         e.preventDefault();
         document.getElementById('btnContinuarF045').click();
       }
     });
 
-    // Permitir ao selecionar direto
+    // Se selecionar no select2, já continua
     $(document).on('select2:select', '#relacaoSelect', function () {
       document.getElementById('btnContinuarF045').click();
     });
   });
 
   function continuarGeracaoF045() {
-    const id = document.getElementById('relacaoSelect').value;
-    if (id) {
-      const url = '{% url "tb050_f045" 0 %}'.replace('/0/', '/' + id + '/');
-      window.location.href = url;
-    } else {
-      alert("Selecione um relatório válido!");
-    }
+  const id = document.getElementById('relacaoSelect').value;
+
+  if (!id) {
+    alert("Selecione um relatório válido!");
+    return;
   }
+
+  fetch(`/qualidade/norma-aprovada/${id}/`)
+    .then(response => response.json())
+    .then(data => {
+  if (data.aprovada === true) {
+    const url = '{% url "tb050_f045" 0 %}'.replace('/0/', '/' + id + '/');
+    window.location.href = url;
+  } else {
+    const nomeSpan = document.getElementById('nomeNormaNaoAprovada');
+    nomeSpan.textContent = data.nome || "(Norma não identificada)";
+
+    const modal = new bootstrap.Modal(document.getElementById('modalNormaNaoAprovada'));
+    modal.show();
+  }
+})
+
+    .catch(error => {
+      console.error("Erro ao verificar norma:", error);
+      alert("Erro ao validar a norma. Entre em contato com o departamento técnico.");
+    });
+}
+
 </script>
+
 
 {% if f045_pending %}
 <!-- Modal de Sucesso F045 -->

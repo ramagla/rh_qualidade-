@@ -30,6 +30,7 @@ from qualidade_fornecimento.views.materiaprima_views import (
     lista_tb050,
     selecionar_etiquetas_tb050,
     visualizar_tb050,
+    norma_aprovada
 )
 from qualidade_fornecimento.views.relatorio_avaliacao import relatorio_avaliacao_view
 
@@ -184,5 +185,7 @@ urlpatterns = [
     visualizar_controle_servico_externo,
     name="visualizar_controle_servico_externo",
     ),
+path("normas/aprovar/", norma_views.aprovar_normas, name="aprovar_normas"),
+path("norma-aprovada/<int:id>/", norma_aprovada, name="verificar_norma_aprovada"),
 
 ]

@@ -41,9 +41,15 @@ class NormaTecnicaForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: ASTM A580"}),
     )
 
+    aprovada = forms.BooleanField(
+        label="Aprovada para uso?",
+        required=False,
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"})
+    )
+
     class Meta:
         model = NormaTecnica
-        fields = ["nome_norma", "arquivo_norma", "vinculo_norma"]
+        fields = ["nome_norma", "arquivo_norma", "vinculo_norma", "aprovada"]
         widgets = {
             "arquivo_norma": forms.FileInput(attrs={"class": "form-control"}),
         }

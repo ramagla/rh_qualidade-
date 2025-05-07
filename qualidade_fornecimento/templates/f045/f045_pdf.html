@@ -242,16 +242,7 @@
   </tbody>
 </table>
 
-<!-- Status -->
-<p><strong>Status Geral:</strong>
-  {% if obj.status_geral == "Aprovado" %}
-    <span class="status-aprovado">APROVADO ✔️</span>
-  {% elif obj.status_geral == "Aprovado Condicionalmente" %}
-    <span class="status-condicional">APROVAÇÃO CONDICIONAL ⚠️</span>
-  {% else %}
-    <span class="status-reprovado">REPROVADO ❌</span>
-  {% endif %}
-</p>
+
 
 <!-- Especificação de Norma -->
 <h4 style="margin-top: 10px;">📄 Especificação de Norma</h4>
@@ -295,7 +286,16 @@
 </table>
 
 
-
+<!-- Status -->
+<p><strong>Status Geral:</strong>
+  {% if obj.status_geral == "Aprovado" %}
+    <span class="status-aprovado">APROVADO ✔️</span>
+  {% elif obj.status_geral == "Aprovado Condicionalmente" %}
+    <span class="status-condicional">APROVAÇÃO CONDICIONAL ⚠️</span>
+  {% else %}
+    <span class="status-reprovado">REPROVADO ❌</span>
+  {% endif %}
+</p>
 
 
 

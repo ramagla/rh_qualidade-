@@ -16,6 +16,9 @@ class NormaTecnica(models.Model):
         "Norma vinculada (tração)", max_length=100, blank=True, null=True
     )
 
+    aprovada = models.BooleanField("Norma aprovada para uso?", default=False)
+
+
     class Meta:
         verbose_name = "Norma Técnica"
         verbose_name_plural = "Normas Técnicas"

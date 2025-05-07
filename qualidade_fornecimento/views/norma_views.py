@@ -22,6 +22,11 @@ from qualidade_fornecimento.models.norma import (
 
 
 
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from qualidade_fornecimento.models.norma import NormaTecnica
+
 @login_required
 def lista_normas(request):
     nome_norma = request.GET.get("nome_norma")
@@ -54,8 +59,12 @@ def lista_normas(request):
     page_number = request.GET.get("page")
     normas = paginator.get_page(page_number)
 
+    # Lista de normas ainda não aprovadas (para o modal de aprovação)
+    normas_pendentes = NormaTecnica.objects.filter(aprovada=False)
+
     context = {
         "normas": normas,
+        "normas_pendentes": normas_pendentes,
         "total_normas": total_normas,
         "normas_com_arquivo": normas_com_arquivo,
         "normas_sem_vinculo": normas_sem_vinculo,
@@ -67,6 +76,7 @@ def lista_normas(request):
         ).distinct(),
     }
     return render(request, "normas/lista_normas.html", context)
+
 
 
 # lista fixa dos 18 campos numéricos da composição
@@ -282,3 +292,15 @@ def get_tipos_abnt(request):
     )
 
     return JsonResponse({"tipos": list(tipos)})
+
+
+def is_tecnico(user):
+    return user.groups.filter(name="tecnico").exists()
+
+@login_required
+def aprovar_normas(request):
+    if request.method == "POST":
+        ids = request.POST.getlist("normas_aprovadas")
+        NormaTecnica.objects.filter(id__in=ids).update(aprovada=True)
+        messages.success(request, "Normas aprovadas com sucesso.")
+    return redirect("lista_normas")

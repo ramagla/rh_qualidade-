@@ -119,13 +119,57 @@
 
 
   <!-- Botão de Cadastro -->
-  <div class="d-flex justify-content-end gap-2 mb-3">
+ <div class="d-flex justify-content-end gap-2 mb-3">
+
   {% if request.user|has_permission:'qualidade_fornecimento.add_normatecnica' %}
-  <a href="{% url 'cadastrar_norma' %}" class="btn btn-success" aria-label="Cadastrar nova norma técnica">
-    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Nova Norma
+  <a href="{% url 'cadastrar_norma' %}" class="btn btn-success me-2">
+    <i class="bi bi-plus-circle"></i> Nova Norma
   </a>
   {% endif %}
+
+{% if request.user|has_permission:'qualidade_fornecimento.aprovar_normatecnica' %}
+   <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAprovarNormas">
+    <i class="bi bi-patch-check"></i> Aprovar Normas
+  </button>
+  {% endif %}
+
 </div>
+<div class="modal fade" id="modalAprovarNormas" tabindex="-1" aria-labelledby="modalAprovarNormasLabel" aria-hidden="true">
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalAprovarNormasLabel">
+          <i class="bi bi-patch-check me-1"></i> Aprovação de Normas
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+
+        <form method="post" action="{% url 'aprovar_normas' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+  <label for="normas_aprovadas" class="form-label">Selecionar Normas para Aprovação</label>
+<select id="normas_aprovadas" name="normas_aprovadas" class="form-select" multiple required>
+    {% for norma in normas_pendentes %}
+      <option value="{{ norma.id }}">{{ norma.nome_norma }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+
+          <div class="text-end mt-3">
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check2-circle me-1"></i> Confirmar Aprovação
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 
 
@@ -135,22 +179,35 @@
   <table class="table zebra-tabela table-hover table-bordered text-center align-middle">
     <thead class="table-light">
       <tr>
-        <th><i class="bi bi-file-earmark-text me-1"></i> Norma</th>
-        <th><i class="bi bi-link-45deg me-1"></i> Vinculada</th>
-        <th><i class="bi bi-gear me-1"></i> Ações</th>
+        <tr>
+          <th><i class="bi bi-file-earmark-text me-1"></i> Norma</th>
+          <th><i class="bi bi-link-45deg me-1"></i> Vinculada</th>
+          <th><i class="bi bi-check2-circle me-1"></i> Aprovada?</th>
+          <th><i class="bi bi-gear me-1"></i> Ações</th>
+        </tr>
+
       </tr>
     </thead>
     <tbody>
         {% for norma in normas %}
           <tr>
-            <td class="text-center align-middle">{{ norma.nome_norma }}</td>
-            <td class="text-center align-middle">
-              {% if norma.vinculo_norma %}
-                {{ norma.vinculo_norma }}
-              {% else %}
-                <span class="text-muted">Nenhuma</span>
-              {% endif %}
-            </td>
+            <tr>
+  <td class="text-center align-middle">{{ norma.nome_norma }}</td>
+  <td class="text-center align-middle">
+    {% if norma.vinculo_norma %}
+      {{ norma.vinculo_norma }}
+    {% else %}
+      <span class="text-muted">Nenhuma</span>
+    {% endif %}
+  </td>
+  <td class="text-center align-middle">
+    {% if norma.aprovada %}
+      <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Sim</span>
+    {% else %}
+      <span class="badge bg-secondary"><i class="bi bi-hourglass-split me-1"></i> Não</span>
+    {% endif %}
+  </td>
+
             <td class="text-center align-middle">
   <div class="d-inline-flex flex-wrap justify-content-center gap-2">
 
@@ -218,5 +275,16 @@
   const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
   tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
 </script>
+
+<script>
+  $('#normas_aprovadas').select2({
+  width: '100%',
+  placeholder: "Selecione uma ou mais normas",
+  allowClear: true,
+  dropdownParent: $('#modalAprovarNormas .modal-content')
+});
+
+</script>
+
 
 {% endblock %}
