@@ -4,365 +4,173 @@
 
 {% block content %}
 {% load custom_filters %}
+{% include 'partials/global/_styles_componentes.html' %}
+
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Avaliações Anuais</h2>
+    {% include 'partials/global/_header_titulo.html' with titulo="Avaliações Anuais" icone="bi bi-journal-check" %}
 
-    <!-- Toast container para mensagens de alerta -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                    <div class="toast align-items-center border-0" style="background-color: #f8d7da; color: #842029;">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <h4 class="alert-heading">Atenção!</h4>
-                                <p>{{ message }}</p>
-                            </div>
-                        </div>
-                    </div>
-                {% elif message.tags == "success" %}
-                    <div class="toast align-items-center border-0" style="background-color: #d1e7dd; color: #0f5132;" data-bs-delay="10000">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <h4 class="alert-heading">Sucesso!</h4>
-                                <p>{{ message }}</p>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
+    {% include 'partials/global/_toast_mensagens.html' %}
 
-    <div class="d-flex justify-content-end mb-4">
-        {% if request.user|has_permission:'Funcionario.add_avaliacaoanual' %}
-        <a href="{% url 'cadastrar_avaliacao_anual' %}" class="btn btn-primary me-2">
+    {% if request.user|has_permission:'Funcionario.add_avaliacaoanual' %}
+    <div class="text-end mb-4">
+        <a href="{% url 'cadastrar_avaliacao_anual' %}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
-        {% endif %}   
-     
     </div>
-    
+    {% endif %}
 
-   <!-- Formulário de Filtro -->
-<form method="get" class="mb-4">
-    <div class="row">
-        <!-- Filtro por Colaborador -->
-        <div class="col-md-3">
-            <label for="funcionario" class="form-label">Colaborador:</label>
-            <select name="funcionario" id="funcionario" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for funcionario in funcionarios %}
-                    <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>{{ funcionario.nome }}</option>
-                {% endfor %}
-            </select>
+   <!-- 🔎 Filtros de Avaliações -->
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+    <strong class="text-primary">Filtros de Avaliações</strong>
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
+        <!-- Colaborador -->
+        <div class="col-md-4">
+          <label for="funcionario" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-person text-secondary"></i> Colaborador
+          </label>
+          <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtrar por colaborador">
+            <option value="">Selecione</option>
+            {% for funcionario in funcionarios %}
+              <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>{{ funcionario.nome }}</option>
+            {% endfor %}
+          </select>
         </div>
 
+        <!-- Departamento -->
+        <div class="col-md-4">
+          <label for="departamento" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-diagram-3 text-secondary"></i> Departamento
+          </label>
+          <select name="departamento" id="departamento" class="form-select select2" aria-label="Filtrar por departamento">
+            <option value="">Selecione</option>
+            {% for departamento in departamentos %}
+              <option value="{{ departamento }}" {% if request.GET.departamento == departamento %}selected{% endif %}>{{ departamento }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Período de Avaliação -->
+        <div class="col-md-4">
+          <label class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-range text-secondary"></i> Período de Avaliação
+          </label>
+          <div class="row">
+            <div class="col">
+              <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}" aria-label="Data de Início">
+            </div>
+            <div class="col">
+              <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}" aria-label="Data de Fim">
+            </div>
+          </div>
+        </div>
+
+        <!-- Botão de Filtrar -->
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </div>
+    </form>
+  </div>
+</div>
+
+
+    <div class="row mb-4">
+        {% include 'partials/global/_card_indicador.html' with cor='info' titulo='Total de Avaliações' valor=total_avaliacoes subtitulo='Avaliações cadastradas' %}
+        {% include 'partials/global/_card_indicador.html' with cor='success' titulo='Ótimo' valor=classificacao_otimo subtitulo='Classificação Ótimo' %}
+        {% include 'partials/global/_card_indicador.html' with cor='primary' titulo='Bom' valor=classificacao_bom subtitulo='Classificação Bom' %}
+        {% include 'partials/global/_card_indicador.html' with cor='warning' titulo='Regular' valor=classificacao_regular subtitulo='Classificação Regular' %}
+    </div>
+
+    <table class="table table-bordered table-striped text-center mt-4">
+  <thead class="table-light">
+    <tr>
+      <th scope="col">
+        <i class="bi bi-person-fill me-1 text-secondary" aria-hidden="true"></i>
+        Colaborador
+      </th>
+      <th scope="col">
+        <i class="bi bi-calendar-event-fill me-1 text-secondary" aria-hidden="true"></i>
+        Data de Avaliação
+      </th>
+      <th scope="col">
+        <i class="bi bi-cash-coin me-1 text-secondary" aria-hidden="true"></i>
+        Centro de Custo
+      </th>
+      <th scope="col">
+        <i class="bi bi-diagram-3-fill me-1 text-secondary" aria-hidden="true"></i>
+        Departamento
+      </th>
+      <th scope="col">
+        <i class="bi bi-bar-chart-fill me-1 text-secondary" aria-hidden="true"></i>
+        Classificação
+      </th>
+      <th scope="col">
+        <i class="bi bi-percent me-1 text-secondary" aria-hidden="true"></i>
         
-<!-- Filtro por Departamento -->
-<div class="col-md-3">
-    <label for="departamento" class="form-label">Departamento:</label>
-    <select name="departamento" id="departamento" class="form-select select2">
-        <option value="">Selecione</option>
-        {% for departamento in departamentos %}
-            <option value="{{ departamento }}" {% if request.GET.departamento == departamento %}selected{% endif %}>{{ departamento }}</option>
-        {% endfor %}
-    </select>
-</div>
+      </th>
+      <th scope="col">
+        <i class="bi bi-gear-fill me-1 text-secondary" aria-hidden="true"></i>
+        Ações
+      </th>
+    </tr>
+  </thead>
 
-
-
-        <!-- Filtro por Data de Avaliação -->
-<div class="col-md-4">
-    <label for="data_avaliacao" class="form-label">Período de Avaliação:</label>
-    <div class="row">
-        <div class="col">
-            <input type="date" name="data_inicio" class="form-control" placeholder="Data Início" value="{{ request.GET.data_inicio }}">
-        </div>
-        <div class="col">
-            <input type="date" name="data_fim" class="form-control" placeholder="Data Fim" value="{{ request.GET.data_fim }}">
-        </div>
-    </div>
-</div>
-
-
-    <div class="text-end mt-3">
-        <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
-    </div>
-</form>
-
-
-  
-
-
-<div class="d-flex flex-wrap justify-content-between mb-4 mt-4">
-    <!-- Total de Avaliações -->
-    <div class="card text-white bg-info card-custom text-center">
-        <div class="card-header">Total de Avaliações</div>
-        <div class="card-body">
-            <h5 class="card-title">{{ total_avaliacoes }}</h5>
-            <p class="card-text">Avaliações cadastradas</p>
-        </div>
-    </div>
-
-    <!-- Classificação Ótimo -->
-    <div class="card text-white bg-success card-custom text-center">
-        <div class="card-header">Ótimo</div>
-        <div class="card-body">
-            <h5 class="card-title">{{ classificacao_otimo }}</h5>
-            <p class="card-text">Classificação Ótimo</p>
-        </div>
-    </div>
-
-    <!-- Classificação Bom -->
-    <div class="card text-white bg-primary card-custom text-center">
-        <div class="card-header">Bom</div>
-        <div class="card-body">
-            <h5 class="card-title">{{ classificacao_bom }}</h5>
-            <p class="card-text">Classificação Bom</p>
-        </div>
-    </div>
-
-    <!-- Classificação Regular -->
-    <div class="card text-dark bg-warning card-custom text-center">
-        <div class="card-header">Regular</div>
-        <div class="card-body">
-            <h5 class="card-title">{{ classificacao_regular }}</h5>
-            <p class="card-text">Classificação Regular</p>
-        </div>
-    </div>
-
-    <!-- Classificação Ruim -->
-    <div class="card text-white bg-danger card-custom text-center">
-        <div class="card-header">Ruim</div>
-        <div class="card-body">
-            <h5 class="card-title">{{ classificacao_ruim }}</h5>
-            <p class="card-text">Classificação Ruim</p>
-        </div>
-    </div>
-</div>
-<style>
-    .card-custom {
-        flex: 1; /* Faz com que os cards ocupem o mesmo tamanho */
-        min-width: 150px; /* Define uma largura mínima para os cards */
-        margin: 5px; /* Adiciona espaçamento entre os cards */
-    }
-</style>
-
-
- <!-- Lista de Avaliações -->
-<table class="table table-bordered text-center mt-4">
-    <thead>
-        <tr>
-            <th>Colaborador</th>
-            <th>Data de Avaliação</th>
-            <th>Centro de Custo</th>
-            <th>Departamento</th>
-            <th>Classificação</th>
-            <th>%</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for avaliacao in avaliacoes %}
+        <tbody>
+            {% for avaliacao in avaliacoes %}
             <tr>
                 <td class="align-middle">{{ avaliacao.funcionario.nome }}</td>
                 <td class="align-middle">{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
                 <td class="align-middle">{{ avaliacao.centro_custo }}</td>
                 <td class="align-middle">{{ avaliacao.funcionario.local_trabalho }}</td>
                 <td class="align-middle">
-    {% if avaliacao.classificacao == 'Ruim' %}
-        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Ruim</span>
-    {% elif avaliacao.classificacao == 'Regular' %}
-        <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> Regular</span>
-    {% elif avaliacao.classificacao == 'Bom' %}
-        <span class="badge bg-primary"><i class="bi bi-check-circle"></i> Bom</span>
-    {% elif avaliacao.classificacao == 'Ótimo' %}
-        <span class="badge bg-success"><i class="bi bi-star-fill"></i> Ótimo</span>
-    {% else %}
-        <span class="badge bg-secondary">Indeterminado</span>
-    {% endif %}
-</td>
+                    {% if avaliacao.classificacao == 'Ruim' %}
+                        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Ruim</span>
+                    {% elif avaliacao.classificacao == 'Regular' %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> Regular</span>
+                    {% elif avaliacao.classificacao == 'Bom' %}
+                        <span class="badge bg-primary"><i class="bi bi-check-circle"></i> Bom</span>
+                    {% elif avaliacao.classificacao == 'Ótimo' %}
+                        <span class="badge bg-success"><i class="bi bi-star-fill"></i> Ótimo</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Indeterminado</span>
+                    {% endif %}
+                </td>
+                <td class="align-middle">{{ avaliacao.percentual|floatformat:1 }}%</td>
+                <td class="align-middle d-flex justify-content-center gap-1 flex-wrap">
+                    {% if request.user|has_permission:'Funcionario.view_avaliacaoanual' %}
+    {% include 'partials/global/_botao_visualizar.html' with objeto=avaliacao url_visualizar='visualizar_avaliacao_anual' label='avaliação' %}
+{% endif %}
 
-<!-- Para exibir o percentual -->
-<td class="align-middle">{{ avaliacao.percentual|floatformat:1 }}%</td>
+{% if request.user|has_permission:'Funcionario.change_avaliacaoanual' %}
+    {% include 'partials/global/_botao_editar.html' with objeto=avaliacao url_editar='editar_avaliacao_anual' label='avaliação' %}
+{% endif %}
 
-<td class="align-middle">
-    {% if request.user|has_permission:'Funcionario.view_avaliacaoanual' %}
-    <a href="{% url 'visualizar_avaliacao_anual' avaliacao.id %}" class="btn btn-sm btn-info" title="Visualizar">
-        <i class="bi bi-eye"></i>
+{% if request.user|has_permission:'Funcionario.view_avaliacaoanual' %}
+    <a href="{% url 'imprimir_avaliacao_anual' avaliacao.id %}"
+       class="btn btn-sm btn-primary mt-1"
+       target="_blank"
+       title="Imprimir"
+       aria-label="Imprimir avaliação">
+       <i class="bi bi-printer" aria-hidden="true"></i>
     </a>
-    {% endif %}
-    {% if request.user|has_permission:'Funcionario.change_avaliacaoanual' %}
-    <a href="{% url 'editar_avaliacao_anual' avaliacao.id %}" class="btn btn-warning btn-sm" title="Editar">
-        <i class="bi bi-pencil-square"></i>
-    </a>
-    {% endif %}
-    {% if request.user|has_permission:'Funcionario.view_avaliacaoanual' %}
-    <a href="{% url 'imprimir_avaliacao_anual' avaliacao.id %}" target="_blank" class="btn btn-sm btn-primary" title="Imprimir">
-        <i class="bi bi-printer"></i>
-    </a>
-    {% endif %}
-    {% if request.user|has_permission:'Funcionario.delete_avaliacaoanual' %}
-    <a href="#" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}">
-        <i class="bi bi-trash"></i>
-    </a>
-    {% endif %}
-</td>
+{% endif %}
 
+{% if request.user|has_permission:'Funcionario.delete_avaliacaoanual' %}
+    {% include 'partials/global/_botao_excluir.html' with objeto=avaliacao url_excluir='excluir_avaliacao_anual' label='avaliação' %}
+{% endif %}
+
+                </td>
             </tr>
+            {% empty %}
+                {% include 'partials/global/_sem_resultados.html' with item_nome='avaliação' %}
+            {% endfor %}
+        </tbody>
+    </table>
 
-               <!-- Modal para confirmação de exclusão -->
-               <div class="modal fade" id="confirmDeleteModal{{ avaliacao.id }}" tabindex="-1" aria-labelledby="confirmDeleteModalLabel{{ avaliacao.id }}" aria-hidden="true">
-                   <div class="modal-dialog">
-                       <div class="modal-content">
-                           <div class="modal-header">
-                               <h5 class="modal-title" id="confirmDeleteModalLabel{{ avaliacao.id }}">Confirmar Exclusão</h5>
-                               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                           </div>
-                           <div class="modal-body">
-                               <p>Tem certeza de que deseja excluir a avaliação de <strong>{{ avaliacao.funcionario.nome }}</strong>?</p>
-                                                          </div>
-                           <div class="modal-footer">
-                               <form method="post" action="{% url 'excluir_avaliacao_anual' avaliacao.id %}">
-                                   {% csrf_token %}
-                                   <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
-                               </form>
-                               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                           </div>
-                       </div>
-                   </div>
-               </div>
-           {% empty %}
-               <tr>
-                   <td colspan="7" class="text-center">Nenhuma avaliação anual cadastrada.</td>
-               </tr>
-           {% endfor %}
-       </tbody>
-   </table>
+    {% include 'partials/global/_paginacao.html' %}
 </div>
 
-<!-- Paginação -->
-<nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Primeira">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}">{{ num }}</a></li>
-            {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Próxima">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Última">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
-
-
-<style>
-    .classificacao-ruim {
-        background-color: #f8d7da; /* Vermelho claro */
-        color: #842029;
-    }
-    .classificacao-regular {
-        background-color: #fff3cd; /* Amarelo claro */
-        color: #856404;
-    }
-    .classificacao-bom {
-        background-color: #d1e7dd; /* Verde claro */
-        color: #0f5132;
-    }
-    .classificacao-otimo {
-        background-color: #cfe2f3; /* Azul claro */
-        color: #084298;
-    }
-</style>
-<style>
-/* Ajuste para o Select2 dentro da Modal */
-#imprimirModal .select2-container--default .select2-selection--single {
-    height: calc(2.25rem + 2px); /* Ajusta a altura para alinhar com outros inputs */
-    padding: 0.375rem 0.75rem;   /* Padding interno */
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #212529;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-}
-
-#imprimirModal .select2-container {
-    z-index: 9999 !important; /* Garante que o Select2 fique acima da modal */
-    width: 100% !important;   /* Ocupa toda a largura do container */
-}
-
-#imprimirModal .select2-dropdown {
-    z-index: 1050 !important; /* Coloca o dropdown acima da modal */
-}
-
-#imprimirModal #avaliacao_modal + .select2-container {
-    width: 100% !important; /* Ajusta largura */
-}
-</style>
-
-
-
-<!-- Script para exibir toasts e inicializar Select2 -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Exibe os toasts
-    const toasts = document.querySelectorAll('.toast');
-    toasts.forEach(toast => {
-        const bootstrapToast = new bootstrap.Toast(toast);
-        bootstrapToast.show();
-    });
-
-    // Inicializa o Select2 dentro da modal
-    $('#imprimirModal').on('shown.bs.modal', function () {
-        $('#avaliacao_modal').select2({
-            placeholder: 'Selecione uma avaliação',
-            allowClear: true,
-            dropdownParent: $('#imprimirModal') // Define que o dropdown do Select2 pertence à modal
-        });
-    });
-
-    // Configura o botão de impressão
-    document.getElementById('imprimirButton').addEventListener('click', function (event) {
-        event.preventDefault();
-        const avaliacaoId = document.getElementById('avaliacao_modal').value;
-
-        if (avaliacaoId) {
-            // Ajusta a URL para a impressão
-            const url = `/avaliacoes-anual/imprimir/${avaliacaoId}/`; // Substitua pelo caminho correto
-            window.location.href = url;
-        } else {
-            alert('Por favor, selecione uma avaliação para imprimir.');
-        }
-    });
-});
-</script>
-
-
 {% endblock %}
-
-                          

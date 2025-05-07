@@ -207,29 +207,61 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
 class AvaliacaoAnualForm(forms.ModelForm):
     avaliacao_global_avaliador = forms.CharField(
         widget=CKEditor5Widget(config_name="default"),
-        required=False,  # Define como não obrigatório
+        required=False,
     )
     avaliacao_global_avaliado = forms.CharField(
         widget=CKEditor5Widget(config_name="default"),
-        required=False,  # Define como não obrigatório
+        required=False,
     )
 
     class Meta:
         model = AvaliacaoAnual
         fields = "__all__"
         widgets = {
-            "data_avaliacao": forms.DateInput(attrs={"type": "date"}),
+            "data_avaliacao": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"},
+                format="%Y-%m-%d"
+),
+
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Filtrar funcionários ativos e ordenar por nome
+
+        # 🔄 Filtrar funcionários ativos
         self.fields["funcionario"].queryset = Funcionario.objects.filter(
             status__iexact="Ativo"
         ).order_by("nome")
 
+        # ✅ Campos do questionário como ChoiceField (1 a 4)
+        escolhas = [
+            (1, "Ruim"),
+            (2, "Regular"),
+            (3, "Bom"),
+            (4, "Ótimo"),
+        ]
+        campos_questionario = [
+            "postura_seg_trabalho",
+            "qualidade_produtividade",
+            "trabalho_em_equipe",
+            "comprometimento",
+            "disponibilidade_para_mudancas",
+            "disciplina",
+            "rendimento_sob_pressao",
+            "proatividade",
+            "comunicacao",
+            "assiduidade",
+        ]
+        for campo in campos_questionario:
+            self.fields[campo] = forms.ChoiceField(
+                choices=[("", "---------")] + escolhas,
+                widget=forms.Select(attrs={"class": "form-select item-avaliado"}),
+                required=False,
+                label=self.fields[campo].label if campo in self.fields else campo.replace("_", " ").capitalize(),
+            )
+
     def clean_centro_custo(self):
         centro_custo = self.cleaned_data.get("centro_custo")
         if centro_custo:
-            return title_case(centro_custo)  # Aplica a função title_case personalizada
+            return title_case(centro_custo)
         return centro_custo

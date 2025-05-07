@@ -167,3 +167,15 @@ def parse_decimal(value):
         return Decimal(str(value).replace(",", "."))
     except (InvalidOperation, ValueError, TypeError):
         return Decimal("0")
+
+
+@register.filter
+def dict_get(d, key):
+    return d.get(key)
+
+@register.filter
+def lookup(d, key):
+    try:
+        return d[key]
+    except (KeyError, TypeError, AttributeError):
+        return None

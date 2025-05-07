@@ -115,15 +115,28 @@ def cadastrar_avaliacao_anual(request):
     else:
         form = AvaliacaoAnualForm()
 
-    # Ordenar os funcionários por nome
     funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+
+    campos_avaliados = [
+        "postura_seg_trabalho",
+        "qualidade_produtividade",
+        "trabalho_em_equipe",
+        "comprometimento",
+        "disponibilidade_para_mudancas",
+        "disciplina",
+        "rendimento_sob_pressao",
+        "proatividade",
+        "comunicacao",
+        "assiduidade",
+    ]
 
     return render(
         request,
-        "avaliacao_desempenho_anual/cadastrar_avaliacao_anual.html",
+        "avaliacao_desempenho_anual/form_avaliacao_anual.html",
         {
             "form": form,
             "funcionarios": funcionarios,
+            "campos_avaliados": campos_avaliados,
         },
     )
 
@@ -139,20 +152,33 @@ def editar_avaliacao_anual(request, id):
             messages.success(request, "Avaliação anual atualizada com sucesso!")
             return redirect("lista_avaliacao_anual")
         else:
-            # Se o formulário não for válido, você pode optar por adicionar uma mensagem de erro
             messages.error(
                 request, "Erro ao atualizar a avaliação. Verifique os campos."
             )
-
     else:
         form = AvaliacaoAnualForm(instance=avaliacao)
 
+    campos_avaliados = [
+        "postura_seg_trabalho",
+        "qualidade_produtividade",
+        "trabalho_em_equipe",
+        "comprometimento",
+        "disponibilidade_para_mudancas",
+        "disciplina",
+        "rendimento_sob_pressao",
+        "proatividade",
+        "comunicacao",
+        "assiduidade",
+    ]
+
     return render(
         request,
-        "avaliacao_desempenho_anual/editar_avaliacao_anual.html",
+        "avaliacao_desempenho_anual/form_avaliacao_anual.html",
         {
             "form": form,
             "avaliacao": avaliacao,
+            "funcionarios": Funcionario.objects.filter(status="Ativo").order_by("nome"),
+            "campos_avaliados": campos_avaliados,
         },
     )
 
@@ -168,13 +194,22 @@ def excluir_avaliacao_anual(request, id):
 
 @login_required
 def imprimir_avaliacao(request, avaliacao_id):
-    # Obtém a avaliação anual pelo ID
     avaliacao = get_object_or_404(AvaliacaoAnual, id=avaliacao_id)
 
-    # Chama o método calcular_classificacao
+    # Calcula a classificação
     classificacao = avaliacao.calcular_classificacao()
 
-    # Passa a classificação e a avaliação para o template
+    # Campos de nota (exclui os campos textuais e FK)
+    campos_notas = []
+    for field in avaliacao._meta.fields:
+        if field.name not in [
+            "id", "funcionario", "avaliador", "data", "observacoes", "pontos_fortes", "pontos_melhorar"
+        ]:
+            campos_notas.append({
+                "nome": field.verbose_name,
+                "valor": getattr(avaliacao, field.name),
+            })
+
     return render(
         request,
         "avaliacao_desempenho_anual/imprimir_avaliacao_anual.html",
@@ -182,6 +217,7 @@ def imprimir_avaliacao(request, avaliacao_id):
             "avaliacao": avaliacao,
             "percentual": classificacao["percentual"],
             "status": classificacao["status"],
+            "campos_notas": campos_notas,
         },
     )
 
@@ -217,6 +253,7 @@ def visualizar_avaliacao_anual(request, id):
         "status_campos": status_campos,
         "classificacao": classificacao["status"],
         "percentual": classificacao["percentual"],
+        "now": now(),
     }
     return render(
         request, "avaliacao_desempenho_anual/visualizar_avaliacao_anual.html", context

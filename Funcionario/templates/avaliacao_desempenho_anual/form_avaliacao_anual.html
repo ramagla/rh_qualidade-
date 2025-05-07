@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}Cadastro de Avaliação Anual{% endblock %}
+
+{% block content %}
+
+<!-- Cabeçalho do Formulário -->
+{% if form.instance.pk %}
+  {% with "Editar Avaliação Anual" as titulo_header %}
+    {% include 'partials/global/_header_titulo.html' with titulo=titulo_header icone="bi bi-person-check-fill" emoji="📝" %}
+  {% endwith %}
+{% else %}
+  {% with "Cadastro de Avaliação Anual" as titulo_header %}
+    {% include 'partials/global/_header_titulo.html' with titulo=titulo_header icone="bi bi-person-check-fill" emoji="📝" %}
+  {% endwith %}
+{% endif %}
+
+<!-- Barra de Status -->
+<div class="container mb-4">
+  <div class="card shadow-sm sticky-top bg-white border" style="z-index: 1020;">
+    <div class="card-body d-flex justify-content-between align-items-center">
+      <div class="fw-bold" id="status-text"><i class="bi bi-dash-circle"></i> Calculando...</div>
+      <div class="d-flex align-items-center gap-2">
+        <span id="status-percentage" aria-live="polite">(0%)</span>
+        <div class="progress" style="width: 150px;" aria-label="Progresso da avaliação">
+          <div id="status-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <form method="post" action="{% if form.instance.pk %}{% url 'editar_avaliacao_anual' form.instance.pk %}{% else %}{% url 'cadastrar_avaliacao_anual' %}{% endif %}" class="row g-3">
+    {% csrf_token %}
+    {% include 'partials/global/_form_errors.html' %}
+
+    <div class="accordion" id="accordionPrincipal">
+
+      <!-- Sessão Dados Iniciais -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDados">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDados" aria-expanded="true" aria-controls="collapseDados">
+            🗓️ Dados da Avaliação
+          </button>
+        </h2>
+        <div id="collapseDados" class="accordion-collapse collapse show" aria-labelledby="headingDados" data-bs-parent="#accordionPrincipal">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="data_avaliacao" class="form-label"><i class="bi bi-calendar-event"></i> Data da Avaliação:</label>
+              {{ form.data_avaliacao|add_class:'form-control' }}
+            </div>
+            <div class="col-md-6">
+              <label for="funcionario" class="form-label"><i class="bi bi-person"></i> Colaborador:</label>
+              <select class="form-select select2" id="funcionario" name="funcionario">
+                <option value="" disabled selected>Selecione o colaborador</option>
+                {% for funcionario in funcionarios %}
+                  <option value="{{ funcionario.id }}" {% if form.instance.funcionario.id == funcionario.id %}selected{% endif %}>{{ funcionario.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="cargo" class="form-label"><i class="bi bi-award"></i> Cargo:</label>
+                <input type="text" class="form-control" id="cargo" name="cargo" readonly aria-disabled="true">
+            </div>
+            <div class="col-md-6">
+              <label for="departamento" class="form-label"><i class="bi bi-diagram-3"></i> Departamento:</label>
+<input type="text" class="form-control" id="departamento" name="departamento" readonly aria-disabled="true">
+            </div>
+            <div class="col-md-6">
+              <label for="centro_custo" class="form-label"><i class="bi bi-cash-stack"></i> Centro de Custo:</label>
+              {{ form.centro_custo|add_class:'form-control' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sessão Questionário -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingQuest">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuest" aria-expanded="false" aria-controls="collapseQuest">
+            💡 Questionário da Avaliação
+          </button>
+        </h2>
+        <div id="collapseQuest" class="accordion-collapse collapse" aria-labelledby="headingQuest" data-bs-parent="#accordionPrincipal">
+          <div class="accordion-body row g-3">
+            {% for campo in campos_avaliados %}
+              <div class="col-md-6">
+                {% with field=form|lookup:campo %}
+                  <label for="{{ field.id_for_label }}" class="form-label">
+                    <i class="bi bi-ui-checks"></i> {{ field.label }}
+                  </label>
+                  {{ field|add_class:'form-select item-avaliado' }}
+                {% endwith %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Sessão Avaliações Globais -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingGlob">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGlob" aria-expanded="false" aria-controls="collapseGlob">
+            🌐 Avaliações Globais
+          </button>
+        </h2>
+        <div id="collapseGlob" class="accordion-collapse collapse" aria-labelledby="headingGlob" data-bs-parent="#accordionPrincipal">
+          <div class="accordion-body row g-3">
+            <div class="col-12">
+              <label for="avaliacao_global_avaliador" class="form-label"><i class="bi bi-chat-dots"></i> Avaliação Global (Visão do Avaliador)</label>
+            {{ form.avaliacao_global_avaliador|safe }}
+            </div>
+            <div class="col-12">
+              <label for="avaliacao_global_avaliado" class="form-label"><i class="bi bi-chat-square-dots"></i> Avaliação Global (Visão do Avaliado)</label>
+              {{ form.avaliacao_global_avaliado|safe }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='lista_avaliacao_anual' %}
+  </form>
+</div>
+
+<script>
+  function preencherInfoFuncionario() {
+    const funcionarioSelect = $('#funcionario');
+    const cargoInput = document.getElementById('cargo');
+    const departamentoInput = document.getElementById('departamento');
+    let ultimoId = null;
+
+    funcionarioSelect.on('change', function () {
+      const funcionarioId = $(this).val();
+      if (funcionarioId && funcionarioId !== ultimoId) {
+        ultimoId = funcionarioId;
+        fetch(`/get-cargo/${funcionarioId}/`)
+          .then(res => res.json())
+          .then(data => {
+            cargoInput.value = data.cargo || 'Cargo não encontrado';
+            departamentoInput.value = data.departamento || 'Departamento não encontrado';
+          })
+          .catch(() => {
+            cargoInput.value = 'Erro ao carregar';
+            departamentoInput.value = 'Erro ao carregar';
+          });
+      }
+    });
+  }
+
+  function calcularStatus() {
+    let total = 0;
+    const itens = document.querySelectorAll('.item-avaliado');
+    itens.forEach(sel => { total += parseInt(sel.value) || 0 });
+
+    const pct = (total / 40) * 100;
+    const statusText = document.getElementById('status-text');
+    const statusPct = document.getElementById('status-percentage');
+    const bar = document.getElementById('status-progress');
+
+    let status = 'Nota insuficiente';
+    let icon = 'bi-dash-circle';
+    let cls = 'bg-secondary';
+    if (pct >= 85) { status = 'Ótimo'; icon = 'bi-star-fill'; cls = 'bg-success'; }
+    else if (pct >= 66) { status = 'Bom'; icon = 'bi-check-circle'; cls = 'bg-primary'; }
+    else if (pct >= 46) { status = 'Regular'; icon = 'bi-exclamation-circle'; cls = 'bg-warning'; }
+    else if (pct >= 25) { status = 'Ruim'; icon = 'bi-x-circle'; cls = 'bg-danger'; }
+
+    statusText.innerHTML = `<i class="bi ${icon}"></i> ${status}`;
+    statusPct.innerHTML = `(${Math.round(pct)}%)`;
+    bar.style.width = `${pct}%`;
+    bar.setAttribute('aria-valuenow', pct);
+    bar.className = `progress-bar ${cls}`;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    preencherInfoFuncionario();
+
+    const itens = document.querySelectorAll('.item-avaliado');
+    itens.forEach(el => el.addEventListener('change', calcularStatus));
+
+    setTimeout(() => {
+      calcularStatus();
+
+      // Abre o accordion se houver algum campo preenchido
+      const algumPreenchido = Array.from(itens).some(el => el.value && el.value !== "");
+      if (algumPreenchido) {
+        const accordion = document.getElementById("collapseQuest");
+        if (accordion && !accordion.classList.contains("show")) {
+          new bootstrap.Collapse(accordion, { toggle: true });
+        }
+      }
+
+      // ✅ Força carregamento de Cargo/Departamento na edição
+      const funcionarioSelect = document.getElementById("funcionario");
+      if (funcionarioSelect && funcionarioSelect.value) {
+        funcionarioSelect.dispatchEvent(new Event('change'));
+      }
+    }, 100);
+  });
+</script>
+
+
+{% endblock %}
