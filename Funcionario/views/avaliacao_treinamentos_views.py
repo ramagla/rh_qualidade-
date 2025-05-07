@@ -138,7 +138,7 @@ def cadastrar_avaliacao(request):
     # Renderiza o template com o formulário e opções necessárias
     return render(
         request,
-        "avaliacao_treinamento/cadastrar_avaliacao.html",
+        "avaliacao_treinamento/form_avaliacao.html",
         {
             "form": form,
             "funcionarios": funcionarios,
@@ -194,7 +194,7 @@ def editar_avaliacao(request, id):
     # Renderiza o template com os dados necessários
     return render(
         request,
-        "avaliacao_treinamento/editar_avaliacao.html",
+        "avaliacao_treinamento/form_avaliacao.html",
         {
             "form": form,
             "avaliacao": avaliacao,
@@ -206,6 +206,7 @@ def editar_avaliacao(request, id):
         },
     )
 
+from django.utils import timezone
 
 @login_required
 def visualizar_avaliacao(request, id):
@@ -234,24 +235,13 @@ def visualizar_avaliacao(request, id):
         5: "As melhorias obtidas excederam as expectativas.",
     }
 
-    # Traduzindo respostas para texto
-    grau_conhecimento = opcoes_conhecimento.get(
-        avaliacao.pergunta_1, "Resposta não especificada"
-    )
-    aplicacao_conceitos = opcoes_aplicacao.get(
-        avaliacao.pergunta_2, "Resposta não especificada"
-    )
-    resultados_obtidos = opcoes_resultados.get(
-        avaliacao.pergunta_3, "Resposta não especificada"
-    )
+    grau_conhecimento = opcoes_conhecimento.get(avaliacao.pergunta_1, "Resposta não especificada")
+    aplicacao_conceitos = opcoes_aplicacao.get(avaliacao.pergunta_2, "Resposta não especificada")
+    resultados_obtidos = opcoes_resultados.get(avaliacao.pergunta_3, "Resposta não especificada")
 
-    # Avaliação geral - Mapeamento do número para o texto correspondente
     avaliacao_geral_map = {1: "Pouco Eficaz", 2: "Eficaz", 5: "Muito Eficaz"}
-    avaliacao_geral = avaliacao_geral_map.get(
-        avaliacao.avaliacao_geral, "Indeterminado"
-    )
+    avaliacao_geral = avaliacao_geral_map.get(avaliacao.avaliacao_geral, "Indeterminado")
 
-    # Verifica se há um treinamento associado
     treinamento = avaliacao.treinamento if avaliacao.treinamento else None
 
     return render(
@@ -265,9 +255,9 @@ def visualizar_avaliacao(request, id):
             "melhorias": avaliacao.descricao_melhorias,
             "avaliacao_geral": avaliacao_geral,
             "treinamento": treinamento,
+            "now": timezone.now(),  # <- adicionado aqui
         },
     )
-
 
 def get_treinamentos_por_funcionario(request, funcionario_id):
     treinamentos = ListaPresenca.objects.filter(participantes__id=funcionario_id)

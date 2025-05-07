@@ -32,6 +32,11 @@ from django.core.paginator import Paginator
 from django.shortcuts import render
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.shortcuts import render
+from qualidade_fornecimento.models import NormaTecnica  # Import necessário
+
 def listar_materia_prima_catalogo(request):
     # Filtros via GET
     codigo = request.GET.get("codigo", "").strip()
@@ -51,7 +56,7 @@ def listar_materia_prima_catalogo(request):
     if descricao:
         queryset = queryset.filter(descricao__icontains=descricao)
     if norma:
-        queryset = queryset.filter(norma__icontains=norma)
+        queryset = queryset.filter(norma_id=norma)
     if classe:
         queryset = queryset.filter(classe__iexact=classe)
     if tipo:
@@ -67,7 +72,6 @@ def listar_materia_prima_catalogo(request):
     total_inox = queryset.filter(tipo_material__icontains="inox").count()
     total_outros = queryset.exclude(tipo_material__icontains="carbono").exclude(tipo_material__icontains="inox").count()
 
-
     # Paginação
     paginator = Paginator(queryset, 15)
     page_number = request.GET.get("page")
@@ -76,13 +80,15 @@ def listar_materia_prima_catalogo(request):
     # Dados únicos para os filtros (Select2)
     codigos_disponiveis = MateriaPrimaCatalogo.objects.values_list("codigo", flat=True).distinct().order_by("codigo")
     descricoes_disponiveis = MateriaPrimaCatalogo.objects.values_list("descricao", flat=True).distinct().order_by("descricao")
-    normas_disponiveis = (
+
+    normas_ids = (
         MateriaPrimaCatalogo.objects
         .filter(norma__isnull=False)
         .values_list("norma", flat=True)
         .distinct()
-        .order_by("norma")
     )
+    normas_disponiveis = NormaTecnica.objects.filter(id__in=normas_ids).order_by("nome_norma")
+
     classes_disponiveis = MateriaPrimaCatalogo.objects.values_list("classe", flat=True).distinct().order_by("classe")
     tipos_materiais_disponiveis = (
         MateriaPrimaCatalogo.objects
@@ -116,6 +122,7 @@ def listar_materia_prima_catalogo(request):
     }
 
     return render(request, "cadastro_materia_prima/listar_materiaprima.html", context)
+
 
 
 from django.contrib import messages

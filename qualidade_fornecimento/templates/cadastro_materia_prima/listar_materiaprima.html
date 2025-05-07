@@ -48,17 +48,21 @@
         </div>
 
         <div class="col-md-4">
-          <label class="form-label">Norma</label>
-          <div class="input-group flex-nowrap">
-            <span class="input-group-text"><i class="bi bi-journal-text"></i></span>
-            <select class="form-select select2" name="norma" data-placeholder="Selecione a norma...">
-              <option></option>
-              {% for n in normas_disponiveis %}
-                <option value="{{ n }}" {% if request.GET.norma == n %}selected{% endif %}>{{ n }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
+  <label class="form-label">Norma</label>
+  <div class="input-group flex-nowrap">
+    <span class="input-group-text"><i class="bi bi-journal-text"></i></span>
+    <select class="form-select select2" name="norma" data-placeholder="Selecione a norma...">
+      <option></option>
+      {% for n in normas_disponiveis %}
+        <option value="{{ n.id }}" {% if request.GET.norma == n.id|stringformat:"s" %}selected{% endif %}>
+          {{ n.nome_norma }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+
+
 <div class="row g-3">
 
   <div class="col-md-4">

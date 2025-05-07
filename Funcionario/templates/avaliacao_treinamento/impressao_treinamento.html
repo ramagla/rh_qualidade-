@@ -1,254 +1,166 @@
 {% extends 'base.html' %}
 
+{% block title %}Avaliação de Treinamento - {{ avaliacao.funcionario.nome }}{% endblock %}
+{% load custom_filters %}
+
 {% block content %}
-<head>
-    {{ form.media }}
-</head>
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'header.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Avaliação de Eficiência do Treinamento" icone="bi bi-award-fill" emoji="📊" %}
 
-<div class="print-container container mt-5">
-    {% include 'header.html' %} <!-- Inclui o cabeçalho -->
-
-    <!-- Botão de Imprimir -->
-    <div class="text-center mb-4 d-print-none">
-        <button onclick="imprimir()" class="btn btn-primary">
-            <i class="fas fa-print"></i> Imprimir
-        </button>
-    </div>
-
-    <!-- Informações da Avaliação -->
-<div class="info-section mt-4">
-    <table class="custom-table" style="width: 100%;">
-        <tr>
-            <td style="padding: 8px; text-align: left; width: 50%;">
-                <strong>Nome do Colaborador:</strong> {{ avaliacao.funcionario.nome }}
-            </td>
-            <td style="padding: 8px; text-align: left; width: 50%;">
-                <strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao|date:"d/m/Y" }}
-            </td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; text-align: left;">
-                <strong>Treinamento/Curso:</strong> {{ avaliacao.treinamento.assunto }}
-            </td>
-            <td style="padding: 8px; text-align: left;">
-                <strong>Período da Avaliação:</strong> {{ avaliacao.periodo_avaliacao }} dias
-            </td>
-        </tr>
+<div class="container pdf-container">
+  <!-- Informações Gerais -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <caption class="visually-hidden">Informações da Avaliação</caption>
+      <tr>
+        <th><i class="bi bi-person-fill me-1"></i> Nome do Colaborador</th>
+        <td>{{ avaliacao.funcionario.nome }}</td>
+        <th><i class="bi bi-calendar-check-fill me-1"></i> Data da Avaliação</th>
+        <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-journal-richtext me-1"></i> Treinamento/Curso</th>
+        <td>{{ avaliacao.treinamento.nome_curso }}</td>
+        <th><i class="bi bi-hourglass-split me-1"></i> Período da Avaliação</th>
+        <td>{{ avaliacao.periodo_avaliacao }} dias</td>
+      </tr>
     </table>
-</div>
+  </div>
 
-
-   <!-- Responsável(is) pela Avaliação em coluna -->
-<div class="mt-4">
-    <table class="custom-table" style="width: 100%;">
-        <tr>
-            <td colspan="2" style="padding: 8px; text-align: center;">
-                <strong>Responsáveis pela Avaliação</strong>
-            </td>
+  <!-- Responsáveis -->
+  <div class="table-responsive mt-4">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <caption class="visually-hidden">Responsáveis pela Avaliação</caption>
+      <thead>
+        <tr class="text-center">
+          <th colspan="2"><i class="bi bi-people-fill me-1"></i> Responsáveis pela Avaliação</th>
         </tr>
+      </thead>
+      <tbody>
         {% if avaliacao.responsavel_1 %}
-        <tr>
-            <td colspan="2" style="padding: 8px;">
-                <strong>Responsável 1:</strong> {{ avaliacao.responsavel_1.nome }} - {{ avaliacao.responsavel_1.cargo_atual.nome }}
-            </td>
-        </tr>
+        <tr><td colspan="2"><strong>Responsável 1:</strong> {{ avaliacao.responsavel_1.nome }} – {{ avaliacao.responsavel_1.cargo_atual.nome }}</td></tr>
         {% endif %}
         {% if avaliacao.responsavel_2 %}
-        <tr>
-            <td colspan="2" style="padding: 8px;">
-                <strong>Responsável 2:</strong> {{ avaliacao.responsavel_2.nome }} - {{ avaliacao.responsavel_2.cargo_atual.nome }}
-            </td>
-        </tr>
+        <tr><td colspan="2"><strong>Responsável 2:</strong> {{ avaliacao.responsavel_2.nome }} – {{ avaliacao.responsavel_2.cargo_atual.nome }}</td></tr>
         {% endif %}
         {% if avaliacao.responsavel_3 %}
-        <tr>
-            <td colspan="2" style="padding: 8px;">
-                <strong>Responsável 3:</strong> {{ avaliacao.responsavel_3.nome }} - {{ avaliacao.responsavel_3.cargo_atual.nome }}
-            </td>
-        </tr>
+        <tr><td colspan="2"><strong>Responsável 3:</strong> {{ avaliacao.responsavel_3.nome }} – {{ avaliacao.responsavel_3.cargo_atual.nome }}</td></tr>
         {% endif %}
+      </tbody>
     </table>
-</div>
+  </div>
 
-
-<!-- Perguntas e Respostas em uma única coluna -->
-<div class="mt-4">
-    <table class="custom-table" style="width: 100%;">
-        <tr>
-            <td colspan="1" style="padding: 8px; text-align: center;">
-                <strong>Questionário</strong>
-            </td>
-        </tr>
-        
-        <!-- Pergunta 1 - Grau de Conhecimento -->
-        <tr>
-            <td style="padding: 8px;">
-                <strong>I- Com relação ao grau de conhecimento atual dos participantes da metodologia provida pelo treinamento?</strong><br>
-                {% for valor, descricao in opcoes_conhecimento %}
-                    <div class="{% if avaliacao.pergunta_1 == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
-                        <strong>{{ valor }} -</strong> {{ descricao }}
-                    </div>
-                {% endfor %}
-            </td>
-        </tr>
-
-        <!-- Pergunta 2 - Aplicação dos Conceitos -->
-        <tr>
-            <td style="padding: 8px;">
-                <strong>II- Com relação à aplicação pelos participantes, quando necessário, dos conceitos da metodologia:</strong><br>
-                {% for valor, descricao in opcoes_aplicacao %}
-                    <div class="{% if avaliacao.pergunta_2 == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
-                        <strong>{{ valor }} -</strong> {{ descricao }}
-                    </div>
-                {% endfor %}
-            </td>
-        </tr>
-
-        <!-- Pergunta 3 - Resultados Obtidos -->
-        <tr>
-            <td style="padding: 8px;">
-                <strong>III- Com relação aos resultados obtidos com a aplicação da metodologia na melhoria das atividades, processos, serviços ou produtos da área ou empresa:</strong><br>
-                {% for valor, descricao in opcoes_resultados %}
-                    <div class="{% if avaliacao.pergunta_3 == valor %}selected-response{% endif %}" style="margin-bottom: 5px;">
-                        <strong>{{ valor }} -</strong> {{ descricao }}
-                    </div>
-                {% endfor %}
-            </td>
-        </tr>
+  <!-- Questionário -->
+  <div class="table-responsive mt-4">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <caption class="visually-hidden">Respostas ao Questionário</caption>
+      <tr>
+        <td>
+          <strong>I - Com relação ao grau de conhecimento atual dos participantes da metodologia provida pelo treinamento:</strong><br>
+          {% for valor, descricao in opcoes_conhecimento %}
+            <div class="{% if avaliacao.pergunta_1 == valor %}selected-response{% endif %} mb-2">
+              <strong>{{ valor }} -</strong> {{ descricao }}
+            </div>
+          {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>II - Com relação à aplicação pelos participantes, quando necessário, dos conceitos da metodologia:</strong><br>
+          {% for valor, descricao in opcoes_aplicacao %}
+            <div class="{% if avaliacao.pergunta_2 == valor %}selected-response{% endif %} mb-2">
+              <strong>{{ valor }} -</strong> {{ descricao }}
+            </div>
+          {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>III - Com relação aos resultados obtidos com a aplicação da metodologia na melhoria das atividades, processos, serviços ou produtos da área ou empresa:</strong><br>
+          {% for valor, descricao in opcoes_resultados %}
+            <div class="{% if avaliacao.pergunta_3 == valor %}selected-response{% endif %} mb-2">
+              <strong>{{ valor }} -</strong> {{ descricao }}
+            </div>
+          {% endfor %}
+        </td>
+      </tr>
     </table>
-</div>
+  </div>
 
-<!-- CSS para estilizar a resposta selecionada -->
-<style>
+  <style>
     .selected-response {
-        border: 1px dashed #4CAF50; /* Borda tracejada verde */
-        background-color: #e8f5e9; /* Fundo verde claro */
-        padding: 5px;
-        border-radius: 5px;
+      border: 1px dashed #4CAF50;
+      background-color: #e8f5e9;
+      padding: 5px;
+      border-radius: 5px;
     }
-</style>
+  </style>
 
-
-    <!-- Descrição das Melhorias -->
-<div class="mt-4">
-    <table class="custom-table" style="width: 100%;">
-        <tr>
-            <td style="padding: 8px;">
-                <strong>Descreva as melhorias obtidas/resultados:</strong>
-                <p>{{ avaliacao.descricao_melhorias | safe }}</p>
-            </td>
-        </tr>
+  <!-- Melhorias -->
+  <div class="table-responsive mt-4">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <tr>
+        <th><i class="bi bi-bar-chart-fill me-1"></i> Descreva as melhorias obtidas/resultados</th>
+      </tr>
+      <tr>
+        <td>{{ avaliacao.descricao_melhorias|safe }}</td>
+      </tr>
     </table>
-</div>
+  </div>
 
-
-<!-- Status Geral da Avaliação em coluna -->
-<div class="mt-4">
-    <table class="custom-table" style="width: 100%;">
-        <tr>
-            <td style="padding: 8px;">
-                <strong>IV- De forma geral, como você avaliaria a eficácia do treinamento?</strong>
-                <span class="badge"
-                      {% if avaliacao.avaliacao_geral == 1 %}
-                          style="background-color: #f8d7da; color: #842029; font-size: 1rem; padding: 8px;">😞 Pouco Eficaz
-                      {% elif avaliacao.avaliacao_geral == 2 %}
-                          style="background-color: #cfe2ff; color: #084298; font-size: 1rem; padding: 8px;">🙂 Eficaz
-                      {% elif avaliacao.avaliacao_geral == 5 %}
-                          style="background-color: #d1e7dd; color: #0f5132; font-size: 1rem; padding: 8px;">🌟 Muito Eficaz
-                      {% else %}
-                          style="background-color: #fdfd96; color: #856404; font-size: 1rem; padding: 8px;">🤔 Indeterminado
-                      {% endif %}
-                </span>
-            </td>
-        </tr>
+  <!-- Avaliação Geral -->
+  <div class="table-responsive mt-4">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <tr>
+        <th><i class="bi bi-emoji-smile-fill me-1"></i> Eficácia do Treinamento</th>
+        <td>
+          <span class="badge" style="
+            {% if avaliacao.avaliacao_geral == 1 %}
+              background-color: #f8d7da; color: #842029;
+            {% elif avaliacao.avaliacao_geral == 2 %}
+              background-color: #cfe2ff; color: #084298;
+            {% elif avaliacao.avaliacao_geral == 5 %}
+              background-color: #d1e7dd; color: #0f5132;
+            {% else %}
+              background-color: #fdfd96; color: #856404;
+            {% endif %}
+            font-size: 1rem; padding: 8px;">
+            {% if avaliacao.avaliacao_geral == 1 %}😞 Pouco Eficaz
+            {% elif avaliacao.avaliacao_geral == 2 %}🙂 Eficaz
+            {% elif avaliacao.avaliacao_geral == 5 %}🌟 Muito Eficaz
+            {% else %}🤔 Indeterminado
+            {% endif %}
+          </span>
+        </td>
+      </tr>
     </table>
-</div>
+  </div>
 
-
-
-<!-- Campos de Assinatura -->
-<div class="mt-5">
+  <!-- Assinaturas -->
+  <div class="mt-5">
     <table class="custom-table" style="width: 100%;">
-        <tr>
-            <!-- Assinatura do Funcionário -->
-            <td style="padding: 8px; text-align: center; width: 50%;">
-                <p><strong>Assinatura do Colaborador</strong></p>
-                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
-                    {{ avaliacao.funcionario.nome }}
-                </div>
-            </td>
+      <tr>
+        <!-- Assinatura do Funcionário -->
+        <td style="padding: 8px; text-align: center; width: 50%;">
+          <p><strong>Assinatura do Colaborador</strong></p>
+          <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+            {{ avaliacao.funcionario.nome }}
+          </div>
+        </td>
 
-            <!-- Assinatura da Chefia -->
-            <td style="padding: 8px; text-align: center; width: 50%;">
-                <p><strong>Assinatura do Gestor</strong></p>
-                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
-                    {{ responsavel_funcionario }}
-                </div>
-            </td>
-        </tr>
+        <!-- Assinatura da Chefia -->
+        <td style="padding: 8px; text-align: center; width: 50%;">
+          <p><strong>Assinatura do Gestor</strong></p>
+          <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
+            {{ responsavel_funcionario }}
+          </div>
+        </td>
+      </tr>
     </table>
+  </div>
 </div>
 
-
-
-    <!-- Número do Formulário (visível apenas na impressão) -->
-    <div class="numero-formulario d-none d-print-block" style="text-align: right; margin-top: 20px;">
-        F148 Rev.01
-    </div>
-</div>
-
-<!-- Estilos personalizados e de impressão -->
-<style>
-    .custom-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .custom-table th, .custom-table td {
-        padding: 4px;
-        border: 1px solid #ddd;
-        font-size: 10px;
-        text-align: left;
-    }
-    @media print {
-        .d-print-none { display: none !important; }
-        .print-container { width: 100%; max-width: 800px; margin: 0 auto; padding: 20px; }
-    }
-</style>
-
-<!-- Script para impressão -->
-<script>
-function imprimir() {
-    var conteudo = document.querySelector('.print-container').innerHTML;
-    var novaJanela = window.open('', '_blank', 'width=800,height=600');
-    
-    novaJanela.document.write(`
-        <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; color: #333; padding: 20px; font-size: 10px; }
-                    .numero-formulario { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #333; }
-                    .custom-table { width: 100%; border-collapse: collapse; }
-                    th, td { padding: 4px; border: 1px solid #ddd; font-size: 10px; text-align: left; }
-                    th { background-color: #e7f1ff; color: #333; font-weight: bold; }
-                    tr:nth-child(even) { background-color: #f9f9f9; }
-                    h2 { text-align: center; font-size: 14px; margin-top: 0; }
-                    @media print { .d-print-none { display: none !important; } }
-                </style>
-            </head>
-            <body>
-                <h2>Avaliação de Eficácia de Treinamento</h2>
-                ${conteudo}
-                <div class="numero-formulario">F148 Rev.01</div>
-            </body>
-        </html>
-    `);
-
-    novaJanela.document.close();
-    novaJanela.onload = function () {
-        novaJanela.print();
-        novaJanela.close();
-    };
-}
-</script>
-
+{% include "partials/global/_formulario_rodape.html" with numero_formulario="F148 Rev.01" %}
 {% endblock %}

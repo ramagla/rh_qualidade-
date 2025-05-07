@@ -1,121 +1,113 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
 
 {% block title %}Visualização da Avaliação de Treinamentos{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white text-center">
-            <h2 class="mb-0">Visualização da Avaliação de Treinamentos</h2>
-        </div>
-        <div class="card-body">
-            <!-- Dados da Avaliação -->
-            <h5 class="text-primary mb-3">Informações Gerais</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Data da Avaliação</label>
-                    <p class="fw-bold">{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Período da Avaliação (em dias)</label>
-                    <p class="fw-bold">{{ avaliacao.periodo_avaliacao }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Colaborador Avaliado</label>
-                    <p class="fw-bold">{{ avaliacao.funcionario.nome }}</p>
-                </div>
-               <div class="col-md-6">
-                    <label class="form-label text-muted">Treinamento/Curso</label>
-                    {% if avaliacao.treinamento %}
-                        <p class="fw-bold">{{ avaliacao.treinamento.nome_curso }}</p>
-                    {% else %}
-                        <p class="fw-bold text-muted">Treinamento não associado</p>
-                    {% endif %}
-                </div>
-            </div>
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
+  {% include "header.html" %}
 
-            <!-- Responsáveis -->
-            <h5 class="text-primary mb-3">Responsáveis pela Avaliação</h5>
-            <div class="row mb-3">
-                {% if avaliacao.responsavel_1 %}
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Primeiro Responsável</label>
-                    <p class="fw-bold">{{ avaliacao.responsavel_1.nome }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Cargo</label>
-                    <p class="fw-bold">{{ avaliacao.responsavel_1.cargo_atual.nome }}</p>
-                </div>
+  <div id="relatorio-area">
+    <div class="pdf-container">
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>📋 Avaliação de Treinamento</h1>
+        <p>Visualização detalhada do resultado da avaliação</p>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table align-middle">
+            <tr>
+              <th>Data da Avaliação</th>
+              <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+              <th>Período (dias)</th>
+              <td>{{ avaliacao.periodo_avaliacao }}</td>
+            </tr>
+            <tr>
+              <th>Colaborador Avaliado</th>
+              <td>{{ avaliacao.funcionario.nome }}</td>
+            </tr>
+            <tr>
+              <th>Treinamento/Curso</th>
+              <td>
+                {% if avaliacao.treinamento %}
+                  {{ avaliacao.treinamento.nome_curso }}
+                {% else %}
+                  <span class="text-muted">Treinamento não associado</span>
                 {% endif %}
-                {% if avaliacao.responsavel_2 %}
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Segundo Responsável</label>
-                    <p class="fw-bold">{{ avaliacao.responsavel_2.nome }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Cargo</label>
-                    <p class="fw-bold">{{ avaliacao.responsavel_2.cargo_atual.nome }}</p>
-                </div>
-                {% endif %}
-                {% if avaliacao.responsavel_3 %}
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Terceiro Responsável</label>
-                    <p class="fw-bold">{{ avaliacao.responsavel_3.nome }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Cargo</label>
-                    <p class="fw-bold">{{ avaliacao.responsavel_3.cargo_atual.nome }}</p>
-                </div>
-                {% endif %}
-            </div>
+              </td>
+            </tr>
 
-            <!-- Questionários -->
-            <h5 class="text-primary mb-3">Resultados da Avaliação</h5>
-            <div class="row mb-3">
-                <div class="col-12">
-                    <label class="form-label text-muted">I - Grau de conhecimento atual dos participantes da metodologia:</label>
-                    <p class="fw-bold">{{ grau_conhecimento }}</p>
-                </div>
-                <div class="col-12">
-                    <label class="form-label text-muted">II - Aplicação dos conceitos da metodologia:</label>
-                    <p class="fw-bold">{{ aplicacao_conceitos }}</p>
-                </div>
-                <div class="col-12">
-                    <label class="form-label text-muted">III - Resultados obtidos com a aplicação da metodologia:</label>
-                    <p class="fw-bold">{{ resultados_obtidos }}</p>
-                </div>
-                <div class="col-12">
-                    <label class="form-label text-muted">Descrição de Melhorias</label>
-                    <div class="border p-3 rounded bg-light" style="white-space: pre-line;">{{ melhorias|safe }}</div>
-                </div>
-            </div>
+            {% if avaliacao.responsavel_1 %}
+              <tr><th>1º Responsável</th><td>{{ avaliacao.responsavel_1.nome }} – {{ avaliacao.responsavel_1.cargo_atual.nome }}</td></tr>
+            {% endif %}
+            {% if avaliacao.responsavel_2 %}
+              <tr><th>2º Responsável</th><td>{{ avaliacao.responsavel_2.nome }} – {{ avaliacao.responsavel_2.cargo_atual.nome }}</td></tr>
+            {% endif %}
+            {% if avaliacao.responsavel_3 %}
+              <tr><th>3º Responsável</th><td>{{ avaliacao.responsavel_3.nome }} – {{ avaliacao.responsavel_3.cargo_atual.nome }}</td></tr>
+            {% endif %}
 
-            <!-- Avaliação Geral -->
-            <h5 class="text-primary mb-3">Avaliação Geral</h5>
-            <div class="row">
-                <div class="col-12">
-                    <div class="alert {{ avaliacao.avaliacao_geral_class }} text-center" role="alert">
-                        <h4 class="alert-heading">
-                            {{ avaliacao_geral }}
-                            {% if avaliacao_geral == "Pouco Eficaz" %}
-                                😔
-                            {% elif avaliacao_geral == "Eficaz" %}
-                                🙂
-                            {% elif avaliacao_geral == "Muito Eficaz" %}
-                                😃
-                            {% endif %}
-                        </h4>
-                    </div>
-                </div>
-            </div>
+            <tr>
+              <th>I - Grau de conhecimento atual</th>
+              <td>{{ grau_conhecimento }}</td>
+            </tr>
+            <tr>
+              <th>II - Aplicação dos conceitos</th>
+              <td>{{ aplicacao_conceitos }}</td>
+            </tr>
+            <tr>
+              <th>III - Resultados obtidos</th>
+              <td>{{ resultados_obtidos }}</td>
+            </tr>
+            <tr>
+              <th>Descrição de Melhorias</th>
+              <td>
+                <div style="white-space: pre-line;">{{ melhorias|safe }}</div>
+              </td>
+            </tr>
+
+            <tr>
+              <th class="text-center">Avaliação Geral</th>
+              <td class="text-center">
+                <strong class="fs-5">
+                  {{ avaliacao_geral }}
+                  {% if avaliacao_geral == "Pouco Eficaz" %}
+                    😔
+                  {% elif avaliacao_geral == "Eficaz" %}
+                    🙂
+                  {% elif avaliacao_geral == "Muito Eficaz" %}
+                    😃
+                  {% endif %}
+                </strong>
+              </td>
+            </tr>
+          </table>
         </div>
+      </div>
 
-        <!-- Botão de Voltar -->
-        <div class="card-footer text-center">
-            <a href="{% url 'lista_avaliacoes' %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left-circle"></i> Voltar
-            </a>
-        </div>
+      <!-- Rodapé -->
+      <div class="text-center text-muted small mt-4">
+        <i class="bi bi-clock me-1"></i>
+        Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
     </div>
-</div>
+
+    <!-- Botão Voltar -->
+    <div class="text-center mt-4 d-print-none">
+      <a href="{% url 'lista_avaliacoes' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left-circle"></i> Voltar
+      </a>
+    </div>
+  </div>
 {% endblock %}

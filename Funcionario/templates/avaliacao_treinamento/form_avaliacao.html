@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro de Avaliação de Treinamentos{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+{% load static %}
+<div class="container mt-5">
+  {% include 'partials/global/_header_titulo.html' with titulo='Cadastro de Avaliação de Treinamento' icone='bi bi-clipboard2-check-fill' emoji='📋' %}
+
+  <form method="post" action="{% if form.instance.pk %}{% url 'editar_avaliacao' form.instance.pk %}{% else %}{% url 'avaliacao_create' %}{% endif %}" class="row g-3">
+    {% csrf_token %}
+{% include 'partials/global/_form_errors.html' %}
+
+    <div class="accordion" id="accordionAvaliacao">
+      <!-- Seção 1: Identificação -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingIdentificacao">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentificacao" aria-expanded="true" aria-controls="collapseIdentificacao">
+            🔐 Identificação
+          </button>
+        </h2>
+        <div id="collapseIdentificacao" class="accordion-collapse collapse show" aria-labelledby="headingIdentificacao" data-bs-parent="#accordionAvaliacao">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+<label for="data_avaliacao" class="form-label"><i class="bi bi-calendar-date me-2"></i>Data da Avaliação:</label>
+              <input type="date" class="form-control" id="data_avaliacao" name="data_avaliacao" value="{{ form.instance.data_avaliacao|date:'Y-m-d' }}" required>
+            </div>
+            <div class="col-md-6">
+<label for="periodo_avaliacao" class="form-label"><i class="bi bi-hourglass-split me-2"></i>Período da Avaliação (em dias):</label>
+              <input type="number" class="form-control" id="periodo_avaliacao" name="periodo_avaliacao" value="{{ form.instance.periodo_avaliacao|default_if_none:'60' }}" required>
+            </div>
+            <div class="col-12 mt-3">
+<label class="form-label"><i class="bi bi-clock-history me-2"></i>Status do Prazo:</label>
+              <div id="status_prazo" class="alert alert-secondary" role="status" aria-live="polite">
+                Defina a data de avaliação e o período.
+              </div>
+            </div>
+            <div class="col-md-6">
+<label for="funcionario" class="form-label"><i class="bi bi-person-badge me-2"></i>Colaborador:</label>
+              <select class="form-select select2" id="funcionario" name="funcionario" required aria-describedby="funcionario">
+                <option value="" selected>Selecione o colaborador</option>
+                {% for funcionario in funcionarios %}
+                  <option value="{{ funcionario.id }}" {% if form.instance.funcionario.id == funcionario.id %}selected{% endif %}>{{ funcionario.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+<label for="treinamento" class="form-label"><i class="bi bi-journal-bookmark me-2"></i>Treinamento/Curso:</label>
+              <select class="form-select select2" id="treinamento" name="treinamento" required aria-describedby="treinamento">
+                {% if form.instance.pk %}
+                  <option value="{{ form.instance.treinamento.id }}" selected>{{ form.instance.treinamento.nome_curso }} - {{ form.instance.treinamento.data_fim }}</option>
+                {% else %}
+                  <option value="">Selecione o Treinamento</option>
+                {% endif %}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 2: Responsáveis -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingResponsaveis">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResponsaveis" aria-expanded="false" aria-controls="collapseResponsaveis">
+            💼 Responsáveis pela Avaliação
+          </button>
+        </h2>
+        <div id="collapseResponsaveis" class="accordion-collapse collapse" aria-labelledby="headingResponsaveis" data-bs-parent="#accordionAvaliacao">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+<label for="responsavel_1" class="form-label"><i class="bi bi-person-lines-fill me-2"></i>Primeiro Responsável:</label>
+              {{ form.responsavel_1|add_class:"form-select select2" }}
+            </div>
+            <div class="col-md-6">
+              <label for="responsavel_2" class="form-label"><i class="bi bi-person-lines-fill me-2"></i>Segundo Responsável:</label>
+              {{ form.responsavel_2|add_class:"form-select select2" }}
+            </div>
+            <div class="col-md-6">
+              <label for="responsavel_3" class="form-label"><i class="bi bi-person-lines-fill me-2"></i>Terceiro Responsável:</label>
+              {{ form.responsavel_3|add_class:"form-select select2" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 3: Avaliação -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingAvaliacao">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAvaliacao" aria-expanded="false" aria-controls="collapseAvaliacao">
+            📊 Avaliação da Efetividade
+          </button>
+        </h2>
+        <div id="collapseAvaliacao" class="accordion-collapse collapse" aria-labelledby="headingAvaliacao" data-bs-parent="#accordionAvaliacao">
+          <div class="accordion-body row g-3">
+            <div class="col-12">
+              <label class="form-label">I - Grau de conhecimento atual dos participantes:</label>
+              {% for valor, label in opcoes_conhecimento %}
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="pergunta_1" id="pergunta_1_{{ valor }}" value="{{ valor }}" {% if form.instance.pergunta_1 == valor %}checked{% endif %} required>
+                  <label class="form-check-label" for="pergunta_1_{{ valor }}">{{ valor }} - {{ label }}</label>
+                </div>
+              {% endfor %}
+            </div>
+            <div class="col-12">
+              <label class="form-label">II - Aplicação dos conceitos da metodologia:</label>
+              {% for valor, label in opcoes_aplicacao %}
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="pergunta_2" id="pergunta_2_{{ valor }}" value="{{ valor }}" {% if form.instance.pergunta_2 == valor %}checked{% endif %} required>
+                  <label class="form-check-label" for="pergunta_2_{{ valor }}">{{ valor }} - {{ label }}</label>
+                </div>
+              {% endfor %}
+            </div>
+            <div class="col-12">
+              <label class="form-label">III - Resultados obtidos com a aplicação:</label>
+              {% for valor, label in opcoes_resultados %}
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="pergunta_3" id="pergunta_3_{{ valor }}" value="{{ valor }}" {% if form.instance.pergunta_3 == valor %}checked{% endif %} required>
+                  <label class="form-check-label" for="pergunta_3_{{ valor }}">{{ valor }} - {{ label }}</label>
+                </div>
+              {% endfor %}
+            </div>
+            <div class="col-12">
+            <label for="descricao_melhorias" class="form-label"><i class="bi bi-chat-left-text me-2"></i>Descreva as melhorias obtidas/resultados:</label>
+              {{ form.descricao_melhorias }}
+            </div>
+            <input type="hidden" name="avaliacao_geral" id="avaliacao_geral" value="{{ form.instance.avaliacao_geral|default:12 }}" aria-hidden="true">
+            <div class="col-md-6">
+                <label for="avaliacao_status" class="form-label"><i class="bi bi-bar-chart-line me-2"></i>Status da Avaliação:</label>
+              <span id="avaliacao_status" class="form-control-plaintext" role="status" aria-live="polite">Eficaz</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='lista_avaliacoes' %}
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    function calcularAvaliacaoGeral() {
+      let total = 0;
+      let poucoEficaz = false;
+
+      document.querySelectorAll('input[type="radio"]:checked').forEach(function (input) {
+        const valor = parseInt(input.value);
+        if (valor === 1) poucoEficaz = true;
+        total += valor;
+      });
+
+      const avaliacaoGeralInput = document.getElementById("avaliacao_geral");
+      const avaliacaoStatus = document.getElementById("avaliacao_status");
+
+      let valorAvaliacao, statusAvaliacao;
+      if (poucoEficaz) {
+        valorAvaliacao = 1;
+        statusAvaliacao = "Pouco Eficaz";
+      } else if (total < 15) {
+        valorAvaliacao = 2;
+        statusAvaliacao = "Eficaz";
+      } else if (total === 15) {
+        valorAvaliacao = 5;
+        statusAvaliacao = "Muito Eficaz";
+      } else {
+        valorAvaliacao = 0;
+        statusAvaliacao = "Indeterminado";
+      }
+
+      if (avaliacaoGeralInput) avaliacaoGeralInput.value = valorAvaliacao;
+
+      if (avaliacaoStatus) {
+        let classe = "";
+        let emoji = "";
+
+        if (statusAvaliacao === "Muito Eficaz") {
+          classe = "text-success";
+          emoji = "🌟";
+        } else if (statusAvaliacao === "Eficaz") {
+          classe = "text-primary";
+          emoji = "✅";
+        } else if (statusAvaliacao === "Pouco Eficaz") {
+          classe = "text-danger";
+          emoji = "⚠️";
+        } else {
+          classe = "text-muted";
+          emoji = "❓";
+        }
+
+        avaliacaoStatus.textContent = `${emoji} ${statusAvaliacao}`;
+        avaliacaoStatus.className = `form-control-plaintext fw-bold ${classe}`;
+      }
+    }
+
+    function verificarPrazo() {
+      const dataAvaliacao = document.getElementById("data_avaliacao").value;
+      const periodoAvaliacao = parseInt(document.getElementById("periodo_avaliacao").value);
+      const statusPrazoDiv = document.getElementById("status_prazo");
+
+      if (dataAvaliacao && !isNaN(periodoAvaliacao)) {
+        const dataAvaliacaoDate = new Date(dataAvaliacao);
+        const dataLimite = new Date(dataAvaliacaoDate);
+        dataLimite.setDate(dataLimite.getDate() + periodoAvaliacao);
+
+        const hoje = new Date();
+        let status = hoje <= dataLimite ? "Dentro do Prazo 😃" : "Fora do Prazo 😔";
+        let cor = hoje <= dataLimite ? "alert-success" : "alert-danger";
+
+        statusPrazoDiv.className = `alert ${cor}`;
+        statusPrazoDiv.textContent = status;
+      } else {
+        statusPrazoDiv.className = "alert alert-secondary";
+        statusPrazoDiv.textContent = "Defina a data de avaliação e o período.";
+      }
+    }
+
+    document.getElementById("data_avaliacao").addEventListener("change", verificarPrazo);
+    document.getElementById("periodo_avaliacao").addEventListener("input", verificarPrazo);
+
+    document.querySelectorAll('input[type="radio"]').forEach(function (input) {
+      input.addEventListener("change", calcularAvaliacaoGeral);
+    });
+
+    verificarPrazo();
+    calcularAvaliacaoGeral();
+  });
+</script>
+
+{% endblock %}

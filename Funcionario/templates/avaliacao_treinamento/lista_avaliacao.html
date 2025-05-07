@@ -5,372 +5,167 @@
 {% block content %}
 {% load custom_filters %}
 
-<!-- Toast container para mensagens de alerta -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-    {% if messages %}
-        {% for message in messages %}
-            {% if message.tags == "error" %}
-                <div class="toast align-items-center border-0" style="background-color: #f8d7da; color: #842029;">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <h4 class="alert-heading">Atenção!</h4>
-                            <p>{{ message }}</p>
-                        </div>
-                    </div>
-                </div>
-            {% elif message.tags == "success" %}
-                <div class="toast align-items-center border-0" style="background-color: #d1e7dd; color: #0f5132;" data-bs-delay="10000">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <h4 class="alert-heading">Sucesso!</h4>
-                            <p>{{ message }}</p>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-        {% endfor %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Avaliações de Treinamentos" icone="bi bi-clipboard2-check-fill" emoji="📋" %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container mt-4">
+
+  <!-- Botões de ação -->
+  <div class="text-end mb-4">
+    {% if request.user|has_permission:"Funcionario.add_avaliacaotreinamento" %}
+      <a href="{% url 'avaliacao_create' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Cadastrar
+      </a>
     {% endif %}
-</div>
+  </div>
 
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Avaliações de Treinamentos</h2>
-
-   <!-- Botões de Cadastrar Avaliação e Imprimir -->
-    <div class="text-end mb-4">
-        {% if request.user|has_permission:"Funcionario.add_avaliacaotreinamento" %}
-        <a href="{% url 'avaliacao_create' %}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Cadastrar
-        </a>
-        {% endif %}    
-
-    </div> 
-
-
-    <form method="get" class="mb-4">
-    <div class="row">
-        <!-- Filtro por Treinamento com Select2 -->
+  <!-- Filtros de Avaliações -->
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+    <strong class="text-primary">Filtros de Avaliações</strong>
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
+        <!-- Treinamento -->
         <div class="col-md-6">
-    <label for="treinamento" class="form-label">Treinamento/Curso:</label>
-    <select name="treinamento" id="treinamento" class="form-select select2">
-        <option value="">Selecione</option>
-        {% for treinamento in listas_presenca %}
-            <option value="{{ treinamento.id }}" {% if request.GET.treinamento == treinamento.id|stringformat:"s" %}selected{% endif %}>
+          <label for="treinamento" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-journal-check text-secondary"></i> Treinamento/Curso
+          </label>
+          <select name="treinamento" id="treinamento" class="form-select select2" aria-label="Filtrar por treinamento">
+            <option value="">Selecione</option>
+            {% for treinamento in listas_presenca %}
+              <option value="{{ treinamento.id }}" {% if request.GET.treinamento == treinamento.id|stringformat:"s" %}selected{% endif %}>
                 {{ treinamento.nome_curso }} - {{ treinamento.data_inicio|date:"d/m/Y" }}
-            </option>
-        {% endfor %}
-    </select>
-</div>
-
-
-        <!-- Filtro por Funcionário com Select2 -->
-        <div class="col-md-6">
-            <label for="funcionario" class="form-label">Funcionário:</label>
-            <select name="funcionario" id="funcionario" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for funcionario in funcionarios_ativos %}
-                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-
-    <!-- Filtro por Data de Avaliação -->
-    <div class="row mt-3">
-        <div class="col-md-6">
-            <label for="data_inicio" class="form-label">Data Início:</label>
-            <input type="date" name="data_inicio" class="form-control" placeholder="Data Início">
-        </div>
-        <div class="col-md-6">
-            <label for="data_fim" class="form-label">Data Fim:</label>
-            <input type="date" name="data_fim" class="form-control" placeholder="Data Fim">
-        </div>
-    </div>
-
-    <!-- Botão de Filtrar -->
-    <div class="text-end mt-3">
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-funnel"></i> Filtrar
-        </button>
-    </div>
-</form>
-
-
-<div class="row mb-4">
-    <!-- Card: Total de Avaliações -->
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-header text-center">
-                <i class="bi bi-list-task"></i> Total de Avaliações
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ total_avaliacoes|default:0 }}</h5>
-                <p class="card-text text-center">Total de avaliações cadastradas.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Muito Eficaz -->
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-header text-center">
-                <i class="bi bi-star-fill"></i> Muito Eficaz
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ muito_eficaz|default:0 }}</h5>
-                <p class="card-text text-center">Avaliações muito eficazes.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Eficaz -->
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-header text-center">
-                <i class="bi bi-check-circle"></i> Eficaz
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ eficaz|default:0 }}</h5>
-                <p class="card-text text-center">Avaliações eficazes.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Pouco Eficaz -->
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
-            <div class="card-header text-center">
-                <i class="bi bi-x-circle"></i> Pouco Eficaz
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ pouco_eficaz|default:0 }}</h5>
-                <p class="card-text text-center">Avaliações pouco eficazes.</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-    <!-- Lista de Avaliações -->
-    <table class="table table-bordered text-center mt-4">
-        <thead>
-            <tr>
-                <th>Colaborador</th>
-                <th>Treinamento</th>
-                <th>Data da Avaliação</th>
-                <th>Status da Avaliação</th>
-                <th>Status do Prazo</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-    {% for avaliacao in avaliacoes_treinamento %}
-    <tr>
-        <td class="align-middle">{{ avaliacao.funcionario.nome }}</td>
-        <td class="align-middle">
-    {% if avaliacao.treinamento %}
-        {{ avaliacao.treinamento.nome_curso }}
-    {% else %}
-        <span class="text-muted">Não definido</span>
-    {% endif %}
-</td>
-
-        <td class="align-middle">{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
-        <td class="align-middle">
-            {% if avaliacao.avaliacao_geral == 1 %}
-                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Pouco Eficaz</span>
-            {% elif avaliacao.avaliacao_geral == 2 %}
-                <span class="badge bg-primary"><i class="bi bi-check-circle"></i> Eficaz</span>
-            {% elif avaliacao.avaliacao_geral == 5 %}
-                <span class="badge bg-success"><i class="bi bi-star-fill"></i> Muito Eficaz</span>
-            {% else %}
-                <span class="badge bg-warning">{{ avaliacao.get_avaliacao_geral_display }}</span>
-            {% endif %}
-        </td>
-       <td class="align-middle">
-            {% if avaliacao.get_status_prazo == "Dentro do Prazo" %}
-                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Dentro do Prazo</span>
-            {% else %}
-                <span class="badge bg-danger"><i class="bi bi-exclamation-circle"></i> Em Atraso</span>
-            {% endif %}
-        </td>
-
-        <td class="align-middle">
-            {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
-            <a href="{% url 'visualizar_avaliacao' avaliacao.id %}" class="btn btn-sm btn-info" title="Visualizar">
-                <i class="bi bi-eye"></i>
-            </a>
-            {% endif %}
-            {% if request.user|has_permission:"Funcionario.change_avaliacaotreinamento" %}
-
-            <a href="{% url 'editar_avaliacao' avaliacao.id %}" class="btn btn-sm  btn-warning" title="Editar">
-                <i class="bi bi-pencil"></i>
-            </a>
-            {% endif %}
-            {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
-            <a href="{% url 'imprimir_treinamento' avaliacao.id %}" target="_blank" class="btn btn-sm btn-primary" title="Imprimir">
-                <i class="bi bi-printer"></i>
-            </a>
-            {% endif %}
-            {% if request.user|has_permission:"Funcionario.delete_avaliacaotreinamento" %}
-
-             <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ avaliacao.id }}" title="Excluir">
-                <i class="bi bi-trash"></i>
-            </a> 
-            {% endif %}
-
-        </td>
-    </tr>
-
-            <!-- Modal para confirmação de exclusão -->
-            <div class="modal fade" id="confirmDeleteModal{{ avaliacao.id }}" tabindex="-1" aria-labelledby="confirmDeleteModalLabel{{ avaliacao.id }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="confirmDeleteModalLabel{{ avaliacao.id }}">Confirmar Exclusão</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Tem certeza de que deseja excluir a avaliação de <strong>{{ avaliacao.funcionario.nome }}</strong> para o treinamento <strong>{{ avaliacao.treinamento.assunto }}</strong>?</p>
-                        </div>
-                        <div class="modal-footer">
-                            <form method="post" action="{% url 'excluir_avaliacao' avaliacao.id %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Confirmar Exclusão</button>
-                            </form>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% empty %}
-            <tr>
-                <td colspan="6" class="text-center">Nenhuma avaliação cadastrada.</td>
-            </tr>
+              </option>
             {% endfor %}
-        </tbody>
-    </table>
+          </select>
+        </div>
+
+        <!-- Funcionário -->
+        <div class="col-md-6">
+          <label for="funcionario" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-person text-secondary"></i> Funcionário
+          </label>
+          <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtrar por funcionário">
+            <option value="">Selecione</option>
+            {% for funcionario in funcionarios_ativos %}
+              <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
+                {{ funcionario.nome }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Data Início -->
+        <div class="col-md-6">
+          <label for="data_inicio" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-event text-secondary"></i> Data Início
+          </label>
+          <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+        </div>
+
+        <!-- Data Fim -->
+        <div class="col-md-6">
+          <label for="data_fim" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-check text-secondary"></i> Data Fim
+          </label>
+          <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+        </div>
+
+        <!-- Botão Filtrar -->
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </div>
+    </form>
+  </div>
 </div>
 
 
-<!-- Paginação -->
-<nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Primeira">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
+  <!-- Indicadores -->
+  <div class="row mb-4">
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Avaliações" valor=total_avaliacoes|default:0 subtitulo="Total cadastradas" cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Muito Eficaz" valor=muito_eficaz|default:0 subtitulo="Avaliações muito eficazes" cor="success" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Eficaz" valor=eficaz|default:0 subtitulo="Avaliações eficazes" cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Pouco Eficaz" valor=pouco_eficaz|default:0 subtitulo="Avaliações pouco eficazes" cor="danger" %}
+  </div>
+
+  <!-- Tabela de avaliações -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-person"></i> Colaborador</th>
+          <th><i class="bi bi-journal-check"></i> Treinamento</th>
+          <th><i class="bi bi-calendar"></i> Data da Avaliação</th>
+          <th><i class="bi bi-bar-chart-line"></i> Avaliação</th>
+          <th><i class="bi bi-clock-history"></i> Prazo</th>
+          <th><i class="bi bi-gear"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for avaliacao in avaliacoes_treinamento %}
+          <tr>
+            <td>{{ avaliacao.funcionario.nome }}</td>
+            <td>{{ avaliacao.treinamento.nome_curso|default:"—" }}</td>
+            <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+            <td>
+              {% if avaliacao.avaliacao_geral == 1 %}
+                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Pouco Eficaz</span>
+              {% elif avaliacao.avaliacao_geral == 2 %}
+                <span class="badge bg-primary"><i class="bi bi-check-circle"></i> Eficaz</span>
+              {% elif avaliacao.avaliacao_geral == 5 %}
+                <span class="badge bg-success"><i class="bi bi-star-fill"></i> Muito Eficaz</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">{{ avaliacao.get_avaliacao_geral_display }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if avaliacao.get_status_prazo == "Dentro do Prazo" %}
+                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Dentro do Prazo</span>
+              {% else %}
+                <span class="badge bg-danger"><i class="bi bi-exclamation-circle"></i> Em Atraso</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
+                {% include 'partials/global/_botao_visualizar.html' with objeto=avaliacao url_visualizar='visualizar_avaliacao' label="avaliação" %}
+              {% endif %}
+              {% if request.user|has_permission:"Funcionario.change_avaliacaotreinamento" %}
+                {% include 'partials/global/_botao_editar.html' with objeto=avaliacao url_editar='editar_avaliacao' label="avaliação" %}
+              {% endif %}
+              {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
+                <a href="{% url 'imprimir_treinamento' avaliacao.id %}" class="btn btn-sm btn-primary mt-1" target="_blank">
+                  <i class="bi bi-printer"></i>
                 </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}">{{ num }}</a></li>
-            {% endif %}
+              {% endif %}
+              {% if request.user|has_permission:"Funcionario.delete_avaliacaotreinamento" %}
+                {% include 'partials/global/_botao_excluir.html' with objeto=avaliacao url_excluir='excluir_avaliacao' label="avaliação" %}
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          {% include 'partials/global/_sem_resultados.html' with item_nome="avaliação" %}
         {% endfor %}
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Próxima">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Última">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+      </tbody>
+    </table>
+  </div>
 
+  <!-- Paginação -->
+  {% include 'partials/global/_paginacao.html' %}
 
+</div>
 
-<style>
-/* Estilos específicos para Select2 dentro da modal */
-#imprimirAvaliacaoModal .select2-container--default .select2-selection--single {
-    height: calc(2.25rem + 2px);
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #212529;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-}
-
-#imprimirAvaliacaoModal .select2-container {
-    z-index: 9999 !important;
-    width: 100% !important;
-}
-
-#imprimirAvaliacaoModal .select2-dropdown {
-    z-index: 1050; /* Garante que o dropdown fique acima da modal */
-}
-</style>
-
-
-
-
-
+<!-- Select2 e Toast scripts -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Exibe os toasts
+  document.addEventListener('DOMContentLoaded', function () {
+    $('.select2').select2({ width: '100%', allowClear: true });
+
+    // Ativa os toasts
     const toasts = document.querySelectorAll('.toast');
-    toasts.forEach(toast => {
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-    });
-
+    toasts.forEach(t => new bootstrap.Toast(t).show());
+  });
 </script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Inicializa os elementos Select2
-    $('.select2').select2({
-        placeholder: 'Selecione uma avaliação',
-        allowClear: true,
-        width: '100%',
-    });
-
-    // Configura o Select2 para dropdowns dentro da modal
-    $('#imprimirAvaliacaoModal').on('shown.bs.modal', function () {
-        $('#avaliacao_id').select2({
-            placeholder: 'Selecione uma avaliação',
-            allowClear: true,
-            dropdownParent: $('#imprimirAvaliacaoModal') // Garante que o dropdown do Select2 fique dentro da modal
-        });
-    });
-
-    // Submissão do formulário de impressão
-    document.getElementById('imprimirAvaliacaoForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        // Obtém o ID da avaliação selecionada
-        const avaliacaoId = document.getElementById('avaliacao_id').value;
-
-        if (avaliacaoId) {
-            // Constrói a URL de impressão com o ID da avaliação
-            const imprimirUrl = "{% url 'imprimir_treinamento' 0 %}".replace('0', avaliacaoId);
-            window.open(imprimirUrl, '_blank'); // Abre a página de impressão em uma nova aba
-        } else {
-            alert('Por favor, selecione uma avaliação.');
-        }
-    });
-});
-</script>
-
-
-
-
-
-
 
 {% endblock %}
