@@ -6,403 +6,205 @@
 {% load custom_filters %}
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Avaliações de Job Rotation</h2>
-    
-    <!-- Toast container para mensagens de alerta -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                    <div class="toast align-items-center border-0" style="background-color: #f8d7da; color: #842029;">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <h4 class="alert-heading">Atenção!</h4>
-                                <p>{{ message }}</p>
-                            </div>
-                        </div>
-                    </div>
-                {% elif message.tags == "success" %}
-                    <div class="toast align-items-center border-0" style="background-color: #d1e7dd; color: #0f5132;" data-bs-delay="10000">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <h4 class="alert-heading">Sucesso!</h4>
-                                <p>{{ message }}</p>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
+    {% include "partials/global/_header_titulo.html" with titulo="Avaliações de Job Rotation" icone="bi bi-repeat" emoji="🔁" %}
 
-     <!-- Botões -->
-     <div class="d-flex justify-content-end mb-3">
+    {% include "partials/global/_toast_mensagens.html" %}
+
+    <!-- Botões -->
+    <div class="d-flex justify-content-end mb-3">
         {% if request.user|has_permission:'Funcionario.add_jobrotationevaluation' %}
         <a href="{% url 'cadastrar_jobrotation_evaluation' %}" class="btn btn-success me-2">
             <i class="bi bi-plus-circle"></i> Cadastrar
         </a>
         {% endif %}   
-       
     </div>
-    
 
-    <!-- Formulário de Filtro -->
-    <form method="get" class="mb-4">
-        <div class="row">
-            <div class="col-md-3">
-                <label for="funcionario" class="form-label">Colaborador:</label>
-                <select name="funcionario" id="funcionario" class="form-select select2">
-                    <option value="">Selecione</option>
-                    {% for funcionario in funcionarios %}
-                        <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>{{ funcionario.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label for="data_avaliacao" class="form-label">Período de Avaliação:</label>
-                <div class="row">
-                    <div class="col">
-                        <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
-                    </div>
-                    <div class="col">
-                        <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
-                    </div>
-                </div>
-            </div>
+    <!-- Filtros de Avaliações -->
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+    <strong class="text-primary">Filtros de Avaliações</strong>
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
+        <!-- Funcionário -->
+        <div class="col-md-6">
+          <label for="funcionario" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-person text-secondary"></i> Funcionário
+          </label>
+          <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtrar por funcionário">
+            <option value="">Selecione</option>
+            {% for funcionario in funcionarios %}
+              <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>{{ funcionario.nome }}</option>
+            {% endfor %}
+          </select>
         </div>
-        <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+
+        <!-- Data Início -->
+        <div class="col-md-3">
+          <label for="data_inicio" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-event text-secondary"></i> Data Início
+          </label>
+          <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
         </div>
+
+        <!-- Data Fim -->
+        <div class="col-md-3">
+          <label for="data_fim" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-check text-secondary"></i> Data Fim
+          </label>
+          <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+        </div>
+
+        <!-- Botão Filtrar -->
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </div>
     </form>
+  </div>
+</div>
 
 
- 
-
-<style>
-#imprimirJobRotationModal .select2-container--default .select2-selection--single {
-    height: calc(2.25rem + 2px);
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #212529;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-}
-
-#imprimirJobRotationModal .select2-container {
-    z-index: 9999 !important;
-    width: 100% !important;
-}
-
-#imprimirJobRotationModal .select2-dropdown {
-    z-index: 1050 !important;
-}
-</style>
-<!-- Cards -->
-    <div class="d-flex flex-wrap justify-content-between mb-4 mt-4">
-        <!-- Total de Avaliações -->
-        <div class="card text-white bg-info card-custom text-center">
-            <div class="card-header"><i class="bi bi-list-task"></i> Total de Avaliações</div>
-            <div class="card-body">
-                <h5 class="card-title">{{ total_avaliacoes }}</h5>
-                <p class="card-text">Avaliações cadastradas</p>
-            </div>
-        </div>
-
-        <!-- Apto -->
-        <div class="card text-white bg-success card-custom text-center">
-            <div class="card-header"><i class="bi bi-check-circle-fill"></i> Apto</div>
-            <div class="card-body">
-                <h5 class="card-title">{{ apto }}</h5>
-                <p class="card-text">Funcionários aptos</p>
-            </div>
-        </div>
-
-        <!-- Prorrogar -->
-        <div class="card text-dark bg-warning card-custom text-center">
-            <div class="card-header"><i class="bi bi-clock-history"></i> Prorrogar TN</div>
-            <div class="card-body">
-                <h5 class="card-title">{{ prorrogar }}</h5>
-                <p class="card-text">Prorrogações necessárias</p>
-            </div>
-        </div>
-
-        <!-- Inapto -->
-        <div class="card text-white bg-danger card-custom text-center">
-            <div class="card-header"><i class="bi bi-x-circle-fill"></i> Inapto</div>
-            <div class="card-body">
-                <h5 class="card-title">{{ inapto }}</h5>
-                <p class="card-text">Funcionários inaptos</p>
-            </div>
-        </div>
+    <!-- Cards de Indicadores -->
+    <div class="row justify-content-center mb-4 mt-4">
+        {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Avaliações" valor=total_avaliacoes subtitulo="Avaliações cadastradas" %}
+        {% include "partials/global/_card_indicador.html" with cor="success" titulo="Apto" valor=apto subtitulo="Funcionários aptos" %}
+        {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Prorrogar TN" valor=prorrogar subtitulo="Prorrogações necessárias" %}
+        {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Inapto" valor=inapto subtitulo="Funcionários inaptos" %}
     </div>
 
+    <!-- Lista de Avaliações -->
+    <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center mt-4">
+        <thead>
+            <tr>
+                <th><i class="bi bi-person-badge"></i> Colaborador</th>
+                <th><i class="bi bi-building"></i> Cargo / Área Atual</th>
+                <th><i class="bi bi-arrow-right-circle"></i> Nova Função / Área</th>
+                <th><i class="bi bi-calendar-event"></i> Início</th>
+                <th><i class="bi bi-calendar-check"></i> Término Previsto</th>
+                <th><i class="bi bi-clipboard-check"></i> Status</th>
+                <th><i class="bi bi-journal-code"></i> Treinamentos</th>
+                <th><i class="bi bi-gear"></i> Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for evaluation in evaluations %}
+            <tr>
+                <td>{{ evaluation.funcionario.nome }}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#cargoAreaModal{{ evaluation.id }}" aria-label="Ver cargo e área atual"><i class="bi bi-eye"></i></button>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#novaFuncaoModal{{ evaluation.id }}" aria-label="Ver nova função e área"><i class="bi bi-eye"></i></button>
+                </td>
+                <td>{{ evaluation.data_inicio|date:"d/m/Y" }}</td>
+                <td>{{ evaluation.termino_previsto|date:"d/m/Y" }}</td>
+                <td>
+                    {% if evaluation.avaliacao_rh == 'Apto' %}
+                        <span class="badge bg-success">Apto</span>
+                    {% elif evaluation.avaliacao_rh == 'Inapto' %}
+                        <span class="badge bg-danger">Inapto</span>
+                    {% elif evaluation.avaliacao_rh == 'Prorrogar TN' %}
+                        <span class="badge bg-warning text-dark">Prorrogar TN</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Indefinido</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#treinamentoModal{{ evaluation.id }}" aria-label="Ver treinamentos requeridos"><i class="bi bi-eye"></i></button>
+                </td>
+                <td>
+                    {% include "partials/global/_botao_visualizar.html" with objeto=evaluation url_visualizar='visualizar_jobrotation_evaluation' label='avaliação' %}
+                    {% include "partials/global/_botao_editar.html" with objeto=evaluation url_editar='editar_jobrotation_evaluation' label='avaliação' %}
+                    <a href="{% url 'imprimir_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-primary mt-1" target="_blank" title="Imprimir" aria-label="Imprimir avaliação">
+                        <i class="bi bi-printer"></i>
+                    </a>
+                    {% include "partials/global/_botao_excluir.html" with objeto=evaluation url_excluir='excluir_jobrotation' label='avaliação' %}
+                </td>
+            </tr>
 
-
-   <!-- Lista de Avaliações -->
-<table class="table table-bordered text-center mt-4">
-    <thead>
-        <tr>
-            <th class="align-middle">Colaborador</th>
-            <th class="align-middle">Cargo e Área Atual</th>
-            <th class="align-middle">Nova Função e Área</th>
-            <th class="align-middle">Data de Início</th>
-            <th class="align-middle">Término Previsto</th>
-            <th class="align-middle">Status da Avaliação</th>
-            <th class="align-middle">Treinamentos Requeridos</th>
-            <th class="align-middle">Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for evaluation in evaluations %}
-        <tr>
-            <td class="align-middle">{{ evaluation.funcionario.nome }}</td>
-            <td class="align-middle">
-                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#cargoAreaModal{{ evaluation.id }}">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
-            </td>
-            <td class="align-middle">
-                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#novaFuncaoModal{{ evaluation.id }}">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
-            </td>
-            <td class="align-middle">{{ evaluation.data_inicio|date:"d/m/Y" }}</td>
-            <td class="align-middle">{{ evaluation.termino_previsto|date:"d/m/Y" }}</td>
-            <td class="align-middle">
-                {% if evaluation.avaliacao_rh == 'Apto' %}
-                    <span class="badge bg-success">Apto</span>
-                {% elif evaluation.avaliacao_rh == 'Inapto' %}
-                    <span class="badge bg-danger">Inapto</span>
-                {% elif evaluation.avaliacao_rh == 'Prorrogar TN' %}
-                    <span class="badge bg-warning text-dark">Prorrogar TN</span>
-                {% else %}
-                    <span class="badge bg-secondary">Indefinido</span>
-                {% endif %}
-            </td>
-            <td class="align-middle">
-                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#treinamentoModal{{ evaluation.id }}">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
-            </td>
-            <td class="align-middle">
-                {% if request.user|has_permission:'Funcionario.view_jobrotationevaluation' %}
-                <a href="{% url 'visualizar_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-info" title="Visualizar">
-                    <i class="bi bi-eye"></i>
-                </a>
-                {% endif %}
-            
-                {% if request.user|has_permission:'Funcionario.change_jobrotationevaluation' %}
-                <a href="{% url 'editar_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-warning" title="Editar">
-                    <i class="bi bi-pencil-square"></i>
-                </a>
-                {% endif %}
-                {% if request.user|has_permission:'Funcionario.view_jobrotationevaluation' %}
-                <a href="{% url 'imprimir_jobrotation_evaluation' evaluation.id %}" target="_blank" class="btn btn-sm btn-primary" title="Imprimir">
-                    <i class="bi bi-printer"></i>
-                </a>
-                {% endif %}
-            
-                {% if request.user|has_permission:'Funcionario.delete_jobrotationevaluation' %}
-                <!-- Botão para abrir modal de exclusão -->
-                <button type="button" class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#deleteModal{{ evaluation.id }}" title="Excluir">
-                    <i class="bi bi-trash"></i>
-                </button>
-                {% endif %}
-            </td>
-        </tr>
-
-        <!-- Modal de Exclusão -->
-        <div class="modal fade" id="deleteModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ evaluation.id }}" aria-hidden="true">
+         <!-- Modal Genérica de Informação -->
+            <div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-labelledby="{{ modal_id }}Label" aria-hidden="true">
             <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteModalLabel{{ evaluation.id }}">Confirmar Exclusão</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Tem certeza de que deseja excluir a avaliação de <strong>{{ evaluation.funcionario.nome }}</strong>?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <form method="post" action="{% url 'excluir_jobrotation' evaluation.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash"></i> Confirmar Exclusão
-                            </button>
-                        </form>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    </div>
+                <div class="modal-content shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="{{ modal_id }}Label">
+                    <i class="bi bi-info-circle me-2 text-primary"></i> {{ modal_titulo }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    {{ modal_conteudo|safe }}
+                </div>
                 </div>
             </div>
-        </div>
-        {% empty %}
-        <tr>
-            <td colspan="8" class="text-center align-middle">Nenhuma avaliação de Job Rotation encontrada.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+            </div>
+{# Modal Cargo e Área Atual #}
+<div class="modal fade" id="cargoAreaModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="cargoAreaModalLabel{{ evaluation.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cargoAreaModalLabel{{ evaluation.id }}">
+          <i class="bi bi-info-circle me-2 text-primary"></i> Cargo e Área Atual
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Cargo Atual:</strong> {{ evaluation.cargo_atual.nome|default_if_none:"Não informado" }}</p>
+        <p><strong>Área Atual:</strong> {{ evaluation.area|default_if_none:"Não informado" }}</p>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Renderiza todas as Modais -->
-{% for evaluation in evaluations %}
-    <!-- Modal de Cargo e Área Atual -->
-    <div class="modal fade" id="cargoAreaModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="cargoAreaModalLabel{{ evaluation.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cargoAreaModalLabel{{ evaluation.id }}">Cargo e Área Atual</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>Cargo Atual:</strong> {{ evaluation.cargo_atual.nome|default:"Não informado" }}</p>
-                    <p><strong>Área Atual:</strong> {{ evaluation.area|default:"Não informado" }}</p>
-
-                </div>
-            </div>
-        </div>
+{# Modal Nova Função e Área #}
+<div class="modal fade" id="novaFuncaoModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="novaFuncaoModalLabel{{ evaluation.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title" id="novaFuncaoModalLabel{{ evaluation.id }}">
+          <i class="bi bi-info-circle me-2 text-primary"></i> Nova Função e Área
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Nova Função:</strong> {{ evaluation.nova_funcao.nome|default_if_none:"Não informado" }}</p>
+        <p><strong>Nova Área:</strong> {{ evaluation.local_trabalho|default_if_none:"Não informado" }}</p>
+      </div>
     </div>
-
-
-
-    <!-- Modal de Nova Função e Área -->
-    <div class="modal fade" id="novaFuncaoModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="novaFuncaoModalLabel{{ evaluation.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="novaFuncaoModalLabel{{ evaluation.id }}">Nova Função e Área</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>Nova Função:</strong> {{ evaluation.nova_funcao.nome|default_if_none:"Não informado" }}</p>
-                    <p><strong>Nova Área:</strong> {{ evaluation.local_trabalho|default_if_none:"Não informado" }}</p>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Treinamentos Requeridos -->
-    <div class="modal fade" id="treinamentoModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="treinamentoModalLabel{{ evaluation.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="treinamentoModalLabel{{ evaluation.id }}">Treinamentos Requeridos</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <ul>
-                        {% for treinamento in evaluation.treinamentos_requeridos|split_by_comma %}
-                            <li>{{ treinamento | safe }}</li>
-                        {% empty %}
-                            <li>Nenhum treinamento requerido.</li>
-                        {% endfor %}
-                    </ul>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    
-{% endfor %}
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Inicializa os elementos Select2
-    $('.select2').select2({
-        placeholder: 'Selecione uma avaliação',
-        allowClear: true,
-        width: '100%',
-    });
-
-    // Configura o Select2 para dropdowns dentro da modal
-    $('#imprimirJobRotationModal').on('shown.bs.modal', function () {
-        $('#avaliacao_id').select2({
-            placeholder: 'Selecione uma avaliação',
-            allowClear: true,
-            dropdownParent: $('#imprimirJobRotationModal') // Define o dropdown dentro da modal
-        });
-    });
-
-    // Submissão do formulário de impressão
-    document.getElementById('imprimirJobRotationForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        // Obtém o ID da avaliação selecionada
-        const avaliacaoId = document.getElementById('avaliacao_id').value;
-
-        if (avaliacaoId) {
-            // Constrói a URL de impressão com o ID da avaliação
-            const imprimirUrl = "{% url 'imprimir_jobrotation_evaluation' 0 %}".replace('0', avaliacaoId);
-            window.open(imprimirUrl, '_blank'); // Abre a página de impressão em uma nova aba
-        } else {
-            alert('Por favor, selecione uma avaliação.');
-        }
-    });
-});
-</script>
-
-
-
-
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const toasts = document.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            const bootstrapToast = new bootstrap.Toast(toast);
-            bootstrapToast.show();
-        });
-    });
-</script>
-
-<!-- Paginação -->
-<nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Primeira">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}">{{ num }}</a></li>
-            {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Próxima">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Última">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
-
+  </div>
 </div>
-<style>
-.card-custom {
-    flex: 1;
-    min-width: 200px;
-    margin: 5px;
-}
-</style>
+
+{# Modal Treinamentos Requeridos #}
+<div class="modal fade" id="treinamentoModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="treinamentoModalLabel{{ evaluation.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title" id="treinamentoModalLabel{{ evaluation.id }}">
+          <i class="bi bi-info-circle me-2 text-primary"></i> Treinamentos Requeridos
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+  {{ evaluation.treinamentos_requeridos|safe }}
+</div>
+
+    </div>
+  </div>
+</div>
+
+
+
+            {% empty %}
+            {% include "partials/global/_sem_resultados.html" with item_nome="avaliação" %}
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+
+    <!-- Paginação -->
+    {% include "partials/global/_paginacao.html" %}
+</div>
 
 {% endblock %}

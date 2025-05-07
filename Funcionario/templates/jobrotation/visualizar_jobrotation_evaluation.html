@@ -1,89 +1,61 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
 
-{% block title %}Visualizar Avaliação de Job Rotation{% endblock %}
+{% block title %}Visualização da Avaliação de Job Rotation{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white text-center">
-            <h2 class="mb-0">Visualização da Avaliação de Job Rotation</h2>
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
+  {% include "header.html" %}
+
+  <div id="relatorio-area">
+    <div class="pdf-container">
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>🔁 Avaliação de Job Rotation</h1>
+        <p>Visualização completa da movimentação de função e desempenho</p>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table align-middle">
+            <tr><th>Nome do Colaborador</th><td>{{ evaluation.funcionario.nome }}</td></tr>
+            <tr><th>Área Atual</th><td>{{ evaluation.area }}</td></tr>
+            <tr><th>Nova Função</th><td>{{ evaluation.nova_funcao.nome }}</td></tr>
+            <tr><th>Data de Início</th><td>{{ evaluation.data_inicio|date:"d/m/Y" }}</td></tr>
+            <tr><th>Término Previsto</th><td>{{ evaluation.termino_previsto|date:"d/m/Y" }}</td></tr>
+            <tr><th>Gestor Responsável</th><td>{{ evaluation.gestor_responsavel.nome }}</td></tr>
+
+            <tr><th>Treinamentos Requeridos</th><td>{{ evaluation.treinamentos_requeridos|safe }}</td></tr>
+            <tr><th>Treinamentos Propostos</th><td>{{ evaluation.treinamentos_propostos|safe }}</td></tr>
+
+            <tr><th>Avaliação do Gestor</th><td>{{ evaluation.avaliacao_gestor|safe }}</td></tr>
+            <tr><th>Avaliação do Funcionário</th><td>{{ evaluation.avaliacao_funcionario|safe }}</td></tr>
+            <tr><th>Avaliação do RH</th><td>{{ evaluation.avaliacao_rh }}</td></tr>
+
+            <tr><th>Disponibilidade de Vaga no Quadro</th><td>{{ evaluation.disponibilidade_vaga|yesno:"Sim,Não" }}</td></tr>
+          </table>
         </div>
-        <div class="card-body">
-            <!-- Informações Gerais -->
-            <h5 class="text-primary mb-3">Informações Gerais</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Nome</label>
-                    <p class="fw-bold">{{ evaluation.funcionario.nome }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Área</label>
-                    <p class="fw-bold">{{ evaluation.area }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Função</label>
-                    <p class="fw-bold">{{ evaluation.nova_funcao.nome }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Data de Início</label>
-                    <p class="fw-bold">{{ evaluation.data_inicio|date:"d/m/Y" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Término Previsto</label>
-                    <p class="fw-bold">{{ evaluation.termino_previsto|date:"d/m/Y" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Gestor Responsável</label>
-                    <p class="fw-bold">{{ evaluation.gestor_responsavel.nome }}</p>
-                </div>
-            </div>
+      </div>
 
-            <!-- Treinamentos -->
-            <h5 class="text-primary mb-3">Treinamentos</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Treinamentos Requeridos</label>
-                    <div class="border p-3 bg-light">{{ evaluation.treinamentos_requeridos|safe }}</div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Treinamentos Propostos</label>
-                    <div class="border p-3 bg-light">{{ evaluation.treinamentos_propostos|safe }}</div>
-                </div>
-            </div>
-
-            <!-- Avaliações -->
-            <h5 class="text-primary mb-3">Avaliações</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Avaliação do Gestor</label>
-                    <div class="border p-3 bg-light">{{ evaluation.avaliacao_gestor|safe }}</div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Avaliação do Funcionário</label>
-                    <div class="border p-3 bg-light">{{ evaluation.avaliacao_funcionario|safe }}</div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Avaliação do RH</label>
-                    <p class="fw-bold">{{ evaluation.avaliacao_rh }}</p>
-                </div>
-            </div>
-
-            <!-- Disponibilidade de Vaga -->
-            <h5 class="text-primary mb-3">Disponibilidade de Vaga</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted">Disponibilidade no Quadro</label>
-                    <p class="fw-bold">{{ evaluation.disponibilidade_vaga|yesno:"Sim,Não" }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Botão de Voltar -->
-        <div class="card-footer text-center">
-            <a href="{% url 'lista_jobrotation_evaluation' %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left-circle"></i> Voltar
-            </a>
-        </div>
+      <!-- Rodapé -->
+      <div class="text-center text-muted small mt-4">
+        <i class="bi bi-clock me-1"></i>
+        Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
     </div>
-</div>
+
+    <!-- Botão Voltar -->
+    <div class="text-center mt-4 d-print-none">
+      <a href="{% url 'lista_jobrotation_evaluation' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left-circle"></i> Voltar
+      </a>
+    </div>
+  </div>
 {% endblock %}

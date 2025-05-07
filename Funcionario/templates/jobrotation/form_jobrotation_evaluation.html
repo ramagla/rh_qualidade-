@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block title %}
+    {% if edicao %}
+        Editar Avaliação de Job Rotation
+    {% else %}
+        Cadastrar Avaliação de Job Rotation
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+<h2 class="text-center mb-4">
+    {% if edicao %}
+        <i class="bi bi-pencil-square me-2"></i> Editar Avaliação de Job Rotation
+    {% else %}
+        <i class="bi bi-plus-circle me-2"></i> Cadastrar Avaliação de Job Rotation
+    {% endif %}
+</h2>
+<form method="POST"
+      action="{% if edicao %}{% url 'editar_jobrotation_evaluation' evaluation.id %}{% else %}{% url 'cadastrar_jobrotation_evaluation' %}{% endif %}"
+      class="row g-3" id="jobRotationForm">
+        {% csrf_token %}
+
+        <div class="accordion" id="accordionJobRotation">
+          <!-- Dados do Colaborador -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingDados">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDados" aria-expanded="true">
+                <i class="bi bi-person-lines-fill me-2"></i> Dados do Colaborador
+              </button>
+            </h2>
+            <div id="collapseDados" class="accordion-collapse collapse show" data-bs-parent="#accordionJobRotation">
+                            <div class="accordion-body">
+                <div class="row g-3">
+                  <!-- Nome -->
+                  <div class="col-md-6">
+                    <label for="funcionario-select" class="form-label"><i class="bi bi-person-circle me-1"></i> Nome</label>
+                    <select name="funcionario" class="form-control select2 {% if form.funcionario.errors %}is-invalid{% endif %}" id="funcionario-select">
+                        <option value="">Selecione um Colaborador</option>
+                        {% for funcionario in funcionarios %}
+                            <option value="{{ funcionario.id }}" {% if edicao and funcionario.id == evaluation.funcionario.id %}selected{% endif %}>{{ funcionario.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.funcionario.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.funcionario.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                  </div>
+
+                  <!-- Área, Cargo, Competências -->
+                  <div class="col-md-6">
+                    <label for="local-trabalho" class="form-label"><i class="bi bi-diagram-3 me-1"></i> Área Atual</label>
+	<input type="text" class="form-control" id="local-trabalho" readonly>                  </div>
+
+                  <div class="col-md-6">
+                    <label for="cargo-atual" class="form-label"><i class="bi bi-award me-1"></i> Cargo Atual</label>
+    <input type="text" class="form-control" id="cargo-atual" readonly>
+                    </div>
+
+                  <div class="col-md-6">
+                    <label for="competencias" class="form-label"><i class="bi bi-lightbulb me-1"></i> Competências</label>
+	<textarea class="form-control" id="competencias" readonly></textarea>                  </div>
+
+                  <div class="col-md-6">
+                    <label for="data-ultima-avaliacao" class="form-label"><i class="bi bi-calendar-check me-1"></i> Última Avaliação</label>
+<input type="text" class="form-control" id="data-ultima-avaliacao" readonly>                  </div>
+
+                  <div class="col-md-6">
+                    <label for="status-ultima-avaliacao" class="form-label"><i class="bi bi-bar-chart-steps me-1"></i> Status</label>
+	<input type="text" class="form-control" id="status-ultima-avaliacao" readonly>                  </div>
+
+                  <div class="col-md-6">
+                    <label for="escolaridade" class="form-label"><i class="bi bi-mortarboard me-1"></i> Escolaridade</label>
+<input type="text" class="form-control" id="escolaridade" readonly>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+         <!-- Treinamentos -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingTreinamentos">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTreinamentos">
+      <i class="bi bi-journal-richtext me-2"></i> Cursos / Treinamentos
+    </button>
+  </h2>
+  <div id="collapseTreinamentos" class="accordion-collapse collapse" data-bs-parent="#accordionJobRotation">
+    <div class="accordion-body">
+      <div class="table-responsive">
+        <table class="table table-bordered text-center align-middle">
+          <thead class="table-light">
+            <tr>
+              <th><i class="bi bi-tag me-1"></i>Tipo</th>
+              <th><i class="bi bi-journal-text me-1"></i>Nome do Curso</th>
+              <th><i class="bi bi-list-task me-1"></i>Categoria</th>
+              <th><i class="bi bi-check2-circle me-1"></i>Status</th>
+              <th><i class="bi bi-calendar-check me-1"></i>Data de Conclusão</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+          <!-- Job Rotation -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingRotation">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRotation">
+                <i class="bi bi-repeat me-2"></i> Detalhes do Job Rotation
+              </button>
+            </h2>
+            <div id="collapseRotation" class="accordion-collapse collapse" data-bs-parent="#accordionJobRotation">
+              <div class="accordion-body">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="area" class="form-label"><i class="bi bi-geo-alt me-1"></i> Área de Job Rotation</label>
+                    <input type="text" name="area" class="form-control" placeholder="Ex: Logística, Engenharia de Processos" value="{{ evaluation.area|default:'' }}">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="nova_funcao" class="form-label"><i class="bi bi-person-workspace me-1"></i> Nova Função</label>
+                    <select name="nova_funcao" class="form-select select2">
+                        {% for cargo in lista_cargos %}
+                        <option value="{{ cargo.id }}" {% if edicao and cargo.id == evaluation.nova_funcao.id %}selected{% endif %}>{{ cargo.nome }}</option>
+                        {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="data_inicio" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data de Início</label>
+                    <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ evaluation.data_inicio|date:'Y-m-d' }}" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="termino_previsto" class="form-label"><i class="bi bi-calendar2-check me-1"></i> Término Previsto</label>
+                    <input type="text" id="termino_previsto" name="termino_previsto" class="form-control" value="{{ evaluation.termino_previsto|date:'d/m/Y' }}" readonly>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="gestor_responsavel" class="form-label"><i class="bi bi-person-badge me-1"></i> Gestor Responsável</label>
+                    <select name="gestor_responsavel" class="form-select select2">
+                      {% for funcionario in funcionarios %}
+                      <option value="{{ funcionario.id }}" {% if edicao and funcionario.id == evaluation.gestor_responsavel.id %}selected{% endif %}>{{ funcionario.nome }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Avaliações -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingAvaliacoes">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAvaliacoes">
+                <i class="bi bi-clipboard-check me-2"></i> Avaliações e Treinamentos
+              </button>
+            </h2>
+            <div id="collapseAvaliacoes" class="accordion-collapse collapse" data-bs-parent="#accordionJobRotation">
+              <div class="accordion-body">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-journal-text me-1"></i> Treinamentos Requeridos</label>
+                    {{ form.treinamentos_requeridos }}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-journal-plus me-1"></i> Treinamentos Propostos</label>
+                    {{ form.treinamentos_propostos }}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-person-vcard me-1"></i> Avaliação do Gestor</label>
+                    {{ form.avaliacao_gestor }}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-person-fill-check me-1"></i> Avaliação do Colaborador</label>
+                    {{ form.avaliacao_funcionario }}
+                  </div>
+                  <div class="col-md-6">
+                    <label for="avaliacao_rh" class="form-label"><i class="bi bi-building-check me-1"></i> Avaliação do RH</label>
+                    <select name="avaliacao_rh" class="form-select" id="avaliacao_rh" required>
+                        <option value="Apto" {% if form.avaliacao_rh.value == 'Apto' %}selected{% endif %}>Apto</option>
+                        <option value="Inapto" {% if form.avaliacao_rh.value == 'Inapto' %}selected{% endif %}>Inapto</option>
+                        <option value="Prorrogar TN" {% if form.avaliacao_rh.value == 'Prorrogar TN' %}selected{% endif %}>Prorrogar TN</option>
+                        <option value="EmProgresso" {% if form.avaliacao_rh.value == 'EmProgresso' or not form.avaliacao_rh.value %}selected{% endif %}>Em Progresso</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-people me-1"></i> Disponibilidade de Vaga</label>
+                    <div class="form-check">
+                      <input type="radio" id="vaga_sim" name="disponibilidade_vaga" value="Sim" class="form-check-input" {% if evaluation.disponibilidade_vaga %}checked{% endif %}>
+                      <label class="form-check-label" for="vaga_sim">Sim</label>
+                    </div>
+                    <div class="form-check">
+                      <input type="radio" id="vaga_nao" name="disponibilidade_vaga" value="Não" class="form-check-input" {% if not evaluation.disponibilidade_vaga %}checked{% endif %}>
+                      <label class="form-check-label" for="vaga_nao">Não</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="col-12 text-center mt-4">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar</button>
+          <a href="{% url 'lista_jobrotation_evaluation' %}" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
+        </div>
+</form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const dataInicioInput = document.getElementById('data_inicio');
+    const terminoPrevistoInput = document.getElementById('termino_previsto');
+    const funcionarioSelect = $('#funcionario-select');
+
+    // Inicializa o Select2
+    funcionarioSelect.select2({
+        placeholder: "Selecione um colaborador",
+        allowClear: true,
+        dropdownParent: $('#accordionDadosFuncionario')
+    });
+
+    // Evento para calcular término previsto
+    dataInicioInput.addEventListener('change', calcularTerminoPrevisto);
+
+    function calcularTerminoPrevisto() {
+        const dataInicio = new Date(dataInicioInput.value);
+        if (!isNaN(dataInicio.getTime())) {
+            const termino = new Date(dataInicio);
+            termino.setDate(termino.getDate() + 60);
+            const dia = String(termino.getDate()).padStart(2, '0');
+            const mes = String(termino.getMonth() + 1).padStart(2, '0');
+            const ano = termino.getFullYear();
+            terminoPrevistoInput.value = `${dia}/${mes}/${ano}`;
+        } else {
+            terminoPrevistoInput.value = '';
+        }
+    }
+
+    // Função reutilizável para carregar dados do colaborador
+    function carregarDadosFuncionario(funcionarioId) {
+        if (!funcionarioId) return;
+
+        fetch(`/get_funcionario_info/${funcionarioId}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('local-trabalho').value = data.local_trabalho || '';
+                document.getElementById('cargo-atual').value = data.cargo_atual || '';
+                document.getElementById('competencias').value = data.competencias || '';
+                document.getElementById('data-ultima-avaliacao').value = data.data_ultima_avaliacao || 'Não disponível';
+                document.getElementById('status-ultima-avaliacao').value = data.status_ultima_avaliacao || 'Nenhum status encontrado';
+                document.getElementById('escolaridade').value = data.escolaridade || '';
+                carregarTreinamentos(funcionarioId);
+            })
+            .catch(error => {
+                console.error('Erro ao buscar informações do colaborador:', error);
+                alert('Erro ao buscar informações. Por favor, tente novamente.');
+            });
+    }
+
+    // Carregar dados se já houver funcionário selecionado (modo edição)
+    const funcionarioSelecionado = funcionarioSelect.val();
+    if (funcionarioSelecionado) {
+        carregarDadosFuncionario(funcionarioSelecionado);
+    }
+
+    // Evento ao selecionar funcionário
+    funcionarioSelect.on('select2:select', function (e) {
+        const funcionarioId = e.params.data.id;
+        carregarDadosFuncionario(funcionarioId);
+    });
+
+    // Helpers de formatação
+    function formatarTitulo(texto) {
+        if (!texto) return 'Não especificado';
+        return texto.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function formatarData(dataISO) {
+        if (!dataISO) return 'Não especificado';
+        const data = new Date(dataISO);
+        if (isNaN(data.getTime())) return 'Inválida';
+        const dia = String(data.getDate()).padStart(2, '0');
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const ano = data.getFullYear();
+        return `${dia}/${mes}/${ano}`;
+    }
+
+    // Função para carregar treinamentos do funcionário
+    function carregarTreinamentos(funcionarioId) {
+        fetch(`/get-treinamentos/${funcionarioId}/`)
+            .then(response => response.json())
+            .then(treinamentos => {
+                const tbody = document.querySelector('table tbody');
+                tbody.innerHTML = '';
+
+                if (treinamentos.length > 0) {
+                    treinamentos.forEach(treinamento => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${formatarTitulo(treinamento.tipo)}</td>
+                            <td>${treinamento.nome_curso || 'Não especificado'}</td>
+                            <td>${formatarTitulo(treinamento.categoria)}</td>
+                            <td>${formatarTitulo(treinamento.status)}</td>
+                            <td>${formatarData(treinamento.data_fim)}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="5">Nenhum treinamento encontrado para este colaborador.</td>`;
+                    tbody.appendChild(row);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar treinamentos do colaborador:', error);
+                alert('Erro ao carregar treinamentos. Por favor, tente novamente.');
+            });
+    }
+
+    // Abre primeiro accordion por padrão
+    const firstAccordion = document.querySelector('.accordion-button');
+    if (firstAccordion && !firstAccordion.classList.contains('collapsed')) {
+        firstAccordion.click();
+    }
+});
+</script>
+
+{% endblock %}

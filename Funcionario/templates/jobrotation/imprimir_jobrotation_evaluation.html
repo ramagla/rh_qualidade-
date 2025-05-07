@@ -1,476 +1,151 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Avaliação de Job Rotation - {{ evaluation.funcionario.nome }}{% endblock %}
 
 {% block content %}
-<head>
-    {{ form.media }}  <!-- Adiciona media se necessário para editor de texto -->
-</head>
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'header.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Programa de Avaliação - Job Rotation" icone="bi bi-arrow-repeat" emoji="🛋" %}
 
-<div class="print-container container mt-5">
-    {% include 'header.html' %} <!-- Inclui o cabeçalho -->
-    
-    <!-- Botão de Imprimir -->
-    <div class="text-center mb-4 d-print-none">
-        <button onclick="imprimir()" class="btn btn-primary">
-            <i class="fas fa-print"></i> Imprimir
-        </button>
-    </div>
-
-    <!-- Informações da Avaliação de Job Rotation -->
-    <div class="info-section mt-4">
-        <table class="custom-table" style="width: 100%; border-collapse: collapse;table-layout: fixed;">
-            <tr>
-                <!-- Coluna de Informações do Funcionário -->
-                <td style="width: 50%; background-color: #fcf4d9; border: 1px solid #000; padding: 8px; vertical-align: top;">
-                    <table style="width: 100%;">
-                        <tr>
-                            <td colspan="2" style="background-color: #fcf4d9; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding: 4px;">
-                                COLABORADOR
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: left;"><strong>NOME:</strong></td>
-                            <td style="padding: 8px; text-align: left;">{{ evaluation.funcionario.nome }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: left;"><strong>ÁREA ATUAL:</strong></td>
-                            <td style="padding: 8px; text-align: left;">{{ evaluation.funcionario.local_trabalho }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: left;"><strong>CARGO ATUAL:</strong></td>
-                            <td style="padding: 8px; text-align: left;">{{ evaluation.funcionario.cargo_atual.nome }}</td>
-                        </tr>
-                    </table>
-                </td>
-
-                <!-- Coluna de Informações do Job Rotation -->
-                <td style="width: 50%; background-color: #e8f2ff; border: 1px solid #000; padding: 8px; vertical-align: top;">
-                    <table style="width: 100%;">
-                        <tr>
-                            <td colspan="2" style="background-color: #e8f2ff; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding: 4px;">
-                                JOB ROTATION
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: left;"><strong>ÁREA:</strong></td>
-                            <td style="padding: 8px; text-align: left;">{{ evaluation.area }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: left;"><strong>FUNÇÃO:</strong></td>
-                            <td style="padding: 8px; text-align: left;">{{ evaluation.nova_funcao.nome }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: left;"><strong>GESTOR RESP.:</strong></td>
-                            <td style="padding: 8px; text-align: left;">{{ evaluation.gestor_responsavel.nome }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: left;"><strong>DATA DE INÍCIO:</strong></td>
-                            <td style="padding: 8px; text-align: left;">{{ evaluation.data_inicio|date:"d/m/Y" }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: left;"><strong>TÉRMINO PREV.:</strong></td>
-                            <td style="padding: 8px; text-align: left;">{{ evaluation.termino_previsto|date:"d/m/Y" }}</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-
-<!-- Seção para Competências Atuais e Novas Competências -->
-<div class="competencias-section mt-4">
-    <table class="custom-table" style="width: 100%; border-collapse: collapse;table-layout: fixed;">
-        <tr>
-            <!-- Coluna de Competências Atuais -->
-            <td style="width: 50%; background-color: #fcf4d9; border: 1px solid #000; padding: 8px; vertical-align: top;">
-                <table style="width: 100%;">
-                    <tr>
-                        <td colspan="2" style="background-color: #fcf4d9; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding: 4px;">
-                            COMPETÊNCIAS ATUAIS
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" style="font-style: italic; text-align: center; padding: 4px;">
-                            DESCRIÇÃO DAS ATIVIDADES EM EXERCÍCIO
-                        </td>
-                    </tr>
-                    <tr>
-                        <tr>
-                        <td colspan="2" style="padding: 8px; text-align: left;">
-                            <strong>Conforme:</strong> {{ evaluation.competencias }}
-                        </td>
-                    </tr>
-
-                    </tr>
-                    <!-- Data da Última Avaliação de Desempenho -->
-                    <tr>
-                        <td style="padding: 8px; text-align: left;">
-                            <strong>Data da Última Avaliação de Desempenho:</strong> 
-                            {{ evaluation.data_ultima_avaliacao|date:"d/m/Y" }}
-                        </td>
-                    </tr>
-                    <!-- Status da Última Avaliação de Desempenho -->
-                    <tr>
-                        <td style="padding: 8px; text-align: left;">
-                            <strong>Status da Última Avaliação de Desempenho:</strong> 
-                            {{ evaluation.status_ultima_avaliacao }}
-                        </td>
-                    </tr>
-                    <!-- Escolaridade -->
-                    <tr>
-                        <td style="padding: 8px; text-align: left;">
-                            <strong>Escolaridade/Formação:</strong> 
-                            {{ evaluation.escolaridade }}
-                        </td>
-                    </tr>
-                   
-                </table>
-            </td>
-
-          <!-- Coluna de Novas Competências -->
-        <td style="width: 50%; background-color: #e8f2ff; border: 1px solid #000; padding: 8px; vertical-align: top;">
-            <table style="width: 100%;">
-                <tr>
-                    <td colspan="2" style="background-color: #e8f2ff; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding: 4px;">
-                        NOVAS COMPETÊNCIAS
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="font-style: italic; text-align: center; padding: 4px;">
-                        DESCRIÇÃO DO CARGO
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="padding: 8px; text-align: left;">
-                        <span style="font-weight: bold;">Conforme:</span> {{ descricao_cargo }} 
-                        <br>
-                        <strong>Data da Última Atualização:</strong> {{ ultima_revisao.data_revisao|date:"d/m/Y" }}
-                    </td>
-                </tr>
-            </table>
-        </td>
-
-<!-- Seção de Treinamentos Requeridos, Propostos e Cursos/Treinamentos -->
-<tr>
-    <td colspan="3" style="width: 100%; background-color: #e8f2ff; border: 1px solid #000; padding: 8px; vertical-align: top;">
-        <table style="width: 100%;">
-            <tr>
-                <td colspan="3" style="background-color: #e8f2ff; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding: 4px;">
-                    TREINAMENTOS
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3" style="font-style: italic; text-align: center; padding: 4px;">
-                    CURSOS/TREINAMENTOS REALIZADOS, REQUERIDOS E PROPOSTOS
-                </td>
-            </tr>
-            <tr>
-                <!-- Coluna de Cursos/Treinamentos Realizados -->
-                <td style="width: 33%; padding: 8px; text-align: left; vertical-align: top; border-right: 1px solid #000; background-color: #fcf4d9;">
-                    <strong>Cursos/Treinamentos Realizados:</strong>
-                    <div style="padding-top: 8px;">
-                        {% if evaluation.funcionario.treinamentos.exists %}
-                            <ul style="padding-left: 18px;">
-                                {% for treinamento in evaluation.funcionario.treinamentos.all|dictsortreversed:"data_fim"|slice:":10" %}
-                                    <li>
-                                        <strong>{{ treinamento.nome_curso }}</strong> 
-                                        - {{ treinamento.categoria|title }} 
-                                        ({{ treinamento.data_inicio|date:"d/m/Y" }} - {{ treinamento.data_fim|date:"d/m/Y" }})
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            Nenhum curso ou treinamento realizado.
-                        {% endif %}
-                    </div>
-                </td>
-
-                <!-- Coluna de Treinamentos Requeridos -->
-                <td style="width: 33%; padding: 8px; text-align: left; vertical-align: top; border-right: 1px solid #000;">
-                    <strong>Treinamentos Requeridos:</strong>
-                    <div style="padding-top: 8px;">
-                        {{ evaluation.treinamentos_requeridos|default:"Nenhum treinamento requerido."|safe }}
-                    </div>
-                </td>
-
-                <!-- Coluna de Treinamentos Propostos -->
-                <td style="width: 33%; padding: 8px; text-align: left; vertical-align: top;">
-                    <strong>Treinamentos Propostos:</strong>
-                    <div style="padding-top: 8px;">
-                        {{ evaluation.treinamentos_propostos|default:"Nenhum treinamento proposto."|safe }}
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </td>
-</tr>
-
-
-<!-- Seção de Avaliações -->
-<tr>
-    <td colspan="2" style="width: 100%; background-color: #e8f2ff; border: 1px solid #000; padding: 8px; vertical-align: top;">
-        <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
-            <!-- Título da Seção -->
-            <tr>
-                <td colspan="2" style="background-color: #e8f2ff; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding: 4px;">
-                    AVALIAÇÕES
-                </td>
-            </tr>
-            <!-- Subtítulo da Seção -->
-            <tr>
-                <td colspan="2" style="font-style: italic; text-align: center; padding: 4px;">
-                    AVALIAÇÃO DO GESTOR E DO COLABORADOR
-                </td>
-            </tr>
-            <!-- Avaliação do Gestor e do Funcionário -->
-            <tr>
-                <!-- Coluna de Avaliação do Gestor -->
-                <td style="width: 50%; padding: 8px; text-align: left; vertical-align: top; border-right: 1px solid #000;">
-                    <strong>Avaliação do Gestor:</strong>
-                    <div style="padding-top: 8px; word-wrap: break-word; white-space: normal;">
-                        {{ evaluation.avaliacao_gestor|default:"Nenhuma avaliação do gestor."|safe }}
-                    </div>
-                </td>
-                
-                <!-- Coluna de Avaliação do Funcionário -->
-                <td style="width: 50%; padding: 8px; text-align: left; vertical-align: top;">
-                    <strong>Avaliação do Colaborador:</strong>
-                    <div style="padding-top: 8px; word-wrap: break-word; white-space: normal;">
-                        {{ evaluation.avaliacao_funcionario|default:"Nenhuma avaliação do colaborador."|safe }}
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </td>
-</tr>
-
-<!-- Seção de Avaliação do RH e Disponibilidade de Vaga -->
-<tr>
-    <td colspan="2" style="width: 100%; background-color: #e8f2ff; border: 1px solid #000; padding: 8px; vertical-align: top;">
-        <table style="width: 100%;">
-            <tr>
-                <td colspan="2" style="background-color: #e8f2ff; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding: 4px;">
-                    AVALIAÇÃO DO RH E DISPONIBILIDADE DE VAGA
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" style="font-style: italic; text-align: center; padding: 4px;">
-                    INFORMAÇÕES DA AVALIAÇÃO E DISPONIBILIDADE
-                </td>
-            </tr>
-            <tr>
-                <!-- Coluna de Avaliação do RH -->
-                <td style="width: 50%; padding: 8px; text-align: left; vertical-align: top; border-right: 1px solid #000;">
-                    <strong>Avaliação do RH:</strong>
-                    <div style="padding-top: 8px;">
-                        {% if evaluation.avaliacao_rh %}
-                            {{ evaluation.get_avaliacao_rh_display }}
-                        {% else %}
-                            Nenhuma avaliação do RH.
-                        {% endif %}
-                    </div>
-                </td>
-
-                <!-- Coluna de Disponibilidade de Vaga no Quadro -->
-                <td style="width: 50%; padding: 8px; text-align: left; vertical-align: top;">
-                    <strong>Disponibilidade de Vaga no Quadro:</strong>
-                    <div style="padding-top: 8px;">
-                        {% if evaluation.disponibilidade_vaga %}
-                            Sim
-                        {% else %}
-                            Não
-                        {% endif %}
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </td>
-</tr>
-
-
-<div class="mt-5">
-    <table class="custom-table" style="width: 100%; border: 1px solid #000; border-collapse: collapse; table-layout: fixed;">
-        <tr>
-            <!-- Assinatura do Funcionário -->
-            <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
-                <p><strong>Assinatura do Colaborador</strong></p>
-                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
-                    {{ evaluation.funcionario.nome }}
-                </div>
-                <div style="margin-top: 10px;">
-                    <em>Data da Assinatura:</em> ___/___/____
-                </div>
-            </td>
-
-            <!-- Assinatura da Chefia -->
-            <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
-                <p><strong>Assinatura do Gestor</strong></p>
-                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
-                    {{ evaluation.gestor_responsavel.nome }}
-                </div>
-                <div style="margin-top: 10px;">
-                    <em>Data da Assinatura:</em> ___/___/____
-                </div>
-            </td>
-
-            <!-- Assinatura do Responsável R.H. -->
-            <td style="padding: 8px; text-align: center; width: 33%; border: 1px solid #000;">
-                <p><strong>Assinatura do Responsável R.H.</strong></p>
-                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
-                    Responsável R.H.
-                </div>
-                <div style="margin-top: 10px;">
-                    <em>Data da Assinatura:</em> ___/___/____
-                </div>
-            </td>
-        </tr>
+<div class="container pdf-container">
+  <!-- Dados do Colaborador e Job Rotation -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <tr>
+        <th><i class="bi bi-person-circle me-1"></i> Colaborador</th>
+        <td>{{ evaluation.funcionario.nome }}</td>
+        <th><i class="bi bi-geo-alt me-1"></i> Área Atual</th>
+        <td>{{ evaluation.funcionario.local_trabalho }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-award me-1"></i> Cargo Atual</th>
+        <td>{{ evaluation.funcionario.cargo_atual.nome }}</td>
+        <th><i class="bi bi-person-vcard me-1"></i> Gestor Responsável</th>
+        <td>{{ evaluation.gestor_responsavel.nome }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-arrow-right-circle me-1"></i> Nova Função</th>
+        <td>{{ evaluation.nova_funcao.nome }}</td>
+        <th><i class="bi bi-calendar-event me-1"></i> Período</th>
+        <td>{{ evaluation.data_inicio|date:"d/m/Y" }} – {{ evaluation.termino_previsto|date:"d/m/Y" }}</td>
+      </tr>
     </table>
-</div>
+  </div>
 
-<!-- Número do Formulário (fora do contêiner principal) -->
-<div class="numero-formulario d-print-block">
-    F197 Rev.01
-</div>
+  <!-- Competências e Histórico -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <tr>
+<th colspan="2" class="text-center" style="background-color: #fcf4d9;">
+    <i class="bi bi-lightbulb me-1"></i> Competências Atuais
+  </th>        <td>{{ evaluation.competencias }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-mortarboard me-1"></i> Escolaridade</th>
+        <td>{{ evaluation.escolaridade }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-graph-up me-1"></i> Última Avaliação</th>
+        <td>{{ evaluation.data_ultima_avaliacao|date:"d/m/Y" }} ({{ evaluation.status_ultima_avaliacao }})</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-person-workspace me-1"></i> Novas Competências</th>
+        <td>{{ descricao_cargo }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-calendar-range me-1"></i> Última Atualização da Função</th>
+        <td>{{ ultima_revisao.data_revisao|date:"d/m/Y" }}</td>
+      </tr>
+    </table>
+  </div>
 
-<!-- Estilos para Visualização e Impressão -->
+  <!-- Treinamentos -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <thead class="text-center">
+        <tr>
+          <th><i class="bi bi-bookmark-check me-1"></i> Realizados</th>
+          <th><i class="bi bi-journal-plus me-1"></i> Requeridos</th>
+          <th><i class="bi bi-journal-text me-1"></i> Propostos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            {% if evaluation.funcionario.treinamentos.exists %}
+              <ul>
+              {% for treinamento in evaluation.funcionario.treinamentos.all|dictsortreversed:"data_fim"|slice:":10" %}
+                <li><strong>{{ treinamento.nome_curso }}</strong> - {{ treinamento.categoria|title }} ({{ treinamento.data_inicio|date:"d/m/Y" }} - {{ treinamento.data_fim|date:"d/m/Y" }})</li>
+              {% endfor %}
+              </ul>
+            {% else %}
+              Nenhum treinamento realizado.
+            {% endif %}
+          </td>
+          <td>{{ evaluation.treinamentos_requeridos|default:"Nenhum."|safe }}</td>
+          <td>{{ evaluation.treinamentos_propostos|default:"Nenhum."|safe }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
+  <!-- Avaliações -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <thead class="text-center">
+        <tr>
+          <th><i class="bi bi-person-badge-fill me-1"></i> Avaliação do Gestor</th>
+          <th><i class="bi bi-person-lines-fill me-1"></i> Avaliação do Colaborador</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ evaluation.avaliacao_gestor|default:"Nenhuma."|safe }}</td>
+          <td>{{ evaluation.avaliacao_funcionario|default:"Nenhuma."|safe }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-<style>
-    .custom-table {
-        max-width: 100%;
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed
-    }
-     .custom-table th, .custom-table td {
-        padding: 2px;
-        border: 0.3px solid #ddd;
-        font-size: 8px;
-        text-align: center;
-        white-space: normal;
-        word-wrap: break-word; 
+  <!-- RH e Vaga -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped mb-4 rounded-2 border-light">
+      <tr>
+        <th><i class="bi bi-building-check me-1"></i> Avaliação do RH</th>
+        <td>{{ evaluation.get_avaliacao_rh_display|default:"Nenhuma avaliação do RH." }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-people-fill me-1"></i> Disponibilidade de Vaga</th>
+        <td>{% if evaluation.disponibilidade_vaga %}Sim{% else %}Não{% endif %}</td>
+      </tr>
+    </table>
+  </div>
 
-    .custom-table th {
-        background-color: #e7f1ff;
-        color: #333;
-        font-weight: bold;
-        font-size: 8.5px; 
-    }
-    .custom-table tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
+  <!-- Assinaturas -->
+  <div class="mt-5">
+    <table class="custom-table" style="width: 100%;">
+      <tr>
+        <td class="text-center" style="width: 33%;">
+          <p style="margin-bottom: 40px;"><strong>Assinatura do Colaborador</strong></p>
+          <div style="width: 80%; margin: 0 auto; border-top: 1px dashed #333; margin-top: 40px;"></div>
+          <p class="mt-2">{{ evaluation.funcionario.nome }}</p>
+        </td>
+        <td class="text-center" style="width: 33%;">
+          <p style="margin-bottom: 40px;"><strong>Assinatura do Gestor</strong></p>
+          <div style="width: 80%; margin: 0 auto; border-top: 1px dashed #333; margin-top: 40px;"></div>
+          <p class="mt-2">{{ evaluation.gestor_responsavel.nome }}</p>
+        </td>
+        <td class="text-center" style="width: 33%;">
+          <p style="margin-bottom: 40px;"><strong>Assinatura do Responsável R.H.</strong></p>
+          <div style="width: 80%; margin: 0 auto; border-top: 1px dashed #333; margin-top: 40px;"></div>
+          <p class="mt-2">Responsável R.H.</p>
+        </td>
+      </tr>
+    </table>
+  </div>
 
-    /* Estilo para o Número do Formulário */
-    .numero-formulario {
-        position: fixed;
-        bottom: 0;
-        right: 10px;
-        font-size: 8px;
-        color: #333;
-        text-align: right;
-    }
-
-    /* Estilo de impressão */
-    @media print {
-        body {
-            font-size: 8px;
-            padding: 3px;
-        }
-        .numero-formulario {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            font-size: 10px;
-            color: #333;
-        }
-        .d-print-none, .sidebar, .navbar {
-            display: none !important;
-        }
-        .print-container {
-            width: 100%;
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 8px;
-            overflow: hidden;
-        }
-        numero-formulario {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            font-size: 10px;
-            color: #333;
-        }
-    }
-</style>
-
-<!-- Script para impressão -->
-<script>
-function imprimir() {
-    var conteudo = document.querySelector('.print-container').innerHTML;
-    var novaJanela = window.open('', '_blank', 'width=800,height=600');
-    
-    novaJanela.document.write(`
-        <html>
-            <head>
-                <style>
-                    /* Estilos gerais */
-                    body { font-family: Arial, sans-serif; color: #333; padding: 2px; font-size: 8px; }
-                    .custom-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        table-layout: fixed;
-                        max-width: 100%; 
-                    }
-                    th, td {
-                        padding: 2px;
-                        border: 1px solid #ddd;
-                        font-size: 8px;
-                        text-align: center;
-                    }
-                    th {
-                        background-color: #e7f1ff;
-                        color: #333;
-                        font-weight: bold;
-                    }
-                    tr:nth-child(even) {
-                        background-color: #f9f9f9;
-                    }
-                    .numero-formulario {
-                        position: absolute;
-                        bottom: 0;
-                        right: 10px;
-                        width: 100%;
-                        font-size: 6px;
-                        color: #333;
-                        text-align: right;
-                        padding-right: 10px;
-                    }
-                    @media print {
-                        .d-print-none { display: none !important; }
-                        .numero-formulario {
-                            position: fixed;
-                            bottom: 10px;
-                            right: 10px;
-                            font-size: 6px;
-                            color: #333;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <h2 style="text-align: center;">PROGRAMA JOB ROTATION</h2>
-                ${conteudo}
-                <div class="numero-formulario">F197 Rev.01</div>
-            </body>
-        </html>
-    `);
-
-    novaJanela.document.close();
-    novaJanela.onload = function () {
-        novaJanela.print();
-        novaJanela.close();
-    };
-}
-</script>
-
+{% include 'partials/global/_formulario_rodape.html' with numero_formulario="F197 Rev.01" %}
 {% endblock %}

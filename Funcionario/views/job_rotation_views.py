@@ -120,7 +120,7 @@ def cadastrar_jobrotation_evaluation(request):
 
     return render(
         request,
-        "jobrotation/cadastrar_jobrotation_evaluation.html",
+        "jobrotation/form_jobrotation_evaluation.html",
         {"form": form, "lista_cargos": lista_cargos, "funcionarios": funcionarios},
     )
 
@@ -135,7 +135,7 @@ def excluir_jobrotation(request, id):
         job_rotation.delete()
         messages.success(request, "Registro de Job Rotation excluído com sucesso!")
     return redirect(reverse_lazy("lista_jobrotation_evaluation"))
-
+from django.utils.timezone import now
 
 @login_required
 def visualizar_jobrotation_evaluation(request, id):
@@ -143,7 +143,10 @@ def visualizar_jobrotation_evaluation(request, id):
     return render(
         request,
         "jobrotation/visualizar_jobrotation_evaluation.html",
-        {"evaluation": evaluation},
+        {
+            "evaluation": evaluation,
+            "now": now(),  # Adiciona data/hora atual ao contexto
+        },
     )
 
 
@@ -178,14 +181,16 @@ def editar_jobrotation_evaluation(request, id):
     # Enviar os dados para o template de edição
     return render(
         request,
-        "jobrotation/editar_jobrotation_evaluation.html",
+        "jobrotation/form_jobrotation_evaluation.html",
         {
             "form": form,
             "evaluation": evaluation,
             "lista_cargos": lista_cargos,
             "funcionarios": funcionarios,
+            "edicao": True,  # Flag de edição
         },
     )
+
 
 
 @login_required
