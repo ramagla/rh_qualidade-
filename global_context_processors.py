@@ -10,6 +10,12 @@ def global_menu(request):
 
     # Menu Metrologia com permissões
     menu_metrologia = []
+    menu_metrologia.insert(0, {
+    "name": "Dashboard",
+    "url": "metrologia_home",
+    "icon": "fas fa-tachometer-alt",
+})
+
     if user.has_perm("metrologia.view_tabelatecnica"):
         menu_metrologia.append({
             "name": "Cadastros",

@@ -1,85 +1,129 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Dashboard Metrologia{% endblock %}
 
 {% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+
 <div class="container mt-4">
-    <div class="row">
-        <!-- Coluna 1: Equipamentos Recentes -->
-       <div class="col-md-4">
-    <h5 class="text-center">Equipamentos Recentes</h5>
-    {% if equipamentos_recente %}
-        {% for equipamento in equipamentos_recente %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h6 class="card-title">{{ equipamento.codigo }} - {{ equipamento.nome_equipamento }}</h6>
-                    <p class="card-text">
-                        <strong>Alteração:</strong> {{ equipamento.alteracao|default:"Sem alterações registradas" }}
-                    </p>
+  {% include 'partials/global/_header_titulo.html' with titulo="Dashboard Metrologia" icone="bi bi-speedometer2" emoji="📊" %}
+
+  <div class="accordion accordion-flush" id="accordionDashboard">
+
+    <!-- Equipamentos Recentes -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingEquip">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEquip" aria-expanded="false" aria-controls="collapseEquip">
+          <i class="bi bi-tools me-2"></i> Equipamentos Recentes
+        </button>
+      </h2>
+      <div id="collapseEquip" class="accordion-collapse collapse" aria-labelledby="headingEquip" data-bs-parent="#accordionDashboard">
+        <div class="accordion-body p-3">
+          <div class="row g-3">
+            {% if equipamentos_recente %}
+              {% for equipamento in equipamentos_recente %}
+                <div class="col-12 col-md-6 col-lg-4">
+                  <div class="card h-100 shadow-sm">
+                    <div class="card-body p-3">
+                      <h6 class="card-title small mb-2">{{ equipamento.codigo }} – {{ equipamento.nome_equipamento }}</h6>
+                      <p class="card-text small">
+                        <strong>Alteração:</strong><br>
+                        {{ equipamento.alteracao|default:"Sem alterações registradas" }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-            </div>
-        {% endfor %}
-    {% else %}
-        <p class="text-muted">Nenhum equipamento registrado.</p>
-    {% endif %}
-</div>
-
-<div class="col-md-4">
-    <h5 class="text-center">Dispositivos Recentes</h5>
-    {% if dispositivos_recente %}
-        {% for dispositivo in dispositivos_recente %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h6 class="card-title">{{ dispositivo.codigo }} - {{ dispositivo.descricao }}</h6>
-                    <p class="card-text">
-                        <strong>Alteração:</strong> {{ dispositivo.alteracao|default:"Sem alterações registradas" }}
-                    </p>
-                </div>
-            </div>
-        {% endfor %}
-    {% else %}
-        <p class="text-muted">Nenhum dispositivo registrado.</p>
-    {% endif %}
-</div>
-
-
-        <!-- Coluna 3: Alertas de Calibração -->
-        <div class="col-md-12 mt-4">
-            <h5 class="text-center">Alertas de Calibração</h5>
-            {% if alertas_calibracao %}
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Nome</th>
-                            <th>Data da Última Calibração</th>
-                            <th>Próxima Calibração</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for alerta in alertas_calibracao %}
-                            <tr>
-                                <td>{{ alerta.codigo }}</td>
-                                <td>{{ alerta.nome_equipamento }}</td>
-                                <td>{{ alerta.data_ultima_calibracao|date:"d/m/Y" }}</td>
-                                <td>{{ alerta.proxima_calibracao|date:"d/m/Y" }}</td>
-                                <td>
-                                    {% if alerta.proxima_calibracao < today %}
-                                        <span class="badge bg-danger">Calibração Vencida</span>
-                                    {% else %}
-                                        <span class="badge bg-warning">Próxima Calibração</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+              {% endfor %}
             {% else %}
-                <p class="text-muted">Nenhum alerta de calibração pendente.</p>
+              {% include 'partials/global/_sem_resultados.html' with item_nome="equipamento" %}
             {% endif %}
+          </div>
         </div>
+      </div>
     </div>
+
+    <!-- Dispositivos Recentes -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingDisp">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDisp" aria-expanded="false" aria-controls="collapseDisp">
+          <i class="bi bi-cpu me-2"></i> Dispositivos Recentes
+        </button>
+      </h2>
+      <div id="collapseDisp" class="accordion-collapse collapse" aria-labelledby="headingDisp" data-bs-parent="#accordionDashboard">
+        <div class="accordion-body p-3">
+          <div class="row g-3">
+            {% if dispositivos_recente %}
+              {% for dispositivo in dispositivos_recente %}
+                <div class="col-12 col-md-6 col-lg-4">
+                  <div class="card h-100 shadow-sm">
+                    <div class="card-body p-3">
+                      <h6 class="card-title small mb-2">{{ dispositivo.codigo }} – {{ dispositivo.descricao }}</h6>
+                      <p class="card-text small">
+                        <strong>Alteração:</strong><br>
+                        {{ dispositivo.alteracao|default:"Sem alterações registradas" }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              {% include 'partials/global/_sem_resultados.html' with item_nome="dispositivo" %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertas de Calibração -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingAlertas">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAlertas" aria-expanded="true" aria-controls="collapseAlertas">
+          <i class="bi bi-exclamation-diamond me-2"></i> Alertas de Calibração
+        </button>
+      </h2>
+      <div id="collapseAlertas" class="accordion-collapse collapse show" aria-labelledby="headingAlertas" data-bs-parent="#accordionDashboard">
+        <div class="accordion-body">
+          {% if alertas_calibracao %}
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle">
+                <caption class="visually-hidden">Tabela de alertas de calibração</caption>
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col"><i class="bi bi-hash"></i> Código</th>
+                    <th scope="col"><i class="bi bi-box-seam"></i> Nome</th>
+                    <th scope="col"><i class="bi bi-calendar-check"></i> Última Calibração</th>
+                    <th scope="col"><i class="bi bi-calendar-event"></i> Próxima Calibração</th>
+                    <th scope="col"><i class="bi bi-shield-exclamation"></i> Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for alerta in alertas_calibracao %}
+                    <tr>
+                      <td>{{ alerta.codigo }}</td>
+                      <td>{{ alerta.nome_equipamento }}</td>
+                      <td>{{ alerta.data_ultima_calibracao|date:"d/m/Y" }}</td>
+                      <td>{{ alerta.proxima_calibracao|date:"d/m/Y" }}</td>
+                      <td>
+                        {% if alerta.proxima_calibracao < today %}
+                          <span class="badge bg-danger" title="Calibração vencida">Calibração Vencida</span>
+                        {% else %}
+                          <span class="badge bg-warning text-dark" title="Atenção: calibração próxima">Próxima Calibração</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            {% include 'partials/global/_sem_resultados.html' with item_nome="alerta de calibração" %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 {% endblock %}

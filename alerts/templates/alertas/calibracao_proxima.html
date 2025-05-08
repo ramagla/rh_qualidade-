@@ -1,114 +1,154 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alerta de Calibração Próxima</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f9;
-            color: #333;
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .logo {
-            width: 150px;
-        }
-        .equipment-image {
-            width: 150px;
-            border-radius: 10px;
-        }
-        h2 {
-            color: #3498db;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-        th {
-            background-color: #3498db;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        .alerta-content {
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>   
+  <meta charset="UTF-8">
+  <title>⚠️ Alerta de Calibração Próxima</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
 
-    <h2>Alerta de Calibração Próxima</h2>
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+
+    h2 {
+      color: #6A1B9A;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    .alerta-content {
+      font-size: 16px;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #6A1B9A;
+      color: #fff;
+      text-transform: uppercase;
+      font-size: 15px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f3e5f5;
+    }
+
+    tr:nth-child(odd) {
+      background-color: #fff;
+    }
+
+    .important {
+      color: #1b5e20;
+      font-weight: bold;
+    }
+
+    .footer-note {
+      font-size: 12px;
+      color: #777;
+      margin-top: 30px;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .cta-button {
+      display: inline-block;
+      margin-top: 20px;
+      background-color: #6A1B9A;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .cta-button:hover {
+      background-color: #4a148c;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <h2>⚠️ Alerta de Calibração Próxima</h2>
+
     <p class="alerta-content">
-        Prezado, o {{ tipo|title }}
-        <strong>
-            {% if tipo == "equipamentos" %}
-                {{ objeto.nome_equipamento }}
-            {% else %}
-                {{ objeto.codigo }}
-            {% endif %}
-        </strong> 
-        está com a calibração programada para breve.
+      Prezado(a), o {{ tipo|title }} 
+      <strong>
+        {% if tipo == "equipamentos" %}
+          {{ objeto.nome_equipamento }}
+        {% else %}
+          {{ objeto.codigo }}
+        {% endif %}
+      </strong>
+      está com a calibração programada para breve.
     </p>
-    
-    
-    <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; margin-top: 20px;">
-        <thead>
-            <tr style="background-color: #6A1B9A; color: #ffffff; text-align: left;">
-                <th style="padding: 10px; font-size: 16px; text-transform: uppercase;">Campo</th>
-                <th style="padding: 10px; font-size: 16px; text-transform: uppercase;">Informação</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr style="background-color: #F3E5F5;">
-                <th style="padding: 10px; text-align: left; font-size: 14px;">Código</th>
-                <td style="padding: 10px; font-size: 14px;">{{ objeto.codigo }}</td>
-            </tr>
-            {% if tipo == "equipamentos" %}
-            <tr style="background-color: #FFFFFF;">
-                <th style="padding: 10px; text-align: left; font-size: 14px;">Nome</th>
-                <td style="padding: 10px; font-size: 14px;">{{ objeto.nome_equipamento }}</td>
-            </tr>
-            <tr style="background-color: #F3E5F5;">
-                <th style="padding: 10px; text-align: left; font-size: 14px;">Fabricante</th>
-                <td style="padding: 10px; font-size: 14px;">{{ objeto.fabricante }}</td>
-            </tr>
-            {% endif %}
-            <tr style="background-color: #FFFFFF;">
-                <th style="padding: 10px; text-align: left; font-size: 14px;">Próxima Calibração</th>
-                <td style="padding: 10px; font-size: 14px;">{{ proxima_calibracao|date:"d/m/Y" }}</td>
-            </tr>
-            <tr style="background-color: #F3E5F5;">
-                <th style="padding: 10px; text-align: left; font-size: 14px;">Responsável</th>
-                <td style="padding: 10px; font-size: 14px;">{{ objeto.responsavel }}</td>
-            </tr>
-        </tbody>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Informação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Código</td>
+          <td>{{ objeto.codigo }}</td>
+        </tr>
+        {% if tipo == "equipamentos" %}
+        <tr>
+          <td>Nome</td>
+          <td>{{ objeto.nome_equipamento }}</td>
+        </tr>
+        <tr>
+          <td>Fabricante</td>
+          <td>{{ objeto.fabricante }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+          <td><strong class="important">Próxima Calibração</strong></td>
+          <td class="important">{{ proxima_calibracao|date:"d/m/Y" }}</td>
+        </tr>
+        <tr>
+          <td>Responsável</td>
+          <td>{{ objeto.responsavel }}</td>
+        </tr>
+      </tbody>
     </table>
 
-
     <p class="alerta-content">
-        Por favor, prepare-se para realizar a calibração dentro do prazo indicado.
+      Por favor, prepare-se para realizar a calibração dentro do prazo indicado.
     </p>
 
-<p><em>Favor não responder. Este e-mail foi enviado automaticamente.</em></p>
+    <!-- Botão opcional, descomente se houver uma rota para isso -->
+    <!--
+    <a href="{{ url_visualizar_equipamento }}" class="cta-button">🔍 Visualizar Equipamento</a>
+    -->
 
-
-
-
-
+    <p class="footer-note">Favor não responder. Este e-mail foi enviado automaticamente.</p>
+  </div>
 </body>
 </html>

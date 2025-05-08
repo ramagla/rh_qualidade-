@@ -1,312 +1,194 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load custom_filters %}
 
 {% block title %}Tabela Técnica{% endblock %}
 
 {% block content %}
-{% load custom_filters %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Lista de Equipamentos" icone="bi bi-hammer" emoji="🔧" %}
 
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Lista de Equipamentos</h2>
+<div class="container mt-4">
 
-    <!-- Mensagens de alerta -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="toast align-items-center border-0"
-                     {% if message.tags == "error" %} style="background-color: #f8d7da; color: #842029;" {% else %} style="background-color: #d1e7dd; color: #0f5132;" {% endif %}
-                     role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <h4 class="alert-heading">{% if message.tags == "error" %}Atenção!{% else %}Sucesso!{% endif %}</h4>
-                            <p>{{ message }}</p>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endif %}
-    </div>
-
-    <!-- Botão para cadastrar novo equipamento -->
-    <div class="d-flex justify-content-end mb-4">
-        {% if request.user|has_permission:"metrologia.add_tabelatecnica" %}
-
-        <a href="{% url 'cadastrar_tabelatecnica' %}" class="btn btn-success me-2">
-            <i class="bi bi-plus-circle"></i> Cadastrar
-        </a>
-        {% endif %}
-        {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
-
-        <a href="{% url 'imprimir_tabelatecnica' %}" class="btn btn-primary me-2" target="_blank">
-        <i class="bi bi-printer"></i> Imprimir
-    </a>
+  <!-- Botões de Ação -->
+  <div class="d-flex justify-content-end mb-4 gap-2">
+    {% if request.user|has_permission:"metrologia.add_tabelatecnica" %}
+      <a href="{% url 'cadastrar_tabelatecnica' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Cadastrar
+      </a>
     {% endif %}
+    {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
+      <a href="{% url 'imprimir_tabelatecnica' %}" class="btn btn-primary" target="_blank">
+        <i class="bi bi-printer"></i> Imprimir
+      </a>
+    {% endif %}
+  </div>
 
-    </div>
+  <!-- 🔍 Filtros de Equipamentos -->
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+    <strong class="text-primary">Filtros de Equipamentos</strong>
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
 
-    
-
-    <form method="get" class="row mb-4">
-        <!-- Filtro: Código -->
-        <div class="col-md-3 mb-3">
-            <label for="codigo" class="form-label">Código:</label>
-            <select id="codigo" name="codigo" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for codigo in codigos %}
-                    <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>
-                        {{ codigo }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-    
-        <!-- Filtro: Nome do Equipamento -->
-        <div class="col-md-3 mb-3">
-            <label for="nome_equipamento" class="form-label">Nome do Equipamento:</label>
-            <select id="nome_equipamento" name="nome_equipamento" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for equipamento in equipamentos %}
-                    <option value="{{ equipamento }}" {% if equipamento == request.GET.nome_equipamento %}selected{% endif %}>
-                        {{ equipamento }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-    
-        <!-- Filtro: Unidade de Medida -->
+        <!-- Código -->
         <div class="col-md-3">
-            <label for="unidade_medida" class="form-label">Unidade de Medida:</label>
-            <select id="unidade_medida" name="unidade_medida" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for symbol, name in unidades_medida.items %}
-                    <option value="{{ symbol }}" {% if request.GET.unidade_medida == symbol %}selected{% endif %}>
-                        {{ name }}
-                    </option>
-                {% endfor %}
-            </select>
+          <label for="codigo" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-upc-scan text-secondary" aria-hidden="true"></i> Código
+          </label>
+          <select id="codigo" name="codigo" class="form-select select2" aria-label="Filtro por código">
+            <option value="">Selecione</option>
+            {% for codigo in codigos %}
+              <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>{{ codigo }}</option>
+            {% endfor %}
+          </select>
         </div>
-        
-    
-        <!-- Filtro: Status -->
-        <div class="col-md-3 mb-3">
-            <label for="status" class="form-label">Status:</label>
-            <select id="status" name="status" class="form-select select2">
-                <option value="ativo" {% if status_selecionado == "ativo" %}selected{% endif %}>Ativo</option>
-                <option value="inativo" {% if status_selecionado == "inativo" %}selected{% endif %}>Inativo</option>
-            </select>
+
+        <!-- Nome do Equipamento -->
+        <div class="col-md-3">
+          <label for="nome_equipamento" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-gear-wide-connected text-secondary" aria-hidden="true"></i> Nome do Equipamento
+          </label>
+          <select id="nome_equipamento" name="nome_equipamento" class="form-select select2" aria-label="Filtro por nome do equipamento">
+            <option value="">Selecione</option>
+            {% for equipamento in equipamentos %}
+              <option value="{{ equipamento }}" {% if equipamento == request.GET.nome_equipamento %}selected{% endif %}>{{ equipamento }}</option>
+            {% endfor %}
+          </select>
         </div>
-    
-        <!-- Filtro: Responsável -->
-        <div class="col-md-3 mb-3">
-            <label for="responsavel" class="form-label">Responsável:</label>
-            <select id="responsavel" name="responsavel" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for responsavel in responsaveis %}
-                    <option value="{{ responsavel.id }}" {% if responsavel.id|stringformat:"s" == request.GET.responsavel %}selected{% endif %}>
-                        {{ responsavel.nome }}
-                    </option>
-                {% endfor %}
-            </select>
+
+        <!-- Unidade de Medida -->
+        <div class="col-md-3">
+          <label for="unidade_medida" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-rulers text-secondary" aria-hidden="true"></i> Unidade de Medida
+          </label>
+          <select id="unidade_medida" name="unidade_medida" class="form-select select2" aria-label="Filtro por unidade de medida">
+            <option value="">Selecione</option>
+            {% for symbol, name in unidades_medida.items %}
+              <option value="{{ symbol }}" {% if request.GET.unidade_medida == symbol %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+          </select>
         </div>
-    
-        <!-- Filtro: Fabricante -->
-        <div class="col-md-3 mb-3">
-            <label for="fabricante" class="form-label">Fabricante:</label>
-            <select id="fabricante" name="fabricante" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for fabricante in fabricantes %}
-                    <option value="{{ fabricante }}" {% if fabricante == request.GET.fabricante %}selected{% endif %}>
-                        {{ fabricante }}
-                    </option>
-                {% endfor %}
-            </select>
+
+        <!-- Status -->
+        <div class="col-md-3">
+          <label for="status" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-circle-half text-secondary" aria-hidden="true"></i> Status
+          </label>
+          <select id="status" name="status" class="form-select select2" aria-label="Filtro por status">
+            <option value="">Todos</option>
+            <option value="ativo" {% if status_selecionado == "ativo" %}selected{% endif %}>Ativo</option>
+            <option value="inativo" {% if status_selecionado == "inativo" %}selected{% endif %}>Inativo</option>
+          </select>
         </div>
-    
+
+        <!-- Responsável -->
+        <div class="col-md-3">
+          <label for="responsavel" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-person-badge text-secondary" aria-hidden="true"></i> Responsável
+          </label>
+          <select id="responsavel" name="responsavel" class="form-select select2" aria-label="Filtro por responsável">
+            <option value="">Selecione</option>
+            {% for responsavel in responsaveis %}
+              <option value="{{ responsavel.id }}" {% if responsavel.id|stringformat:"s" == request.GET.responsavel %}selected{% endif %}>{{ responsavel.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Fabricante -->
+        <div class="col-md-3">
+          <label for="fabricante" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-tools text-secondary" aria-hidden="true"></i> Fabricante
+          </label>
+          <select id="fabricante" name="fabricante" class="form-select select2" aria-label="Filtro por fabricante">
+            <option value="">Selecione</option>
+            {% for fabricante in fabricantes %}
+              <option value="{{ fabricante }}" {% if fabricante == request.GET.fabricante %}selected{% endif %}>{{ fabricante }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
         <!-- Botão de Filtrar -->
-        <div class="col-md-12 mt-3 text-end">
-            <button type="submit" class="btn btn-primary me-2"><i class="bi bi-funnel"></i> Filtrar</button>
-        </div>
+        {% include 'partials/global/_botao_filtrar.html' %}
+
+      </div>
     </form>
-    
-
-<div class="row mb-4 mt-4">
-    <!-- Card: Total de Equipamentos -->
-    <div class="col-md-4">
-        <div class="card text-white bg-primary">
-            <div class="card-header text-center">
-                <i class="bi bi-clipboard-data"></i> Total de Equipamentos
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ total_tabelas }}</h5>
-                <p class="card-text text-center">Equipamentos cadastrados.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Fora do Prazo -->
-    <div class="col-md-4">
-        <div class="card text-white bg-danger">
-            <div class="card-header text-center">
-                <i class="bi bi-x-circle"></i> Fora do Prazo
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ total_fora_prazo }}</h5>
-                <p class="card-text text-center">Calibração vencida.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Próximo do Prazo -->
-    <div class="col-md-4">
-        <div class="card text-white bg-warning">
-            <div class="card-header text-center">
-                <i class="bi bi-exclamation-circle"></i> Próximo do Prazo
-            </div>
-            <div class="card-body">
-                <h5 class="card-title text-center">{{ total_proximo_prazo }}</h5>
-                <p class="card-text text-center">Próximo do vencimento.</p>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
-<!-- Tabela de Equipamentos -->
-<table class="table table-bordered text-center mt-4">
-    <thead>
-        <tr>
-            <th style="vertical-align: middle;">Código</th>
-            <th style="vertical-align: middle;">Nome do Equipamento</th>
-            <th style="vertical-align: middle;">Fabricante</th>
-            <th style="vertical-align: middle;">Número de Série</th>
-            <th style="vertical-align: middle;">Responsável</th>
-            <th style="vertical-align: middle;">Localização</th>
-            <th style="vertical-align: middle;">Data da Última Calibração</th>
-            <th style="vertical-align: middle;">Próx. Calibração</th>
-            <th style="vertical-align: middle;">Ações</th>
-        </tr>
+
+  <!-- Cards de Indicadores -->
+  <div class="row mb-4">
+    {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Equipamentos" valor=total_tabelas subtitulo="Equipamentos cadastrados" %}
+    {% include 'partials/global/_card_indicador.html' with cor="danger" titulo="Fora do Prazo" valor=total_fora_prazo subtitulo="Calibração vencida" %}
+    {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="Próximo do Prazo" valor=total_proximo_prazo subtitulo="Próximo do vencimento" %}
+  </div>
+
+  <!-- Tabela -->
+  <table class="table table-bordered table-striped text-center mt-4">
+    <caption class="visually-hidden">Lista de equipamentos cadastrados</caption>
+    <thead class="table-light">
+      <tr>
+         <th class="align-middle"><i class="bi bi-upc-scan me-1 text-secondary" aria-hidden="true"></i> Código</th>
+    <th class="align-middle"><i class="bi bi-gear-wide-connected me-1 text-secondary" aria-hidden="true"></i> Nome do Equipamento</th>
+    <th class="align-middle"><i class="bi bi-tools me-1 text-secondary" aria-hidden="true"></i> Fabricante</th>
+    <th class="align-middle"><i class="bi bi-123 me-1 text-secondary" aria-hidden="true"></i> Nº de Série</th>
+    <th class="align-middle"><i class="bi bi-person-badge me-1 text-secondary" aria-hidden="true"></i> Responsável</th>
+    <th class="align-middle"><i class="bi bi-geo-alt-fill me-1 text-secondary" aria-hidden="true"></i> Localização</th>
+    <th class="align-middle"><i class="bi bi-calendar-check me-1 text-secondary" aria-hidden="true"></i> Última Calibração</th>
+    <th class="align-middle"><i class="bi bi-calendar-event me-1 text-secondary" aria-hidden="true"></i> Próx. Calibração</th>
+    <th class="align-middle"><i class="bi bi-three-dots me-1 text-secondary" aria-hidden="true"></i> Ações</th>
+      </tr>
     </thead>
     <tbody>
-        {% for tabela in page_obj %}
+      {% for tabela in page_obj %}
         <tr>
-            <td style="vertical-align: middle;">{{ tabela.codigo }}</td>
-            <td style="vertical-align: middle;">{{ tabela.nome_equipamento }}</td>
-            <td style="vertical-align: middle;">{{ tabela.fabricante }}</td>
-            <td style="vertical-align: middle;">{{ tabela.numero_serie }}</td>
-            <td style="vertical-align: middle;">
-                {% if tabela.responsavel %}
-                    {{ tabela.responsavel.primeiro_nome }}
+          <td>{{ tabela.codigo }}</td>
+          <td>{{ tabela.nome_equipamento }}</td>
+          <td>{{ tabela.fabricante }}</td>
+          <td>{{ tabela.numero_serie }}</td>
+          <td>{{ tabela.responsavel.primeiro_nome|default:"Não definido" }}</td>
+          <td>{{ tabela.localizacao }}</td>
+          <td>{{ tabela.data_ultima_calibracao|date:"d/m/Y"|default:"Não definida" }}</td>
+          <td>
+            {% if tabela.proxima_calibracao %}
+              {% with tabela.proxima_calibracao as data_calibracao %}
+                {% if data_calibracao < today %}
+                  <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
+                {% elif data_calibracao <= today|add_days:31 %}
+                  <span class="badge bg-warning">{{ data_calibracao|date:"d/m/Y" }}</span>
                 {% else %}
-                    Não definido
+                  <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
                 {% endif %}
-            </td>
-
-
-            <td style="vertical-align: middle;">{{ tabela.localizacao }}</td>
-            <td style="vertical-align: middle;">
-                {% if tabela.data_ultima_calibracao %}
-                    {{ tabela.data_ultima_calibracao|date:"d/m/Y" }}
-                {% else %}
-                    Não definida
-                {% endif %}
-            </td>
-            <td class="text-center align-middle">
-                {% if tabela.proxima_calibracao %}
-                    {% with tabela.proxima_calibracao as data_calibracao %}
-                        {% if data_calibracao < today %}
-                            <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
-                        {% elif data_calibracao <= today|add_days:31 %}
-                            <span class="badge bg-warning">{{ data_calibracao|date:"d/m/Y" }}</span>
-                        {% else %}
-                            <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
-                        {% endif %}
-                    {% endwith %}
-                {% else %}
-                    <span style="color: gray;">Data não definida</span>
-                {% endif %}
-            </td>
-
-
-
-
-<td style="vertical-align: middle;">
-    {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
-
-    <a href="{% url 'visualizar_tabelatecnica' tabela.id %}" class="btn btn-info btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;">
-        <i class="bi bi-eye"></i>
-    </a>
-    {% endif %}
-    {% if request.user|has_permission:"metrologia.change_tabelatecnica" %}
-
-    <a href="{% url 'editar_tabelatecnica' tabela.id %}" class="btn btn-primary btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;">
-        <i class="bi bi-pencil"></i>
-    </a>
-    {% endif %}
-    {% if request.user|has_permission:"metrologia.delete_tabelatecnica" %}
-
-     <button class="btn btn-danger btn-sm" style="padding: 0.15rem 0.2rem; font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#modalExcluirTabelaTecnica{{ tabela.id }}">
-        <i class="bi bi-trash"></i>
-    </button> 
-    {% endif %}
-
-</td>
-
+              {% endwith %}
+            {% else %}
+              <span class="text-muted">Não definida</span>
+            {% endif %}
+          </td>
+          <td class="d-flex justify-content-center gap-1 flex-wrap">
+            {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
+              {% include 'partials/global/_botao_visualizar.html' with objeto=tabela url_visualizar='visualizar_tabelatecnica' %}
+            {% endif %}
+            {% if request.user|has_permission:"metrologia.change_tabelatecnica" %}
+              {% include 'partials/global/_botao_editar.html' with objeto=tabela url_editar='editar_tabelatecnica' %}
+            {% endif %}
+            {% if request.user|has_permission:"metrologia.delete_tabelatecnica" %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=tabela url_excluir='excluir_tabelatecnica' %}
+            {% endif %}
+          </td>
         </tr>
+      {% empty %}
+        {% include 'partials/global/_sem_resultados.html' with item_nome="equipamento" %}
+      {% endfor %}
+    </tbody>
+  </table>
 
-      
+  <!-- Paginação -->
+  {% include 'partials/global/_paginacao.html' %}
 
-
-
-                <!-- Modal de Confirmação de Exclusão -->
-                <div class="modal fade" id="modalExcluirTabelaTecnica{{ tabela.id }}" tabindex="-1" aria-labelledby="modalExcluirTabelaTecnicaLabel{{ tabela.id }}" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="modalExcluirTabelaTecnicaLabel{{ tabela.id }}">Excluir Tabela Técnica</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Tem certeza que deseja excluir a tabela técnica abaixo?</p>
-                                <p><strong>Código:</strong> {{ tabela.codigo }}</p>
-                            </div>
-                            <div class="modal-footer">
-                                <form method="post" action="{% url 'excluir_tabelatecnica' tabela.id %}">
-                                    {% csrf_token %}
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-danger">Excluir</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% empty %}
-                <tr>
-                    <td colspan="8" class="text-center">Nenhuma tabela técnica cadastrada.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <!-- Paginação -->
-    <nav aria-label="Navegação de página">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
-                </li>
-            {% endif %}
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                {% else %}
-                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                {% endif %}
-            {% endfor %}
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
 </div>
 {% endblock %}

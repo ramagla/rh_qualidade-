@@ -1,208 +1,183 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="print-container container mt-5">
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
 
-    <!-- Botão de Imprimir -->
-    <div class="text-center mb-4 d-print-none">
-        <button onclick="imprimir()" class="btn btn-primary">
-            <i class="fas fa-print"></i> Imprimir
-        </button>
-    </div>
+<div class="container pdf-container" style="font-size: 9pt;">
 
-    <table class="table table-bordered custom-header" style="width: 100%; text-align: center; font-size: 12px;">
-    <thead>
-        <tr>
-            <td class="align-middle" style="border: 1px solid #ddd; padding: 5px;">
-                <img src="/static/logo.png" alt="Bras-Mol Logo" style="width: 80px;">
-            </td>
-            <td colspan="2" class="align-middle" style="border: 1px solid #ddd; font-weight: bold; padding: 5px;">
-                TABELA DE DADOS TÉCNICOS PARA <br> EQUIPAMENTOS DE MEDIÇÕES E ENSAIOS
-            </td>
-            <td class="align-middle" style="border: 1px solid #ddd; font-weight: bold; padding: 5px;">TB004</td>
-            <td class="align-middle" style="border: 1px solid #ddd; font-weight: bold; padding: 5px;">REV. 21</td>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td class="text-start align-middle" style="border: 1px solid #ddd; padding: 5px;">
-                <strong>REVISADO / VISTO:</strong><br> ANDERSON GOVEIA
-            </td>
-            <td class="text-start align-middle" style="border: 1px solid #ddd; padding: 5px;">
-                <strong>DATA:</strong><br> 07/11/2024
-            </td>
-            <td class="text-start align-middle" style="border: 1px solid #ddd; padding: 5px;">
-                <strong>APROVADO / VISTO:</strong><br> DIEGO VILLEGAS
-            </td>
-            <td colspan="2" class="text-start align-middle" style="border: 1px solid #ddd; padding: 5px;">
-                <strong>DATA:</strong><br> 07/11/2024
-            </td>
-        </tr>
-    </tbody>
+  <!-- Tabela do Cabeçalho -->
+<table class="table table-bordered custom-header info-table mb-0" aria-label="Cabeçalho da tabela técnica"
+       style="border: 1px solid #ccc; font-size: 9pt;">
+  <caption class="visually-hidden">Cabeçalho institucional e de revisão</caption>
+  <thead>
+    <tr>
+      <td class="align-middle text-center" style="width: 15%; border: 1px solid #ccc;">
+        <img src="{% static 'logo.png' %}" alt="Logo Bras-Mol" style="width: 80px;" loading="lazy">
+      </td>
+      <td colspan="2" class="align-middle fw-bold text-center" style="border: 1px solid #ccc;">
+        <i class="bi bi-clipboard2-data me-1"></i>
+        TABELA DE DADOS TÉCNICOS PARA <br> EQUIPAMENTOS DE MEDIÇÕES E ENSAIOS
+      </td>
+      <td class="align-middle text-center fw-bold" style="border: 1px solid #ccc;">
+        <i class="bi bi-file-earmark-text me-1"></i> TB004
+      </td>
+      <td class="align-middle text-center fw-bold" style="border: 1px solid #ccc;">
+        <i class="bi bi-arrow-repeat me-1"></i> REV. 21
+      </td>
+    </tr>
+  </thead>
 </table>
-    
 
- <div class="info-section mt-4">
-    <!-- Conteúdo principal -->
-    <table class="custom-table table table-bordered">
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Nome do<br>Equipamento</th>
-                <th>Capacidade de<br>Medição<br>(Min - Max)</th>
-                <th>Resolução<br>(Unidade)</th>
-                <th>Tolerância Total<br>Mínima da medida<br>a ser realizada<br>(Unidade)</th>
-                <th>Exatidão<br>Requerida<br>(Unidade)</th>
-                <th>Frequência de<br>Calibração<br>(meses)</th>
-               
-            </tr>
-        </thead>
-        <tbody>
-            {% for tabela in tabelas %}
-            <tr>
-                <td>{{ tabela.codigo }}</td>
-                <td>{{ tabela.nome_equipamento }}</td>
-                <td>{{ tabela.capacidade_minima }} - {{ tabela.capacidade_maxima }} {{ tabela.unidade_medida }}</td>
-                <td>{{ tabela.resolucao }} {{ tabela.unidade_medida }}</td>
-                <td>{{ tabela.tolerancia_total_minima }} {{ tabela.unidade_medida }}</td>
-                <td>
-                    {% if tabela.exatidao_requerida %}
-                        L ≤ {{ tabela.exatidao_requerida }} {{ tabela.unidade_medida }}
-                    {% elif tabela.tolerancia_em_percentual %}
-                        L ≤ {{ tabela.tolerancia_em_percentual }}% (Por faixa do equipamento)
-                    {% else %}
-                        -----
-                    {% endif %}
-                </td>
+<!-- Separador sutil entre header e footer -->
+<div style="height: 1px; background-color: #e9e9e9; margin-top: -1px; margin-bottom: 4px;"></div>
 
-                <td>{{ tabela.frequencia_calibracao }} meses</td>
-                
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="8" class="text-center">Nenhum dado disponível.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<!-- Tabela do Rodapé (assinaturas) -->
+<table class="table table-bordered info-table mb-4" style="border: 1px solid #ccc; font-size: 9pt;">
+  <tfoot>
+    <tr class="align-middle text-center" style="height: 70px;">
+      <td class="align-middle" style="width: 25%; border: 1px solid #ccc;">
+        <strong><i class="bi bi-person-check me-1"></i> REVISOR:</strong><br>
+        ANDERSON GOVEIA
+      </td>
+      <td class="align-middle" style="width: 25%; border: 1px solid #ccc;">
+        <strong><i class="bi bi-calendar-event me-1"></i> DATA:</strong><br>
+        07/11/2024
+      </td>
+      <td class="align-middle" style="width: 25%; border: 1px solid #ccc;">
+        <strong><i class="bi bi-person-badge me-1"></i> APROVADOR:</strong><br>
+        DIEGO VILLEGAS
+      </td>
+      <td class="align-middle" style="width: 25%; border: 1px solid #ccc;">
+        <strong><i class="bi bi-calendar-event me-1"></i> DATA:</strong><br>
+        07/11/2024
+      </td>
+    </tr>
+  </tfoot>
+</table>
 
-    <!-- Carimbos no rodapé -->
-    <div class="footer-stamps">
-        <div class="stamp">
-            <p>
-                CÓPIA ELETRÔNICA<br>
-                DOCUMENTO SÓ TEM<br>
-                VALIDADE EM CÓPIA<br>
-                DIGITALIZADA
-            </p>
-        </div>
-        <div class="stamp">
-            <p>
-                CÓPIA CONTROLADA<br>
-                (PROIBIDA A REPRODUÇÃO)
-            </p>
-        </div>
-    </div>
+
+
+  <!-- Conteúdo principal -->
+<table class="table table-bordered info-table tabela-zebrada" aria-label="Lista de equipamentos técnicos" style="font-size: 9pt;">
+<thead class="table-light text-center">
+  <tr>
+    <th scope="col" style="font-size: 8pt;">
+      <div class="d-flex flex-column align-items-center justify-content-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        Código
+      </div>
+    </th>
+    <th scope="col" style="font-size: 8pt;">
+      <div class="d-flex flex-column align-items-center justify-content-center">
+        <i class="bi bi-hammer mb-1"></i>
+        Equipamento
+      </div>
+    </th>
+    <th scope="col" style="font-size: 8pt;">
+      <div class="d-flex flex-column align-items-center justify-content-center text-center">
+        <i class="bi bi-arrows-expand mb-1"></i>
+        Capacidade de Med. Min-Max
+      </div>
+    </th>
+    <th scope="col" style="font-size: 8pt;">
+      <div class="d-flex flex-column align-items-center justify-content-center text-center">
+        <i class="bi bi-grid-1x2 mb-1"></i>
+        Resolução<br>(Unidade)
+      </div>
+    </th>
+    <th scope="col" style="font-size: 8pt;">
+      <div class="d-flex flex-column align-items-center justify-content-center text-center">
+        <i class="bi bi-rulers mb-1"></i>
+        Tolerância Total Mínima<br>(Unidade)
+      </div>
+    </th>
+    <th scope="col" style="font-size: 8pt;">
+      <div class="d-flex flex-column align-items-center justify-content-center text-center">
+        <i class="bi bi-bullseye mb-1"></i>
+        Exatidão Requerida
+      </div>
+    </th>
+    <th scope="col" style="font-size: 8pt;">
+      <div class="d-flex flex-column align-items-center justify-content-center text-center">
+        <i class="bi bi-clock-history mb-1"></i>
+        Frequência de Calibração<br>(meses)
+      </div>
+    </th>
+  </tr>
+</thead>
+
+
+  <tbody>
+  {% for tabela in tabelas %}
+  <tr class="align-middle linha-hover {% cycle 'bg-white' 'bg-light' %}">
+    <td class="text-center align-middle">{{ tabela.codigo }}</td>
+    <td class="text-center align-middle">{{ tabela.nome_equipamento }}</td>
+    <td class="text-center align-middle">{{ tabela.capacidade_minima }} - {{ tabela.capacidade_maxima }} {{ tabela.unidade_medida }}</td>
+    <td class="text-center align-middle">{{ tabela.resolucao }} {{ tabela.unidade_medida }}</td>
+    <td class="text-center align-middle">{{ tabela.tolerancia_total_minima }} {{ tabela.unidade_medida }}</td>
+    <td class="text-center align-middle">
+      {% if tabela.exatidao_requerida %}
+        L ≤ {{ tabela.exatidao_requerida }} {{ tabela.unidade_medida }}
+      {% elif tabela.tolerancia_em_percentual %}
+        L ≤ {{ tabela.tolerancia_em_percentual }}% (Por faixa do equipamento)
+      {% else %}
+        <span class="text-muted">---</span>
+      {% endif %}
+    </td>
+    <td class="text-center align-middle">{{ tabela.frequencia_calibracao }} meses</td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="7" class="text-center">
+      {% include 'partials/global/_sem_resultados.html' with item_nome="equipamento técnico" %}
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
+
+</table>
+
+
+  <!-- Rodapé institucional padrão -->
+  {% include 'partials/global/_formulario_rodape.html' with numero_formulario="TB004 - Rev. 21" %}
+
+  {% include 'partials/global/_carimbos_impressao.html' %}
+
+
 </div>
-
-<!-- Estilos para os carimbos no rodapé -->
 <style>
-    .footer-stamps {
-        display: none; /* Oculta os carimbos na exibição normal */
-    }
-
-    @media print {
-        .footer-stamps {
-            display: flex; /* Exibe os carimbos apenas na impressão */
-            justify-content: space-between; /* Espaça os carimbos */
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            z-index: 1;
-        }
-
-         .stamp {
-            display: flex; /* Adiciona flexbox para centralização */
-            justify-content: center; /* Centraliza horizontalmente */
-            align-items: center; /* Centraliza verticalmente */
-            width: 120px;
-            height: 60px; /* Define uma altura fixa */
-            text-align: center;
-            font-size: 9px; /* Fonte ajustada para impressão */
-            font-family: Arial, sans-serif;
-            color: rgba(255, 0, 0, 0.6); /* Vermelho mais claro na impressão */
-            border: 1px solid rgba(255, 0, 0, 0.6); /* Borda vermelha mais clara */
-            border-radius: 5px; /* Bordas arredondadas */
-            padding: 5px;
-            box-shadow: none; /* Remove sombra na impressão */
-            transform: rotate(0deg); /* Sem inclinação */
-        }
-    }
+  /* Efeito de realce ao passar o mouse sobre a linha */
+  .linha-hover:hover {
+    background-color: #eef6ff !important;
+    box-shadow: inset 0 0 0 9999px rgba(0, 123, 255, 0.05);
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+  }
 </style>
 
-
-
-
-
-   
-
-<!-- Estilos de impressão -->
 <style>
-    .custom-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-    }
-    .custom-table th, .custom-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: center;
-        font-size: 9px;
-    }
-    .custom-table th {
-        background-color: #f4f4f4;
-        font-weight: bold;
-    }
-    @media print {
-        .d-print-none {
-            display: none;
-        }
-        .print-container {
-            width: 100%;
-            margin: 0 auto;
-        }
-    }
-</style>
-
-<script>
-function imprimir() {
-    var conteudo = document.querySelector('.print-container').innerHTML;
-    var novaJanela = window.open('', '_blank', 'width=800,height=600');
-    
-    novaJanela.document.write(`
-        <html>
-            <head>
-                <title>Tabela de Dados Técnicos</title>
-                <style>
-                    @media print {
-                        .d-print-none { display: none !important; }
-                    }
-                </style>
-            </head>
-            <body>
-                ${conteudo}
-            </body>
-        </html>
-    `);
-
-    novaJanela.document.close();
-    novaJanela.onload = function () {
-        novaJanela.print();
-        novaJanela.close();
-    };
+    .pdf-container {
+  font-size: 9pt !important;
 }
-</script>
 
+</style>
+<style>
+  /* Zebragem padrão para tela */
+  .tabela-zebrada tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  /* Zebragem para impressão */
+  @media print {
+    .tabela-zebrada tbody tr:nth-child(even) {
+      background-color: #eaeaea !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
+</style>
 
 {% endblock %}

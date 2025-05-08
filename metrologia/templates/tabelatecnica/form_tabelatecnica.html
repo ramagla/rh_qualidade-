@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+  {% if edicao %}Editar Instrumento{% else %}Cadastrar Instrumento{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center mb-4">
+    {% if edicao %}
+      <i class="bi bi-pencil-square me-1 text-primary"></i> Editar Instrumento
+    {% else %}
+      <i class="bi bi-plus-circle me-1 text-success"></i> Cadastrar Instrumento
+    {% endif %}
+  </h2>
+
+  {% include 'partials/global/_form_errors.html' %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="accordion" id="accordionInstrumento">
+
+      <!-- Dados Gerais -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDadosGerais">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDadosGerais">
+            <i class="bi bi-clipboard2 me-2 text-primary"></i> Dados Gerais
+          </button>
+        </h2>
+        <div id="collapseDadosGerais" class="accordion-collapse collapse show">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="codigo" class="form-label"><i class="bi bi-upc-scan me-1 text-muted"></i> Código:</label>
+              {{ form.codigo|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label for="nome_equipamento" class="form-label"><i class="bi bi-hammer me-1 text-muted"></i> Nome do Equipamento:</label>
+              {{ form.nome_equipamento|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label for="tipo" class="form-label"><i class="bi bi-check2-square me-1 text-muted"></i> Equipamento por Faixa?</label>
+              {{ form.tipo|add_class:"form-select" }}
+            </div>
+            <div class="col-md-6" id="campo-faixa" style="display: none;" aria-hidden="true">
+              <label for="faixa" class="form-label"><i class="bi bi-percent me-1 text-muted"></i> Faixa (%)</label>
+              {{ form.faixa|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6" id="campo-tolerancia" style="display: none;" aria-hidden="true">
+              <label for="tolerancia_em_percentual" class="form-label"><i class="bi bi-percent me-1 text-muted"></i> Tolerância em (%)</label>
+              {{ form.tolerancia_em_percentual|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label for="tipo_avaliacao" class="form-label"><i class="bi bi-card-checklist me-1 text-muted"></i> Tipo de Avaliação</label>
+              {{ form.tipo_avaliacao|add_class:"form-select" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Capacidade e Resolução -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingCapacidade">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCapacidade">
+            <i class="bi bi-arrows-collapse me-2 text-primary"></i> Capacidade e Resolução
+          </button>
+        </h2>
+        <div id="collapseCapacidade" class="accordion-collapse collapse">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-arrow-down-up me-1 text-muted"></i> Capacidade Mínima</label>
+              {{ form.capacidade_minima|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-arrow-up me-1 text-muted"></i> Capacidade Máxima</label>
+              {{ form.capacidade_maxima|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-toggles2 me-1 text-muted"></i> Resolução</label>
+              {{ form.resolucao|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-rulers me-1 text-muted"></i> Unidade de Medida</label>
+              {{ form.unidade_medida|add_class:"form-select" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tolerância e Calibração -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTolerancia">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTolerancia">
+            <i class="bi bi-sliders me-2 text-primary"></i> Tolerância e Calibração
+          </button>
+        </h2>
+        <div id="collapseTolerancia" class="accordion-collapse collapse">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-dash-circle me-1 text-muted"></i> Tolerância Total Mínima</label>
+              {{ form.tolerancia_total_minima|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">
+                <i class="bi bi-123 me-1 text-muted"></i> Exatidão Requerida (ER)
+              </label>
+              <input type="text" id="exatidao_requerida" class="form-control" readonly aria-describedby="exatidaoAjuda">
+              <div id="exatidaoAjuda" class="form-text">ER calculada automaticamente conforme a faixa ou tolerância mínima.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-calendar-check me-1 text-muted"></i> Frequência de Calibração (meses)</label>
+              {{ form.frequencia_calibracao|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-calendar-event me-1 text-muted"></i> Data da Última Calibração</label>
+              {{ form.data_ultima_calibracao|add_class:"form-control" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Identificação -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingIdentificacao">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentificacao">
+            <i class="bi bi-fingerprint me-2 text-primary"></i> Identificação
+          </button>
+        </h2>
+        <div id="collapseIdentificacao" class="accordion-collapse collapse">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-123 me-1 text-muted"></i> Nº de Série</label>
+              {{ form.numero_serie|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-puzzle me-1 text-muted"></i> Modelo</label>
+              {{ form.modelo|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-tools me-1 text-muted"></i> Fabricante</label>
+              {{ form.fabricante|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-camera me-1 text-muted"></i> Foto do Equipamento</label>
+              {{ form.foto_equipamento|add_class:"form-control" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Localização -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingLocalizacao">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLocalizacao">
+            <i class="bi bi-geo-alt me-2 text-primary"></i> Localização e Controle
+          </button>
+        </h2>
+        <div id="collapseLocalizacao" class="accordion-collapse collapse">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-person-badge me-1 text-muted"></i> Responsável</label>
+              {{ form.responsavel|add_class:"form-select select2" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-person-check me-1 text-muted"></i> Proprietário</label>
+              {{ form.proprietario|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-pin-map me-1 text-muted"></i> Localização</label>
+              {{ form.localizacao|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-circle-half me-1 text-muted"></i> Status</label>
+              {{ form.status|add_class:"form-select" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Botões -->
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=edicao url_voltar=url_voltar param_id=param_id %}
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const tipoField = document.querySelector('select[name="tipo"]');
+    const faixaField = document.getElementById('campo-faixa');
+    const toleranciaField = document.getElementById('campo-tolerancia');
+    const faixaInput = document.querySelector('input[name="faixa"]');
+    const toleranciaInput = document.querySelector('input[name="tolerancia_em_percentual"]');
+    const toleranciaMinimaField = document.querySelector('input[name="tolerancia_total_minima"]');
+    const exatidaoField = document.getElementById('exatidao_requerida');
+
+    function atualizarCampos() {
+      const isFaixa = tipoField.value === 'sim';
+      faixaField.style.display = isFaixa ? 'block' : 'none';
+      toleranciaField.style.display = isFaixa ? 'block' : 'none';
+      faixaField.setAttribute('aria-hidden', !isFaixa);
+      toleranciaField.setAttribute('aria-hidden', !isFaixa);
+      if (!isFaixa) {
+        faixaInput.value = '';
+        toleranciaInput.value = '';
+      }
+      calcularER();
+    }
+
+    function calcularER() {
+      const faixa = parseFloat(faixaInput.value) || 0;
+      const tolPct = parseFloat(toleranciaInput.value) || 0;
+      const tolMin = parseFloat(toleranciaMinimaField.value) || 0;
+
+      let er = 0;
+      if (tipoField.value === 'sim' && faixa > 0 && tolPct > 0) {
+        er = faixa * (tolPct / 100);
+      } else {
+        er = tolMin / 2;
+      }
+      exatidaoField.value = er > 0 ? er.toFixed(4) : 'N/A';
+    }
+
+    tipoField.addEventListener('change', atualizarCampos);
+    faixaInput.addEventListener('input', calcularER);
+    toleranciaInput.addEventListener('input', calcularER);
+    toleranciaMinimaField.addEventListener('input', calcularER);
+    atualizarCampos();
+  });
+</script>
+{% endblock %}

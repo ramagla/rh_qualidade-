@@ -1,0 +1,56 @@
+<style>
+  @media print {
+    .footer-stamps {
+      display: block;
+      position: fixed;
+      width: 100%;
+      bottom: 20mm; /* Subiu um pouco para não cortar */
+      left: 0;
+      right: 0;
+      padding: 0 10mm;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .footer-stamps .stamp {
+      width: 140px;
+      height: 65px;
+      font-size: 8.5pt;
+      font-family: Arial, sans-serif;
+      color: rgba(255, 0, 0, 0.65);
+      border: 1px solid rgba(255, 0, 0, 0.65);
+      border-radius: 5px;
+      text-align: center;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+    }
+
+    .footer-stamps .stamp-left {
+      left: 10mm;
+    }
+
+    .footer-stamps .stamp-right {
+      right: 10mm;
+    }
+  }
+</style>
+
+<div class="footer-stamps d-print-block d-none" aria-hidden="true">
+  <div class="stamp stamp-left">
+    <p>
+      CÓPIA ELETRÔNICA<br>
+      DOCUMENTO SÓ TEM<br>
+      VALIDADE EM CÓPIA<br>
+      DIGITALIZADA
+    </p>
+  </div>
+  <div class="stamp stamp-right">
+    <p>
+      CÓPIA CONTROLADA<br>
+      (PROIBIDA A REPRODUÇÃO)
+    </p>
+  </div>
+</div>

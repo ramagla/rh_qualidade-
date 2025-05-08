@@ -109,33 +109,33 @@ def lista_tabelatecnica(request):
     return render(request, "tabelatecnica/lista_tabelatecnica.html", context)
 
 
+@login_required
 def cadastrar_tabelatecnica(request):
-    """
-    View para cadastrar uma nova Tabela Técnica.
-    """
     if request.method == "POST":
-        form = TabelaTecnicaForm(request.POST)
+        form = TabelaTecnicaForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, "Tabela Técnica cadastrada com sucesso!")
             return redirect("lista_tabelatecnica")
         else:
-            messages.error(
-                request,
-                "Erro ao cadastrar a Tabela Técnica. Verifique os dados e tente novamente.",
-            )
+            messages.error(request, "Erro ao cadastrar a Tabela Técnica.")
     else:
         form = TabelaTecnicaForm()
 
-    return render(request, "tabelatecnica/cadastrar_tabelatecnica.html", {"form": form})
+    context = {
+        "form": form,
+        "edicao": False,
+        "url_voltar": "lista_tabelatecnica"
+    }
+    return render(request, "tabelatecnica/form_tabelatecnica.html", context)
 
 
 @login_required
-def editar_tabelatecnica(request, id):  # Altere 'pk' para 'id'
-    tabela = TabelaTecnica.objects.get(pk=id)  # Use 'id' no filtro
+def editar_tabelatecnica(request, id):
+    tabela = get_object_or_404(TabelaTecnica, id=id)
 
     if request.method == "POST":
-        form = TabelaTecnicaForm(request.POST, instance=tabela)
+        form = TabelaTecnicaForm(request.POST, request.FILES, instance=tabela)
         if form.is_valid():
             form.save()
             messages.success(request, "Tabela Técnica editada com sucesso!")
@@ -143,15 +143,25 @@ def editar_tabelatecnica(request, id):  # Altere 'pk' para 'id'
     else:
         form = TabelaTecnicaForm(instance=tabela)
 
-    return render(request, "tabelatecnica/editar_tabelatecnica.html", {"form": form})
+    context = {
+    "form": form,
+    "edicao": True,
+    "url_voltar": "lista_tabelatecnica"  # sem param_id
+}
 
+    return render(request, "tabelatecnica/form_tabelatecnica.html", context)
+
+
+from django.utils import timezone
 
 @login_required
 def visualizar_tabelatecnica(request, id):
     tabelatecnica = get_object_or_404(TabelaTecnica, id=id)
-    context = {"tabelatecnica": tabelatecnica}
+    context = {
+        "tabelatecnica": tabelatecnica,
+        "now": timezone.now(),  # ⏰ Data e hora atual
+    }
     return render(request, "tabelatecnica/visualizar_tabelatecnica.html", context)
-
 
 @login_required
 def excluir_tabelatecnica(request, id):

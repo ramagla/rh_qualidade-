@@ -47,31 +47,44 @@ def lista_documentos(request):
     return render(request, "documentos/lista_documentos.html", context)
 
 
-@login_required
-def cadastrar_documento(request):
-    if request.method == "POST":
-        form = DocumentoForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Documento cadastrado com sucesso!")
-            return redirect("lista_documentos")
+def _salvar_documento(request, documento_id=None):
+    if documento_id:
+        documento = get_object_or_404(Documento, id=documento_id)
+        edicao = True
     else:
-        form = DocumentoForm()
-    return render(request, "documentos/cadastrar_documento.html", {"form": form})
+        documento = None
+        edicao = False
 
-
-@login_required
-def editar_documento(request, documento_id):
-    documento = get_object_or_404(Documento, id=documento_id)
     if request.method == "POST":
         form = DocumentoForm(request.POST, request.FILES, instance=documento)
         if form.is_valid():
             form.save()
-            messages.success(request, "Documento atualizado com sucesso!")
+            msg = "Documento atualizado com sucesso!" if edicao else "Documento cadastrado com sucesso!"
+            messages.success(request, msg)
             return redirect("lista_documentos")
     else:
         form = DocumentoForm(instance=documento)
-    return render(request, "documentos/editar_documento.html", {"form": form})
+
+    context = {
+        "form": form,
+        "edicao": edicao,
+        "documento": documento,
+        "url_voltar": "lista_documentos",
+        "param_id": None,  # ou simplesmente omitir completamente essa linha
+    }
+
+    return render(request, "documentos/form_documento.html", context)
+
+
+
+@login_required
+def cadastrar_documento(request):
+    return _salvar_documento(request)
+
+
+@login_required
+def editar_documento(request, documento_id):
+    return _salvar_documento(request, documento_id=documento_id)
 
 
 @login_required
