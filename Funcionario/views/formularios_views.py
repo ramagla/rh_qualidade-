@@ -27,21 +27,29 @@ class FormularioPesquisaConscienciaView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
-        context["funcionarios"] = funcionarios
+        paginator = Paginator(funcionarios, 10)  # Altere a quantidade por página se necessário
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
+        context["page_obj"] = page_obj  # 👈 ESSENCIAL!
         context["titulo"] = "Pesquisa de Consciência"
         return context
 
+
+from django.core.paginator import Paginator
 
 class FormularioCartaCompetenciaView(TemplateView):
     template_name = "formularios/carta_competencia.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Obtém o funcionário pelo ID ou retorna 404 se não existir
         funcionario_id = self.kwargs.get("funcionario_id")
         context["funcionario"] = get_object_or_404(Funcionario, id=funcionario_id)
         return context
+
+
 
 
 @login_required

@@ -1,422 +1,149 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
 
 {% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Avaliação de Capacidade Prática da Função" icone="bi bi-person-check" emoji="🧰" %}
 
-<!-- Botão de Imprimir -->
-<div class="text-center mb-4 d-print-none">
-    <button onclick="imprimir()" class="btn btn-primary">
-        <i class="fas fa-print"></i> Imprimir
-    </button>
-</div>
-<div class="container mt-5 print-container">
-    {% include 'header.html' %}
-    
-    <h3 class="text-center">AVALIAÇÃO DE CAPACIDADE PRÁTICA DA FUNÇÃO</h3>
-    
-    <!-- Informações do Funcionário -->
-    <div class="info-section mt-4">
-        <table class="custom-table">
-            <tr>
-                <td style="text-align:left"><strong>Nome do Colaborador:</strong> {{ funcionario.nome }}</td>
-                <td style="text-align:left"><strong>Função Atual:</strong> {{ funcionario.cargo_atual }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 10px; text-align: left;" colspan="2">
-                    <strong>Setor:</strong> {{ funcionario.local_trabalho }}
-                </td>
-            </tr>
-        </table>
-    </div>
-<style>
-    .requisitos-table th {
-        vertical-align: middle; /* Centraliza o texto verticalmente */
-    }
-</style>
+<div class="container pdf-container">
 
-    <!-- Tabela de Requisitos -->
-    <div class="mt-4">
-        <table class="custom-table requisitos-table">
-            <thead>
-                <tr>
-                <th rowspan="2" style="vertical-align: middle;">REQUISITOS</th>
-                <th colspan="5">AVALIAÇÃO</th>
-                </tr>
-                <tr>
-                   
-                    <th>O</th>
-                    <th>B</th>
-                    <th>R</th>
-                    <th>P</th>
-                    <th>NA</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1. Leitura e interpretação de desenhos.</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>2. Utilização e operação de equipamentos de medição e ensaios.</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>
-                        3. Operação de máquinas p/ fabricação de molas. 
-                        <label><input type="checkbox"> Tração</label>
-                        <label><input type="checkbox"> Compressão</label>
-                        <label><input type="checkbox"> Torção</label>
-                    </td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>4. Operação máqs. automáticas p/ transformação de arames ou fitas Bihler, Wafios e Finzer</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>5. Conhecimentos de informática.</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>6. Operação de retífica de molas.                     
-                    </td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                    <tr>
-                    <td>7. Conhecimento de normas técnicas.
-                         <label><input type="checkbox"> DIN </label>
-                        <label><input type="checkbox"> ASTM   </label>
-                        <label><input type="checkbox"> SAE </label>
-                        <label><input type="checkbox"> AISI </label>
-                    </td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>   
-                <tr>
-                    <td>8. Técnicas de planejamento e controle de produção.</td>                      
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>  
-                <tr>
-                    <td>9. Operação máqs operatrizes. 
-                         <label><input type="checkbox"> Torno </label>
-                        <label><input type="checkbox"> Fresadora   </label>
-                        <label><input type="checkbox"> Retífica </label>
-                        <label><input type="checkbox"> Plaina </label>
-                        <label><input type="checkbox"> Furadeira </label>
-                    </td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>  
-                <tr>
-                    <td>10. Operação de prensas excêntricas.</td>
-                        
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>    
-                <tr>
-                    <td>11. Operação de forno de indução para revenimento de molas.</td>                        
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>  
-                <tr>
-                    <td>12. Outros: </td>                        
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>  
-                <tr>
-                    <td>13. Outros: </td>                        
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>       
-                <tr>
-                    <td>14. Outros: </td>                        
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>       
-                <tr>
-                    <td>15. Outros: </td>                        
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>                          
-             </tbody>
-        </table>
-    
-    <!-- Seção de Legendas -->
-    <div class="legendas mt-4">
-        <table class="custom-table" style="width: 100%;">
-            <tbody>
-                <tr>
-                    <td style="text-align: center;"><strong>O</strong> = ÓTIMO</td>
-                    <td style="text-align: center;"><strong>B</strong> = BOM</td>
-                    <td style="text-align: center;"><strong>R</strong> = REGULAR</td>
-                    <td style="text-align: center;"><strong>P</strong> = PÉSSIMO</td>
-                    <td style="text-align: center;"><strong>NA</strong> = NÃO APLICÁVEL</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-    <!-- Seção do Laudo -->
-<div class="laudo-section mt-4">
-    <table class="custom-table" style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="width: 50%; text-align: left; padding: 8px;">
-                <strong>LAUDO:</strong>
-                <ul style="list-style: none; padding-left: 0; margin-top: 8px;">
-                    <li><label><input type="checkbox"> Pode executar a função.</label></li>
-                    <li><label><input type="checkbox"> Não pode executar a função.</label></li>
-                    <li>
-                        <label>
-                            <input type="checkbox">
-                            Pode executar a função desde que faça os seguintes cursos:
-                        </label>
-                        <br>
-                        <textarea rows="3" style="width: 100%; border: 1px solid #ccc; margin-top: 5px;">Observações:</textarea>
-                    </li>
-                </ul>
-            </td>
-        </tr>
+  <!-- Informações do Colaborador -->
+  <section class="mb-4">
+    <table class="table table-bordered info-table">
+      <caption class="visually-hidden">Dados do colaborador</caption>
+      <tr>
+        <td><i class="bi bi-person-fill me-1"></i> <strong>Nome:</strong> {{ funcionario.nome }}</td>
+        <td><i class="bi bi-briefcase-fill me-1"></i> <strong>Função:</strong> {{ funcionario.cargo_atual }}</td>
+      </tr>
+      <tr>
+        <td colspan="2"><i class="bi bi-building me-1"></i> <strong>Setor:</strong> {{ funcionario.local_trabalho }}</td>
+      </tr>
     </table>
-</div>
+  </section>
 
-    <!-- Assinaturas -->
-<div class="mt-5">
-    <table class="custom-table" style="width: 100%; border: 1px solid #000; border-collapse: collapse; table-layout: fixed;">
+  <!-- Requisitos Técnicos -->
+  <section>
+    <table class="table table-bordered table-striped requisitos-table">
+      <caption class="visually-hidden">Requisitos técnicos avaliados</caption>
+      <thead class="text-center">
         <tr>
-            <!-- Assinatura do Funcionário -->
-            <td style="padding: 8px; text-align: center; width: 50%; border: 1px solid #000;">
-                <p><strong>Assinatura do Colaborador</strong></p>
-                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
-                    {{ funcionario.nome }}
-                </div>
-                <div style="margin-top: 10px;">
-                    <em>Data da Assinatura:</em> ___/___/____
-                </div>
-            </td>
-
-            <!-- Assinatura da Chefia -->
-            <td style="padding: 8px; text-align: center; width: 50%; border: 1px solid #000;">
-                <p><strong>Assinatura do Gestor</strong></p>
-                <div style="border-top: 1px dashed #333; padding-top: 5px; margin-top: 20px;">
-                    {{ funcionario.responsavel }}
-                </div>
-                <div style="margin-top: 10px;">
-                    <em>Data da Assinatura:</em> ___/___/____
-                </div>
-            </td>
+          <th rowspan="2" class="align-middle"><i class="bi bi-list-check me-1"></i> REQUISITOS</th>
+          <th colspan="5"><i class="bi bi-star-fill me-1"></i> AVALIAÇÃO</th>
         </tr>
+        <tr>
+          <th>O</th><th>B</th><th>R</th><th>P</th><th>NA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="text-start">1. Leitura e interpretação de desenhos.</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="text-start">2. Utilização e operação de equipamentos de medição e ensaios.</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr>
+          <td class="text-start">3. Operação de máquinas p/ fabricação de molas. <label><input type="checkbox"> Tração</label> <label><input type="checkbox"> Compressão</label> <label><input type="checkbox"> Torção</label></td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr><td class="text-start">4. Operação máqs. automáticas p/ transformação de arames ou fitas Bihler, Wafios e Finzer.</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="text-start">5. Conhecimentos de informática.</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="text-start">6. Operação de retífica de molas.</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr>
+          <td class="text-start">7. Conhecimento de normas técnicas. <label><input type="checkbox"> DIN</label> <label><input type="checkbox"> ASTM</label> <label><input type="checkbox"> SAE</label> <label><input type="checkbox"> AISI</label></td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr><td class="text-start">8. Técnicas de planejamento e controle de produção.</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr>
+          <td class="text-start">9. Operação máqs operatrizes. <label><input type="checkbox"> Torno</label> <label><input type="checkbox"> Fresadora</label> <label><input type="checkbox"> Retífica</label> <label><input type="checkbox"> Plaina</label> <label><input type="checkbox"> Furadeira</label></td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr><td class="text-start">10. Operação de prensas excêntricas.</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="text-start">11. Operação de forno de indução para revenimento de molas.</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="text-start">12. Outros:</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="text-start">13. Outros:</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="text-start">14. Outros:</td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="text-start">15. Outros:</td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
     </table>
+  </section>
+
+  <!-- Legenda -->
+  <section class="mt-4">
+    <table class="table table-bordered text-center">
+      <tbody>
+        <tr>
+          <td><strong>O</strong> = Ótimo</td>
+          <td><strong>B</strong> = Bom</td>
+          <td><strong>R</strong> = Regular</td>
+          <td><strong>P</strong> = Péssimo</td>
+          <td><strong>NA</strong> = Não Aplicável</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Laudo -->
+  <section class="laudo-section mt-4">
+    <fieldset class="border p-3">
+      <legend class="w-auto px-2"><i class="bi bi-journal-check me-1"></i> Laudo Final</legend>
+      <ul class="list-unstyled mb-0">
+        <li><label><input type="checkbox" name="laudo_execucao"> Pode executar a função.</label></li>
+        <li><label><input type="checkbox" name="laudo_negado"> Não pode executar a função.</label></li>
+        <li>
+          <label><input type="checkbox" name="laudo_condicionado"> Pode executar desde que faça os seguintes cursos:</label>
+<textarea rows="3" class="form-control mt-2" placeholder="Descreva aqui os cursos recomendados..." aria-label="Cursos recomendados"></textarea>
+        </li>
+      </ul>
+    </fieldset>
+  </section>
+
+  <!-- Assinaturas -->
+  <section class="mt-5">
+    <table class="table table-bordered text-center assinatura-section">
+      <tr>
+        <td style="width: 50%;">
+          <p><strong>Assinatura do Colaborador</strong></p>
+          <div class="border-top mt-4 pt-2">{{ funcionario.nome }}</div>
+          <small><em>Data:</em> ___/___/____</small>
+        </td>
+        <td style="width: 50%;">
+          <p><strong>Assinatura do Gestor</strong></p>
+          <div class="border-top mt-4 pt-2">{{ funcionario.responsavel }}</div>
+          <small><em>Data:</em> ___/___/____</small>
+        </td>
+      </tr>
+    </table>
+  </section>
+
 </div>
 
 <style>
-    .custom-table th, .custom-table td {
-        text-align: center; /* Centraliza o conteúdo horizontalmente */
-        vertical-align: middle; /* Centraliza o conteúdo verticalmente */
-        font-size: 10px; /* Reduz o tamanho do texto */
+  @media print {
+    h2, h3 {
+      font-size: 14pt !important;
     }
+
+    textarea::placeholder {
+      color: transparent !important;
+    }
+
+    textarea::-webkit-input-placeholder {
+      color: transparent !important;
+    }
+
+    textarea:-moz-placeholder {
+      color: transparent !important;
+    }
+
+    textarea::-moz-placeholder {
+      color: transparent !important;
+    }
+
+    textarea:-ms-input-placeholder {
+      color: transparent !important;
+    }
+  }
 </style>
 
 
-
-<!-- Estilos personalizados -->
- <style>
-    td label {
-        margin-right: 10px;
-        font-size: 12px;
-    }
-    input[type="checkbox"] {
-        margin-right: 5px;
-    }
-</style>
-<style>
-    .custom-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-    }
-
-    .custom-table th, .custom-table td {
-        border: 1px solid #000;
-        padding: 6px;
-        text-align: center;
-        font-size: 12px;
-    }
-
-    .requisitos-table th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-    }
-
-    .requisitos-table td:first-child {
-        text-align: left;
-    }
-
-    .numero-formulario {
-        font-size: 10px;
-        text-align: right;
-        margin-top: 20px;
-    }
-
-    @media print {
-        .d-print-none {
-            display: none !important;
-        }
-
-        .print-container {
-            width: 100%;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .custom-table th, .custom-table td {
-            font-size: 10px;
-        }
-    }
-</style>
-<style>
-    .laudo-section ul {
-        list-style: none;
-        padding-left: 0;
-    }
-
-    .laudo-section label {
-        font-size: 12px;
-        margin-bottom: 5px;
-        display: inline-block;
-    }
-
-    .laudo-section input[type="checkbox"] {
-        margin-right: 5px;
-    }
-
-    .assinatura-section td {
-        padding: 10px;
-        font-size: 12px;
-    }
-
-    .assinatura-section div {
-        width: 100%;
-        border-top: 1px solid #000;
-        margin-top: 5px;
-    }
-</style>
-
-
-<script>
-function imprimir() {
-    var conteudo = document.querySelector('.print-container').innerHTML;
-    var novaJanela = window.open('', '_blank', 'width=800,height=600');
-
-    novaJanela.document.write(`
-        <html>
-            <head>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        font-size: 10px;
-                        padding: 20px;
-                    }
-
-                    .custom-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-
-                    .custom-table th,
-                    .custom-table td {
-                        border: 1px solid #000;
-                        padding: 8px;
-                        font-size: 10px;
-                    }
-                        label {
-                                font-size: 10px; /* Reduz o tamanho do texto associado aos checkboxes */
-                            }
-                            input[type="checkbox"] {
-                                width: 10px; /* Ajusta o tamanho do checkbox */
-                                height: 10px; /* Ajusta o tamanho do checkbox */
-                                margin-right: 5px; /* Espaçamento entre o checkbox e o texto */
-                            }
-                    h3 {
-                        text-align: center;
-                        font-size: 12px;
-                        font-weight: bold;
-                        margin-bottom: 20px;
-                    }
-
-                    .numero-formulario {
-                        text-align: right;
-                        font-size: 10px;
-                        margin-top: 20px;
-                    }
-                </style>
-            </head>
-            <body>
-                ${conteudo}
-                <div class="numero-formulario">F043 Rev.02</div>
-            </body>
-        </html>
-    `);
-
-    novaJanela.document.close();
-    novaJanela.onload = function () {
-        novaJanela.print();
-        novaJanela.close();
-    };
-}
-</script>
-
-
-
+{% include 'partials/global/_formulario_rodape.html' with numero_formulario="F043 Rev.02" %}
 {% endblock %}
