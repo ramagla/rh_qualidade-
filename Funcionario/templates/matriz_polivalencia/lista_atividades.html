@@ -1,246 +1,182 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
 
 {% block title %}Lista de Atividades{% endblock %}
 
 {% block content %}
-{% load custom_filters %}
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_header_titulo.html" with titulo="Lista de Atividades" icone="bi bi-list-check" emoji="✅" %}
+{% include "partials/global/_toast_mensagens.html" %}
 
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Lista de Atividades</h2>
+<div class="container mt-4">
 
-    <!-- Botão para Cadastrar Atividade -->
-    <div class="text-end mb-4">
-        {% if request.user|has_permission:'Funcionario.add_atividade' %}
-        <a href="{% url 'cadastrar_atividade' %}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Cadastrar
-        </a>
-        {% endif %}
+  <!-- Botão de Cadastrar -->
+  {% if request.user|has_permission:'Funcionario.add_atividade' %}
+    <div class="text-end mb-3">
+      <a href="{% url 'cadastrar_atividade' %}" class="btn btn-success d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle me-2"></i> Cadastrar
+      </a>
     </div>
-    
+  {% endif %}
 
-    <!-- Formulário de filtro e limite de visualização -->
-    <form method="get" class="mb-4">
-        <div class="row">
-            <!-- Filtro por Departamento -->
-            <div class="col-md-3">
-                <label for="departamento" class="form-label">Departamento:</label>
-                <select name="departamento" id="departamento" class="form-select select2">
-                    <option value="">Selecione</option>
-                    {% for departamento in departamentos %}
-                        <option value="{{ departamento }}" {% if request.GET.departamento == departamento %}selected{% endif %}>
-                            {{ departamento }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+  <!-- 🔍 Filtros de Atividades -->
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+    <strong class="text-primary">Filtros de Atividades</strong>
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
 
-            <!-- Filtro por Nome de Atividade -->
-            <div class="col-md-3">
-                <label for="nome" class="form-label">Nome da Atividade:</label>
-                <select name="nome" id="nome" class="form-select select2">
-                    <option value="">Selecione</option>
-                    {% for nome in nomes_atividades %}
-                        <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>
-                            {{ nome }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            
-
-        <!-- Botão para Submeter Filtro -->
-        <div class="text-end mt-3">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-funnel"></i> Filtrar
-            </button>
-        </div>
-    </form>
-
-<!-- Accordion para Total de Atividades e Atividades por Departamento -->
-    <div class="row mt-4">
-        <!-- Accordion para Total de Atividades -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-primary text-white" id="headingTotalAtividades">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTotalAtividades" aria-expanded="false" aria-controls="collapseTotalAtividades">
-                            <i class="bi bi-list-task" style="font-size: 1.5rem; margin-right: 10px;"></i>
-                            Total de Atividades
-                        </button>
-                    </h5>
-                </div>
-                <div id="collapseTotalAtividades" class="collapse" aria-labelledby="headingTotalAtividades">
-                    <div class="card-body">
-                        <h5 class="card-title text-center" style="font-size: 54px;">{{ total_atividades }}</h5>
-                        <p class="card-text text-center">Total de atividades cadastradas.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Accordion para Atividades por Departamento -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-success text-white" id="headingAtividadesPorDepartamento">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAtividadesPorDepartamento" aria-expanded="false" aria-controls="collapseAtividadesPorDepartamento">
-                            <i class="bi bi-building" style="font-size: 1.5rem; margin-right: 10px;"></i>
-                            Atividades por Departamento
-                        </button>
-                    </h5>
-                </div>
-                <div id="collapseAtividadesPorDepartamento" class="collapse" aria-labelledby="headingAtividadesPorDepartamento">
-                    <div class="card-body">
-                        <ul class="list-group">
-                            {% for departamento in atividades_por_departamento %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ departamento.departamento|title }}
-                                    <span class="badge bg-info text-white">{{ departamento.total }}</span>
-                                </li>
-                            {% empty %}
-                                <li class="list-group-item">Nenhum departamento encontrado.</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-        
-        
-  
-    <!-- Tabela de Atividades -->
-    <table class="table table-bordered text-center mt-4">
-        <thead>
-            <tr>
-                <th class="align-middle">Nome da Atividade</th>
-                <th class="align-middle">Departamento</th>
-                <th class="align-middle">Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for atividade in page_obj %}
-                <tr>
-                    <td class="align-middle text-start">{{ atividade.nome }}</td>
-                    <td class="align-middle">{{ atividade.departamento }}</td>
-                    <td class="align-middle">
-                        {% if request.user|has_permission:'Funcionario.view_atividade' %}
-                        <a href="{% url 'visualizar_atividade' atividade.id %}" class="btn btn-sm btn-info" title="Visualizar">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                        {% endif %}
-                    
-                        {% if request.user|has_permission:'Funcionario.change_atividade' %}
-                        <a href="{% url 'editar_atividade' atividade.id %}" class="btn btn-sm btn-warning" title="Editar">
-                            <i class="bi bi-pencil-square"></i>
-                        </a>
-                        {% endif %}
-                    
-                        {% if request.user|has_permission:'Funcionario.delete_atividade' %}
-                        <button type="button" class="btn btn-sm btn-danger" title="Excluir" data-bs-toggle="modal" data-bs-target="#modalExcluirAtividade{{ atividade.id }}">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                        {% endif %}
-                    </td>
-                    
-                </tr>
-
-                <!-- Modal de confirmação de exclusão -->
-                <div class="modal fade" id="modalExcluirAtividade{{ atividade.id }}" tabindex="-1" aria-labelledby="modalExcluirAtividadeLabel{{ atividade.id }}" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="modalExcluirAtividadeLabel{{ atividade.id }}">Confirmar Exclusão</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Tem certeza de que deseja excluir a atividade <strong>{{ atividade.nome }}</strong>?</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <form action="{% url 'excluir_atividade' atividade.id %}" method="post" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger">Excluir</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% empty %}
-                <tr>
-                    <td colspan="4" class="text-center align-middle">Nenhuma atividade encontrada.</td>
-                </tr>
+        <!-- 🏢 Departamento -->
+        <div class="col-md-4">
+          <label for="departamento" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-building text-secondary"></i> Departamento
+          </label>
+          <select name="departamento" id="departamento" class="form-select select2" aria-label="Filtrar por departamento">
+            <option value="">Selecione</option>
+            {% for departamento in departamentos %}
+              <option value="{{ departamento }}" {% if request.GET.departamento == departamento %}selected{% endif %}>
+                {{ departamento }}
+              </option>
             {% endfor %}
-        </tbody>
-    </table>
-
-    <!-- Modal de Toasts de Sucesso -->
-    <div id="toastSucesso" class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
-        <div class="d-flex">
-            <div class="toast-body">
-                Ação realizada com sucesso!
-            </div>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+          </select>
         </div>
+
+        <!-- 📝 Nome da Atividade -->
+        <div class="col-md-4">
+          <label for="nome" class="form-label d-flex align-items-center gap-2">
+            <i class="bi bi-card-text text-secondary"></i> Nome da Atividade
+          </label>
+          <select name="nome" id="nome" class="form-select select2" aria-label="Filtrar por nome da atividade">
+            <option value="">Selecione</option>
+            {% for nome in nomes_atividades %}
+              <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>
+                {{ nome }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- 🔍 Botão Filtrar -->
+        <div class="col-md-4 d-flex align-items-end">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+
+  <!-- 📊 Indicadores (Accordion recolhido por padrão) -->
+<div class="accordion mb-4" id="accordionIndicadores">
+
+  <!-- Total de Atividades -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingTotal">
+      <button class="accordion-button collapsed d-flex align-items-center gap-2" type="button"
+              data-bs-toggle="collapse" data-bs-target="#collapseTotal"
+              aria-expanded="false" aria-controls="collapseTotal">
+        <i class="bi bi-list-task text-primary fs-5"></i>
+        <strong class="text-primary">Total de Atividades</strong>
+      </button>
+    </h2>
+    <div id="collapseTotal" class="accordion-collapse collapse" aria-labelledby="headingTotal" data-bs-parent="#accordionIndicadores">
+      <div class="accordion-body">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center">
+            <h2 class="display-5 text-success">{{ total_atividades }}</h2>
+            <p class="text-muted">Total de atividades cadastradas no sistema.</p>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Atividades por Departamento -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingDepto">
+      <button class="accordion-button collapsed d-flex align-items-center gap-2" type="button"
+              data-bs-toggle="collapse" data-bs-target="#collapseDepto"
+              aria-expanded="false" aria-controls="collapseDepto">
+        <i class="bi bi-building text-success fs-5"></i>
+        <strong class="text-success">Atividades por Departamento</strong>
+      </button>
+    </h2>
+    <div id="collapseDepto" class="accordion-collapse collapse" aria-labelledby="headingDepto" data-bs-parent="#accordionIndicadores">
+      <div class="accordion-body">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <ul class="list-group">
+              {% for departamento in atividades_por_departamento %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  {{ departamento.departamento|title }}
+                  <span class="badge bg-info text-white">{{ departamento.total }}</span>
+                </li>
+              {% empty %}
+                {% include "partials/global/_sem_resultados.html" with item_nome="departamento" %}
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
-<!-- Paginação -->
-<nav aria-label="Navegação de página">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Primeira">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}">{{ num }}</a></li>
-            {% endif %}
+
+
+  <!-- Tabela -->
+  <div class="table-responsive mt-4">
+    <table class="table table-striped table-bordered text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-card-text me-1"></i> Nome da Atividade</th>
+          <th><i class="bi bi-building me-1"></i> Departamento</th>
+          <th><i class="bi bi-gear me-1"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for atividade in page_obj %}
+          <tr>
+            <td class="text-start">{{ atividade.nome }}</td>
+            <td>{{ atividade.departamento }}</td>
+            <td>
+              
+              {% if request.user|has_permission:'Funcionario.change_atividade' %}
+                {% include "partials/global/_botao_editar.html" with objeto=atividade url_editar='editar_atividade' label='atividade' %}
+              {% endif %}
+              {% if request.user|has_permission:'Funcionario.delete_atividade' %}
+                {% include "partials/global/_botao_excluir.html" with objeto=atividade url_excluir='excluir_atividade' label='atividade' %}
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          {% include "partials/global/_sem_resultados.html" with item_nome="atividade" %}
         {% endfor %}
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Próxima">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET %}&{{ request.GET.urlencode|remove_query_param:'page' }}{% endif %}" aria-label="Última">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginação -->
+  {% include "partials/global/_paginacao.html" %}
 
 </div>
 
-<!-- Script para inicialização do Select2 e modal -->
+<!-- Scripts -->
+{% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Inicializa os elementos Select2
+  document.addEventListener('DOMContentLoaded', function () {
     $('.select2').select2({
-        placeholder: 'Selecione uma opção',
-        allowClear: true,
-        width: '100%',
+      placeholder: 'Selecione uma opção',
+      allowClear: true,
+      width: '100%',
+      dropdownParent: $('.container').first() // evita conflito com modais
     });
-});
-
-// Para exibir o toast
-window.onload = function() {
-    var toastEl = document.getElementById('toastSucesso');
-    var toast = new bootstrap.Toast(toastEl);
-    toast.show();
-};
+  });
 </script>
-
+{% endblock %}
 {% endblock %}

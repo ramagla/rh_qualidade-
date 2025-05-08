@@ -140,7 +140,6 @@ from .views.matriz_polivalencia_views import (
     imprimir_matriz,
     lista_atividades,
     lista_matriz_polivalencia,
-    visualizar_atividade,
 )
 from .views.relatorios_views import (
     RelatorioIndicadorAnualView,
@@ -482,7 +481,6 @@ urlpatterns = [
     # Atividades
     path("atividades/", lista_atividades, name="lista_atividades"),
     path("atividades/cadastrar/", cadastrar_atividade, name="cadastrar_atividade"),
-    path("atividades/<int:id>/", visualizar_atividade, name="visualizar_atividade"),
     path("atividades/<int:id>/editar/", editar_atividade, name="editar_atividade"),
     path("atividades/<int:id>/excluir/", excluir_atividade, name="excluir_atividade"),
     # APIs para AJAX

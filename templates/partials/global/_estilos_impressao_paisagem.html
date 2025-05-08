@@ -1,14 +1,12 @@
 <style>
   /* Container visual para impressão */
   .pdf-container {
-    width: 297mm; /* largura de A4 paisagem */
-    margin: 0 auto;
-    padding: 15mm;
-    background: #fff;
-    border: 1px solid #000;
-    font-family: Arial, sans-serif;
-    font-size: 11pt;
-  }
+  width: calc(100% - 20mm) !important;
+  margin: 0 auto !important;
+  padding: 10mm !important;
+  background: white !important;
+  page-break-inside: avoid;
+}
 
   .pdf-header {
     text-align: center;
@@ -48,54 +46,98 @@
   .info-table th {
     background-color: #f2f2f2;
     font-weight: bold;
+      overflow-wrap: break-word !important;
+  word-break: break-word !important;
+    
   }
 
   /* Impressão */
-  @media print {
-    @page {
-      size: A4 landscape;
-      margin: 10mm;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0 !important;
-      padding: 0 !important;
-      width: 100% !important;
-      background: white !important;
-      overflow: visible !important;
-    }
-
-    .sidebar, .navbar, .d-print-none, .btn, .btn-group, .text-end {
-      display: none !important;
-      visibility: hidden !important;
-      width: 0 !important;
-      height: 0 !important;
-      overflow: hidden !important;
-      position: absolute !important;
-      left: -9999px !important;
-    }
-
-    .main, .container, .container-fluid, .content, .page-content, .pdf-container {
-      all: unset !important;
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      float: none !important;
-    }
-
-    .pdf-container {
-      padding: 0 !important;
-      border: none !important;
-    }
-
-    .info-table th,
-    .info-table td {
-      padding: 6px 8px !important;
-      font-size: 10pt !important;
-    }
+  /* Impressão */
+@media print {
+  @page {
+    size: A4 landscape; /* ajustar: define orientação paisagem */
+    margin: 10mm;       /* ajustar: define margem padrão */
   }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    background: white !important;
+    overflow: visible !important;
+    font-size: 10pt; /* ajustar: define tamanho de fonte padrão */
+  }
+
+  .sidebar, .navbar, .d-print-none, .btn, .btn-group, .text-end {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+  }
+
+  .main, .container, .container-fluid, .content, .page-content, .pdf-container {
+    all: unset !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+  }
+
+  .pdf-container {
+    zoom: 0.85 !important;  /* ANTES: 0.95 */
+    width: 100% !important;
+  max-width: 100% !important;
+    padding: 10mm !important;
+    margin: 0 auto !important;
+    background: white !important;
+    page-break-inside: avoid;
+  }
+
+  .info-table {
+    
+    width: 100% !important;
+    margin: 0 auto !important;
+
+  border-collapse: separate !important;
+    border-spacing: 0 !important;
+
+    table-layout: fixed !important;  /* ajustar: impede crescimento descontrolado das colunas */
+    font-size: 9pt !important;        /* ajustar: reduz fonte para caber melhor na página */
+  }
+
+  .info-table th,
+.info-table td {
+    box-sizing: border-box !important;
+
+  border: 0.75pt solid #000 !important;   
+  padding: 4px 5px !important;
+  font-size: 9pt !important;
+  word-break: break-word !important;
+  vertical-align: middle !important;
+}
+
+.info-table th {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+
+
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+
 </style>
+
+
+
+

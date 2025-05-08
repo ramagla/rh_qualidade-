@@ -219,3 +219,10 @@ def get_opcao_experiencia(obj, campo):
         }
     }
     return respostas.get(campo, {}).get(valor, "Não avaliado")
+
+
+@register.filter
+def split(value, delimiter=","):
+    if isinstance(value, str):
+        return value.split(delimiter)
+    return []

@@ -57,7 +57,6 @@ def lista_matriz_polivalencia(request):
     )
 
 
-@login_required
 def gerar_grafico_icone(nota):
     icones = {
         0: "icons/barra_0.png",
@@ -69,32 +68,33 @@ def gerar_grafico_icone(nota):
     return icones.get(nota, "icons/barra_1.png")
 
 
-@login_required
-def imprimir_matriz(request, **kwargs):
-    id = kwargs.get("id")
-    matriz = get_object_or_404(MatrizPolivalencia, id=id)
-    atividades = matriz.atividades
-    colaboradores = matriz.funcionarios
+def imprimir_matriz(request, id):
+    print(">>> TIPO DE REQUEST:", type(request))
 
-    # Construir o dicionário de notas com suplente
-    notas_por_funcionario = {}
-    for colaborador in colaboradores:
-        notas_por_funcionario[colaborador.id] = {
+    matriz = get_object_or_404(MatrizPolivalencia, id=id)
+    atividades = matriz.atividades.all()  # <- ajustado para .all()
+    notas = Nota.objects.filter(atividade__in=atividades)
+
+    # Pega apenas os funcionários que possuem nota associada à matriz
+    colaborador_ids = notas.values_list("funcionario_id", flat=True).distinct()
+    colaboradores = Funcionario.objects.filter(id__in=colaborador_ids)
+
+    # Dicionário de notas
+    notas_por_funcionario = {
+        colaborador.id: {
             atividade.id: {"pontuacao": None, "suplente": False, "grafico": None}
             for atividade in atividades
         }
+        for colaborador in colaboradores
+    }
 
-    for nota in Nota.objects.filter(
-        funcionario__in=colaboradores, atividade__in=atividades
-    ):
+    for nota in notas:
         notas_por_funcionario[nota.funcionario.id][nota.atividade.id] = {
             "pontuacao": nota.pontuacao,
             "suplente": nota.suplente,
-            # Usa o ícone com base na pontuação
             "grafico": gerar_grafico_icone(nota.pontuacao),
         }
 
-    # Transformar para lista plana para uso no template
     notas_lista = [
         {
             "colaborador_id": colab_id,
@@ -107,7 +107,6 @@ def imprimir_matriz(request, **kwargs):
         for ativ_id, valores in atividades.items()
     ]
 
-    # Adicionar status de suplente para cada colaborador
     colaboradores_com_suplente = [
         {
             "id": colaborador.id,
@@ -120,15 +119,17 @@ def imprimir_matriz(request, **kwargs):
         for colaborador in colaboradores
     ]
 
-    # Adicionar dados ao contexto para renderizar o template
-    context = {
-        "matriz": matriz,
-        "atividades": atividades,
-        "colaboradores": colaboradores_com_suplente,
-        "notas_lista": notas_lista,
-    }
+    return render(
+        request,
+        "matriz_polivalencia/imprimir_matriz.html",
+        {
+            "matriz": matriz,
+            "atividades": atividades,
+            "colaboradores": colaboradores_com_suplente,
+            "notas_lista": notas_lista,
+        },
+    )
 
-    return render(request, "matriz_polivalencia/imprimir_matriz.html", context)
 
 
 @login_required
@@ -185,14 +186,16 @@ def cadastrar_matriz_polivalencia(request):
 
     return render(
         request,
-        "matriz_polivalencia/cadastrar_matriz.html",
+        "matriz_polivalencia/form_matriz.html",
         {
             "form": form,
-            "funcionarios": funcionarios,
+            "funcionarios": list(funcionarios.values("id", "nome")),
             "atividades": atividades,
             "departamentos": departamentos,
+            "campos_responsaveis": ['elaboracao', 'coordenacao', 'validacao'],
         },
     )
+
 
 
 # Editar uma matriz de polivalência
@@ -206,25 +209,29 @@ def editar_matriz_polivalencia(request, id):
         id=id,
     )
 
-    # Obter lista de funcionários ativos
-    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
-
-    # Obter todos os departamentos
-    departamentos = Atividade.objects.values_list("departamento", flat=True).distinct()
-
     # Departamento fixo associado ao cadastro da matriz
     departamento_selecionado = matriz.departamento
 
     # Filtrar atividades relacionadas ao departamento selecionado
     atividades = Atividade.objects.filter(departamento=departamento_selecionado)
 
+    # Pega os funcionários que possuem nota relacionada com as atividades da matriz
+    atividade_ids = atividades.values_list("id", flat=True)
+    funcionarios = Funcionario.objects.filter(
+        notas__atividade_id__in=atividade_ids
+    ).distinct().order_by("nome")
+
+    # Obter todos os departamentos disponíveis para o select
+    departamentos = Atividade.objects.values_list("departamento", flat=True).distinct()
+
     # Construir o dicionário de notas com suplente
-    notas_por_funcionario = {}
-    for funcionario in funcionarios:
-        notas_por_funcionario[funcionario.id] = {
+    notas_por_funcionario = {
+        funcionario.id: {
             atividade.id: {"pontuacao": None, "suplente": False}
             for atividade in atividades
         }
+        for funcionario in funcionarios
+    }
 
     # Preencher com os valores das notas existentes
     for nota in Nota.objects.filter(
@@ -236,16 +243,13 @@ def editar_matriz_polivalencia(request, id):
         }
 
     if request.method == "POST":
-        # Processar o formulário com os dados enviados
         form = MatrizPolivalenciaForm(request.POST, instance=matriz)
         if form.is_valid():
             matriz = form.save(commit=False)
-
-            # Certificar que o departamento não seja sobrescrito ou apagado
-            matriz.departamento = departamento_selecionado
+            matriz.departamento = departamento_selecionado  # preservar o departamento original
             matriz.save()
 
-            # Atualizar as notas com os valores do POST
+            # Atualizar notas dos colaboradores
             for funcionario in funcionarios:
                 for atividade in atividades:
                     nota_key = f"nota_{funcionario.id}_{atividade.id}"
@@ -253,7 +257,7 @@ def editar_matriz_polivalencia(request, id):
                     nota_value = request.POST.get(nota_key)
                     suplente_value = request.POST.get(suplente_key, "off") == "on"
 
-                    if nota_value:  # Se uma nota foi fornecida
+                    if nota_value:
                         Nota.objects.update_or_create(
                             funcionario=funcionario,
                             atividade=atividade,
@@ -266,15 +270,11 @@ def editar_matriz_polivalencia(request, id):
             messages.success(request, "Matriz de Polivalência atualizada com sucesso.")
             return redirect("lista_matriz_polivalencia")
         else:
-            messages.error(
-                request,
-                "Erro ao atualizar a Matriz de Polivalência. Verifique os dados.",
-            )
+            messages.error(request, "Erro ao atualizar a Matriz de Polivalência.")
     else:
-        # Instanciar o formulário com a matriz existente
         form = MatrizPolivalenciaForm(instance=matriz)
 
-    # Preparar o contexto com notas em formato acessível ao template
+    # Converter as notas para lista de dicionários (JSON)
     notas_lista = [
         {
             "funcionario_id": func_id,
@@ -282,24 +282,25 @@ def editar_matriz_polivalencia(request, id):
             "pontuacao": valores["pontuacao"],
             "suplente": valores["suplente"],
         }
-        for func_id, atividades in notas_por_funcionario.items()
-        for ativ_id, valores in atividades.items()
+        for func_id, atividades_dict in notas_por_funcionario.items()
+        for ativ_id, valores in atividades_dict.items()
     ]
 
-    # Retornar o template de edição com todos os dados necessários
     return render(
         request,
-        "matriz_polivalencia/editar_matriz.html",
+        "matriz_polivalencia/form_matriz.html",
         {
             "form": form,
             "matriz": matriz,
-            "funcionarios": funcionarios,
+            "funcionarios": list(funcionarios.values("id", "nome")),
             "atividades": atividades,
             "departamentos": departamentos,
             "notas_lista": notas_lista,
-            "departamento_selecionado": departamento_selecionado,  # Informação fixa do departamento
+            "departamento_selecionado": departamento_selecionado,
+            "campos_responsaveis": ['elaboracao', 'coordenacao', 'validacao'],
         },
     )
+
 
 
 # Excluir uma matriz de polivalência
@@ -386,7 +387,7 @@ def cadastrar_atividade(request):
 
     return render(
         request,
-        "matriz_polivalencia/cadastrar_atividade.html",
+        "matriz_polivalencia/form_atividade.html",
         {
             "form": form,
             "funcionarios": funcionarios,  # Passa os funcionários para o template
@@ -451,7 +452,7 @@ def editar_atividade(request, id):
 
     return render(
         request,
-        "matriz_polivalencia/editar_atividade.html",
+        "matriz_polivalencia/form_atividade.html",
         {
             "form": form,
             "atividade": atividade,
@@ -488,21 +489,25 @@ def get_atividades_e_funcionarios_por_departamento(request):
     departamento = request.GET.get("departamento")
 
     if departamento:
-        # Obter as atividades associadas ao departamento
-        atividades = Atividade.objects.filter(departamento=departamento).values(
-            "id", "nome"
-        )
+        # Buscar atividades relacionadas ao departamento
+        atividades = Atividade.objects.filter(departamento=departamento).values("id", "nome")
 
-        # Obter todos os funcionários ativos, ordenados alfabeticamente
-        funcionarios = (
-            Funcionario.objects.filter(status="Ativo")
-            .order_by("nome")
-            .values("id", "nome")
-        )
+        # Agrupar funcionários ativos por local_trabalho
+        funcionarios = Funcionario.objects.filter(status="Ativo").order_by("local_trabalho", "nome")
+        colaboradores_por_departamento = {}
 
-        # Retornar as atividades e funcionários em formato JSON
-        return JsonResponse(
-            {"atividades": list(atividades), "funcionarios": list(funcionarios)}
-        )
+        for f in funcionarios:
+            setor = f.local_trabalho or "Sem Setor"
+            if setor not in colaboradores_por_departamento:
+                colaboradores_por_departamento[setor] = []
+            colaboradores_por_departamento[setor].append({
+                "id": f.id,
+                "nome": f.nome
+            })
+
+        return JsonResponse({
+            "atividades": list(atividades),
+            "colaboradores_por_departamento": colaboradores_por_departamento
+        })
 
     return JsonResponse({"error": "Departamento não encontrado"}, status=400)
