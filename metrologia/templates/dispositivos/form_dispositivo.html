@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if edicao %}Editar Dispositivo{% else %}Cadastrar Dispositivo{% endif %}{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_header_titulo.html' with titulo=edicao|yesno:"Editar Dispositivo,Cadastrar Dispositivo" icone="bi bi-hdd-rack" emoji="📏" %}
+<div class="container">
+
+  <form method="post" enctype="multipart/form-data" id="dispositivo-form">
+    {% csrf_token %}
+  {% include 'partials/global/_form_errors.html' %}
+
+    <!-- SESSAO: Identificação -->
+    <div class="accordion mb-3" id="accordionDispositivo">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingIdentificacao">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentificacao" aria-expanded="true" aria-controls="collapseIdentificacao">
+            <i class="bi bi-info-circle-fill me-2"></i> Dados de Identificação
+          </button>
+        </h2>
+        <div id="collapseIdentificacao" class="accordion-collapse collapse show" aria-labelledby="headingIdentificacao">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="codigo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código</label>
+              {{ form.codigo|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label for="qtde" class="form-label"><i class="bi bi-hash me-1"></i> Quantidade</label>
+              {{ form.qtde|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label for="cliente" class="form-label"><i class="bi bi-person-fill me-1"></i> Cliente</label>
+              {{ form.cliente|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label for="descricao" class="form-label"><i class="bi bi-card-text me-1"></i> Descrição</label>
+              {{ form.descricao|add_class:"form-control" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSAO: Calibração -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingCalibracao">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCalibracao" aria-expanded="false" aria-controls="collapseCalibracao">
+            <i class="bi bi-clock-history me-2"></i> Dados de Calibração
+          </button>
+        </h2>
+        <div id="collapseCalibracao" class="accordion-collapse collapse" aria-labelledby="headingCalibracao">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="estudo_realizado" class="form-label"><i class="bi bi-check2-square me-1"></i> Estudo Realizado</label>
+              {{ form.estudo_realizado|add_class:"form-select" }}
+            </div>
+            <div class="col-md-6">
+              <label for="data_ultima_calibracao" class="form-label"><i class="bi bi-calendar-check me-1"></i> Última Calibração</label>
+              {{ form.data_ultima_calibracao|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label for="frequencia_calibracao" class="form-label"><i class="bi bi-repeat me-1"></i> Freq. Calibração (meses)</label>
+              {{ form.frequencia_calibracao|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label for="local_armazenagem" class="form-label"><i class="bi bi-geo-alt-fill me-1"></i> Local de Armazenagem</label>
+              {{ form.local_armazenagem|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label for="unidade_medida" class="form-label"><i class="bi bi-rulers me-1"></i> Unidade de Medida</label>
+              {{ form.unidade_medida|add_class:"form-select" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSAO: Anexos -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingAnexos">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnexos" aria-expanded="false" aria-controls="collapseAnexos">
+            <i class="bi bi-paperclip me-2"></i> Anexos
+          </button>
+        </h2>
+        <div id="collapseAnexos" class="accordion-collapse collapse" aria-labelledby="headingAnexos">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="desenho_anexo" class="form-label"><i class="bi bi-file-earmark-image me-1"></i> Desenho do Dispositivo</label>
+              {{ form.desenho_anexo|add_class:"form-control" }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="text-center mt-5 mb-3"><i class="bi bi-diagram-3-fill me-1"></i> Cadastro de Cotas</h4>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-striped text-center align-middle" id="cotas-table">
+    <caption class="visually-hidden">Tabela de cotas do dispositivo</caption>
+    <thead class="table-light">
+      <tr>
+        <th><i class="bi bi-123 me-1 text-muted"></i> Número</th>
+        <th><i class="bi bi-arrow-down me-1 text-muted"></i> Valor Mínimo</th>
+        <th><i class="bi bi-arrow-up me-1 text-muted"></i> Valor Máximo</th>
+        <th><i class="bi bi-gear-fill me-1 text-muted"></i> Ações</th>
+      </tr>
+    </thead>
+   <tbody>
+  {% for form in cotas_forms %}
+    <tr>
+      {{ form.id }} {# ESSENCIAL para o formset funcionar corretamente #}
+      <td>
+        {{ form.numero|add_class:"form-control" }}
+        {% for error in form.numero.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </td>
+      <td>
+        {{ form.valor_minimo|add_class:"form-control" }}
+        {% for error in form.valor_minimo.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </td>
+      <td>
+        {{ form.valor_maximo|add_class:"form-control" }}
+        {% for error in form.valor_maximo.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </td>
+      <td>
+        <button type="button" class="btn btn-danger remove-cota-btn" aria-label="Remover cota">
+          <i class="bi bi-trash"></i>
+        </button>
+        {{ form.DELETE.as_hidden }}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4">Nenhuma cota cadastrada.</td></tr>
+  {% endfor %}
+</tbody>
+
+
+{{ cotas_forms.management_form }}
+
+<!-- Formulário vazio para clonagem -->
+<table class="d-none">
+  <tbody>
+    <tr id="empty-form-template">
+      <td>{{ cotas_forms.empty_form.numero|add_class:"form-control" }}</td>
+      <td>{{ cotas_forms.empty_form.valor_minimo|add_class:"form-control" }}</td>
+      <td>{{ cotas_forms.empty_form.valor_maximo|add_class:"form-control" }}</td>
+      <td>
+        <button type="button" class="btn btn-danger remove-cota-btn" aria-label="Remover cota">
+          <i class="bi bi-trash"></i>
+        </button>
+        {{ cotas_forms.empty_form.DELETE.as_hidden }}
+        {{ cotas_forms.empty_form.id.as_hidden }}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
+
+<div class="text-end">
+  <button type="button" class="btn btn-success" id="add-cota-btn">
+    <i class="bi bi-plus-circle"></i> Adicionar Cota
+  </button>
+</div>
+
+
+{% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=edicao url_voltar=url_voltar %}
+
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+    const cotasTable = document.getElementById('cotas-formset');
+    const emptyFormTemplate = document.getElementById('empty-form-template').outerHTML;
+    const addCotaBtn = document.getElementById('add-cota-btn');
+
+    function applyRemoveHandlers() {
+      document.querySelectorAll('.remove-cota-btn').forEach(btn => {
+        btn.onclick = () => {
+          const row = btn.closest('tr');
+          row.remove();
+        };
+      });
+    }
+
+    addCotaBtn.addEventListener('click', function () {
+      const formIndex = parseInt(totalForms.value);
+      const newRow = emptyFormTemplate.replace(/__prefix__/g, formIndex);
+      cotasTable.insertAdjacentHTML('beforeend', newRow);
+      totalForms.value = formIndex + 1;
+      applyRemoveHandlers();
+    });
+
+    applyRemoveHandlers();
+  });
+</script>
+
+{% endblock %}

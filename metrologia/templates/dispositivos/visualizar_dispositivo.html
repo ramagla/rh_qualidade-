@@ -1,85 +1,138 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
 
 {% block title %}Visualizar Dispositivo{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Detalhes do Dispositivo</h2>
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
+  {% include "header.html" %}
 
-    <!-- Informações do Dispositivo -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Código: {{ dispositivo.codigo }}</h5>
-            <p class="card-text">
-                <strong>Quantidade:</strong> {{ dispositivo.qtde }}<br>
-                <strong>Cliente:</strong> {{ dispositivo.cliente }}<br>
-                <strong>Descrição:</strong> {{ dispositivo.descricao }}<br>
-                <strong>Estudo Realizado:</strong> {{ dispositivo.get_estudo_realizado_display }}<br>
-                <strong>Data da Última Calibração:</strong> {{ dispositivo.data_ultima_calibracao }}<br>
-                <strong>Frequência de Calibração:</strong> {{ dispositivo.frequencia_calibracao }} meses<br>
-                <strong>Local de Armazenagem:</strong> {{ dispositivo.local_armazenagem }}<br>
-                <strong>Unidade de Medida:</strong> {{ dispositivo.get_unidade_medida_display }}<br>
-                <strong>Desenho Anexo:</strong>
+  <div id="relatorio-area">
+    <div class="pdf-container">
+
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>🧰 Dispositivo: {{ dispositivo.codigo }}</h1>
+        <p>Visualização detalhada do dispositivo cadastrado</p>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table align-middle">
+            <tr>
+              <th>Código</th>
+              <td>{{ dispositivo.codigo }}</td>
+            </tr>
+            <tr>
+              <th>Quantidade</th>
+              <td>{{ dispositivo.qtde }}</td>
+            </tr>
+            <tr>
+              <th>Cliente</th>
+              <td>{{ dispositivo.cliente }}</td>
+            </tr>
+            <tr>
+              <th>Descrição</th>
+              <td>{{ dispositivo.descricao }}</td>
+            </tr>
+            <tr>
+              <th>Estudo Realizado</th>
+              <td>{{ dispositivo.get_estudo_realizado_display }}</td>
+            </tr>
+            <tr>
+              <th>Data da Última Calibração</th>
+              <td>
+                {% if dispositivo.data_ultima_calibracao %}
+                  {{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}
+                {% else %}
+                  Não definida
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>Frequência de Calibração</th>
+              <td>{{ dispositivo.frequencia_calibracao }} meses</td>
+            </tr>
+            <tr>
+              <th>Local de Armazenagem</th>
+              <td>{{ dispositivo.local_armazenagem }}</td>
+            </tr>
+            <tr>
+              <th>Unidade de Medida</th>
+              <td>{{ dispositivo.get_unidade_medida_display }}</td>
+            </tr>
+            <tr>
+              <th>Desenho Anexo</th>
+              <td class="text-center">
                 {% if dispositivo.desenho_anexo %}
-                <div class="text-center">
-                    <!-- Imagem com botão para ampliar -->
-                    <img src="{{ dispositivo.desenho_anexo.url }}" 
-                         alt="Desenho do Dispositivo" 
-                         class="img-fluid rounded" 
-                         style="max-width: 300px; max-height: 300px;" 
-                         data-bs-toggle="modal" 
-                         data-bs-target="#imageModal">
-                </div>
-            
-                <!-- Modal para ampliar a imagem -->
-                <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-body text-center">
-                                <img src="{{ dispositivo.desenho_anexo.url }}" 
-                                     alt="Desenho do Dispositivo Ampliado" 
-                                     class="img-fluid rounded">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% else %}
-                <p>Não disponível</p>
-            {% endif %}
-            
+                  <img src="{{ dispositivo.desenho_anexo.url }}" 
+                       alt="Desenho do Dispositivo" 
+                       class="img-fluid mt-2 rounded" 
+                       style="max-width: 300px; max-height: 300px;"
+                       data-bs-toggle="modal" 
+                       data-bs-target="#imageModal">
+                {% else %}
+                  <p class="fw-bold">Sem desenho cadastrado</p>
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+        </div>
 
-    <!-- Cotas Associadas -->
-    <div class="mt-5">
-        <h3 class="text-center mb-3">Cotas Associadas</h3>
-        <table class="table table-bordered text-center">
-            <thead>
-                <tr>
-                    <th>Número</th>
-                    <th>Valor Mínimo</th>
-                    <th>Valor Máximo</th>
-                </tr>
+        <!-- Cotas Associadas -->
+        <div class="mt-5">
+          <h3 class="text-center mb-3">📐 Cotas Associadas</h3>
+          <table class="table table-bordered info-table text-center align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Número</th>
+                <th>Valor Mínimo</th>
+                <th>Valor Máximo</th>
+              </tr>
             </thead>
             <tbody>
-                {% for cota in cotas %}
-                <tr>
-                    <td>{{ cota.numero }}</td>
-                    <td>{{ cota.valor_minimo }}</td>
-                    <td>{{ cota.valor_maximo }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3">Nenhuma cota cadastrada.</td>
-                </tr>
-                {% endfor %}
+              {% for cota in cotas %}
+              <tr>
+                <td>{{ cota.numero }}</td>
+                <td>{{ cota.valor_minimo }}</td>
+                <td>{{ cota.valor_maximo }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3">Nenhuma cota cadastrada.</td>
+              </tr>
+              {% endfor %}
             </tbody>
-        </table>
-    </div>
+          </table>
+        </div>
+      </div>
 
-    <!-- Botão de Voltar -->
-    <div class="text-center mt-4">
-        <a href="{% url 'lista_dispositivos' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Voltar
-        </a>
+      <!-- Rodapé -->
+      <div class="text-center text-muted small mt-4">
+        <i class="bi bi-clock me-1"></i>
+        Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
     </div>
-</div>
+  </div>
+
+  <!-- Modal de imagem ampliada -->
+  {% if dispositivo.desenho_anexo %}
+  <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0">
+        <div class="modal-body text-center">
+          <img src="{{ dispositivo.desenho_anexo.url }}" alt="Desenho ampliado" class="img-fluid rounded">
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
 {% endblock %}

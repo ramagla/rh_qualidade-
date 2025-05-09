@@ -100,29 +100,44 @@ def lista_dispositivos(request):
     return render(request, "dispositivos/lista_dispositivos.html", context)
 
 
+
+def salvar_dispositivo_e_cotas(request, dispositivo_form, cota_formset, dispositivo):
+
+    dispositivo = dispositivo_form.save()
+
+    if cota_formset:
+        cotas = cota_formset.save(commit=False)
+        for cota in cotas:
+            cota.dispositivo = dispositivo
+            cota.save()
+
+        for cota in cota_formset.deleted_objects:
+            cota.delete()
+    else:
+        # Criação direta a partir de listas do POST
+        cotas_numero = request.POST.getlist("cotas_numero[]")
+        cotas_valor_minimo = request.POST.getlist("cotas_valor_minimo[]")
+        cotas_valor_maximo = request.POST.getlist("cotas_valor_maximo[]")
+
+        for numero, valor_min, valor_max in zip(
+            cotas_numero, cotas_valor_minimo, cotas_valor_maximo
+        ):
+            Cota.objects.create(
+                dispositivo=dispositivo,
+                numero=numero,
+                valor_minimo=valor_min,
+                valor_maximo=valor_max,
+            )
+
+    return dispositivo
+
+
 def cadastrar_dispositivo(request):
     if request.method == "POST":
         dispositivo_form = DispositivoForm(request.POST, request.FILES)
 
         if dispositivo_form.is_valid():
-            dispositivo = dispositivo_form.save()
-
-            # Salva as cotas associadas
-            cotas_numero = request.POST.getlist("cotas_numero[]")
-            cotas_valor_minimo = request.POST.getlist("cotas_valor_minimo[]")
-            cotas_valor_maximo = request.POST.getlist("cotas_valor_maximo[]")
-
-            for numero, valor_min, valor_max in zip(
-                cotas_numero, cotas_valor_minimo, cotas_valor_maximo
-            ):
-                Cota.objects.create(
-                    dispositivo=dispositivo,
-                    numero=numero,
-                    valor_minimo=valor_min,
-                    valor_maximo=valor_max,
-                )
-
-            # Redireciona para a lista de dispositivos
+            salvar_dispositivo_e_cotas(request, dispositivo_form)
             return redirect("lista_dispositivos")
 
     else:
@@ -130,9 +145,11 @@ def cadastrar_dispositivo(request):
 
     return render(
         request,
-        "dispositivos/cadastrar_dispositivo.html",
+        "dispositivos/form_dispositivo.html",
         {
             "form": dispositivo_form,
+            "edicao": False,
+            "url_voltar": "lista_dispositivos",
         },
     )
 
@@ -140,7 +157,6 @@ def cadastrar_dispositivo(request):
 def editar_dispositivo(request, dispositivo_id):
     dispositivo = get_object_or_404(Dispositivo, id=dispositivo_id)
 
-    # Criar um ModelFormSet para as cotas
     CotaFormSet = modelformset_factory(
         Cota,
         fields=("numero", "valor_minimo", "valor_maximo"),
@@ -149,57 +165,34 @@ def editar_dispositivo(request, dispositivo_id):
     )
 
     if request.method == "POST":
-        dispositivo_form = DispositivoForm(
-            request.POST, request.FILES, instance=dispositivo
-        )
-        cota_formset = CotaFormSet(
-            request.POST, queryset=Cota.objects.filter(dispositivo=dispositivo)
-        )
+        dispositivo_form = DispositivoForm(request.POST, request.FILES, instance=dispositivo)
+        cota_formset = CotaFormSet(request.POST, queryset=Cota.objects.filter(dispositivo=dispositivo))
+
+        print("Form válido:", dispositivo_form.is_valid())
+        print("Formset válido:", cota_formset.is_valid())
+        print("Formset erros:", cota_formset.errors)
+        print("Formset non_form_errors:", cota_formset.non_form_errors())
 
         if dispositivo_form.is_valid() and cota_formset.is_valid():
-            dispositivo = dispositivo_form.save()
-
-            # Salvar cotas
-            cotas = cota_formset.save(commit=False)
-
-            for cota in cotas:
-                cota.dispositivo = dispositivo
-                cota.save()
-
-            # Excluir cotas marcadas para exclusão
-            for cota in cota_formset.deleted_objects:
-                cota.delete()
-
-            # Após salvar, reconstruir o formset com os dados do banco
-            cota_formset = CotaFormSet(
-                queryset=Cota.objects.filter(dispositivo=dispositivo)
-            )
-
-        else:
-            # Log de erros para depuração
-            print("Formulário de dispositivo válido:", dispositivo_form.is_valid())
-            print("Formset de cotas válido:", cota_formset.is_valid())
-            print(
-                "Formset reconstruído após salvar:",
-                list(Cota.objects.filter(dispositivo=dispositivo)),
-            )
-            print("Erros no formset de cotas:", cota_formset.errors)
-            print("Erros no management_form:", cota_formset.management_form.errors)
+            salvar_dispositivo_e_cotas(request, dispositivo_form, cota_formset, dispositivo)
+            return redirect("lista_dispositivos")
 
     else:
         dispositivo_form = DispositivoForm(instance=dispositivo)
-        cota_formset = CotaFormSet(
-            queryset=Cota.objects.filter(dispositivo=dispositivo)
-        )
+        cota_formset = CotaFormSet(queryset=Cota.objects.filter(dispositivo=dispositivo))
 
     return render(
         request,
-        "dispositivos/editar_dispositivo.html",
+        "dispositivos/form_dispositivo.html",
         {
             "form": dispositivo_form,
             "cotas_forms": cota_formset,
+            "edicao": True,
+            "url_voltar": "lista_dispositivos",
         },
     )
+
+
 
 
 def excluir_dispositivo(request, id):
@@ -217,18 +210,22 @@ def excluir_dispositivo(request, id):
     return redirect(reverse("lista_dispositivos"))
 
 
+from django.utils.timezone import now
+
 def visualizar_dispositivo(request, id):
     dispositivo = get_object_or_404(Dispositivo, id=id)
-    # Obtém as cotas relacionadas ao dispositivo
     cotas = Cota.objects.filter(dispositivo=dispositivo)
+    
     return render(
         request,
         "dispositivos/visualizar_dispositivo.html",
         {
             "dispositivo": dispositivo,
             "cotas": cotas,
+            "now": now(),  # para uso no rodapé
         },
     )
+
 
 
 def imprimir_dispositivo(request):

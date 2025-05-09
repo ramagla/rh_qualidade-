@@ -4,297 +4,175 @@
 {% load tz %}
 {% now "Y-m-d" as hoje %}
 {% load custom_filters %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_estilos_impressao_paisagem.html' %}
 
 <div class="print-container container mt-5">
-    <!-- Cabeçalho -->
-    <div class="header header-table print-header text-center">
-        <table class="custom-header" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-                <td rowspan="2" style="text-align: center; vertical-align: middle; width: 10%; border: 1px solid #ddd;">
-                    <img src="/static/logo.png" alt="Logo" style="width: 80px; height: auto;">
-                </td>
-                <td colspan="5" style="text-align: center; font-weight: bold; font-size: 16px; vertical-align: middle; border: 1px solid #ddd;">
-                    CRONOGRAMA DE CALIBRAÇÃO DOS EQUIPAMENTOS
-                </td>
-                <td rowspan="2" style="text-align: center; vertical-align: middle; width: 15%; border: 1px solid #ddd;">
-                    <strong>CR001 - Rev24</strong><br>
-                    <span>{{ data_atual }}</span>
-                </td>
-            </tr>
-            <tr>
-                <td style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
-                    <strong>Ano:</strong> {{ ano|default:"Todos os Anos" }}
-                </td>
-                <td style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
-                    <strong>Tipo de Avaliação:</strong> {{ tipo_avaliacao|default:"Todos os Tipos" }}
-                </td>
-                <td colspan="3" style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
-                    <strong>Atualizado:</strong> Automaticamente
-                </td>
-            </tr>
-        </table>
+  {% include 'partials/global/_header_titulo.html' with titulo="Cronograma de Calibração dos Equipamentos" icone="bi bi-tools" emoji="🔧" %}
+
+  <div class="header header-table print-header text-center">
+    <table class="custom-header" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+      <thead>
+        <tr>
+          <th rowspan="2" style="text-align: center; vertical-align: middle; width: 10%; border: 1px solid #ddd;">
+            <img src="/static/logo.png" alt="Logo" style="width: 80px; height: auto;">
+          </th>
+          <th colspan="5" style="text-align: center; font-weight: bold; font-size: 16px; vertical-align: middle; border: 1px solid #ddd;">
+            <i class="bi bi-calendar2-range"></i> CRONOGRAMA DE CALIBRAÇÃO DOS EQUIPAMENTOS
+          </th>
+          <th rowspan="2" style="text-align: center; vertical-align: middle; width: 15%; border: 1px solid #ddd;">
+            <strong>CR001 - Rev24</strong><br>
+            <time datetime="{{ hoje }}">{{ hoje }}</time>
+          </th>
+        </tr>
+        <tr>
+          <th style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
+            <i class="bi bi-calendar3"></i> <strong>Ano:</strong> {{ ano|default:"Todos os Anos" }}
+          </th>
+          <th style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
+            <i class="bi bi-bar-chart-steps"></i> <strong>Tipo de Avaliação:</strong> {{ tipo_avaliacao|default:"Todos os Tipos" }}
+          </th>
+          <th colspan="3" style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
+            <i class="bi bi-arrow-clockwise"></i> <strong>Atualizado:</strong> Automaticamente
+          </th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+
+  <div class="text-center mb-4 d-print-none">
+    {% include 'partials/global/_botao_impressao.html' %}
+  </div>
+  
+  <!-- Filtros -->
+  <div class="card shadow-sm mb-4 d-print-none">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+      <i class="bi bi-funnel-fill text-primary"></i>
+      <strong>Filtros de Pesquisa</strong>
     </div>
+    <div class="card-body">
+      <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label for="ano" class="form-label"><i class="bi bi-calendar3 me-1"></i> Ano:</label>
+          <select id="ano" name="ano" class="form-select">
+            <option value="">Todos</option>
+            {% for ano in anos_disponiveis %}
+              <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-    <!-- Botão de Impressão -->
-    <div class="text-center mb-4 d-print-none">
-        <button onclick="imprimir()" class="btn btn-primary">
-            <i class="fas fa-print"></i> Imprimir
-        </button>
+        <div class="col-md-3">
+          <label for="grandeza" class="form-label"><i class="bi bi-rulers me-1"></i> Grandeza:</label>
+          <select id="grandeza" name="grandeza" class="form-select">
+            <option value="">Todas</option>
+            {% for tipo in tipos_grandeza %}
+              <option value="{{ tipo }}" {% if tipo == request.GET.grandeza %}selected{% endif %}>{{ tipo }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label for="tipo_avaliacao" class="form-label"><i class="bi bi-bar-chart-line me-1"></i> Tipo de Avaliação:</label>
+          <select id="tipo_avaliacao" name="tipo_avaliacao" class="form-select">
+            <option value="">Todos</option>
+            {% for tipo in tipos_avaliacao %}
+              <option value="{{ tipo }}" {% if tipo == request.GET.tipo_avaliacao %}selected{% endif %}>{{ tipo }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </form>
     </div>
+  </div>
 
-    <!-- Filtros -->
-    <form method="GET" class="row mb-4 d-print-none">
-        <div class="col-md-3 mb-3">
-            <label for="ano" class="form-label">Ano:</label>
-            <select id="ano" name="ano" class="form-select">
-                <option value="">Todos</option>
-                {% for ano in anos_disponiveis %}
-                    <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <label for="grandeza" class="form-label">Grandeza:</label>
-            <select id="grandeza" name="grandeza" class="form-select">
-                <option value="">Todas</option>
-                {% for tipo in tipos_grandeza %}
-                    <option value="{{ tipo }}" {% if tipo == request.GET.grandeza %}selected{% endif %}>{{ tipo }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <label for="tipo_avaliacao" class="form-label">Tipo de Avaliação:</label>
-            <select id="tipo_avaliacao" name="tipo_avaliacao" class="form-select">
-                <option value="">Todos</option>
-                {% for tipo in tipos_avaliacao %}
-                    <option value="{{ tipo }}" {% if tipo == request.GET.tipo_avaliacao %}selected{% endif %}>{{ tipo }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-3 d-flex align-items-end mb-3">
-            <button type="submit" class="btn btn-primary w-100">
-                <i class="bi bi-funnel"></i> Filtrar
-            </button>
-        </div>
-    </form>
-
-    <!-- Tabela -->
-    <div class="table-responsive">
-        <table class="custom-table">
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Equipamento</th>
-                    <th>Fabricante</th>
-                    <th>Capacidade</th>
-                    <th>Resolução</th>
-                    <th>Responsável</th>
-                    <th>Última Calibração</th>
-                    <th>Próxima Calibração</th>
-                    <th>Frequência (meses)</th>
-                    <th>Laboratório</th>
-                    <th>N° Certificado</th>
-                    <th>(E) Erro</th>
-                    <th>(I) Incerteza</th>
-                    <th>L = (E + I)</th>
-                    <th>EXATIDÃO REQUERIDA</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for equipamento in equipamentos %}
-                <tr>
-                    <td>{{ equipamento.codigo }}</td>
-                    <td>{{ equipamento.nome_equipamento }}</td>
-                    <td>{{ equipamento.fabricante }}</td>
-                    <td>{{ equipamento.capacidade }}</td>
-                    <td>{{ equipamento.resolucao }}</td>
-                    <td>{{ equipamento.responsavel }}</td>
-                    <td>{{ equipamento.data_ultima_calibracao|date:"d/m/Y" }}</td>
-                    <td>
-                        {% if equipamento.data_proxima_calibracao %}
-                            {% with equipamento.data_proxima_calibracao as data_calibracao %}
-                                {% if data_calibracao < today %}
-                                    <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
-                                {% elif data_calibracao <= today|add_days:31 %}
-                                    <span class="badge bg-warning">{{ data_calibracao|date:"d/m/Y" }}</span>
-                                {% else %}
-                                    <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
-                                {% endif %}
-                            {% endwith %}
-                        {% else %}
-                            <span class="text-muted">Não definida</span>
-                        {% endif %}
-                    </td>
-                    
-                         
-                    <td>{{ equipamento.frequencia_calibracao }}</td>
-                    <td>{{ equipamento.laboratorio }}</td>
-                    <td>{{ equipamento.numero_certificado }}</td>
-                    <td>{{ equipamento.erro_equipamento }}</td>
-                    <td>{{ equipamento.incerteza }}</td>
-                    <td>{{ equipamento.l }}</td>
-                    <td>{{ equipamento.exatidao_requerida }}</td>
-                    <td>
-                        {% if equipamento.status == "Aprovado" %}
-                            <span class="badge bg-success">Aprovado</span>
-                        {% elif equipamento.status == "Reprovado" %}
-                            <span class="badge bg-danger">Reprovado</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Indefinido</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <div class="table-responsive">
+    <table class="custom-table table table-bordered table-striped table-hover text-center align-middle">
+      <thead class="table-primary">
+        <tr>
+            <th scope="col" class="align-middle"><i class="bi bi-upc-scan me-1"></i> Código</th>
+            <th scope="col" class="align-middle"><i class="bi bi-hammer me-1"></i> Equipamento</th>
+            <th scope="col" class="align-middle"><i class="bi bi-building me-1"></i> Fabricante</th>
+            <th scope="col" class="align-middle"><i class="bi bi-arrows-expand me-1"></i> Capacidade</th>
+            <th scope="col" class="align-middle"><i class="bi bi-grid-1x2 me-1"></i> Resolução</th>
+            <th scope="col" class="align-middle"><i class="bi bi-person-badge me-1"></i> Responsável</th>
+            <th scope="col" class="align-middle"><i class="bi bi-calendar-check me-1"></i> Última Calibração</th>
+            <th scope="col" class="align-middle"><i class="bi bi-calendar-event me-1"></i> Próxima Calibração</th>
+            <th scope="col" class="align-middle"><i class="bi bi-clock-history me-1"></i> Frequência (meses)</th>
+            <th scope="col" class="align-middle"><i class="bi bi-hospital me-1"></i> Laboratório</th>
+            <th scope="col" class="align-middle"><i class="bi bi-file-earmark-text me-1"></i> Nº Certificado</th>
+            <th scope="col" class="align-middle">(E) Erro</th>
+            <th scope="col" class="align-middle">(I) Incerteza</th>
+            <th scope="col" class="align-middle">L = (E + I)</th>
+            <th scope="col" class="align-middle"><i class="bi bi-bullseye me-1"></i> Exatidão Requerida</th>
+            <th scope="col" class="align-middle"><i class="bi bi-activity me-1"></i> Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for equipamento in equipamentos %}
+          <tr>
+            <td>{{ equipamento.codigo }}</td>
+            <td>{{ equipamento.nome_equipamento }}</td>
+            <td>{{ equipamento.fabricante }}</td>
+            <td>{{ equipamento.capacidade }}</td>
+            <td>{{ equipamento.resolucao }}</td>
+            <td>{{ equipamento.responsavel }}</td>
+            <td>{{ equipamento.data_ultima_calibracao|date:"d/m/Y" }}</td>
+            <td>
+              {% if equipamento.data_proxima_calibracao %}
+                {% with equipamento.data_proxima_calibracao as data_calibracao %}
+                  {% if data_calibracao < hoje %}
+                    <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
+                  {% elif data_calibracao <= hoje|add_days:31 %}
+                    <span class="badge bg-warning text-dark">{{ data_calibracao|date:"d/m/Y" }}</span>
+                  {% else %}
+                    <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
+                  {% endif %}
+                {% endwith %}
+              {% else %}
+                <span class="text-muted">Não definida</span>
+              {% endif %}
+            </td>
+            <td>{{ equipamento.frequencia_calibracao }}</td>
+            <td>{{ equipamento.laboratorio }}</td>
+            <td>{{ equipamento.numero_certificado }}</td>
+            <td>{{ equipamento.erro_equipamento }}</td>
+            <td>{{ equipamento.incerteza }}</td>
+            <td>{{ equipamento.l }}</td>
+            <td>{{ equipamento.exatidao_requerida }}</td>
+            <td>
+              {% if equipamento.status == "Aprovado" %}
+                <span class="badge bg-success">Aprovado</span>
+              {% elif equipamento.status == "Reprovado" %}
+                <span class="badge bg-danger">Reprovado</span>
+              {% else %}
+                <span class="badge bg-secondary">Indefinido</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
-
-<!-- Script de Impressão -->
-<script>
-    function imprimir() {
-        const conteudo = document.querySelector('.print-container').innerHTML;
-        const novaJanela = window.open('', '_blank', 'width=800,height=600');
-        novaJanela.document.write(`
-            <html>
-                <head>
-                    <title>Cronograma de Calibração</title>
-                    <style>
-                        @page { size: A4 landscape; margin: 10mm; }
-                        body { font-family: Arial, sans-serif; font-size: 8px; }
-    
-                        /* Ajusta tamanho da tabela */
-                        .custom-table th, .custom-table td {
-                            font-size: 8px; /* Reduz tamanho da fonte */
-                            padding: 3px; /* Reduz espaçamento */
-                        }
-                        .custom-table, .custom-table th, .custom-table td {
-                            border: 1px solid #ddd !important; /* Bordas suaves */
-                            border-collapse: collapse;
-                            text-align: center;
-                        }
-    
-                        /* Reduz tamanho do header */
-                        .header-table th, .header-table td {
-                            font-size: 8px; /* Reduz tamanho da fonte do header */
-                            padding: 2px; /* Espaçamento menor */
-                            text-align: center;
-                            vertical-align: middle;
-                        }
-    
-                        /* Reduz tamanho do logo */
-                        img.logo {
-                            width: 50px; /* Tamanho menor do logo */
-                            height: auto;
-                        }
-    
-                        /* Cores */
-                        .badge.bg-success { background-color: #28a745; color: #fff; }
-                        .badge.bg-danger { background-color: #dc3545; color: #fff; }
-                        .badge.bg-secondary { background-color: #6c757d; color: #fff; }
-    
-                        .d-print-none { display: none !important; }
-
-                        @media print {
-                            * {
-                                -webkit-print-color-adjust: exact; /* Garante cores na impressão */
-                                color-adjust: exact;
-                                print-color-adjust: exact; /* Compatível com alguns navegadores */
-                            }
-
-                            .badge {
-                                -webkit-print-color-adjust: exact;
-                                print-color-adjust: exact;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>${conteudo}</body>
-            </html>
-        `);
-        novaJanela.document.close();
-        novaJanela.onload = () => {
-            novaJanela.print();
-            novaJanela.close();
-        };
-    }
-    </script>
-    
-
-    <style>
-        /* Tabela principal */
-        .custom-table {
-            width: 100%; /* Garante que a tabela ocupa 100% da largura */
-            table-layout: fixed; /* Largura fixa para alinhar colunas */
-            border-collapse: collapse; /* Elimina espaços entre bordas */
+<style>
+    @media print {
+        .custom-table th,
+        .custom-table td {
+          font-size: 8pt !important;
+          padding: 2px 4px !important;
         }
-        
-        .custom-table th, .custom-table td {
-            border: 1px solid #ddd; /* Borda sutil */
-            padding: 5px;
-            text-align: center;
-            font-size: 12px;
-            vertical-align: middle;
+      
+        .custom-header td,
+        .custom-header th {
+          font-size: 8pt !important;
+          padding: 2px 4px !important;
         }
-        
-        /* Cabeçalho personalizado */
-        .custom-header {
-            width: 100%; /* Largura total */
-            table-layout: fixed; /* Garante alinhamento igual ao da tabela */
-            border-collapse: collapse;
+      
+        body, html {
+          font-size: 8pt !important;
         }
-        
-        .custom-header td, .custom-header th {
-            border: 1px solid #ddd; /* Borda consistente com a tabela principal */
-            padding: 5px;
-            text-align: center;
-            font-size: 12px;
-            vertical-align: middle;
-        }
-        
-        /* Badges (cores do status) */
-        .badge.bg-success { 
-            background-color: #28a745; 
-            color: #fff; 
-        }
-        .badge.bg-danger { 
-            background-color: #dc3545; 
-            color: #fff; 
-        }
-        .badge.bg-secondary { 
-            background-color: #6c757d; 
-            color: #fff; 
-        }
-        
-        /* Ajustes de impressão */
-        @media print {
-            * {
-                -webkit-print-color-adjust: exact; /* Garante cores na impressão */
-                color-adjust: exact;
-                print-color-adjust: exact;
-            }
-        
-            /* Esconde elementos não imprimíveis */
-            .d-print-none { 
-                display: none !important; 
-            }
-        
-            /* Ajustes para tabelas */
-            .custom-table th, .custom-table td {
-                font-size: 10px; /* Fonte um pouco menor para impressão */
-                padding: 4px; /* Reduz espaçamento */
-            }
-        
-            /* Ajustes para cabeçalho */
-            .custom-header td, .custom-header th {
-                font-size: 10px;
-                padding: 4px;
-            }
-        }
-        </style>
-        
+      }
+    </style>      
 {% endblock %}

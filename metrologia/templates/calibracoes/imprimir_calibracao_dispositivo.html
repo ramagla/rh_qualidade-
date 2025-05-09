@@ -2,231 +2,181 @@
 {% load static %}
 {% block content %}
 
-<div class="container mt-5">
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'header.html' %}
 
-    <!-- Botão de Imprimir (imprime tudo) -->
-    <div class="text-center mb-4 d-print-none mt-5">
-        <button onclick="imprimir()" class="btn btn-primary">
-            <i class="fas fa-print"></i> Imprimir
-        </button>
+<div class="container mt-5 pdf-container">
+
+  <!-- Botão de impressão -->
+  {% include 'partials/global/_botao_impressao.html' %}
+
+  <!-- Título principal com ícone -->
+  {% include 'partials/global/_header_titulo.html' with titulo="Registro de Calibração de Dispositivo" icone="bi bi-clipboard-check-fill" emoji="🛠️" %}
+
+  {% if calibracoes %}
+
+  <!-- Informações Gerais -->
+<div class="card shadow-sm border-0 mb-4 informacoes-gerais-card">
+    <div class="card-header bg-light text-center fw-bold">
+      <i class="bi bi-info-circle me-2"></i>Informações Gerais
     </div>
-
-    {% if calibracoes %}
-       <!-- Cabeçalho -->
-<div class="header mb-3">
-    <table class="custom-table" style="width: 100%; border: 1px solid black; border-collapse: collapse;">
-        <tr>
-            <!-- Logo -->
-            <td rowspan="2" style="text-align: center; vertical-align: middle; width: 10%;">
-                <img src="/static/logo.png" alt="Logo" style="width: 60px; height: auto;">
-            </td>
-            <!-- Título principal -->
-            <td colspan="4" style="text-align: center; font-weight: bold; font-size: 16px; vertical-align: middle;">
-                REGISTRO DE CALIBRAÇÃO DE DISPOSITIVO
-            </td>
-        </tr>
-    </table>
-</div>
-
-        <!-- Desenho Técnico (envolto em .desenho-tecnico para centralizar) -->
-        <div class="desenho-tecnico">
-            {% if calibracoes.first.codigo_dispositivo.desenho_anexo %}
-                <img src="{{ calibracoes.first.codigo_dispositivo.desenho_anexo.url }}"
-                     alt="Desenho Técnico"
-                     class="img-desenho">
-            {% else %}
-                <p class="text-muted">Nenhum desenho técnico anexado para este dispositivo.</p>
-            {% endif %}
-        </div>        
-
-        <!-- Informações Gerais -->
-        <div class="row mt-4">
-            <table class="table table-bordered">
-                <tr>
-                    <td><strong>Número da peça:</strong> {{ calibracoes.first.codigo_peca }}</td>
-                    <td><strong>Número do dispositivo:</strong> {{ calibracoes.first.codigo_dispositivo.codigo }}</td>
-                    <td>
-                        <strong>Padrão a ser utilizado:</strong> 
-                        {{ calibracoes.first.instrumento_utilizado.nome_equipamento }}
-                        {{ calibracoes.first.instrumento_utilizado.capacidade_minima }} -
-                        {{ calibracoes.first.instrumento_utilizado.capacidade_maxima }}
-                        ({{ calibracoes.first.instrumento_utilizado.resolucao|floatformat:2 }})
-                    </td>
-                </tr>
-            </table>
+    <div class="card-body">
+      <div class="row mb-3 text-center">
+        <div class="col-md-6 mb-2">
+          <div class="fw-semibold text-muted small mb-1">
+            <i class="bi bi-hash me-1"></i> Número da Peça
+          </div>
+          <div class="fs-6 fw-bold">{{ calibracoes.first.codigo_peca }}</div>
         </div>
-
-        <!-- Tabela de Aferições -->
-        <div class="row mt-4">
-            <table class="table table-bordered text-center align-middle">
-                <thead>
-                    <tr>
-                        <th>Cota<br>(Número)</th>
-                        <th>Identificação do<br>padrão utilizado</th>
-                        <th>Valor encontrado</th>
-                        <th>Aprovado</th>
-                        <th>Data</th>
-                        <th>Responsável</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for calibracao in calibracoes %}
-                        {% for afericao in calibracao.afericoes.all %}
-                        <tr>
-                            <td>{{ afericao.cota.numero }}</td>
-                            <td>{{ calibracao.instrumento_utilizado.codigo }}</td>
-                            <td>{{ afericao.valor }}</td>
-                            <td>
-                                {% if afericao.status == 'Aprovado' %}
-                                    <span style="color: #28a745; font-weight: bold;">SIM</span>
-                                {% else %}
-                                    <span style="color: #dc3545; font-weight: bold;">NÃO</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ calibracao.data_afericao|date:"d/m/Y" }}</td>
-                            <td>{{ calibracao.nome_responsavel.nome }}</td>
-                        </tr>
-                        {% endfor %}
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-md-6 mb-2">
+          <div class="fw-semibold text-muted small mb-1">
+            <i class="bi bi-cpu me-1"></i> Número do Dispositivo
+          </div>
+          <div class="fs-6 fw-bold">{{ calibracoes.first.codigo_dispositivo.codigo }}</div>
         </div>
+      </div>
+      <div class="row text-center">
+        <div class="col-12">
+          <div class="fw-semibold text-muted small mb-1">
+            <i class="bi bi-rulers me-1"></i> Padrão Utilizado
+          </div>
+          <div class="fs-6 fw-bold">
+            {{ calibracoes.first.instrumento_utilizado.nome_equipamento }},
+            {{ calibracoes.first.instrumento_utilizado.capacidade_minima }} -
+            {{ calibracoes.first.instrumento_utilizado.capacidade_maxima }}
+            ({{ calibracoes.first.instrumento_utilizado.resolucao|floatformat:2 }})
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+
+  <!-- Desenho Técnico -->
+  <div class="desenho-tecnico text-center mb-4 mt-4">
+    {% if calibracoes.first.codigo_dispositivo.desenho_anexo %}
+      <img src="{{ calibracoes.first.codigo_dispositivo.desenho_anexo.url }}" alt="Desenho técnico do dispositivo" class="img-desenho border">
     {% else %}
-        <p class="text-muted text-center">Nenhuma calibração encontrada para este dispositivo.</p>
+      <p class="text-muted"><i class="bi bi-image me-1"></i> Nenhum desenho técnico anexado para este dispositivo.</p>
     {% endif %}
+  </div>
+
+  <!-- Tabela de Aferições -->
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-light text-center fw-bold">
+      <i class="bi bi-list-check me-2"></i>Resultados de Aferição
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle text-center mb-0">
+          <thead class="table-light">
+            <tr>
+                <th scope="col" class="align-middle text-center"><i class="bi bi-tag me-1"></i> Cota (Número)</th>
+                <th scope="col" class="align-middle text-center"><i class="bi bi-tools me-1"></i> Padrão Utilizado</th>
+                <th scope="col" class="align-middle text-center"><i class="bi bi-123 me-1"></i> Valor Encontrado</th>
+                <th scope="col" class="align-middle text-center"><i class="bi bi-check-circle me-1"></i> Aprovado</th>
+                <th scope="col" class="align-middle text-center"><i class="bi bi-calendar-event me-1"></i> Data</th>
+                <th scope="col" class="align-middle text-center"><i class="bi bi-person-fill-check me-1"></i> Responsável</th>
+              </tr>
+              
+          </thead>
+          <tbody>
+            {% for calibracao in calibracoes %}
+              {% for afericao in calibracao.afericoes.all %}
+                <tr>
+                  <td>{{ afericao.cota.numero }}</td>
+                  <td>{{ calibracao.instrumento_utilizado.codigo }}</td>
+                  <td>{{ afericao.valor }}</td>
+                  <td>
+                    {% if afericao.status == 'Aprovado' %}
+                      <span class="badge bg-success rounded-pill px-3 py-2">
+                        ✔️ SIM
+                      </span>
+                    {% else %}
+                      <span class="badge bg-danger rounded-pill px-3 py-2">
+                        ❌ NÃO
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td>{{ calibracao.data_afericao|date:"d/m/Y" }}</td>
+                  <td>{{ calibracao.nome_responsavel.nome }}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+
+  {% else %}
+    {% include 'partials/global/_sem_resultados.html' with item_nome="calibração" %}
+  {% endif %}
+
 </div>
 
- <!-- Número do Formulário (visível apenas na impressão) -->
- <div class="numero-formulario d-none d-print-block">
-    F55 Rev.02
-</div>
+<!-- Rodapé institucional -->
+{% include 'partials/global/_formulario_rodape.html' with numero_formulario="F55 Rev.02" %}
+
+
+
 <style>
     @media print {
-        .d-print-none { display: none !important; }
-        .numero-formulario {
+        .informacoes-gerais-card .row {
+          display: flex !important;
+          flex-direction: row !important;
+          flex-wrap: nowrap !important;
+          justify-content: space-between !important;
+        }
+      
+        .informacoes-gerais-card .col-md-6 {
+            width: 48% !important;
+            display: inline-block !important;
+            vertical-align: top !important;
+          }
+      
+        .informacoes-gerais-card .row.mb-3 {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            gap: 2rem !important;
+            flex-wrap: wrap !important;
+          }
+        .rodape-barra {
+            position: fixed;
+            bottom: 28px;
+            left: 10mm;
+            right: 10mm;
+            border-top: 1px solid #000;
+            height: 0;
+            display: block !important;
+          }
+        
+          .rodape-institucional {
             position: fixed;
             bottom: 10px;
-            right: 10px;
-            font-size: 10px;
-            color: #333;
-        }
+            left: 10mm;
+            font-size: 9pt;
+            font-style: italic;
+            color: #555;
+            display: block !important;
+          }
+        
+          .rodape-formulario {
+            position: fixed;
+            bottom: 10px;
+            right: 10mm;
+            font-weight: bold;
+            font-size: 9pt;
+            color: #000;
+            display: block !important;
+          }
+      }
+      
+      
+      
 </style>
-
-
-<script>
-function imprimir() {
-    var conteudo = document.querySelector('.container').innerHTML;
-    var novaJanela = window.open('', '_blank', 'width=800,height=600');
-    
-    novaJanela.document.write(`
-        <html>
-            <head>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        margin: 20px;
-                    }
-
-                    /* Logo do cabeçalho (ajuste o tamanho desejado) */
-                    .logo-cabecalho {
-                        width: 80px; /* Tamanho normal */
-                        height: auto;
-                        display: block;
-                        margin: 0 auto; /* Centraliza horizontalmente a imagem dentro da célula */
-                    }
-
-                    .header {
-                        margin-bottom: 20px; 
-                        text-align: center;
-                    }
-                    .numero-formulario {
-                        position: fixed;
-                        bottom: 10px;
-                        right: 10px;
-                        font-size: 10px;
-                        color: #333;
-                    }
-
-                    .custom-table td {
-                        border: 1px solid black;
-                        padding: 5px;
-                    }
-
-                    .desenho-tecnico {
-                        text-align: center;
-                        margin-top: 20px; 
-                        margin-bottom: 20px;
-                    }
-
-                    /* Desenho técnico com tamanho e centralização */
-                    .img-desenho {
-                        max-width: 800px;
-                        height: auto;
-                        border: 1px solid #000;
-                        display: block;
-                        margin: 0 auto; /* Centralizar a imagem */
-                    }
-
-                  
-
-                    .table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        border: 1px solid #000;
-                        margin-bottom: 20px;
-                        margin-top: 20px;
-                    }
-
-                    .table th, .table td {
-                        border: 1px solid #000;
-                        padding: 8px;
-                        text-align: center;
-                        font-size: 10px;
-                    }
-
-                    /* Ajuste se quiser aumentar/diminuir o texto */
-                    .table th {
-                        font-weight: bold;
-                    }
-
-                    @media print {
-                        body {
-                            margin: 0;
-                            padding: 0;
-                        }
-
-                        .d-print-none {
-                            display: none !important;
-                        }
-
-                        /* Logo menor na impressão */
-                        .logo-cabecalho {
-                            width: 60px !important; 
-                        }
-
-                        .table th, .table td {
-                            font-size: 9px; /* Se quiser diminuir mais */
-                        }
-
-                        .img-desenho {
-                            max-width: 400px; /* Reduz um pouco no papel */
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                ${conteudo}
-                <div class="numero-formulario">F055 Rev.02</div>
-            </body>
-        </html>
-    `);
-    
-    novaJanela.document.close();
-    novaJanela.onload = function () {
-        novaJanela.print();
-        novaJanela.close();
-    };
-}
-</script>
 
 {% endblock %}

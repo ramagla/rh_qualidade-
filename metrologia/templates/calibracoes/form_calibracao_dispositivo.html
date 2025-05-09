@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if edicao %}Editar Calibração de Dispositivo{% else %}Cadastrar Calibração de Dispositivo{% endif %}{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_header_titulo.html' with titulo=edicao|yesno:'Editar Calibração de Dispositivo,Cadastrar Calibração de Dispositivo' icone="bi bi-tools" emoji="🔧" %}
+
+<div class="container mt-4">
+  <form method="POST" action="">
+    {% csrf_token %}
+    {% include 'partials/global/_form_errors.html' %}
+
+    <div class="accordion" id="accordionFormulario">
+      <!-- Seção 1: Identificação do Dispositivo -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingIdentificacao">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentificacao" aria-expanded="true" aria-controls="collapseIdentificacao">
+            <i class="bi bi-upc-scan me-2"></i>🔢 Identificação do Dispositivo
+          </button>
+        </h2>
+        <div id="collapseIdentificacao" class="accordion-collapse collapse show" data-bs-parent="#accordionFormulario">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="codigo_dispositivo" class="form-label">
+                <i class="bi bi-upc"></i> Código do Dispositivo:
+              </label>
+              {{ form.codigo_dispositivo|add_class:"form-select select2" }}
+            </div>
+
+            <div class="col-md-6">
+              <label for="codigo_peca" class="form-label">
+                <i class="bi bi-tag"></i> Código da Peça:
+              </label>
+              <input type="text" id="codigo_peca" class="form-control" value="{{ form.instance.codigo_peca }}" readonly aria-describedby="ajuda-codigo-peca">
+              <div id="ajuda-codigo-peca" class="form-text">Campo preenchido automaticamente</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 2: Informações de Calibração -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingCalibracao">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCalibracao" aria-expanded="false" aria-controls="collapseCalibracao">
+            <i class="bi bi-clipboard-check me-2"></i>🔢 Detalhes da Calibração
+          </button>
+        </h2>
+        <div id="collapseCalibracao" class="accordion-collapse collapse" data-bs-parent="#accordionFormulario">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="instrumento_utilizado" class="form-label">
+                <i class="bi bi-rulers"></i> Instrumento:
+              </label>
+              {{ form.instrumento_utilizado|add_class:"form-select select2" }}
+            </div>
+
+            <div class="col-md-6">
+              <label for="nome_responsavel" class="form-label">
+                <i class="bi bi-person-badge"></i> Nome do Responsável:
+              </label>
+              {{ form.nome_responsavel|add_class:"form-select select2" }}
+            </div>
+
+            <div class="col-md-6">
+              <label for="data_afericao" class="form-label">
+                <i class="bi bi-calendar-date"></i> Data da Aferição:
+              </label>
+              {{ form.data_afericao|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-6">
+              <label for="desenho_miniatura" class="form-label">
+                <i class="bi bi-image"></i> Desenho do Dispositivo:
+              </label>
+              <div id="desenho_miniatura" class="border p-2 text-center" style="height: 200px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#imagemModal">
+                <p class="text-muted">Selecione um dispositivo para visualizar o desenho.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 3: Cotas -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingCotas">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCotas" aria-expanded="false" aria-controls="collapseCotas">
+            <i class="bi bi-list-check me-2"></i>🧹 Cotas Aferidas
+          </button>
+        </h2>
+        <div id="collapseCotas" class="accordion-collapse collapse" data-bs-parent="#accordionFormulario">
+          <div class="accordion-body">
+            <fieldset>
+              <legend class="visually-hidden">Cotas</legend>
+              <div id="cotas-container" class="row">
+                <p>Selecione um dispositivo para carregar as cotas associadas.</p>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 4: Observações -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingObs">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseObs" aria-expanded="false" aria-controls="collapseObs">
+            <i class="bi bi-chat-text me-2"></i>💬 Observações
+          </button>
+        </h2>
+        <div id="collapseObs" class="accordion-collapse collapse" data-bs-parent="#accordionFormulario">
+          <div class="accordion-body">
+            <label for="observacoes" class="form-label">
+              <i class="bi bi-info-circle"></i> Comentários Adicionais:
+            </label>
+            {{ form.observacoes|add_class:"form-control" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=False url_voltar='lista_calibracoes_dispositivos' %}
+  </form>
+</div>
+
+<!-- Modal de Imagem -->
+<div class="modal fade" id="imagemModal" tabindex="-1" aria-labelledby="imagemModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imagemModalLabel">Desenho do Dispositivo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="imagem_ampliada" src="" alt="Desenho Ampliado" style="max-width: 100%; max-height: 500px;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const selectDispositivo = $("#id_codigo_dispositivo");
+      const codigoPecaInput = document.getElementById("codigo_peca");
+      const cotasContainer = document.getElementById("cotas-container");
+      const desenhoMiniatura = document.getElementById("desenho_miniatura");
+      const imagemAmpliada = document.getElementById("imagem_ampliada");
+      const calibracaoId = "{{ calibracao.id|default:'' }}"; // só tem valor na edição
+  
+      // Inicializar Select2
+      selectDispositivo.select2({
+        placeholder: "Selecione um dispositivo",
+        allowClear: true
+      });
+  
+      // Evento ao mudar o dispositivo
+      selectDispositivo.on("change", function () {
+        const dispositivoId = $(this).val();
+        if (!dispositivoId) {
+          // Reset
+          codigoPecaInput.value = "";
+          desenhoMiniatura.innerHTML = `<p class="text-muted">Selecione um dispositivo para visualizar o desenho.</p>`;
+          imagemAmpliada.removeAttribute("data-src");
+          cotasContainer.innerHTML = "<p>Selecione um dispositivo para carregar as cotas associadas.</p>";
+          return;
+        }
+  
+        let url = `/metrologia/get_dispositivo_info/${dispositivoId}/`;
+        if (calibracaoId) {
+          url += `?calibracao_id=${calibracaoId}`;
+        }
+  
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            // Código da Peça
+            codigoPecaInput.value = data.codigo_peca || "";
+  
+            // Miniatura do Desenho
+            if (data.desenho_url) {
+              desenhoMiniatura.innerHTML = `<img src="${data.desenho_url}" alt="Desenho do dispositivo" class="img-fluid h-100" style="object-fit: contain;">`;
+              imagemAmpliada.setAttribute("data-src", data.desenho_url);
+            } else {
+              desenhoMiniatura.innerHTML = `<p class="text-muted">Nenhum desenho disponível para este dispositivo.</p>`;
+              imagemAmpliada.removeAttribute("data-src");
+            }
+  
+            // Cotas
+            cotasContainer.innerHTML = "";
+            data.cotas.forEach((cota) => {
+              const row = document.createElement("div");
+              row.className = "col-md-6 mb-3";
+              row.innerHTML = `
+                <label for="afericao_${cota.numero}" class="form-label">
+                  <i class="bi bi-arrow-right-circle me-1"></i> Aferição para Cota ${cota.numero}:
+                </label>
+                <input type="text" class="form-control" id="afericao_${cota.numero}" 
+                  name="afericoes[${cota.numero}]"
+                  value="${cota.valor_aferido || ''}"
+                  data-min="${cota.valor_minimo}" 
+                  data-max="${cota.valor_maximo}" 
+                  autocomplete="off">
+                <small>Entre ${cota.valor_minimo} e ${cota.valor_maximo}</small>
+                <div id="status_${cota.numero}" class="mt-2 text-muted" role="status" aria-live="polite">Status: Pendente</div>
+              `;
+              cotasContainer.appendChild(row);
+  
+              // Validação dinâmica
+              const afericaoInput = document.getElementById(`afericao_${cota.numero}`);
+              afericaoInput.addEventListener("input", function () {
+                const valor = parseFloat(this.value.replace(',', '.'));
+                const statusDiv = document.getElementById(`status_${cota.numero}`);
+                const min = parseFloat(this.dataset.min);
+                const max = parseFloat(this.dataset.max);
+  
+                if (!isNaN(valor) && valor >= min && valor <= max) {
+                  statusDiv.textContent = "Status: Aprovado";
+                  statusDiv.className = "mt-2 text-success";
+                } else {
+                  statusDiv.textContent = "Status: Reprovado";
+                  statusDiv.className = "mt-2 text-danger";
+                }
+              });
+            });
+          })
+          .catch(error => {
+            console.error("Erro ao buscar informações do dispositivo:", error);
+          });
+      });
+  
+      // Lazy-load da imagem ampliada no modal
+      const modal = document.getElementById("imagemModal");
+      modal.addEventListener("show.bs.modal", function () {
+        const src = imagemAmpliada.getAttribute("data-src");
+        if (src) {
+          imagemAmpliada.src = src;
+        }
+      });
+      modal.addEventListener("hidden.bs.modal", function () {
+        imagemAmpliada.removeAttribute("src");
+      });
+  
+      // 🔁 Forçar carregamento automático na edição
+      if (selectDispositivo.val()) {
+        selectDispositivo.trigger("change");
+      }
+    });
+  </script>
+  
+  
+{% endblock %}

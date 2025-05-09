@@ -71,82 +71,79 @@ def lista_calibracoes_dispositivos(request):
 
     return render(request, "calibracoes/lista_calibracoes_dispositivos.html", context)
 
+def salvar_calibracao_dispositivo(request, pk=None):
+    if pk:
+        calibracao = get_object_or_404(CalibracaoDispositivo, pk=pk)
+        titulo = "Editar Calibração de Dispositivo"
+        edicao = True
+    else:
+        calibracao = None
+        titulo = "Cadastrar Calibração de Dispositivo"
+        edicao = False
 
-def cadastrar_calibracao_dispositivo(request):
     if request.method == "POST":
-        print("Recebendo requisição POST")
-        form = CalibracaoDispositivoForm(request.POST)
+        form = CalibracaoDispositivoForm(request.POST, instance=calibracao)
 
         if form.is_valid():
             try:
-                print("Formulário válido. Iniciando salvamento...")
-
-                # Salvar a calibração de dispositivo
                 calibracao_dispositivo = form.save()
-                print(f"Calibração salva com sucesso: {calibracao_dispositivo}")
 
-                # Processar aferições associadas
                 for key, value in request.POST.items():
-                    print(f"Processando item: {key} -> {value}")
-                    if key.startswith("afericoes["):  # Filtra os dados das aferições
+                    if key.startswith("afericoes["):
                         cota_numero = key.split("[")[1].split("]")[0]
-                        print(f"Número da cota identificado: {cota_numero}")
-
                         if not cota_numero.isdigit():
                             raise ValueError(f"Número da cota inválido: {cota_numero}")
-
-                        # Buscar a cota associada ao dispositivo
                         cota = Cota.objects.filter(
                             numero=cota_numero,
                             dispositivo=calibracao_dispositivo.codigo_dispositivo,
                         ).first()
-
                         if not cota:
-                            print(
-                                f"Cota {cota_numero} não encontrada para o dispositivo."
-                            )
-                            raise Http404(
-                                f"Cota {cota_numero} não encontrada para o dispositivo especificado."
-                            )
+                            raise Http404(f"Cota {cota_numero} não encontrada.")
 
-                        # Converter o valor de string para float (substituindo vírgula por ponto)
                         valor = float(value.replace(",", ".")) if value else None
-                        print(f"Valor da aferição: {valor}")
-
-                        # Criar a aferição se o valor for válido
                         if valor is not None:
-                            afericao = Afericao.objects.create(
+                            Afericao.objects.update_or_create(
                                 calibracao_dispositivo=calibracao_dispositivo,
                                 cota=cota,
-                                valor=valor,
+                                defaults={"valor": valor}
                             )
-                            print(f"Aferição criada: {afericao}")
 
-                # Agora, após criar as aferições, atualizamos o status
                 calibracao_dispositivo.atualizar_status()
 
-                messages.success(request, "Calibração cadastrada com sucesso!")
-                print("Redirecionando para a lista de calibrações...")
-                # Redireciona para a lista
+                msg = "Calibração atualizada com sucesso!" if pk else "Calibração cadastrada com sucesso!"
+                messages.success(request, msg)
                 return redirect("lista_calibracoes_dispositivos")
 
             except Exception as e:
-                # Depuração em caso de erro
-                print(f"Erro durante o processamento: {e}")
                 messages.error(request, f"Erro ao processar calibração: {e}")
         else:
-            # Exibe erros de validação do formulário
-            print(f"Erros no formulário: {form.errors}")
-            messages.error(
-                request, "Erro no formulário. Verifique os campos e tente novamente."
-            )
+            messages.error(request, "Erro no formulário. Verifique os campos.")
     else:
-        print("Requisição GET recebida")
-        form = CalibracaoDispositivoForm()
+        form = CalibracaoDispositivoForm(instance=calibracao)
 
-    return render(
-        request, "calibracoes/cadastrar_calibracao_dispositivo.html", {"form": form}
-    )
+    dispositivo = calibracao.codigo_dispositivo if calibracao else None
+    codigo_peca = dispositivo.codigo[:-2] if dispositivo and len(dispositivo.codigo) > 2 else ""
+    desenho_url = dispositivo.desenho_anexo.url if dispositivo and dispositivo.desenho_anexo else None
+    afericoes = calibracao.afericoes.all() if calibracao else []
+
+    context = {
+        "form": form,
+        "calibracao": calibracao,
+        "titulo_pagina": titulo,
+        "codigo_peca": codigo_peca,
+        "desenho_url": desenho_url,
+        "afericoes": afericoes,
+        "edicao": edicao,
+        "url_voltar": "lista_calibracoes_dispositivos",
+        "param_id": None,
+    }
+    return render(request, "calibracoes/form_calibracao_dispositivo.html", context)
+
+
+
+def cadastrar_calibracao_dispositivo(request):
+    return salvar_calibracao_dispositivo(request)
+
 
 
 @csrf_exempt
@@ -154,64 +151,32 @@ def get_dispositivo_info(request, dispositivo_id):
     dispositivo = get_object_or_404(Dispositivo, id=dispositivo_id)
     cotas = Cota.objects.filter(dispositivo=dispositivo)
 
-    data = {
-        "codigo_peca": (
-            dispositivo.codigo[:-2]
-            if len(dispositivo.codigo) > 2
-            else dispositivo.codigo
-        ),
-        "desenho_url": (
-            dispositivo.desenho_anexo.url if dispositivo.desenho_anexo else None
-        ),
-        "cotas": [
-            {
-                "numero": cota.numero,
-                "valor_minimo": float(cota.valor_minimo),
-                "valor_maximo": float(cota.valor_maximo),
-            }
-            for cota in cotas
-        ],
-    }
-    return JsonResponse(data)
+    # Tenta identificar a calibração atual (modo edição)
+    afericoes_dict = {}
+    calibracao_id = request.GET.get("calibracao_id")
+    if calibracao_id:
+        afericoes = Afericao.objects.filter(calibracao_dispositivo_id=calibracao_id)
+        afericoes_dict = {str(a.cota.numero): float(a.valor) for a in afericoes}
+
+    cotas_data = []
+    for cota in cotas:
+        cotas_data.append({
+            "numero": cota.numero,
+            "valor_minimo": float(cota.valor_minimo),
+            "valor_maximo": float(cota.valor_maximo),
+            "valor_aferido": afericoes_dict.get(str(cota.numero))
+        })
+
+    return JsonResponse({
+        "codigo_peca": dispositivo.codigo[:-2] if len(dispositivo.codigo) > 2 else dispositivo.codigo,
+        "desenho_url": dispositivo.desenho_anexo.url if dispositivo.desenho_anexo else None,
+        "cotas": cotas_data
+    })
 
 
 def editar_calibracao_dispositivo(request, pk):
-    calibracao = get_object_or_404(CalibracaoDispositivo, pk=pk)
-    afericoes = calibracao.afericoes.all()
+    return salvar_calibracao_dispositivo(request, pk=pk)
 
-    if request.method == "POST":
-        form = CalibracaoDispositivoForm(request.POST, instance=calibracao)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Calibração atualizada com sucesso!")
-            # Use reverse para garantir a URL correta
-            return redirect(reverse("lista_calibracoes_dispositivos"))
-        else:
-            messages.error(
-                request, "Erro ao atualizar calibração. Verifique os dados informados."
-            )
-    else:
-        form = CalibracaoDispositivoForm(instance=calibracao)
-
-    dispositivo = calibracao.codigo_dispositivo
-    codigo_peca = (
-        dispositivo.codigo[:-2]
-        if dispositivo and len(dispositivo.codigo) > 2
-        else dispositivo.codigo
-    )
-    desenho_url = dispositivo.desenho_anexo.url if dispositivo.desenho_anexo else None
-
-    print(f"Data carregada no formulário: {calibracao.data_afericao}")
-
-    context = {
-        "form": form,
-        "calibracao": calibracao,
-        "afericoes": afericoes,
-        "codigo_peca": codigo_peca,
-        "desenho_url": desenho_url,
-    }
-
-    return render(request, "calibracoes/editar_calibracao_dispositivo.html", context)
 
 
 def excluir_calibracao_dispositivo(request, id):

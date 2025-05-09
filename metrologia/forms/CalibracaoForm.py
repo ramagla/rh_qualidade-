@@ -15,10 +15,13 @@ class CalibracaoForm(forms.ModelForm):
 
     # Campo de data com seleção de calendário
     data_calibracao = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        widget=forms.DateInput(
+            attrs={"type": "date", "class": "form-control"},
+            format="%Y-%m-%d"  # formato compatível com input HTML5
+        ),
         label="Data da Calibração",
+        input_formats=["%Y-%m-%d"],  # também aceita esse formato na submissão
     )
-
     class Meta:
         model = Calibracao
         fields = [

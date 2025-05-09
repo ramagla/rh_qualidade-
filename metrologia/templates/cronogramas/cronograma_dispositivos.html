@@ -1,205 +1,151 @@
 {% extends 'base.html' %}
-
-{% block content %}
 {% load tz %}
 {% now "Y-m-d" as hoje %}
 {% load custom_filters %}
 
+{% block content %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_estilos_impressao_paisagem.html' %}
+
 <div class="print-container container mt-5">
-    <!-- Cabeçalho -->
-    <div class="header header-table print-header text-center">
-        <table class="custom-header" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-                <td rowspan="2" style="text-align: center; vertical-align: middle; width: 10%; border: 1px solid #ddd;">
-                    <img src="/static/logo.png" alt="Logo" style="width: 50px; height: auto;">
-                </td>
-                <td colspan="5" style="text-align: center; font-weight: bold; font-size: 12px; vertical-align: middle; border: 1px solid #ddd;">
-                    CRONOGRAMA DE CALIBRAÇÃO DOS DISPOSITIVOS
-                </td>
-                <td rowspan="2" style="text-align: center; vertical-align: middle; width: 15%; border: 1px solid #ddd;">
-                    <strong>CR006 - Rev33</strong><br>
-                    <span>{{ data_atual }}</span>
-                </td>
-            </tr>
-            <tr>
-                <td style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
-                    <strong>Ano:</strong> {{ ano|default:"Todos os Anos" }}
-                </td>
-                <td colspan="4" style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
-                    <strong>Atualizado:</strong> Automaticamente
-                </td>
-            </tr>
-        </table>
+
+  {% include 'partials/global/_header_titulo.html' with titulo="Cronograma de Calibração dos Dispositivos" icone="bi bi-calendar-check-fill" emoji="📅" %}
+
+  <!-- Cabeçalho do relatório -->
+  <div class="header header-table print-header text-center">
+    <table class="custom-header" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+      <thead>
+        <tr>
+          <th rowspan="2" style="text-align: center; vertical-align: middle; width: 10%; border: 1px solid #ddd;">
+            <img src="/static/logo.png" alt="Logo" style="width: 50px; height: auto;">
+          </th>
+          <th colspan="5" style="text-align: center; font-weight: bold; font-size: 12px; vertical-align: middle; border: 1px solid #ddd;">
+            <i class="bi bi-calendar-week"></i> CRONOGRAMA DE CALIBRAÇÃO DOS DISPOSITIVOS
+          </th>
+          <th rowspan="2" style="text-align: center; vertical-align: middle; width: 15%; border: 1px solid #ddd;">
+            <strong>CR006 - Rev33</strong><br>
+            <time datetime="{{ hoje }}">{{ hoje }}</time>
+          </th>
+        </tr>
+        <tr>
+          <th style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
+            <i class="bi bi-calendar2-range"></i> <strong>Ano:</strong> {{ ano|default:"Todos os Anos" }}
+          </th>
+          <th colspan="4" style="text-align: left; padding-left: 10px; border: 1px solid #ddd;">
+            <i class="bi bi-arrow-clockwise"></i> <strong>Atualizado:</strong> Automaticamente
+          </th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+
+  <!-- Botão de Impressão -->
+  <div class="text-center mb-4 d-print-none">
+    {% include 'partials/global/_botao_impressao.html' %}
+  </div>
+
+  <!-- Card de Filtros -->
+  <div class="card shadow-sm mb-4 d-print-none">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+      <i class="bi bi-funnel-fill text-primary"></i>
+      <strong>Filtros de Pesquisa</strong>
     </div>
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label for="ano" class="form-label">
+            <i class="bi bi-calendar2 me-1"></i> Ano:
+          </label>
+          <select id="ano" name="ano" class="form-select" aria-label="Filtrar por ano">
+            <option value="">Todos</option>
+            {% for ano in anos_disponiveis %}
+              <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-    <!-- Botão de Impressão -->
-    <div class="text-center mb-4 d-print-none">
-        <button onclick="imprimir()" class="btn btn-primary">
-            <i class="fas fa-print"></i> Imprimir
-        </button>
+        <div class="col-md-3">
+          <label for="cliente" class="form-label">
+            <i class="bi bi-person-badge me-1"></i> Cliente:
+          </label>
+          <select id="cliente" name="cliente" class="form-select" aria-label="Filtrar por cliente">
+            <option value="">Todos</option>
+            {% for cliente in clientes_disponiveis %}
+              <option value="{{ cliente }}" {% if cliente == request.GET.cliente %}selected{% endif %}>{{ cliente }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </form>
     </div>
+  </div>
 
-    <!-- Filtros -->
-    <form method="GET" class="row mb-4 d-print-none">
-        <div class="col-md-3 mb-3">
-            <label for="ano" class="form-label">Ano:</label>
-            <select id="ano" name="ano" class="form-select">
-                <option value="">Todos</option>
-                {% for ano in anos_disponiveis %}
-                    <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <label for="cliente" class="form-label">Cliente:</label>
-            <select id="cliente" name="cliente" class="form-select">
-                <option value="">Todos</option>
-                {% for cliente in clientes_disponiveis %}
-                    <option value="{{ cliente }}" {% if cliente == request.GET.cliente %}selected{% endif %}>{{ cliente }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-3 d-flex align-items-end mb-3">
-            <button type="submit" class="btn btn-primary w-100">
-                <i class="bi bi-funnel"></i> Filtrar
-            </button>
-        </div>
-    </form>
-
+  {% if dispositivos %}
     <div class="table-responsive">
-        <table class="custom-table table-bordered table-striped text-center align-middle">
-            <thead class="table-primary">
-                <tr>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Código do Dispositivo</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Quantidade</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Cliente</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Descrição</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Estudo Realizado</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Data da Última Calibração</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Próxima Calibração</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Última Saída</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Data de Retorno</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Setor</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Situação</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Observações</th>
-                    <th class="text-center align-middle" style="white-space: pre-line;">Local de Armazenagem</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for dispositivo in dispositivos %}
-                <tr>
-                    <td>{{ dispositivo.codigo }}</td>
-                    <td>{{ dispositivo.qtde }}</td>
-                    <td>{{ dispositivo.cliente }}</td>
-                    <td>{{ dispositivo.descricao }}</td>
-                    <td>{{ dispositivo.estudo_realizado }}</td>
-                    <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
-                    <td>
-                        {% if dispositivo.data_proxima_calibracao %}
-                            {% with dispositivo.data_proxima_calibracao as data_calibracao %}
-                                {% if data_calibracao < today %}
-                                    <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
-                                {% elif data_calibracao <= today|add_days:31 %}
-                                    <span class="badge bg-warning">{{ data_calibracao|date:"d/m/Y" }}</span>
-                                {% else %}
-                                    <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
-                                {% endif %}
-                            {% endwith %}
-                        {% else %}
-                            <span class="text-muted">Não definida</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ dispositivo.data_ultima_saida|date:"d/m/Y" }}</td>
-                    <td>{{ dispositivo.data_retorno|date:"d/m/Y" }}</td>
-                    <td>{{ dispositivo.setor }}</td>
-                    <td>
-                        {% if dispositivo.situacao %}
-                            {% if dispositivo.situacao == "OK" %}
-                                <span class="badge bg-success">OK</span>
-                            {% else %}
-                                <span class="badge bg-danger">N/OK</span>
-                            {% endif %}
-                        {% endif %}
-                    </td>
-                    <td>{{ dispositivo.observacoes | safe }}</td>
-                    <td>{{ dispositivo.local_armazenagem }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <table class="custom-table table table-bordered table-striped table-hover text-center align-middle">
+        <thead class="table-primary">
+          <tr>
+            <th scope="col" class="align-middle"><i class="bi bi-upc-scan me-1"></i> Código</th>
+            <th scope="col" class="align-middle"><i class="bi bi-hash me-1"></i> Qtde</th>
+            <th scope="col" class="align-middle"><i class="bi bi-person me-1"></i> Cliente</th>
+            <th scope="col" class="align-middle"><i class="bi bi-info-circle me-1"></i> Descrição</th>
+            <th scope="col" class="align-middle"><i class="bi bi-clipboard2-check me-1"></i> Estudo</th>
+            <th scope="col" class="align-middle"><i class="bi bi-calendar-check me-1"></i> Última Calibração</th>
+            <th scope="col" class="align-middle"><i class="bi bi-calendar-event me-1"></i> Próxima</th>
+            <th scope="col" class="align-middle"><i class="bi bi-box-arrow-right me-1"></i> Última Saída</th>
+            <th scope="col" class="align-middle"><i class="bi bi-box-arrow-in-left me-1"></i> Retorno</th>
+            <th scope="col" class="align-middle"><i class="bi bi-diagram-3 me-1"></i> Setor</th>
+            <th scope="col" class="align-middle"><i class="bi bi-activity me-1"></i> Situação</th>
+            <th scope="col" class="align-middle"><i class="bi bi-building me-1"></i> Armazenagem</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dispositivo in dispositivos %}
+            <tr>
+              <td>{{ dispositivo.codigo }}</td>
+              <td>{{ dispositivo.qtde }}</td>
+              <td>{{ dispositivo.cliente }}</td>
+              <td>{{ dispositivo.descricao }}</td>
+              <td>{{ dispositivo.estudo_realizado }}</td>
+              <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
+              <td>
+                {% if dispositivo.data_proxima_calibracao %}
+                  {% with dispositivo.data_proxima_calibracao as data_calibracao %}
+                    {% if data_calibracao < hoje %}
+                      <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
+                    {% elif data_calibracao <= hoje|add_days:31 %}
+                      <span class="badge bg-warning text-dark">{{ data_calibracao|date:"d/m/Y" }}</span>
+                    {% else %}
+                      <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
+                    {% endif %}
+                  {% endwith %}
+                {% else %}
+                  <span class="text-muted">Não definida</span>
+                {% endif %}
+              </td>
+              <td>{{ dispositivo.data_ultima_saida|date:"d/m/Y" }}</td>
+              <td>{{ dispositivo.data_retorno|date:"d/m/Y" }}</td>
+              <td>{{ dispositivo.setor }}</td>
+              <td>
+                {% if dispositivo.situacao == "OK" %}
+                  <span class="badge bg-success">OK</span>
+                {% else %}
+                  <span class="badge bg-danger">N/OK</span>
+                {% endif %}
+              </td>
+              <td>{{ dispositivo.local_armazenagem }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    
-    <style>
-        /* Tabela customizada */
-        .custom-table {
-            width: 100%;
-            table-layout: fixed;
-            border-collapse: collapse;
-            border: 1px solid #ddd; /* Linhas externas da tabela */
-        }
+  {% else %}
+    {% include 'partials/global/_sem_resultados.html' with item_nome="dispositivo" %}
+  {% endif %}
 
-        .custom-table th, .custom-table td {
-            border: 1px solid #ddd; /* Linhas internas da tabela */
-            padding: 5px;
-            text-align: center; /* Centraliza horizontalmente */
-            vertical-align: middle; /* Centraliza verticalmente */
-            font-size: 10px; /* Tamanho consistente */
-        }
+  {% include 'partials/global/_formulario_rodape.html' with numero_formulario="CR006 - Rev33" %}
 
-        /* Ajuste para cabeçalhos */
-        .custom-table th {
-            background-color: #f5f5f5; /* Fundo para destacar o cabeçalho */
-            font-weight: bold;
-        }
+</div>
 
-        /* Ajustes para impressão */
-        @media print {
-            * {
-                -webkit-print-color-adjust: exact; /* Garante as cores na impressão */
-                color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            .d-print-none {
-                display: none !important; /* Esconde elementos desnecessários */
-            }
-
-            .custom-table th, .custom-table td {
-                font-size: 8px; /* Fonte menor para impressão */
-                padding: 3px; /* Reduz espaçamento */
-            }
-        }
-    </style>
-
-    <script>
-        function imprimir() {
-            const conteudo = document.querySelector('.print-container').innerHTML;
-            const novaJanela = window.open('', '_blank', 'width=800,height=600');
-            novaJanela.document.write(`
-                <!DOCTYPE html>
-                <html lang="pt-br">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>Cronograma de Dispositivos</title>
-                        <link rel="stylesheet" href="/static/css/styles.css"> <!-- Link para o CSS -->
-                        <style>
-                            @page { size: A4 landscape; margin: 10mm; }
-                            body { margin: 0; padding: 0; }
-                            .d-print-none { display: none !important; } /* Oculta elementos desnecessários */
-                        </style>
-                    </head>
-                    <body>${conteudo}</body>
-                </html>
-            `);
-            novaJanela.document.close();
-            novaJanela.onload = () => {
-                novaJanela.print();
-                novaJanela.close();
-            };
-        }
-    </script>
-    
 {% endblock %}

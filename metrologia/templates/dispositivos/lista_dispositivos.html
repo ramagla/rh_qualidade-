@@ -2,242 +2,157 @@
 {% load widget_tweaks %}
 {% load custom_filters %}
 
-
 {% block title %}Lista de Dispositivos{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Lista de Dispositivos</h2>
+{% include 'partials/global/_header_titulo.html' with titulo="Lista de Dispositivos" icone="bi bi-hdd-rack" emoji="🧰" %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_toast_mensagens.html' %}
 
-    <!-- Botão para cadastrar novo dispositivo -->
-    <div class="d-flex justify-content-end mb-4">
-        {% if request.user|has_permission:"metrologia.add_dispositivo" %}
+<div class="container">
 
-        <a href="{% url 'cadastrar_dispositivo' %}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Novo Dispositivo
-        </a>
-        {% endif %}
+  <!-- Filtros -->
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary"></i>
+    <strong>Filtros de Pesquisa</strong>
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label for="codigo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código:</label>
+        <select name="codigo" id="codigo" class="form-select select2">
+          <option value="">Todos</option>
+          {% for codigo in codigos_disponiveis %}
+            <option value="{{ codigo }}" {% if request.GET.codigo == codigo %}selected{% endif %}>{{ codigo }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-    </div>
+      <div class="col-md-3">
+        <label for="cliente" class="form-label"><i class="bi bi-person-badge me-1"></i> Cliente:</label>
+        <select name="cliente" id="cliente" class="form-select select2">
+          <option value="">Todos</option>
+          {% for cliente in clientes_disponiveis %}
+            <option value="{{ cliente }}" {% if request.GET.cliente == cliente %}selected{% endif %}>{{ cliente }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-    <form method="get" class="row g-3 mb-4 align-items-end">
-        <!-- Código -->
-        <div class="col-md-3">
-            <label for="codigo" class="form-label">Código:</label>
-            <select name="codigo" id="codigo" class="form-select select2">
-                <option value="">Todos</option>
-                {% for codigo in codigos_disponiveis %}
-                    <option value="{{ codigo }}" {% if request.GET.codigo == codigo %}selected{% endif %}>
-                        {{ codigo }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-    
-        <!-- Cliente -->
-        <div class="col-md-3">
-            <label for="cliente" class="form-label">Cliente:</label>
-            <select name="cliente" id="cliente" class="form-select select2">
-                <option value="">Todos</option>
-                {% for cliente in clientes_disponiveis %}
-                    <option value="{{ cliente }}" {% if request.GET.cliente == cliente %}selected{% endif %}>
-                        {{ cliente }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-    
-        <!-- Local de Armazenagem -->
-        <div class="col-md-3">
-            <label for="local_armazenagem" class="form-label">Local de Armazenagem:</label>
-            <select name="local_armazenagem" id="local_armazenagem" class="form-select select2">
-                <option value="">Todos</option>
-                {% for local in locais_disponiveis %}
-                    <option value="{{ local }}" {% if request.GET.local_armazenagem == local %}selected{% endif %}>
-                        {{ local }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-    
-        <!-- Data de Início -->
-        <div class="col-md-3">
-            <label for="data_inicio" class="form-label">Data Início:</label>
-            <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
-        </div>
-    
-        <!-- Data de Fim -->
-        <div class="col-md-3">
-            <label for="data_fim" class="form-label">Data Fim:</label>
-            <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
-        </div>
-    
-        <!-- Botão de Filtrar -->
-        <div class="col-md-3 d-flex align-items-end justify-content-end">
-            <button type="submit" class="btn btn-primary btn-block">
-                <i class="bi bi-funnel"></i> Filtrar
-            </button>
-        </div>
+      <div class="col-md-3">
+        <label for="local_armazenagem" class="form-label"><i class="bi bi-geo-alt me-1"></i> Local:</label>
+        <select name="local_armazenagem" id="local_armazenagem" class="form-select select2">
+          <option value="">Todos</option>
+          {% for local in locais_disponiveis %}
+            <option value="{{ local }}" {% if request.GET.local_armazenagem == local %}selected{% endif %}>{{ local }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label for="data_inicio" class="form-label"><i class="bi bi-calendar me-1"></i> Data Início:</label>
+        <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+      </div>
+
+      <div class="col-md-3">
+        <label for="data_fim" class="form-label"><i class="bi bi-calendar2-week me-1"></i> Data Fim:</label>
+        <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+      </div>
+
+      {% include 'partials/global/_botao_filtrar.html' %}
     </form>
-    
-    
-
-
-
-   <!-- Cards para estatísticas -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card text-white bg-primary h-100">
-            <div class="card-header text-center">Total de Dispositivos</div>
-            <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                <h5 class="card-title">{{ total_dispositivos }}</h5>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-danger h-100">
-            <div class="card-header text-center">
-                <i class="bi bi-x-circle"></i> Fora do Prazo
-            </div>
-            <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                <h5 class="card-title text-center">{{ total_fora_prazo }}</h5>
-                <p class="card-text text-center">Dispositivos com calibração vencida.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-warning h-100">
-            <div class="card-header text-center">
-                <i class="bi bi-exclamation-circle"></i> Próximo do Prazo
-            </div>
-            <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                <h5 class="card-title text-center">{{ total_proximo_prazo }}</h5>
-                <p class="card-text text-center">Dispositivos próximos do vencimento.</p>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
 
-    
-    
+  <!-- Botão Novo -->
+  <div class="d-flex justify-content-end mb-4">
+    {% if request.user|has_permission:"metrologia.add_dispositivo" %}
+      <a href="{% url 'cadastrar_dispositivo' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Novo Dispositivo
+      </a>
+    {% endif %}
+  </div>
 
-   <!-- Tabela de dispositivos -->
-<table class="table table-bordered text-center align-middle small-text-table">
-    <thead>
-        <tr>
-            <th>Código</th>
-            <th>Quantidade</th>
-            <th>Cliente</th>
-            <th>Descrição</th>
-            <th>Local de Armazenagem</th>
-            <th>Data da Última Calibração</th>
-            <th>Data da Próxima Calibração</th>
-            <th>Ações</th>
-        </tr>
+  <!-- Indicadores -->
+  <div class="row mb-4">
+    {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Dispositivos" valor=total_dispositivos subtitulo="Cadastrados no sistema" %}
+    {% include 'partials/global/_card_indicador.html' with cor="danger" titulo="Fora do Prazo" valor=total_fora_prazo subtitulo="Calibração vencida" %}
+    {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="Próximo do Prazo" valor=total_proximo_prazo subtitulo="Atenção urgente" %}
+  </div>
+
+  <!-- Tabela -->
+  <table class="table table-bordered text-center align-middle small-text-table">
+    <caption class="visually-hidden">Tabela de dispositivos cadastrados</caption>
+    <thead class="table-light">
+      <tr>
+        <th scope="col"><i class="bi bi-upc-scan"></i> Código</th>
+        <th scope="col"><i class="bi bi-stack"></i> Quantidade</th>
+        <th scope="col"><i class="bi bi-person"></i> Cliente</th>
+        <th scope="col"><i class="bi bi-file-text"></i> Descrição</th>
+        <th scope="col"><i class="bi bi-geo-alt-fill"></i> Local</th>
+        <th scope="col"><i class="bi bi-calendar-check"></i> Última Calibração</th>
+        <th scope="col"><i class="bi bi-calendar-event"></i> Próxima Calibração</th>
+        <th scope="col"><i class="bi bi-gear"></i> Ações</th>
+      </tr>
     </thead>
     <tbody>
-        {% for dispositivo in page_obj %}
-        <tr>
-            <td>{{ dispositivo.codigo }}</td>
-            <td>{{ dispositivo.qtde }}</td>
-            <td>{{ dispositivo.cliente }}</td>
-            <td>{{ dispositivo.descricao }}</td>
-            <td>{{ dispositivo.local_armazenagem }}</td>
-            <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
-            <td>
-                {% if dispositivo.data_ultima_calibracao %}
-                    {% with dispositivo.data_ultima_calibracao|add_months:dispositivo.frequencia_calibracao as proxima_calibracao %}
-                        {% if proxima_calibracao < today %}
-                            <span class="badge bg-danger small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
-                        {% elif proxima_calibracao <= today|add_days:31 %}
-                            <span class="badge bg-warning small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
-                        {% else %}
-                            <span class="badge bg-success small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
-                        {% endif %}
-                    {% endwith %}
-                {% else %}
-                    <span style="color: gray;">Não Informada</span>
-                {% endif %}
-            </td>
-            <td>
-                {% if request.user|has_permission:"metrologia.view_dispositivo" %}
-                <a href="{% url 'visualizar_dispositivo' dispositivo.id %}" class="btn btn-sm btn-secondary small-icon" title="Visualizar">
-                    <i class="bi bi-eye"></i>
-                </a>
-                {% endif %}
-                {% if request.user|has_permission:"metrologia.change_dispositivo" %}
-
-                <a href="{% url 'editar_dispositivo' dispositivo.id %}" class="btn btn-sm btn-primary small-icon" title="Editar">
-                    <i class="bi bi-pencil"></i>
-                </a>
-                {% endif %}
-                {% if request.user|has_permission:"metrologia.view_controleentradasaida" %}
-
-                <a href="{% url 'historico_movimentacoes' dispositivo.id %}" class="btn btn-sm btn-info small-icon" title="Registrar Entrada/Saída">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                </a>
-                {% endif %}
-
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="8">Nenhum dispositivo encontrado.</td>
-        </tr>
-        {% endfor %}
+      {% for dispositivo in page_obj %}
+      <tr>
+        <td>{{ dispositivo.codigo }}</td>
+        <td>{{ dispositivo.qtde }}</td>
+        <td>{{ dispositivo.cliente }}</td>
+        <td>{{ dispositivo.descricao }}</td>
+        <td>{{ dispositivo.local_armazenagem }}</td>
+        <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
+        <td>
+          {% if dispositivo.data_ultima_calibracao %}
+            {% with dispositivo.data_ultima_calibracao|add_months:dispositivo.frequencia_calibracao as proxima_calibracao %}
+              {% if proxima_calibracao < today %}
+                <span class="badge bg-danger small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
+              {% elif proxima_calibracao <= today|add_days:31 %}
+                <span class="badge bg-warning small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
+              {% else %}
+                <span class="badge bg-success small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
+              {% endif %}
+            {% endwith %}
+          {% else %}
+            <span class="text-muted">Não Informada</span>
+          {% endif %}
+        </td>
+        <td class="d-flex justify-content-center gap-1 flex-wrap">
+          {% if request.user|has_permission:"metrologia.view_dispositivo" %}
+            {% include 'partials/global/_botao_visualizar.html' with objeto=dispositivo url_visualizar='visualizar_dispositivo' %}
+          {% endif %}
+          {% if request.user|has_permission:"metrologia.change_dispositivo" %}
+            {% include 'partials/global/_botao_editar.html' with objeto=dispositivo url_editar='editar_dispositivo' %}
+          {% endif %}
+          {% if request.user|has_permission:"metrologia.view_controleentradasaida" %}
+            <a href="{% url 'historico_movimentacoes' dispositivo.id %}" class="btn btn-sm btn-info mt-1" title="Movimentações" aria-label="Registrar entrada ou saída">
+              <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+            </a>
+          {% endif %}
+          {% include 'partials/global/_botao_excluir.html' with objeto=dispositivo url_excluir='excluir_dispositivo' label="dispositivo" %}
+        </td>
+      </tr>
+      {% empty %}
+        {% include 'partials/global/_sem_resultados.html' with item_nome="dispositivo" %}
+      {% endfor %}
     </tbody>
-</table>
-<style>
-    /* Texto menor na tabela */
-    .small-text-table th, .small-text-table td {
-        font-size: 12px; /* Reduz o tamanho do texto */
-    }
-    
-    /* Tamanho menor para os badges */
-    .small-text-table .badge.small-text {
-        font-size: 10px;
-    }
-    
-    /* Ícones menores */
-    .small-icon i {
-        font-size: 14px; /* Ajusta o tamanho dos ícones */
-    }
-    </style>
-    
-    <!-- Paginação -->
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
-            </li>
-            {% endif %}
-            {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% else %}
-            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-            {% endif %}
-            {% endfor %}
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
+  </table>
+
+  {% include 'partials/global/_paginacao.html' %}
 </div>
 
-<!-- Select2 Scripts -->
+<!-- Scripts Select2 -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('.select2').select2({
-            placeholder: "Selecione uma opção",
-            allowClear: true
-        });
+  $(document).ready(function() {
+    $('.select2').select2({
+      placeholder: "Selecione uma opção",
+      allowClear: true
     });
+  });
 </script>
 {% endblock %}

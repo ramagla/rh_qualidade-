@@ -2,97 +2,119 @@
 {% load custom_filters %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center">Registrar Movimentação - {{ dispositivo.codigo }}</h2>
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Registrar Movimentação" icone="bi bi-arrow-left-right" emoji="🔄" %}
+{% include 'partials/global/_form_errors.html' %}
 
-    <!-- Formulário de Movimentação -->
-    <form method="post">
-        {% csrf_token %}
-        <div class="row g-3">
+<div class="container mt-4">
+  <form method="post">
+    {% csrf_token %}
+    {% include 'partials/global/_form_errors.html' %}
+
+    <div class="accordion" id="accordionMovimentacao">
+
+      <!-- Seção 1: Dados da Movimentação -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTipo">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTipo" aria-expanded="true" aria-controls="collapseTipo">
+            <i class="bi bi-arrow-left-right me-2"></i> 🔁 Tipo e Quantidade
+          </button>
+        </h2>
+        <div id="collapseTipo" class="accordion-collapse collapse show" aria-labelledby="headingTipo" data-bs-parent="#accordionMovimentacao">
+          <div class="accordion-body row g-3">
             <div class="col-md-6">
-                <label for="tipo_movimentacao" class="form-label">Tipo de Movimentação</label>
-                {{ form.tipo_movimentacao|add_class:"form-select" }}
+              <label for="tipo_movimentacao" class="form-label"><i class="bi bi-shuffle me-1"></i> Tipo de Movimentação</label>
+              {{ form.tipo_movimentacao|add_class:"form-select" }}
             </div>
             <div class="col-md-6">
-                <label for="quantidade" class="form-label">Quantidade</label>
-                {{ form.quantidade|add_class:"form-control" }}
+              <label for="quantidade" class="form-label"><i class="bi bi-hash me-1"></i> Quantidade</label>
+              {{ form.quantidade|add_class:"form-control" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 2: Colaborador -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingColaborador">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseColaborador" aria-expanded="false" aria-controls="collapseColaborador">
+            <i class="bi bi-person-badge me-2"></i> 👤 Colaborador e Setor
+          </button>
+        </h2>
+        <div id="collapseColaborador" class="accordion-collapse collapse" aria-labelledby="headingColaborador" data-bs-parent="#accordionMovimentacao">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="colaborador" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Colaborador</label>
+              {{ form.colaborador|add_class:"form-select select2" }}
             </div>
             <div class="col-md-6">
-                <label for="colaborador" class="form-label">Colaborador</label>
-                {{ form.colaborador|add_class:"form-select select2" }}
+              <label for="setor" class="form-label" title="Preenchido automaticamente com base no colaborador selecionado">
+                <i class="bi bi-building me-1"></i> Setor
+              </label>
+              <input type="text" id="id_setor" name="setor" class="form-control" readonly placeholder="Será preenchido automaticamente">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 3: Dados Adicionais -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOutros">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutros" aria-expanded="false" aria-controls="collapseOutros">
+            <i class="bi bi-calendar-plus me-2"></i> 🗓️ Data, Observação e Status
+          </button>
+        </h2>
+        <div id="collapseOutros" class="accordion-collapse collapse" aria-labelledby="headingOutros" data-bs-parent="#accordionMovimentacao">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="data_movimentacao" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data da Movimentação</label>
+              {{ form.data_movimentacao|add_class:"form-control" }}
             </div>
             <div class="col-md-6">
-                <label for="data_movimentacao" class="form-label">Data da Movimentação</label>
-                {{ form.data_movimentacao|add_class:"form-control" }}
+              <label for="status" class="form-label"><i class="bi bi-flag me-1"></i> Status</label>
+              {{ form.situacao|add_class:"form-select select2" }}
             </div>
             <div class="col-12">
-                <label for="observacao" class="form-label">Observação</label>
-                {{ form.observacao }}
+              <label for="observacao" class="form-label"><i class="bi bi-chat-text me-1"></i> Observação</label>
+              {{ form.observacao|add_class:"form-control" }}
             </div>
-            <div class="col-md-6">
-                <label for="setor" class="form-label">Setor</label>
-                <select id="id_setor" name="setor" class="form-select select2">
-                    <option value="">Selecione o setor</option>
-                    {% for setor in setores %}
-                    <option value="{{ setor }}">{{ setor }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="col-md-6">
-                <label for="status" class="form-label">Status</label>
-                {{ form.situacao|add_class:"form-select select2" }}
-            </div>
+          </div>
         </div>
+      </div>
+    </div>
 
-        <!-- Botões -->
-        <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-save"></i> Salvar
-            </button>
-            <a href="{% url 'historico_movimentacoes' dispositivo.id %}" class="btn btn-secondary ms-2">
-                <i class="bi bi-arrow-left"></i> Cancelar
-            </a>
-        </div>
-    </form>
+    <!-- Botões -->
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=False param_id=dispositivo.id url_voltar='historico_movimentacoes' %}
+  </form>
 </div>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const colaboradorSelect = document.getElementById("id_colaborador");
-        const setorInput = document.getElementById("id_setor");
+  document.addEventListener("DOMContentLoaded", function () {
+    const colaboradorSelect = document.getElementById("id_colaborador");
+    const setorInput = document.getElementById("id_setor");
 
-        if (colaboradorSelect && setorInput) {
-            console.log("Colaborador Select e Setor Input encontrados.");
+    if (colaboradorSelect && setorInput) {
+      $(colaboradorSelect).select2({
+        placeholder: "Selecione um colaborador",
+        allowClear: true
+      });
 
-            // Inicializa o Select2 para o campo colaborador
-            $(colaboradorSelect).select2({
-                placeholder: "Selecione um colaborador",
-                allowClear: true
-            });
-
-            colaboradorSelect.addEventListener("change", function () {
-                const funcionarioId = this.value;
-                console.log(`Funcionário selecionado: ${funcionarioId}`);
-
-                if (funcionarioId) {
-                    fetch(`/get_funcionario_info/${funcionarioId}/`)
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log("Dados recebidos da API:", data);
-                            setorInput.value = data.local_trabalho || "Setor não encontrado";
-                        })
-                        .catch(error => {
-                            console.error("Erro ao buscar informações do colaborador:", error);
-                            setorInput.value = "Erro ao carregar setor";
-                        });
-                } else {
-                    console.log("Nenhum funcionário selecionado.");
-                    setorInput.value = "";
-                }
+      colaboradorSelect.addEventListener("change", function () {
+        const funcionarioId = this.value;
+        if (funcionarioId) {
+          fetch(`/get_funcionario_info/${funcionarioId}/`)
+            .then(response => response.json())
+            .then(data => {
+              setorInput.value = data.local_trabalho || "Setor não encontrado";
+            })
+            .catch(error => {
+              setorInput.value = "Erro ao carregar setor";
             });
         } else {
-            console.error("Campos necessários não encontrados no DOM.");
+          setorInput.value = "";
         }
-    });
+      });
+    }
+  });
 </script>
 {% endblock %}

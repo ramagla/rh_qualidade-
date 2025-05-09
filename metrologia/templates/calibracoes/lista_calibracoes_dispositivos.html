@@ -1,375 +1,228 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
-{% load custom_filters %} 
+{% load custom_filters %}
 
 {% block title %}Lista de Calibrações de Dispositivos{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Lista de Calibrações de Dispositivos</h2>
+{% include 'partials/global/_styles_componentes.html' %}
 
-    <!-- Mensagens de alerta -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="toast align-items-center border-0"
-                     {% if message.tags == "error" %} style="background-color: #f8d7da; color: #842029;" {% else %} style="background-color: #d1e7dd; color: #0f5132;" {% endif %}
-                     role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <h4 class="alert-heading">{% if message.tags == "error" %}Atenção!{% else %}Sucesso!{% endif %}</h4>
-                            <p>{{ message }}</p>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endif %}
-    </div>
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Lista de Calibrações de Dispositivos" icone="bi bi-tools" emoji="🛠️" %}
 
-     <!-- Botões -->
-    <div class="d-flex justify-content-end mb-4">
-        {% if request.user|has_permission:"metrologia.add_calibracaodispositivo" %}
-        <a href="{% url 'cadastrar_calibracao_dispositivo' %}" class="btn btn-success me-2">
-            <i class="bi bi-plus-circle"></i> Nova Calibração
-        </a>
-        {% endif %}
-        {% if request.user|has_permission:"metrologia.view_calibracaodispositivo" %}
+<div class="container mt-4">
+  <!-- Botões superiores -->
+<div class="d-flex justify-content-end gap-2 mb-3">
+  {% if request.user|has_permission:"metrologia.add_calibracaodispositivo" %}
+    <a href="{% url 'cadastrar_calibracao_dispositivo' %}" class="btn btn-success d-flex align-items-center gap-2">
+      <i class="bi bi-plus-circle"></i> Nova Calibração
+    </a>
+  {% endif %}
+  {% if request.user|has_permission:"metrologia.view_calibracaodispositivo" %}
+    <button class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#imprimirModal">
+      <i class="bi bi-printer"></i> Imprimir
+    </button>
+  {% endif %}
+</div>
 
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#imprimirModal">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
-        {% endif %}
-
-    </div>
-
-   <!-- Modal para Seleção de Dispositivo -->
+<!-- Modal para Seleção de Dispositivo para Impressão -->
 <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imprimirModalLabel">Selecionar Dispositivo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="imprimirForm" method="GET">
-                    <div class="mb-3">
-                        <label for="dispositivo_id" class="form-label">Código do Dispositivo:</label>
-                        <select id="dispositivo_id" name="id" class="form-select select2" required>
-                            <option value="">Selecione</option>
-                            {% for dispositivo in dispositivos %}
-                                <option value="{{ dispositivo.id }}">{{ dispositivo.codigo }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Imprimir</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imprimirModalLabel">
+          <i class="bi bi-printer me-1"></i> Selecionar Dispositivo para Impressão
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="imprimirForm" method="GET">
+          <div class="mb-3">
+            <label for="dispositivo_id" class="form-label">
+              <i class="bi bi-upc-scan me-1"></i> Código do Dispositivo:
+            </label>
+            <select id="dispositivo_id" name="id" class="form-select select2" required>
+              <option value="">Selecione</option>
+              {% for dispositivo in dispositivos %}
+                <option value="{{ dispositivo.id }}">{{ dispositivo.codigo }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-printer"></i> Imprimir
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
-
-    
-
-    <form method="get" class="row g-3 mb-4">
-        <div class="col-md-3">
-            <label for="codigo_dispositivo" class="form-label">Código do Dispositivo:</label>
-            <select id="codigo_dispositivo" name="codigo_dispositivo" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for codigo in codigos %}
-                    <option value="{{ codigo }}" {% if request.GET.codigo_dispositivo == codigo %}selected{% endif %}>
-                        {{ codigo }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label for="instrumento_utilizado" class="form-label">Instrumento Utilizado:</label>
-            <select id="instrumento_utilizado" name="instrumento_utilizado" class="form-select select2">
-                <option value="">Selecione</option>
-                {% for instrumento in instrumentos %}
-                    <option value="{{ instrumento }}" {% if request.GET.instrumento_utilizado == instrumento %}selected{% endif %}>
-                        {{ instrumento }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label for="status" class="form-label">Status:</label>
-            <select id="status" name="status" class="form-select select2">
-                <option value="">Todos</option>
-                <option value="Aprovado" {% if request.GET.status == "Aprovado" %}selected{% endif %}>Aprovado</option>
-                <option value="Reprovado" {% if request.GET.status == "Reprovado" %}selected{% endif %}>Reprovado</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label for="data_inicio" class="form-label">Data Início:</label>
-            <input type="date" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
-        </div>
-        <div class="col-md-3">
-            <label for="data_fim" class="form-label">Data Fim:</label>
-            <input type="date" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
-        </div>
-        <div class="col-md-12 text-end">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
-        </div>
-    </form>
-    
-    
-
-    <!-- Cards -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card text-white bg-success">
-            <div class="card-header text-center">Total de Calibrações</div>
-            <div class="card-body text-center">
-                <h5 class="card-title">{{ total_calibracoes }}</h5>
-            </div>
-        </div>
+  <!-- Filtros -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+      <i class="bi bi-funnel-fill text-primary"></i>
+      <strong>Filtros de Pesquisa</strong>
     </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-primary">
-            <div class="card-header text-center">Aprovadas</div>
-            <div class="card-body text-center">
-                <h5 class="card-title">{{ total_aprovadas }}</h5>
-            </div>
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label for="codigo_dispositivo" class="form-label">
+            <i class="bi bi-upc-scan me-1"></i> Código do Dispositivo:
+          </label>
+          <select id="codigo_dispositivo" name="codigo_dispositivo" class="form-select select2">
+            <option value="">Selecione</option>
+            {% for codigo in codigos %}
+              <option value="{{ codigo }}" {% if request.GET.codigo_dispositivo == codigo %}selected{% endif %}>{{ codigo }}</option>
+            {% endfor %}
+          </select>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-danger">
-            <div class="card-header text-center">Reprovadas</div>
-            <div class="card-body text-center">
-                <h5 class="card-title">{{ total_reprovadas }}</h5>
-            </div>
+        <div class="col-md-3">
+          <label for="instrumento_utilizado" class="form-label">
+            <i class="bi bi-hammer me-1"></i> Instrumento Utilizado:
+          </label>
+          <select id="instrumento_utilizado" name="instrumento_utilizado" class="form-select select2">
+            <option value="">Selecione</option>
+            {% for instrumento in instrumentos %}
+              <option value="{{ instrumento }}" {% if request.GET.instrumento_utilizado == instrumento %}selected{% endif %}>{{ instrumento }}</option>
+            {% endfor %}
+          </select>
         </div>
+        <div class="col-md-3">
+          <label for="status" class="form-label">
+            <i class="bi bi-clipboard2-check me-1"></i> Status:
+          </label>
+          <select id="status" name="status" class="form-select select2">
+            <option value="">Todos</option>
+            <option value="Aprovado" {% if request.GET.status == "Aprovado" %}selected{% endif %}>Aprovado</option>
+            <option value="Reprovado" {% if request.GET.status == "Reprovado" %}selected{% endif %}>Reprovado</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="data_inicio" class="form-label">
+            <i class="bi bi-calendar-event me-1"></i> Data Início:
+          </label>
+          <input type="date" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label for="data_fim" class="form-label">
+            <i class="bi bi-calendar2-check me-1"></i> Data Fim:
+          </label>
+          <input type="date" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
+        </div>
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </form>
     </div>
-</div>
+  </div>
 
+  <!-- Indicadores -->
+  <div class="row mb-4">
+    {% include 'partials/global/_card_indicador.html' with cor='success' titulo='Total de Calibrações' valor=total_calibracoes subtitulo='' %}
+    {% include 'partials/global/_card_indicador.html' with cor='primary' titulo='Aprovadas' valor=total_aprovadas subtitulo='' %}
+    {% include 'partials/global/_card_indicador.html' with cor='danger' titulo='Reprovadas' valor=total_reprovadas subtitulo='' %}
+  </div>
 
-    <!-- Tabela -->
-<table class="table table-bordered text-center align-middle small-text-table">
-    <thead class="small-header">
-        <tr>
-            <th>Código do Dispositivo</th>
-            <th>Instrumento Utilizado</th>
-            <th>Status</th>
-            <th>Data da Aferição</th>
-            <th>Responsável</th>
-            <th>Aferições</th>
-            <th>Ações</th>
-        </tr>
+  <!-- Tabela -->
+  <table class="table table-striped table-bordered align-middle text-center">
+    <thead class="table-light text-center">
+      <tr>
+        <th><i class="bi bi-upc-scan me-1"></i> Código</th>
+        <th><i class="bi bi-hammer me-1"></i> Instrumento</th>
+        <th><i class="bi bi-clipboard-check me-1"></i> Status</th>
+        <th><i class="bi bi-calendar-event me-1"></i> Data</th>
+        <th><i class="bi bi-person-badge me-1"></i> Responsável</th>
+        <th><i class="bi bi-rulers me-1"></i> Aferições</th>
+        <th><i class="bi bi-gear me-1"></i> Ações</th>
+      </tr>
     </thead>
     <tbody>
-        {% for calibracao in page_obj %}
+      {% for calibracao in page_obj %}
         <tr>
-            <td>{{ calibracao.codigo_dispositivo.codigo }}</td>
-            <td>{{ calibracao.instrumento_utilizado.nome_equipamento }}</td>
-            <td>
-                {% if calibracao.status == "Aprovado" %}
-                    <span class="badge bg-success small-text">{{ calibracao.status }}</span>
-                {% else %}
-                    <span class="badge bg-danger small-text">{{ calibracao.status }}</span>
-                {% endif %}
-            </td>
-            <td>{{ calibracao.data_afericao|date:"d/m/Y" }}</td>
-            <td>{{ calibracao.nome_responsavel.nome }}</td>
-            <td>
-                <!-- Ícone para abrir a modal -->
-                <button type="button" class="btn btn-link text-primary small-icon" data-bs-toggle="modal" data-bs-target="#modalCotas{{ calibracao.id }}">
-                    <i class="bi bi-eye-fill"></i>
-                </button>
-                
-                <!-- Modal com a lista de cotas -->
-                <div class="modal fade" id="modalCotas{{ calibracao.id }}" tabindex="-1" aria-labelledby="modalCotasLabel{{ calibracao.id }}" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="modalCotasLabel{{ calibracao.id }}">Cotas da Calibração</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <ul class="list-group">
-                                    {% for afericao in calibracao.afericoes.all %}
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <strong>Cota:</strong> {{ afericao.cota.numero }} <br>
-                                                <strong>Valor:</strong> {{ afericao.valor }} 
-                                                <small>(Entre {{ afericao.cota.valor_minimo }} e {{ afericao.cota.valor_maximo }})</small>
-                                            </div>
-                                            {% if afericao.status == "Reprovado" %}
-                                                <span class="badge bg-danger"><i class="bi bi-x-circle-fill"></i> Reprovado</span>
-                                            {% elif afericao.status == "Aprovado" %}
-                                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Aprovado</span>
-                                            {% else %}
-                                                <span class="badge bg-warning text-dark"><i class="bi bi-question-circle-fill"></i> Pendente</span>
-                                            {% endif %}
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </td>
-            <td>
-                {% if request.user|has_permission:"metrologia.change_calibracaodispositivo" %}
-                <a href="{% url 'editar_calibracao_dispositivo' calibracao.id %}" class="btn btn-sm btn-primary small-icon" title="Editar">
-                    <i class="bi bi-pencil"></i>
-                </a>
-                {% endif %}
-                {% if request.user|has_permission:"metrologia.delete_calibracaodispositivo" %}
-                <a href="#" class="btn btn-sm btn-danger small-icon" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ calibracao.id }}" title="Excluir">
-                    <i class="bi bi-trash"></i>
-                </a>     
-                {% endif %}               
-            </td>
-        </tr>
-        <!-- Modal de Exclusão -->
-        <div class="modal fade" id="modalExcluir{{ calibracao.id }}" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Excluir Calibração</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Tem certeza que deseja excluir a calibração do dispositivo <strong>{{ calibracao.codigo_dispositivo.codigo }}</strong>?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <form method="post" action="{% url 'excluir_calibracao_dispositivo' calibracao.id %}">
-                            {% csrf_token %}
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-danger">Excluir</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <tr>
-            <td colspan="7">Nenhuma calibração encontrada.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-<style>
-    /* Reduz o tamanho do texto na tabela */
-    .small-text-table th, .small-text-table td {
-        font-size: 12px; /* Tamanho menor */
-    }
-    
-    /* Centraliza o texto do cabeçalho */
-    .small-header th {
-        text-align: center;
-        vertical-align: middle;
-    }
-    
-    /* Tamanho menor para os badges */
-    .badge.small-text {
-        font-size: 10px;
-    }
-    
-    /* Ícones menores */
-    .small-icon i {
-        font-size: 14px; /* Ajuste o tamanho dos ícones */
-    }
-    </style>
-    
-
-
-    <!-- Paginação -->
-<nav aria-label="Page navigation">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">&laquo;</a>
-            </li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          <td>{{ calibracao.codigo_dispositivo.codigo }}</td>
+          <td>{{ calibracao.instrumento_utilizado.nome_equipamento }}</td>
+          <td>
+            {% if calibracao.status == "Aprovado" %}
+              <span class="badge bg-success">Aprovado</span>
             {% else %}
-                <li class="page-item"><a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+              <span class="badge bg-danger">Reprovado</span>
             {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">&raquo;</a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+          </td>
+          <td>{{ calibracao.data_afericao|date:"d/m/Y" }}</td>
+          <td>{{ calibracao.nome_responsavel.nome }}</td>
+          <td>
+            <button type="button" class="btn btn-link text-primary small-icon" data-bs-toggle="modal" data-bs-target="#modalCotas{{ calibracao.id }}">
+              <i class="bi bi-eye-fill"></i>
+            </button>
+          </td>
+          <td class="d-flex justify-content-center gap-1">
+            {% include 'partials/global/_botao_editar.html' with objeto=calibracao url_editar='editar_calibracao_dispositivo' %}
+            {% include 'partials/global/_botao_excluir.html' with objeto=calibracao url_excluir='excluir_calibracao_dispositivo' %}
+          </td>
+        </tr>
+        <!-- Modal de Aferições -->
+        <div class="modal fade" id="modalCotas{{ calibracao.id }}" tabindex="-1" aria-labelledby="modalCotasLabel{{ calibracao.id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modalCotasLabel{{ calibracao.id }}">Cotas da Calibração</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+              </div>
+              <div class="modal-body">
+                <ul class="list-group">
+                  {% for afericao in calibracao.afericoes.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>Cota:</strong> {{ afericao.cota.numero }}<br>
+                        <strong>Valor:</strong> {{ afericao.valor }}
+                        <small>(Entre {{ afericao.cota.valor_minimo }} e {{ afericao.cota.valor_maximo }})</small>
+                      </div>
+                      {% if afericao.status == "Reprovado" %}
+                        <span class="badge bg-danger"><i class="bi bi-x-circle-fill"></i> Reprovado</span>
+                      {% elif afericao.status == "Aprovado" %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Aprovado</span>
+                      {% else %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-question-circle-fill"></i> Pendente</span>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        {% include 'partials/global/_sem_resultados.html' with item_nome="calibração" %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% include 'partials/global/_paginacao.html' %}
 
 </div>
-
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const afericoes = document.querySelectorAll("[data-afericao-status]");
-    
-        afericoes.forEach(function (input) {
-            const valor = parseFloat(input.dataset.valor);
-            const min = parseFloat(input.dataset.min);
-            const max = parseFloat(input.dataset.max);
-            const status = input.querySelector(".status");
-    
-            if (!isNaN(valor) && valor >= min && valor <= max) {
-                status.textContent = "Aprovado";
-                status.classList.add("text-success");
-            } else {
-                status.textContent = "Reprovado";
-                status.classList.add("text-danger");
-            }
-        });
+  document.addEventListener('DOMContentLoaded', function () {
+    $('#imprimirModal').on('shown.bs.modal', function () {
+      $('#dispositivo_id').select2({
+        placeholder: 'Selecione um dispositivo',
+        allowClear: true,
+        dropdownParent: $('#imprimirModal'),
+        width: '100%'
+      });
     });
-    
-</script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Inicializa o Select2 para o campo dentro da modal
-        $('#imprimirModal').on('shown.bs.modal', function () {
-            $('#dispositivo_id').select2({
-                placeholder: 'Selecione um dispositivo',
-                allowClear: true,
-                dropdownParent: $('#imprimirModal'), // Faz o dropdown aparecer dentro da modal
-                width: '100%' // Garante que o campo ocupe toda a largura disponível
-            });
-        });
-    
-        // Configura o evento de envio do formulário
-        document.querySelector('#imprimirForm').addEventListener('submit', function (event) {
-            event.preventDefault(); // Impede o envio padrão do formulário
-    
-            // Obtém o ID do dispositivo selecionado
-            const dispositivoId = document.querySelector('#dispositivo_id').value;
-    
-            if (dispositivoId) {
-                // Define a URL com o ID do dispositivo selecionado
-                const imprimirUrl = `/metrologia/calibracoes/dispositivos/${dispositivoId}/imprimir/`;
-                window.location.href = imprimirUrl; // Redireciona para a URL de impressão
-            } else {
-                alert('Por favor, selecione um dispositivo para imprimir.');
-            }
-        });
+    document.querySelector('#imprimirForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const dispositivoId = document.querySelector('#dispositivo_id').value;
+      if (dispositivoId) {
+        window.location.href = `/metrologia/calibracoes/dispositivos/${dispositivoId}/imprimir/`;
+      } else {
+        alert('Por favor, selecione um dispositivo para imprimir.');
+      }
     });
-    
+  });
 </script>
-
-
-<style>
-    /* Garante que o Select2 dentro da modal tenha um z-index maior */
-    #imprimirModal .select2-container {
-        z-index: 1060 !important; /* Deve estar maior que o z-index da modal */
-    }
-    #imprimirModal .select2-dropdown {
-        z-index: 1070 !important; /* Deve estar maior que o dropdown do Select2 */
-    }
-</style>
-
-
 {% endblock %}

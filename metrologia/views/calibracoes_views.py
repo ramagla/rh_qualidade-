@@ -84,6 +84,27 @@ def lista_calibracoes(request):
     )
 
 
+def salvar_calibracao(request, pk=None):
+    edicao = pk is not None
+    calibracao = get_object_or_404(Calibracao, pk=pk) if edicao else None
+
+    if request.method == "POST":
+        form = CalibracaoForm(request.POST, request.FILES, instance=calibracao)
+        if form.is_valid():
+            form.save()
+            return redirect("calibracoes_instrumentos")
+    else:
+        form = CalibracaoForm(instance=calibracao)
+
+    contexto = {
+        "form": form,
+        "edicao": edicao,
+        "param_id": pk,
+        "url_voltar": "calibracoes_instrumentos"
+    }
+    return render(request, "calibracoes/form_calibracao.html", contexto)
+
+
 def metrologia_calibracoes(request):
     calibracoes = Calibracao.objects.all()
     return render(
@@ -92,32 +113,11 @@ def metrologia_calibracoes(request):
 
 
 def cadastrar_calibracao(request):
-    if request.method == "POST":
-        form = CalibracaoForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect("calibracoes_instrumentos")
-    else:
-        # Inicializa o formulário e passa os dados necessários
-        form = CalibracaoForm()
-
-    return render(request, "calibracoes/cadastrar_calibracao.html", {"form": form})
+    return salvar_calibracao(request)
 
 
 def editar_calibracao(request, pk):
-    # Obtenha a instância da Calibração
-    calibracao = get_object_or_404(Calibracao, pk=pk)
-
-    if request.method == "POST":
-        form = CalibracaoForm(request.POST, request.FILES, instance=calibracao)
-        if form.is_valid():
-            form.save()
-            return redirect("calibracoes_instrumentos")  # Redireciona para a lista
-    else:
-        form = CalibracaoForm(instance=calibracao)  # Carrega a instância no formulário
-
-    # Renderiza o template com o formulário preenchido
-    return render(request, "calibracoes/editar_calibracao.html", {"form": form})
+    return salvar_calibracao(request, pk=pk)
 
 
 def excluir_calibracao(request, id):
