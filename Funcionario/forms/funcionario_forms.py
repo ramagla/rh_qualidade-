@@ -57,6 +57,16 @@ class FuncionarioForm(forms.ModelForm):
         ),
         input_formats=["%Y-%m-%d"],
     )
+    data_nascimento = forms.DateField(
+        label="Data de Nascimento",
+        required=False,
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date", "class": "form-control"}
+        ),
+        input_formats=["%Y-%m-%d"],
+    )
+
     
     escolaridade = forms.ChoiceField(
         choices=ESCOLARIDADE_CHOICES,
@@ -123,6 +133,8 @@ class FuncionarioForm(forms.ModelForm):
             self.initial["data_admissao"] = self.instance.data_admissao.strftime("%Y-%m-%d")
         if self.instance and getattr(self.instance, "data_integracao", None):
             self.initial["data_integracao"] = self.instance.data_integracao.strftime("%Y-%m-%d")
+        if self.instance and getattr(self.instance, "data_nascimento", None):
+            self.initial["data_nascimento"] = self.instance.data_nascimento.strftime("%Y-%m-%d")
 
         # Adicionar classe "form-control" nos campos, exceto Select2Widget
         for name, field in self.fields.items():

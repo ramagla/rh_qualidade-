@@ -23,53 +23,118 @@ from Funcionario.models import (
 )
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from datetime import datetime
+import requests
+
+from Funcionario.models import (
+    AtualizacaoSistema,
+    AvaliacaoAnual,
+    Comunicado,
+    Settings,
+)
+
+from django.utils.timezone import now
+from Funcionario.models import Funcionario, AvaliacaoAnual, Treinamento
+from django.db.models.functions import ExtractYear
+
+from collections import Counter
+from datetime import datetime
+
+import requests
+from django.contrib.auth.decorators import login_required
+from django.db.models.functions import ExtractYear
+from django.shortcuts import render
+from django.utils.timezone import now
+
+from Funcionario.models import Funcionario, AvaliacaoAnual
+
+
+from collections import Counter
+from datetime import datetime
+import requests
+
+from django.contrib.auth.decorators import login_required
+from django.db.models.functions import ExtractYear
+from django.shortcuts import render
+from django.utils.timezone import now
+
+
+
+
 @login_required
 def home(request):
-    # Obter feriados da API
-
-    url = "https://brasilapi.com.br/api/feriados/v1/2025"
+    # 🔗 Feriados via API
     feriados = []
     try:
-        response = requests.get(url)
+        response = requests.get("https://brasilapi.com.br/api/feriados/v1/2025")
         if response.status_code == 200:
             feriados = response.json()
     except Exception as e:
-        print("Exceção ao chamar a API:", e)
+        print("Erro ao buscar feriados:", e)
 
-    # Consulta aos últimos comunicados
+    # 📣 Comunicados recentes
     comunicados = Comunicado.objects.order_by("-data")[:4]
 
-    # Consulta ao banco de dados para funcionários com avaliação baixa
-    funcionarios_avaliacao_baixa = [
-        {
-            "id": avaliacao.id,
-            "funcionario_id": avaliacao.funcionario.id,  # Ainda pode ser útil para exibição
-            "nome": avaliacao.funcionario.nome,
-            "foto": (
-                avaliacao.funcionario.foto.url if avaliacao.funcionario.foto else None
-            ),
-            "classificacao": classificacao["percentual"],
-            "status": classificacao["status"],
-        }
-        for avaliacao in AvaliacaoAnual.objects.all()
-        if (classificacao := avaliacao.calcular_classificacao())["percentual"] < 66
-    ]
+    # 📊 Classificações de avaliações
+    avaliacoes = AvaliacaoAnual.objects.all()
+    classificacao_counter = Counter()
+    funcionarios_avaliacao_baixa = []
 
-    # Consulta às atualizações do sistema com status "concluído"
-    proximas_atualizacoes = AtualizacaoSistema.objects.all().order_by("-previsao")[:4]
+    for avaliacao in avaliacoes:
+        classificacao = avaliacao.calcular_classificacao()
+        status = classificacao["status"]
+        percentual = classificacao["percentual"]
 
-    # Consulta a última atualização para o modal de informações de versão
-    ultima_atualizacao_concluida = (
-        AtualizacaoSistema.objects.filter(status="concluido")
-        .order_by("-previsao")
-        .first()
+        classificacao_counter[status] += 1
+
+        if percentual < 66:
+            funcionarios_avaliacao_baixa.append({
+                "id": avaliacao.id,
+                "funcionario_id": avaliacao.funcionario.id,
+                "nome": avaliacao.funcionario.nome,
+                "foto": avaliacao.funcionario.foto.url if avaliacao.funcionario.foto else None,
+                "classificacao": percentual,
+                "status": status,
+            })
+
+    # 🔧 Atualizações
+    proximas_atualizacoes = AtualizacaoSistema.objects.order_by("-previsao")[:4]
+    ultima_atualizacao_concluida = AtualizacaoSistema.objects.filter(
+        status="concluido"
+    ).order_by("-data_termino").first()
+    historico_versoes = AtualizacaoSistema.objects.filter(
+        status="concluido"
+    ).exclude(
+        id=ultima_atualizacao_concluida.id if ultima_atualizacao_concluida else None
+    ).order_by("-data_termino")
+
+    # 📌 Indicadores gerais
+    ano_atual = now().year
+    total_colaboradores = Funcionario.objects.filter(status="Ativo").count()
+
+    ids_funcionarios_avaliados = AvaliacaoAnual.objects.annotate(
+        ano=ExtractYear("data_avaliacao")
+    ).filter(ano=ano_atual).values_list("funcionario_id", flat=True)
+
+    funcionarios_pendentes = Funcionario.objects.filter(
+        status="Ativo"
+    ).exclude(id__in=ids_funcionarios_avaliados)
+
+    avaliacoes_pendentes = funcionarios_pendentes.count()
+
+
+    treinamentos = Treinamento.objects.filter(data_inicio__gte=now()).prefetch_related("funcionarios")
+    treinamentos_agendados = treinamentos.count()
+
+    aniversariantes = Funcionario.objects.filter(
+        status="Ativo",
+        data_nascimento__month=now().month
     )
 
-    # Consulta às configurações da empresa, incluindo logos
-    # Obtém a primeira instância de Settings, caso haja mais de uma
     settings = Settings.objects.first()
 
-    # Contexto para o template
     context = {
         "nome_modulo": "Recursos Humanos",
         "icone_modulo": "bi-people",
@@ -78,10 +143,27 @@ def home(request):
         "funcionarios_avaliacao_baixa": funcionarios_avaliacao_baixa,
         "proximas_atualizacoes": proximas_atualizacoes,
         "ultima_atualizacao_concluida": ultima_atualizacao_concluida,
-        "settings": settings,  # Inclui settings para acesso aos logos
+        "historico_versoes": historico_versoes,
+        "settings": settings,
+        "ano_atual": ano_atual,
+        "total_colaboradores": total_colaboradores,
+        "avaliacoes_pendentes": avaliacoes_pendentes,
+        "treinamentos_agendados": treinamentos_agendados,
+        "treinamentos": treinamentos,  # usado no modal de detalhes
+        "aniversariantes": aniversariantes,
+        # Classificações
+        "classificacao_ruim": classificacao_counter.get("Ruim", 0),
+        "classificacao_regular": classificacao_counter.get("Regular", 0),
+        "classificacao_bom": classificacao_counter.get("Bom", 0),
+        "classificacao_otimo": classificacao_counter.get("Ótimo", 0),
+        "avaliacoes_pendentes": avaliacoes_pendentes,
+    "funcionarios_pendentes": funcionarios_pendentes,
     }
 
     return render(request, "dashboard/home.html", context)
+
+
+
 
 
 @login_required

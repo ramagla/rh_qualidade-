@@ -135,8 +135,10 @@
     </div>
   </main>
 
-  <footer role="contentinfo">© {{ ano_atual }} BM ({{ versao }})</footer>
-
+  <footer role="contentinfo">
+    <span class="text-light small">&copy; {{ ano_atual }} <strong>BM</strong> <span class="text-warning">v{{ versao }}</span></span>
+  </footer>
+  
   <script defer>
     function togglePassword() {
       const passwordInput = document.getElementById("password");

@@ -1,0 +1,78 @@
+<!-- Modal Atual da Versão -->
+<div class="modal fade" id="versaoModal" tabindex="-1" aria-labelledby="versaoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content rounded-3 shadow">
+        <div class="modal-header bg-light border-bottom">
+          <h5 class="modal-title" id="versaoModalLabel">
+            <i class="bi bi-info-circle-fill me-2"></i> Informações da Última Versão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          {% if ultima_atualizacao_concluida %}
+            <div class="mb-3">
+              <h5><strong>Versão {{ ultima_atualizacao_concluida.versao }}</strong></h5>
+              <p>{{ ultima_atualizacao_concluida.descricao|safe }}</p>
+              <p class="text-muted">
+                Entregue em: {{ ultima_atualizacao_concluida.data_termino|date:"d/m/Y" }}
+              </p>
+            </div>
+          {% else %}
+            <p class="text-muted">Nenhuma atualização registrada.</p>
+          {% endif %}
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#versoesAnterioresModal" data-bs-dismiss="modal">
+            <i class="bi bi-clock-history me-1"></i> Ver versões anteriores
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de Versões Anteriores -->
+<div class="modal fade" id="versoesAnterioresModal" tabindex="-1" aria-labelledby="versoesAnterioresModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content rounded-3 shadow">
+        <div class="modal-header bg-light border-bottom">
+          <h5 class="modal-title" id="versoesAnterioresModalLabel">
+            <i class="bi bi-clock-history me-2"></i> Histórico de Versões
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          {% if historico_versoes %}
+            <ul class="list-group">
+              {% for item in historico_versoes %}
+                <li class="list-group-item">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <strong>Versão {{ item.versao }}</strong><br>
+                      <small class="text-muted">Entregue em {{ item.data_termino|date:"d/m/Y" }}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#desc-{{ item.id }}">
+                      <i class="bi bi-eye"></i> Ver Descrição
+                    </button>
+                  </div>
+                  <div class="collapse mt-2" id="desc-{{ item.id }}">
+                    <div class="card card-body border-light">
+                      {{ item.descricao|safe }}
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">Nenhuma versão anterior encontrada.</p>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  

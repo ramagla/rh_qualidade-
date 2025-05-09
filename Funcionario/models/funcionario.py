@@ -90,6 +90,8 @@ class Funcionario(models.Model):
     formulario_f146 = models.FileField(
         upload_to="certificado_ensino/", blank=True, null=True
     )
+    data_nascimento = models.DateField(null=True, blank=True)
+
 
     def __str__(self):
         return self.nome

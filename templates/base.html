@@ -272,10 +272,10 @@
             <!-- Footer do Sidebar fixado na parte inferior -->
             <div class="sidebar-footer">
                 <a href="{% url 'calendario' %}" class="calendar-button">
-                    <i class="fas fa-calendar-alt"></i> <span class="sidebar-text">Calendário</span>
+                    <i class="fas fa-calendar-alt"></i> <span class="sidebar-text"></span>
                 </a>
                 <span class="version-section" data-bs-toggle="modal" data-bs-target="#versaoModal">
-                    <i class="fas fa-info-circle"></i> <span class="sidebar-text">&copy; {{ ano_atual }}  {{ ultima_atualizacao.versao }}</span>
+                    <i class="fas fa-info-circle"></i> <span class="sidebar-text"> {{ ultima_atualizacao_concluida.versao }}</span>
                 </span>
             </div>
         </div>
@@ -376,31 +376,9 @@
         
     </div>
 
-    <!-- Modal de Informações da Versão -->
-    <div class="modal fade" id="versaoModal" tabindex="-1" aria-labelledby="versaoModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="versaoModalLabel">Informações da Versão</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" autofocus></button>
-                </div>
-                <div class="modal-body">
-                    {% if ultima_atualizacao %}
-                        <div class="mb-3">
-                            <h6><strong>{{ ultima_atualizacao.versao }}</strong></h6>
-                            <p>{{ ultima_atualizacao.descricao|safe }}</p>
-                            <p class="text-muted">Entregue em: {{ ultima_atualizacao.data_termino|date:"d/m/Y" }}</p>
-                        </div>
-                    {% else %}
-                        <p>Nenhuma atualização registrada.</p>
-                    {% endif %}
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'partials/global/_modal_versao.html' %}
+
+
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
