@@ -379,8 +379,75 @@ def excluir_historico_cargo(request, historico_id):
 
     return redirect("listar_historico_cargo", funcionario_id=historico.funcionario.id)
 
+from collections import defaultdict
+from datetime import date
+
+from collections import defaultdict
+from django.db.models import Prefetch
+
+
+def montar_organograma(lista):
+    mapa = {}
+    raiz = []
+
+    for item in lista:
+        item['subordinados'] = []
+        mapa[item['id']] = item
+
+    for item in lista:
+        pai_id = item.get('responsavel_id')
+        if pai_id and pai_id in mapa:
+            mapa[pai_id]['subordinados'].append(item)
+        else:
+            raiz.append(item)
+
+    return raiz
+
+from collections import defaultdict
+from copy import deepcopy
 
 @login_required
 def imprimir_organograma(request):
-    organograma = Funcionario.objects.filter(responsavel__isnull=True).prefetch_related('funcionarios_gerenciados')
-    return render(request, "funcionarios/organograma/organograma_imprimir.html", {"organograma": organograma})
+    funcionarios = Funcionario.objects.select_related("cargo_atual", "responsavel__cargo_atual")
+
+    cargos_dict = {}
+    subordinados_por_cargo = defaultdict(set)
+
+    for f in funcionarios:
+        if f.cargo_atual:
+            cargo_nome = f.cargo_atual.nome
+            cargos_dict[cargo_nome] = f.cargo_atual.id
+
+            if f.responsavel and f.responsavel.cargo_atual:
+                responsavel_nome = f.responsavel.cargo_atual.nome
+                subordinados_por_cargo[responsavel_nome].add(cargo_nome)
+
+    # Cria os nós únicos (sem vínculo ainda)
+    cargos_nos = {
+        nome: {
+            'id': id,
+            'cargo': nome,
+            'subordinados': []
+        }
+        for nome, id in cargos_dict.items()
+    }
+
+    # Relaciona subordinados (usando cópia para evitar ciclos)
+    for responsavel_nome, lista in subordinados_por_cargo.items():
+        if responsavel_nome in cargos_nos:
+            cargos_nos[responsavel_nome]['subordinados'] = [
+                deepcopy(cargos_nos[nome]) for nome in lista if nome in cargos_nos
+            ]
+
+    # Detecta cargos sem responsáveis (topo)
+    todos_subordinados = {nome for lista in subordinados_por_cargo.values() for nome in lista}
+    topo = [deepcopy(n) for nome, n in cargos_nos.items() if nome not in todos_subordinados]
+
+    contexto = {
+        'organograma': topo,
+        'revisao': '06',
+        'data': '04/03/2025',
+        'elaborador': 'Anderson Goveia',
+        'aprovador': 'Lilian Fernandes'
+    }
+    return render(request, 'funcionarios/organograma/organograma_imprimir.html', contexto)

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Organograma de Cargos{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao_paisagem.html' %}
+{% include 'header.html' %}
+{% load custom_filters %}
+
+<div class="container my-5 print-container">
+  {% include "partials/global/_header_titulo.html" with titulo="Organograma de Cargos" icone="bi bi-diagram-3-fill" emoji="📊" %}
+  {% include "partials/global/_botao_impressao.html" %}
+
+  <div class="organograma-arvore d-flex flex-column align-items-center">
+    {% for nivel, cargos in niveis_ordenados %}
+      <div class="nivel-container text-center mb-4">
+        <div class="nivel-titulo mb-3 text-primary fw-bold">
+          <i class="bi bi-diagram-3-fill me-1"></i> {{ cargos.0.cargo.get_nivel_display }}
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-center gap-3 position-relative">
+          {% for item in cargos %}
+            {% with cargo=item.cargo %}
+              <div class="card card-org text-center shadow-sm position-relative">
+
+                {% with funcionarios_com_foto=cargo.cargo_atual_funcionarios.all|filter_status:"Ativo"|dictfilter:"foto"|dictsort:"nome" %}
+                  {% if funcionarios_com_foto %}
+                    <div class="fotos-funcionarios d-flex justify-content-center gap-1 position-absolute top-0 start-50 translate-middle-x">
+                      {% for f in funcionarios_com_foto|slice:":4" %}
+                        <img src="{{ f.foto.url }}" class="mini-foto-multipla rounded-circle border border-white shadow" alt="Foto de {{ f.nome }}" title="{{ f.nome }}">
+                      {% endfor %}
+
+                      {% if funcionarios_com_foto|length > 4 %}
+                        <div class="dropdown">
+                          <button class="btn btn-sm btn-light border rounded-circle p-0 px-1 ms-1 dropdown-toggle shadow-sm"
+                                  type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                  title="+{{ funcionarios_com_foto|length|add:"-4" }} outros">
+                            +{{ funcionarios_com_foto|length|add:"-4" }}
+                          </button>
+                          <ul class="dropdown-menu p-2 shadow-sm text-center">
+                            {% for f in funcionarios_com_foto|slice:"4:" %}
+                              <li class="d-inline-block m-1">
+                                <img src="{{ f.foto.url }}" class="mini-foto-extra rounded-circle border border-white" alt="Foto de {{ f.nome }}" title="{{ f.nome }}">
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                {% endwith %}
+
+                <div class="card-body py-2 px-3 mt-4">
+                  <h6 class="card-title fw-semibold small mb-1">
+                    <i class="bi bi-person-badge-fill text-secondary me-1"></i>{{ cargo.nome }}
+                  </h6>
+                  <p class="card-text text-muted small mb-0">
+                    <i class="bi bi-building me-1"></i>{{ cargo.departamento }}
+                  </p>
+                </div>
+              </div>
+            {% endwith %}
+          {% endfor %}
+        </div>
+
+        {% if not forloop.last %}
+          <div class="seta-nivel mb-3 d-print-none">
+            <i class="bi bi-arrow-down-circle-fill text-secondary fs-3"></i>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  {% include "partials/global/_formulario_rodape.html" with numero_formulario="" %}
+</div>
+
+  
+
+<style>
+  .organograma-arvore {
+    position: relative;
+  }
+
+  .nivel-container {
+    width: 100%;
+  }
+
+  .card-org {
+    min-width: 220px;
+    max-width: 240px;
+    border-left: 4px solid #0d6efd;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .card-org:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.25);
+  }
+
+  .seta-nivel {
+    text-align: center;
+    animation: pulso 1.5s infinite;
+  }
+
+  @keyframes pulso {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(5px); }
+  }
+  .mini-foto-multipla {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    margin-top: -18px;
+    z-index: 5;
+  }
+  
+  .mini-foto-extra {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+  }
+  
+  
+  
+  
+</style>
+
+<style>
+    @media print {
+      body {
+        zoom: 0.5; /* reduz escala geral */
+      }
+  
+      .print-container {
+        width: 100%;
+        max-width: 100%;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+  
+      .organograma-arvore {
+        flex-wrap: wrap !important;
+        page-break-inside: avoid;
+      }
+  
+      .card-org {
+        min-width: 160px !important;
+        max-width: 180px !important;
+        font-size: 10px !important;
+        padding: 0.25rem 0.5rem !important;
+      }
+  
+      .card-org .card-title {
+        font-size: 10px !important;
+      }
+  
+      .card-org .card-text {
+        font-size: 9px !important;
+      }
+  
+      .seta-nivel {
+        display: none !important;
+      }
+    }
+  </style>
+  
+{% endblock %}

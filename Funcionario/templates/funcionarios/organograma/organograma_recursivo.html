@@ -11,7 +11,7 @@
     </div>
     {% if subordinado.subordinados %}
     <ul>
-        {% include 'funcionario/organograma_recursivo.html' with funcionarios=subordinado.subordinados %}
+        {% include 'funcionario/_organograma_recursivo.html' with funcionarios=subordinado.subordinados %}
     </ul>
     {% endif %}
 </li>

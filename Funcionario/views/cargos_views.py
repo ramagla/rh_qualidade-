@@ -4,11 +4,30 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from collections import defaultdict
 
 from ..forms import CargoForm, RevisaoForm
 from ..models import Cargo, Funcionario, Revisao
 
+@login_required
+def organograma_cargos(request):
+    cargos_agrupados = defaultdict(list)
 
+    for cargo in Cargo.objects.prefetch_related("cargo_atual_funcionarios").order_by("nivel", "nome"):
+        funcionario_ativo = next(
+            (f for f in cargo.cargo_atual_funcionarios.all() if f.status == "Ativo"),
+            None
+        )
+        cargos_agrupados[cargo.nivel].append({
+            "cargo": cargo,
+            "funcionario_ativo": funcionario_ativo
+        })
+
+    niveis_ordenados = sorted(cargos_agrupados.items())
+
+    return render(request, "cargos/organograma_cargos.html", {
+        "niveis_ordenados": niveis_ordenados
+    })
 @login_required
 def lista_cargos(request):
     # Recupera todos os cargos ordenados por número da DC

@@ -8,14 +8,17 @@
 <div class="container mt-5">
   {% include "partials/global/_header_titulo.html" with titulo="Lista de Descrições de Cargos" icone="bi bi-briefcase-fill" emoji="📄" %}
 
-  <!-- Botões de Ação -->
-  <div class="text-end mb-4">
+  <div class="d-flex justify-content-end gap-2 mb-4">
     {% if request.user|has_permission:"Funcionario.add_cargo" %}
-      <a href="{% url 'cadastrar_cargo' %}" class="btn btn-success me-2" aria-label="Cadastrar novo cargo">
-        <i class="bi bi-plus-circle" aria-hidden="true"></i> Cadastrar
+      <a href="{% url 'cadastrar_cargo' %}" class="btn btn-success" aria-label="Cadastrar novo cargo">
+        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar
+      </a>
+      <a href="{% url 'organograma_cargos' %}" class="btn btn-primary" aria-label="Visualizar organograma dos cargos">
+        <i class="bi bi-diagram-3-fill me-1" aria-hidden="true"></i> Organograma
       </a>
     {% endif %}
   </div>
+  
 
   {% include "partials/global/_toast_mensagens.html" %}
 

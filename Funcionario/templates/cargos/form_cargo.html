@@ -44,6 +44,13 @@
               {{ form.departamento }}
             </div>
             <div class="col-md-6">
+              <label for="nivel" class="form-label">
+                <i class="bi bi-diagram-3-fill me-1" aria-hidden="true"></i> Nível Hierárquico:
+                <span class="text-danger" aria-label="obrigatório" data-bs-toggle="tooltip" title="Campo obrigatório">*</span>
+              </label>
+              {{ form.nivel }}
+            </div>
+            <div class="col-md-6">
               <label for="descricao_arquivo" class="form-label">
                 <i class="bi bi-upload me-1" aria-hidden="true"></i> Descrição do Cargo Assinada:
               </label>

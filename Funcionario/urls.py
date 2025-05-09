@@ -51,6 +51,7 @@ from .views.cargos_views import (
     historico_revisoes,
     imprimir_cargo,
     lista_cargos,
+    organograma_cargos
 )
 from .views.comunicados_views import (
     cadastrar_comunicado,
@@ -598,6 +599,7 @@ urlpatterns = [
     ),
     path("avaliacao-anual/", cadastrar_type_avaliacao, name="cadastrar_type_avaliacao"),
     path('funcionarios/imprimir-organograma/', imprimir_organograma, name='imprimir_organograma'),
+    path("cargos/organograma/", organograma_cargos, name="organograma_cargos"),
 
 ]
 

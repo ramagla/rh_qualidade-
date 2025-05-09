@@ -1,41 +1,139 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Organograma Bras-Mol{% endblock %}
+
 {% block content %}
 {% include 'partials/global/_estilos_impressao_paisagem.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
 
-<div class="container my-4 pdf-container">
-  <div class="d-print-none text-end mb-3">
-    <button class="btn btn-primary" onclick="window.print()" aria-label="Imprimir organograma">
-      <i class="bi bi-printer-fill me-1"></i> Imprimir Organograma
-    </button>
-  </div>
+<div class="container-fluid pdf-container mt-4">
+  {% include 'partials/global/_header_titulo.html' with titulo="Organograma Bras-Mol" icone="bi-diagram-3" emoji="🏢" %}
+  <p class="text-center mb-1">Revisão: <strong>{{ revisao }}</strong> — Data: <strong>{{ data }}</strong></p>
+  <p class="text-center mb-4">Elaborado por: <strong>{{ elaborador }}</strong> — Aprovado por: <strong>{{ aprovador }}</strong></p>
 
-  <div class="text-center mb-4">
-    <h2 class="mb-1">Organograma Bras-Mol</h2>
-    <p class="mb-0">Revisão: <strong>06</strong> — Data: <strong>04/03/2025</strong></p>
-    <p class="mb-0">Elaborado por: <strong>Anderson Goveia</strong> — Aprovado por: <strong>Lilian Fernandes</strong></p>
-  </div>
-
-  <div class="tree-org text-center">
-    <ul class="tree">
-      {% for funcionario in organograma %}
-        <li>
-          <div class="box">
-            {% if funcionario.foto %}
-              <img src="{{ funcionario.foto.url }}" alt="Foto de {{ funcionario.nome }}">
-            {% endif %}
-            <strong>{{ funcionario.nome }}</strong><br>
-            <small>{{ funcionario.cargo_atual }}</small>
-          </div>
-          {% if funcionario.funcionarios_gerenciados.all %}
-            <ul>
-              {% include "funcionarios/organograma/_subordinados_recursivos_impressao.html" with subordinados=funcionario.funcionarios_gerenciados.all %}
-            </ul>
-          {% endif %}
-        </li>
+  <div class="organograma-container">
+    <ul class="organograma">
+      {% for item in organograma %}
+        {% include 'funcionarios/organograma/_item_organograma.html' with item=item %}
       {% endfor %}
     </ul>
   </div>
 </div>
+
+<style>
+  .organograma-container {
+    overflow-x: auto;
+    padding: 20px;
+  }
+
+  .organograma, .organograma ul {
+    padding: 0;
+    margin: 0;
+    position: relative;
+    text-align: center;
+  }
+
+  .organograma ul {
+    padding-top: 20px;
+  }
+
+  .organograma li {
+    display: inline-block;
+    vertical-align: top;
+    text-align: center;
+    list-style-type: none;
+    position: relative;
+    padding: 30px 5px 0 5px;
+  }
+
+  /* Linha vertical do pai para os filhos */
+  .organograma li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border-left: 1px solid #999;
+    height: 30px;
+  }
+
+  /* ⛔ Remove linhas do topo da raiz */
+  .organograma > li::before,
+  .organograma > li::after {
+    display: none !important;
+  }
+
+  /* Conexão horizontal entre irmãos */
+  .organograma li:not(:only-child)::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border-top: 1px solid #999;
+    width: 100%;
+    height: 1px;
+    transform: translateX(-50%);
+  }
+
+  .organograma li:only-child::before,
+  .organograma li:only-child::after {
+    display: none;
+  }
+
+  /* Conector vertical central do grupo de filhos */
+  .organograma ul::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top: 1px solid #999;
+    width: 100%;
+    height: 1px;
+  }
+
+  .organograma ul:only-child::before {
+    display: none;
+  }
+
+  /* Card de pessoa */
+  .wrap-infos {
+    border: 1px solid #999;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.08);
+    min-width: 120px;
+    max-width: 160px;
+    font-size: 0.75rem;
+    word-break: break-word;
+    display: inline-block;
+  }
+
+  .nome {
+    font-weight: 600;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+  }
+
+  .cargo {
+    font-style: italic;
+    color: #666;
+    font-size: 0.7rem;
+  }
+
+  @media print {
+    .organograma-container {
+      zoom: 0.72;
+      transform-origin: top left;
+      overflow: visible !important;
+    }
+
+    .wrap-infos {
+      box-shadow: none !important;
+    }
+  }
+</style>
+
+
 {% endblock %}

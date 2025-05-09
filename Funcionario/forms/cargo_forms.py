@@ -75,12 +75,15 @@ class CargoForm(forms.ModelForm):
             "elaborador_data",
             "aprovador",
             "aprovador_data",
+            "nivel", 
         ]
         widgets = {
             "nome": forms.TextInput(attrs={"class": "form-control"}),
             "numero_dc": forms.TextInput(attrs={"class": "form-control"}),
             "descricao_arquivo": forms.FileInput(attrs={"class": "form-control"}),
             "departamento": forms.TextInput(attrs={"class": "form-control"}),
+            "nivel": forms.Select(attrs={"class": "form-select"}),  # 👈 Aqui
+
             "elaborador": Select2Widget(attrs={"class": "form-select"}),
             "elaborador_data": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}

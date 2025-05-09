@@ -1,0 +1,12 @@
+<li>
+  <div class="wrap-infos wrap-infos-padrao">
+    <p class="cargo">{{ item.cargo }}</p>
+  </div>
+  {% if item.subordinados %}
+    <ul>
+      {% for sub in item.subordinados %}
+        {% include 'funcionarios/organograma/_item_organograma.html' with item=sub %}
+      {% endfor %}
+    </ul>
+  {% endif %}
+</li>

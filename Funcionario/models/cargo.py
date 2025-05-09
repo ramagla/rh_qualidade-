@@ -1,6 +1,18 @@
 from django.db import models
 from django.utils import timezone
 
+NIVEIS_HIERARQUIA = [
+    (1, "Alta Direção / Conselho"),
+    (2, "Diretoria"),
+    (3, "Gerência Sênior"),
+    (4, "Gerência Média"),
+    (5, "Coordenação"),
+    (6, "Supervisão"),
+    (7, "Liderança Técnica"),
+    (8, "Analista / Técnico"),
+    (9, "Assistente / Auxiliar"),
+    (10, "Operacional"),
+]
 
 class Cargo(models.Model):
     nome = models.CharField(max_length=100)
@@ -8,6 +20,14 @@ class Cargo(models.Model):
     descricao_arquivo = models.FileField(upload_to="cargos/", blank=True, null=True)
     departamento = models.CharField(max_length=100, verbose_name="Departamento")
 
+
+    # NOVO CAMPO DE NÍVEL HIERÁRQUICO
+    nivel = models.PositiveSmallIntegerField(
+            choices=NIVEIS_HIERARQUIA,
+            verbose_name="Nível Hierárquico",
+            help_text="1 = Mais alto (Direção), 10 = Mais baixo (Operacional)",
+            default=10
+        )
     # Campos de texto para responsabilidade e autoridade, educação, treinamento e experiência
     responsabilidade_atividade_primaria = models.TextField(
         verbose_name="Responsabilidade e Autoridade: (Atividade Primária)",

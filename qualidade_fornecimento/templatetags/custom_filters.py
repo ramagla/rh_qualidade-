@@ -226,3 +226,16 @@ def split(value, delimiter=","):
     if isinstance(value, str):
         return value.split(delimiter)
     return []
+
+
+@register.filter
+def filter_status(queryset, status):
+    return queryset.filter(status=status)
+
+@register.filter
+def dictfilter(queryset, attr):
+    """
+    Filtra objetos em uma queryset ou lista onde o atributo especificado não é None ou vazio.
+    Ex: {{ funcionarios|dictfilter:"foto" }}
+    """
+    return [obj for obj in queryset if getattr(obj, attr, None)]
