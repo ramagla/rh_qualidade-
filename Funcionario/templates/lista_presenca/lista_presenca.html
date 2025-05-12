@@ -151,15 +151,25 @@
             {% endif %}
           </td>
           <td>
-            {% include 'partials/global/_botao_visualizar.html' with objeto=lista url_visualizar='visualizar_lista_presenca' %}
-            {% include 'partials/global/_botao_editar.html' with objeto=lista url_editar='editar_lista_presenca' %}
-            {% if request.user|has_permission:"Funcionario.print_listapresenca" %}
+            {% if request.user|has_permission:"Funcionario.view_listapresenca" %}
+              {% include 'partials/global/_botao_visualizar.html' with objeto=lista url_visualizar='visualizar_lista_presenca' %}
+            {% endif %}
+          
+            {% if request.user|has_permission:"Funcionario.change_listapresenca" %}
+              {% include 'partials/global/_botao_editar.html' with objeto=lista url_editar='editar_lista_presenca' %}
+            {% endif %}
+          
+            {% if request.user|has_permission:"Funcionario.view_listapresenca" %}
               <a href="{% url 'imprimir_lista_presenca' lista.id %}" class="btn btn-sm btn-primary mt-1" title="Imprimir" aria-label="Imprimir">
                 <i class="bi bi-printer"></i>
               </a>
             {% endif %}
-            {% include 'partials/global/_botao_excluir.html' with objeto=lista url_excluir='excluir_lista_presenca' label=lista.assunto %}
+          
+            {% if request.user|has_permission:"Funcionario.delete_listapresenca" %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=lista url_excluir='excluir_lista_presenca' label=lista.assunto %}
+            {% endif %}
           </td>
+          
         </tr>
 
         <!-- Modal Participantes -->

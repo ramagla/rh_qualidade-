@@ -115,13 +115,25 @@
                     <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#treinamentoModal{{ evaluation.id }}" aria-label="Ver treinamentos requeridos"><i class="bi bi-eye"></i></button>
                 </td>
                 <td>
+                  {% if request.user|has_permission:"Funcionario.view_jobrotationevaluation" %}
                     {% include "partials/global/_botao_visualizar.html" with objeto=evaluation url_visualizar='visualizar_jobrotation_evaluation' label='avaliação' %}
+                  {% endif %}
+                
+                  {% if request.user|has_permission:"Funcionario.change_jobrotationevaluation" %}
                     {% include "partials/global/_botao_editar.html" with objeto=evaluation url_editar='editar_jobrotation_evaluation' label='avaliação' %}
+                  {% endif %}
+                
+                  {% if request.user|has_permission:"Funcionario.view_jobrotationevaluation" %}
                     <a href="{% url 'imprimir_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-primary mt-1" target="_blank" title="Imprimir" aria-label="Imprimir avaliação">
-                        <i class="bi bi-printer"></i>
+                      <i class="bi bi-printer"></i>
                     </a>
+                  {% endif %}
+                
+                  {% if request.user|has_permission:"Funcionario.delete_jobrotationevaluation" %}
                     {% include "partials/global/_botao_excluir.html" with objeto=evaluation url_excluir='excluir_jobrotation' label='avaliação' %}
+                  {% endif %}
                 </td>
+                
             </tr>
 
          <!-- Modal Genérica de Informação -->

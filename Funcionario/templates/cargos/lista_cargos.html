@@ -101,18 +101,30 @@
           {% if request.user|has_permission:"Funcionario.change_cargo" %}
             {% include "partials/global/_botao_editar.html" with objeto=cargo url_editar='editar_cargo' %}
           {% endif %}
- <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm mt-1" title="Histórico de Revisões">
-                        <i class="bi bi-clock-history"></i>
-                    </a>          <a href="{% url 'imprimir_cargo' cargo.id %}" class="btn btn-sm btn-success mt-1" title="Imprimir Descrição" aria-label="Imprimir descrição do cargo">
-            <i class="bi bi-printer" aria-hidden="true"></i>
-          </a>
-          {% if cargo.descricao_arquivo %}
+        
+          {% if request.user|has_permission:"Funcionario.view_revisao" %}
+            <a href="{% url 'historico_revisoes' cargo.id %}" class="btn btn-info btn-sm mt-1" title="Histórico de Revisões">
+              <i class="bi bi-clock-history"></i>
+            </a>
+          {% endif %}
+        
+          {% if request.user|has_permission:"Funcionario.view_cargo" %}
+            <a href="{% url 'imprimir_cargo' cargo.id %}" class="btn btn-sm btn-success mt-1" title="Imprimir Descrição" aria-label="Imprimir descrição do cargo">
+              <i class="bi bi-printer" aria-hidden="true"></i>
+            </a>
+          {% endif %}
+        
+          {% if request.user|has_permission:"Funcionario.view_cargo" and cargo.descricao_arquivo %}
             <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-sm btn-secondary mt-1" download title="Baixar Descrição" aria-label="Baixar descrição em PDF">
               <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
             </a>
           {% endif %}
-          {% include "partials/global/_botao_excluir.html" with objeto=cargo url_excluir='excluir_cargo' label="cargo" %}
+        
+          {% if request.user|has_permission:"Funcionario.delete_cargo" %}
+            {% include "partials/global/_botao_excluir.html" with objeto=cargo url_excluir='excluir_cargo' label="cargo" %}
+          {% endif %}
         </td>
+        
       </tr>
       {% empty %}
         {% include "partials/_sem_resultados.html" with item_nome="cargo" %}

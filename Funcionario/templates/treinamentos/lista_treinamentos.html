@@ -12,30 +12,31 @@
     {% include 'partials/global/_header_titulo.html' with titulo="Treinamentos Cadastrados" icone="bi bi-mortarboard" emoji="🎓" %}
 
     <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
-        <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary d-flex align-items-center">
+        {% if request.user|has_permission:"Funcionario.view_treinamento" %}
+          <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary d-flex align-items-center">
             <i class="bi bi-download me-2"></i> Exportar para Excel
-        </a>
-
+          </a>
+        {% endif %}
+      
         <div class="ms-auto d-flex flex-wrap gap-2">
-            {% if request.user|has_permission:"Funcionario.add_treinamento" %}
-                <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success d-flex align-items-center">
-                    <i class="bi bi-plus-circle me-2"></i> Cadastrar
-                </a>
-            {% endif %}
-
-            {% if request.user|has_permission:"Funcionario.print_treinamento" %}
-                <button type="button" class="btn btn-info d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
-                    <i class="bi bi-printer me-2"></i> Imprimir
-                </button>
-            {% endif %}
-
-            {% if request.user|has_permission:"Funcionario.view_treinamento" %}
-                <a href="{% url 'levantamento_treinamento' %}" class="btn btn-secondary d-flex align-items-center">
-                    <i class="bi bi-file-earmark-spreadsheet me-2"></i> Levantamento de Necessidades
-                </a>
-            {% endif %}
+          {% if request.user|has_permission:"Funcionario.add_treinamento" %}
+            <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success d-flex align-items-center">
+              <i class="bi bi-plus-circle me-2"></i> Cadastrar
+            </a>
+          {% endif %}
+      
+          {% if request.user|has_permission:"Funcionario.view_treinamento" %}
+            <button type="button" class="btn btn-info d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
+              <i class="bi bi-printer me-2"></i> Imprimir
+            </button>
+      
+            <a href="{% url 'levantamento_treinamento' %}" class="btn btn-secondary d-flex align-items-center">
+              <i class="bi bi-file-earmark-spreadsheet me-2"></i> Levantamento de Necessidades
+            </a>
+          {% endif %}
         </div>
-    </div>
+      </div>
+      
 
     <!-- Modal de Impressao -->
     <div class="modal fade" id="imprimirF003Modal" tabindex="-1" aria-labelledby="imprimirF003ModalLabel" aria-hidden="true">
@@ -188,10 +189,19 @@
                         {% endif %}
                     </td>
                     <td class="d-flex justify-content-center flex-wrap gap-1">
-                        {% include 'partials/global/_botao_visualizar.html' with objeto=treinamento url_visualizar='visualizar_treinamento' label='treinamento' %}
-                        {% include 'partials/global/_botao_editar.html' with objeto=treinamento url_editar='editar_treinamento' label='treinamento' %}
-                        {% include 'partials/global/_botao_excluir.html' with objeto=treinamento url_excluir='excluir_treinamento' label='treinamento' %}
-                    </td>
+                        {% if request.user|has_permission:"Funcionario.view_treinamento" %}
+                          {% include 'partials/global/_botao_visualizar.html' with objeto=treinamento url_visualizar='visualizar_treinamento' label='treinamento' %}
+                        {% endif %}
+                      
+                        {% if request.user|has_permission:"Funcionario.change_treinamento" %}
+                          {% include 'partials/global/_botao_editar.html' with objeto=treinamento url_editar='editar_treinamento' label='treinamento' %}
+                        {% endif %}
+                      
+                        {% if request.user|has_permission:"Funcionario.delete_treinamento" %}
+                          {% include 'partials/global/_botao_excluir.html' with objeto=treinamento url_excluir='excluir_treinamento' label='treinamento' %}
+                        {% endif %}
+                      </td>
+                      
                 </tr>
 
                 <!-- Modal de Funcionários -->
