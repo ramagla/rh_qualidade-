@@ -49,65 +49,87 @@ def feriados(request):
         feriados = []
     return render(request, "configuracoes/feriados.html", {"feriados": feriados})
 
-from django.apps import apps
-from django.contrib.auth.models import Permission, User, Group
-from django.contrib.contenttypes.models import ContentType
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-import json
+# views.py
 
 from collections import defaultdict
 
-from django.contrib.auth.models import User, Permission, Group
-from django.contrib.contenttypes.models import ContentType
-from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User, Group, Permission
+from django.shortcuts import get_object_or_404, redirect, render
 
+@login_required
+def permissoes_acesso(request):
+    from collections import defaultdict
+    from django.contrib.auth.models import User, Permission
 
-def permissoes_acesso(request, usuario_id=None):
-    usuario = get_object_or_404(User, id=usuario_id) if usuario_id else None
+    usuario = None
+    user_id = request.GET.get('usuario_id') or request.POST.get('usuario_id')
 
-    # Processamento do formulário
-    if request.method == "POST":
-        user_id = request.POST.get("usuario_id")
-        if not user_id:
-            messages.error(request, "Usuário não selecionado.")
-            return redirect("permissoes_acesso")
+    if user_id:
+        usuario = get_object_or_404(User, pk=user_id)
 
-        user = get_object_or_404(User, pk=user_id)
-        permissoes_ids = request.POST.getlist("permissoes")
+    if request.method == 'POST' and usuario:
+        permissoes_ids = request.POST.getlist('permissoes')
         permissoes = Permission.objects.filter(id__in=permissoes_ids)
+        usuario.user_permissions.set(permissoes)
+        messages.success(request, f"Permissões atualizadas para {usuario.get_full_name() or usuario.username}")
+        return redirect(f"{request.path}?usuario_id={usuario.id}")
 
-        user.user_permissions.set(permissoes)
-        messages.success(
-            request,
-            f"Permissões atualizadas com sucesso para {user.get_full_name() or user.username}"
-        )
-        return redirect("permissoes_acesso", usuario_id=user.id)
-
-    # Listas auxiliares
-    usuarios = User.objects.all().order_by("username")
-    grupos = Group.objects.all().order_by("name")
-
-    # Agrupamento por app e modelo
+    # Agrupar permissões por app e modelo
     permissoes_agrupadas = defaultdict(lambda: defaultdict(list))
-    permissoes = Permission.objects.select_related("content_type").order_by(
-        "content_type__app_label", "content_type__model", "codename"
-    )
-
-    for perm in permissoes:
+    todas = Permission.objects.select_related('content_type').order_by('content_type__app_label', 'content_type__model', 'codename')
+    for perm in todas:
         app = perm.content_type.app_label
-        modelo = perm.content_type.name.title()  # fallback seguro com nome visível
+        modelo = perm.content_type.name.title()
         permissoes_agrupadas[app][modelo].append(perm)
 
-    context = {
-        "usuarios": usuarios,
-        "grupos": grupos,
+    return render(request, "configuracoes/permissoes_acesso.html", {
+        "usuarios": User.objects.order_by("username"),
         "usuario": usuario,
-        "permissoes_agrupadas": dict(permissoes_agrupadas),
+        "permissoes_agrupadas": {app: dict(modelos) for app, modelos in permissoes_agrupadas.items()},
+        "permissoes_ativas_usuario": usuario.get_all_permissions() if usuario else set(),
+    })
+
+
+
+from django.contrib.auth.models import Permission, Group
+from django.contrib import messages
+from django.shortcuts import render, get_object_or_404, redirect
+from collections import defaultdict
+
+def permissoes_por_grupo(request, grupo_id=None):
+    grupo = None
+    permissoes_agrupadas = defaultdict(lambda: defaultdict(list))
+    grupos = Group.objects.all()
+
+    if grupo_id:
+        grupo = get_object_or_404(Group, pk=grupo_id)
+        todas_permissoes = Permission.objects.select_related("content_type").order_by(
+            "content_type__app_label", "content_type__model", "codename"
+        )
+
+        for perm in todas_permissoes:
+            app = perm.content_type.app_label
+            modelo = perm.content_type.name.title()
+            permissoes_agrupadas[app][modelo].append(perm)
+
+        if request.method == "POST":
+            permissoes_ids = request.POST.getlist("permissoes")
+            permissoes_selecionadas = Permission.objects.filter(id__in=permissoes_ids)
+            grupo.permissions.set(permissoes_selecionadas)
+            messages.success(request, f"Permissões atualizadas para o grupo {grupo.name}")
+            return redirect("permissoes_por_grupo", grupo_id=grupo.id)
+
+    context = {
+        "grupos": grupos,
+        "grupo": grupo,
+        "permissoes_agrupadas": {app: dict(modelos) for app, modelos in permissoes_agrupadas.items()},
     }
 
-    return render(request, "configuracoes/permissoes_acesso.html", context)
+    return render(request, "configuracoes/permissoes_por_grupo.html", context)
+
+
 
 
 import google.generativeai as genai

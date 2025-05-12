@@ -262,23 +262,3 @@ def formatar_duracao_flex(valor):
         return "-"
 
 
-@register.filter
-def traduz_perm(nome):
-    traducoes = {
-        "Can add": "Pode adicionar",
-        "Can change": "Pode editar",
-        "Can delete": "Pode excluir",
-        "Can view": "Pode visualizar",
-    }
-    for en, pt in traducoes.items():
-        if nome.startswith(en):
-            return nome.replace(en, pt)
-    return nome
-
-
-@register.filter
-def tem_permissao(usuario, permissao_str):
-    """
-    Exemplo: {{ usuario|tem_permissao:"metrologia.view_dispositivo" }}
-    """
-    return usuario.has_perm(permissao_str)

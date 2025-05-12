@@ -2,43 +2,35 @@
 {% load static %}
 {% load permissoes_tags %}
 
-{% block title %}Permissões de Acesso{% endblock %}
+{% block title %}Permissões por Grupo{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-  {% include 'partials/global/_header_titulo.html' with titulo="Permissões de Acesso" icone="bi bi-lock-fill" emoji="🔐" %}
+  {% include 'partials/global/_header_titulo.html' with titulo="Permissões por Grupo" icone="bi bi-people" emoji="👥" %}
 
   <div class="card shadow-sm mb-4">
     <div class="card-body">
-      <form method="get" class="row g-3">
+      <form class="row g-3">
         <div class="col-md-6">
-          <label class="form-label" for="usuario_id"><i class="bi bi-person-badge"></i> Selecione o Usuário</label>
-          <select name="usuario_id" id="usuario_id" class="form-select select2" onchange="this.form.submit()" required>
-            <option value="">-- Selecione --</option>
-            {% for u in usuarios %}
-              <option value="{{ u.id }}" {% if usuario and usuario.id == u.id %}selected{% endif %}>
-                {{ u.get_full_name }} ({{ u.username }})
-              </option>
+          <label class="form-label" for="grupo_id"><i class="bi bi-shield-lock-fill"></i> Selecione o Grupo</label>
+          <select id="grupo_id" class="form-select select2" onchange="redirecionarGrupo()">
+            <option value="">-- Escolha um grupo --</option>
+            {% for g in grupos %}
+              <option value="{{ g.id }}" {% if grupo and grupo.id == g.id %}selected{% endif %}>{{ g.name }}</option>
             {% endfor %}
           </select>
-        </div>
-        <div class="col-md-6 text-end align-self-end">
-          <a href="{% url 'permissoes_por_grupo_lista' %}" class="btn btn-outline-primary mt-2">
-            <i class="bi bi-people-fill"></i> Permissões por Grupo
-          </a>
         </div>
       </form>
     </div>
   </div>
 
-  {% if usuario %}
+  {% if grupo %}
   <form method="post" class="card shadow-sm">
     {% csrf_token %}
-    <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
     <div class="card-body">
       <h5 class="mb-4">
-        <i class="bi bi-person-lines-fill"></i> Permissões para o usuário:
-        <strong>{{ usuario.get_full_name }} ({{ usuario.username }})</strong>
+        <i class="bi bi-lock-fill"></i> Permissões para o grupo:
+        <strong>{{ grupo.name }}</strong>
       </h5>
 
       <div class="accordion" id="accordionApps">
@@ -67,15 +59,21 @@
                         <div class="accordion-body">
                           <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
                             {% for p in perms %}
-                              {% with p.content_type.app_label|add:"."|add:p.codename as perm_codename %}
-                                <div class="col">
-                                  <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" name="permissoes" id="perm{{ p.id }}" value="{{ p.id }}"
-                                      {% if perm_codename in permissoes_ativas_usuario %}checked{% endif %}>
-                                    <label class="form-check-label" for="perm{{ p.id }}">{{ p.name|traduz_perm }}</label>
-                                  </div>
+                              <div class="col">
+                                <div class="form-check form-switch">
+                                  <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="permissoes"
+                                    id="perm{{ p.id }}"
+                                    value="{{ p.id }}"
+                                    {% if p in grupo.permissions.all %}checked{% endif %}
+                                  >
+                                  <label class="form-check-label" for="perm{{ p.id }}">
+                                    {{ p.name|traduz_perm }}
+                                  </label>
                                 </div>
-                              {% endwith %}
+                              </div>
                             {% endfor %}
                           </div>
                         </div>
@@ -98,13 +96,13 @@
     </div>
   </form>
   {% endif %}
-</div>
-{% endblock %}
 
-{% block extra_scripts %}
-<script>
-  $(document).ready(function () {
-    $('.select2').select2({ width: '100%' });
-  });
-</script>
+  <script>
+    function redirecionarGrupo() {
+      const grupoId = document.getElementById("grupo_id").value;
+      if (grupoId) {
+        window.location.href = "/permissoes-grupo/" + grupoId + "/";
+      }
+    }
+  </script>
 {% endblock %}

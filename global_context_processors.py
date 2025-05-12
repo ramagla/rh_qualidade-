@@ -1,4 +1,6 @@
 from datetime import datetime
+from Funcionario.models import AtualizacaoSistema
+
 
 def global_menu(request):
     user = request.user
@@ -152,6 +154,8 @@ def global_menu(request):
                 "icon": "fas fa-calendar-alt",
             })
 
+        
+
         # Menu Qualidade de Fornecimento com permissões
             menu_qualidade_fornecimento = []
 
@@ -244,6 +248,17 @@ def global_menu(request):
         alertas_nao_lidos = 0
         ultimos_alertas = []
 
+    ultima = (
+    AtualizacaoSistema.objects.filter(status="concluido")
+    .order_by("-data_termino")
+    .first()
+    )
+
+    historico = (
+        AtualizacaoSistema.objects.filter(status="concluido")
+        .exclude(id=ultima.id if ultima else None)
+        .order_by("-data_termino")
+    )
 
     return {
         "menu": menu,
@@ -252,5 +267,8 @@ def global_menu(request):
         "ano_atual": datetime.now().year,
         "alertas_nao_lidos": alertas_nao_lidos,
         "ultimos_alertas": ultimos_alertas,
+        "ultima_atualizacao_concluida": ultima,
+        "historico_versoes": historico,
     }
+
 

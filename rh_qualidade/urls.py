@@ -8,6 +8,7 @@ from .views import (
     feriados,
     logs,
     permissoes_acesso,
+    permissoes_por_grupo,
     chat_gpt_query,  # ➤ Importa a view que você criou
 )
 
@@ -29,8 +30,11 @@ urlpatterns = [
 
     # Páginas internas e permissões
     path("acesso_negado/", acesso_negado, name="acesso_negado"),
-    path("permissoes-acesso/<int:usuario_id>/", permissoes_acesso, name="permissoes_acesso"),
     path("permissoes-acesso/", permissoes_acesso, name="permissoes_acesso_lista"),
+    path("permissoes-grupo/<int:grupo_id>/", permissoes_por_grupo, name="permissoes_por_grupo"),
+    path("permissoes-grupo/", permissoes_por_grupo, name="permissoes_por_grupo_lista"),
+
+
     path("alertas/", include("alerts.urls")),
     path("logs/", logs, name="logs"),
     path("alertas-email/", alertas_emails, name="alertas_emails"),

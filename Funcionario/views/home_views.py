@@ -159,8 +159,11 @@ def home(request):
         "classificacao_bom": classificacao_counter.get("Bom", 0),
         "classificacao_otimo": classificacao_counter.get("Ótimo", 0),
         "avaliacoes_pendentes": avaliacoes_pendentes,
-    "funcionarios_pendentes": funcionarios_pendentes,
+        "funcionarios_pendentes": funcionarios_pendentes,
     }
+    form = EventoForm()  # <-- ADICIONE ISSO
+    context["form"] = form  # <-- E ISSO
+
 
     return render(request, "dashboard/home.html", context)
 
