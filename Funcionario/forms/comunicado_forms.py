@@ -1,17 +1,23 @@
 from django import forms
-from django.forms.widgets import Textarea
+from django_ckeditor_5.widgets import CKEditor5Widget
 
 from rh_qualidade.utils import title_case
-
 from ..models import Comunicado
 
 
 class ComunicadoForm(forms.ModelForm):
-    descricao = forms.CharField(widget=Textarea(attrs={
-        'class': 'form-control tinymce',
-        'readonly': False,  # redundante, mas previne sobrescrita
-        'disabled': False,
-    }))
+    descricao = forms.CharField(
+        widget=CKEditor5Widget(
+            config_name="default",
+            attrs={"placeholder": "Digite o conteúdo do comunicado"}
+        ),
+        required=True
+    )
+
+    lista_assinaturas = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={"class": "form-control"}),
+    )
 
     class Meta:
         model = Comunicado
@@ -30,21 +36,13 @@ class ComunicadoForm(forms.ModelForm):
             ),
             "assunto": forms.TextInput(attrs={"class": "form-control"}),
             "tipo": forms.Select(attrs={"class": "form-select"}),
-            "departamento_responsavel": forms.TextInput(
-                attrs={"class": "form-control"}
-            ),
-            "lista_assinaturas": forms.FileInput(attrs={"class": "form-control"}),
+            "departamento_responsavel": forms.TextInput(attrs={"class": "form-control"}),
         }
 
     def clean_assunto(self):
-        assunto = self.cleaned_data.get("assunto")
-        if assunto:
-            return title_case(assunto)  # Aplica a função title_case personalizada
-        return assunto
+        assunto = self.cleaned_data.get("assunto", "")
+        return title_case(assunto) if assunto else assunto
 
     def clean_departamento_responsavel(self):
-        departamento_responsavel = self.cleaned_data.get("departamento_responsavel")
-        if departamento_responsavel:
-            # Aplica a função title_case personalizada
-            return title_case(departamento_responsavel)
-        return departamento_responsavel
+        departamento = self.cleaned_data.get("departamento_responsavel", "")
+        return title_case(departamento) if departamento else departamento

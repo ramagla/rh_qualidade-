@@ -122,6 +122,8 @@ def global_menu(request):
                     {"name": "Indicador Anual", "url": "relatorio_indicador_anual"},
                     {"name": "Cronograma de Treinamentos", "url": "cronograma_treinamentos"},
                     {"name": "Cronograma de Eficácia", "url": "cronograma_avaliacao_eficacia"},
+                    {"name": "Aniversariantes do Mês", "url": "relatorio_aniversariantes"},  
+
                 ],
             })
 
@@ -213,11 +215,11 @@ def global_menu(request):
 
 
     # Módulos disponíveis no seletor superior
-    modulos_disponiveis = []
-    if metrologia_permitido:
-        modulos_disponiveis.append({"name": "Metrologia", "url": "metrologia_home", "icon": "bi bi-rulers"})
+    modulos_disponiveis = []    
     if recursos_humanos_permitido:
         modulos_disponiveis.append({"name": "Recursos Humanos", "url": "home", "icon": "bi bi-people"})
+    if metrologia_permitido:
+        modulos_disponiveis.append({"name": "Metrologia", "url": "metrologia_home", "icon": "bi bi-rulers"})
     if qualidade_fornecimento_permitido:
         modulos_disponiveis.append({"name": "Qualidade de Fornecimento", "url": "qualidadefornecimento_home", "icon": "fas fa-industry"})
 
@@ -233,10 +235,22 @@ def global_menu(request):
         menu = menu_recursos_humanos
         modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Recursos Humanos"), None)
 
+    from alerts.models import AlertaUsuario
+
+    if user.is_authenticated:
+        alertas_nao_lidos = AlertaUsuario.objects.filter(usuario=user, lido=False).count()
+        ultimos_alertas = AlertaUsuario.objects.filter(usuario=user).order_by("-criado_em")[:5]
+    else:
+        alertas_nao_lidos = 0
+        ultimos_alertas = []
+
+
     return {
-    "menu": menu,
-    "modulo_ativo": modulo_ativo,
-    "modulos_disponiveis": modulos_disponiveis,
-    "ano_atual": datetime.now().year,
-}
+        "menu": menu,
+        "modulo_ativo": modulo_ativo,
+        "modulos_disponiveis": modulos_disponiveis,
+        "ano_atual": datetime.now().year,
+        "alertas_nao_lidos": alertas_nao_lidos,
+        "ultimos_alertas": ultimos_alertas,
+    }
 

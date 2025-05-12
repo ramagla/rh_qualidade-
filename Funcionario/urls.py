@@ -102,6 +102,7 @@ from .views.home_views import (
     exportar_calendario,
     home,
     imprimir_calendario,
+    marcar_alertas_como_lidos,
 )
 from .views.integracao_views import (
     cadastrar_integracao,
@@ -147,6 +148,7 @@ from .views.relatorios_views import (
     RelatorioPlanilhaTreinamentosView,
     cronograma_avaliacao_eficacia,
     cronograma_treinamentos,
+    relatorio_aniversariantes
 )
 from .views.treinamento_views import (
     cadastrar_treinamento,
@@ -167,6 +169,8 @@ urlpatterns = [
     path("", home, name="funcionarios_home"),
     path("", home, name="home"),
     path("home/", home, name="home"),
+    path("marcar_lidos/", marcar_alertas_como_lidos, name="marcar_alertas_como_lidos"),
+
     # Funcionários
     path("funcionarios/", lista_funcionarios, name="lista_funcionarios"),
     path(
@@ -600,6 +604,7 @@ urlpatterns = [
     path("avaliacao-anual/", cadastrar_type_avaliacao, name="cadastrar_type_avaliacao"),
     path('funcionarios/imprimir-organograma/', imprimir_organograma, name='imprimir_organograma'),
     path("cargos/organograma/", organograma_cargos, name="organograma_cargos"),
+    path('relatorios/aniversariantes/', relatorio_aniversariantes, name='relatorio_aniversariantes'),
 
 ]
 

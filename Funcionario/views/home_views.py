@@ -60,6 +60,8 @@ from django.db.models.functions import ExtractYear
 from django.shortcuts import render
 from django.utils.timezone import now
 
+from alerts.models import AlertaConfigurado
+
 
 
 
@@ -418,3 +420,10 @@ def eventos_json(request):
         print("Erro ao carregar feriados:", e)
 
     return JsonResponse({"eventos": eventos_list, "feriados": feriados}, safe=False)
+
+@login_required
+def marcar_alertas_como_lidos(request):
+    alertas = request.user.alertas.filter(lido=False)
+    alertas.update(lido=True)
+    return JsonResponse({"status": "ok"})
+

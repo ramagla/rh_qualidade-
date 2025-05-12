@@ -86,14 +86,27 @@ def imprimir_comunicado(request, id):
 @login_required
 def cadastrar_comunicado(request):
     if request.method == "POST":
-        form = ComunicadoForm(request.POST, request.FILES)  # Inclua request.FILES aqui
+        form = ComunicadoForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, "Comunicado cadastrado com sucesso!")
             return redirect("lista_comunicados")
     else:
         form = ComunicadoForm()
-    return render(request, "comunicados/form_comunicado.html", {"form": form})
+
+    return render(
+        request,
+        "comunicados/form_comunicado.html",
+        {
+            "form": form,
+            "comunicado": None,
+            "edicao": False,
+            "param_id": None,
+            "ultima_atualizacao_concluida": None,
+            "ultima_atualizacao": now(),  # <- Aqui está o que falta!
+        },
+    )
+
 
 
 @login_required

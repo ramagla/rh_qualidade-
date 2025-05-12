@@ -185,7 +185,8 @@ urlpatterns = [
     visualizar_controle_servico_externo,
     name="visualizar_controle_servico_externo",
     ),
-path("normas/aprovar/", norma_views.aprovar_normas, name="aprovar_normas"),
-path("norma-aprovada/<int:id>/", norma_aprovada, name="verificar_norma_aprovada"),
+    path("normas/aprovar/", norma_views.aprovar_normas, name="aprovar_normas"),
+    path("norma-aprovada/<int:id>/", norma_aprovada, name="verificar_norma_aprovada"),
+
 
 ]

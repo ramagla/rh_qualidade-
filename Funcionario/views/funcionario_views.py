@@ -16,6 +16,10 @@ from Funcionario.models import (
     HistoricoCargo,
     Treinamento,
 )
+from Funcionario.models.avaliacao_treinamento import AvaliacaoTreinamento
+from Funcionario.models.integracao_funcionario import IntegracaoFuncionario
+from Funcionario.models.job_rotation_evaluation import JobRotationEvaluation
+from Funcionario.models.lista_presenca import ListaPresenca
 
 from ..models.cargo import Cargo
 
@@ -218,43 +222,54 @@ def excluir_funcionario(request, funcionario_id):
     return redirect("lista_funcionarios")
 
 
+from django.views import View
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
+from datetime import timedelta
+
+
+from metrologia.models import TabelaTecnica
+
+
 class ImprimirFichaView(View):
     def get(self, request, funcionario_id):
-        # Obtém o funcionário e todas as avaliações associadas
         funcionario = get_object_or_404(Funcionario, id=funcionario_id)
 
-        # Filtra as avaliações de experiência e anuais do funcionário
-        avaliacoes_experiencia = AvaliacaoExperiencia.objects.filter(
-            funcionario=funcionario
-        )
+        # Dados relacionados
+        treinamentos = Treinamento.objects.filter(funcionarios=funcionario)
+        listas_presenca = ListaPresenca.objects.filter(participantes=funcionario)
+        avaliacoes_treinamento = AvaliacaoTreinamento.objects.filter(funcionario=funcionario)
+        avaliacoes_experiencia = AvaliacaoExperiencia.objects.filter(funcionario=funcionario)
         avaliacoes_anual = AvaliacaoAnual.objects.filter(funcionario=funcionario)
+        job_rotations = JobRotationEvaluation.objects.filter(funcionario=funcionario)
+        equipamentos = TabelaTecnica.objects.filter(responsavel=funcionario)
+        integracao = IntegracaoFuncionario.objects.filter(funcionario=funcionario).last()
 
-        # Define o status do prazo para cada avaliação de experiência
+        # Status de prazo para avaliações
         today = timezone.now().date()
-
         for avaliacao in avaliacoes_experiencia:
             data_limite = avaliacao.data_avaliacao + timedelta(days=30)
-            avaliacao.get_status_prazo = (
-                "Dentro do Prazo" if data_limite >= today else "Em Atraso"
-            )
+            avaliacao.get_status_prazo = "Dentro do Prazo" if data_limite >= today else "Em Atraso"
 
         for avaliacao in avaliacoes_anual:
             data_limite = avaliacao.data_avaliacao + timedelta(days=365)
-            avaliacao.get_status_prazo = (
-                "Dentro do Prazo" if data_limite >= today else "Em Atraso"
-            )
+            avaliacao.get_status_prazo = "Dentro do Prazo" if data_limite >= today else "Em Atraso"
 
         context = {
             "funcionario": funcionario,
+            "treinamentos": treinamentos,
+            "listas_presenca": listas_presenca,
+            "avaliacoes_treinamento": avaliacoes_treinamento,
             "avaliacoes_experiencia": avaliacoes_experiencia,
             "avaliacoes_anual": avaliacoes_anual,
+            "job_rotations": job_rotations,
+            "equipamentos": equipamentos,
+            "integracao": integracao,
         }
 
         return render(request, "funcionarios/template_de_impressao.html", context)
 
     def post(self, request, funcionario_id):
-        # A lógica de imprimir deve ser tratada aqui, se necessário.
-        # Para o momento, apenas redireciona para o método GET
         return self.get(request, funcionario_id)
 
 

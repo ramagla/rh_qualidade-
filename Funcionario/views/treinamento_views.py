@@ -149,32 +149,23 @@ def visualizar_treinamento(request, treinamento_id):
     )
 
 
+from Funcionario.models import Documento, RevisaoDoc
+
 @login_required
 def imprimir_f003(request, funcionario_id):
-    # Obtém o funcionário pelo ID
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-
-    # Busca os treinamentos associados ao funcionário
     treinamentos = Treinamento.objects.filter(funcionarios=funcionario)
-
-    # Busca a integração associada ao funcionário
     integracao = IntegracaoFuncionario.objects.filter(funcionario=funcionario).first()
+    ultima_atualizacao = treinamentos.order_by("-data_fim").first().data_fim if treinamentos.exists() else None
 
-    # Obtém a data da última atualização dos treinamentos
-    ultima_atualizacao = (
-        treinamentos.order_by("-data_fim").first().data_fim
-        if treinamentos.exists()
-        else None
-    )
+    # 🔎 Busca a última revisão do formulário F003
+    try:
+        doc_f003 = Documento.objects.get(codigo="F003")
+        revisao = doc_f003.revisoes.filter(status="ativo").order_by("-data_revisao").first()
+        numero_formulario = f"{doc_f003.codigo} Rev.{revisao.numero_revisao}" if revisao else f"{doc_f003.codigo} Rev.00"
+    except Documento.DoesNotExist:
+        numero_formulario = "F003 Rev.00"
 
-    # Debug para verificar os dados no terminal
-    print(f"Funcionário: {funcionario}")
-    print(f"Treinamentos: {list(treinamentos)}")
-    print(
-        f"Data de Integração: {integracao.data_integracao if integracao else 'Nenhuma integração encontrada'}"
-    )
-
-    # Renderiza o template com os dados necessários
     return render(
         request,
         "treinamentos/relatorio_f003.html",
@@ -183,9 +174,11 @@ def imprimir_f003(request, funcionario_id):
             "treinamentos": treinamentos,
             "current_date": timezone.now(),
             "ultima_atualizacao": ultima_atualizacao,
-            "integracao": integracao,  # Inclui a integração no contexto
+            "integracao": integracao,
+            "numero_formulario": numero_formulario,  # ⬅️ usado no rodapé
         },
     )
+
 
 
 @login_required

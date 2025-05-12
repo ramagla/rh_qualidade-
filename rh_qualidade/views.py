@@ -49,37 +49,62 @@ def feriados(request):
         feriados = []
     return render(request, "configuracoes/feriados.html", {"feriados": feriados})
 
+from django.apps import apps
+from django.contrib.auth.models import Permission, User, Group
+from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+import json
+
+from collections import defaultdict
+
+from django.contrib.auth.models import User, Permission, Group
+from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+
 
 def permissoes_acesso(request, usuario_id=None):
-    usuario = get_object_or_404(User, id=usuario_id) if usuario_id else request.user
+    usuario = get_object_or_404(User, id=usuario_id) if usuario_id else None
 
-    permissoes_json = []
-    modulos = apps.get_app_configs()
+    # Processamento do formulário
+    if request.method == "POST":
+        user_id = request.POST.get("usuario_id")
+        if not user_id:
+            messages.error(request, "Usuário não selecionado.")
+            return redirect("permissoes_acesso")
 
-    for modulo in modulos:
-        permissoes = Permission.objects.filter(content_type__app_label=modulo.label)
-        permissoes_lista = [
-            {
-                "id": p.id,
-                "text": force_str(p.name),
-                "ativo": usuario.has_perm(f"{p.content_type.app_label}.{p.codename}"),
-            }
-            for p in permissoes
-        ]
-        if permissoes_lista:
-            permissoes_json.append(
-                {"text": force_str(modulo.verbose_name), "nodes": permissoes_lista}
-            )
+        user = get_object_or_404(User, pk=user_id)
+        permissoes_ids = request.POST.getlist("permissoes")
+        permissoes = Permission.objects.filter(id__in=permissoes_ids)
 
-    # Depuração: Exibir JSON gerado no terminal do servidor
-    print(
-        "🔹 JSON de permissões:",
-        json.dumps(permissoes_json, indent=4, ensure_ascii=False),
+        user.user_permissions.set(permissoes)
+        messages.success(
+            request,
+            f"Permissões atualizadas com sucesso para {user.get_full_name() or user.username}"
+        )
+        return redirect("permissoes_acesso", usuario_id=user.id)
+
+    # Listas auxiliares
+    usuarios = User.objects.all().order_by("username")
+    grupos = Group.objects.all().order_by("name")
+
+    # Agrupamento por app e modelo
+    permissoes_agrupadas = defaultdict(lambda: defaultdict(list))
+    permissoes = Permission.objects.select_related("content_type").order_by(
+        "content_type__app_label", "content_type__model", "codename"
     )
 
+    for perm in permissoes:
+        app = perm.content_type.app_label
+        modelo = perm.content_type.name.title()  # fallback seguro com nome visível
+        permissoes_agrupadas[app][modelo].append(perm)
+
     context = {
-        "usuarios_permissoes_json": json.dumps(permissoes_json, ensure_ascii=False),
+        "usuarios": usuarios,
+        "grupos": grupos,
         "usuario": usuario,
+        "permissoes_agrupadas": dict(permissoes_agrupadas),
     }
 
     return render(request, "configuracoes/permissoes_acesso.html", context)

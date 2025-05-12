@@ -184,7 +184,33 @@
     max-height: 500px;
     z-index: 1000;
 }
-
+#alerta-flutuante {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 1050;
+  }
+  
+  #alerta-flutuante .btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+    font-size: 1.25rem;
+  }
+  
+  @media (max-width: 768px) {
+    #alerta-flutuante {
+      bottom: 15px;
+      right: 15px;
+    }
+  }
+  
+  
     </style>
 </head>
 <body>
@@ -272,10 +298,10 @@
             <!-- Footer do Sidebar fixado na parte inferior -->
             <div class="sidebar-footer">
                 <a href="{% url 'calendario' %}" class="calendar-button">
-                    <i class="fas fa-calendar-alt"></i> <span class="sidebar-text"></span>
+                    <i class="fas fa-calendar-alt"></i> <span class="sidebar-text">Calendário</span>
                 </a>
                 <span class="version-section" data-bs-toggle="modal" data-bs-target="#versaoModal">
-                    <i class="fas fa-info-circle"></i> <span class="sidebar-text"> {{ ultima_atualizacao_concluida.versao }}</span>
+                    <i class="fas fa-info-circle"></i> <span class="sidebar-text">&copy; {{ ano_atual }}  {{ ultima_atualizacao.versao }}</span>
                 </span>
             </div>
         </div>
@@ -342,6 +368,12 @@
                                         </a>
                                     </li>
                                 {% endif %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}">
+                                        <i class="bi bi-bell"></i> Alertas
+                                    </a>
+                                </li>
+
                                 {% if perms.Funcionario.view_feriados %}
                                     <li>
                                         <a class="dropdown-item" href="{% url 'feriados' %}">
@@ -376,8 +408,65 @@
         
     </div>
 
-    {% include 'partials/global/_modal_versao.html' %}
-
+   <!-- Modal de Informações da Versão -->
+<div class="modal fade" id="versaoModal" tabindex="-1" aria-labelledby="versaoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="versaoModalLabel">Informações da Versão</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" autofocus></button>
+        </div>
+        <div class="modal-body">
+          {% if ultima_atualizacao_concluida %}
+            <!-- Versão atual -->
+            <div class="mb-4">
+              <h6 class="text-primary">
+                <i class="bi bi-star-fill me-1"></i>
+                Versão Atual: <strong>{{ ultima_atualizacao_concluida.versao }}</strong>
+              </h6>
+              <p>{{ ultima_atualizacao_concluida.descricao|safe }}</p>
+              <p class="text-muted">Entregue em: {{ ultima_atualizacao_concluida.data_termino|date:"d/m/Y" }}</p>
+            </div>
+  
+            <!-- Histórico -->
+            {% if historico_versoes %}
+              <hr>
+              <h6>
+                <i class="bi bi-clock-history me-1"></i>
+                Versões Anteriores
+              </h6>
+              <div class="accordion accordion-flush mt-3" id="accordionHistoricoVersoes">
+                {% for versao in historico_versoes %}
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                              data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false"
+                              aria-controls="collapse{{ forloop.counter }}">
+                        <strong>{{ versao.versao }}</strong> – {{ versao.data_termino|date:"d/m/Y" }}
+                      </button>
+                    </h2>
+                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
+                         aria-labelledby="heading{{ forloop.counter }}"
+                         data-bs-parent="#accordionHistoricoVersoes">
+                      <div class="accordion-body small">
+                        {{ versao.descricao|safe }}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% else %}
+            <p>Nenhuma atualização registrada.</p>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
 
 
     <!-- Scripts -->
@@ -428,7 +517,55 @@
             });
         });
     </script>,
-    
+    <!-- Botão flutuante de alertas -->
+    {% if alertas_nao_lidos > 0 %}
+<div class="dropdown" id="alerta-flutuante">
+    <a class="btn btn-warning rounded-circle" href="#" id="botaoAlertas" data-bs-toggle="dropdown" aria-expanded="false" title="Alertas de Qualidade">
+      <i class="bi bi-envelope-fill fs-4"></i>
+      {% if alertas_nao_lidos > 0 %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          {{ alertas_nao_lidos }}
+          <span class="visually-hidden">alertas não lidos</span>
+        </span>
+      {% endif %}
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="botaoAlertas" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+      {% for alerta in ultimos_alertas %}
+        <li class="dropdown-item small">
+          <strong>{{ alerta.titulo }}</strong><br>
+          <span class="text-muted">{{ alerta.mensagem|truncatechars:80 }}</span>
+        </li>
+      {% empty %}
+        <li class="dropdown-item text-muted">Nenhum alerta novo.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const alertaBtn = document.getElementById("botaoAlertas");
+  
+      alertaBtn?.addEventListener("click", function () {
+        // Somente faz a chamada se ainda tiver badge
+        if (document.querySelector("#botaoAlertas .badge")) {
+          fetch("{% url 'marcar_alertas_como_lidos' %}")
+            .then(response => response.json())
+            .then(data => {
+              if (data.status === "ok") {
+                // Remove badge visual
+                const badge = document.querySelector("#botaoAlertas .badge");
+                if (badge) {
+                  badge.remove();
+                }
+                // Opcional: esconder o botão inteiro
+                // document.getElementById("alerta-flutuante").style.display = "none";
+              }
+            });
+        }
+      });
+    });
+  </script>
+  
 
 </body>
 </html>

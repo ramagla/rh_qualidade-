@@ -239,3 +239,46 @@ def dictfilter(queryset, attr):
     Ex: {{ funcionarios|dictfilter:"foto" }}
     """
     return [obj for obj in queryset if getattr(obj, attr, None)]
+
+@register.filter
+def formatar_duracao_flex(valor):
+    """
+    Converte decimal para hh:mm, preserva strings como '18h', e retorna '-' para valores inválidos.
+    """
+    try:
+        # Se já está no formato string (ex: '18h', '1h', '00:45'), retorna como está
+        if isinstance(valor, str):
+            return valor.strip()
+
+        total_minutos = int(float(valor) * 60)
+        horas = total_minutos // 60
+        minutos = total_minutos % 60
+
+        # Se for hora cheia
+        if minutos == 0:
+            return f"{horas}h"
+        return f"{horas:02d}:{minutos:02d}"
+    except (TypeError, ValueError):
+        return "-"
+
+
+@register.filter
+def traduz_perm(nome):
+    traducoes = {
+        "Can add": "Pode adicionar",
+        "Can change": "Pode editar",
+        "Can delete": "Pode excluir",
+        "Can view": "Pode visualizar",
+    }
+    for en, pt in traducoes.items():
+        if nome.startswith(en):
+            return nome.replace(en, pt)
+    return nome
+
+
+@register.filter
+def tem_permissao(usuario, permissao_str):
+    """
+    Exemplo: {{ usuario|tem_permissao:"metrologia.view_dispositivo" }}
+    """
+    return usuario.has_perm(permissao_str)

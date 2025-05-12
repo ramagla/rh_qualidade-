@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h5>
+    <i class="bi bi-pencil me-2"></i> Editar Alerta: {{ alerta.get_tipo_display }}
+  </h5>
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="usuarios" class="form-label">
+        <i class="bi bi-person-fill me-1"></i> Usuários
+      </label>
+      <select name="usuarios" id="usuarios" multiple class="form-select select2">
+        {% for user in usuarios %}
+          <option value="{{ user.id }}" {% if user in alerta.usuarios.all %}selected{% endif %}>
+            {{ user.username }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="grupos" class="form-label">
+        <i class="bi bi-people-fill me-1"></i> Grupos
+      </label>
+      <select name="grupos" id="grupos" multiple class="form-select select2">
+        {% for grupo in grupos %}
+          <option value="{{ grupo.id }}" {% if grupo in alerta.grupos.all %}selected{% endif %}>
+            {{ grupo.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-check mb-4">
+      <input type="checkbox" class="form-check-input" id="ativo" name="ativo" {% if alerta.ativo %}checked{% endif %}>
+      <label class="form-check-label" for="ativo">
+        <i class="bi bi-check-circle me-1"></i> Alerta Ativo
+      </label>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-save me-1"></i> Salvar
+      </button>
+      <a href="{% url 'alerts:gerenciar_alertas' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Voltar
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    $('.select2').select2({ width: '100%' });
+  });
+</script>
+{% endblock %}

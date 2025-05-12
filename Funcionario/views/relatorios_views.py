@@ -389,3 +389,24 @@ def cronograma_avaliacao_eficacia(request):
     }
 
     return render(request, "relatorios/cronograma_avaliacao_eficacia.html", context)
+
+
+def relatorio_aniversariantes(request):
+    hoje = date.today()
+    mes = int(request.GET.get('mes', hoje.month))
+
+    aniversariantes = Funcionario.objects.filter(
+        data_nascimento__month=mes
+    ).order_by('data_nascimento')
+
+    meses = [
+        (1, 'Janeiro'), (2, 'Fevereiro'), (3, 'Março'), (4, 'Abril'),
+        (5, 'Maio'), (6, 'Junho'), (7, 'Julho'), (8, 'Agosto'),
+        (9, 'Setembro'), (10, 'Outubro'), (11, 'Novembro'), (12, 'Dezembro'),
+    ]
+
+    return render(request, 'relatorios/aniversariantes_mes.html', {
+        'aniversariantes': aniversariantes,
+        'meses': meses,
+        'mes_selecionado': mes,
+    })

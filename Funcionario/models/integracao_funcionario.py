@@ -19,6 +19,7 @@ class IntegracaoFuncionario(models.Model):
         verbose_name="PDF da Integração Assinada",
     )
 
+   
     @property
     def departamento(self):
         return self.funcionario.local_trabalho

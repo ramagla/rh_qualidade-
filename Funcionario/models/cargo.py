@@ -17,6 +17,7 @@ NIVEIS_HIERARQUIA = [
 class Cargo(models.Model):
     nome = models.CharField(max_length=100)
     numero_dc = models.CharField(max_length=4)
+    
     descricao_arquivo = models.FileField(upload_to="cargos/", blank=True, null=True)
     departamento = models.CharField(max_length=100, verbose_name="Departamento")
 

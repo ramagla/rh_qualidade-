@@ -31,6 +31,7 @@ urlpatterns = [
     path("acesso_negado/", acesso_negado, name="acesso_negado"),
     path("permissoes-acesso/<int:usuario_id>/", permissoes_acesso, name="permissoes_acesso"),
     path("permissoes-acesso/", permissoes_acesso, name="permissoes_acesso_lista"),
+    path("alertas/", include("alerts.urls")),
     path("logs/", logs, name="logs"),
     path("alertas-email/", alertas_emails, name="alertas_emails"),
     path("feriados/", feriados, name="feriados"),

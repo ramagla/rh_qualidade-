@@ -76,32 +76,39 @@
 
 
 
-<!-- Modal de Impressão Compacto -->
+<!-- Modal de Impressão com Select2 -->
 <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="imprimirModalLabel">Selecionar Colaborador</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body">
-        <label for="inputFuncionarioId" class="form-label">Digite o ID do Colaborador:</label>
-        <input type="number" id="inputFuncionarioId" class="form-control" placeholder="Ex: 123" required>
-        <div id="feedbackFuncionarioId" class="alert alert-danger mt-2 d-none" role="alert">
-          <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i> ID inválido, tente novamente.
+    <form id="formImprimirFicha" method="GET">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="imprimirModalLabel">Selecionar Colaborador</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <label for="selectFuncionario" class="form-label">
+            <i class="bi bi-person me-1"></i> Colaborador:
+          </label>
+          <select id="selectFuncionario" class="form-select select2" required>
+            <option value="" disabled selected>Selecione o colaborador</option>
+            {% for funcionario in funcionarios %}
+              <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-printer"></i> Imprimir
+          </button>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle"></i> Cancelar
-        </button>
-        <button type="button" id="botaoImprimirFicha" class="btn btn-primary">
-          <i class="bi bi-printer"></i> Imprimir
-        </button>
-      </div>
-    </div>
+    </form>
   </div>
 </div>
+
 
 
 
@@ -273,55 +280,39 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const toasts = document.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            const bootstrapToast = new bootstrap.Toast(toast);
-            bootstrapToast.show();
-        });
-
-        // Script para imprimir ficha
-        document.querySelector('.btn-primary.ms-2').addEventListener('click', function(event) {
-            event.preventDefault();  // Previne o redirecionamento padrão
-            var modal = new bootstrap.Modal(document.getElementById('imprimirModal'));
-            modal.show();
-        });
-
-        // Captura o envio do formulário
-        document.getElementById('imprimirForm').addEventListener('submit', function(event) {
-            var funcionarioId = document.getElementById('funcionario_id').value;
-            // Define a action dinamicamente
-            this.action = "{% url 'imprimir_ficha' 0 %}".replace(/0/, funcionarioId);
-        });
-    });
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Ativa o select2 para todos os campos com a classe 'select2'
-        $('.select2').select2({
-            placeholder: "Selecione uma opção",
-            allowClear: true,
-            width: '100%'
-        });
-
-        // Sincroniza os valores do select2 antes de enviar o formulário
-        const form = document.querySelector('form[method="get"]');
-        form.addEventListener('submit', function (event) {
-            form.querySelectorAll('.select2').forEach(function (select) {
-  $(select).trigger('change.select2');
-});
-
-        });
-    });
-</script>
-
-
-  {% include "partials/global/_paginacao.html" with page_obj=page_obj %}
-
-
-</div>
-<script>
   document.addEventListener("DOMContentLoaded", function () {
+    // ⚙️ Exibir toasts automaticamente
+    const toasts = document.querySelectorAll(".toast");
+    toasts.forEach(toast => {
+      const bootstrapToast = new bootstrap.Toast(toast);
+      bootstrapToast.show();
+    });
+
+    // 🖨️ Modal de impressão - redirecionar com select2
+    const formImprimir = document.getElementById("formImprimirFicha");
+    const selectFuncionario = document.getElementById("selectFuncionario");
+
+    if (formImprimir && selectFuncionario) {
+      formImprimir.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const id = selectFuncionario.value;
+        if (id) {
+          const url = "{% url 'imprimir_ficha' 0 %}".replace("0", id);
+          window.location.href = url;
+        } else {
+          alert("Por favor, selecione um colaborador.");
+        }
+      });
+    }
+
+    const imprimirModal = document.getElementById("imprimirModal");
+    if (imprimirModal) {
+      imprimirModal.addEventListener("shown.bs.modal", () => {
+        $('#selectFuncionario').select2('open');
+      });
+    }
+
+    // 🕘 Modal de histórico de cargos
     const formHistorico = document.getElementById("historicoForm");
     if (formHistorico) {
       formHistorico.addEventListener("submit", function (e) {
@@ -337,36 +328,25 @@
       });
     }
 
-    const funcionariosIds = [
-      {% for funcionario in funcionarios %}
-        {{ funcionario.id }},
-      {% endfor %}
-    ];
+    // 🎨 Ativar select2 para todos os campos
+    $('.select2').select2({
+      placeholder: "Selecione uma opção",
+      allowClear: true,
+      width: '100%'
+    });
 
-    const botaoImprimir = document.getElementById("botaoImprimirFicha");
-    if (botaoImprimir) {
-      botaoImprimir.addEventListener("click", function () {
-        const id = parseInt(document.getElementById("inputFuncionarioId").value);
-        const feedback = document.getElementById("feedbackFuncionarioId");
-
-        if (funcionariosIds.includes(id)) {
-          feedback.classList.add("d-none");
-          const url = "{% url 'imprimir_ficha' 0 %}".replace("/0/", "/" + id + "/");
-          window.location.href = url;
-        } else {
-          feedback.classList.remove("d-none");
-        }
-      });
-    }
-
-    const imprimirModal = document.getElementById("imprimirModal");
-    if (imprimirModal) {
-      imprimirModal.addEventListener("shown.bs.modal", () => {
-        document.getElementById("inputFuncionarioId").focus();
+    // 🔄 Sincroniza select2 antes de submit GET
+    const formFiltro = document.querySelector('form[method="get"]');
+    if (formFiltro) {
+      formFiltro.addEventListener("submit", function () {
+        formFiltro.querySelectorAll(".select2").forEach(function (select) {
+          $(select).trigger("change.select2");
+        });
       });
     }
   });
 </script>
+
 
 
 {% endblock %}
