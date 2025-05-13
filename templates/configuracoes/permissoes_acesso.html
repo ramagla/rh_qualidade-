@@ -8,13 +8,15 @@
 <div class="container mt-5">
   {% include 'partials/global/_header_titulo.html' with titulo="Permissões de Acesso" icone="bi bi-lock-fill" emoji="🔐" %}
 
-  <form method="get" class="row g-3 mb-4">
-    <div class="card shadow-sm">
-      <div class="card-body">
+  <!-- Seleção de Usuário ou Grupo (form GET separado) -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get">
         <div class="row">
+          {% if usuarios %}
           <div class="col-md-6">
-            <label class="form-label" for="usuario_id"><i class="bi bi-person-badge"></i> Selecione o Usuário</label>
-            <select name="usuario_id" id="usuario_id" class="form-select select2" onchange="this.form.submit()" required>
+            <label class="form-label"><i class="bi bi-person-badge"></i> Selecione o Usuário</label>
+            <select name="usuario_id" class="form-select select2" onchange="this.form.submit()" required>
               <option value="">-- Selecione --</option>
               {% for u in usuarios %}
                 <option value="{{ u.id }}" {% if usuario and usuario.id == u.id %}selected{% endif %}>
@@ -23,85 +25,125 @@
               {% endfor %}
             </select>
           </div>
-          <div class="col-md-6 text-end align-self-end">
-            <a href="{% url 'permissoes_por_grupo_lista' %}" class="btn btn-outline-primary mt-2">
-              <i class="bi bi-people-fill"></i> Permissões por Grupo
-            </a>
+          {% elif grupos %}
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-people-fill"></i> Selecione o Grupo</label>
+            <select name="grupo_id" class="form-select select2" onchange="this.form.submit()" required>
+              <option value="">-- Selecione --</option>
+              {% for g in grupos %}
+                <option value="{{ g.id }}" {% if grupo and grupo.id == g.id %}selected{% endif %}>{{ g.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if usuario or grupo %}
+  <!-- Formulário principal (POST) -->
+  <form method="post" class="card shadow-sm">
+    {% csrf_token %}
+    {% if usuario %}
+      <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+    {% elif grupo %}
+      <input type="hidden" name="grupo_id" value="{{ grupo.id }}">
+    {% endif %}
+
+    <div class="card-body">
+      <h5 class="mb-4">
+        {% if usuario %}
+          <i class="bi bi-person-lines-fill"></i> Permissões para o usuário:
+          <strong>{{ usuario.get_full_name }} ({{ usuario.username }})</strong>
+        {% else %}
+          <i class="bi bi-people"></i> Permissões para o grupo:
+          <strong>{{ grupo.name }}</strong>
+        {% endif %}
+      </h5>
+
+      <!-- Permissões de Acesso aos Módulos -->
+      {% if acesso_modulos %}
+      <div class="card shadow-sm mb-4 border-start border-4 border-success">
+        <div class="card-body">
+          <h5 class="mb-3 text-success">
+            <i class="bi bi-unlock-fill me-1"></i> Acesso aos Módulos
+          </h5>
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+            {% for p in acesso_modulos %}
+            <div class="col">
+              {% with p.content_type.app_label|add:"."|add:p.codename as perm_codename %}
+              <div class="form-check form-switch">
+                <input class="form-check-input"
+                       type="checkbox"
+                       name="permissoes"
+                       id="perm{{ p.id }}"
+                       value="{{ p.id }}"
+                       {% if perm_codename in permissoes_ativas_usuario %}checked{% endif %}>
+                <label class="form-check-label" for="perm{{ p.id }}">
+                  🔓 {{ p.name }}
+                </label>
+              </div>
+              {% endwith %}
+            </div>
+            {% endfor %}
           </div>
         </div>
       </div>
-    </div>
-  </form>
-  
-  {% if usuario %}
-  <form method="post" class="card shadow-sm">
-    {% csrf_token %}
-    {% if messages %}
-  <div class="alert alert-success mt-3">
-    {% for message in messages %}
-      {{ message }}
-    {% endfor %}
-  </div>
-{% endif %}
+      {% endif %}
 
-    <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
-    <div class="card-body">
-      <h5 class="mb-4">
-        <i class="bi bi-person-lines-fill"></i> Permissões para o usuário:
-        <strong>{{ usuario.get_full_name }} ({{ usuario.username }})</strong>
-      </h5>
-
+      <!-- Demais permissões agrupadas -->
       <div class="accordion" id="accordionApps">
         {% for app, modelos in permissoes_agrupadas.items %}
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="headingApp{{ forloop.counter }}">
-              <button class="accordion-button collapsed bg-primary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseApp{{ forloop.counter }}" aria-expanded="false" aria-controls="collapseApp{{ forloop.counter }}">
-                <i class="bi bi-box me-2"></i> {{ app|capfirst }}
-              </button>
-            </h2>
-            <div id="collapseApp{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="headingApp{{ forloop.counter }}" data-bs-parent="#accordionApps">
-              <div class="accordion-body">
-
-                <div class="accordion" id="accordionModelos{{ forloop.counter }}">
-                  {% for modelo, perms in modelos.items %}
-                    <div class="accordion-item">
-                      <h2 class="accordion-header" id="headingModelo{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapseModelo{{ forloop.parentloop.counter }}_{{ forloop.counter }}" aria-expanded="false"
-                                aria-controls="collapseModelo{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
-                          <i class="bi bi-file-earmark-code-fill me-2"></i> {{ modelo|capfirst }}
-                        </button>
-                      </h2>
-                      <div id="collapseModelo{{ forloop.parentloop.counter }}_{{ forloop.counter }}" class="accordion-collapse collapse"
-                           aria-labelledby="headingModelo{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
-                        <div class="accordion-body">
-                          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-                            {% for p in perms %}
-                                {% with p.content_type.app_label|lower|add:"."|add:p.codename as perm_codename %}
-                                  <div class="col">
-                                    <div class="form-check form-switch">
-                                      <input class="form-check-input"
-                                            type="checkbox"
-                                            name="permissoes"
-                                            id="perm{{ p.id }}"
-                                            value="{{ p.id }}"
-                                            {% if perm_codename in permissoes_ativas_usuario %}checked{% endif %}>
-                                      <label class="form-check-label" for="perm{{ p.id }}">{{ p.name|traduz_perm }}</label>
-                                    </div>
-                                  </div>
-                                {% endwith %}
-                              {% endfor %}
-
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingApp{{ forloop.counter }}">
+            <button class="accordion-button collapsed bg-primary text-white" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#collapseApp{{ forloop.counter }}">
+              <i class="bi bi-box me-2"></i> {{ app|capfirst }}
+            </button>
+          </h2>
+          <div id="collapseApp{{ forloop.counter }}" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <div class="accordion" id="accordionModelos{{ forloop.counter }}">
+                {% for modelo, perms in modelos.items %}
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="headingModelo{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapseModelo{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                      <i class="bi bi-file-earmark-code-fill me-2"></i> {{ modelo|capfirst }}
+                    </button>
+                  </h2>
+                  <div id="collapseModelo{{ forloop.parentloop.counter }}_{{ forloop.counter }}"
+                       class="accordion-collapse collapse">
+                    <div class="accordion-body">
+                      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                        {% for p in perms %}
+                        <div class="col">
+                          {% with p.content_type.app_label|add:"."|add:p.codename as perm_codename %}
+                          <div class="form-check form-switch">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="permissoes"
+                                   id="perm{{ p.id }}"
+                                   value="{{ p.id }}"
+                                   {% if perm_codename in permissoes_ativas_usuario %}checked{% endif %}>
+                            <label class="form-check-label" for="perm{{ p.id }}">
+                              {{ p.name|traduz_perm }}
+                            </label>
                           </div>
+                          {% endwith %}
                         </div>
+                        {% endfor %}
                       </div>
                     </div>
-                  {% endfor %}
+                  </div>
                 </div>
-
+                {% endfor %}
               </div>
             </div>
           </div>
+        </div>
         {% endfor %}
       </div>
 

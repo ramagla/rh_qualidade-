@@ -18,6 +18,7 @@
     <div class="col-lg-9">
       <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-2 g-4 h-100">
         <!-- Total de Colaboradores -->
+        {% if perms.Funcionario.view_funcionario %}
         <div class="col">
           <div class="card shadow-sm text-center h-100">
             <div class="card-body">
@@ -26,8 +27,10 @@
             </div>
           </div>
         </div>
-
+        {% endif %}
         <!-- Avaliações Pendentes -->
+        {% if perms.Funcionario.view_avaliacaoanual %}
+
 <div class="col">
   <div class="card shadow-sm text-center h-100">
     <div class="card-body d-flex flex-column justify-content-center">
@@ -42,7 +45,6 @@
     </div>
   </div>
 </div>
-
 
         <!-- Avaliações por Desempenho -->
         <div class="col">
@@ -77,6 +79,7 @@
         </div>
       </div>
     </div>
+    {% endif %}
 
     <!-- Coluna da direita com card alto de aniversariantes -->
     <div class="col-lg-3 d-flex">

@@ -8,38 +8,42 @@ from .views import (
     feriados,
     logs,
     permissoes_acesso,
-    permissoes_por_grupo,
-    chat_gpt_query,  # ➤ Importa a view que você criou
+    home_geral,
+    chat_gpt_query,
 )
 
 from Funcionario.views.home_views import login_view
+from rh_qualidade.views import home_geral
 
 urlpatterns = [
+    # Admin
     path("admin/", admin.site.urls),
+
+    # Home geral do sistema (todos os usuários veem)
+    path("", home_geral, name="home_geral"),
 
     # Login e Logout
     path("login/", login_view, name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
 
-    # Módulos do sistema
-    path("", include("Funcionario.urls")),
+    # Módulos por prefixo
     path("metrologia/", include("metrologia.urls")),
     path("qualidade/", include("qualidade_fornecimento.urls")),
+    path("rh/", include("Funcionario.urls")),  # Acesso ao RH via /rh/
 
+    # Plugins e ferramentas
     path("ckeditor5/", include("django_ckeditor_5.urls")),
 
-    # Páginas internas e permissões
+    # Páginas internas
     path("acesso_negado/", acesso_negado, name="acesso_negado"),
     path("permissoes-acesso/", permissoes_acesso, name="permissoes_acesso_lista"),
-    path("permissoes-grupo/<int:grupo_id>/", permissoes_por_grupo, name="permissoes_por_grupo"),
-    path("permissoes-grupo/", permissoes_por_grupo, name="permissoes_por_grupo_lista"),
-
-
     path("alertas/", include("alerts.urls")),
     path("logs/", logs, name="logs"),
     path("alertas-email/", alertas_emails, name="alertas_emails"),
     path("feriados/", feriados, name="feriados"),
 
-    # ➤ Endpoint do ChatGPT (aqui está o que você pediu)
+    # Integração com ChatGPT
     path("chat-gpt/", chat_gpt_query, name="chat_gpt_query"),
 ]
+
+

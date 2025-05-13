@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Início do Sistema{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row g-4">
+
+    <!-- Total de Colaboradores -->
+    <div class="col-md-4">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h5 class="card-title">👥 Colaboradores Ativos</h5>
+          <p class="fs-2">{{ total_colaboradores }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Última Atualização -->
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title"><i class="bi bi-wrench-adjustable-circle"></i> Última Atualização do Sistema</h5>
+          {% if ultima_atualizacao %}
+            <p><strong>Versão:</strong> {{ ultima_atualizacao.versao }}</p>
+            <p><strong>Concluída em:</strong> {{ data_atualizacao_formatada }}</p>
+
+            <p><strong>Resumo:</strong> {{ ultima_atualizacao.resumo }}</p>
+          {% else %}
+            <p class="text-muted">Nenhuma atualização registrada.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Aniversariantes -->
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <strong>🎉 Aniversariantes do Mês</strong>
+        </div>
+        <div class="card-body">
+          {% if aniversariantes %}
+            <ul class="list-group">
+              {% for p in aniversariantes %}
+                <li class="list-group-item d-flex align-items-center">
+                  {% if p.foto %}
+                    <img src="{{ p.foto.url }}" class="rounded-circle me-2" width="40" height="40">
+                  {% else %}
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                  {% endif %}
+                  <div>
+                    <strong>{{ p.nome }}</strong><br>
+                    <small>{{ p.data_nascimento|date:"d/m" }}</small>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">Nenhum aniversariante neste mês.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Últimos Comunicados -->
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <strong>📢 Últimos Comunicados</strong>
+        </div>
+        <div class="card-body">
+          {% if comunicados %}
+            <ul class="list-group list-group-flush">
+              {% for c in comunicados %}
+                <li class="list-group-item">
+                  <strong>{{ c.assunto }}</strong><br>
+                  <small>{{ c.data|date:"d/m/Y" }}</small>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">Nenhum comunicado recente.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

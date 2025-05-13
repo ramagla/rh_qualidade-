@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "Funcionario",
+    "Funcionario.apps.FuncionarioConfig",
     "metrologia",
     "crispy_forms",
     "xhtml2pdf",
@@ -116,7 +116,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "rh_qualidade.middleware.PermissionMiddleware",
+    "rh_qualidade.middleware.permission_middleware.PermissionMiddleware",
 ]
 
 # Configuração de URLs e WSGI

@@ -195,7 +195,7 @@ def login_view(request):
         if user is not None:
             print(f"Usuário autenticado: {user.username}")  # Debug
             login(request, user)
-            return redirect("home")  # Ou outro nome, ex: "funcionarios_home"
+            return redirect("home_geral")  # ✅ Novo redirecionamento correto
         else:
             print("❌ Falha na autenticação!")  # Debug
             context = {
@@ -212,6 +212,7 @@ def login_view(request):
         "versao": ultima_atualizacao.versao if ultima_atualizacao else "1.0.0",
     }
     return render(request, "login.html", context)
+
 
 
 def calendario_view(request):

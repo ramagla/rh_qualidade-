@@ -45,110 +45,96 @@ def feriados(request):
 
 # views.py
 
-from collections import defaultdict
-
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group, Permission
-from django.shortcuts import get_object_or_404, redirect, render
-
-from collections import defaultdict
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User, Permission
-from django.shortcuts import get_object_or_404, redirect, render
+from collections import defaultdict
+
 
 @login_required
 def permissoes_acesso(request):
     usuario = None
-    user_id = request.GET.get('usuario_id') or request.POST.get('usuario_id')
+    grupo = None
 
+    user_id = request.GET.get("usuario_id") or request.POST.get("usuario_id")
+    grupo_id = request.GET.get("grupo_id") or request.POST.get("grupo_id")
+
+    # Selecionar alvo
     if user_id:
-        usuario = User.objects.get(pk=user_id)
+        usuario = get_object_or_404(User, pk=user_id)
+    elif grupo_id:
+        grupo = get_object_or_404(Group, pk=grupo_id)
 
-    if request.method == 'POST' and usuario:
-        permissoes_ids = request.POST.getlist('permissoes')
-        print("🟢 POST recebido com permissões:", permissoes_ids)
+    # 🔃 Carregar permissões especiais ANTES do POST
+    acesso_modulos = Permission.objects.filter(codename__startswith="acesso_").order_by("name")
 
+    # Processar POST
+    if request.method == "POST":
+        print("🧾 POST bruto:", dict(request.POST))
+        print("🧾 getlist permissoes:", request.POST.getlist("permissoes"))
+        print("🧾 getlist permissoes[]:", request.POST.getlist("permissoes[]"))
+        permissoes_ids = request.POST.getlist("permissoes")
         permissoes = Permission.objects.filter(id__in=permissoes_ids)
-        usuario.user_permissions.set(permissoes)
-        usuario.save()
 
-        messages.success(request, f"Permissões atualizadas para {usuario.get_full_name() or usuario.username}")
-        return redirect(f"{request.path}?usuario_id={usuario.id}")
+        if usuario:
+            usuario.user_permissions.set(permissoes)
+            messages.success(request, f"Permissões atualizadas para {usuario.get_full_name() or usuario.username}")
+            return redirect(f"{request.path}?usuario_id={usuario.id}")
 
-    # Recarrega após o redirect
-    if user_id and request.method == 'GET':
-        usuario = User.objects.get(pk=user_id)
+        if grupo:
+            grupo.permissions.set(permissoes)
+            messages.success(request, f"Permissões atualizadas para o grupo {grupo.name}")
+            return redirect(f"{request.path}?grupo_id={grupo.id}")
 
-    # Agrupar permissões por app e modelo
+
+    # Agrupar permissões para exibição
     permissoes_agrupadas = defaultdict(lambda: defaultdict(list))
-    todas = Permission.objects.select_related('content_type').order_by(
-        'content_type__app_label', 'content_type__model', 'codename'
+    todas = Permission.objects.select_related("content_type").order_by(
+        "content_type__app_label", "content_type__model", "codename"
     )
     for perm in todas:
         app = perm.content_type.app_label
         modelo = perm.content_type.name.title()
         permissoes_agrupadas[app][modelo].append(perm)
 
-    # Permissões herdadas de grupos + diretas (todas efetivas)
+    # Permissões efetivas
     permissoes_efetivas = set()
-    permissoes_diretas_usuario = set()
+    permissoes_diretas = set()
 
     if usuario:
         permissoes_efetivas = {
             f"{p.content_type.app_label.lower()}.{p.codename}"
             for p in Permission.objects.filter(user=usuario) | Permission.objects.filter(group__user=usuario)
         }
-        permissoes_diretas_usuario = {
+        permissoes_diretas = {
             f"{p.content_type.app_label.lower()}.{p.codename}"
             for p in usuario.user_permissions.all()
         }
 
-    return render(request, "configuracoes/permissoes_acesso.html", {
-        "usuarios": User.objects.order_by("username"),
-        "usuario": usuario,
-        "permissoes_agrupadas": {app: dict(modelos) for app, modelos in permissoes_agrupadas.items()},
-        "permissoes_ativas_usuario": permissoes_efetivas,
-        "permissoes_diretas_usuario": permissoes_diretas_usuario,
-    })
-
-
-from django.contrib.auth.models import Permission, Group
-from django.contrib import messages
-from django.shortcuts import render, get_object_or_404, redirect
-from collections import defaultdict
-
-def permissoes_por_grupo(request, grupo_id=None):
-    grupo = None
-    permissoes_agrupadas = defaultdict(lambda: defaultdict(list))
-    grupos = Group.objects.all()
-
-    if grupo_id:
-        grupo = get_object_or_404(Group, pk=grupo_id)
-        todas_permissoes = Permission.objects.select_related("content_type").order_by(
-            "content_type__app_label", "content_type__model", "codename"
-        )
-
-        for perm in todas_permissoes:
-            app = perm.content_type.app_label
-            modelo = perm.content_type.name.title()
-            permissoes_agrupadas[app][modelo].append(perm)
-
-        if request.method == "POST":
-            permissoes_ids = request.POST.getlist("permissoes")
-            permissoes_selecionadas = Permission.objects.filter(id__in=permissoes_ids)
-            grupo.permissions.set(permissoes_selecionadas)
-            messages.success(request, f"Permissões atualizadas para o grupo {grupo.name}")
-            return redirect("permissoes_por_grupo", grupo_id=grupo.id)
+    if grupo:
+        permissoes_efetivas = {
+            f"{p.content_type.app_label.lower()}.{p.codename}"
+            for p in grupo.permissions.all()
+        }
 
     context = {
-        "grupos": grupos,
+        "usuarios": User.objects.order_by("username"),
+        "grupos": Group.objects.order_by("name"),
+        "usuario": usuario,
         "grupo": grupo,
         "permissoes_agrupadas": {app: dict(modelos) for app, modelos in permissoes_agrupadas.items()},
+        "permissoes_ativas_usuario": permissoes_efetivas,
+        "permissoes_diretas_usuario": permissoes_diretas,
+        "acesso_modulos": acesso_modulos,
     }
 
-    return render(request, "configuracoes/permissoes_por_grupo.html", context)
+    return render(request, "configuracoes/permissoes_acesso.html", context)
+
+
+
+
+
 
 
 
@@ -251,3 +237,51 @@ def chat_gpt_query(request):
     except Exception as e:
         print("❌ Erro inesperado:", str(e))
         return JsonResponse({'error': f'Erro inesperado: {str(e)}'}, status=500)
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.utils.timezone import now
+from datetime import datetime
+from Funcionario.models import Funcionario, Comunicado, AtualizacaoSistema, Settings
+
+@login_required
+def home_geral(request):
+    # 📆 Aniversariantes do mês
+    aniversariantes = Funcionario.objects.filter(
+        status="Ativo",
+        data_nascimento__month=now().month
+    )
+
+    # 👥 Total de colaboradores ativos
+    total_colaboradores = Funcionario.objects.filter(status="Ativo").count()
+
+    # 📣 Últimos comunicados
+    comunicados = Comunicado.objects.order_by("-data")[:4]
+
+    # 🔧 Última atualização concluída do sistema
+    ultima_atualizacao = AtualizacaoSistema.objects.filter(
+        status="concluido"
+    ).order_by("-data_termino").first()
+
+    # Formatação segura da data
+    data_atualizacao_formatada = None
+    if ultima_atualizacao and ultima_atualizacao.data_termino:
+        if isinstance(ultima_atualizacao.data_termino, datetime):
+            data_atualizacao_formatada = ultima_atualizacao.data_termino.strftime("%d/%m/%Y %H:%M")
+        else:
+            data_atualizacao_formatada = ultima_atualizacao.data_termino.strftime("%d/%m/%Y")
+
+    settings = Settings.objects.first()
+
+    context = {
+        "aniversariantes": aniversariantes,
+        "total_colaboradores": total_colaboradores,
+        "comunicados": comunicados,
+        "ultima_atualizacao": ultima_atualizacao,
+        "data_atualizacao_formatada": data_atualizacao_formatada,
+        "settings": settings,
+    }
+
+    return render(request, "home_geral.html", context)
