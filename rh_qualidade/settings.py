@@ -194,7 +194,9 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "Funcionario.context_processors.global_settings",
                 "global_context_processors.global_menu",
+                "rh_qualidade.context_processors.default_form", 
             ],
+            "string_if_invalid": "",
         },
     },
 ]
@@ -210,14 +212,28 @@ if not os.path.exists(log_dir):
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {"format": "%(levelname)s %(message)s"},
+    },
     "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+            "level": "INFO",         # só INFO+, não DEBUG
+        },
         "file": {
-            "level": "DEBUG",
             "class": "logging.FileHandler",
             "filename": os.path.join(log_dir, "debug.log"),
+            "level": "DEBUG",
+            "encoding": "utf-8",     # aceita caracteres Unicode
         },
     },
     "loggers": {
+        "django.template": {
+            "handlers": ["console", "file"],
+            "level": "INFO",         # sobe para INFO
+            "propagate": False,
+        },
         "django": {
             "handlers": ["file"],
             "level": "DEBUG",
@@ -225,6 +241,7 @@ LOGGING = {
         },
     },
 }
+
 
 # Configurações do e-mail
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

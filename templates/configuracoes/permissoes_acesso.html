@@ -8,32 +8,42 @@
 <div class="container mt-5">
   {% include 'partials/global/_header_titulo.html' with titulo="Permissões de Acesso" icone="bi bi-lock-fill" emoji="🔐" %}
 
-  <div class="card shadow-sm mb-4">
-    <div class="card-body">
-      <form method="get" class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label" for="usuario_id"><i class="bi bi-person-badge"></i> Selecione o Usuário</label>
-          <select name="usuario_id" id="usuario_id" class="form-select select2" onchange="this.form.submit()" required>
-            <option value="">-- Selecione --</option>
-            {% for u in usuarios %}
-              <option value="{{ u.id }}" {% if usuario and usuario.id == u.id %}selected{% endif %}>
-                {{ u.get_full_name }} ({{ u.username }})
-              </option>
-            {% endfor %}
-          </select>
+  <form method="get" class="row g-3 mb-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <label class="form-label" for="usuario_id"><i class="bi bi-person-badge"></i> Selecione o Usuário</label>
+            <select name="usuario_id" id="usuario_id" class="form-select select2" onchange="this.form.submit()" required>
+              <option value="">-- Selecione --</option>
+              {% for u in usuarios %}
+                <option value="{{ u.id }}" {% if usuario and usuario.id == u.id %}selected{% endif %}>
+                  {{ u.get_full_name }} ({{ u.username }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6 text-end align-self-end">
+            <a href="{% url 'permissoes_por_grupo_lista' %}" class="btn btn-outline-primary mt-2">
+              <i class="bi bi-people-fill"></i> Permissões por Grupo
+            </a>
+          </div>
         </div>
-        <div class="col-md-6 text-end align-self-end">
-          <a href="{% url 'permissoes_por_grupo_lista' %}" class="btn btn-outline-primary mt-2">
-            <i class="bi bi-people-fill"></i> Permissões por Grupo
-          </a>
-        </div>
-      </form>
+      </div>
     </div>
-  </div>
-
+  </form>
+  
   {% if usuario %}
   <form method="post" class="card shadow-sm">
     {% csrf_token %}
+    {% if messages %}
+  <div class="alert alert-success mt-3">
+    {% for message in messages %}
+      {{ message }}
+    {% endfor %}
+  </div>
+{% endif %}
+
     <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
     <div class="card-body">
       <h5 class="mb-4">
@@ -67,16 +77,21 @@
                         <div class="accordion-body">
                           <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
                             {% for p in perms %}
-                              {% with p.content_type.app_label|add:"."|add:p.codename as perm_codename %}
-                                <div class="col">
-                                  <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" name="permissoes" id="perm{{ p.id }}" value="{{ p.id }}"
-                                      {% if perm_codename in permissoes_ativas_usuario %}checked{% endif %}>
-                                    <label class="form-check-label" for="perm{{ p.id }}">{{ p.name|traduz_perm }}</label>
+                                {% with p.content_type.app_label|lower|add:"."|add:p.codename as perm_codename %}
+                                  <div class="col">
+                                    <div class="form-check form-switch">
+                                      <input class="form-check-input"
+                                            type="checkbox"
+                                            name="permissoes"
+                                            id="perm{{ p.id }}"
+                                            value="{{ p.id }}"
+                                            {% if perm_codename in permissoes_ativas_usuario %}checked{% endif %}>
+                                      <label class="form-check-label" for="perm{{ p.id }}">{{ p.name|traduz_perm }}</label>
+                                    </div>
                                   </div>
-                                </div>
-                              {% endwith %}
-                            {% endfor %}
+                                {% endwith %}
+                              {% endfor %}
+
                           </div>
                         </div>
                       </div>

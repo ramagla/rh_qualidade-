@@ -18,12 +18,6 @@ def acesso_negado(request):
     )
 
 
-# View para Permissões de Acesso
-def permissoes_acesso(request):
-    return render(request, "configuracoes/permissoes_acesso.html")
-
-
-# View para Logs
 
 
 def logs(request):
@@ -58,39 +52,66 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group, Permission
 from django.shortcuts import get_object_or_404, redirect, render
 
+from collections import defaultdict
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User, Permission
+from django.shortcuts import get_object_or_404, redirect, render
+
 @login_required
 def permissoes_acesso(request):
-    from collections import defaultdict
-    from django.contrib.auth.models import User, Permission
-
     usuario = None
     user_id = request.GET.get('usuario_id') or request.POST.get('usuario_id')
 
     if user_id:
-        usuario = get_object_or_404(User, pk=user_id)
+        usuario = User.objects.get(pk=user_id)
 
     if request.method == 'POST' and usuario:
         permissoes_ids = request.POST.getlist('permissoes')
+        print("🟢 POST recebido com permissões:", permissoes_ids)
+
         permissoes = Permission.objects.filter(id__in=permissoes_ids)
         usuario.user_permissions.set(permissoes)
+        usuario.save()
+
         messages.success(request, f"Permissões atualizadas para {usuario.get_full_name() or usuario.username}")
         return redirect(f"{request.path}?usuario_id={usuario.id}")
 
+    # Recarrega após o redirect
+    if user_id and request.method == 'GET':
+        usuario = User.objects.get(pk=user_id)
+
     # Agrupar permissões por app e modelo
     permissoes_agrupadas = defaultdict(lambda: defaultdict(list))
-    todas = Permission.objects.select_related('content_type').order_by('content_type__app_label', 'content_type__model', 'codename')
+    todas = Permission.objects.select_related('content_type').order_by(
+        'content_type__app_label', 'content_type__model', 'codename'
+    )
     for perm in todas:
         app = perm.content_type.app_label
         modelo = perm.content_type.name.title()
         permissoes_agrupadas[app][modelo].append(perm)
 
+    # Permissões herdadas de grupos + diretas (todas efetivas)
+    permissoes_efetivas = set()
+    permissoes_diretas_usuario = set()
+
+    if usuario:
+        permissoes_efetivas = {
+            f"{p.content_type.app_label.lower()}.{p.codename}"
+            for p in Permission.objects.filter(user=usuario) | Permission.objects.filter(group__user=usuario)
+        }
+        permissoes_diretas_usuario = {
+            f"{p.content_type.app_label.lower()}.{p.codename}"
+            for p in usuario.user_permissions.all()
+        }
+
     return render(request, "configuracoes/permissoes_acesso.html", {
         "usuarios": User.objects.order_by("username"),
         "usuario": usuario,
         "permissoes_agrupadas": {app: dict(modelos) for app, modelos in permissoes_agrupadas.items()},
-        "permissoes_ativas_usuario": usuario.get_all_permissions() if usuario else set(),
+        "permissoes_ativas_usuario": permissoes_efetivas,
+        "permissoes_diretas_usuario": permissoes_diretas_usuario,
     })
-
 
 
 from django.contrib.auth.models import Permission, Group

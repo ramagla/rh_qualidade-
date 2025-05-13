@@ -14,3 +14,5 @@ def global_settings(request):
         "ano_atual": datetime.now().year,
         "versao": versao,
     }
+
+

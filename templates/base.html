@@ -16,9 +16,10 @@
  
     {% if form %}
     {{ form.media }}
-{% endif %}
+  {% endif %}
 
-
+        {# Bloco vazio para as páginas que queiram inserir CSS/JS extra #}
+        {% block extra_head %}{% endblock %}
     <style>
         body {
             font-family: Arial, sans-serif;
