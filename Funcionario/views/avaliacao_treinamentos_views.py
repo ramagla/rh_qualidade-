@@ -13,6 +13,8 @@ from Funcionario.models import (
 )
 
 
+
+
 @login_required
 def lista_avaliacoes(request):
     avaliacoes_treinamento = AvaliacaoTreinamento.objects.all().order_by(
@@ -81,117 +83,92 @@ def lista_avaliacoes(request):
     )
 
 
-@login_required
-def cadastrar_avaliacao(request):
-    # Carregar todos os funcionários ordenados por nome
-    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+def get_opcoes_avaliacao():
+    return {
+        "opcoes_conhecimento": [
+            (1, "Muito baixo"),
+            (2, "Baixo"),
+            (3, "Médio"),
+            (4, "Bom"),
+            (5, "Excelente"),
+        ],
+        "opcoes_aplicacao": [
+            (1, "Muito baixo"),
+            (2, "Baixo"),
+            (3, "Médio"),
+            (4, "Bom"),
+            (5, "Excelente"),
+        ],
+        "opcoes_resultados": [
+            (1, "Muito baixo"),
+            (2, "Baixo"),
+            (3, "Médio"),
+            (4, "Bom"),
+            (5, "Excelente"),
+        ],
+    }
 
-    # Define as opções para os campos de questionário
-    opcoes_conhecimento = [
-        (1, "Muito baixo"),
-        (2, "Baixo"),
-        (3, "Médio"),
-        (4, "Bom"),
-        (5, "Excelente"),
-    ]
-    opcoes_aplicacao = [
-        (1, "Muito baixo"),
-        (2, "Baixo"),
-        (3, "Médio"),
-        (4, "Bom"),
-        (5, "Excelente"),
-    ]
-    opcoes_resultados = [
-        (1, "Muito baixo"),
-        (2, "Baixo"),
-        (3, "Médio"),
-        (4, "Bom"),
-        (5, "Excelente"),
-    ]
+
+def processar_formulario_avaliacao(request, instance=None):
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+    listas_presenca = ListaPresenca.objects.all()
+    treinamentos = Treinamento.objects.all()
 
     if request.method == "POST":
-        # Captura o ID do funcionário selecionado
+        form = AvaliacaoTreinamentoForm(request.POST, request.FILES, instance=instance)
+
         funcionario_id = request.POST.get("funcionario")
-
-        # Cria o formulário com os dados do POST
-        form = AvaliacaoTreinamentoForm(request.POST)
-
-        # Ajusta o queryset dinamicamente para o campo treinamento
         if funcionario_id:
             form.fields["treinamento"].queryset = Treinamento.objects.filter(
                 funcionarios__id=funcionario_id
             )
 
-        # Verifica se o formulário é válido
         if form.is_valid():
             form.save()
-            messages.success(request, "Avaliação cadastrada com sucesso!")
-            return redirect("lista_avaliacoes")
+            return form, funcionarios, listas_presenca, True
         else:
-            messages.error(
-                request, "Erro ao cadastrar a avaliação. Verifique os campos."
-            )
+            messages.error(request, "Erro ao salvar a avaliação. Verifique os campos.")
+            return form, funcionarios, listas_presenca, False
     else:
-        # Cria um formulário vazio para o GET
-        form = AvaliacaoTreinamentoForm()
+        form = AvaliacaoTreinamentoForm(instance=instance)
+        if instance and instance.funcionario:
+            form.fields["treinamento"].queryset = Treinamento.objects.filter(
+                funcionarios=instance.funcionario
+            )
+        return form, funcionarios, listas_presenca, None
 
-    # Renderiza o template com o formulário e opções necessárias
+
+@login_required
+def cadastrar_avaliacao(request):
+    form, funcionarios, listas_presenca, status = processar_formulario_avaliacao(request)
+
+    if status is True:
+        messages.success(request, "Avaliação cadastrada com sucesso!")
+        return redirect("lista_avaliacoes")
+
     return render(
         request,
         "avaliacao_treinamento/form_avaliacao.html",
         {
             "form": form,
             "funcionarios": funcionarios,
-            "opcoes_conhecimento": opcoes_conhecimento,
-            "opcoes_aplicacao": opcoes_aplicacao,
-            "opcoes_resultados": opcoes_resultados,
+            "listas_presenca": listas_presenca,
+            **get_opcoes_avaliacao(),
         },
     )
 
 
 @login_required
 def editar_avaliacao(request, id):
-    # Busca a avaliação de treinamento com o ID fornecido
     avaliacao = get_object_or_404(AvaliacaoTreinamento, id=id)
-    # Carrega todos os funcionários ordenados por nome
-    funcionarios = Funcionario.objects.order_by("nome")
+    form, funcionarios, listas_presenca, status = processar_formulario_avaliacao(request, instance=avaliacao)
 
-    # Inicializa os treinamentos vinculados ao funcionário da avaliação
+    if status is True:
+        messages.success(request, "Avaliação atualizada com sucesso!")
+        return redirect("lista_avaliacoes")
+
     treinamentos = Treinamento.objects.filter(funcionarios=avaliacao.funcionario)
 
-    if request.method == "POST":
-        # Carrega o formulário com os dados enviados
-        form = AvaliacaoTreinamentoForm(request.POST, instance=avaliacao)
-
-        # Obtém o funcionário selecionado no formulário
-        funcionario_id = request.POST.get("funcionario")
-
-        # Ajusta dinamicamente o queryset do campo treinamento com base no funcionário selecionado
-        if funcionario_id:
-            form.fields["treinamento"].queryset = Treinamento.objects.filter(
-                funcionarios__id=funcionario_id
-            )
-        else:
-            form.fields["treinamento"].queryset = Treinamento.objects.none()
-
-        if form.is_valid():
-            # Salva a avaliação com os dados atualizados
-            form.save()
-            messages.success(request, "Avaliação atualizada com sucesso!")
-            # Redireciona para a lista de avaliações
-            return redirect("lista_avaliacoes")
-        else:
-            messages.error(
-                request, "Erro ao atualizar a avaliação. Verifique os campos."
-            )
-    else:
-        # Inicializa o formulário com os dados existentes
-        form = AvaliacaoTreinamentoForm(instance=avaliacao)
-
-        # Define o queryset do treinamento com base no funcionário da avaliação existente
-        form.fields["treinamento"].queryset = treinamentos
-
-    # Renderiza o template com os dados necessários
     return render(
         request,
         "avaliacao_treinamento/form_avaliacao.html",
@@ -199,12 +176,12 @@ def editar_avaliacao(request, id):
             "form": form,
             "avaliacao": avaliacao,
             "funcionarios": funcionarios,
-            "treinamentos": treinamentos,  # Envia os treinamentos disponíveis para o template
-            "opcoes_conhecimento": AvaliacaoTreinamento.OPCOES_CONHECIMENTO,
-            "opcoes_aplicacao": AvaliacaoTreinamento.OPCOES_APLICACAO,
-            "opcoes_resultados": AvaliacaoTreinamento.OPCOES_RESULTADOS,
+            "treinamentos": treinamentos,
+            "listas_presenca": listas_presenca,
+            **get_opcoes_avaliacao(),
         },
     )
+
 
 from django.utils import timezone
 

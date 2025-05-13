@@ -40,6 +40,8 @@ class TreinamentoForm(forms.ModelForm):
             "situacao": forms.Select(
                 choices=Treinamento.SITUACAO_CHOICES, attrs={"class": "form-select"}
             ),
+            "necessita_avaliacao": forms.CheckboxInput(attrs={"class": "form-check-input"}),  # ✅ Adicionado
+
         }
 
     def clean(self):
@@ -66,3 +68,10 @@ class TreinamentoForm(forms.ModelForm):
             # Aplica a função title_case personalizada
             return title_case(instituicao_ensino)
         return instituicao_ensino
+    
+    def clean_necessita_avaliacao(self):
+        valor = self.cleaned_data.get("necessita_avaliacao")
+        if isinstance(valor, str):
+            return valor == "True"
+        return bool(valor)
+

@@ -72,12 +72,37 @@ def lista_treinamentos(request):
     return render(request, "treinamentos/lista_treinamentos.html", context)
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+from Funcionario.forms import TreinamentoForm
+from Funcionario.models import Funcionario, AvaliacaoTreinamento, Treinamento
+from datetime import date
+
+
 @login_required
 def cadastrar_treinamento(request):
     if request.method == "POST":
         form = TreinamentoForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            treinamento = form.save()
+
+            if treinamento.necessita_avaliacao and treinamento.status == "concluido":
+                for participante in treinamento.funcionarios.all():
+                    AvaliacaoTreinamento.objects.get_or_create(
+                        funcionario=participante,
+                        treinamento=treinamento,
+                        defaults={
+                            "data_avaliacao": treinamento.data_inicio or date.today(),
+                            "periodo_avaliacao": 60,
+                            "pergunta_1": 1,
+                            "pergunta_2": 1,
+                            "pergunta_3": 1,
+                            "responsavel_1": participante.responsavel,
+                            "descricao_melhorias": "Aguardando avaliação",
+                            "avaliacao_geral": 1,
+                        }
+                    )
+
             return redirect("lista_treinamentos")
         else:
             print(f"Erros: {form.errors}")
@@ -85,7 +110,6 @@ def cadastrar_treinamento(request):
     else:
         form = TreinamentoForm()
 
-    # Filtra os funcionários com status 'Ativo'
     funcionarios_ativos = Funcionario.objects.filter(status="Ativo").order_by("nome")
 
     return render(
@@ -93,7 +117,7 @@ def cadastrar_treinamento(request):
         "treinamentos/form_treinamento.html",
         {
             "form": form,
-            "funcionarios": funcionarios_ativos,  # Envia a lista de funcionários ativos para o template
+            "funcionarios": funcionarios_ativos,
         },
     )
 
@@ -104,16 +128,42 @@ def editar_treinamento(request, id):
     if request.method == "POST":
         form = TreinamentoForm(request.POST, request.FILES, instance=treinamento)
         if form.is_valid():
-            form.save()
+            treinamento = form.save()
+
+            if treinamento.necessita_avaliacao and treinamento.status == "concluido":
+                for participante in treinamento.funcionarios.all():
+                    avaliacao, criada = AvaliacaoTreinamento.objects.get_or_create(
+                        funcionario=participante,
+                        treinamento=treinamento,
+                        defaults={
+                            "data_avaliacao": treinamento.data_inicio or date.today(),
+                            "periodo_avaliacao": 60,
+                            "pergunta_1": 1,
+                            "pergunta_2": 1,
+                            "pergunta_3": 1,
+                            "responsavel_1": participante.responsavel,
+                            "descricao_melhorias": "Aguardando avaliação",
+                            "avaliacao_geral": 1,
+                        }
+                    )
+                    if not criada:
+                        # Atualiza campos se a avaliação já existia
+                        avaliacao.data_avaliacao = treinamento.data_inicio or date.today()
+                        avaliacao.pergunta_1 = 1
+                        avaliacao.pergunta_2 = 1
+                        avaliacao.pergunta_3 = 1
+                        avaliacao.responsavel_1 = participante.responsavel
+                        avaliacao.descricao_melhorias = "Aguardando avaliação"
+                        avaliacao.avaliacao_geral = 1
+                        avaliacao.save()
+
             return redirect("lista_treinamentos")
     else:
         form = TreinamentoForm(instance=treinamento)
-
-    # Forçar o formato para garantir que seja compreendido pelo campo de data
-    if form.instance.data_inicio:
-        form.initial["data_inicio"] = form.instance.data_inicio.strftime("%Y-%m-%d")
-    if form.instance.data_fim:
-        form.initial["data_fim"] = form.instance.data_fim.strftime("%Y-%m-%d")
+        if form.instance.data_inicio:
+            form.initial["data_inicio"] = form.instance.data_inicio.strftime("%Y-%m-%d")
+        if form.instance.data_fim:
+            form.initial["data_fim"] = form.instance.data_fim.strftime("%Y-%m-%d")
 
     return render(
         request,
@@ -123,6 +173,7 @@ def editar_treinamento(request, id):
             "funcionarios": Funcionario.objects.filter(status="Ativo").order_by("nome"),
         },
     )
+
 
 
 @login_required

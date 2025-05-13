@@ -136,14 +136,20 @@
                 {% include 'partials/global/_botao_editar.html' with objeto=avaliacao url_editar='editar_avaliacao' label="avaliação" %}
               {% endif %}
               {% if request.user|has_permission:"Funcionario.view_avaliacaotreinamento" %}
-                <a href="{% url 'imprimir_treinamento' avaliacao.id %}" class="btn btn-sm btn-primary mt-1" target="_blank">
+                <a href="{% url 'imprimir_treinamento' avaliacao.id %}" class="btn btn-sm btn-primary mt-1" target="_blank" title="Imprimir Avaliação">
                   <i class="bi bi-printer"></i>
+                </a>
+              {% endif %}
+              {% if avaliacao.anexo %}
+                <a href="{{ avaliacao.anexo.url }}" class="btn btn-sm btn-secondary mt-1" target="_blank" title="Visualizar Anexo" aria-label="Anexo da avaliação">
+                  <i class="bi bi-paperclip"></i>
                 </a>
               {% endif %}
               {% if request.user|has_permission:"Funcionario.delete_avaliacaotreinamento" %}
                 {% include 'partials/global/_botao_excluir.html' with objeto=avaliacao url_excluir='excluir_avaliacao' label="avaliação" %}
               {% endif %}
             </td>
+            
           </tr>
         {% empty %}
           {% include 'partials/global/_sem_resultados.html' with item_nome="avaliação" %}

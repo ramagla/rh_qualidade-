@@ -62,6 +62,8 @@ class Treinamento(models.Model):
     planejado = models.CharField(
         max_length=3, choices=PLANEJADO_CHOICES, default="nao", verbose_name="Planejado"
     )
+    necessita_avaliacao = models.BooleanField(default=False)
+
 
     def __str__(self):
         return self.nome_curso

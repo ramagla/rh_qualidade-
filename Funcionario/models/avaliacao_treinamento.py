@@ -42,6 +42,13 @@ class AvaliacaoTreinamento(models.Model):
 
     data_avaliacao = models.DateField()
     periodo_avaliacao = models.IntegerField(default=60)  # Período de avaliação em dias
+    anexo = models.FileField(
+        upload_to="avaliacoes_treinamento/",
+        null=True,
+        blank=True,
+        verbose_name="Comprovante/Anexo",
+    )
+
 
     def get_status_prazo(self):
         # Calcula a data limite adicionando o período ao dia da avaliação

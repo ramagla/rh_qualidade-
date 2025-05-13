@@ -72,36 +72,32 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
             "responsavel_3": forms.Select(attrs={"class": "form-select"}),
             "funcionario": forms.Select(attrs={"class": "form-select"}),
             "treinamento": forms.Select(attrs={"class": "form-select"}),
+            "anexo": forms.ClearableFileInput(attrs={"class": "form-control"}),
+
         }
 
     def __init__(self, *args, **kwargs):
         super(AvaliacaoTreinamentoForm, self).__init__(*args, **kwargs)
 
-        # Definindo o queryset para o campo 'treinamento'
-        self.fields["treinamento"].queryset = ListaPresenca.objects.all()
+        # ✅ Corrigido: usa o modelo correto (Treinamento)
+        self.fields["treinamento"].queryset = Treinamento.objects.all()
         self.fields["treinamento"].label = "Treinamento/Curso"
 
-        # Configurando o queryset para campos de responsáveis
-        # Agora os responsáveis são ForeignKeys para o modelo Funcionario
-        self.fields["responsavel_1"].queryset = Funcionario.objects.filter(
-            status="Ativo"
-        ).order_by("nome")
-        self.fields["responsavel_1"].required = False  # Definindo como opcional
+        # ✅ Responsáveis (somente funcionários ativos)
+        ativos = Funcionario.objects.filter(status="Ativo").order_by("nome")
 
-        self.fields["responsavel_2"].queryset = Funcionario.objects.filter(
-            status="Ativo"
-        ).order_by("nome")
-        self.fields["responsavel_2"].required = False  # Definindo como opcional
-
-        self.fields["responsavel_3"].queryset = Funcionario.objects.filter(
-            status="Ativo"
-        ).order_by("nome")
-        self.fields["responsavel_3"].required = False  # Definindo como opcional
-
-        # Ajustando rótulos
+        self.fields["responsavel_1"].queryset = ativos
+        self.fields["responsavel_1"].required = False
         self.fields["responsavel_1"].label = "Primeiro Responsável (opcional)"
+
+        self.fields["responsavel_2"].queryset = ativos
+        self.fields["responsavel_2"].required = False
         self.fields["responsavel_2"].label = "Segundo Responsável (opcional)"
+
+        self.fields["responsavel_3"].queryset = ativos
+        self.fields["responsavel_3"].required = False
         self.fields["responsavel_3"].label = "Terceiro Responsável (opcional)"
+
 
 
 class AvaliacaoExperienciaForm(forms.ModelForm):
