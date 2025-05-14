@@ -4,7 +4,7 @@ from django.db import models
 
 TIPO_PRODUTO = [
     ("Fita de Aço/Inox", "Fita de Aço/Inox"),
-    ("Aço Inox", "Aço Inox"),
+    ("Arame de Aço", "Arame de Aço"),
     ("Arame de inox", "Arame de inox"),
     ("Calibração", "Calibração"),
     ("Trat. Superficial", "Trat. Superficial"),
