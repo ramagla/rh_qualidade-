@@ -123,16 +123,16 @@ class NormaTracao(models.Model):
     tipo_abnt = models.CharField("Tipo ABNT", max_length=100, blank=True, null=True)  # NOVO CAMPO
 
     bitola_minima = models.DecimalField(
-        "Bitola mín (mm)", max_digits=6, decimal_places=2
+        "Bitola mín (mm)", max_digits=6, decimal_places=2, null=True, blank=True
     )
     bitola_maxima = models.DecimalField(
-        "Bitola máx (mm)", max_digits=6, decimal_places=2
+        "Bitola máx (mm)", max_digits=6, decimal_places=2, null=True, blank=True
     )
     resistencia_min = models.DecimalField(
-        "R. tração mín (Kgf/mm²)", max_digits=8, decimal_places=2
+        "R. tração mín (Kgf/mm²)", max_digits=8, decimal_places=2, null=True, blank=True
     )
     resistencia_max = models.DecimalField(
-        "R. tração máx (Kgf/mm²)", max_digits=8, decimal_places=2
+        "R. tração máx (Kgf/mm²)", max_digits=8, decimal_places=2, null=True, blank=True
     )
     dureza = models.DecimalField(
         "Dureza (HR)", max_digits=6, decimal_places=0, null=True, blank=True
