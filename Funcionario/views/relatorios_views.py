@@ -51,6 +51,34 @@ def generate_training_hours_chart_styled(total_horas_por_trimestre, ano):
     plt.close()
     return graphic
 
+def dividir_horas_por_trimestre(data_inicio, data_fim, carga_horaria_total):
+    dias_total = (data_fim - data_inicio).days + 1
+    if dias_total <= 0 or carga_horaria_total <= 0:
+        return {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0}
+
+    horas_por_trimestre = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0}
+    dias_por_trimestre = {1: 0, 2: 0, 3: 0, 4: 0}
+
+    current = data_inicio
+    while current <= data_fim:
+        mes = current.month
+        if mes in [1, 2, 3]:
+            dias_por_trimestre[1] += 1
+        elif mes in [4, 5, 6]:
+            dias_por_trimestre[2] += 1
+        elif mes in [7, 8, 9]:
+            dias_por_trimestre[3] += 1
+        elif mes in [10, 11, 12]:
+            dias_por_trimestre[4] += 1
+        current += timedelta(days=1)
+
+    for trimestre in horas_por_trimestre:
+        horas_por_trimestre[trimestre] = round(
+            (dias_por_trimestre[trimestre] / dias_total) * carga_horaria_total, 2
+        )
+
+    return horas_por_trimestre
+
 
 @method_decorator(login_required, name="dispatch")
 class RelatorioPlanilhaTreinamentosView(TemplateView):
@@ -72,7 +100,7 @@ class RelatorioPlanilhaTreinamentosView(TemplateView):
 
         # Inicializar dados
         total_horas_por_mes = {mes: 0.0 for mes in range(1, 13)}
-        total_horas_por_trimestre = {}
+        total_horas_por_trimestre = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0}
         total_horas_treinamento = 0.0
 
         # Processar treinamentos por mês e trimestre
@@ -83,8 +111,6 @@ class RelatorioPlanilhaTreinamentosView(TemplateView):
                 data_inicio__month__lte=mes_fim,
             ).order_by("data_inicio")
 
-            # Calcula o total de horas no trimestre
-            total_horas = 0.0
             for treinamento in treinamentos:
                 carga_horaria = (
                     float(treinamento.carga_horaria.replace("h", "").strip())
@@ -101,16 +127,22 @@ class RelatorioPlanilhaTreinamentosView(TemplateView):
                     .count()
                 )
 
-                total_horas += carga_horaria * participantes_count
+                total_horas = carga_horaria * participantes_count
+                total_horas_treinamento += total_horas
 
-            # Atualizar horas totais por trimestre
-            total_horas_por_trimestre[trimestre] = round(total_horas, 2)
+                # ✅ Dividir corretamente por trimestre
+                horas_trimestre = dividir_horas_por_trimestre(
+                    treinamento.data_inicio, 
+                    treinamento.data_fim, 
+                    total_horas
+                )
 
-            # Distribuir horas por mês
-            for mes in range(mes_inicio, mes_fim + 1):
-                total_horas_por_mes[mes] += total_horas
+                for t, horas in horas_trimestre.items():
+                    total_horas_por_trimestre[t] += horas
 
-            total_horas_treinamento += total_horas
+                # ✅ Distribuir por mês apenas como total bruto (não precisa mais aqui)
+                for mes in range(mes_inicio, mes_fim + 1):
+                    total_horas_por_mes[mes] += total_horas
 
         # Calcular média de horas por trimestre (dividindo pelo total de funcionários ativos)
         total_funcionarios = Funcionario.objects.filter(status="Ativo").count() or 1
@@ -119,51 +151,41 @@ class RelatorioPlanilhaTreinamentosView(TemplateView):
             for trimestre, total in total_horas_por_trimestre.items()
         }
 
-        # Calculando média anual
+        # Média anual
         media_anual = sum(media_por_funcionario.values()) / len(media_por_funcionario)
 
-        # Gerar gráfico em base64
+        # Gráfico
         grafico_base64 = generate_training_hours_chart_styled(
             media_por_funcionario, ano
         )
 
-        # Total de horas trabalhadas na empresa (base de 176 horas/mês por funcionário)
-        total_horas_trabalhadas_empresa = (
-            total_funcionarios * 176 * 12
-        )  # 12 meses no ano
+        # Total de horas trabalhadas na empresa
+        total_horas_trabalhadas_empresa = total_funcionarios * 176 * 12
 
-        # Lógica para análise de dados (se dentro da meta ou não)
-        meta = 4  # Meta estabelecida
+        # Análise
         analise_dados = {}
         for trimestre, media in media_por_funcionario.items():
-            if media >= meta:
-                analise_dados[trimestre] = {
-                    "status": "Ok",
-                    "mensagem": "Indicador dentro da meta estabelecida",
-                }
-            else:
-                analise_dados[trimestre] = {
-                    "status": "Nok",
-                    "mensagem": "Indicador fora da meta estabelecida",
-                }
-
-        # Atualizar contexto
-        context.update(
-            {
-                "ano": ano,
-                "trimestres": trimestres,
-                "valores": media_por_funcionario,
-                "media": round(media_anual, 2),
-                "total_horas_por_trimestre": total_horas_por_trimestre,
-                "total_horas_treinamento": total_horas_treinamento,
-                "total_horas_trabalhadas_empresa": total_horas_trabalhadas_empresa,
-                "grafico_base64": grafico_base64,
-                "anos_disponiveis": context["anos_disponiveis"],
-                "analise_dados": analise_dados,  # Adicionado para o template
+            analise_dados[trimestre] = {
+                "status": "Ok" if media >= 4 else "Nok",
+                "mensagem": "Indicador dentro da meta estabelecida" if media >= 4 else "Indicador fora da meta estabelecida",
             }
-        )
+
+        # Contexto
+        context.update({
+            "ano": ano,
+            "trimestres": trimestres,
+            "valores": media_por_funcionario,
+            "media": round(media_anual, 2),
+            "total_horas_por_trimestre": total_horas_por_trimestre,
+            "total_horas_treinamento": total_horas_treinamento,
+            "total_horas_trabalhadas_empresa": total_horas_trabalhadas_empresa,
+            "grafico_base64": grafico_base64,
+            "anos_disponiveis": context["anos_disponiveis"],
+            "analise_dados": analise_dados,
+        })
 
         return context
+
 
 
 class RelatorioIndicadorAnualView(TemplateView):

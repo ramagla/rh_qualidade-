@@ -97,20 +97,25 @@
           <td>{{ avaliacao.avaliacao.treinamento.nome_curso }}</td>
           {% for mes in meses %}
           <td class="{% if mes == avaliacao.mes_final %}
-                        {% if avaliacao.avaliacao.treinamento.status == 'concluido' %} bg-success text-white
-                        {% elif avaliacao.avaliacao.treinamento.status == 'requerido' and avaliacao.avaliacao.treinamento.situacao == 'reprovado' %} bg-danger text-white
-                        {% elif avaliacao.avaliacao.treinamento.get_planejado_display == 'Sim' %} bg-warning text-dark
-                        {% else %} bg-light text-dark {% endif %}
-                      {% else %} bg-white text-dark {% endif %}">
-            {% if mes == avaliacao.mes_final %}
-              {% if avaliacao.avaliacao.treinamento.status == 'concluido' %}<span title="Concluído">✔</span>
-              {% elif avaliacao.avaliacao.treinamento.status == 'requerido' and avaliacao.avaliacao.treinamento.situacao == 'reprovado' %}<span title="Reprovado">✘</span>
-              {% elif avaliacao.avaliacao.treinamento.get_planejado_display == 'Sim' %}<span title="Planejado">▲</span>
-              {% else %}<span title="Outro Status">○</span>
-              {% endif %}
-            {% else %}<span title="Não Agendado">○</span>
+                      {% if avaliacao.avaliacao.avaliacao_geral %}
+                        bg-success text-white
+                      {% else %}
+                        bg-warning text-dark
+                      {% endif %}
+                    {% else %}
+                      bg-white text-dark
+                    {% endif %}">
+          {% if mes == avaliacao.mes_final %}
+            {% if avaliacao.avaliacao.avaliacao_geral %}
+              <span title="Concluído">✔</span>
+            {% else %}
+              <span title="Planejado">▲</span>
             {% endif %}
-          </td>
+          {% else %}
+            <span title="Não Agendado">○</span>
+          {% endif %}
+        </td>
+
           {% endfor %}
           <td class="text-start">
             {% for participante in avaliacao.avaliacao.treinamento.funcionarios.all %}
@@ -119,16 +124,19 @@
           </td>
           <td>{{ avaliacao.avaliacao.responsavel_1.nome|default:""|primeiro_nome }}</td>
           <td>
-            {% if avaliacao.avaliacao.avaliacao_geral == 1 %}
+            {% if avaliacao.avaliacao.avaliacao_geral is None %}
+              <span class="badge bg-secondary"><i class="bi bi-hourglass-split"></i> Aguardando Avaliação</span>
+            {% elif avaliacao.avaliacao.avaliacao_geral == 1 %}
               <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Pouco Eficaz</span>
             {% elif avaliacao.avaliacao.avaliacao_geral == 2 %}
               <span class="badge bg-primary"><i class="bi bi-check-circle"></i> Eficaz</span>
             {% elif avaliacao.avaliacao.avaliacao_geral == 5 %}
               <span class="badge bg-success"><i class="bi bi-star-fill"></i> Muito Eficaz</span>
             {% else %}
-              <span class="badge bg-warning">{{ avaliacao.avaliacao.get_avaliacao_geral_display }}</span>
+              <span class="badge bg-warning text-dark">{{ avaliacao.avaliacao.get_avaliacao_geral_display }}</span>
             {% endif %}
           </td>
+          
           <td>
             {% if avaliacao.avaliacao.get_status_prazo == "Dentro do Prazo" %}
               <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Dentro do Prazo</span>

@@ -92,14 +92,14 @@ def cadastrar_treinamento(request):
                         funcionario=participante,
                         treinamento=treinamento,
                         defaults={
-                            "data_avaliacao": treinamento.data_inicio or date.today(),
+                            "data_avaliacao": treinamento.data_fim or date.today(),
                             "periodo_avaliacao": 60,
-                            "pergunta_1": 1,
-                            "pergunta_2": 1,
-                            "pergunta_3": 1,
+                            "pergunta_1": None,
+                            "pergunta_2": None,
+                            "pergunta_3": None,
                             "responsavel_1": participante.responsavel,
                             "descricao_melhorias": "Aguardando avaliação",
-                            "avaliacao_geral": 1,
+                            "avaliacao_geral": None,
                         }
                     )
 
@@ -136,25 +136,25 @@ def editar_treinamento(request, id):
                         funcionario=participante,
                         treinamento=treinamento,
                         defaults={
-                            "data_avaliacao": treinamento.data_inicio or date.today(),
+                            "data_avaliacao": treinamento.data_fim or date.today(),
                             "periodo_avaliacao": 60,
-                            "pergunta_1": 1,
-                            "pergunta_2": 1,
-                            "pergunta_3": 1,
+                            "pergunta_1": None,
+                            "pergunta_2": None,
+                            "pergunta_3": None,
                             "responsavel_1": participante.responsavel,
                             "descricao_melhorias": "Aguardando avaliação",
-                            "avaliacao_geral": 1,
+                            "avaliacao_geral": None,
                         }
                     )
                     if not criada:
                         # Atualiza campos se a avaliação já existia
-                        avaliacao.data_avaliacao = treinamento.data_inicio or date.today()
-                        avaliacao.pergunta_1 = 1
-                        avaliacao.pergunta_2 = 1
-                        avaliacao.pergunta_3 = 1
+                        avaliacao.data_avaliacao = treinamento.data_fim or date.today()
+                        avaliacao.pergunta_1 = None
+                        avaliacao.pergunta_2 = None
+                        avaliacao.pergunta_3 = None
                         avaliacao.responsavel_1 = participante.responsavel
                         avaliacao.descricao_melhorias = "Aguardando avaliação"
-                        avaliacao.avaliacao_geral = 1
+                        avaliacao.avaliacao_geral = None
                         avaliacao.save()
 
             return redirect("lista_treinamentos")

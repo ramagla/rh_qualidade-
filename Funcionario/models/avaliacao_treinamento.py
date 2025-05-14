@@ -81,11 +81,11 @@ class AvaliacaoTreinamento(models.Model):
         related_name="avaliacoes_responsavel_3",
     )
 
-    pergunta_1 = models.IntegerField(choices=OPCOES_CONHECIMENTO)
-    pergunta_2 = models.IntegerField(choices=OPCOES_APLICACAO)
-    pergunta_3 = models.IntegerField(choices=OPCOES_RESULTADOS)
+    pergunta_1 = models.IntegerField(choices=OPCOES_CONHECIMENTO, null=True, blank=True)
+    pergunta_2 = models.IntegerField(choices=OPCOES_APLICACAO, null=True, blank=True)
+    pergunta_3 = models.IntegerField(choices=OPCOES_RESULTADOS, null=True, blank=True)
 
-    descricao_melhorias = models.TextField(default="Nenhuma melhoria descrita")
+    descricao_melhorias = models.TextField(default="Nenhuma melhoria descrita", blank=True)
     avaliacao_geral = models.IntegerField(
         choices=[
             (1, "Pouco eficaz"),
@@ -93,5 +93,7 @@ class AvaliacaoTreinamento(models.Model):
             (3, "Razoável"),
             (4, "Bom"),
             (5, "Muito eficaz"),
-        ]
+        ],
+        null=True,
+        blank=True
     )

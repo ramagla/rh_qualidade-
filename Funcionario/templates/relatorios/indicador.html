@@ -46,6 +46,12 @@
     </div>
     {% include 'partials/global/_botao_filtrar.html' %}
   </form>
+<!-- 🔵 Alerta Informativo - Distribuição de Horas -->
+<div class="alert alert-info col-12 d-print-none" role="alert">
+  <strong>Como são calculadas as horas por trimestre?</strong><br>
+  A carga horária de cada treinamento é <strong>proporcionalmente dividida</strong> entre os trimestres do ano com base no período em que ocorreu.<br>
+  <i>Exemplo:</i> Um curso com <strong>260h</strong> realizado de <strong>14/01 a 14/08</strong> terá suas horas distribuídas entre os 3 primeiros trimestres, de acordo com o número de dias em cada um.
+</div>
 
   <!-- Gráfico e Média (visual padrão com layout flex para impressão e tela) -->
 <div class="grafico-midia-container mb-4 mt-4 d-flex flex-column flex-md-row justify-content-between align-items-start gap-4">
@@ -222,9 +228,6 @@
 </div>
 
 
-  <!-- Rodapé -->
-  {% include 'partials/global/_rodape_institucional.html' with numero_formulario="F023" %}
-</div>
 
 
 <style>

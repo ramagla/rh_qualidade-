@@ -116,14 +116,14 @@ def cadastrar_lista_presenca(request):
                         AvaliacaoTreinamento.objects.create(
                             funcionario=participante,
                             treinamento=treinamento_existente,
-                            data_avaliacao=lista_presenca.data_inicio or date.today(),
-                            pergunta_1=1,
-                            pergunta_2=1,
-                            pergunta_3=1,
+                            data_avaliacao=lista_presenca.data_fim or date.today(),
+                            pergunta_1=None,
+                            pergunta_2=None,
+                            pergunta_3=None,
                             periodo_avaliacao=60,
                             responsavel_1=participante.responsavel,
                             descricao_melhorias="Aguardando avaliação",
-                            avaliacao_geral=1,
+                            avaliacao_geral=None,
                         )
 
                 return redirect("lista_presenca")
@@ -198,27 +198,28 @@ def editar_lista_presenca(request, id):
                             AvaliacaoTreinamento.objects.create(
                                 funcionario=participante,
                                 treinamento=treinamento_existente,
-                                data_avaliacao=lista.data_inicio or date.today(),
-                                pergunta_1=1,
-                                pergunta_2=1,
-                                pergunta_3=1,
+                                data_avaliacao=lista.data_fim or date.today(),
+                                pergunta_1=None,
+                                pergunta_2=None,
+                                pergunta_3=None,
                                 periodo_avaliacao=60,
                                 responsavel_1=participante.responsavel,
                                 descricao_melhorias="Aguardando avaliação",
-                                avaliacao_geral=1,
+                                avaliacao_geral=None,
                             )
                         else:
                             avaliacao_existente.data_avaliacao = (
-                                lista.data_inicio or date.today()
-                            )
-                            avaliacao_existente.pergunta_1 = 1
-                            avaliacao_existente.pergunta_2 = 1
-                            avaliacao_existente.pergunta_3 = 1
+                                    lista.data_fim or date.today()
+                                )
+
+                            avaliacao_existente.pergunta_1 = None
+                            avaliacao_existente.pergunta_2 = None
+                            avaliacao_existente.pergunta_3 = None
                             avaliacao_existente.responsavel_1 = participante.responsavel
                             avaliacao_existente.descricao_melhorias = (
                                 "Aguardando avaliação"
                             )
-                            avaliacao_existente.avaliacao_geral = 1
+                            avaliacao_existente.avaliacao_geral = None
                             avaliacao_existente.save()
 
                 return redirect("lista_presenca")

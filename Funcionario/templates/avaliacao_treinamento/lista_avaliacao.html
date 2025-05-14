@@ -111,7 +111,9 @@
             <td>{{ avaliacao.treinamento.nome_curso|default:"—" }}</td>
             <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
             <td>
-              {% if avaliacao.avaliacao_geral == 1 %}
+              {% if avaliacao.avaliacao_geral is None %}
+                <span class="badge bg-secondary"><i class="bi bi-hourglass-split"></i> Aguardando Avaliação</span>
+              {% elif avaliacao.avaliacao_geral == 1 %}
                 <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Pouco Eficaz</span>
               {% elif avaliacao.avaliacao_geral == 2 %}
                 <span class="badge bg-primary"><i class="bi bi-check-circle"></i> Eficaz</span>
@@ -121,6 +123,7 @@
                 <span class="badge bg-warning text-dark">{{ avaliacao.get_avaliacao_geral_display }}</span>
               {% endif %}
             </td>
+            
             <td>
               {% if avaliacao.get_status_prazo == "Dentro do Prazo" %}
                 <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Dentro do Prazo</span>
