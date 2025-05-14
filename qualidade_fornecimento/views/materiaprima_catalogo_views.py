@@ -176,10 +176,11 @@ def importar_materia_prima_excel(request):
             print("🔍 Primeiras linhas:", df.head(3).to_dict(orient="records"))  # DEBUG
 
             colunas_obrigatorias = [
-                "código", "descrição", "localização", "tipo", "tipo de material",
-                "bitolo ø (mm)", "largura (mm)", "tolerância (mm)",
-                "tolerância largura (mm)", "norma", "tipo abnt/classe"
-            ]
+                    "código", "descrição", "localização", "tipo", "tipo material",
+                    "bitolo ø (mm)", "largura (mm)", "tolerância (mm)",
+                    "tolerância largura (mm)", "norma", "tipo abnt/classe"
+                ]
+
 
             for col in colunas_obrigatorias:
                 if col not in df.columns:
