@@ -74,10 +74,19 @@
 <div class="border-top pt-4 mt-4"></div>
 
     {# ---------- 2) Composição Química ---------- #}
+
+    
     <h4 class="mb-3">
       <i class="bi bi-sliders me-2" aria-hidden="true"></i>
       Composição Química
     </h4>
+    <!-- 🔵 Alerta Informativo -->
+<div class="alert alert-info col-12" role="alert">
+  <strong>Importante:</strong> Caso a norma técnica não especifique os valores <strong>mínimos</strong> ou <strong>máximos</strong> de algum elemento químico,
+  deixe os respectivos campos <strong>em branco</strong>.
+  <br>Evite utilizar "0" ou "nan" — campos em branco serão ignorados na validação automática dos laudos.
+</div>
+
 
     {{ elementos_formset.management_form }}
     <div class="table-responsive">

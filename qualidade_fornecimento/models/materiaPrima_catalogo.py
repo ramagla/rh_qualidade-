@@ -51,10 +51,16 @@ class MateriaPrimaCatalogo(models.Model):
     def save(self, *args, **kwargs):
         import re
 
+        # Converter localização para maiúsculas
+        if self.localizacao:
+            self.localizacao = self.localizacao.upper()
+
+        # Preencher a bitola a partir da descrição (se estiver vazia)
         if not self.bitola and self.descricao:
             match = re.search(r"Ø([\d,.]+)", self.descricao)
             if match:
                 self.bitola = match.group(1).replace(",", ".").strip() + " mm"
+
         super().save(*args, **kwargs)
 
     def __str__(self):

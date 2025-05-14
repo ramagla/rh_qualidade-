@@ -166,8 +166,8 @@ def importar_materia_prima_excel(request):
     def limpar_valor(valor):
         if pd.isna(valor):
             return ""
-        valor_str = str(valor).strip().lower()
-        return "" if valor_str in ["nan", "none", "-"] else valor_str.replace(",", ".")
+        valor_str = str(valor).strip()
+        return "" if valor_str.lower() in ["nan", "none", "-"] else valor_str
 
     if request.method == "POST":
         print("✅ View de importação chamada com sucesso")  # DEBUG
