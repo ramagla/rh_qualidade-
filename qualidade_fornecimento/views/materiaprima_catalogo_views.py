@@ -153,8 +153,22 @@ import pandas as pd
 from qualidade_fornecimento.models import NormaTecnica, MateriaPrimaCatalogo
 
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+import pandas as pd
+
+from qualidade_fornecimento.models import MateriaPrimaCatalogo, NormaTecnica
+
+
 @login_required
 def importar_materia_prima_excel(request):
+    def limpar_valor(valor):
+        if pd.isna(valor):
+            return ""
+        valor_str = str(valor).strip().lower()
+        return "" if valor_str in ["nan", "none", "-"] else valor_str.replace(",", ".")
+
     if request.method == "POST":
         print("✅ View de importação chamada com sucesso")  # DEBUG
 
@@ -176,11 +190,10 @@ def importar_materia_prima_excel(request):
             print("🔍 Primeiras linhas:", df.head(3).to_dict(orient="records"))  # DEBUG
 
             colunas_obrigatorias = [
-                    "código", "descrição", "localização", "tipo", "tipo material",
-                    "bitolo ø (mm)", "largura (mm)", "tolerância (mm)",
-                    "tolerância largura (mm)", "norma", "tipo abnt/classe"
-                ]
-
+                "código", "descrição", "localização", "tipo", "tipo material",
+                "bitolo ø (mm)", "largura (mm)", "tolerância (mm)",
+                "tolerância largura (mm)", "norma", "tipo abnt/classe"
+            ]
 
             for col in colunas_obrigatorias:
                 if col not in df.columns:
@@ -196,22 +209,23 @@ def importar_materia_prima_excel(request):
                 try:
                     print(f"\n📌 Processando linha {index + 2}: {row.to_dict()}")  # DEBUG
 
-                    codigo = str(row.get("código", "")).strip()
-                    descricao = str(row.get("descrição", "")).strip()
+                    codigo = str(row.get("código")) if pd.notna(row.get("código")) else ""
+                    codigo = codigo.strip()                    
+                    descricao = limpar_valor(row.get("descrição"))
 
                     if not codigo or not descricao:
                         print(f"⚠️ Linha {index + 2} ignorada por falta de código ou descrição")  # DEBUG
                         continue
 
-                    localizacao = str(row.get("localização") or "").strip()
-                    tipo = str(row.get("tipo") or "").strip()
-                    tipo_material = str(row.get("tipo de material") or "").strip()
-                    bitola = str(row.get("bitolo ø (mm)") or "").replace(",", ".").strip()
-                    largura = str(row.get("largura (mm)") or "").replace(",", ".").strip()
-                    tolerancia = str(row.get("tolerância (mm)") or "").replace(",", ".").strip()
-                    tolerancia_largura = str(row.get("tolerância largura (mm)") or "").replace(",", ".").strip()
-                    norma_nome = str(row.get("norma") or "").strip()
-                    tipo_abnt = str(row.get("tipo abnt/classe") or "").strip()
+                    localizacao = limpar_valor(row.get("localização"))
+                    tipo = limpar_valor(row.get("tipo"))
+                    tipo_material = limpar_valor(row.get("tipo material"))
+                    bitola = limpar_valor(row.get("bitolo ø (mm)"))
+                    largura = limpar_valor(row.get("largura (mm)"))
+                    tolerancia = limpar_valor(row.get("tolerância (mm)"))
+                    tolerancia_largura = limpar_valor(row.get("tolerância largura (mm)"))
+                    norma_nome = limpar_valor(row.get("norma"))
+                    tipo_abnt = limpar_valor(row.get("tipo abnt/classe"))
 
                     norma_obj = None
                     if norma_nome:
@@ -276,6 +290,7 @@ def importar_materia_prima_excel(request):
 
     print("🔁 Método GET carregado (render de template)")  # DEBUG
     return render(request, "cadastro_materia_prima/importar_excel_materia_prima.html")
+
 
 
 
