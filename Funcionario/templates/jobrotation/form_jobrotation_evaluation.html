@@ -246,8 +246,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function carregarDadosFuncionario(funcionarioId) {
         if (!funcionarioId) return;
 
-        fetch(`/get_funcionario_info/${funcionarioId}/`)
-            .then(response => response.json())
+        fetch(`/rh/get_funcionario_info/${funcionarioId}/`)
+        .then(response => response.json())
             .then(data => {
                 document.getElementById('local-trabalho').value = data.local_trabalho || '';
                 document.getElementById('cargo-atual').value = data.cargo_atual || '';
@@ -293,8 +293,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Função para carregar treinamentos do funcionário
     function carregarTreinamentos(funcionarioId) {
-        fetch(`/get-treinamentos/${funcionarioId}/`)
-            .then(response => response.json())
+        fetch(`/rh/get-treinamentos/${funcionarioId}/`)
+        .then(response => response.json())
             .then(treinamentos => {
                 const tbody = document.querySelector('table tbody');
                 tbody.innerHTML = '';

@@ -220,6 +220,7 @@ def imprimir_avaliacao(request, avaliacao_id):
             "campos_notas": campos_notas,
         },
     )
+from django.utils.timezone import now
 
 
 @login_required

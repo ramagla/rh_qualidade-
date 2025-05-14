@@ -82,7 +82,12 @@
 
         <form method="post" class="text-start" autocomplete="on">
           {% csrf_token %}
-
+          {% if erro %}
+          <div class="alert alert-danger text-start" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ erro }}
+          </div>
+        {% endif %}
+        
           <div class="mb-3">
             <label for="username" class="form-label">Usuário</label>
             <div class="input-group">
@@ -125,10 +130,18 @@
             <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Entrar
           </button>
 
-          <p class="text-center mt-3 small text-muted">
+          <div class="text-center mt-3">
+            <a href="{% url 'password_reset' %}" class="text-decoration-none small">
+              <i class="bi bi-question-circle-fill me-1 text-primary"></i> Esqueci minha senha
+            </a>
+            
+          </div>
+          
+          <p class="text-center mt-2 small text-muted">
             <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
             Não possui cadastro? Entre em contato com o <strong>Departamento de Tecnologia</strong> para criação do seu acesso.
           </p>
+          
         </form>
 
       </section>

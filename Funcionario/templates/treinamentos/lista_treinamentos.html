@@ -256,8 +256,8 @@
             e.preventDefault();
             const funcionarioId = document.getElementById('funcionario_modal').value;
             if (funcionarioId) {
-                this.action = `/treinamentos/imprimir_f003/${funcionarioId}/`;
-                this.submit();
+              this.action = `/rh/treinamentos/imprimir_f003/${funcionarioId}/`;
+              this.submit();
             } else {
                 const toast = document.createElement('div');
                 toast.className = 'toast align-items-center text-white bg-danger border-0 show';

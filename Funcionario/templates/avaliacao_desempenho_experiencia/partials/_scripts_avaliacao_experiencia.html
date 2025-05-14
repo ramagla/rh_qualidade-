@@ -7,7 +7,7 @@
 
     function buscarDadosFuncionario(funcionarioId) {
       if (funcionarioId) {
-        fetch(`/get-cargo/${funcionarioId}/`)
+        fetch(`/rh/get-cargo/${funcionarioId}/`)
           .then((response) => response.json())
           .then((data) => {
             cargoInput.value = data.cargo || "Cargo não encontrado";
