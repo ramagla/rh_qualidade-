@@ -16,8 +16,6 @@ def redirecionar_para_modulo_permitido(user):
     return redirect("acesso_negado")
 
 
-
-
 class PermissionMiddleware:
     """
     Middleware para verificar autenticação e permissões com base nas URLs acessadas.
@@ -27,8 +25,18 @@ class PermissionMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Redireciona se não estiver autenticado e não for login
-        if not request.user.is_authenticated and not request.path.startswith("/login/"):
+        # Rotas públicas que podem ser acessadas sem autenticação
+        paths_livres = [
+            "/login/",
+            "/senha/esqueci/",
+            "/senha/enviado/",
+            "/senha/finalizado/",
+            "/senha/nova/",  # cobre /senha/nova/<uidb64>/<token>/
+        ]
+
+        if not request.user.is_authenticated:
+            if any(request.path.startswith(p) for p in paths_livres):
+                return self.get_response(request)
             return redirect("login")
 
         try:
@@ -39,7 +47,6 @@ class PermissionMiddleware:
 
         # Verifica permissão necessária para a view
         required_permission = permission_map.get(view_name)
-
         if required_permission and not request.user.has_perm(required_permission):
             return redirect("acesso_negado")  # ou: raise PermissionDenied()
 
