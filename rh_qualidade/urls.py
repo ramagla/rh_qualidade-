@@ -22,8 +22,16 @@ urlpatterns = [
     # Home geral do sistema (todos os usuários veem)
     path("", home_geral, name="home_geral"),
 
-    path("senha/esqueci/", auth_views.PasswordResetView.as_view(
-        template_name="registration/password_reset_form.html"), name="password_reset"),
+    path(
+            "senha/esqueci/",
+            auth_views.PasswordResetView.as_view(
+                template_name="registration/password_reset_form.html",
+                email_template_name="registration/password_reset_email.html",  # texto puro
+                html_email_template_name="registration/password_reset_email.html",  # HTML estilizado
+            ),
+            name="password_reset"
+        ),
+
     path("senha/enviado/", auth_views.PasswordResetDoneView.as_view(
         template_name="registration/password_reset_done.html"), name="password_reset_done"),
     path("senha/nova/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(
