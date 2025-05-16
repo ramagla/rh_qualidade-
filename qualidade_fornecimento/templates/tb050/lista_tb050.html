@@ -130,7 +130,7 @@
   {# ----------------- Botões de Ação ------------------- #}
 <div class="d-flex justify-content-end mb-4 gap-2">
 
-  {% if request.user|has_permission:'qualidade_fornecimento.add_tb050' %}
+  {% if request.user|has_permission:'qualidade_fornecimento.importar_excel_tb050' %}
   <a href="{% url 'tb050_cadastrar' %}"
      class="btn btn-success d-inline-flex align-items-center"
      aria-label="Cadastrar nova relação de matérias‑primas"
@@ -150,7 +150,7 @@
   </a>
   {% endif %}
 
-  {# Botão Gerar F045 não é protegido por permissão, fica liberado para todos os usuários #}
+  {% if request.user|has_permission:"qualidade_fornecimento.f045_status" %}
   <button type="button"
           class="btn btn-warning d-inline-flex align-items-center"
           data-bs-toggle="modal"
@@ -160,6 +160,7 @@
     <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>
     <span>Gerar F045</span>
   </button>
+  {% endif %}
 
 </div>
 <!-- Modal de Alerta para Norma Não Aprovada -->
