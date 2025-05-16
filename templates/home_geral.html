@@ -23,8 +23,9 @@
           {% if ultima_atualizacao %}
             <p><strong>Versão:</strong> {{ ultima_atualizacao.versao }}</p>
             <p><strong>Concluída em:</strong> {{ data_atualizacao_formatada }}</p>
-
-            <p><strong>Resumo:</strong> {{ ultima_atualizacao.resumo }}</p>
+            <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalAtualizacao">
+              <i class="bi bi-eye"></i> Visualizar
+            </button>
           {% else %}
             <p class="text-muted">Nenhuma atualização registrada.</p>
           {% endif %}
@@ -72,9 +73,14 @@
           {% if comunicados %}
             <ul class="list-group list-group-flush">
               {% for c in comunicados %}
-                <li class="list-group-item">
-                  <strong>{{ c.assunto }}</strong><br>
-                  <small>{{ c.data|date:"d/m/Y" }}</small>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ c.assunto }}</strong><br>
+                    <small>{{ c.data|date:"d/m/Y" }}</small>
+                  </div>
+                  <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalComunicado{{ forloop.counter }}">
+                    <i class="bi bi-eye"></i>
+                  </button>
                 </li>
               {% endfor %}
             </ul>
@@ -84,7 +90,43 @@
         </div>
       </div>
     </div>
-
   </div>
 </div>
+
+<!-- Modal Última Atualização -->
+<div class="modal fade" id="modalAtualizacao" tabindex="-1" aria-labelledby="modalAtualizacaoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAtualizacaoLabel">🛠️ Detalhes da Última Atualização</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Versão:</strong> {{ ultima_atualizacao.versao }}</p>
+        <p><strong>Data:</strong> {{ data_atualizacao_formatada }}</p>
+        <p><strong>Descrição:</strong></p>
+        <div>{{ ultima_atualizacao.descricao|safe }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modais para cada comunicado -->
+{% for c in comunicados %}
+<div class="modal fade" id="modalComunicado{{ forloop.counter }}" tabindex="-1" aria-labelledby="modalComunicadoLabel{{ forloop.counter }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalComunicadoLabel{{ forloop.counter }}">📢 {{ c.assunto }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Data:</strong> {{ c.data|date:"d/m/Y" }}</p>
+        <p><strong>Descrição:</strong></p>
+        <div>{{ c.descricao|safe }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
 {% endblock %}

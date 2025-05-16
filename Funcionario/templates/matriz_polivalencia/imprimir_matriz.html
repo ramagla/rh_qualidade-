@@ -115,7 +115,7 @@
       </tr>
     </thead>
     <tbody>
-{% for colaborador in colaboradores|dictsort:"nome" %}
+      {% for colaborador in colaboradores|ordenar_por_perfil %}
       <tr>
 <td style="vertical-align: middle; font-size: 8pt;">
   {{ colaborador.nome|primeiro_nome }}
@@ -203,6 +203,10 @@
   <!-- Linha de descrição de perfis -->
 <div class="d-flex flex-wrap gap-4 justify-content-center align-items-center mt-3 text-center">
   <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-award-fill"></i>
+    <span><strong>Oficial:</strong> Responsável principal pela atividade</span>
+  </div>
+  <div class="d-flex align-items-center gap-2">
     <i class="bi bi-people-fill"></i>
     <span><strong>Suplente:</strong> Pode substituir o oficial em sua ausência</span>
   </div>
@@ -214,11 +218,8 @@
     <i class="bi bi-person-workspace"></i>
     <span><strong>Em Treinamento:</strong> Em processo de aprendizagem</span>
   </div>
-  <div class="d-flex align-items-center gap-2">
-    <i class="bi bi-award-fill"></i>
-    <span><strong>Oficial:</strong> Responsável principal pela atividade</span>
-  </div>
 </div>
+
 
 
 

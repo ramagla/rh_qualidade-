@@ -261,4 +261,16 @@ def formatar_duracao_flex(valor):
     except (TypeError, ValueError):
         return "-"
 
+PERFIL_ORDEM = {
+    "oficial": 1,
+    "suplente": 2,
+    "treinado": 3,
+    "em_treinamento": 4,
+}
 
+@register.filter
+def ordenar_por_perfil(lista):
+    return sorted(
+        lista,
+        key=lambda c: (PERFIL_ORDEM.get(c.get("perfil", ""), 999), c.get("nome", "").lower())
+    )
