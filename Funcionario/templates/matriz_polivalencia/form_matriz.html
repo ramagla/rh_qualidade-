@@ -103,7 +103,7 @@
                   <thead>
                     <tr>
                       <th class="sticky-header sticky-column">Colaborador</th>
-                      <th class="sticky-header sticky-suplente">Suplente</th>
+                      <th class="sticky-header sticky-suplente">Perfil</th>
                     </tr>
                   </thead>
                   <tbody></tbody>
@@ -184,9 +184,13 @@
                 let row = `<tr id="linha-funcionario-${nota.funcionario_id}">
                   <td class="sticky-column">${nome}</td>
                   <td class="sticky-suplente">
-                    <div class="form-check form-switch d-flex justify-content-center">
-                      <input class="form-check-input" type="checkbox" role="switch" name="suplente_${nota.funcionario_id}" id="suplente_${nota.funcionario_id}" ${nota.suplente ? 'checked' : ''}>
-                    </div>
+                    <select name="perfil_${nota.funcionario_id}" class="form-select" required>
+                      <option value="">Selecione...</option>
+                      <option value="suplente" ${nota.perfil === 'suplente' ? 'selected' : ''}>Suplente</option>
+                      <option value="treinado" ${nota.perfil === 'treinado' ? 'selected' : ''}>Treinado</option>
+                      <option value="em_treinamento" ${nota.perfil === 'em_treinamento' ? 'selected' : ''}>Em Treinamento</option>
+                      <option value="oficial" ${nota.perfil === 'oficial' ? 'selected' : ''}>Oficial</option>
+                    </select>
                   </td>`;
 
                 atividades.forEach((atividade) => {
@@ -227,11 +231,15 @@
 
       let row = `<tr id="linha-funcionario-${id}">
         <td class="sticky-column">${nome}</td>
-        <td class="sticky-suplente">
-          <div class="form-check form-switch d-flex justify-content-center">
-            <input class="form-check-input" type="checkbox" role="switch" name="suplente_${id}" id="suplente_${id}">
-          </div>
-        </td>`;
+       <td class="sticky-suplente">
+            <select name="perfil_${id}" class="form-select" required>
+              <option value="">Selecione...</option>
+              <option value="suplente">Suplente</option>
+              <option value="treinado">Treinado</option>
+              <option value="em_treinamento">Em Treinamento</option>
+              <option value="oficial">Oficial</option>
+            </select>
+          </td>`;
 
       atividades.forEach((atividade) => {
         row += `
