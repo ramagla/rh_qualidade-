@@ -10,6 +10,7 @@ from .views import (
     permissoes_acesso,
     home_geral,
     chat_gpt_query,
+    copiar_permissoes
 )
 
 from Funcionario.views.home_views import login_view
@@ -54,6 +55,8 @@ urlpatterns = [
     # Páginas internas
     path("acesso_negado/", acesso_negado, name="acesso_negado"),
     path("permissoes-acesso/", permissoes_acesso, name="permissoes_acesso_lista"),
+    path("permissoes/copiar/", copiar_permissoes, name="copiar_permissoes"),
+
     path("alertas/", include("alerts.urls")),
     path("logs/", logs, name="logs"),
     path("alertas-email/", alertas_emails, name="alertas_emails"),

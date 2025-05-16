@@ -52,6 +52,13 @@ from django.contrib.auth.decorators import login_required
 from collections import defaultdict
 
 
+from collections import defaultdict
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User, Group, Permission
+from django.shortcuts import get_object_or_404, redirect, render
+
+
 @login_required
 def permissoes_acesso(request):
     usuario = None
@@ -66,14 +73,11 @@ def permissoes_acesso(request):
     elif grupo_id:
         grupo = get_object_or_404(Group, pk=grupo_id)
 
-    # 🔃 Carregar permissões especiais ANTES do POST
+    # 🔃 Carregar permissões especiais antes do POST
     acesso_modulos = Permission.objects.filter(codename__startswith="acesso_").order_by("name")
 
     # Processar POST
     if request.method == "POST":
-        print("🧾 POST bruto:", dict(request.POST))
-        print("🧾 getlist permissoes:", request.POST.getlist("permissoes"))
-        print("🧾 getlist permissoes[]:", request.POST.getlist("permissoes[]"))
         permissoes_ids = request.POST.getlist("permissoes")
         permissoes = Permission.objects.filter(id__in=permissoes_ids)
 
@@ -87,8 +91,7 @@ def permissoes_acesso(request):
             messages.success(request, f"Permissões atualizadas para o grupo {grupo.name}")
             return redirect(f"{request.path}?grupo_id={grupo.id}")
 
-
-    # Agrupar permissões para exibição
+    # Agrupar todas as permissões por app e modelo
     permissoes_agrupadas = defaultdict(lambda: defaultdict(list))
     todas = Permission.objects.select_related("content_type").order_by(
         "content_type__app_label", "content_type__model", "codename"
@@ -98,25 +101,13 @@ def permissoes_acesso(request):
         modelo = perm.content_type.name.title()
         permissoes_agrupadas[app][modelo].append(perm)
 
-    # Permissões efetivas
+    # Permissões ativas (somente diretas, por ID)
     permissoes_efetivas = set()
-    permissoes_diretas = set()
-
     if usuario:
-        permissoes_efetivas = {
-            f"{p.content_type.app_label.lower()}.{p.codename}"
-            for p in Permission.objects.filter(user=usuario) | Permission.objects.filter(group__user=usuario)
-        }
-        permissoes_diretas = {
-            f"{p.content_type.app_label.lower()}.{p.codename}"
-            for p in usuario.user_permissions.all()
-        }
+        permissoes_efetivas = set(usuario.user_permissions.values_list("id", flat=True))
 
     if grupo:
-        permissoes_efetivas = {
-            f"{p.content_type.app_label.lower()}.{p.codename}"
-            for p in grupo.permissions.all()
-        }
+        permissoes_efetivas = set(grupo.permissions.values_list("id", flat=True))
 
     context = {
         "usuarios": User.objects.order_by("username"),
@@ -125,12 +116,38 @@ def permissoes_acesso(request):
         "grupo": grupo,
         "permissoes_agrupadas": {app: dict(modelos) for app, modelos in permissoes_agrupadas.items()},
         "permissoes_ativas_usuario": permissoes_efetivas,
-        "permissoes_diretas_usuario": permissoes_diretas,
         "acesso_modulos": acesso_modulos,
     }
 
     return render(request, "configuracoes/permissoes_acesso.html", context)
 
+@login_required
+def copiar_permissoes(request):
+    if request.method == "POST":
+        origem_id = request.POST.get("usuario_origem_id")
+        destino_id = request.POST.get("usuario_destino_id")
+
+        if origem_id == destino_id:
+            messages.warning(request, "Você não pode copiar permissões para o mesmo usuário.")
+            return redirect("permissoes_acesso")
+
+        usuario_origem = get_object_or_404(User, pk=origem_id)
+        usuario_destino = get_object_or_404(User, pk=destino_id)
+
+        # Pega apenas as permissões diretas (não as de grupo)
+        permissoes_origem = usuario_origem.user_permissions.all()
+
+        # Apaga permissões anteriores (opcional — ou pode usar `.add()` se quiser manter)
+        usuario_destino.user_permissions.add(*permissoes_origem)
+
+        messages.success(
+            request,
+            f"Permissões copiadas de {usuario_origem.get_full_name() or usuario_origem.username} para {usuario_destino.get_full_name() or usuario_destino.username}."
+        )
+        return redirect(f"/permissoes-acesso/?usuario_id={usuario_destino.id}")
+
+    messages.error(request, "Requisição inválida.")
+    return redirect("permissoes_acesso")
 
 
 
