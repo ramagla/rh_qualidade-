@@ -22,6 +22,13 @@ class Nota(models.Model):
         (4, "Instrutor"),
     ]
 
+    PERFIL_CHOICES = [
+    ("suplente", "Suplente"),
+    ("treinado", "Treinado"),
+    ("em_treinamento", "Em Treinamento"),
+    ("oficial", "Oficial"),
+]
+
     SIM_NAO_CHOICES = [
         (True, "Sim"),
         (False, "Não"),
@@ -36,8 +43,13 @@ class Nota(models.Model):
     pontuacao = models.PositiveSmallIntegerField(
         choices=PONTUACAO_CHOICES, verbose_name="Pontuação"
     )
-    suplente = models.BooleanField(default=False, verbose_name="É Suplente")
 
+    perfil = models.CharField(
+        max_length=20,
+        choices=PERFIL_CHOICES,
+        verbose_name="Perfil"
+    )
+    
     class Meta:
         unique_together = ("funcionario", "atividade")
 

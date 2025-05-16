@@ -69,30 +69,48 @@ def gerar_grafico_icone(nota):
 
 
 def imprimir_matriz(request, id):
-    print(">>> TIPO DE REQUEST:", type(request))
-
     matriz = get_object_or_404(MatrizPolivalencia, id=id)
-    atividades = matriz.atividades.all()  # <- ajustado para .all()
+    atividades = matriz.atividades.all()
     notas = Nota.objects.filter(atividade__in=atividades)
 
-    # Pega apenas os funcionários que possuem nota associada à matriz
     colaborador_ids = notas.values_list("funcionario_id", flat=True).distinct()
     colaboradores = Funcionario.objects.filter(id__in=colaborador_ids)
 
-    # Dicionário de notas
+    def gerar_grafico_icone(nota):
+        icones = {
+            0: "icons/barra_0.png",
+            1: "icons/barra_1.png",
+            2: "icons/barra_2.png",
+            3: "icons/barra_3.png",
+            4: "icons/barra_4.png",
+        }
+        return icones.get(nota, "icons/barra_0.png")
+
+    def descricao_nivel(nota):
+        return {
+            0: "Não Treinado",
+            1: "Tarefas básicas com acompanhamento",
+            2: "Tarefas chave com acompanhamento",
+            3: "Qualificado sem acompanhamento",
+            4: "Qualificador",
+        }.get(nota, "")
+
     notas_por_funcionario = {
         colaborador.id: {
-            atividade.id: {"pontuacao": None, "suplente": False, "grafico": None}
+            atividade.id: {"pontuacao": None, "perfil": "", "grafico": "", "descricao": "", "nivel": ""}
             for atividade in atividades
         }
         for colaborador in colaboradores
     }
 
     for nota in notas:
+        p = nota.pontuacao
         notas_por_funcionario[nota.funcionario.id][nota.atividade.id] = {
-            "pontuacao": nota.pontuacao,
-            "suplente": nota.suplente,
-            "grafico": gerar_grafico_icone(nota.pontuacao),
+            "pontuacao": p,
+            "perfil": nota.perfil,
+            "grafico": gerar_grafico_icone(p) if p is not None else "icons/barra_0.png",
+            "descricao": descricao_nivel(p),
+            "nivel": p,
         }
 
     notas_lista = [
@@ -100,20 +118,23 @@ def imprimir_matriz(request, id):
             "colaborador_id": colab_id,
             "atividade_id": ativ_id,
             "pontuacao": valores["pontuacao"],
-            "suplente": valores["suplente"],
+            "perfil": valores["perfil"],
             "grafico": valores["grafico"],
+            "descricao": valores["descricao"],
+            "nivel": valores["nivel"],
         }
         for colab_id, atividades in notas_por_funcionario.items()
         for ativ_id, valores in atividades.items()
+        if valores["pontuacao"] is not None
     ]
 
-    colaboradores_com_suplente = [
+    colaboradores_com_perfil = [
         {
             "id": colaborador.id,
             "nome": colaborador.nome,
-            "suplente": any(
-                nota["suplente"]
-                for nota in notas_por_funcionario[colaborador.id].values()
+            "perfil": next(
+                (nota["perfil"] for nota in notas_por_funcionario[colaborador.id].values() if nota["perfil"]),
+                ""
             ),
         }
         for colaborador in colaboradores
@@ -125,62 +146,63 @@ def imprimir_matriz(request, id):
         {
             "matriz": matriz,
             "atividades": atividades,
-            "colaboradores": colaboradores_com_suplente,
+            "colaboradores": colaboradores_com_perfil,
             "notas_lista": notas_lista,
         },
     )
 
 
 
+
+
+def salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=False, usar_suplente=False):
+    """
+    Salva ou atualiza notas dos funcionários para as atividades.
+    """
+    for funcionario in funcionarios:
+        for atividade in atividades:
+            nota_key = f"nota_{funcionario.id}_{atividade.id}"
+            nota_value = request.POST.get(nota_key)
+
+            if not nota_value or not nota_value.isdigit():
+                continue
+
+            dados_nota = {"pontuacao": int(nota_value)}
+
+            if usar_perfil:
+                perfil_key = f"perfil_{funcionario.id}"
+                dados_nota["perfil"] = request.POST.get(perfil_key, "")
+
+            if usar_suplente:
+                suplente_key = f"suplente_{funcionario.id}"
+                dados_nota["suplente"] = request.POST.get(suplente_key, "off") == "on"
+
+            Nota.objects.update_or_create(
+                funcionario=funcionario,
+                atividade=atividade,
+                defaults=dados_nota
+            )
+
+
 @login_required
 def cadastrar_matriz_polivalencia(request):
-    funcionarios = Funcionario.objects.filter(status="Ativo").order_by(
-        "nome"
-    )  # Funcionários ativos ordenados
-    atividades = Atividade.objects.all()  # Todas as atividades
-    departamentos = Atividade.objects.values_list(
-        "departamento", flat=True
-    ).distinct()  # Departamentos únicos
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+    atividades = Atividade.objects.all()
+    departamentos = Atividade.objects.values_list("departamento", flat=True).distinct()
 
     if request.method == "POST":
         form = MatrizPolivalenciaForm(request.POST)
         if form.is_valid():
             matriz = form.save()
-
-            # Processa as notas e suplentes dos funcionários
-            for funcionario in funcionarios:
-                for atividade in atividades:
-                    nota_key = f"nota_{funcionario.id}_{atividade.id}"
-                    suplente_key = f"suplente_{funcionario.id}"
-                    nota_value = request.POST.get(nota_key)
-
-                    # Converter nota para número inteiro e validar
-                    nota_value = (
-                        int(nota_value)
-                        if nota_value is not None and nota_value.isdigit()
-                        else None
-                    )
-                    suplente_value = request.POST.get(suplente_key, "off") == "on"
-
-                    if (
-                        nota_value is not None
-                    ):  # Verifica se a nota foi fornecida, incluindo 0
-                        Nota.objects.update_or_create(
-                            funcionario=funcionario,
-                            atividade=atividade,
-                            defaults={
-                                "pontuacao": nota_value,
-                                "suplente": suplente_value,
-                            },
-                        )
+            salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=True)
 
             messages.success(request, "Matriz de Polivalência cadastrada com sucesso!")
+
+            if "salvar_adicionar_nova" in request.POST:
+                return redirect("cadastrar_matriz_polivalencia")
             return redirect("lista_matriz_polivalencia")
         else:
-            messages.error(
-                request,
-                "Erro ao cadastrar a Matriz de Polivalência. Verifique os dados.",
-            )
+            messages.error(request, "Erro ao cadastrar a Matriz de Polivalência. Verifique os dados.")
     else:
         form = MatrizPolivalenciaForm()
 
@@ -192,80 +214,53 @@ def cadastrar_matriz_polivalencia(request):
             "funcionarios": list(funcionarios.values("id", "nome")),
             "atividades": atividades,
             "departamentos": departamentos,
-            "campos_responsaveis": ['elaboracao', 'coordenacao', 'validacao'],
+            "campos_responsaveis": ["elaboracao", "coordenacao", "validacao"],
+            "url_voltar": "lista_matriz_polivalencia",
         },
     )
 
 
-
-# Editar uma matriz de polivalência
 @login_required
 def editar_matriz_polivalencia(request, id):
-    # Pré-carregar as relações para otimizar o acesso aos dados relacionados
     matriz = get_object_or_404(
-        MatrizPolivalencia.objects.select_related(
-            "elaboracao", "coordenacao", "validacao"
-        ),
+        MatrizPolivalencia.objects.select_related("elaboracao", "coordenacao", "validacao"),
         id=id,
     )
 
-    # Departamento fixo associado ao cadastro da matriz
     departamento_selecionado = matriz.departamento
-
-    # Filtrar atividades relacionadas ao departamento selecionado
     atividades = Atividade.objects.filter(departamento=departamento_selecionado)
-
-    # Pega os funcionários que possuem nota relacionada com as atividades da matriz
     atividade_ids = atividades.values_list("id", flat=True)
+
     funcionarios = Funcionario.objects.filter(
         notas__atividade_id__in=atividade_ids
     ).distinct().order_by("nome")
 
-    # Obter todos os departamentos disponíveis para o select
     departamentos = Atividade.objects.values_list("departamento", flat=True).distinct()
 
-    # Construir o dicionário de notas com suplente
     notas_por_funcionario = {
-        funcionario.id: {
-            atividade.id: {"pontuacao": None, "suplente": False}
-            for atividade in atividades
+            funcionario.id: {
+                atividade.id: {"pontuacao": None, "perfil": ""}
+                for atividade in atividades
+            }
+            for funcionario in funcionarios
         }
-        for funcionario in funcionarios
-    }
 
-    # Preencher com os valores das notas existentes
-    for nota in Nota.objects.filter(
-        funcionario__in=funcionarios, atividade__in=atividades
-    ):
+
+    for nota in Nota.objects.filter(funcionario__in=funcionarios, atividade__in=atividades):
         notas_por_funcionario[nota.funcionario.id][nota.atividade.id] = {
             "pontuacao": nota.pontuacao,
-            "suplente": nota.suplente,
+            "perfil": nota.perfil,
         }
+
 
     if request.method == "POST":
         form = MatrizPolivalenciaForm(request.POST, instance=matriz)
         if form.is_valid():
             matriz = form.save(commit=False)
-            matriz.departamento = departamento_selecionado  # preservar o departamento original
+            matriz.departamento = departamento_selecionado
             matriz.save()
 
-            # Atualizar notas dos colaboradores
-            for funcionario in funcionarios:
-                for atividade in atividades:
-                    nota_key = f"nota_{funcionario.id}_{atividade.id}"
-                    suplente_key = f"suplente_{funcionario.id}"
-                    nota_value = request.POST.get(nota_key)
-                    suplente_value = request.POST.get(suplente_key, "off") == "on"
-
-                    if nota_value:
-                        Nota.objects.update_or_create(
-                            funcionario=funcionario,
-                            atividade=atividade,
-                            defaults={
-                                "pontuacao": nota_value,
-                                "suplente": suplente_value,
-                            },
-                        )
+            salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=True)
 
             messages.success(request, "Matriz de Polivalência atualizada com sucesso.")
             return redirect("lista_matriz_polivalencia")
@@ -274,13 +269,12 @@ def editar_matriz_polivalencia(request, id):
     else:
         form = MatrizPolivalenciaForm(instance=matriz)
 
-    # Converter as notas para lista de dicionários (JSON)
     notas_lista = [
         {
             "funcionario_id": func_id,
             "atividade_id": ativ_id,
             "pontuacao": valores["pontuacao"],
-            "suplente": valores["suplente"],
+            "perfil": valores["perfil"],
         }
         for func_id, atividades_dict in notas_por_funcionario.items()
         for ativ_id, valores in atividades_dict.items()

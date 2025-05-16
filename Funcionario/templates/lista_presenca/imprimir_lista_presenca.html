@@ -8,6 +8,7 @@
 {% include 'partials/global/_estilos_impressao.html' %}
 {% include 'header.html' %}
 {% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
 {% include 'partials/global/_header_titulo.html' with titulo="Lista de Presença do Treinamento" icone="bi bi-person-lines-fill" emoji="🗘" %}
 
 <div class="container pdf-container">
@@ -95,9 +96,10 @@
         {% endfor %}
       </tbody>
     </table>
+
   </div>
-  {% include "partials/global/_formulario_rodape.html" with numero_formulario="F013 Rev.03" %}
 </div>
+{% include "partials/global/_formulario_rodape.html" with numero_formulario=numero_formulario %}
 
 
 {% endblock %}

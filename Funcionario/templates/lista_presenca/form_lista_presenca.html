@@ -169,51 +169,51 @@
 
 
       <!-- PARTICIPANTES -->
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="headingParticipantes">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseParticipantes">
-            <i class="bi bi-people-fill me-2"></i> Seleção de Participantes
-          </button>
-        </h2>
-        <div id="collapseParticipantes" class="accordion-collapse collapse" data-bs-parent="#accordionListaPresenca">
-          <div class="accordion-body">
-            <div class="table-responsive">
-              <table class="table table-bordered text-center align-middle">
-                <thead class="table-light">
-                  <tr>
-                    <th><i class="bi bi-check2-square"></i> Selecionar</th>
-                    <th><i class="bi bi-person"></i> Colaborador</th>
-                    <th><i class="bi bi-geo-alt"></i> Local de Trabalho</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for funcionario in todos_funcionarios %}
-                    <tr data-nome="{{ funcionario.nome }}" data-local-trabalho="{{ funcionario.local_trabalho }}">
-                      <td><input type="checkbox" name="participantes" value="{{ funcionario.id }}"></td>
-                      <td>{{ funcionario.nome }}</td>
-                      <td>{{ funcionario.local_trabalho }}</td>
-                    </tr>
-                  {% empty %}
-                    {% include "partials/global/_sem_resultados.html" with item_nome="funcionário" %}
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingParticipantes">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseParticipantes">
+      <i class="bi bi-people-fill me-2"></i> Seleção de Participantes
+    </button>
+  </h2>
+  <div id="collapseParticipantes" class="accordion-collapse collapse" data-bs-parent="#accordionListaPresenca">
+    <div class="accordion-body">
+      <div class="row g-3">
+        <div class="col-md-12">
+          <label for="id_participantes" class="form-label">
+            <i class="bi bi-person-plus-fill me-1"></i> Participantes:
+          </label>
+          {{ form.participantes|add_class:"form-select select2" }}
+          <small class="text-muted d-block mt-2">
+            Você pode selecionar múltiplos participantes mantendo <kbd>Ctrl</kbd> (ou <kbd>Cmd</kbd> no Mac) pressionado.
+          </small>
         </div>
       </div>
-
     </div>
-
-    <!-- BOTÕES -->
-    {% include "partials/global/_botoes_salvar_cancelar.html" with edicao=form.instance.pk url_voltar="lista_presenca" %}
-
-  </form>
+  </div>
 </div>
 
+<!-- BOTÕES -->
+{% include "partials/global/_botoes_salvar_cancelar.html" with edicao=form.instance.pk url_voltar="lista_presenca" %}
+
+</form>
+</div>
+
+
 {% block scripts %}
+<!-- Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    // Inicializa Select2
+    $('.select2').select2({
+      width: '100%',
+      placeholder: "Selecione os participantes",
+      allowClear: true
+    });
+
+    // Cálculo de duração com base nos horários
     const calcDuracao = () => {
       const inicio = document.getElementById('id_horario_inicio')?.value;
       const fim = document.getElementById('id_horario_fim')?.value;
@@ -224,9 +224,12 @@
         document.getElementById('duracao').value = diff >= 0 ? diff.toFixed(2) : '';
       }
     };
+
     document.getElementById('id_horario_inicio')?.addEventListener('change', calcDuracao);
     document.getElementById('id_horario_fim')?.addEventListener('change', calcDuracao);
   });
 </script>
 {% endblock %}
+
+
 {% endblock %}
