@@ -146,14 +146,21 @@
           </td>
           <td>{{ calibracao.data_calibracao|date:'d/m/Y' }}</td>
           <td class="d-flex justify-content-center gap-1 flex-wrap">
-            {% include 'partials/global/_botao_editar.html' with objeto=calibracao url_editar='editar_calibracao' label='calibração' %}
-            {% include 'partials/global/_botao_excluir.html' with objeto=calibracao url_excluir='excluir_calibracao' label='calibração' %}
+            {% if request.user|has_permission:"metrologia.change_calibracao" %}
+              {% include 'partials/global/_botao_editar.html' with objeto=calibracao url_editar='editar_calibracao' label='calibração' %}
+            {% endif %}
+          
+            {% if request.user|has_permission:"metrologia.delete_calibracao" %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=calibracao url_excluir='excluir_calibracao' label='calibração' %}
+            {% endif %}
+          
             {% if calibracao.certificado_anexo %}
               <a href="{{ calibracao.certificado_anexo.url }}" class="btn btn-sm btn-info mt-1" title="Download do Certificado">
                 <i class="bi bi-award"></i>
               </a>
             {% endif %}
           </td>
+          
         </tr>
       {% empty %}
         {% include 'partials/global/_sem_resultados.html' with item_nome="calibração" %}

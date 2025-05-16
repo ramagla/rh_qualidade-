@@ -92,8 +92,13 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "evento", "exportar_calendario", "Pode exportar o calendário"),
     ("Funcionario", "evento", "imprimir_calendario", "Pode imprimir o calendário"),
     ("Funcionario", "funcionario", "acesso_rh", "Pode acessar o módulo RH"),
+    ("Funcionario", "cargo", "visualizar_organograma", "Pode visualizar o organograma de cargos"),
     ("metrologia", "tabelatecnica", "acesso_metrologia", "Pode acessar o módulo Metrologia"),
     ("qualidade_fornecimento", "relatoriof045", "acesso_qualidade", "Pode acessar o módulo Qualidade de Fornecimento"),
+    ("Funcionario", "revisao", "view_revisao", "Pode visualizar descrição da revisão"),
+    ("qualidade_fornecimento", "relacaomateriaprima", "gerar_f045", "Pode gerar relatório F045"),
+
+
 ]
     
 
@@ -101,8 +106,11 @@ CUSTOM_PERMISSOES = [
 def criar_permissoes_customizadas(sender, **kwargs):
     for app_label, model, codename, name in CUSTOM_PERMISSOES:
         content_type, _ = ContentType.objects.get_or_create(app_label=app_label, model=model)
-        Permission.objects.get_or_create(
+        perm, created = Permission.objects.get_or_create(
             codename=codename,
-            name=name,
-            content_type=content_type
+            content_type=content_type,
+            defaults={"name": name}
         )
+        if not created and perm.name != name:
+            perm.name = name
+            perm.save()

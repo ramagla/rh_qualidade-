@@ -12,8 +12,8 @@
     {% include 'partials/global/_header_titulo.html' with titulo="Treinamentos Cadastrados" icone="bi bi-mortarboard" emoji="🎓" %}
 
     <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
-        {% if request.user|has_permission:"Funcionario.view_treinamento" %}
-          <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary d-flex align-items-center">
+      {% if request.user|has_permission:"Funcionario.imprimir_treinamento" %}
+      <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary d-flex align-items-center">
             <i class="bi bi-download me-2"></i> Exportar para Excel
           </a>
         {% endif %}
@@ -25,8 +25,8 @@
             </a>
           {% endif %}
       
-          {% if request.user|has_permission:"Funcionario.view_treinamento" %}
-            <button type="button" class="btn btn-info d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
+          {% if request.user|has_permission:"Funcionario.imprimir_treinamento" %}
+          <button type="button" class="btn btn-info d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
               <i class="bi bi-printer me-2"></i> Imprimir
             </button>
       

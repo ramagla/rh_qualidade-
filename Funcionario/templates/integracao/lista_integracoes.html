@@ -109,8 +109,8 @@
                     {% include 'partials/global/_botao_editar.html' with objeto=integracao url_editar='editar_integracao' %}
                   {% endif %}
                 
-                  {% if request.user|has_permission:"Funcionario.view_integracaofuncionario" %}
-                    <a href="{% url 'imprimir_integracao' integracao.id %}" target="_blank" class="btn btn-sm btn-primary mt-1" title="Imprimir">
+                  {% if request.user|has_permission:"Funcionario.imprimir_integracao" %}
+                  <a href="{% url 'imprimir_integracao' integracao.id %}" target="_blank" class="btn btn-sm btn-primary mt-1" title="Imprimir">
                       <i class="bi bi-printer"></i>
                     </a>
                   {% endif %}

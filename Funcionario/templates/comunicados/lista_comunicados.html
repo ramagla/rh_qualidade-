@@ -19,22 +19,26 @@
     </a>
   {% endif %}
 
-  {% if request.user|has_permission:"Funcionario.imprimir_comunicado" %}
+  {% if request.user|has_permission:"Funcionario.imprimir_comunicado" or request.user|has_permission:"Funcionario.imprimir_assinaturas" %}
   <div class="btn-group">
       <button type="button" class="btn btn-info dropdown-toggle d-inline-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-printer me-1" aria-hidden="true"></i> Imprimir
       </button>
       <ul class="dropdown-menu">
         <li>
+          {% if request.user|has_permission:"Funcionario.imprimir_comunicado" %}
       <a class="dropdown-item" href="#" onclick="abrirModalImpressao('comunicado')" aria-label="Abrir modal para imprimir comunicado">
   <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i> Imprimir Comunicado
 </a>
         </li>
-        <li>
+        {% endif %}
+        {% if request.user|has_permission:"Funcionario.imprimir_assinaturas" %}
+
   <a class="dropdown-item" href="#" onclick="abrirModalImpressao('assinatura')" aria-label="Abrir modal para imprimir lista de assinaturas">
   <i class="bi bi-card-checklist me-1" aria-hidden="true"></i> Imprimir Lista de Assinaturas
 </a>
         </li>
+        {% endif %}
       </ul>
     </div>
   {% endif %}

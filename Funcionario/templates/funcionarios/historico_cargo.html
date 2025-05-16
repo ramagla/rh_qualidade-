@@ -13,8 +13,8 @@
   <!-- Botão de adicionar com alinhamento -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div></div>
-    <a href="{% url 'adicionar_historico_cargo' funcionario.id %}" class="btn btn-success d-inline-flex align-items-center">
-      <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Adicionar Histórico
+    {% if request.user|has_permission:"Funcionario.add_historicocargo" %}
+    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Adicionar Histórico
     </a>
   </div>
 

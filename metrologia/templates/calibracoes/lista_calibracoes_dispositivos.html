@@ -156,9 +156,15 @@
             </button>
           </td>
           <td class="d-flex justify-content-center gap-1">
-            {% include 'partials/global/_botao_editar.html' with objeto=calibracao url_editar='editar_calibracao_dispositivo' %}
-            {% include 'partials/global/_botao_excluir.html' with objeto=calibracao url_excluir='excluir_calibracao_dispositivo' %}
+            {% if request.user|has_permission:"metrologia.change_calibracaodispositivo" %}
+              {% include 'partials/global/_botao_editar.html' with objeto=calibracao url_editar='editar_calibracao_dispositivo' %}
+            {% endif %}
+          
+            {% if request.user|has_permission:"metrologia.delete_calibracaodispositivo" %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=calibracao url_excluir='excluir_calibracao_dispositivo' %}
+            {% endif %}
           </td>
+          
         </tr>
         <!-- Modal de Aferições -->
         <div class="modal fade" id="modalCotas{{ calibracao.id }}" tabindex="-1" aria-labelledby="modalCotasLabel{{ calibracao.id }}" aria-hidden="true">

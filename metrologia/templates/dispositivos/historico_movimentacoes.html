@@ -47,15 +47,15 @@
             </span>
           </td>
           <td>
-            {% if request.user|has_permission:"metrologia.view_controleentradasaida" %}
-              <button type="button" class="btn btn-sm btn-secondary"
+            {% if request.user|has_permission:"Metrologia.view_controleentradasaida" %}
+            <button type="button" class="btn btn-sm btn-secondary"
                       data-bs-toggle="modal" data-bs-target="#modalDescricao{{ movimentacao.id }}"
                       title="Visualizar movimentação" aria-label="Visualizar movimentação">
                 <i class="bi bi-eye"></i>
               </button>
             {% endif %}
-            {% if request.user|has_permission:"metrologia.delete_controleentradasaida" %}
-              {% include "partials/global/_botao_excluir.html" with objeto=movimentacao url_excluir="excluir_movimentacao" label="movimentação" %}
+            {% if request.user|has_permission:"Metrologia.delete_controleentradasaida" %}
+            {% include "partials/global/_botao_excluir.html" with objeto=movimentacao url_excluir="excluir_movimentacao" label="movimentação" %}
             {% endif %}
           </td>
         </tr>
@@ -98,8 +98,8 @@
   
   <!-- Botões adicionais -->
   <div class="text-end d-print-none mt-4">
-    {% if request.user|has_permission:"metrologia.add_controleentradasaida" %}
-      <a href="{% url 'cadastrar_movimentacao' dispositivo.id %}" class="btn btn-outline-success me-2">
+    {% if request.user|has_permission:"Metrologia.add_controleentradasaida" %}
+    <a href="{% url 'cadastrar_movimentacao' dispositivo.id %}" class="btn btn-outline-success me-2">
         <i class="bi bi-plus-circle fs-5"></i> Nova Movimentação
       </a>
     {% endif %}

@@ -159,8 +159,8 @@
               {% include 'partials/global/_botao_editar.html' with objeto=lista url_editar='editar_lista_presenca' %}
             {% endif %}
           
-            {% if request.user|has_permission:"Funcionario.view_listapresenca" %}
-              <a href="{% url 'imprimir_lista_presenca' lista.id %}" class="btn btn-sm btn-primary mt-1" title="Imprimir" aria-label="Imprimir">
+            {% if request.user|has_permission:"Funcionario.imprimir_lista_presenca" %}
+            <a href="{% url 'imprimir_lista_presenca' lista.id %}" class="btn btn-sm btn-primary mt-1" title="Imprimir" aria-label="Imprimir">
                 <i class="bi bi-printer"></i>
               </a>
             {% endif %}

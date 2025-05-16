@@ -148,7 +148,7 @@
     {% include 'partials/global/_botao_editar.html' with objeto=avaliacao url_editar='editar_avaliacao_anual' label='avaliação' %}
 {% endif %}
 
-{% if request.user|has_permission:'Funcionario.view_avaliacaoanual' %}
+{% if request.user|has_permission:'Funcionario.imprimir_avaliacao' %}
     <a href="{% url 'imprimir_avaliacao_anual' avaliacao.id %}"
        class="btn btn-sm btn-primary mt-1"
        target="_blank"
@@ -157,6 +157,7 @@
        <i class="bi bi-printer" aria-hidden="true"></i>
     </a>
 {% endif %}
+
 
 {% if request.user|has_permission:'Funcionario.delete_avaliacaoanual' %}
     {% include 'partials/global/_botao_excluir.html' with objeto=avaliacao url_excluir='excluir_avaliacao_anual' label='avaliação' %}

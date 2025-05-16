@@ -119,15 +119,16 @@
     {% include "partials/global/_botao_editar.html" with objeto=avaliacao url_editar='editar_avaliacao_experiencia' %}
   {% endif %}
 
-  {% if request.user|has_permission:'Funcionario.view_avaliacaoexperiencia' %}
-    <a href="{% url 'imprimir_avaliacao_experiencia' avaliacao.id %}"
-       target="_blank"
-       class="btn btn-sm btn-primary mt-1"
-       title="Imprimir"
-       aria-label="Imprimir avaliação de {{ avaliacao.funcionario.nome }}">
-      <i class="bi bi-printer" aria-hidden="true"></i>
-    </a>
-  {% endif %}
+  {% if request.user|has_permission:'Funcionario.imprimir_avaliacao_experiencia' %}
+  <a href="{% url 'imprimir_avaliacao_experiencia' avaliacao.id %}"
+     target="_blank"
+     class="btn btn-sm btn-primary mt-1"
+     title="Imprimir"
+     aria-label="Imprimir avaliação de {{ avaliacao.funcionario.nome }}">
+    <i class="bi bi-printer" aria-hidden="true"></i>
+  </a>
+{% endif %}
+
 
   {% if request.user|has_permission:'Funcionario.delete_avaliacaoexperiencia' %}
     {% include "partials/global/_botao_excluir.html" with objeto=avaliacao url_excluir='excluir_avaliacao_experiencia' label='avaliação' %}

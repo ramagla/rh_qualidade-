@@ -27,7 +27,7 @@
           <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
           <td class="d-flex gap-2">
 
-            {% if request.user|has_permission:"Funcionario.view_revisao" %}
+            {% if request.user|has_permission:"Funcionario.view_cargo" %}
             <button class="btn btn-sm btn-info mt-1"
                     data-bs-toggle="modal"
                     data-bs-target="#modalDescricao{{ revisao.id }}"
