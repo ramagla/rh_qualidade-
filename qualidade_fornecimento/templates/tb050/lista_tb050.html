@@ -127,10 +127,10 @@
 </div>
 
 
-  {# ----------------- Botões de Ação ------------------- #}
+ {# ----------------- Botões de Ação ------------------- #}
 <div class="d-flex justify-content-end mb-4 gap-2">
 
-  {% if request.user|has_permission:'qualidade_fornecimento.importar_excel_tb050' %}
+  {% if request.user|has_permission:'qualidade_fornecimento.add_relacaomateriaprima' %}
   <a href="{% url 'tb050_cadastrar' %}"
      class="btn btn-success d-inline-flex align-items-center"
      aria-label="Cadastrar nova relação de matérias‑primas"
@@ -139,7 +139,9 @@
     <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
     <span>Novo</span>
   </a>
+  {% endif %}
 
+  {% if request.user|has_permission:'qualidade_fornecimento.importar_excel_tb050' %}
   <a href="{% url 'tb050_importar_excel' %}"
      class="btn btn-secondary d-inline-flex align-items-center"
      aria-label="Importar Excel"
@@ -163,6 +165,7 @@
   {% endif %}
 
 </div>
+
 <!-- Modal de Alerta para Norma Não Aprovada -->
 <div class="modal fade" id="modalNormaNaoAprovada" tabindex="-1" aria-labelledby="modalNormaNaoAprovadaLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -320,7 +323,7 @@
 <td class="text-center align-middle">
   <div class="d-inline-flex flex-wrap justify-content-center gap-1">
 
-    {% if request.user|has_permission:'qualidade_fornecimento.view_tb050' %}
+    {% if request.user|has_permission:'qualidade_fornecimento.view_relacaomateriaprima' %}
     <a href="{% url 'tb050_visualizar' item.pk %}"
        class="btn btn-sm btn-secondary"
        data-bs-toggle="tooltip"
@@ -330,7 +333,7 @@
     </a>
     {% endif %}
 
-    {% if request.user|has_permission:'qualidade_fornecimento.change_tb050' %}
+    {% if request.user|has_permission:'qualidade_fornecimento.change_relacaomateriaprima' %}
     <a href="{% url 'tb050_editar' item.pk %}"
        class="btn btn-sm btn-warning"
        data-bs-toggle="tooltip"
@@ -338,7 +341,9 @@
        aria-label="Editar relatório">
       <i class="bi bi-pencil" aria-hidden="true"></i>
     </a>
+    {% endif %}
 
+    {% if request.user|has_permission:'qualidade_fornecimento.selecionar_etiquetas_tb050' %}
     <a href="{% url 'tb050_selecionar_etiquetas' item.pk %}"
        class="btn btn-sm btn-info"
        data-bs-toggle="tooltip"
@@ -368,7 +373,7 @@
     </a>
     {% endif %}
 
-    {% if request.user|has_permission:'qualidade_fornecimento.delete_tb050' %}
+    {% if request.user|has_permission:'qualidade_fornecimento.delete_relacaomateriaprima' %}
     <button type="button"
             class="btn btn-sm btn-danger"
             data-bs-toggle="modal"
@@ -378,7 +383,6 @@
       <i class="bi bi-trash" aria-hidden="true"></i>
     </button>
     {% include 'partials/global/_modal_exclusao.html' with objeto=item url_excluir='tb050_excluir' %}
-
     {% endif %}
 
   </div>

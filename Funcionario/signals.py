@@ -72,6 +72,12 @@ CUSTOM_PERMISSOES = [
     ("qualidade_fornecimento", "relacaomateriaprima", "get_rolos_peso", "Pode obter peso dos rolos"),
     ("qualidade_fornecimento", "normatecnica", "norma_aprovada", "Pode verificar se norma está aprovada"),
     ("qualidade_fornecimento", "fornecedorqualificado", "relatorio_avaliacao_view", "Pode visualizar relatório de avaliação semestral"),
+    ("qualidade_fornecimento", "relacaomateriaprima", "gerar_f045", "Pode gerar relatório F045"),
+    ("qualidade_fornecimento", "relatoriof045", "acesso_qualidade", "Pode acessar o módulo Qualidade de Fornecimento"),
+    ("qualidade_fornecimento", "relatoriof045", "dashboard_qualidade", "Pode acessar o dashboard de Qualidade de Fornecimento"),
+    ("qualidade_fornecimento", "fornecedorqualificado", "importar_excel_fornecedores", "Pode importar fornecedores via Excel"),
+
+
 
     # Funcionário
     ("Funcionario", "avaliacaotreinamento", "imprimir_treinamento", "Pode imprimir avaliação de treinamento"),
@@ -94,9 +100,21 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "funcionario", "acesso_rh", "Pode acessar o módulo RH"),
     ("Funcionario", "cargo", "visualizar_organograma", "Pode visualizar o organograma de cargos"),
     ("metrologia", "tabelatecnica", "acesso_metrologia", "Pode acessar o módulo Metrologia"),
-    ("qualidade_fornecimento", "relatoriof045", "acesso_qualidade", "Pode acessar o módulo Qualidade de Fornecimento"),
     ("Funcionario", "revisao", "view_revisao", "Pode visualizar descrição da revisão"),
-    ("qualidade_fornecimento", "relacaomateriaprima", "gerar_f045", "Pode gerar relatório F045"),
+    ("Funcionario", "integracaofuncionario", "imprimir_integracao", "Pode imprimir integração"),
+    ("Funcionario", "listapresenca", "imprimir_lista_presenca", "Pode imprimir lista de presença"),
+    # Relatórios RH
+    ("Funcionario", "relatorio", "relatorio_indicador", "Pode acessar o Indicador de Treinamentos"),
+    ("Funcionario", "relatorio", "relatorio_indicador_anual", "Pode acessar o Indicador Anual"),
+    ("Funcionario", "relatorio", "cronograma_treinamentos", "Pode acessar o Cronograma de Treinamentos"),
+    ("Funcionario", "relatorio", "cronograma_avaliacao_eficacia", "Pode acessar o Cronograma de Avaliação de Eficácia"),
+    ("Funcionario", "relatorio", "relatorio_aniversariantes", "Pode acessar o Relatório de Aniversariantes"),
+
+
+    # Formulários RH
+    ("Funcionario", "funcionario", "emitir_carta_competencia", "Pode emitir carta de competência"),
+    ("Funcionario", "funcionario", "emitir_pesquisa_consciencia", "Pode emitir pesquisa de consciência"),
+    ("Funcionario", "funcionario", "emitir_capacitacao_pratica", "Pode emitir avaliação de capacitação prática"),
 
 
 ]

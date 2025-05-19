@@ -1,6 +1,6 @@
 qualidade_permissions = {
     # Dashboard
-    "qualidadefornecimento_home": "qualidade_fornecimento.view_relatoriof045",
+    "qualidadefornecimento_home": "qualidade_fornecimento.dashboard_qualidade",
 
     # Fornecedores Qualificados
     "lista_fornecedores": "qualidade_fornecimento.view_fornecedorqualificado",

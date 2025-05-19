@@ -119,16 +119,21 @@
 
 
   <!-- Botões -->
- <div class="d-flex justify-content-end gap-2 mb-4">
-  {% if request.user|has_permission:'Qualidade_Fornecimento.add_materiaprimacatalogo' %}
+ <!-- Botões -->
+<div class="d-flex justify-content-end gap-2 mb-4">
+  {% if request.user|has_permission:'qualidade_fornecimento.add_materiaprimacatalogo' %}
   <a href="{% url 'materiaprima_catalogo_create' %}" class="btn btn-success">
-      <i class="bi bi-plus-circle me-1"></i> Novo Cadastro
-    </a>
-    <a href="{% url 'materiaprima_importar' %}" class="btn btn-outline-primary">
-      <i class="bi bi-file-earmark-spreadsheet me-1"></i> Importar do Excel
-    </a>
+    <i class="bi bi-plus-circle me-1"></i> Novo Cadastro
+  </a>
+  {% endif %}
+
+  {% if request.user|has_permission:'qualidade_fornecimento.importar_materia_prima_excel' %}
+  <a href="{% url 'materiaprima_importar' %}" class="btn btn-outline-primary">
+    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Importar do Excel
+  </a>
   {% endif %}
 </div>
+
 
 
 
@@ -218,39 +223,40 @@
             <td>{{ mp.bitola }}</td>
             <td>{{ mp.localizacao }}</td>
             <td>
-              {% if request.user|has_permission:'Qualidade_Fornecimento.view_materiaprimacatalogo' %}
+              {% if request.user|has_permission:'qualidade_fornecimento.view_materiaprimacatalogo' %}
               <a href="{% url 'materiaprima_visualizar' mp.pk %}" 
-       class="btn btn-sm btn-secondary" 
-       title="Visualizar" 
-       data-bs-toggle="tooltip" 
-       aria-label="Visualizar matéria-prima">
-      <i class="bi bi-eye"></i>
-    </a>
-  {% endif %}
+                 class="btn btn-sm btn-secondary" 
+                 title="Visualizar" 
+                 data-bs-toggle="tooltip" 
+                 aria-label="Visualizar matéria-prima">
+                <i class="bi bi-eye"></i>
+              </a>
+              {% endif %}
+            
+              {% if request.user|has_permission:'qualidade_fornecimento.change_materiaprimacatalogo' %}
+              <a href="{% url 'materiaprima_editar' mp.pk %}"
+                 class="btn btn-sm btn-warning"
+                 data-bs-toggle="tooltip"
+                 title="Editar matéria-prima"
+                 aria-label="Editar matéria-prima">
+                <i class="bi bi-pencil"></i>
+              </a>
+              {% endif %}
+            
+              {% if request.user|has_permission:'qualidade_fornecimento.delete_materiaprimacatalogo' %}
+              <button class="btn btn-sm btn-danger"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalExcluir{{ mp.pk }}"
+                      title="Excluir matéria-prima"
+                      aria-label="Excluir matéria-prima">
+                <i class="bi bi-trash"></i>
+              </button>
+              {% include 'partials/global/_modal_exclusao.html' with objeto=mp url_excluir='materiaprima_deletar' %}
+              {% endif %}
+            </td>
+            
 
-  {% if request.user|has_permission:'Qualidade_Fornecimento.change_materiaprimacatalogo' %}
-  <a href="{% url 'materiaprima_editar' mp.pk %}"
-       class="btn btn-sm btn-warning"
-       data-bs-toggle="tooltip"
-       title="Editar matéria-prima"
-       aria-label="Editar matéria-prima">
-      <i class="bi bi-pencil"></i>
-    </a>
-  {% endif %}
-
-  {% if request.user|has_permission:'Qualidade_Fornecimento.delete_materiaprimacatalogo' %}
-  <button class="btn btn-sm btn-danger"
-            data-bs-toggle="modal"
-            data-bs-target="#modalExcluir{{ mp.pk }}"
-            data-bs-toggle="tooltip"
-            title="Excluir matéria-prima"
-            aria-label="Excluir matéria-prima">
-      <i class="bi bi-trash"></i>
-    </button>
-  {% include 'partials/global/_modal_exclusao.html' with objeto=mp url_excluir='materiaprima_deletar' %}
-</td>
           </tr>   
-{%endif%}
           {% endfor %}
           
         </tbody>

@@ -89,17 +89,17 @@
 </div>
 
 
-  <div class="d-flex flex-wrap justify-content-end align-items-end gap-2 mb-4">
+<div class="d-flex flex-wrap justify-content-end align-items-end gap-2 mb-4">
 
-    {% if request.user|has_permission:'Qualidade_Fornecimento.add_controleservicoexterno' %}
-    <a href="{% url 'cadastrar_controle_servico_externo' %}" 
+  {% if request.user|has_permission:'qualidade_fornecimento.add_controleservicoexterno' %}
+  <a href="{% url 'cadastrar_controle_servico_externo' %}" 
      class="btn btn-success d-inline-flex align-items-center" 
      aria-label="Cadastrar novo serviço externo">
     <i class="bi bi-plus-circle me-2" aria-hidden="true"></i> Novo Serviço Externo
   </a>
   {% endif %}
 
-  {% if request.user|has_permission:'Qualidade_Fornecimento.add_relatorioinspecaoservico' %}
+  {% if request.user|has_permission:'qualidade_fornecimento.add_inspecaoservicoexterno' %}
   <button type="button" 
           class="btn btn-primary d-inline-flex align-items-center" 
           data-bs-toggle="modal" 
@@ -110,6 +110,7 @@
   {% endif %}
 
 </div>
+
 
 
 <div class="modal fade" 
@@ -296,59 +297,60 @@
       <td>{{ servico.data_retorno|date:"d/m/Y" }}</td>
       <td class="text-center align-middle">
         <div class="d-inline-flex flex-wrap justify-content-center gap-2">
-          {% if request.user|has_permission:'Qualidade_Fornecimento.view_controleservicoexterno' %}
+      
+          {% if request.user|has_permission:'qualidade_fornecimento.view_controleservicoexterno' %}
           <a href="{% url 'visualizar_controle_servico_externo' servico.id %}" 
-     class="btn btn-sm btn-secondary" 
-     title="Visualizar serviço externo"
-     data-bs-toggle="tooltip" 
-     aria-label="Visualizar serviço externo">
-    <i class="bi bi-eye"></i>
-  </a>
-{% endif %}
-
-{% if request.user|has_permission:'Qualidade_Fornecimento.change_controleservicoexterno' %}
-            <a href="{% url 'editar_controle_servico_externo' servico.id %}" 
-               class="btn btn-sm btn-primary" 
-               data-bs-toggle="tooltip" 
-               title="Editar pedido {{ servico.pedido }}">
-              <i class="bi bi-pencil-square"></i>
-            </a>
+             class="btn btn-sm btn-secondary" 
+             title="Visualizar serviço externo"
+             data-bs-toggle="tooltip" 
+             aria-label="Visualizar serviço externo">
+            <i class="bi bi-eye"></i>
+          </a>
           {% endif %}
       
-
+          {% if request.user|has_permission:'qualidade_fornecimento.change_controleservicoexterno' %}
+          <a href="{% url 'editar_controle_servico_externo' servico.id %}" 
+             class="btn btn-sm btn-primary" 
+             data-bs-toggle="tooltip" 
+             title="Editar pedido {{ servico.pedido }}">
+            <i class="bi bi-pencil-square"></i>
+          </a>
+          {% endif %}
+      
           {% if servico.inspecao and servico.inspecao.pdf %}
-            <a href="{{ servico.inspecao.pdf.url }}" target="_blank" 
-               class="btn btn-sm btn-outline-primary" 
-               data-bs-toggle="tooltip" 
-               title="Visualizar PDF da inspeção do pedido {{ servico.pedido }}">
-              <i class="bi bi-file-earmark-pdf"></i>
-            </a>
+          <a href="{{ servico.inspecao.pdf.url }}" target="_blank" 
+             class="btn btn-sm btn-outline-primary" 
+             data-bs-toggle="tooltip" 
+             title="Visualizar PDF da inspeção do pedido {{ servico.pedido }}">
+            <i class="bi bi-file-earmark-pdf"></i>
+          </a>
           {% endif %}
-
+      
           {% if servico.inspecao and servico.inspecao.certificado_anexo %}
-  <a href="{{ servico.inspecao.certificado_anexo.url }}" 
-     class="btn btn-sm btn-outline-success" 
-     data-bs-toggle="tooltip"
-     title="Download do Certificado da Inspeção"
-     target="_blank"
-     aria-label="Download do Certificado da Inspeção">
-    <i class="bi bi-paperclip"></i>
-  </a>
-{% endif %}
-
-
-{% if request.user|has_permission:'Qualidade_Fornecimento.delete_controleservicoexterno' %}
-            <button type="button" 
-                    class="btn btn-sm btn-danger" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#modalExcluir{{ servico.id }}" 
-                    title="Excluir pedido {{ servico.pedido }}">
-              <i class="bi bi-trash"></i>
-            </button>
-            {% include 'partials/global/_modal_exclusao.html' with objeto=servico url_excluir='excluir_controle_servico_externo' %}
+          <a href="{{ servico.inspecao.certificado_anexo.url }}" 
+             class="btn btn-sm btn-outline-success" 
+             data-bs-toggle="tooltip"
+             title="Download do Certificado da Inspeção"
+             target="_blank"
+             aria-label="Download do Certificado da Inspeção">
+            <i class="bi bi-paperclip"></i>
+          </a>
           {% endif %}
+      
+          {% if request.user|has_permission:'qualidade_fornecimento.delete_controleservicoexterno' %}
+          <button type="button" 
+                  class="btn btn-sm btn-danger" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#modalExcluir{{ servico.id }}" 
+                  title="Excluir pedido {{ servico.pedido }}">
+            <i class="bi bi-trash"></i>
+          </button>
+          {% include 'partials/global/_modal_exclusao.html' with objeto=servico url_excluir='excluir_controle_servico_externo' %}
+          {% endif %}
+      
         </div>
       </td>
+      
     </tr>
   {% endfor %}
 </tbody>

@@ -60,27 +60,84 @@ def global_menu(request):
                 "icon": "fas fa-folder-open",
             })
 
-    # Menu Recursos Humanos
+   # Menu Recursos Humanos
     menu_recursos_humanos = []
     if recursos_humanos_permitido:
+
+        # Dashboard (ainda pode depender de view_funcionario)
         if user.has_perm("Funcionario.view_funcionario"):
-            menu_recursos_humanos.extend([
-                {"name": "Dashboard", "url": "funcionarios_home", "icon": "fas fa-tachometer-alt"},
-                {"name": "Comunicados Internos", "url": "lista_comunicados", "icon": "fas fa-bullhorn"},
-                {"name": "Cargos", "url": "lista_cargos", "icon": "fas fa-briefcase"},
-                {"name": "Colaboradores", "url": "lista_funcionarios", "icon": "fas fa-user"},
-                {"name": "Integrações", "url": "lista_integracoes", "icon": "bi bi-person-badge"},
-            ])
-        if user.has_perm("Funcionario.view_treinamento"):
             menu_recursos_humanos.append({
-                "name": "Treinamentos",
-                "icon": "fas fa-graduation-cap",
-                "submenu": [
-                    {"name": "Lista de Treinamentos", "url": "lista_treinamentos"},
-                    {"name": "Lista de Presença", "url": "lista_presenca"},
-                    {"name": "Avaliação de Treinamentos", "url": "lista_avaliacoes"},
-                ],
+                "name": "Dashboard",
+                "url": "funcionarios_home",
+                "icon": "fas fa-tachometer-alt",
             })
+
+        # Colaboradores (individual)
+        if user.has_perm("Funcionario.view_funcionario"):
+            menu_recursos_humanos.append({
+                "name": "Colaboradores",
+                "url": "lista_funcionarios",
+                "icon": "fas fa-user",
+            })
+
+        # Integrações (individual)
+        if user.has_perm("Funcionario.view_integracaofuncionario"):
+            menu_recursos_humanos.append({
+                "name": "Integrações",
+                "url": "lista_integracoes",
+                "icon": "bi bi-person-badge",
+            })
+
+        # Comunicados Internos (independente)
+        if user.has_perm("Funcionario.view_comunicado"):
+            menu_recursos_humanos.append({
+                "name": "Comunicados Internos",
+                "url": "lista_comunicados",
+                "icon": "fas fa-bullhorn",
+            })
+
+        # Cargos
+        if user.has_perm("Funcionario.view_cargo") or user.has_perm("Funcionario.add_cargo"):
+            menu_recursos_humanos.append({
+                "name": "Cargos",
+                "url": "lista_cargos",
+                "icon": "fas fa-briefcase",
+            })
+
+        # Treinamentos
+        if (
+            user.has_perm("Funcionario.view_treinamento") or
+            user.has_perm("Funcionario.view_listapresenca") or
+            user.has_perm("Funcionario.view_avaliacaotreinamento")
+        ):
+            submenu_treinamentos = []
+
+            if user.has_perm("Funcionario.view_treinamento"):
+                submenu_treinamentos.append({
+                    "name": "Lista de Treinamentos",
+                    "url": "lista_treinamentos"
+                })
+
+            if user.has_perm("Funcionario.view_listapresenca"):
+                submenu_treinamentos.append({
+                    "name": "Lista de Presença",
+                    "url": "lista_presenca"
+                })
+
+            if user.has_perm("Funcionario.view_avaliacaotreinamento"):
+                submenu_treinamentos.append({
+                    "name": "Avaliação de Treinamentos",
+                    "url": "lista_avaliacoes"
+                })
+
+            if submenu_treinamentos:
+                menu_recursos_humanos.append({
+                    "name": "Treinamentos",
+                    "icon": "fas fa-graduation-cap",
+                    "submenu": submenu_treinamentos,
+                })
+
+        # Desempenho
         if user.has_perm("Funcionario.view_avaliacaoanual") or user.has_perm("Funcionario.view_avaliacaoexperiencia"):
             menu_recursos_humanos.append({
                 "name": "Desempenho",
@@ -90,12 +147,16 @@ def global_menu(request):
                     {"name": "Experiência", "url": "lista_avaliacao_experiencia"},
                 ],
             })
+
+        # Job Rotation
         if user.has_perm("Funcionario.view_jobrotationevaluation"):
             menu_recursos_humanos.append({
                 "name": "Job Rotation",
                 "url": "lista_jobrotation_evaluation",
                 "icon": "fas fa-sync-alt",
             })
+
+        # Matriz de Polivalência
         if user.has_perm("Funcionario.view_matrizpolivalencia"):
             menu_recursos_humanos.append({
                 "name": "Matriz de Polivalência",
@@ -105,34 +166,85 @@ def global_menu(request):
                     {"name": "Lista de Matriz", "url": "lista_matriz_polivalencia"},
                 ],
             })
-        if user.has_perm("Funcionario.view_treinamento") or user.has_perm("Funcionario.view_avaliacaotreinamento"):
+
+        # Relatórios
+        submenu_relatorios = []
+
+        if user.has_perm("Funcionario.relatorio_indicador"):
+            submenu_relatorios.append({
+                "name": "Indicador de Treinamentos",
+                "url": "relatorio_indicador"
+            })
+
+        if user.has_perm("Funcionario.cronograma_treinamentos"):
+            submenu_relatorios.append({
+                "name": "Cronograma de Treinamentos",
+                "url": "cronograma_treinamentos"
+            })
+
+        if user.has_perm("Funcionario.cronograma_avaliacao_eficacia"):
+            submenu_relatorios.append({
+                "name": "Cronograma de Eficácia",
+                "url": "cronograma_avaliacao_eficacia"
+            })
+
+        if user.has_perm("Funcionario.relatorio_indicador_anual"):
+            submenu_relatorios.append({
+                "name": "Indicador Anual",
+                "url": "relatorio_indicador_anual"
+            })
+
+        if user.has_perm("Funcionario.relatorio_aniversariantes"):
+            submenu_relatorios.append({
+                "name": "Aniversariantes do Mês",
+                "url": "relatorio_aniversariantes"
+            })
+
+        if submenu_relatorios:
             menu_recursos_humanos.append({
                 "name": "Relatórios",
                 "icon": "fas fa-file-alt",
-                "submenu": [
-                    {"name": "Indicador de Treinamentos", "url": "relatorio_indicador"},
-                    {"name": "Indicador Anual", "url": "relatorio_indicador_anual"},
-                    {"name": "Cronograma de Treinamentos", "url": "cronograma_treinamentos"},
-                    {"name": "Cronograma de Eficácia", "url": "cronograma_avaliacao_eficacia"},
-                    {"name": "Aniversariantes do Mês", "url": "relatorio_aniversariantes"},
-                ],
+                "submenu": submenu_relatorios,
             })
-        if user.has_perm("Funcionario.view_funcionario"):
+
+
+        # Formulários (novas permissões customizadas)
+        submenu_formularios = []
+
+        if user.has_perm("Funcionario.emitir_carta_competencia"):
+            submenu_formularios.append({
+                "name": "Carta de Competência",
+                "url": "filtro_funcionario"
+            })
+
+        if user.has_perm("Funcionario.emitir_pesquisa_consciencia"):
+            submenu_formularios.append({
+                "name": "Pesquisa de Consciência",
+                "url": "formulario_pesquisa_consciencia"
+            })
+
+        if user.has_perm("Funcionario.emitir_capacitacao_pratica"):
+            submenu_formularios.append({
+                "name": "Avaliação de Capacitação Prática",
+                "url": "filtro_carta_competencia"
+            })
+
+        if submenu_formularios:
             menu_recursos_humanos.append({
                 "name": "Formulários",
                 "icon": "fas fa-edit",
-                "submenu": [
-                    {"name": "Carta de Competência", "url": "filtro_funcionario"},
-                    {"name": "Pesquisa de Consciência", "url": "formulario_pesquisa_consciencia"},
-                    {"name": "Avaliação de Capacitação Prática", "url": "filtro_carta_competencia"},
-                ],
+                "submenu": submenu_formularios,
             })
+
+        # Documentos
         if user.has_perm("Funcionario.view_documento"):
             menu_recursos_humanos.append({
                 "name": "Documentos",
                 "url": "lista_documentos",
                 "icon": "fas fa-folder-open",
             })
+
+        # Calendário
         if user.has_perm("Funcionario.view_calendario"):
             menu_recursos_humanos.append({
                 "name": "Calendário",
@@ -140,36 +252,66 @@ def global_menu(request):
                 "icon": "fas fa-calendar-alt",
             })
 
+
+
+    # Módulos disponíveis
+    modulos_disponiveis = []
+    if recursos_humanos_permitido:
+        modulos_disponiveis.append({
+            "name": "Recursos Humanos",
+            "url": "home",
+            "icon": "bi bi-people",
+            "permissao": "Funcionario.acesso_rh",
+        })
+    if metrologia_permitido:
+        modulos_disponiveis.append({
+            "name": "Metrologia",
+            "url": "metrologia_home",
+            "icon": "bi bi-rulers",
+            "permissao": "metrologia.acesso_metrologia",
+        })
+    if qualidade_fornecimento_permitido:
+        modulos_disponiveis.append({
+            "name": "Qualidade de Fornecimento",
+            "url": "qualidadefornecimento_home",
+            "icon": "fas fa-industry",
+            "permissao": "qualidade_fornecimento.acesso_qualidade",
+        })
+
     # Menu Qualidade de Fornecimento
     menu_qualidade_fornecimento = []
     if qualidade_fornecimento_permitido:
-        if user.has_perm("qualidade_fornecimento.view_relatoriof045"):
+        if user.has_perm("qualidade_fornecimento.dashboard_qualidade"):
             menu_qualidade_fornecimento.append({
                 "name": "Dashboard",
                 "url": "qualidadefornecimento_home",
                 "icon": "fas fa-industry",
             })
 
-        # Submenu: Cadastros
+        # Cadastros
         submenu_cadastros = []
+
         if user.has_perm("qualidade_fornecimento.view_fornecedorqualificado"):
             submenu_cadastros.append({
                 "name": "Fornecedores",
                 "url": "lista_fornecedores",
                 "icon": "fas fa-truck",
             })
+
         if user.has_perm("qualidade_fornecimento.view_normatecnica"):
             submenu_cadastros.append({
                 "name": "Normas Técnicas",
                 "url": "lista_normas",
                 "icon": "fas fa-file-alt",
             })
+
         if user.has_perm("qualidade_fornecimento.view_materiaprimacatalogo"):
             submenu_cadastros.append({
                 "name": "Catálogo de Matéria-Prima",
                 "url": "materiaprima_catalogo_list",
                 "icon": "fas fa-tags",
             })
+
         if submenu_cadastros:
             menu_qualidade_fornecimento.append({
                 "name": "Cadastros",
@@ -204,31 +346,6 @@ def global_menu(request):
                 ],
             })
 
-
-
-    # Módulos disponíveis
-    modulos_disponiveis = []
-    if recursos_humanos_permitido:
-        modulos_disponiveis.append({
-            "name": "Recursos Humanos",
-            "url": "home",
-            "icon": "bi bi-people",
-            "permissao": "Funcionario.acesso_rh",
-        })
-    if metrologia_permitido:
-        modulos_disponiveis.append({
-            "name": "Metrologia",
-            "url": "metrologia_home",
-            "icon": "bi bi-rulers",
-            "permissao": "metrologia.acesso_metrologia",
-        })
-    if qualidade_fornecimento_permitido:
-        modulos_disponiveis.append({
-            "name": "Qualidade de Fornecimento",
-            "url": "qualidadefornecimento_home",
-            "icon": "fas fa-industry",
-            "permissao": "qualidade_fornecimento.acesso_qualidade",
-        })
 
     active_module = request.path.split("/")[1]
     if active_module == "metrologia":

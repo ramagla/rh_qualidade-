@@ -112,7 +112,7 @@
   </a>
   {% endif %}
 
-  {% if request.user|has_permission:'qualidade_fornecimento.add_fornecedorqualificado' %}
+  {% if request.user|has_permission:'qualidade_fornecimento.importar_excel_fornecedores' %}
   <a href="{% url 'importar_excel_fornecedores' %}" class="btn btn-secondary" aria-label="Importar fornecedores via Excel">
     <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Importar Excel
   </a>
