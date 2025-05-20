@@ -125,45 +125,13 @@
 
 
   <!-- Cards com Indicadores -->
-  <div class="row mb-4">
-    <div class="col-md-3">
-<div class="card text-white bg-success border-0 shadow-sm card-status">
-        <div class="card-header text-center">Total de Fornecedores</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ total_fornecedores }}</h5>
-          <p class="card-text">Cadastrados no sistema.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-<div class="card text-white bg-danger border-0 shadow-sm card-status">
-        <div class="card-header text-center">Certificações Vencidas</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ total_vencidas }}</h5>
-          <p class="card-text">Certificados expirados.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-<div class="card text-white bg-warning border-0 shadow-sm card-status">
-        <div class="card-header text-center">Certificações Próx.Vencimento</div>
-        <div class="card-body text-center">
-          <h5 class="card-title">{{ total_proximas }}</h5>
-          <p class="card-text">Até 30 dias para vencer.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-<div class="card text-white border-0 shadow-sm card-status" style="background-color: #ff6600;">
-    <div class="card-header text-center">Alto Risco</div>
-    <div class="card-body text-center">
-      <h5 class="card-title">{{ total_alto_risco }}</h5>
-      <p class="card-text">Classificados com risco alto.</p>
-    </div>
-  </div>
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Fornecedores" valor=total_fornecedores subtitulo="Cadastrados no sistema." cor="success" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Certificações Vencidas" valor=total_vencidas subtitulo="Certificados expirados." cor="danger" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Certificações Próx.Vencimento" valor=total_proximas subtitulo="Até 30 dias para vencer." cor="warning" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Alto Risco" valor=total_alto_risco subtitulo="Classificados com risco alto." cor="laranja" %}
 </div>
 
-  </div>
 
   <!-- Lista de Fornecedores -->
   <!-- Lista de Fornecedores -->
@@ -173,8 +141,8 @@
     📄 Lista de Fornecedores
   </h5>
   <div class="table-responsive">
-<table class="table zebra-tabela table-hover table-bordered text-center align-middle">
-      <thead class="table-light">
+    <table class="table table-striped zebra-tabela table-hover table-bordered text-center align-middle">
+      <thead class="table-light align-middle">
   <tr>
     <th class="py-2"><i class="bi bi-person me-1"></i> Nome</th>
     <th class="py-2"><i class="bi bi-box-seam me-1"></i> Produto</th>
@@ -290,7 +258,12 @@
 
 
 </div>
-
+<style>
+  .bg-laranja {
+    background-color: #ff6600 !important;
+    color: white !important;
+  }
+</style>  
 
 <script>
   // Inicializa os tooltips para todos os elementos com data-bs-toggle="tooltip"

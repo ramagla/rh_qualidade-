@@ -25,6 +25,7 @@ class Treinamento(models.Model):
     ]
 
     STATUS_CHOICES = [
+        ("planejado", "Planejado"), 
         ("concluido", "Concluído"),
         ("trancado", "Trancado"),
         ("cursando", "Cursando"),

@@ -18,25 +18,18 @@
             <tr>
                 <td>{{ revisao.numero_revisao }}</td>
                 <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
-                <td>
-                    <!-- Botão para abrir a modal de descrição -->
-                    {% if request.user|has_permission:'Funcionario.view_revisao' %}
-
-                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ revisao.id }}">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    {% endif %}
-
-
-                    <!-- Botão para abrir a modal de exclusão -->
-                    {% if request.user|has_permission:'Funcionario.delete_revisao' %}
-
-                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirRevisao{{ revisao.id }}">
-                        <i class="bi bi-trash"></i>
-                    </button> 
-                    {% endif %}
-
-                </td>
+                <td class="text-center">
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                      {% if request.user|has_permission:"Funcionario.view_revisao" %}
+                        {% include "partials/global/_botao_visualizar.html" with objeto=revisao url_visualizar=None modal="modalDescricao"|add:revisao.id %}
+                      {% endif %}
+                  
+                      {% if request.user|has_permission:"Funcionario.delete_revisao" %}
+                        {% include "partials/global/_botao_excluir.html" with objeto=revisao url_excluir="excluir_revisao2" label="revisão"|add:" "|add:revisao.numero_revisao %}
+                      {% endif %}
+                    </div>
+                  </td>
+                  
             </tr>
 
             <!-- Modal de Descrição -->
@@ -95,16 +88,15 @@
     </table>
     
     <!-- Botões adicionais -->
-    <div class="text-end mb-4">
+    <div class="text-end mt-4 d-flex justify-content-end gap-2 flex-wrap">
         {% if request.user|has_permission:'Funcionario.add_revisao' %}
-        <a href="{% url 'adicionar_documento' documento.id %}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Adicionar Revisão
-        </a>
+          <a href="{% url 'adicionar_documento' documento.id %}" class="btn btn-success btn-sm">
+            <i class="bi bi-plus-circle"></i> Nova Revisão
+          </a>
         {% endif %}
-    
-        <a href="{% url 'lista_documentos' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Retornar
+        <a href="{% url 'lista_documentos' %}" class="btn btn-secondary btn-sm">
+          <i class="bi bi-arrow-left"></i> Voltar
         </a>
-    </div>
+      </div>
     
 {% endblock %}

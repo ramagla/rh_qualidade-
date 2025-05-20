@@ -71,10 +71,70 @@ def lista_presenca(request):
     )
 
 
+def processar_lista_presenca(lista_presenca):
+    # Regras de criação
+    if (
+        lista_presenca.situacao == "finalizado"
+        or (lista_presenca.situacao == "em_andamento" and lista_presenca.planejado == "sim")
+    ):
+        treinamento_existente = Treinamento.objects.filter(
+            nome_curso=lista_presenca.assunto,
+            data_inicio=lista_presenca.data_inicio,
+            data_fim=lista_presenca.data_fim,
+            descricao=lista_presenca.descricao,
+            carga_horaria=lista_presenca.duracao,
+        ).first()
+
+        if not treinamento_existente:
+            treinamento_existente = Treinamento.objects.create(
+                tipo="interno",
+                categoria="treinamento",
+                nome_curso=lista_presenca.assunto,
+                instituicao_ensino="Bras-Mol",
+                status="planejado" if lista_presenca.situacao == "em_andamento" else "concluido",
+                data_inicio=lista_presenca.data_inicio,
+                data_fim=lista_presenca.data_fim,
+                carga_horaria=lista_presenca.duracao,
+                descricao=lista_presenca.descricao,
+                situacao="aprovado",
+                planejado=lista_presenca.planejado,
+            )
+
+        else:
+            treinamento_existente.funcionarios.clear()
+
+        for participante in lista_presenca.participantes.all():
+            treinamento_existente.funcionarios.add(participante)
+
+        if lista_presenca.necessita_avaliacao:
+            for participante in lista_presenca.participantes.all():
+                avaliacao, criada = AvaliacaoTreinamento.objects.get_or_create(
+                    funcionario=participante,
+                    treinamento=treinamento_existente,
+                    defaults={
+                        "data_avaliacao": lista_presenca.data_fim or date.today(),
+                        "periodo_avaliacao": 60,
+                        "pergunta_1": None,
+                        "pergunta_2": None,
+                        "pergunta_3": None,
+                        "responsavel_1": participante.responsavel,
+                        "descricao_melhorias": "Aguardando avaliação",
+                        "avaliacao_geral": None,
+                    },
+                )
+                if not criada:
+                    avaliacao.data_avaliacao = lista_presenca.data_fim or date.today()
+                    avaliacao.pergunta_1 = None
+                    avaliacao.pergunta_2 = None
+                    avaliacao.pergunta_3 = None
+                    avaliacao.responsavel_1 = participante.responsavel
+                    avaliacao.descricao_melhorias = "Aguardando avaliação"
+                    avaliacao.avaliacao_geral = None
+                    avaliacao.save()
+
 @login_required
 def cadastrar_lista_presenca(request):
     treinamentos = Treinamento.objects.filter(categoria="treinamento")
-    # Obtém todos os funcionários ativos sem filtro e sem paginação
     funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
 
     if request.method == "POST":
@@ -82,50 +142,7 @@ def cadastrar_lista_presenca(request):
         if form.is_valid():
             with transaction.atomic():
                 lista_presenca = form.save()
-
-                treinamento_existente = None
-                if lista_presenca.situacao == "finalizado":
-                    treinamento_existente = Treinamento.objects.filter(
-                        nome_curso=lista_presenca.assunto,
-                        data_inicio=lista_presenca.data_inicio,
-                        data_fim=lista_presenca.data_fim,
-                        descricao=lista_presenca.descricao,
-                        carga_horaria=lista_presenca.duracao,
-                    ).first()
-
-                    if not treinamento_existente:
-                        treinamento_existente = Treinamento.objects.create(
-                            tipo="interno",
-                            categoria="treinamento",
-                            nome_curso=lista_presenca.assunto,
-                            instituicao_ensino="Bras-Mol",
-                            status="concluido",
-                            data_inicio=lista_presenca.data_inicio,
-                            data_fim=lista_presenca.data_fim,
-                            carga_horaria=lista_presenca.duracao,
-                            descricao=lista_presenca.descricao,
-                            situacao="aprovado",
-                            planejado="sim",
-                        )
-
-                    for participante in lista_presenca.participantes.all():
-                        treinamento_existente.funcionarios.add(participante)
-
-                if lista_presenca.necessita_avaliacao and treinamento_existente:
-                    for participante in lista_presenca.participantes.all():
-                        AvaliacaoTreinamento.objects.create(
-                            funcionario=participante,
-                            treinamento=treinamento_existente,
-                            data_avaliacao=lista_presenca.data_fim or date.today(),
-                            pergunta_1=None,
-                            pergunta_2=None,
-                            pergunta_3=None,
-                            periodo_avaliacao=60,
-                            responsavel_1=participante.responsavel,
-                            descricao_melhorias="Aguardando avaliação",
-                            avaliacao_geral=None,
-                        )
-
+                processar_lista_presenca(lista_presenca)
                 return redirect("lista_presenca")
     else:
         form = ListaPresencaForm()
@@ -140,16 +157,11 @@ def cadastrar_lista_presenca(request):
         },
     )
 
-
-# Função editar_lista_presenca sem filtros e sem paginação
-
-
 @login_required
 def editar_lista_presenca(request, id):
     lista = get_object_or_404(ListaPresenca, id=id)
     treinamentos = Treinamento.objects.all()
     todos_funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
-    funcionarios = todos_funcionarios  # Sem filtros e sem paginação
 
     if request.method == "POST":
         form = ListaPresencaForm(request.POST, request.FILES, instance=lista)
@@ -157,71 +169,7 @@ def editar_lista_presenca(request, id):
             with transaction.atomic():
                 lista = form.save()
                 lista.participantes.set(request.POST.getlist("participantes"))
-
-                treinamento_existente = None
-                if lista.situacao == "finalizado":
-                    treinamento_existente = Treinamento.objects.filter(
-                        nome_curso=lista.assunto,
-                        data_inicio=lista.data_inicio,
-                        data_fim=lista.data_fim,
-                        descricao=lista.descricao,
-                        carga_horaria=lista.duracao,
-                    ).first()
-
-                    if not treinamento_existente:
-                        treinamento_existente = Treinamento.objects.create(
-                            tipo="interno",
-                            categoria="treinamento",
-                            nome_curso=lista.assunto,
-                            instituicao_ensino="Bras-Mol",
-                            status="concluido",
-                            data_inicio=lista.data_inicio,
-                            data_fim=lista.data_fim,
-                            carga_horaria=lista.duracao,
-                            descricao=lista.descricao,
-                            situacao="aprovado",
-                            planejado="sim",
-                        )
-
-                    treinamento_existente.funcionarios.clear()
-                    for participante in lista.participantes.all():
-                        treinamento_existente.funcionarios.add(participante)
-
-                if lista.necessita_avaliacao and treinamento_existente:
-                    for participante in lista.participantes.all():
-                        avaliacao_existente = AvaliacaoTreinamento.objects.filter(
-                            funcionario=participante,
-                            treinamento=treinamento_existente,
-                        ).first()
-
-                        if not avaliacao_existente:
-                            AvaliacaoTreinamento.objects.create(
-                                funcionario=participante,
-                                treinamento=treinamento_existente,
-                                data_avaliacao=lista.data_fim or date.today(),
-                                pergunta_1=None,
-                                pergunta_2=None,
-                                pergunta_3=None,
-                                periodo_avaliacao=60,
-                                responsavel_1=participante.responsavel,
-                                descricao_melhorias="Aguardando avaliação",
-                                avaliacao_geral=None,
-                            )
-                        else:
-                            avaliacao_existente.data_avaliacao = (
-                                    lista.data_fim or date.today()
-                                )
-
-                            avaliacao_existente.pergunta_1 = None
-                            avaliacao_existente.pergunta_2 = None
-                            avaliacao_existente.pergunta_3 = None
-                            avaliacao_existente.responsavel_1 = participante.responsavel
-                            avaliacao_existente.descricao_melhorias = (
-                                "Aguardando avaliação"
-                            )
-                            avaliacao_existente.avaliacao_geral = None
-                            avaliacao_existente.save()
-
+                processar_lista_presenca(lista)
                 return redirect("lista_presenca")
     else:
         form = ListaPresencaForm(instance=lista)
@@ -236,9 +184,6 @@ def editar_lista_presenca(request, id):
             "lista": lista,
         },
     )
-
-
-# Função para excluir lista de presença
 
 
 @login_required

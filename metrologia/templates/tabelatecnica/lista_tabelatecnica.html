@@ -131,22 +131,22 @@
   <!-- Tabela -->
   <table class="table table-bordered table-striped text-center mt-4">
     <caption class="visually-hidden">Lista de equipamentos cadastrados</caption>
-    <thead class="table-light">
+    <thead class="table-light align-middle">
       <tr>
-         <th class="align-middle"><i class="bi bi-upc-scan me-1 text-secondary" aria-hidden="true"></i> Código</th>
-    <th class="align-middle"><i class="bi bi-gear-wide-connected me-1 text-secondary" aria-hidden="true"></i> Nome do Equipamento</th>
-    <th class="align-middle"><i class="bi bi-tools me-1 text-secondary" aria-hidden="true"></i> Fabricante</th>
-    <th class="align-middle"><i class="bi bi-123 me-1 text-secondary" aria-hidden="true"></i> Nº de Série</th>
-    <th class="align-middle"><i class="bi bi-person-badge me-1 text-secondary" aria-hidden="true"></i> Responsável</th>
-    <th class="align-middle"><i class="bi bi-geo-alt-fill me-1 text-secondary" aria-hidden="true"></i> Localização</th>
-    <th class="align-middle"><i class="bi bi-calendar-check me-1 text-secondary" aria-hidden="true"></i> Última Calibração</th>
-    <th class="align-middle"><i class="bi bi-calendar-event me-1 text-secondary" aria-hidden="true"></i> Próx. Calibração</th>
-    <th class="align-middle"><i class="bi bi-three-dots me-1 text-secondary" aria-hidden="true"></i> Ações</th>
+        <th><i class="bi bi-upc-scan me-1 text-secondary" aria-hidden="true"></i> Código</th>
+        <th><i class="bi bi-gear-wide-connected me-1 text-secondary" aria-hidden="true"></i> Nome do Equipamento</th>
+        <th><i class="bi bi-tools me-1 text-secondary" aria-hidden="true"></i> Fabricante</th>
+        <th><i class="bi bi-123 me-1 text-secondary" aria-hidden="true"></i> Nº de Série</th>
+        <th><i class="bi bi-person-badge me-1 text-secondary" aria-hidden="true"></i> Responsável</th>
+        <th><i class="bi bi-geo-alt-fill me-1 text-secondary" aria-hidden="true"></i> Localização</th>
+        <th><i class="bi bi-calendar-check me-1 text-secondary" aria-hidden="true"></i> Última Calibração</th>
+        <th><i class="bi bi-calendar-event me-1 text-secondary" aria-hidden="true"></i> Próx. Calibração</th>
+        <th><i class="bi bi-three-dots me-1 text-secondary" aria-hidden="true"></i> Ações</th>
       </tr>
     </thead>
     <tbody>
       {% for tabela in page_obj %}
-        <tr>
+        <tr class="align-middle">  
           <td>{{ tabela.codigo }}</td>
           <td>{{ tabela.nome_equipamento }}</td>
           <td>{{ tabela.fabricante }}</td>

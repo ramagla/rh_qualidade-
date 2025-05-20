@@ -89,7 +89,7 @@
         </div>
       </div>
 
-   <!-- INSTRUTOR E AVALIAÇÃO -->
+ <!-- INSTRUTOR E AVALIAÇÃO -->
 <div class="accordion-item">
   <h2 class="accordion-header" id="headingInstrutor">
     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstrutor">
@@ -161,6 +161,33 @@
           <i class="bi bi-flag-fill me-1"></i> Situação:
         </label>
         {{ form.situacao|add_class:"form-select" }}
+      </div>
+
+      <!-- 🔵 Alerta Informativo -->
+      <div class="alert alert-info col-12" role="alert">
+        <strong>Importante:</strong> Quando a situação for <strong>“Finalizado”</strong>, o sistema <strong>sempre</strong> cria um novo cadastro no módulo de Treinamentos, independentemente do campo “Planejado?”.
+        <br>Se a situação for <strong>“Em Andamento”</strong>:
+        <ul class="mb-0 mt-1">
+          <li>Se <strong>Planejado = Sim</strong>, o treinamento será <strong>cadastrado com status "Planejado"</strong> no módulo de Treinamentos.</li>
+          <li>Se <strong>Planejado = Não</strong>, <strong>nenhum cadastro</strong> será criado no módulo de Treinamentos.</li>
+        </ul>
+        <br>Esse comportamento permite organizar os treinamentos previstos mesmo antes de sua finalização.
+      </div>
+
+      <div class="col-md-6">
+        <fieldset class="border p-2">
+          <legend class="float-none w-auto px-2 fs-6"><i class="bi bi-calendar2-plus-fill me-1"></i> Planejado?</legend>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="planejado" id="planejado_sim" value="sim"
+                   {% if form.planejado.value == 'sim' %}checked{% endif %}>
+            <label class="form-check-label" for="planejado_sim">Sim</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="planejado" id="planejado_nao" value="nao"
+                   {% if form.planejado.value == 'nao' %}checked{% endif %}>
+            <label class="form-check-label" for="planejado_nao">Não</label>
+          </div>
+        </fieldset>
       </div>
 
     </div>

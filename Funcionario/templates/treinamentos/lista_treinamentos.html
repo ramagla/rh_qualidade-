@@ -143,7 +143,7 @@
     <div class="table-responsive">
         <table class="table table-bordered table-striped table-hover text-center align-middle">
   <thead class="table-light">
-    <tr>
+    <tr class="align-middle">
       <th><i class="bi bi-people me-1"></i> Colaboradores</th>
       <th><i class="bi bi-journal-text me-1"></i> Curso</th>
       <th><i class="bi bi-bookmark-check me-1"></i> Tipo</th>
@@ -169,18 +169,21 @@
                     <td>{% if treinamento.data_fim %}{{ treinamento.data_fim|date:"d/m/Y" }}{% else %}-{% endif %}</td>
                     <td>{{ treinamento.carga_horaria }}</td>
                     <td>
-                        {% if treinamento.status == 'cursando' %}
-                            <span class="badge bg-warning text-dark">Cursando</span>
-                        {% elif treinamento.status == 'concluido' %}
-                            <span class="badge bg-success">Concluído</span>
-                        {% elif treinamento.status == 'trancado' %}
-                            <span class="badge bg-danger">Trancado</span>
-                        {% elif treinamento.status == 'requerido' %}
-                            <span class="badge bg-info">Requerido</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Indefinido</span>
-                        {% endif %}
-                    </td>
+                      {% if treinamento.status == 'planejado' %}
+                          <span class="badge bg-primary">Planejado</span>
+                      {% elif treinamento.status == 'cursando' %}
+                          <span class="badge bg-warning text-dark">Cursando</span>
+                      {% elif treinamento.status == 'concluido' %}
+                          <span class="badge bg-success">Concluído</span>
+                      {% elif treinamento.status == 'trancado' %}
+                          <span class="badge bg-danger">Trancado</span>
+                      {% elif treinamento.status == 'requerido' %}
+                          <span class="badge bg-info">Requerido</span>
+                      {% else %}
+                          <span class="badge bg-secondary">Indefinido</span>
+                      {% endif %}
+                  </td>
+                  
                     <td>
                         {% if treinamento.anexo %}
                             <a href="{{ treinamento.anexo.url }}" class="btn btn-sm btn-info" target="_blank">

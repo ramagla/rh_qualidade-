@@ -215,7 +215,7 @@ def imprimir_f003(request, funcionario_id):
         revisao = doc_f003.revisoes.filter(status="ativo").order_by("-data_revisao").first()
         numero_formulario = f"{doc_f003.codigo} Rev.{revisao.numero_revisao}" if revisao else f"{doc_f003.codigo} Rev.00"
     except Documento.DoesNotExist:
-        numero_formulario = "F003 Rev.00"
+        numero_formulario = "F003 Rev.03"
 
     return render(
         request,

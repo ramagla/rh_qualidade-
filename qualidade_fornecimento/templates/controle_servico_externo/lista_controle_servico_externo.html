@@ -6,128 +6,99 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
-{% include "partials/global/_styles_componentes.html" %}
 
-{% include "partials/global/_header_titulo.html" with titulo="Controle de Serviço Externo" %}
+  {% include "partials/global/_styles_componentes.html" %}
+  {% include "partials/global/_header_titulo.html" with titulo="Controle de Serviço Externo" %}
+  {% include "partials/global/_toast_mensagens.html" %}
 
+  <div class="card mb-4">
+    <div class="card-header">
+      <i class="bi bi-funnel me-1"></i> Filtros
+    </div>
+    <div class="card-body">
+      <form method="get">
+        <div class="row row-cols-1 row-cols-md-3 g-2">
+          <div class="col">
+            <label for="pedido" class="form-label"><i class="bi bi-receipt me-1"></i> Pedido</label>
+            <select class="form-select form-select-sm select2" id="pedido" name="pedido">
+              <option value="">-- Todos --</option>
+              {% for p in pedidos %}
+                <option value="{{ p }}" {% if request.GET.pedido == p %}selected{% endif %}>{{ p }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col">
+            <label for="codigo_bm" class="form-label">Código BM</label>
+            <select class="form-select form-select-sm select2" id="codigo_bm" name="codigo_bm">
+                            <option value="">-- Todos --</option>
+              {% for bm in codigos_bm %}
+                <option value="{{ bm }}" {% if request.GET.codigo_bm == bm %}selected{% endif %}>{{ bm }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="fornecedor" class="form-label">Fornecedor</label>
+            <select class="form-select select2" id="fornecedor" name="fornecedor">
+              <option value="">-- Todos --</option>
+              {% for f in fornecedores %}
+                <option value="{{ f }}" {% if request.GET.fornecedor == f %}selected{% endif %}>{{ f }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="status2" class="form-label">Status</label>
+            <select class="form-select select2" id="status2" name="status2">
+              <option value="">-- Todos --</option>
+              <option value="OK" {% if request.GET.status2 == "OK" %}selected{% endif %}>OK</option>
+              <option value="Atenção Saldo" {% if request.GET.status2 == "Atenção Saldo" %}selected{% endif %}>Atenção Saldo</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="data_inicio" class="form-label">Data Início</label>
+            <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}">
+          </div>
+          <div class="col-md-3">
+            <label for="data_fim" class="form-label">Data Fim</label>
+            <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}">
+          </div>
+        </div>
 
- {% include "partials/global/_toast_mensagens.html" %}
-
-
- <div class="card mb-4">
-  <div class="card-header">
-    <i class="bi bi-funnel me-1" aria-hidden="true"></i> Filtros
+        {% include "partials/global/_botao_filtrar.html" %}
+      </form>
+    </div>
   </div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row g-3">
 
-        <!-- Pedido -->
-        <div class="col-md-3">
-          <label for="pedido" class="form-label">Pedido</label>
-          <select class="form-select select2" id="pedido" name="pedido">
-            <option value="">-- Todos --</option>
-            {% for p in pedidos %}
-              <option value="{{ p }}" {% if request.GET.pedido == p %}selected{% endif %}>{{ p }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Código BM -->
-        <div class="col-md-3">
-          <label for="codigo_bm" class="form-label">Código BM</label>
-          <select class="form-select select2" id="codigo_bm" name="codigo_bm">
-            <option value="">-- Todos --</option>
-            {% for bm in codigos_bm %}
-              <option value="{{ bm }}" {% if request.GET.codigo_bm == bm %}selected{% endif %}>{{ bm }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Fornecedor -->
-        <div class="col-md-3">
-          <label for="fornecedor" class="form-label">Fornecedor</label>
-          <select class="form-select select2" id="fornecedor" name="fornecedor">
-            <option value="">-- Todos --</option>
-            {% for f in fornecedores %}
-              <option value="{{ f }}" {% if request.GET.fornecedor == f %}selected{% endif %}>{{ f }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Status -->
-        <div class="col-md-3">
-          <label for="status2" class="form-label">Status</label>
-          <select class="form-select select2" id="status2" name="status2">
-            <option value="">-- Todos --</option>
-            <option value="OK" {% if request.GET.status2 == "OK" %}selected{% endif %}>OK</option>
-            <option value="Atenção Saldo" {% if request.GET.status2 == "Atenção Saldo" %}selected{% endif %}>Atenção Saldo</option>
-          </select>
-        </div>
-
-       
-        <!-- Data Início -->
-        <div class="col-md-3">
-          <label for="data_inicio" class="form-label">Data Início</label>
-          <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}">
-        </div>
-
-        <!-- Data Fim -->
-        <div class="col-md-3">
-          <label for="data_fim" class="form-label">Data Fim</label>
-          <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}">
-        </div>
-
-      </div>
-
-      <!-- Botão de Filtrar centralizado abaixo -->
-      <div class="text-center mt-4">
-    {% include "partials/global/_botao_filtrar.html" %}
+  <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+    {% if request.user|has_permission:'Qualidade_Fornecimento.add_controleservicoexterno' %}
+      <a href="{% url 'cadastrar_controle_servico_externo' %}" class="btn btn-success d-flex align-items-center">
+        <i class="bi bi-plus-circle me-2"></i> Novo Serviço Externo
+      </a>
+    {% endif %}
+    {% if request.user|has_permission:'Qualidade_Fornecimento.add_relatorioinspecaoservico' %}
+      <button type="button" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalNovaInspecao">
+        <i class="bi bi-clipboard-check me-2"></i> Nova Inspeção
+      </button>
+    {% endif %}
   </div>
-    </form>
-  </div>
-</div>
 
-
-<div class="d-flex flex-wrap justify-content-end align-items-end gap-2 mb-4">
-
-  {% if request.user|has_permission:'qualidade_fornecimento.add_controleservicoexterno' %}
-  <a href="{% url 'cadastrar_controle_servico_externo' %}" 
-     class="btn btn-success d-inline-flex align-items-center" 
-     aria-label="Cadastrar novo serviço externo">
-    <i class="bi bi-plus-circle me-2" aria-hidden="true"></i> Novo Serviço Externo
-  </a>
-  {% endif %}
-
-  {% if request.user|has_permission:'qualidade_fornecimento.add_inspecaoservicoexterno' %}
-  <button type="button" 
-          class="btn btn-primary d-inline-flex align-items-center" 
-          data-bs-toggle="modal" 
-          data-bs-target="#modalNovaInspecao" 
-          aria-label="Cadastrar nova inspeção de serviço">
-    <i class="bi bi-clipboard-check me-2" aria-hidden="true"></i> Nova Inspeção
-  </button>
-  {% endif %}
-
-</div>
-
-
-
-<div class="modal fade" 
-     id="modalNovaInspecao" 
-     tabindex="-1" 
-     aria-labelledby="modalNovaInspecaoLabel" 
-     aria-modal="true" 
-     aria-hidden="true" 
+<!-- Modal de Nova Inspeção de Serviço -->
+<div class="modal fade"
+     id="modalNovaInspecao"
+     tabindex="-1"
+     aria-labelledby="modalNovaInspecaoLabel"
+     aria-modal="true"
+     aria-hidden="true"
      role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      
+
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="modalNovaInspecaoLabel">Selecionar Serviço para Inspeção</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar modal"></button>
+        <h5 class="modal-title" id="modalNovaInspecaoLabel">
+          <i class="bi bi-clipboard-check me-2"></i> Selecionar Serviço para Inspeção
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar modal"></button>
       </div>
-      
+
       <div class="modal-body">
         <label for="servicoSelect" class="form-label">Selecione o Serviço</label>
         <select id="servicoSelect" class="form-select select2" style="width:100%;">
@@ -137,234 +108,177 @@
             </option>
           {% endfor %}
         </select>
+      </div>
 
-      </div>
-      
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancelar seleção">Cancelar</button>
-        <button id="btnContinuarInspecao" class="btn btn-primary" onclick="continuarInspecao()" aria-label="Continuar para inspeção">Continuar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button id="btnContinuarInspecao" class="btn btn-primary" onclick="continuarInspecao()">Continuar</button>
       </div>
-      
+
     </div>
   </div>
 </div>
 
-
-
-
-
- <div class="row mb-4">
-  {% include "partials/global/_card_indicador.html" with titulo="Total Enviados" valor=total_enviados subtitulo="Pedidos registrados" cor="info" %}
-  {% include "partials/global/_card_indicador.html" with titulo="Total OK" valor=total_ok subtitulo="Pedidos concluídos" cor="success" %}
-  {% include "partials/global/_card_indicador.html" with titulo="Pendentes" valor=total_pendentes subtitulo="Pedidos com saldo" cor="danger" %}
-  {% include "partials/global/_card_indicador.html" with titulo="Com Atraso" valor=total_atrasados subtitulo="Entregas atrasadas" cor="warning" %}
-</div>
-
-
-<style>
-  .zebra-tabela tbody tr:nth-child(odd) {
-    background-color: #f9f9f9;
-  }
-
-  .zebra-tabela tbody tr:hover {
-    background-color: #f1f1f1 !important;
-    cursor: pointer;
-  }
-</style>
-<style>
-  /* Corrige os select2 fora da modal */
-  .select2-container {
-    z-index: 1040 !important; /* abaixo da modal (que é 1050) */
-  }
-
-  /* Corrige os select2 DENTRO da modal */
-  #modalNovaInspecao .select2-container {
-    z-index: 1060 !important; /* acima da modal */
-  }
-</style>
-
+  <div class="row mb-4">
+    {% include "partials/global/_card_indicador.html" with titulo="Total Enviados" valor=total_enviados subtitulo="Pedidos registrados" cor="info" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Total OK" valor=total_ok subtitulo="Pedidos concluídos" cor="success" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Pendentes" valor=total_pendentes subtitulo="Pedidos com saldo" cor="danger" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Com Atraso" valor=total_atrasados subtitulo="Entregas atrasadas" cor="warning" %}
+  </div>
 
   {% if servicos_paginados %}
     <div class="table-responsive">
-<table class="table table-hover table-bordered text-center align-middle zebra-tabela">
-  <caption class="visually-hidden">Lista de Serviços Externos Controlados</caption>
-  <h5 class="mb-3">
-  <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
-  📄 Lista de Serviços
-</h5>
-
-  <thead class="table-light align-middle">
-  <tr>
-    <th class="py-2"><i class="bi bi-receipt me-1"></i> Pedido</th>
-    <th class="py-2"><i class="bi bi-upc-scan me-1"></i> Código BM</th>
-    <th class="py-2"><i class="bi bi-people-fill me-1"></i> Fornecedor</th>
-    <th class="py-2"><i class="bi bi-truck me-1"></i> Entrega</th>
-    <th class="py-2"><i class="bi bi-collection-fill me-1"></i> Total (kg/peças)</th>
-    <th class="py-2"><i class="bi bi-check-circle-fill me-1"></i> Status</th>
-    <th class="py-2"><i class="bi bi-clipboard-check me-1"></i> Status Inspeção</th>
-    <th class="py-2"><i class="bi bi-alarm me-1"></i> Atraso (dias)</th>
-    <th class="py-2"><i class="bi bi-bar-chart-line me-1"></i> IP</th>
-    <th class="py-2"><i class="bi bi-calendar-plus me-1"></i> Data Envio</th>
-    <th class="py-2"><i class="bi bi-calendar-minus me-1"></i> Data Retorno</th>
-    <th class="py-2"><i class="bi bi-gear-fill me-1"></i> Ações</th>
-  </tr>
-</thead>
-
+      <table class="table table-hover table-bordered text-center align-middle zebra-tabela">
+        <thead class="table-light">
+          <tr>
+            <th><i class="bi bi-receipt me-1"></i> Pedido</th>
+            <th><i class="bi bi-upc-scan me-1"></i> Código BM</th>
+            <th><i class="bi bi-people-fill me-1"></i> Fornecedor</th>
+            <th><i class="bi bi-truck me-1"></i> Entrega</th>
+            <th><i class="bi bi-collection-fill me-1"></i> Total</th>
+            <th><i class="bi bi-check-circle-fill me-1"></i> Status</th>
+            <th><i class="bi bi-clipboard-check me-1"></i> Status Inspeção</th>
+            <th><i class="bi bi-alarm me-1"></i> Atraso</th>
+            <th><i class="bi bi-bar-chart-line me-1"></i> IP</th>
+            <th><i class="bi bi-calendar-plus me-1"></i> Envio</th>
+            <th><i class="bi bi-calendar-minus me-1"></i> Retorno</th>
+            <th><i class="bi bi-gear-fill me-1"></i> Ações</th>
+          </tr>
+        </thead>
         <tbody>
-  {% for servico in servicos_paginados %}
-    <tr>
-      <td>{{ servico.pedido }}</td>
-      <td>{{ servico.codigo_bm.codigo }}</td>
-      <td>{{ servico.fornecedor.nome }}</td>
-      <td>
-        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ servico.id }}">
-          <i class="bi bi-truck"></i>
-        </button>
-
-        <!-- Modal embutida no TD -->
-        <div class="modal fade" id="modalEntrega{{ servico.id }}" tabindex="-1">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                  Entregas do Pedido {{ servico.pedido }} / NF {{ servico.nota_fiscal }}
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body">
-                {% if servico.retornos.all %}
-                <div class="table-responsive">
-                  <table class="table table-sm table-bordered text-center align-middle mb-0">
-                    <thead class="table-light">
-                      <tr>
-                        <th><i class="bi bi-calendar-event me-1"></i> Data</th>
-                        <th><i class="bi bi-box-fill me-1"></i> Quantidade</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for retorno in servico.retornos.all %}
-                      <tr>
-                        <td>{{ retorno.data|date:"d/m/Y" }}</td>
-                        <td>{{ retorno.quantidade|floatformat:2 }} kg/peças</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
+          {% for servico in servicos_paginados %}
+            <tr>
+              <td>{{ servico.pedido }}</td>
+              <td>{{ servico.codigo_bm.codigo }}</td>
+              <td>{{ servico.fornecedor.nome }}</td>
+              <td>
+                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ servico.id }}">
+                  <i class="bi bi-truck"></i>
+                </button>
+                <div class="modal fade" id="modalEntrega{{ servico.id }}" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                          Entregas do Pedido {{ servico.pedido }} / NF {{ servico.nota_fiscal }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body">
+                        {% if servico.retornos.all %}
+                        <div class="table-responsive">
+                          <table class="table table-sm table-bordered text-center align-middle mb-0">
+                            <thead class="table-light">
+                              <tr>
+                                <th><i class="bi bi-calendar-event me-1"></i> Data</th>
+                                <th><i class="bi bi-box-fill me-1"></i> Quantidade</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for retorno in servico.retornos.all %}
+                              <tr>
+                                <td>{{ retorno.data|date:"d/m/Y" }}</td>
+                                <td>{{ retorno.quantidade|floatformat:2 }} kg/peças</td>
+                              </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted mb-0">Nenhuma entrega registrada.</p>
+                        {% endif %}
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+                              </td>
+              <td>{{ servico.quantidade_enviada|default:"-" }}</td>
+              <td>
+                {% if servico.status2 == "OK" %}
+                  <span class="badge bg-success">OK</span>
+                {% elif servico.status2 == "Atenção Saldo" %}
+                  <span class="badge bg-warning text-dark">Atenção Saldo</span>
                 {% else %}
-                <p class="text-muted mb-0">Nenhuma entrega registrada.</p>
+                  <span class="badge bg-secondary">Saldo Acima</span>
                 {% endif %}
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </td>
-
-      <td>{{ servico.quantidade_enviada|default:"-" }}</td>
-
-      <td>
-        {% if servico.status2 == "OK" %}
-          <span class="badge bg-success">OK</span>
-        {% elif servico.status2 == "Atenção Saldo" %}
-          <span class="badge bg-warning text-dark">Atenção Saldo</span>
-        {% else %}
-          <span class="badge bg-secondary">Saldo Acima</span>
-        {% endif %}
-      </td>
-
-      <td>
-        {% if servico.inspecao %}
-          {% if servico.inspecao.status_geral == "Aprovado" %}
-            <span class="badge bg-success">Aprovado</span>
-          {% elif servico.inspecao.status_geral == "Reprovado" %}
-            <span class="badge bg-danger">Reprovado</span>
-          {% elif servico.inspecao.status_geral == "Aprovado Condicionalmente" %}
-            <span class="badge badge-condicional">Aprovado Condicionalmente</span>
-          {% else %}
-            <span class="badge bg-secondary">-</span>
-          {% endif %}
-        {% else %}
-          <span class="badge bg-secondary">Aguardando Inspeção</span>
-        {% endif %}
-      </td>
-
-      <td>{{ servico.atraso_em_dias|default:"0" }}</td>
-      <td>{{ servico.ip|default:"0" }}</td>
-      <td>{{ servico.data_envio|date:"d/m/Y" }}</td>
-      <td>{{ servico.data_retorno|date:"d/m/Y" }}</td>
-      <td class="text-center align-middle">
-        <div class="d-inline-flex flex-wrap justify-content-center gap-2">
-      
-          {% if request.user|has_permission:'qualidade_fornecimento.view_controleservicoexterno' %}
-          <a href="{% url 'visualizar_controle_servico_externo' servico.id %}" 
-             class="btn btn-sm btn-secondary" 
-             title="Visualizar serviço externo"
-             data-bs-toggle="tooltip" 
-             aria-label="Visualizar serviço externo">
-            <i class="bi bi-eye"></i>
-          </a>
-          {% endif %}
-      
-          {% if request.user|has_permission:'qualidade_fornecimento.change_controleservicoexterno' %}
-          <a href="{% url 'editar_controle_servico_externo' servico.id %}" 
-             class="btn btn-sm btn-primary" 
-             data-bs-toggle="tooltip" 
-             title="Editar pedido {{ servico.pedido }}">
-            <i class="bi bi-pencil-square"></i>
-          </a>
-          {% endif %}
-      
-          {% if servico.inspecao and servico.inspecao.pdf %}
-          <a href="{{ servico.inspecao.pdf.url }}" target="_blank" 
-             class="btn btn-sm btn-outline-primary" 
-             data-bs-toggle="tooltip" 
-             title="Visualizar PDF da inspeção do pedido {{ servico.pedido }}">
-            <i class="bi bi-file-earmark-pdf"></i>
-          </a>
-          {% endif %}
-      
-          {% if servico.inspecao and servico.inspecao.certificado_anexo %}
-          <a href="{{ servico.inspecao.certificado_anexo.url }}" 
-             class="btn btn-sm btn-outline-success" 
-             data-bs-toggle="tooltip"
-             title="Download do Certificado da Inspeção"
-             target="_blank"
-             aria-label="Download do Certificado da Inspeção">
-            <i class="bi bi-paperclip"></i>
-          </a>
-          {% endif %}
-      
-          {% if request.user|has_permission:'qualidade_fornecimento.delete_controleservicoexterno' %}
-          <button type="button" 
-                  class="btn btn-sm btn-danger" 
-                  data-bs-toggle="modal" 
-                  data-bs-target="#modalExcluir{{ servico.id }}" 
-                  title="Excluir pedido {{ servico.pedido }}">
-            <i class="bi bi-trash"></i>
-          </button>
-          {% include 'partials/global/_modal_exclusao.html' with objeto=servico url_excluir='excluir_controle_servico_externo' %}
-          {% endif %}
-      
-        </div>
-      </td>
-      
-    </tr>
-  {% endfor %}
-</tbody>
-
-
+              </td>
+              <td>
+                {% if servico.inspecao %}
+                  {% if servico.inspecao.status_geral == "Aprovado" %}
+                    <span class="badge bg-success">Aprovado</span>
+                  {% elif servico.inspecao.status_geral == "Reprovado" %}
+                    <span class="badge bg-danger">Reprovado</span>
+                  {% elif servico.inspecao.status_geral == "Aprovado Condicionalmente" %}
+                    <span class="badge badge-condicional">Aprovado Condicionalmente</span>
+                  {% else %}
+                    <span class="badge bg-secondary">-</span>
+                  {% endif %}
+                {% else %}
+                  <span class="badge bg-secondary">Aguardando Inspeção</span>
+                {% endif %}
+              </td>
+              <td>{{ servico.atraso_em_dias|default:"0" }}</td>
+              <td>{{ servico.ip|default:"0" }}</td>
+              <td>{{ servico.data_envio|date:"d/m/Y" }}</td>
+              <td>{{ servico.data_retorno|date:"d/m/Y" }}</td>
+              <td>
+                <div class="d-flex flex-wrap justify-content-center gap-1">
+                  {% include "partials/global/_botao_visualizar.html" with objeto=servico url_visualizar='visualizar_controle_servico_externo' %}
+                  {% include "partials/global/_botao_editar.html" with objeto=servico url_editar='editar_controle_servico_externo' %}
+                  {% if servico.inspecao and servico.inspecao.pdf %}
+                    <a href="{{ servico.inspecao.pdf.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                      <i class="bi bi-file-earmark-pdf"></i>
+                    </a>
+                  {% endif %}
+                  {% if servico.inspecao and servico.inspecao.certificado_anexo %}
+                    <a href="{{ servico.inspecao.certificado_anexo.url }}" class="btn btn-sm btn-outline-success" target="_blank">
+                      <i class="bi bi-paperclip"></i>
+                    </a>
+                  {% endif %}
+                  {% include "partials/global/_botao_excluir.html" with objeto=servico url_excluir='excluir_controle_servico_externo' %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
       </table>
     </div>
   {% else %}
-{% include "partials/global/_sem_resultados.html" %}
+    {% include "partials/global/_sem_resultados.html" with item_nome="serviço" %}
   {% endif %}
 
-  {# Paginação #}
-  
-{% include "partials/global/_paginacao.html" with page_obj=servicos_paginados %}
+  {% include "partials/global/_paginacao.html" with page_obj=servicos_paginados %}
+
+<!-- Modal de Sucesso PDF -->
+<div class="modal fade" id="modalSucessoInspecao" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-success shadow">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-check-circle-fill me-2"></i> PDF Gerado com Sucesso!
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>O PDF da inspeção de serviço externo está pronto.</p>
+        <p class="small text-muted">Clique no botão abaixo para visualizar ou baixar o arquivo:</p>
+        <a id="linkDownloadInspecao" href="#" target="_blank" class="btn btn-outline-primary">
+          <i class="bi bi-file-earmark-pdf me-1"></i> Baixar PDF
+        </a>
+      </div>
+      <div class="modal-footer justify-content-end">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+          <i class="bi bi-check2-circle me-1"></i> OK
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 
 </div>
 

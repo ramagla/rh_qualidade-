@@ -380,14 +380,13 @@ def cronograma_avaliacao_eficacia(request):
     # Processar avaliações para definir o mês correto no cronograma
     avaliacoes_processadas = []
     for avaliacao in avaliacoes:
-        if avaliacao.data_avaliacao and avaliacao.periodo_avaliacao:
-            data_final = avaliacao.data_avaliacao + timedelta(
-                days=avaliacao.periodo_avaliacao
-            )
+        treinamento = getattr(avaliacao, "treinamento", None)
+        if treinamento and treinamento.data_fim:
+            data_final = treinamento.data_fim + timedelta(days=60)
             mes_final = data_final.strftime("%b/%y").capitalize()
         else:
             data_final = None
-            mes_final = None  # Caso não tenha data
+            mes_final = None
 
         # Adiciona a propriedade mes_final para cada avaliação
         avaliacoes_processadas.append(

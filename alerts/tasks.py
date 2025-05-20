@@ -62,7 +62,7 @@ def enviar_alertas_calibracao():
 
         # Dispositivos
         for dispositivo in dados["dispositivos"]:
-            nome = dispositivo.codigo
+            nome = f"{dispositivo.codigo} – {dispositivo.descricao}"
             context = {
                 "objeto": dispositivo,
                 "proxima_calibracao": dispositivo.proxima_calibracao,
@@ -90,7 +90,7 @@ def enviar_alertas_calibracao():
 
         # Equipamentos
         for equipamento in dados["equipamentos"]:
-            nome = equipamento.nome_equipamento
+            nome = f"{equipamento.codigo} – {equipamento.nome_equipamento}"
             context = {
                 "objeto": equipamento,
                 "proxima_calibracao": equipamento.proxima_calibracao,
@@ -115,3 +115,77 @@ def enviar_alertas_calibracao():
                     titulo="🔧 Alerta de Calibração",
                     mensagem=f"O equipamento {nome} {dados['mensagem']}.",
                 )
+from datetime import timedelta
+from django.utils.timezone import now
+from django.core.mail import send_mail
+from celery import shared_task
+
+from alerts.models import AlertaUsuario, AlertaConfigurado
+from qualidade_fornecimento.models import FornecedorQualificado
+
+
+@shared_task
+def enviar_alertas_fornecedores_proximos():
+    today = now().date()
+    range_end = today + timedelta(days=30)
+    fornecedores = FornecedorQualificado.objects.all()
+
+    def disparar_alerta(tipo_alerta, campo_data, titulo, campo_nome):
+        try:
+            config = AlertaConfigurado.objects.get(tipo=tipo_alerta, ativo=True)
+            destinatarios = set(config.usuarios.all())
+            for grupo in config.grupos.all():
+                destinatarios.update(grupo.user_set.all())
+        except AlertaConfigurado.DoesNotExist:
+            return
+
+        proximos = fornecedores.filter(**{
+            f"{campo_data}__range": (today, range_end)
+        })
+
+        for fornecedor in proximos:
+            nome = fornecedor.nome
+            data_evento = getattr(fornecedor, campo_data)
+            mensagem = f"O fornecedor {nome} tem {campo_nome} prevista para {data_evento.strftime('%d/%m/%Y')}."
+
+            for user in destinatarios:
+                # Alerta in-app
+                AlertaUsuario.objects.create(
+                    usuario=user,
+                    titulo=titulo,
+                    mensagem=mensagem,
+                    tipo=tipo_alerta,
+                    referencia_id=fornecedor.id,
+                    url_destino=f"/fornecedores/{fornecedor.id}/visualizar/",
+                )
+
+                # E-mail (se e-mail do usuário estiver preenchido)
+                if user.email:
+                    send_mail(
+                        subject=titulo,
+                        message=mensagem,
+                        from_email="no-reply@brasmol.com.br",
+                        recipient_list=[user.email],
+                        fail_silently=True,
+                    )
+
+    disparar_alerta(
+        "AVALIACAO_RISCO_PROXIMA",
+        "proxima_avaliacao_risco",
+        "⚠️ Avaliação de Risco Próxima",
+        "a próxima avaliação de risco"
+    )
+
+    disparar_alerta(
+        "AUDITORIA_PROXIMA",
+        "proxima_auditoria",
+        "📝 Auditoria Próxima",
+        "a próxima auditoria"
+    )
+
+    disparar_alerta(
+        "CERTIFICACAO_PROXIMA",
+        "vencimento_certificacao",
+        "🏅 Certificação Próxima do Vencimento",
+        "a certificação vencendo"
+    )

@@ -195,6 +195,7 @@ TEMPLATES = [
                 "Funcionario.context_processors.global_settings",
                 "global_context_processors.global_menu",
                 "rh_qualidade.context_processors.default_form", 
+                'alerts.context_processors.alertas_do_usuario',
             ],
             "string_if_invalid": "",
         },

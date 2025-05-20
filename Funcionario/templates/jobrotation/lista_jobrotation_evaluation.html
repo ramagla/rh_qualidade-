@@ -76,9 +76,9 @@
     <!-- Lista de Avaliações -->
     <div class="table-responsive">
     <table class="table table-bordered table-striped text-center mt-4">
-        <thead>
-            <tr>
-                <th><i class="bi bi-person-badge"></i> Colaborador</th>
+        <thead class="table-light align-middle">
+            <tr >
+                <th ><i class="bi bi-person-badge"></i> Colaborador</th>
                 <th><i class="bi bi-building"></i> Cargo / Área Atual</th>
                 <th><i class="bi bi-arrow-right-circle"></i> Nova Função / Área</th>
                 <th><i class="bi bi-calendar-event"></i> Início</th>
@@ -90,7 +90,7 @@
         </thead>
         <tbody>
             {% for evaluation in evaluations %}
-            <tr>
+            <tr class="align-middle">
                 <td>{{ evaluation.funcionario.nome }}</td>
                 <td>
                     <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#cargoAreaModal{{ evaluation.id }}" aria-label="Ver cargo e área atual"><i class="bi bi-eye"></i></button>

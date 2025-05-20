@@ -31,6 +31,10 @@ app.conf.beat_schedule = {
         "task": "alerts.tasks.enviar_alertas_calibracao",
         "schedule": 60.0,  # Executar a cada 60 segundos
     },
+     "alertas_proximos_fornecedores": {
+        "task": "qualidade_fornecimento.tasks.enviar_alertas_fornecedores_proximos",
+        "schedule": 86400.0,  # Executar a cada 24 horas
+    },
 }
 
 

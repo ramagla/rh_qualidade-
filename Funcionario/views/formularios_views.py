@@ -6,6 +6,17 @@ from django.views.generic import TemplateView
 from Funcionario.models import Funcionario, Settings
 
 
+@login_required
+def formulario_f033(request, funcionario_id):
+    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+    context = {
+        "funcionario": funcionario,
+        "data_atual": now(),
+    }
+    return render(request, "formularios/f033_formulario.html", context)
+
+
+
 # Avaliação de Capacitação Prática
 @login_required
 def avaliacao_capacitacao(request, funcionario_id):
@@ -69,6 +80,17 @@ def filtro_funcionario(request):
         {"funcionarios": funcionarios, "next_view": next_view},
     )
 
+
+@login_required
+def filtro_funcionario_f033(request):
+    if request.method == "POST":
+        funcionario_id = request.POST.get("funcionario")
+        return redirect("formulario_f033", funcionario_id=funcionario_id)
+
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+    return render(request, "formularios/filtro_f033.html", {
+        "funcionarios": funcionarios
+    })
 
 @login_required
 def filtro_carta_competencia(request):

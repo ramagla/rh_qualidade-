@@ -38,6 +38,7 @@ class AlertaUsuario(models.Model):
     referencia_id = models.PositiveIntegerField(blank=True, null=True)  # ← novo: ID do objeto
     url_destino = models.CharField(max_length=255, blank=True, null=True)  # ← novo: link no botão
     lido = models.BooleanField(default=False)
+    excluido = models.BooleanField(default=False) 
     criado_em = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -46,10 +47,13 @@ class AlertaUsuario(models.Model):
 
 class AlertaConfigurado(models.Model):
     TIPO_ALERTA_CHOICES = [
-        ("F045_GERADO", "Geração de F045"),
-        ("MANUTENCAO_PROXIMA", "Manutenção Próxima"),
-        ("MANUTENCAO_VENCIDA", "Manutenção Vencida"),
-    ]
+    ("F045_GERADO", "Geração de F045"),
+    ("MANUTENCAO_PROXIMA", "Manutenção Próxima"),
+    ("MANUTENCAO_VENCIDA", "Manutenção Vencida"),
+    ("AVALIACAO_RISCO_PROXIMA", "Avaliação de Risco Próxima"),
+    ("AUDITORIA_PROXIMA", "Auditoria Próxima"),
+    ("CERTIFICACAO_PROXIMA", "Certificação Próxima"),
+]
 
     tipo = models.CharField(max_length=30, choices=TIPO_ALERTA_CHOICES, unique=True)
     usuarios = models.ManyToManyField(User, blank=True, related_name="alertas_configurados")

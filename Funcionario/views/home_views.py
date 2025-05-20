@@ -85,6 +85,9 @@ def home(request):
     funcionarios_avaliacao_baixa = []
 
     for avaliacao in avaliacoes:
+        funcionario = avaliacao.funcionario
+        if funcionario.status != "Ativo":
+            continue
         classificacao = avaliacao.calcular_classificacao()
         status = classificacao["status"]
         percentual = classificacao["percentual"]

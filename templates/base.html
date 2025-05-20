@@ -1,9 +1,12 @@
 <!DOCTYPE html>
+{% load static %}
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Dashboard{% endblock %}</title>
+    <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
 
     <!-- Bootstrap CSS e Ícones -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
@@ -27,6 +30,7 @@
         }
         .sidebar {
             height: 100vh;
+            overflow-y: auto; /* permite scroll interno */
             background-color: #2b2b2b;
             width: 220px;
             position: fixed;
@@ -37,6 +41,7 @@
             justify-content: space-between;
             color: #fff;
             transition: width 0.3s;
+            z-index: 1030; /* fica acima do conteúdo */
         }
         .sidebar.collapsed {
             width: 60px;
@@ -214,6 +219,20 @@
       bottom: 15px;
       right: 15px;
     }
+    .sidebar {
+        position: fixed;
+        width: 220px;
+        z-index: 1040;
+        overflow-y: auto;
+      }
+    
+      .content {
+        margin-left: 0 !important;
+      }
+    
+      .content.collapsed {
+        margin-left: 0 !important;
+      }
   }
   
   
@@ -527,41 +546,86 @@
       {% endif %}
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="botaoAlertas" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
-      {% for alerta in ultimos_alertas %}
-        <li class="dropdown-item small">
-          <strong>{{ alerta.titulo }}</strong><br>
-          <span class="text-muted">{{ alerta.mensagem|truncatechars:80 }}</span>
-        </li>
-      {% empty %}
-        <li class="dropdown-item text-muted">Nenhum alerta novo.</li>
-      {% endfor %}
-    </ul>
+        {% for alerta in ultimos_alertas %}
+        <li class="dropdown-item small d-flex justify-content-between align-items-start" id="alerta-{{ alerta.id }}">
+            <div class="me-2">
+              <strong>{{ alerta.titulo }}</strong><br>
+              <span class="text-muted">{{ alerta.mensagem|truncatechars:80 }}</span>
+            </div>
+            <div class="form-check form-switch ms-2">
+                <input class="form-check-input" type="checkbox"
+                        id="switch-alerta-{{ alerta.id }}"
+                        onchange="marcarComoLido(this, {{ alerta.id }})">
+              </div>
+              
+          </li>
+          
+        {% empty %}
+          <li class="dropdown-item text-muted">Nenhum alerta novo.</li>
+        {% endfor %}
+      </ul>
+      
   </div>
   {% endif %}
+
+  <!-- Token CSRF oculto para requisições AJAX -->
+<form id="csrf-token-form" style="display: none;">
+    {% csrf_token %}
+  </form>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const alertaBtn = document.getElementById("botaoAlertas");
+      // ✅ Marcar como lido com switch
+      window.marcarComoLido = function (checkbox, alertaId) {
+        // Só envia se estiver marcado (classifica como lido)
+        if (!checkbox.checked) return;
   
-      alertaBtn?.addEventListener("click", function () {
-        // Somente faz a chamada se ainda tiver badge
-        if (document.querySelector("#botaoAlertas .badge")) {
-          fetch("{% url 'marcar_alertas_como_lidos' %}")
-            .then(response => response.json())
-            .then(data => {
-              if (data.status === "ok") {
-                // Remove badge visual
-                const badge = document.querySelector("#botaoAlertas .badge");
-                if (badge) {
-                  badge.remove();
-                }
-                // Opcional: esconder o botão inteiro
-                // document.getElementById("alerta-flutuante").style.display = "none";
+        const csrfToken = document.querySelector('#csrf-token-form input[name=csrfmiddlewaretoken]')?.value;
+  
+        fetch(`{% url 'alerts:excluir_alerta_usuario' 0 %}`.replace("/0/", `/${alertaId}/`), {
+            method: "POST",
+          headers: {
+            "X-CSRFToken": csrfToken,
+            "Content-Type": "application/json",
+          },
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data?.status === "ok") {
+              const item = document.getElementById("alerta-" + alertaId);
+              if (item) {
+                item.style.transition = "opacity 0.3s ease";
+                item.style.opacity = 0;
+                setTimeout(() => item.remove(), 300);
               }
-            });
-        }
-      });
+  
+              const restantes = document.querySelectorAll('[id^="alerta-"]').length - 1;
+              const badge = document.querySelector("#botaoAlertas .badge");
+              if (badge && restantes <= 0) {
+                badge.remove();
+              } else if (badge) {
+                badge.textContent = restantes;
+              }
+            } else {
+              console.error("Erro ao marcar como lido:", data.mensagem);
+              alert("Erro ao marcar alerta como lido.");
+              checkbox.checked = false;
+            }
+          })
+          .catch(error => {
+            console.error("Erro na requisição:", error);
+            alert("Erro de conexão ao tentar marcar como lido.");
+            checkbox.checked = false;
+          });
+      };
     });
   </script>
+  
+  
+  
+  
+  
+  
+  
   
 
 </body>

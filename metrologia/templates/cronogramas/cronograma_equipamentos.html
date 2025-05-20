@@ -11,7 +11,8 @@
   {% include 'partials/global/_header_titulo.html' with titulo="Cronograma de Calibração dos Equipamentos" icone="bi bi-tools" emoji="🔧" %}
 
   <div class="header header-table print-header text-center">
-    <table class="custom-header" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <div class="table-responsive">
+      <table class="custom-header table table-bordered table-striped align-middle">  
       <thead>
         <tr>
           <th rowspan="2" style="text-align: center; vertical-align: middle; width: 10%; border: 1px solid #ddd;">
@@ -39,6 +40,7 @@
       </thead>
     </table>
   </div>
+</div>
 
   <div class="text-center mb-4 d-print-none">
     {% include 'partials/global/_botao_impressao.html' %}
@@ -51,8 +53,8 @@
       <strong>Filtros de Pesquisa</strong>
     </div>
     <div class="card-body">
-      <form method="GET" class="row g-3 align-items-end">
-        <div class="col-md-3">
+      <form method="GET" class="row row-cols-1 row-cols-md-4 g-3 align-items-end">
+        <div class="col">
           <label for="ano" class="form-label"><i class="bi bi-calendar3 me-1"></i> Ano:</label>
           <select id="ano" name="ano" class="form-select">
             <option value="">Todos</option>
@@ -86,75 +88,80 @@
       </form>
     </div>
   </div>
+  
+  <!-- Scroll horizontal superior -->
+<div class="table-scroll-top overflow-auto mb-2" style="height: 20px;">
+  <div style="width: max-content;"></div>
+</div>
 
-  <div class="table-responsive">
-    <table class="custom-table table table-bordered table-striped table-hover text-center align-middle">
-      <thead class="table-primary">
+<!-- Scroll principal com tabela -->
+<div class="table-responsive table-scroll-bottom overflow-auto">
+  <table class="custom-table table table-bordered table-striped table-hover text-center align-middle">
+    <thead class="table-primary">
+      <tr>
+        <th><i class="bi bi-upc-scan me-1"></i> Código</th>
+        <th><i class="bi bi-hammer me-1"></i> Equipamento</th>
+        <th><i class="bi bi-building me-1"></i> Fabricante</th>
+        <th><i class="bi bi-arrows-expand me-1"></i> Capacidade</th>
+        <th><i class="bi bi-grid-1x2 me-1"></i> Resolução</th>
+        <th><i class="bi bi-person-badge me-1"></i> Responsável</th>
+        <th><i class="bi bi-calendar-check me-1"></i> Última Calibração</th>
+        <th><i class="bi bi-calendar-event me-1"></i> Próxima Calibração</th>
+        <th><i class="bi bi-clock-history me-1"></i> Frequência</th>
+        <th><i class="bi bi-hospital me-1"></i> Laboratório</th>
+        <th><i class="bi bi-file-earmark-text me-1"></i> Nº Certificado</th>
+        <th>(E) Erro</th>
+        <th>(I) Incerteza</th>
+        <th>L = (E + I)</th>
+        <th><i class="bi bi-bullseye me-1"></i> Exatidão</th>
+        <th><i class="bi bi-activity me-1"></i> Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for equipamento in equipamentos %}
         <tr>
-            <th scope="col" class="align-middle"><i class="bi bi-upc-scan me-1"></i> Código</th>
-            <th scope="col" class="align-middle"><i class="bi bi-hammer me-1"></i> Equipamento</th>
-            <th scope="col" class="align-middle"><i class="bi bi-building me-1"></i> Fabricante</th>
-            <th scope="col" class="align-middle"><i class="bi bi-arrows-expand me-1"></i> Capacidade</th>
-            <th scope="col" class="align-middle"><i class="bi bi-grid-1x2 me-1"></i> Resolução</th>
-            <th scope="col" class="align-middle"><i class="bi bi-person-badge me-1"></i> Responsável</th>
-            <th scope="col" class="align-middle"><i class="bi bi-calendar-check me-1"></i> Última Calibração</th>
-            <th scope="col" class="align-middle"><i class="bi bi-calendar-event me-1"></i> Próxima Calibração</th>
-            <th scope="col" class="align-middle"><i class="bi bi-clock-history me-1"></i> Frequência (meses)</th>
-            <th scope="col" class="align-middle"><i class="bi bi-hospital me-1"></i> Laboratório</th>
-            <th scope="col" class="align-middle"><i class="bi bi-file-earmark-text me-1"></i> Nº Certificado</th>
-            <th scope="col" class="align-middle">(E) Erro</th>
-            <th scope="col" class="align-middle">(I) Incerteza</th>
-            <th scope="col" class="align-middle">L = (E + I)</th>
-            <th scope="col" class="align-middle"><i class="bi bi-bullseye me-1"></i> Exatidão Requerida</th>
-            <th scope="col" class="align-middle"><i class="bi bi-activity me-1"></i> Status</th>
+          <td>{{ equipamento.codigo }}</td>
+          <td>{{ equipamento.nome_equipamento }}</td>
+          <td>{{ equipamento.fabricante }}</td>
+          <td>{{ equipamento.capacidade }}</td>
+          <td>{{ equipamento.resolucao }}</td>
+          <td>{{ equipamento.responsavel }}</td>
+          <td>{{ equipamento.data_ultima_calibracao|date:"d/m/Y" }}</td>
+          <td>
+            {% if equipamento.data_proxima_calibracao %}
+              {% with equipamento.data_proxima_calibracao as data_calibracao %}
+                {% if data_calibracao < hoje %}
+                  <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
+                {% elif data_calibracao <= hoje|add_days:31 %}
+                  <span class="badge bg-warning text-dark">{{ data_calibracao|date:"d/m/Y" }}</span>
+                {% else %}
+                  <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
+                {% endif %}
+              {% endwith %}
+            {% else %}
+              <span class="text-muted">Não definida</span>
+            {% endif %}
+          </td>
+          <td>{{ equipamento.frequencia_calibracao }}</td>
+          <td>{{ equipamento.laboratorio }}</td>
+          <td>{{ equipamento.numero_certificado }}</td>
+          <td>{{ equipamento.erro_equipamento }}</td>
+          <td>{{ equipamento.incerteza }}</td>
+          <td>{{ equipamento.l }}</td>
+          <td>{{ equipamento.exatidao_requerida }}</td>
+          <td>
+            {% if equipamento.status == "Aprovado" %}
+              <span class="badge bg-success">Aprovado</span>
+            {% elif equipamento.status == "Reprovado" %}
+              <span class="badge bg-danger">Reprovado</span>
+            {% else %}
+              <span class="badge bg-secondary">Indefinido</span>
+            {% endif %}
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        {% for equipamento in equipamentos %}
-          <tr>
-            <td>{{ equipamento.codigo }}</td>
-            <td>{{ equipamento.nome_equipamento }}</td>
-            <td>{{ equipamento.fabricante }}</td>
-            <td>{{ equipamento.capacidade }}</td>
-            <td>{{ equipamento.resolucao }}</td>
-            <td>{{ equipamento.responsavel }}</td>
-            <td>{{ equipamento.data_ultima_calibracao|date:"d/m/Y" }}</td>
-            <td>
-              {% if equipamento.data_proxima_calibracao %}
-                {% with equipamento.data_proxima_calibracao as data_calibracao %}
-                  {% if data_calibracao < hoje %}
-                    <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
-                  {% elif data_calibracao <= hoje|add_days:31 %}
-                    <span class="badge bg-warning text-dark">{{ data_calibracao|date:"d/m/Y" }}</span>
-                  {% else %}
-                    <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
-                  {% endif %}
-                {% endwith %}
-              {% else %}
-                <span class="text-muted">Não definida</span>
-              {% endif %}
-            </td>
-            <td>{{ equipamento.frequencia_calibracao }}</td>
-            <td>{{ equipamento.laboratorio }}</td>
-            <td>{{ equipamento.numero_certificado }}</td>
-            <td>{{ equipamento.erro_equipamento }}</td>
-            <td>{{ equipamento.incerteza }}</td>
-            <td>{{ equipamento.l }}</td>
-            <td>{{ equipamento.exatidao_requerida }}</td>
-            <td>
-              {% if equipamento.status == "Aprovado" %}
-                <span class="badge bg-success">Aprovado</span>
-              {% elif equipamento.status == "Reprovado" %}
-                <span class="badge bg-danger">Reprovado</span>
-              {% else %}
-                <span class="badge bg-secondary">Indefinido</span>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 <style>
     @media print {
@@ -174,5 +181,40 @@
           font-size: 8pt !important;
         }
       }
+
+      @media (max-width: 768px) {
+        .custom-table th,
+        .custom-table td {
+          white-space: nowrap;
+        }
+      }
+      
     </style>      
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const topScroll = document.querySelector('.table-scroll-top');
+        const bottomScroll = document.querySelector('.table-scroll-bottom');
+    
+        if (topScroll && bottomScroll) {
+          const table = bottomScroll.querySelector('table');
+          const mirror = table.cloneNode(false);
+          mirror.style.width = table.scrollWidth + 'px';
+          mirror.style.height = '1px';
+          mirror.style.visibility = 'hidden';
+          topScroll.innerHTML = '';
+          topScroll.appendChild(mirror);
+    
+          // sincronizar os scrolls
+          topScroll.addEventListener('scroll', () => {
+            bottomScroll.scrollLeft = topScroll.scrollLeft;
+          });
+          bottomScroll.addEventListener('scroll', () => {
+            topScroll.scrollLeft = bottomScroll.scrollLeft;
+          });
+        }
+      });
+    </script>
+    
+    
 {% endblock %}

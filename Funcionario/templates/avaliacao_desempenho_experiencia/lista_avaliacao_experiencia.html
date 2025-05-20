@@ -28,45 +28,50 @@
   </div>
   <div class="card-body">
     <form method="get">
-      <div class="row g-3">
+      <div class="row row-cols-1 row-cols-md-2 g-3">
+        
         <!-- Colaborador -->
-        <div class="col-md-4">
+        <div>
           <label for="funcionario" class="form-label d-flex align-items-center gap-2">
             <i class="bi bi-person text-secondary" aria-hidden="true"></i> Colaborador
           </label>
-          <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtrar por colaborador">
+          <select name="funcionario" id="funcionario" class="form-select select2 w-100" aria-label="Filtrar por colaborador">
             <option value="">Selecione</option>
             {% for funcionario in funcionarios %}
-              <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>{{ funcionario.nome }}</option>
+              <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
+                {{ funcionario.nome }}
+              </option>
             {% endfor %}
           </select>
         </div>
 
         <!-- Período de Avaliação -->
-        <div class="col-md-4">
+        <div>
           <label class="form-label d-flex align-items-center gap-2">
             <i class="bi bi-calendar-range text-secondary" aria-hidden="true"></i> Período de Avaliação
           </label>
           <div class="row g-2">
-            <div class="col">
+            <div class="col-12 col-sm-6">
               <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}" aria-label="Data de Início">
             </div>
-            <div class="col">
+            <div class="col-12 col-sm-6">
               <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}" aria-label="Data de Fim">
             </div>
           </div>
         </div>
+
       </div>
 
-      <!-- Botão de Filtrar -->
+      <!-- Botão de Filtrar centralizado em telas pequenas -->
       <div class="row mt-3">
-        <div class="col text-end">
+        <div class="col d-flex justify-content-md-end justify-content-center">
           {% include "partials/global/_botao_filtrar.html" %}
         </div>
       </div>
     </form>
   </div>
 </div>
+
 
 
   <!-- Cards indicadores -->
@@ -80,7 +85,7 @@
   <!-- Tabela de Avaliações -->
   <div class="table-responsive">
     <table class="table table-bordered table-striped align-middle text-center">
-      <thead>
+      <thead class="table-light align-middle">
         <tr>
           <th><i class="bi bi-person"></i> Colaborador</th>
           <th><i class="bi bi-calendar-event"></i> Data de Avaliação</th>

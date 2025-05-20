@@ -82,64 +82,73 @@
   </div>
 
   {% if dispositivos %}
-    <div class="table-responsive">
-      <table class="custom-table table table-bordered table-striped table-hover text-center align-middle">
-        <thead class="table-primary">
-          <tr>
-            <th scope="col" class="align-middle"><i class="bi bi-upc-scan me-1"></i> Código</th>
-            <th scope="col" class="align-middle"><i class="bi bi-hash me-1"></i> Qtde</th>
-            <th scope="col" class="align-middle"><i class="bi bi-person me-1"></i> Cliente</th>
-            <th scope="col" class="align-middle"><i class="bi bi-info-circle me-1"></i> Descrição</th>
-            <th scope="col" class="align-middle"><i class="bi bi-clipboard2-check me-1"></i> Estudo</th>
-            <th scope="col" class="align-middle"><i class="bi bi-calendar-check me-1"></i> Última Calibração</th>
-            <th scope="col" class="align-middle"><i class="bi bi-calendar-event me-1"></i> Próxima</th>
-            <th scope="col" class="align-middle"><i class="bi bi-box-arrow-right me-1"></i> Última Saída</th>
-            <th scope="col" class="align-middle"><i class="bi bi-box-arrow-in-left me-1"></i> Retorno</th>
-            <th scope="col" class="align-middle"><i class="bi bi-diagram-3 me-1"></i> Setor</th>
-            <th scope="col" class="align-middle"><i class="bi bi-activity me-1"></i> Situação</th>
-            <th scope="col" class="align-middle"><i class="bi bi-building me-1"></i> Armazenagem</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for dispositivo in dispositivos %}
-            <tr>
-              <td>{{ dispositivo.codigo }}</td>
-              <td>{{ dispositivo.qtde }}</td>
-              <td>{{ dispositivo.cliente }}</td>
-              <td>{{ dispositivo.descricao }}</td>
-              <td>{{ dispositivo.estudo_realizado }}</td>
-              <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
-              <td>
-                {% if dispositivo.data_proxima_calibracao %}
-                  {% with dispositivo.data_proxima_calibracao as data_calibracao %}
-                    {% if data_calibracao < hoje %}
-                      <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
-                    {% elif data_calibracao <= hoje|add_days:31 %}
-                      <span class="badge bg-warning text-dark">{{ data_calibracao|date:"d/m/Y" }}</span>
-                    {% else %}
-                      <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
-                    {% endif %}
-                  {% endwith %}
+    <!-- Scroll horizontal superior -->
+<div class="table-scroll-top overflow-auto mb-2" style="height: 20px;">
+  <div style="width: max-content;"></div>
+</div>
+
+<!-- Tabela com scroll inferior sincronizado -->
+<div class="table-responsive table-scroll-bottom overflow-auto">
+  <table class="custom-table table table-bordered table-striped table-hover text-center align-middle">
+    <thead class="table-primary align-middle">
+      <tr>
+        <th><i class="bi bi-upc-scan me-1"></i> Código</th>
+        <th><i class="bi bi-hash me-1"></i> Qtde</th>
+        <th><i class="bi bi-person me-1"></i> Cliente</th>
+        <th><i class="bi bi-info-circle me-1"></i> Descrição</th>
+        <th><i class="bi bi-clipboard2-check me-1"></i> Estudo</th>
+        <th><i class="bi bi-calendar-check me-1"></i> Última Calibração</th>
+        <th><i class="bi bi-calendar-event me-1"></i> Próxima</th>
+        <th><i class="bi bi-box-arrow-right me-1"></i> Última Saída</th>
+        <th><i class="bi bi-box-arrow-in-left me-1"></i> Retorno</th>
+        <th><i class="bi bi-diagram-3 me-1"></i> Setor</th>
+        <th><i class="bi bi-activity me-1"></i> Situação</th>
+        <th><i class="bi bi-building me-1"></i> Armazenagem</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dispositivo in dispositivos %}
+        <tr>
+          <td>{{ dispositivo.codigo }}</td>
+          <td>{{ dispositivo.qtde }}</td>
+          <td>{{ dispositivo.cliente }}</td>
+          <td>{{ dispositivo.descricao }}</td>
+          <td>{{ dispositivo.estudo_realizado }}</td>
+          <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
+          <td>
+            {% if dispositivo.data_proxima_calibracao %}
+              {% with dispositivo.data_proxima_calibracao as data_calibracao %}
+                {% if data_calibracao < hoje %}
+                  <span class="badge bg-danger">{{ data_calibracao|date:"d/m/Y" }}</span>
+                {% elif data_calibracao <= hoje|add_days:31 %}
+                  <span class="badge bg-warning text-dark">{{ data_calibracao|date:"d/m/Y" }}</span>
                 {% else %}
-                  <span class="text-muted">Não definida</span>
+                  <span class="badge bg-success">{{ data_calibracao|date:"d/m/Y" }}</span>
                 {% endif %}
-              </td>
-              <td>{{ dispositivo.data_ultima_saida|date:"d/m/Y" }}</td>
-              <td>{{ dispositivo.data_retorno|date:"d/m/Y" }}</td>
-              <td>{{ dispositivo.setor }}</td>
-              <td>
-                {% if dispositivo.situacao == "OK" %}
-                  <span class="badge bg-success">OK</span>
-                {% else %}
-                  <span class="badge bg-danger">N/OK</span>
-                {% endif %}
-              </td>
-              <td>{{ dispositivo.local_armazenagem }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+              {% endwith %}
+            {% else %}
+              <span class="text-muted">Não definida</span>
+            {% endif %}
+          </td>
+          <td>{{ dispositivo.data_ultima_saida|date:"d/m/Y" }}</td>
+          <td>{{ dispositivo.data_retorno|date:"d/m/Y" }}</td>
+          <td>{{ dispositivo.setor }}</td>
+          <td>
+            {% if dispositivo.situacao == "OK" %}
+              <span class="badge bg-success">OK</span>
+            {% else %}
+              <span class="badge bg-danger">N/OK</span>
+            {% endif %}
+          </td>
+          <td>{{ dispositivo.local_armazenagem }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+
   {% else %}
     {% include 'partials/global/_sem_resultados.html' with item_nome="dispositivo" %}
   {% endif %}
@@ -147,5 +156,28 @@
   {% include 'partials/global/_formulario_rodape.html' with numero_formulario="CR006 - Rev33" %}
 
 </div>
+<!-- Scroll sincronizado script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const topScroll = document.querySelector('.table-scroll-top');
+    const bottomScroll = document.querySelector('.table-scroll-bottom');
 
+    if (topScroll && bottomScroll) {
+      const table = bottomScroll.querySelector('table');
+      const mirror = document.createElement('div');
+      mirror.style.width = table.scrollWidth + 'px';
+      mirror.style.height = '1px';
+      mirror.style.visibility = 'hidden';
+      topScroll.innerHTML = '';
+      topScroll.appendChild(mirror);
+
+      topScroll.addEventListener('scroll', () => {
+        bottomScroll.scrollLeft = topScroll.scrollLeft;
+      });
+      bottomScroll.addEventListener('scroll', () => {
+        topScroll.scrollLeft = bottomScroll.scrollLeft;
+      });
+    }
+  });
+</script>
 {% endblock %}

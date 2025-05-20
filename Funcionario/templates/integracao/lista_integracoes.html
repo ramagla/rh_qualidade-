@@ -82,25 +82,25 @@
         <caption class="visually-hidden">Tabela de integrações realizadas por colaboradores</caption>
         <thead>
             <tr>
-                <th><i class="bi bi-person-fill"></i> Colaborador</th>
-                <th><i class="bi bi-calendar-event"></i> Data</th>
-                <th><i class="bi bi-building"></i> Departamento</th>
-                <th><i class="bi bi bi-whatsapp"></i> Grupo WhatsApp</th>
-                <th><i class="bi bi-journal"></i> Requer Treinamento</th>
-                <th><i class="bi bi-file-earmark-pdf"></i> PDF</th>
-                <th><i class="bi bi-gear"></i> Ações</th>
+                <th class="align-middle"><i class="bi bi-person-fill"></i> Colaborador</th>
+                <th class="align-middle"><i class="bi bi-calendar-event"></i> Data</th>
+                <th class="align-middle"><i class="bi bi-building"></i> Departamento</th class="align-middle">
+                <th class="align-middle"><i class="bi bi bi-whatsapp"></i> Grupo WhatsApp</th class="align-middle">
+                <th class="align-middle"><i class="bi bi-journal"></i> Requer Treinamento</th class="align-middle">
+                <th class="align-middle"><i class="bi bi-file-earmark-pdf"></i> PDF</th class="align-middle">
+                <th class="align-middle"><i class="bi bi-gear"></i> Ações</th>
             </tr>
         </thead>
         <tbody>
         {% for integracao in integracoes %}
             <tr>
-                <td>{{ integracao.funcionario.nome }}</td>
-                <td>{{ integracao.data_integracao|date:"d/m/Y" }}</td>
-                <td>{{ integracao.funcionario.local_trabalho }}</td>
-                <td>{% if integracao.grupo_whatsapp %}<span class="badge bg-success">Sim</span>{% else %}<span class="badge bg-danger">Não</span>{% endif %}</td>
-                <td>{% if integracao.requer_treinamento %}<span class="badge bg-warning text-dark">Sim</span>{% else %}<span class="badge bg-secondary">Não</span>{% endif %}</td>
-                <td>{% if integracao.pdf_integracao %}<a href="{{ integracao.pdf_integracao.url }}" class="btn btn-light" target="_blank"><i class="bi bi-filetype-pdf"></i></a>{% else %}<span class="text-muted">Não anexado</span>{% endif %}</td>
-                <td class="d-flex justify-content-center gap-2 flex-wrap">
+                <td class="align-middle">{{ integracao.funcionario.nome }}</td>
+                <td class="align-middle">{{ integracao.data_integracao|date:"d/m/Y" }}</td>
+                <td class="align-middle">{{ integracao.funcionario.local_trabalho }}</td>
+                <td class="align-middle">{% if integracao.grupo_whatsapp %}<span class="badge bg-success">Sim</span>{% else %}<span class="badge bg-danger">Não</span>{% endif %}</td>
+                <td class="align-middle">{% if integracao.requer_treinamento %}<span class="badge bg-warning text-dark">Sim</span>{% else %}<span class="badge bg-secondary">Não</span>{% endif %}</td>
+                <td class="align-middle">{% if integracao.pdf_integracao %}<a href="{{ integracao.pdf_integracao.url }}" class="btn btn-light" target="_blank"><i class="bi bi-filetype-pdf"></i></a>{% else %}<span class="text-muted">Não anexado</span>{% endif %}</td>
+                <td class="align-middle" class="d-flex justify-content-center gap-2 flex-wrap">
                   {% if request.user|has_permission:"Funcionario.view_integracaofuncionario" %}
                     {% include 'partials/global/_botao_visualizar.html' with objeto=integracao url_visualizar='visualizar_integracao' %}
                   {% endif %}

@@ -77,6 +77,8 @@ from .views.formularios_views import (
     avaliacao_capacitacao,
     filtro_carta_competencia,
     filtro_funcionario,
+    formulario_f033,
+    filtro_funcionario_f033,
 )
 from .views.funcionario_views import (
     ImprimirFichaView,
@@ -544,6 +546,13 @@ urlpatterns = [
         filtro_carta_competencia,
         name="filtro_carta_competencia",
     ),
+    path(
+    "formularios/solicitacao-bolsa/<int:funcionario_id>/",
+    formulario_f033,
+    name="formulario_f033",
+    ),
+    path("formularios/filtro-f033/", filtro_funcionario_f033, name="filtro_funcionario_f033"),
+
     path(
         "formularios/avaliacao-capacitacao-pratica/carta/<int:funcionario_id>/",
         avaliacao_capacitacao,

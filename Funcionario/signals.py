@@ -115,6 +115,7 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "funcionario", "emitir_carta_competencia", "Pode emitir carta de competência"),
     ("Funcionario", "funcionario", "emitir_pesquisa_consciencia", "Pode emitir pesquisa de consciência"),
     ("Funcionario", "funcionario", "emitir_capacitacao_pratica", "Pode emitir avaliação de capacitação prática"),
+    ("Funcionario", "funcionario", "emitir_f033", "Pode emitir Solicitação de Bolsa-Treinamento (F033)"),
 
 
 ]

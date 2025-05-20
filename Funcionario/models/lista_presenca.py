@@ -36,6 +36,12 @@ class ListaPresenca(models.Model):
     situacao = models.CharField(
         max_length=20, choices=SITUACAO_CHOICES, default="em_andamento"
     )
+    planejado = models.CharField(
+        max_length=3,
+        choices=[("sim", "Sim"), ("nao", "Não")],
+        default="nao",
+        verbose_name="Planejado?"
+    )
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

@@ -37,6 +37,7 @@ class ListaPresencaForm(forms.ModelForm):
             "instrutor": forms.TextInput(attrs={"class": "form-control"}),
             "assunto": forms.TextInput(attrs={"class": "form-control"}),
             "situacao": forms.Select(attrs={"class": "form-select"}),
+            "planejado": forms.RadioSelect(),
         }
 
     def __init__(self, *args, **kwargs):

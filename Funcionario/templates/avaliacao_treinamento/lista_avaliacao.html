@@ -19,8 +19,7 @@
       </a>
     {% endif %}
   </div>
-
-  <!-- Filtros de Avaliações -->
+<!-- Filtros de Avaliações -->
 <div class="card mb-4">
   <div class="card-header bg-light d-flex align-items-center gap-2">
     <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
@@ -28,13 +27,14 @@
   </div>
   <div class="card-body">
     <form method="get">
-      <div class="row g-3">
+      <div class="row row-cols-1 row-cols-md-2 g-3">
+
         <!-- Treinamento -->
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
           <label for="treinamento" class="form-label d-flex align-items-center gap-2">
             <i class="bi bi-journal-check text-secondary"></i> Treinamento/Curso
           </label>
-          <select name="treinamento" id="treinamento" class="form-select select2" aria-label="Filtrar por treinamento">
+          <select name="treinamento" id="treinamento" class="form-select select2 w-100">
             <option value="">Selecione</option>
             {% for treinamento in listas_presenca %}
               <option value="{{ treinamento.id }}" {% if request.GET.treinamento == treinamento.id|stringformat:"s" %}selected{% endif %}>
@@ -45,11 +45,11 @@
         </div>
 
         <!-- Funcionário -->
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
           <label for="funcionario" class="form-label d-flex align-items-center gap-2">
             <i class="bi bi-person text-secondary"></i> Funcionário
           </label>
-          <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtrar por funcionário">
+          <select name="funcionario" id="funcionario" class="form-select select2 w-100">
             <option value="">Selecione</option>
             {% for funcionario in funcionarios_ativos %}
               <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
@@ -60,27 +60,31 @@
         </div>
 
         <!-- Data Início -->
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
           <label for="data_inicio" class="form-label d-flex align-items-center gap-2">
             <i class="bi bi-calendar-event text-secondary"></i> Data Início
           </label>
-          <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+          <input type="date" name="data_inicio" id="data_inicio" class="form-control w-100" value="{{ request.GET.data_inicio }}">
         </div>
 
         <!-- Data Fim -->
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
           <label for="data_fim" class="form-label d-flex align-items-center gap-2">
             <i class="bi bi-calendar-check text-secondary"></i> Data Fim
           </label>
-          <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+          <input type="date" name="data_fim" id="data_fim" class="form-control w-100" value="{{ request.GET.data_fim }}">
         </div>
 
         <!-- Botão Filtrar -->
-        {% include 'partials/global/_botao_filtrar.html' %}
+        <div class="col-12 d-flex justify-content-end">
+          {% include 'partials/global/_botao_filtrar.html' %}
+        </div>
+
       </div>
     </form>
   </div>
 </div>
+
 
 
   <!-- Indicadores -->
@@ -94,7 +98,7 @@
   <!-- Tabela de avaliações -->
   <div class="table-responsive">
     <table class="table table-bordered table-striped text-center align-middle">
-      <thead class="table-light">
+      <thead class="table-light align-middle">
         <tr>
           <th><i class="bi bi-person"></i> Colaborador</th>
           <th><i class="bi bi-journal-check"></i> Treinamento</th>

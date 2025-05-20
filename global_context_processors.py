@@ -184,7 +184,7 @@ def global_menu(request):
 
         if user.has_perm("Funcionario.cronograma_avaliacao_eficacia"):
             submenu_relatorios.append({
-                "name": "Cronograma de Eficácia",
+                "name": "Acompanhamento de Eficácia",
                 "url": "cronograma_avaliacao_eficacia"
             })
 
@@ -229,12 +229,21 @@ def global_menu(request):
                 "url": "filtro_carta_competencia"
             })
 
+        if user.has_perm("Funcionario.emitir_f033"):
+            submenu_formularios.append({
+                "name": "Solicitação de Bolsa-Treinamento (F033)",
+                "url": "filtro_funcionario_f033"
+            })
+
+
+
         if submenu_formularios:
             menu_recursos_humanos.append({
                 "name": "Formulários",
                 "icon": "fas fa-edit",
                 "submenu": submenu_formularios,
             })
+       
 
         # Documentos
         if user.has_perm("Funcionario.view_documento"):

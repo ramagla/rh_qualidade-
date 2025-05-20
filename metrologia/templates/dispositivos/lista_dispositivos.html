@@ -84,7 +84,7 @@
   <!-- Tabela -->
   <table class="table table-bordered text-center align-middle small-text-table">
     <caption class="visually-hidden">Tabela de dispositivos cadastrados</caption>
-    <thead class="table-light">
+    <thead class="table-light align-middle">
       <tr>
         <th scope="col"><i class="bi bi-upc-scan"></i> Código</th>
         <th scope="col"><i class="bi bi-stack"></i> Quantidade</th>
@@ -98,7 +98,7 @@
     </thead>
     <tbody>
       {% for dispositivo in page_obj %}
-      <tr>
+      <tr class="align-middle">
         <td>{{ dispositivo.codigo }}</td>
         <td>{{ dispositivo.qtde }}</td>
         <td>{{ dispositivo.cliente }}</td>

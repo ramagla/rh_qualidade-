@@ -8,15 +8,20 @@
   {% include "partials/global/_toast_mensagens.html" %}
 
   <!-- Título com ícone -->
-  {% include "partials/global/_header_titulo.html" with titulo="Histórico de Cargos - "|add:funcionario.nome icone="bi bi-briefcase-fill" emoji="💼" %}
+  {% with "Histórico de Cargos - "|add:funcionario.nome as titulo_completo %}
+  {% include "partials/global/_header_titulo.html" with titulo=titulo_completo icone="bi bi-briefcase-fill" emoji="💼" %}
+{% endwith %}
 
   <!-- Botão de adicionar com alinhamento -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div></div>
     {% if request.user|has_permission:"Funcionario.add_historicocargo" %}
-    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Adicionar Histórico
-    </a>
+    <a href="{% url 'adicionar_historico_cargo' funcionario.id %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Adicionar Histórico
+      </a>
+    {% endif %}
   </div>
+  
 
   <!-- Tabela com caption para acessibilidade -->
   <table class="table table-hover align-middle">
