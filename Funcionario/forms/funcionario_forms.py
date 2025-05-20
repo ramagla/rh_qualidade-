@@ -100,14 +100,7 @@ class FuncionarioForm(forms.ModelForm):
         model = Funcionario
         fields = "__all__"  # Ou liste explicitamente os campos, incluindo 'status'
 
-        widgets = {
-            "local_trabalho": Select2Widget(
-                attrs={
-                    "class": "select2 form-select",
-                    "placeholder": "Selecione um local de trabalho",
-                }
-            ),
-        }
+        
 
     def __init__(self, *args, **kwargs):
         super(FuncionarioForm, self).__init__(*args, **kwargs)
@@ -153,11 +146,7 @@ class FuncionarioForm(forms.ModelForm):
         return nome
 
     def clean_local_trabalho(self):
-        local_trabalho = self.cleaned_data.get("local_trabalho")
-        if local_trabalho:
-            # Aplica a função title_case personalizada
-            return title_case(local_trabalho)
-        return local_trabalho
+        return self.cleaned_data.get("local_trabalho")
 
     def clean_responsavel(self):
         responsavel = self.cleaned_data.get("responsavel", None)
