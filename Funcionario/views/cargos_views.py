@@ -8,6 +8,7 @@ from collections import defaultdict
 
 from ..forms import CargoForm, RevisaoForm
 from ..models import Cargo, Funcionario, Revisao
+from Funcionario.models.choices_departamento import DEPARTAMENTOS_EMPRESA
 
 @login_required
 def organograma_cargos(request):
@@ -47,12 +48,7 @@ def lista_cargos(request):
     for cargo in cargos:
         cargo.ultima_revisao = cargo.revisoes.order_by("-data_revisao").first()
 
-    # Obter todos os departamentos e nomes de cargos distintos em ordem alfabética
-    todos_departamentos = (
-        Cargo.objects.values_list("departamento", flat=True)
-        .distinct()
-        .order_by("departamento")
-    )
+    
     todos_cargos = Cargo.objects.all().distinct("nome").order_by("nome")
 
     # Dados para os cards
@@ -90,7 +86,7 @@ def lista_cargos(request):
         {
             "cargos": page_obj,
             "page_obj": page_obj,
-            "departamentos": todos_departamentos,
+            "departamentos": DEPARTAMENTOS_EMPRESA,
             "todos_cargos": todos_cargos,
             "total_cargos": total_cargos,
             "departamento_mais_frequente": departamento_mais_frequente,

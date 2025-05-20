@@ -20,6 +20,7 @@ from Funcionario.models.avaliacao_treinamento import AvaliacaoTreinamento
 from Funcionario.models.integracao_funcionario import IntegracaoFuncionario
 from Funcionario.models.job_rotation_evaluation import JobRotationEvaluation
 from Funcionario.models.lista_presenca import ListaPresenca
+from Funcionario.models.choices_departamento import DEPARTAMENTOS_EMPRESA
 
 from ..models.cargo import Cargo
 
@@ -79,9 +80,7 @@ def lista_funcionarios(request):
 
     context = {
         "page_obj": page_obj,
-        "locais_trabalho": Funcionario.objects.filter(status="Ativo")
-        .values_list("local_trabalho", flat=True)
-        .distinct(),
+        "departamentos_choices": DEPARTAMENTOS_EMPRESA,
         "responsaveis": responsaveis,
         "niveis_escolaridade": Funcionario.objects.filter(status="Ativo")
         .values_list("escolaridade", flat=True)

@@ -38,10 +38,11 @@
           <label for="departamento" class="form-label">Filtrar por Departamento:</label>
           <select name="departamento" id="departamento" class="form-select select2" autocomplete="off">
             <option value="">Todos</option>
-            {% for dept in departamentos %}
-              <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>{{ dept }}</option>
+            {% for value, label in departamentos %}
+              <option value="{{ value }}" {% if request.GET.departamento == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
+          
         </div>
         <div class="col-md-6">
           <label for="cargo" class="form-label">Filtrar por Cargo:</label>
@@ -130,7 +131,7 @@
         
       </tr>
       {% empty %}
-        {% include "partials/_sem_resultados.html" with item_nome="cargo" %}
+        {% include "partials/global/_sem_resultados.html" with item_nome="cargo" %}
       {% endfor %}
     </tbody>
   </table>

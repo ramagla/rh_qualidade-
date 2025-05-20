@@ -141,10 +141,11 @@
         </label>
         <select name="local_trabalho" id="local_trabalho" class="form-select select2">
           <option value="">Selecione</option>
-          {% for local in locais_trabalho %}
-            <option value="{{ local }}" {% if request.GET.local_trabalho == local %}selected{% endif %}>{{ local }}</option>
+          {% for value, label in departamentos_choices %}
+            <option value="{{ value }}" {% if request.GET.local_trabalho == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
+        
       </div>
 
       <!-- Responsável -->

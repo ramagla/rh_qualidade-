@@ -18,6 +18,7 @@ from ..models.funcionario import Funcionario
 from ..models.matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
 
 matplotlib.use("Agg")  # Backend para renderização sem GUI
+from Funcionario.models.choices_departamento import DEPARTAMENTOS_EMPRESA
 
 
 @login_required
@@ -40,10 +41,8 @@ def lista_matriz_polivalencia(request):
     if data_fim:
         matrizes = matrizes.filter(atualizado_em__lte=data_fim)
 
-    # Recuperando os departamentos disponíveis
-    departamentos = MatrizPolivalencia.objects.values_list(
-        "departamento", flat=True
-    ).distinct()
+    departamentos = DEPARTAMENTOS_EMPRESA
+
 
     # Paginação
     paginator = Paginator(matrizes, 10)  # 10 itens por página
@@ -352,10 +351,7 @@ def lista_atividades(request):
             "nomes_atividades": Atividade.objects.values_list(
                 "nome", flat=True
             ).distinct(),
-            # Listagem de departamentos para filtro
-            "departamentos": Atividade.objects.values_list(
-                "departamento", flat=True
-            ).distinct(),
+           "departamentos": DEPARTAMENTOS_EMPRESA,
             "total_atividades": total_atividades,  # Total de atividades
             "atividades_por_departamento": atividades_por_departamento,  # Atividades por departamento
         },

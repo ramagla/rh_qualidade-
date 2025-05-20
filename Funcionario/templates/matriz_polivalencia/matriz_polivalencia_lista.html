@@ -29,9 +29,9 @@
           </label>
           <select id="departamento" name="departamento" class="form-select" aria-label="Filtrar por departamento">
             <option value="">Todos os Departamentos</option>
-            {% for dep in departamentos %}
-              <option value="{{ dep }}" {% if request.GET.departamento == dep %}selected{% endif %}>{{ dep }}</option>
-            {% endfor %}
+            {% for value, label in departamentos %}
+  <option value="{{ value }}" {% if request.GET.departamento == value %}selected{% endif %}>{{ label }}</option>
+{% endfor %}
           </select>
         </div>
 
