@@ -81,7 +81,7 @@ class CargoForm(forms.ModelForm):
             "nome": forms.TextInput(attrs={"class": "form-control"}),
             "numero_dc": forms.TextInput(attrs={"class": "form-control"}),
             "descricao_arquivo": forms.FileInput(attrs={"class": "form-control"}),
-            "departamento": forms.TextInput(attrs={"class": "form-control"}),
+            "departamento": forms.Select(attrs={"class": "form-select"}),
             "nivel": forms.Select(attrs={"class": "form-select"}),  # 👈 Aqui
 
             "elaborador": Select2Widget(attrs={"class": "form-select"}),
@@ -104,6 +104,7 @@ class CargoForm(forms.ModelForm):
         self.fields["aprovador"].queryset = Funcionario.objects.filter(
             status="Ativo"
         ).order_by("nome")
+        self.fields["departamento"].widget.attrs.update({"class": "form-select select2"})
 
         # Definir valores padrão se o formulário for novo
         if not self.instance.pk:

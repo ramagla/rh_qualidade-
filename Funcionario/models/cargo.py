@@ -14,13 +14,42 @@ NIVEIS_HIERARQUIA = [
     (10, "Operacional"),
 ]
 
+DEPARTAMENTOS_EMPRESA = [
+    ("RH", "Recursos Humanos"),
+    ("QUALIDADE", "Gestão da Qualidade"),
+    ("CONTROLE", "Controle de Qualidade"),
+    ("PRODUCAO", "Produção"),
+    ("COMPRAS", "Compras"),
+    ("COMERCIAL", "Comercial"),
+    ("DIRETORIA", "Diretoria"),
+    ("PCP", "Logistica/PCP"),
+    ("LIMPEZA", "Serviços Gerais"),
+    ("TÉCNICO", "Técnico"),
+    ("TI", "Técnologia da Informação"),
+    ("ALMOXARIFADO", "Almoxarifado"),
+    ("EXPEDICAO", "Expedição"),
+    ("MANUTENÇÃO", "Manutenção"),
+    ("COMPRESSAO", "Compressão"),
+    ("RETIFICA", "Retífica"),
+    ("TORSÃO", "Torção"),
+    ("ESTAMPARIA_BIHLER", "Estamparia Bihler"),
+    ("ACABAMENTO", "Acabamento"),
+    ("PRENSA", "Prensa"),
+    ("DOBRADEIRA_CNC", "Dobradeira CNC"),
+    ("ALIVIO_TENSAO_TECNICO", "Alívio de Tensão Técnico"),
+]
+
+
 class Cargo(models.Model):
     nome = models.CharField(max_length=100)
     numero_dc = models.CharField(max_length=4)
     
     descricao_arquivo = models.FileField(upload_to="cargos/", blank=True, null=True)
-    departamento = models.CharField(max_length=100, verbose_name="Departamento")
-
+    departamento = models.CharField(
+        max_length=50,
+        choices=DEPARTAMENTOS_EMPRESA,
+        verbose_name="Departamento"
+    )
 
     # NOVO CAMPO DE NÍVEL HIERÁRQUICO
     nivel = models.PositiveSmallIntegerField(

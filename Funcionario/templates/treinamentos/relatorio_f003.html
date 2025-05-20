@@ -5,6 +5,9 @@
 
 {% block content %}
 {% include 'partials/global/_estilos_impressao.html' %}
+
+{% include 'partials/global/_styles_componentes.html' %}
+
 {% include 'header.html' %}
 <div role="toolbar" class="mb-3">
   {% include 'partials/global/_botao_impressao.html' %}
@@ -144,5 +147,5 @@
 </div>
 
 <!-- Rodapé com número do formulário -->
-{% include "partials/global/_formulario_rodape.html" with numero_formulario=numero_formulario %}
+{% include "partials/global/_formulario_rodape.html" with numero_formulario="F003 Rev.04" %}
 {% endblock %}

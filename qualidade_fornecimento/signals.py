@@ -17,7 +17,7 @@ def gerar_alerta_f045(sender, instance, created, **kwargs):
             for user in destinatarios:
                 AlertaUsuario.objects.create(
                     usuario=user,
-                    titulo="📄 Novo Relatório F045 Gerado",
+                    titulo="📄 Relatório F045 Gerado",
                     mensagem=f"O relatório F045 número {instance.nro_relatorio} foi gerado para {instance.material}.",
                 )
 

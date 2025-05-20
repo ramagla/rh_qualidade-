@@ -84,8 +84,8 @@ def enviar_alertas_calibracao():
             for user in destinatarios_in_app:
                 AlertaUsuario.objects.create(
                     usuario=user,
-                    titulo="🔧 Alerta de Calibração",
-                    mensagem=f"O dispositivo {nome} {dados['mensagem']}.",
+                    titulo = "📟 Calibração de Dispositivo Vencida" if chave == "vencida" else "🕒 Calibração de Dispositivo Próxima",
+                    mensagem = f"O dispositivo {nome} {dados['mensagem']}."
                 )
 
         # Equipamentos
@@ -112,8 +112,9 @@ def enviar_alertas_calibracao():
             for user in destinatarios_in_app:
                 AlertaUsuario.objects.create(
                     usuario=user,
-                    titulo="🔧 Alerta de Calibração",
-                    mensagem=f"O equipamento {nome} {dados['mensagem']}.",
+                    titulo = "🔩 Calibração de Equipamento Vencida" if chave == "vencida" else "🕒 Calibração de Equipamento Próxima",
+                    mensagem = f"O equipamento {nome} {dados['mensagem']}."
+
                 )
 from datetime import timedelta
 from django.utils.timezone import now

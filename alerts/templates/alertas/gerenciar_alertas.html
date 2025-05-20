@@ -21,7 +21,7 @@
             <tbody>
                 {% for alerta in alertas %}
                     <tr>
-                        <td>{{ alerta.get_tipo_display }}</td>
+                        <td>{{ alerta }}</td>
                         <td>
                             {% for user in alerta.usuarios.all %}
                                 <span class="badge bg-primary">{{ user.username }}</span>

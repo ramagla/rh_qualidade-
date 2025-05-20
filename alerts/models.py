@@ -47,13 +47,13 @@ class AlertaUsuario(models.Model):
 
 class AlertaConfigurado(models.Model):
     TIPO_ALERTA_CHOICES = [
-    ("F045_GERADO", "Geração de F045"),
-    ("MANUTENCAO_PROXIMA", "Manutenção Próxima"),
-    ("MANUTENCAO_VENCIDA", "Manutenção Vencida"),
-    ("AVALIACAO_RISCO_PROXIMA", "Avaliação de Risco Próxima"),
-    ("AUDITORIA_PROXIMA", "Auditoria Próxima"),
-    ("CERTIFICACAO_PROXIMA", "Certificação Próxima"),
-]
+        ("F045_GERADO", "Geração de F045"),
+        ("MANUTENCAO_PROXIMA", "Manutenção Próxima"),
+        ("MANUTENCAO_VENCIDA", "Manutenção Vencida"),
+        ("AVALIACAO_RISCO_PROXIMA", "Avaliação de Risco Próxima"),
+        ("AUDITORIA_PROXIMA", "Auditoria Próxima"),
+        ("CERTIFICACAO_PROXIMA", "Certificação Próxima"),
+    ]
 
     tipo = models.CharField(max_length=30, choices=TIPO_ALERTA_CHOICES, unique=True)
     usuarios = models.ManyToManyField(User, blank=True, related_name="alertas_configurados")
@@ -61,4 +61,12 @@ class AlertaConfigurado(models.Model):
     ativo = models.BooleanField(default=True)
 
     def __str__(self):
-        return dict(self.TIPO_ALERTA_CHOICES).get(self.tipo, self.tipo)
+        nomes_exibicao = {
+            "F045_GERADO": "📄 Relatório F045 Gerado",
+            "MANUTENCAO_PROXIMA": "🔧 Calibração (Dispositivo/Equipamento) Próxima",
+            "MANUTENCAO_VENCIDA": "⚠️ Calibração (Dispositivo/Equipamento) Vencida",
+            "AVALIACAO_RISCO_PROXIMA": "🛡️ Avaliação de Risco do Fornecedor Próxima",
+            "AUDITORIA_PROXIMA": "📋 Auditoria de Fornecedor Próxima",
+            "CERTIFICACAO_PROXIMA": "📜 Certificação de Fornecedor Próxima do Vencimento",
+        }
+        return nomes_exibicao.get(self.tipo, self.tipo)
