@@ -24,4 +24,6 @@ DEPARTAMENTOS_EMPRESA = [
     ("DOBRADEIRA_CNC", "Dobradeira CNC"),
     ("ALIVIO_TENSAO_TECNICO", "Alívio de Tensão Técnico"),
     ("FERRAMENTARIA", "Ferramentaria"),
+    ("PORTARIA", "Portaria"),
+    ("FINANCEIRO", "Financeiro"),
 ]
