@@ -30,21 +30,14 @@
       {{ form.nome|add_class:"form-control" }}
     </div>
 
-    <!-- Departamento -->
-    <div class="col-md-6">
-      <label for="departamento" class="form-label d-flex align-items-center gap-2">
-        <i class="bi bi-building text-secondary"></i> Departamento (Atividade):
-      </label>
-      <select name="departamento" id="departamento" class="form-select select2" aria-label="Departamento da Atividade">
-        <option value="">Selecione o Departamento</option>
-        {% for departamento in departamentos %}
-          <option value="{{ departamento.local_trabalho }}"
-            {% if form.instance.departamento == departamento.local_trabalho %}selected{% endif %}>
-            {{ departamento.local_trabalho }}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
+   <!-- Departamento -->
+<div class="col-md-6">
+  <label for="{{ form.departamento.id_for_label }}" class="form-label d-flex align-items-center gap-2">
+    <i class="bi bi-building text-secondary"></i> Departamento (Atividade):
+  </label>
+  {{ form.departamento|add_class:"form-select select2" }}
+</div>
+
 
     {% include "partials/global/_botoes_salvar_cancelar.html" with edicao=form.instance.id url_voltar='lista_matriz_polivalencia' %}
 

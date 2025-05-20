@@ -2,13 +2,17 @@ from django.db import models
 from django.utils.timezone import now
 
 from .funcionario import Funcionario
+from .choices_departamento import DEPARTAMENTOS_EMPRESA
 
 
 class Atividade(models.Model):
     nome = models.CharField(max_length=255, verbose_name="Nome da Atividade")
     # Relacionado ao local_trabalho
-    departamento = models.CharField(max_length=100, verbose_name="Departamento")
-
+    departamento = models.CharField(
+        max_length=30,
+        choices=DEPARTAMENTOS_EMPRESA,
+        verbose_name="Departamento"
+    )
     def __str__(self):
         return f"{self.nome} ({self.departamento})"
 
@@ -70,7 +74,11 @@ class Nota(models.Model):
 
 class MatrizPolivalencia(models.Model):
     departamento = models.CharField(
-        max_length=100, verbose_name="Departamento", blank=True, null=True
+        max_length=30,
+        choices=DEPARTAMENTOS_EMPRESA,
+        verbose_name="Departamento",
+        blank=True,
+        null=True
     )
     elaboracao = models.ForeignKey(
         Funcionario,
