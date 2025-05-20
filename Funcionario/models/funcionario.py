@@ -4,6 +4,8 @@ from django.db import models
 from django.utils.text import slugify
 
 from .cargo import Cargo
+from .choices_departamento import DEPARTAMENTOS_EMPRESA
+
 
 
 # Função para renomear o arquivo de currículo
@@ -32,7 +34,7 @@ class Funcionario(models.Model):
     STATUS_CHOICES = [
         ("Ativo", "Ativo"),
         ("Inativo", "Inativo"),
-    ]
+    ]   
 
     EXPERIENCIA_CHOICES = [
         (
@@ -57,7 +59,12 @@ class Funcionario(models.Model):
         null=True,
     )
     numero_registro = models.CharField(max_length=20, unique=True)
-    local_trabalho = models.CharField(max_length=100)
+    local_trabalho = models.CharField(
+            max_length=30,
+            choices=DEPARTAMENTOS_EMPRESA,
+            verbose_name="Local de Trabalho"
+        )
+
     data_integracao = models.DateField(blank=True, null=True)
     responsavel = models.ForeignKey(
         "self",  # Relacionamento ao próprio modelo

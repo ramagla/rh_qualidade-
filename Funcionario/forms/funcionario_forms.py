@@ -4,6 +4,7 @@ from django_select2.forms import Select2Widget
 from rh_qualidade.utils import title_case
 
 from ..models import Cargo, Funcionario
+from ..models import DEPARTAMENTOS_EMPRESA  # ← no topo se necessário
 
 
 class FuncionarioForm(forms.ModelForm):
@@ -24,15 +25,9 @@ class FuncionarioForm(forms.ModelForm):
     )
 
     local_trabalho = forms.ChoiceField(
-        choices=[("", "Selecione uma opção")]
-        + [
-            (dep, dep)
-            for dep in Cargo.objects.values_list("departamento", flat=True)
-            .distinct()
-            .order_by("departamento")
-        ],
+        choices=[("", "Selecione uma opção")] + DEPARTAMENTOS_EMPRESA,
         label="Local de Trabalho",
-        widget=forms.Select(attrs={"class": "form-select select2"}),
+        widget=Select2Widget(attrs={"class": "form-select select2"}),
     )
 
     cargo_inicial = forms.ModelChoiceField(

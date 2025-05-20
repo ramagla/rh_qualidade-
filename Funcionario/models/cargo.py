@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from .choices_departamento import DEPARTAMENTOS_EMPRESA
 
 NIVEIS_HIERARQUIA = [
     (1, "Alta Direção / Conselho"),
@@ -13,32 +14,6 @@ NIVEIS_HIERARQUIA = [
     (9, "Assistente / Auxiliar"),
     (10, "Operacional"),
 ]
-
-DEPARTAMENTOS_EMPRESA = [
-    ("RH", "Recursos Humanos"),
-    ("QUALIDADE", "Gestão da Qualidade"),
-    ("CONTROLE", "Controle de Qualidade"),
-    ("PRODUCAO", "Produção"),
-    ("COMPRAS", "Compras"),
-    ("COMERCIAL", "Comercial"),
-    ("DIRETORIA", "Diretoria"),
-    ("PCP", "Logistica/PCP"),
-    ("LIMPEZA", "Serviços Gerais"),
-    ("TÉCNICO", "Técnico"),
-    ("TI", "Técnologia da Informação"),
-    ("ALMOXARIFADO", "Almoxarifado"),
-    ("EXPEDICAO", "Expedição"),
-    ("MANUTENÇÃO", "Manutenção"),
-    ("COMPRESSAO", "Compressão"),
-    ("RETIFICA", "Retífica"),
-    ("TORSÃO", "Torção"),
-    ("ESTAMPARIA_BIHLER", "Estamparia Bihler"),
-    ("ACABAMENTO", "Acabamento"),
-    ("PRENSA", "Prensa"),
-    ("DOBRADEIRA_CNC", "Dobradeira CNC"),
-    ("ALIVIO_TENSAO_TECNICO", "Alívio de Tensão Técnico"),
-]
-
 
 class Cargo(models.Model):
     nome = models.CharField(max_length=100)
