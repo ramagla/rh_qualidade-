@@ -8,6 +8,8 @@ def global_menu(request):
     metrologia_permitido = user.has_perm("metrologia.acesso_metrologia")
     recursos_humanos_permitido = user.has_perm("Funcionario.acesso_rh")
     qualidade_fornecimento_permitido = user.has_perm("qualidade_fornecimento.acesso_qualidade")
+    portaria_permitido = user.has_perm("portaria.acesso_portaria")  # ✅ NOVO
+
 
     # Menu Metrologia
     menu_metrologia = []
@@ -286,6 +288,13 @@ def global_menu(request):
             "icon": "fas fa-industry",
             "permissao": "qualidade_fornecimento.acesso_qualidade",
         })
+    if portaria_permitido:
+        modulos_disponiveis.append({
+            "name": "Portaria",
+            "url": "lista_pessoas",
+            "icon": "fas fa-door-open",
+            "permissao": "portaria.acesso_portaria",
+        })
 
     # Menu Qualidade de Fornecimento
     menu_qualidade_fornecimento = []
@@ -355,6 +364,40 @@ def global_menu(request):
                 ],
             })
 
+       
+      # Menu Cadastros (agrupando submenus da portaria)
+        menu_cadastros = []
+
+        if portaria_permitido:
+            submenu_portaria = []
+
+            submenu_portaria.append({
+                "name": "Pessoas",
+                "url": "lista_pessoas",
+                "icon": "fas fa-door-open",
+            })
+
+            if user.has_perm("portaria.view_veiculoportaria"):
+                submenu_portaria.append({
+                    "name": "Veículos",
+                    "url": "lista_veiculos",
+                    "icon": "fas fa-car-side",
+                })
+
+            menu_cadastros.append({
+                "name": "Cadastros",
+                "icon": "fas fa-folder-open",
+                "submenu": submenu_portaria
+            })
+
+        # Menu simples: Controle de Visitantes
+            if user.has_perm("portaria.view_controlevisitantes"):
+                menu_cadastros.append({
+                    "name": "Controle de Visitantes",
+                    "url": "listar_controle_visitantes",
+                    "icon": "fas fa-user-check"
+                })
+
 
     active_module = request.path.split("/")[1]
     if active_module == "metrologia":
@@ -363,9 +406,14 @@ def global_menu(request):
     elif active_module == "qualidade":
         menu = menu_qualidade_fornecimento
         modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Qualidade de Fornecimento"), None)
+    elif active_module == "portaria":
+        menu = menu_cadastros  # ✅ agora é este o nome correto
+        modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Portaria"), None)
+
     else:
         menu = menu_recursos_humanos
         modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Recursos Humanos"), None)
+
 
     from alerts.models import AlertaUsuario
     if user.is_authenticated:

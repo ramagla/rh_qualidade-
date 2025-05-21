@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
-
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import (
     acesso_negado,
     alertas_emails,
@@ -22,6 +23,7 @@ urlpatterns = [
 
     # Home geral do sistema (todos os usuários veem)
     path("", home_geral, name="home_geral"),
+    path("portaria/", include("portaria.urls")),
 
     path(
             "senha/esqueci/",
@@ -65,5 +67,6 @@ urlpatterns = [
     # Integração com ChatGPT
     path("chat-gpt/", chat_gpt_query, name="chat_gpt_query"),
 ]
-
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

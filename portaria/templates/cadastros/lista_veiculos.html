@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Veículos da Portaria{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Veículos da Portaria" icone="bi bi-truck-front-fill" emoji="🚗" %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container mt-4">
+
+  <!-- Cards de Indicadores -->
+  <div class="row mb-4">
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Veículos" valor=total_veiculos subtitulo="Cadastrados no sistema." cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Com Pessoa Vinculada" valor=total_com_pessoa subtitulo="Vinculados a uma pessoa." cor="success" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Sem Vínculo" valor=total_sem_pessoa subtitulo="Sem vínculo com pessoa." cor="danger" %}
+  </div>
+
+  <!-- Botão de Ação -->
+  <div class="text-end mb-4">
+    {% if request.user|has_permission:"Portaria.add_veiculoportaria" %}
+      <a href="{% url 'cadastrar_veiculo' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Cadastrar Veículo
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+      <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+      <strong class="text-primary">Filtros de Veículos</strong>
+    </div>
+    <div class="card-body">
+      <form method="get">
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+
+          <!-- Placa -->
+          <div class="col">
+            <label for="placa" class="form-label"><i class="bi bi-input-cursor-text me-1"></i> Placa</label>
+            <select name="placa" id="placa" class="form-select select2 w-100">
+              <option value="">Todas</option>
+              {% for placa in placas_disponiveis %}
+                <option value="{{ placa }}" {% if request.GET.placa == placa %}selected{% endif %}>{{ placa }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Tipo -->
+          <div class="col">
+            <label for="tipo" class="form-label"><i class="bi bi-car-front me-1"></i> Tipo</label>
+            <select name="tipo" id="tipo" class="form-select select2 w-100">
+              <option value="">Todos</option>
+              {% for key, label in tipos %}
+                <option value="{{ key }}" {% if request.GET.tipo == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+         <!-- Pessoa -->
+        <div class="col">
+          <label for="pessoa" class="form-label"><i class="bi bi-person me-1"></i> Pessoa</label>
+          <select name="pessoa" id="pessoa" class="form-select select2 w-100">
+            <option value="">Todas</option>
+            {% for pessoa in pessoas_disponiveis %}
+              <option value="{{ pessoa.nome }}" {% if request.GET.pessoa == pessoa.nome %}selected{% endif %}>{{ pessoa.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+          <!-- Botão Filtrar -->
+          <div class="col-12 d-flex justify-content-end">
+            {% include 'partials/global/_botao_filtrar.html' %}
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabela de Veículos -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-card-text"></i> Placa</th>
+          <th><i class="bi bi-car-front"></i> Tipo</th>        
+          <th><i class="bi bi-person"></i> Pessoa Vinculada</th>
+          <th><i class="bi bi-gear"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for veiculo in veiculos %}
+          <tr>
+            <td>{{ veiculo.placa }}</td>
+            <td>{{ veiculo.get_tipo_display }}</td>         
+            <td>
+              {% if veiculo.pessoa %}
+                {{ veiculo.pessoa.nome }}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if request.user|has_permission:"Portaria.change_veiculoportaria" %}
+                {% include 'partials/global/_botao_editar.html' with objeto=veiculo url_editar='editar_veiculo' label="veículo" %}
+              {% endif %}
+              {% if request.user|has_permission:"Portaria.delete_veiculoportaria" %}
+                {% include 'partials/global/_botao_excluir.html' with objeto=veiculo url_excluir='excluir_veiculo' label="veículo" %}
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          {% include 'partials/global/_sem_resultados.html' with item_nome="veículo" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'partials/global/_paginacao.html' %}
+</div>
+
+<!-- Scripts -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    $('.select2').select2({ width: '100%', allowClear: true });
+  });
+</script>
+
+{% endblock %}

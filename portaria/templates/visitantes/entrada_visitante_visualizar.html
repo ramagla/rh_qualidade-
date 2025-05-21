@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
+
+{% block title %}Visualização da Entrada de Visitante{% endblock %}
+
+{% block content %}
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
+  {% include 'header.html' %}
+
+  <div id="relatorio-area">
+    <div class="pdf-container">
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>🛂 Entrada de Visitante</h1>
+        <p>Visualização detalhada da visita</p>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table">
+
+            <!-- Nome do Visitante -->
+            <tr>
+              <th class="align-middle">Nome</th>
+              <td class="align-middle">{{ entrada.pessoa.nome }}</td>
+            </tr>
+
+            <!-- Tipo -->
+            <tr>
+              <th class="align-middle">Tipo</th>
+              <td class="align-middle">{{ entrada.pessoa.get_tipo_display }}</td>
+            </tr>
+
+            <!-- Documento -->
+            <tr>
+              <th class="align-middle">Documento (RG)</th>
+              <td class="align-middle">{{ entrada.pessoa.documento|mascara_rg }}</td>
+            </tr>
+
+            <!-- Empresa -->
+            <tr>
+              <th class="align-middle">Empresa/Origem</th>
+              <td class="align-middle">{{ entrada.pessoa.empresa|default:"—" }}</td>
+            </tr>
+
+            <!-- Veículo -->
+<tr>
+    <th class="align-middle">Veículo</th>
+    <td class="align-middle">
+      {% if entrada.veiculo %}
+        {{ entrada.veiculo.placa }} - {{ entrada.veiculo.tipo }}
+      {% else %}
+        Nenhum
+      {% endif %}
+    </td>
+  </tr>
+  
+  
+
+            <!-- Data e Hora de Entrada -->
+            <tr>
+              <th class="align-middle">Data da Visita</th>
+              <td class="align-middle">{{ entrada.data|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+              <th class="align-middle">Hora de Entrada</th>
+              <td class="align-middle">{{ entrada.hora_entrada|default:"—" }}</td>
+            </tr>
+
+            <!-- Hora de Saída -->
+            <tr>
+              <th class="align-middle">Hora de Saída</th>
+              <td class="align-middle">
+                {% if entrada.hora_saida %}
+                  {{ entrada.hora_saida }}
+                {% else %}
+                  <span class="text-muted">Pendente</span>
+                {% endif %}
+              </td>
+            </tr>
+
+           <!-- Permanência -->
+<tr>
+    <th class="align-middle">Tempo de Permanência</th>
+    <td class="align-middle">
+      {% if permanencia %}
+        {{ permanencia }}
+      {% else %}
+        <span class="text-muted">—</span>
+      {% endif %}
+    </td>
+  </tr>
+  
+
+            <!-- Pessoa Visitada -->
+            <tr>
+              <th class="align-middle">Pessoa a ser Visitada</th>
+              <td class="align-middle">{{ entrada.falar_com|default:"—" }}</td>
+            </tr>
+
+            <!-- Motivo -->
+            <tr>
+              <th class="align-middle">Motivo da Visita</th>
+              <td class="align-middle">
+                {% if entrada.motivo == "outro" %}
+                  <i class="bi bi-pencil"></i> {{ entrada.outro_motivo }}
+                {% else %}
+                  {{ entrada.get_motivo_display }}
+                {% endif %}
+              </td>
+            </tr>
+
+            <!-- Foto -->
+            <tr>
+              <th class="align-middle">Foto</th>
+              <td class="align-middle text-center">
+                {% if entrada.pessoa.foto %}
+                  <img src="{{ entrada.pessoa.foto.url }}"
+                       alt="Foto"
+                       style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
+                {% else %}
+                  Sem foto cadastrada
+                {% endif %}
+              </td>
+            </tr>
+
+          </table>
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="pdf-footer text-center text-muted small">
+        <p class="mb-1">
+          <i class="bi bi-clock me-1" aria-hidden="true"></i>
+          Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+        </p>
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

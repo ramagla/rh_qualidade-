@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Registro de Entrada de Visitante{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  {% include 'partials/global/_header_titulo.html' with titulo='Registrar Entrada de Visitante' icone='bi bi-person-plus-fill' emoji='🛂' %}
+
+  <form method="post" enctype="multipart/form-data" id="formularioEntrada" class="row g-3">
+    {% csrf_token %}
+    {% include 'partials/global/_form_errors.html' %}
+
+    <!-- Accordion: Dados do Visitante -->
+    <div class="accordion mb-3" id="accordionEntrada">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingVisitante">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVisitante">
+            🧍‍♂️ Dados do Visitante
+          </button>
+        </h2>
+        <div id="collapseVisitante" class="accordion-collapse collapse show" data-bs-parent="#accordionEntrada">
+          <div class="accordion-body row g-3">
+
+            <!-- Pessoa existente -->
+            <div class="col-md-12">
+              <label class="form-label"><i class="bi bi-person-lines-fill me-2"></i> Selecionar Pessoa Cadastrada</label>
+              <select name="pessoa" id="id_pessoa" class="form-select select2">
+                <option value="">— Selecione —</option>
+                <option value="novo">Novo Cadastro</option>
+                {% for pessoa in pessoas %}
+                  <option value="{{ pessoa.id }}" {% if form.pessoa.value == pessoa.id %}selected{% endif %}>{{ pessoa.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 campo-novo" style="display: none;">
+              <label class="form-label"><i class="bi bi-person-badge me-2"></i> Tipo</label>
+              {{ form.tipo|add_class:"form-select" }}
+            </div>
+            
+            <!-- Novo Cadastro: Nome/RG/Empresa -->
+            <div class="col-md-6 campo-novo" style="display: none;">
+              <label class="form-label"><i class="bi bi-person-fill me-2"></i> Nome</label>
+              {{ form.nome|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6 campo-novo" style="display: none;">
+              <label class="form-label"><i class="bi bi-card-text me-2"></i> RG</label>
+              {{ form.documento|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6 campo-novo" style="display: none;">
+              <label class="form-label"><i class="bi bi-building me-2"></i> Empresa</label>
+              {{ form.empresa|add_class:"form-control" }}
+            </div>
+
+            <!-- Novo Cadastro: Veículo Manual -->
+            <div class="col-md-6 campo-novo" style="display: none;">
+              <label class="form-label"><i class="bi bi-truck me-2"></i> Placa do Veículo</label>
+              <input type="text" name="veiculo_manual" id="id_veiculo_manual" class="form-control">
+            </div>
+            <div class="col-md-6 campo-novo" style="display: none;">
+              <label class="form-label"><i class="bi bi-ui-checks me-2"></i> Tipo do Veículo</label>
+              {{ form.tipo_veiculo|add_class:"form-select" }}
+            </div>
+
+            <!-- Pessoa existente: Select de veículos -->
+              <div class="col-md-12 campo-existente" style="display: none;">
+                <label class="form-label"><i class="bi bi-truck me-2"></i> Veículos Associados</label>
+                <select name="veiculo" id="id_veiculo" class="form-select select2">
+                  <option value="">— Selecione —</option>
+                  {% if form.instance.veiculo %}
+                    <option value="{{ form.instance.veiculo.id }}" selected>
+                      {{ form.instance.veiculo.placa }} ({{ form.instance.veiculo.tipo }})
+                    </option>
+                  {% endif %}
+                </select>
+              </div>
+
+
+            <!-- Foto: novo cadastro ou exibição de foto existente -->
+<div class="col-md-6">
+  <label class="form-label"><i class="bi bi-camera-fill me-2"></i> Foto</label>
+
+  <!-- Foto da pessoa existente -->
+  <div id="foto_existente" class="d-none mb-2">
+    <img id="imagem_pessoa" src="" alt="Foto da Pessoa" class="img-thumbnail w-100">
+  </div>
+
+  <!-- Captura da foto -->
+  <div id="camera_container" class="campo-novo">
+    <video id="webcam" autoplay playsinline width="100%" class="rounded border mb-2"></video>
+    <canvas id="snapshot" class="rounded border d-none" width="100%"></canvas>
+    <input type="hidden" name="foto" id="foto_base64">
+    <button type="button" class="btn btn-secondary btn-sm" id="capturar_foto">
+      <i class="bi bi-camera"></i> Capturar Foto
+    </button>
+  </div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accordion: Dados da Visita -->
+    <div class="accordion mb-4" id="accordionVisita">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDados">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDados">
+            📝 Dados da Visita
+          </button>
+        </h2>
+        <div id="collapseDados" class="accordion-collapse collapse show" data-bs-parent="#accordionVisita">
+          <div class="accordion-body row g-3">
+
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-calendar-event me-2"></i> Data</label>
+              {{ form.data|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-door-open-fill me-2"></i> Hora de Entrada</label>
+              {{ form.hora_entrada|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-door-closed-fill me-2"></i> Hora de Saída</label>
+              {{ form.hora_saida|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-person-rolodex me-2"></i> Falar com</label>
+              {{ form.falar_com|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-chat-dots me-2"></i> Motivo</label>
+              {{ form.motivo|add_class:"form-select" }}
+            </div>
+
+            <div class="col-md-12" id="campo_outro_motivo" style="display: none;">
+              <label class="form-label"><i class="bi bi-pencil-fill me-2"></i> Outro motivo (se aplicável)</label>
+              {{ form.outro_motivo|add_class:"form-control" }}
+            </div>
+            
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='listar_controle_visitantes' %}
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Select2
+    $('.select2').select2({ width: '100%' });
+
+    // Webcam
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("snapshot");
+    const inputBase64 = document.getElementById("foto_base64");
+    const btnCapturar = document.getElementById("capturar_foto");
+    const cameraContainer = document.getElementById("camera_container");
+    const fotoExistente = document.getElementById("foto_existente");
+    const imagemPessoa = document.getElementById("imagem_pessoa");
+    const veiculoSelect = document.getElementById("id_veiculo");
+
+    let streamAtivo = null;
+
+    function iniciarCamera() {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+          streamAtivo = stream;
+          video.srcObject = stream;
+          video.play();
+        }).catch(function (err) {
+          console.error("Erro ao acessar webcam:", err);
+          alert("⚠️ Não foi possível acessar a câmera.");
+        });
+      }
+    }
+
+    function pararCamera() {
+      if (streamAtivo) {
+        streamAtivo.getTracks().forEach(track => track.stop());
+        streamAtivo = null;
+      }
+    }
+
+    btnCapturar.addEventListener("click", function () {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      inputBase64.value = canvas.toDataURL("image/png");
+      video.classList.add("d-none");
+      canvas.classList.remove("d-none");
+      pararCamera();
+    });
+
+    // Alterna campos com base na seleção da pessoa
+    $('#id_pessoa').on('change', function () {
+      const val = $(this).val();
+
+      if (val === 'novo') {
+        $('.campo-novo').show();
+        $('.campo-existente').hide();
+
+        // Mostrar webcam
+        cameraContainer.style.display = "block";
+        fotoExistente.classList.add("d-none");
+        imagemPessoa.src = "";
+        iniciarCamera();
+
+        // Limpa veiculo select
+        if (veiculoSelect) {
+          veiculoSelect.innerHTML = '<option value="">— Selecione —</option>';
+        }
+
+      } else if (val) {
+        $('.campo-novo').hide();
+        $('.campo-existente').show();
+
+        // Esconder webcam
+        cameraContainer.style.display = "none";
+        pararCamera();
+
+        // Buscar foto da pessoa
+        fetch(`/portaria/api/pessoa/${val}/foto/`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.foto_url) {
+              fotoExistente.classList.remove("d-none");
+              imagemPessoa.src = data.foto_url;
+            } else {
+              fotoExistente.classList.add("d-none");
+              imagemPessoa.src = "";
+            }
+          });
+
+        // Buscar veículos da pessoa
+        fetch(`/portaria/api/pessoa/${val}/veiculos/`)
+          .then(response => response.json())
+          .then(data => {
+            if (veiculoSelect) {
+              veiculoSelect.innerHTML = '<option value="">— Selecione —</option>';
+              data.veiculos.forEach(v => {
+                const option = document.createElement("option");
+                option.value = v.id;
+                option.textContent = `${v.placa} (${v.tipo})`;
+                veiculoSelect.appendChild(option);
+              });
+            }
+          });
+
+      } else {
+        $('.campo-novo, .campo-existente').hide();
+        cameraContainer.style.display = "none";
+        fotoExistente.classList.add("d-none");
+        imagemPessoa.src = "";
+        pararCamera();
+
+        if (veiculoSelect) {
+          veiculoSelect.innerHTML = '<option value="">— Selecione —</option>';
+        }
+      }
+    }).trigger('change');
+  });
+  // Mostrar "Outro motivo" apenas se o select for "outro"
+const selectMotivo = document.getElementById("id_motivo");
+const campoOutroMotivo = document.getElementById("campo_outro_motivo");
+
+if (selectMotivo && campoOutroMotivo) {
+  function toggleOutroMotivo() {
+    if (selectMotivo.value === "outro") {
+      campoOutroMotivo.style.display = "block";
+    } else {
+      campoOutroMotivo.style.display = "none";
+    }
+  }
+
+  selectMotivo.addEventListener("change", toggleOutroMotivo);
+  toggleOutroMotivo(); // aplicar no carregamento
+}
+
+</script>
+
+
+{% endblock %}

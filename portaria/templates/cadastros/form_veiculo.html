@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Cadastro de Veículo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  {% include 'partials/global/_header_titulo.html' with titulo='Cadastro de Veículo' icone='bi bi-truck' emoji='🚗' %}
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+    {% include 'partials/global/_form_errors.html' %}
+
+    <div class="col-md-6">
+      <label for="id_placa" class="form-label"><i class="bi bi-123 me-2"></i> Placa:</label>
+      {{ form.placa }}
+    </div>
+
+    <div class="col-md-6">
+      <label for="id_tipo" class="form-label"><i class="bi bi-car-front me-2"></i> Tipo:</label>
+      {{ form.tipo }}
+    </div>
+    <div class="mb-3">
+      <label for="{{ form.pessoa.id_for_label }}" class="form-label">
+        <i class="bi bi-person"></i> Pessoa Vinculada
+      </label>
+      {{ form.pessoa|add_class:"form-select select2" }}
+    </div>
+    
+
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='lista_veiculos' %}
+  </form>
+</div>
+{% endblock %}

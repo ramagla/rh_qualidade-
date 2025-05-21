@@ -1,0 +1,30 @@
+<div class="modal fade" id="modalVeiculos{{ pessoa.id }}" tabindex="-1" aria-labelledby="veiculosLabel{{ pessoa.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title" id="veiculosLabel{{ pessoa.id }}">
+            <i class="bi bi-truck"></i> Veículos vinculados – {{ pessoa.nome }}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          {% if pessoa.veiculos_vinculados.exists %}
+            <ul class="list-group">
+              {% for veiculo in pessoa.veiculos_vinculados.all %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span><strong>{{ veiculo.placa }}</strong> — {{ veiculo.tipo }}</span>
+                  <span class="badge bg-secondary">{{ veiculo.chassi|default:"—" }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted mb-0">Nenhum veículo vinculado.</p>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  

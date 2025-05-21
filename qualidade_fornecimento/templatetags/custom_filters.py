@@ -274,3 +274,27 @@ def ordenar_por_perfil(lista):
         lista,
         key=lambda c: (PERFIL_ORDEM.get(c.get("perfil", ""), 999), c.get("nome", "").lower())
     )
+
+@register.filter
+def mascara_rg(value):
+    if not value:
+        return "—"
+    value = str(value).zfill(9)  # garante 9 dígitos
+    return f"{value[:2]}.{value[2:5]}.{value[5:8]}-{value[8]}"
+
+
+
+from django import template
+from datetime import datetime, timedelta
+
+@register.simple_tag
+def tempo_permanencia(entrada, saida):
+    if entrada and saida:
+        hoje = datetime.today()
+        dt_entrada = datetime.combine(hoje, entrada)
+        dt_saida = datetime.combine(hoje, saida)
+        diferenca = dt_saida - dt_entrada
+        horas, resto = divmod(diferenca.seconds, 3600)
+        minutos = resto // 60
+        return f"{horas}h {minutos}min"
+    return "—"

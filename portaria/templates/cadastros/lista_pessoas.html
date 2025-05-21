@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Pessoas da Portaria{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Cadastro de Pessoas da Portaria" icone="bi bi-person-badge-fill" emoji="🚪" %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container mt-4">
+
+  <!-- Cards de Indicadores -->
+  <div class="row mb-4">
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Pessoas" valor=total_pessoas subtitulo="Cadastradas no sistema." cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Visitantes" valor=visitantes subtitulo="Registrados como visitantes." cor="info" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Entregadores" valor=entregadores subtitulo="Registrados como entregadores." cor="warning" %}
+  </div>
+
+  <!-- Botão de ação -->
+  <div class="text-end mb-4">
+    {% if request.user|has_permission:"Portaria.add_pessoa" %}
+      <a href="{% url 'cadastrar_pessoa' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Cadastrar Pessoa
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+      <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+      <strong class="text-primary">Filtros de Pessoas</strong>
+    </div>
+    <div class="card-body">
+      <form method="get">
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+
+         <!-- Nome -->
+<div class="col">
+  <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
+  <select name="nome" id="nome" class="form-select select2 w-100">
+    <option value="">Todos</option>
+    {% for nome in nomes_disponiveis %}
+      <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<!-- Tipo -->
+<div class="col">
+  <label for="tipo" class="form-label"><i class="bi bi-person-badge me-1"></i> Tipo</label>
+  <select name="tipo" id="tipo" class="form-select select2 w-100">
+    <option value="">Todos</option>
+    {% for key, label in tipos %}
+      <option value="{{ key }}" {% if request.GET.tipo == key %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<!-- Empresa -->
+<div class="col">
+  <label for="empresa" class="form-label"><i class="bi bi-building me-1"></i> Empresa</label>
+  <select name="empresa" id="empresa" class="form-select select2 w-100">
+    <option value="">Todas</option>
+    {% for empresa in empresas_disponiveis %}
+      <option value="{{ empresa }}" {% if request.GET.empresa == empresa %}selected{% endif %}>{{ empresa }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+
+          <!-- Botão Filtrar -->
+          <div class="col-12 d-flex justify-content-end">
+            {% include 'partials/global/_botao_filtrar.html' %}
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabela de pessoas -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-image"></i> Foto</th>
+          <th><i class="bi bi-person"></i> Nome</th>
+          <th><i class="bi bi-person-badge"></i> Tipo</th>
+          <th><i class="bi bi-card-text"></i> Documento</th>
+          <th><i class="bi bi-building"></i> Empresa</th>
+          <th><i class="bi bi-truck"></i> Veículos</th>
+          <th><i class="bi bi-gear"></i> Ações</th> <!-- NOVO -->
+        </tr>
+      </thead>
+      <tbody>
+        {% for pessoa in pessoas %}
+          <tr>
+            <td>
+              {% if pessoa.foto %}
+              <img src="{{ pessoa.foto.url }}"
+              alt="Foto de {{ pessoa.nome }}"
+              class="img-thumbnail rounded-circle"
+              style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+              data-bs-toggle="modal"
+              data-bs-target="#modalFotoExpandida"
+              data-foto="{{ pessoa.foto.url }}"
+              data-nome="{{ pessoa.nome }}">
+                       {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td>{{ pessoa.nome }}</td>
+            <td>{{ pessoa.get_tipo_display }}</td>
+            <td>{{ pessoa.documento|mascara_rg }}</td>
+            <td>{{ pessoa.empresa|default:"—" }}</td>
+            <td>
+              {% if pessoa.veiculos_vinculados.exists %}
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalVeiculos{{ pessoa.id }}" title="Visualizar Veículos">
+                  <i class="bi bi-eye"></i>
+                </button>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            
+              {% include 'cadastros/_modal_veiculos_pessoa.html' with pessoa=pessoa %}
+            </td>
+            
+            <td>
+              {% if request.user|has_permission:"Portaria.view_pessoaportaria" %}
+                {% include 'partials/global/_botao_visualizar.html' with objeto=pessoa url_visualizar='visualizar_pessoa' label="pessoa" %}
+              {% endif %}
+            
+              {% if request.user|has_permission:"Portaria.change_pessoaportaria" %}
+                {% include 'partials/global/_botao_editar.html' with objeto=pessoa url_editar='editar_pessoa' label="pessoa" %}
+              {% endif %}
+            
+              {% if request.user|has_permission:"Portaria.delete_pessoaportaria" %}
+                {% include 'partials/global/_botao_excluir.html' with objeto=pessoa url_excluir='excluir_pessoa' label="pessoa" %}
+              {% endif %}
+            </td>
+            
+          </tr>
+        {% empty %}
+          {% include 'partials/global/_sem_resultados.html' with item_nome="pessoa" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'partials/global/_paginacao.html' %}
+
+</div>
+<div class="modal fade" id="modalFotoExpandida" tabindex="-1" aria-labelledby="modalFotoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalFotoLabel"><i class="bi bi-person-circle"></i> Foto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="fotoExpandida" src="" alt="Foto" class="img-fluid rounded shadow">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Select2 Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    $('.select2').select2({ width: '100%', allowClear: true });
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("modalFotoExpandida");
+    const imgExpandida = document.getElementById("fotoExpandida");
+    const modalTitle = document.getElementById("modalFotoLabel");
+
+    modal.addEventListener("show.bs.modal", function (event) {
+      const trigger = event.relatedTarget;
+      const src = trigger.getAttribute("data-foto");
+      const nome = trigger.getAttribute("data-nome");
+
+      imgExpandida.src = src;
+      modalTitle.textContent = `Foto – ${nome}`;
+    });
+  });
+</script>
+
+{% endblock %}
