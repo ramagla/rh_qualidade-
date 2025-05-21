@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Ocorrências da Portaria{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Ocorrências da Portaria" icone="bi bi-exclamation-triangle-fill" emoji="🚨" %}
+
+<div class="container mt-4">
+ 
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+      <i class="bi bi-funnel-fill text-primary"></i>
+      <strong class="text-primary">Filtros de Ocorrências</strong>
+    </div>
+    <div class="card-body">
+      <form method="get">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label for="tipo" class="form-label">Tipo de Ocorrência</label>
+            <select name="tipo" id="tipo" class="form-select select2">
+              <option value="">Todos</option>
+              <option value="alarme" {% if request.GET.tipo == 'alarme' %}selected{% endif %}>Alarme</option>
+              <option value="acesso_indevido" {% if request.GET.tipo == 'acesso_indevido' %}selected{% endif %}>Acesso Indevido</option>
+              <option value="confusao" {% if request.GET.tipo == 'confusao' %}selected{% endif %}>Confusão</option>
+              <option value="reclamacao" {% if request.GET.tipo == 'reclamacao' %}selected{% endif %}>Reclamação</option>
+              <option value="outros" {% if request.GET.tipo == 'outros' %}selected{% endif %}>Outros</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" id="status" class="form-select select2">
+              <option value="">Todos</option>
+              <option value="aberta" {% if request.GET.status == 'aberta' %}selected{% endif %}>Aberta</option>
+              <option value="analise" {% if request.GET.status == 'analise' %}selected{% endif %}>Em Análise</option>
+              <option value="encerrada" {% if request.GET.status == 'encerrada' %}selected{% endif %}>Encerrada</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="data" class="form-label">Data</label>
+            <input type="date" name="data" id="data" class="form-control" value="{{ request.GET.data }}">
+          </div>
+          <div class="col-md-12 text-end">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-search"></i> Filtrar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Cards de Indicadores -->
+  <div class="row mb-4">
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Ocorrências" valor=ocorrencias|length subtitulo="Registradas no sistema." cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Abertas" valor=total_abertas subtitulo="Status aberta." cor="danger" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Em Análise" valor=total_analise subtitulo="Em andamento." cor="warning" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Encerradas" valor=total_encerradas subtitulo="Finalizadas." cor="success" %}
+  </div>
+ <!-- Botões de Ação -->
+ <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+    <a href="{% url 'cadastrar_ocorrencia' %}" class="btn btn-success d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle me-1"></i> Nova Ocorrência
+    </a>
+  </div>
+  <!-- Tabela -->
+  <div class="table-responsive">
+    <table class="table table-bordered zebra-tabela table-hover text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-exclamation-circle me-1"></i> Tipo</th>
+          <th><i class="bi bi-geo-alt me-1"></i> Local</th>
+          <th><i class="bi bi-calendar me-1"></i> Data</th>
+          <th><i class="bi bi-clock me-1"></i> Hora</th>
+          <th><i class="bi bi-hourglass-split me-1"></i> Duração</th>
+          <th><i class="bi bi-flag me-1"></i> Status</th>
+          <th><i class="bi bi-person-badge me-1"></i> Responsável</th>
+          <th><i class="bi bi-gear me-1"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ocorrencia in ocorrencias %}
+        <tr>
+            <td>
+                {% if ocorrencia.tipo_ocorrencia == 'alarme' %}
+                  <span class="badge bg-danger"><i class="bi bi-bell-fill me-1"></i> Alarme</span>
+                {% elif ocorrencia.tipo_ocorrencia == 'acesso_indevido' %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-shield-exclamation me-1"></i> Acesso Indevido</span>
+                {% elif ocorrencia.tipo_ocorrencia == 'confusao' %}
+                  <span class="badge bg-dark"><i class="bi bi-exclamation-diamond me-1"></i> Confusão</span>
+                {% elif ocorrencia.tipo_ocorrencia == 'reclamacao' %}
+                  <span class="badge bg-info text-dark"><i class="bi bi-chat-left-dots me-1"></i> Reclamação</span>
+                {% else %}
+                  <span class="badge bg-secondary"><i class="bi bi-question-circle me-1"></i> Outros</span>
+                {% endif %}
+              </td>
+                        <td>{{ ocorrencia.local }}</td>
+          <td>{{ ocorrencia.data_inicio|date:"d/m/Y" }}</td>
+          <td>{{ ocorrencia.hora_inicio|time:"H:i" }}</td>
+          <td>{{ ocorrencia|calcular_duracao }}</td>
+
+          <td>
+            {% if ocorrencia.status == 'aberta' %}
+              <span class="badge bg-danger">Aberta</span>
+            {% elif ocorrencia.status == 'analise' %}
+              <span class="badge bg-warning text-dark">Em Análise</span>
+            {% elif ocorrencia.status == 'encerrada' %}
+              <span class="badge bg-success">Encerrada</span>
+            {% endif %}
+          </td>
+          <td>{{ ocorrencia.responsavel_registro.get_full_name|default:ocorrencia.responsavel_registro.username }}</td>
+          <td>
+            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+              {% include 'partials/global/_botao_visualizar.html' with objeto=ocorrencia url_visualizar='visualizar_ocorrencia' label='ocorrência' %}
+              {% include 'partials/global/_botao_editar.html' with objeto=ocorrencia url_editar='editar_ocorrencia' label='ocorrência' %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=ocorrencia url_excluir='excluir_ocorrencia' label='ocorrência' %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+          {% include 'partials/global/_sem_resultados.html' with colspan=7 %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

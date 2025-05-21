@@ -262,40 +262,73 @@ from django.shortcuts import render
 from django.utils.timezone import now
 from datetime import datetime
 from Funcionario.models import Funcionario, Comunicado, AtualizacaoSistema, Settings
+from alerts.models import AlertaUsuario
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.utils.timezone import now
+from datetime import datetime
+from Funcionario.models import Funcionario, Comunicado, AtualizacaoSistema, Settings
+from alerts.models import AlertaUsuario
+from portaria.models.ocorrencia import OcorrenciaPortaria  # ✅ necessário
 
 @login_required
 def home_geral(request):
-    # 📆 Aniversariantes do mês
+    # 🎂 Aniversariantes
     aniversariantes = Funcionario.objects.filter(
-        status="Ativo",
+        status="Ativo", 
         data_nascimento__month=now().month
     )
 
-    # 👥 Total de colaboradores ativos
+    # 👥 Total de colaboradores
     total_colaboradores = Funcionario.objects.filter(status="Ativo").count()
 
-    # 📣 Últimos comunicados
+    # 📢 Últimos comunicados
     comunicados = Comunicado.objects.order_by("-data")[:4]
 
-    # 🔧 Última atualização concluída do sistema
-    ultima_atualizacao = AtualizacaoSistema.objects.filter(
-        status="concluido"
-    ).order_by("-data_termino").first()
-
-    # Formatação segura da data
+    # ⚙️ Última atualização
+    ultima_atualizacao = AtualizacaoSistema.objects.filter(status="concluido").order_by("-data_termino").first()
     data_atualizacao_formatada = None
     if ultima_atualizacao and ultima_atualizacao.data_termino:
-        if isinstance(ultima_atualizacao.data_termino, datetime):
-            data_atualizacao_formatada = ultima_atualizacao.data_termino.strftime("%d/%m/%Y %H:%M")
-        else:
-            data_atualizacao_formatada = ultima_atualizacao.data_termino.strftime("%d/%m/%Y")
+        data = ultima_atualizacao.data_termino
+        data_atualizacao_formatada = data.strftime("%d/%m/%Y %H:%M") if isinstance(data, datetime) else data.strftime("%d/%m/%Y")
 
+    # 📨 Recados do usuário logado
+    recados_usuario = AlertaUsuario.objects.filter(
+        usuario=request.user,
+        tipo="recado"
+    ).order_by("-criado_em")[:4]
+
+    # 🔔 Alertas do usuário (ocorrências e outros tipos, exceto recado)
+    alertas_raw = AlertaUsuario.objects.filter(
+        usuario=request.user
+    ).exclude(tipo="recado").order_by("-criado_em")[:4]
+
+    # Enriquecer alertas com ocorrência quando houver
+    alertas_usuario = []
+    for alerta in alertas_raw:
+        ocorrencia = None
+        if alerta.tipo == "ocorrencia" and alerta.referencia_id:
+            try:
+                ocorrencia = OcorrenciaPortaria.objects.get(pk=alerta.referencia_id)
+            except OcorrenciaPortaria.DoesNotExist:
+                pass
+        alertas_usuario.append({
+            "titulo": alerta.titulo,
+            "mensagem": alerta.mensagem,
+            "criado_em": alerta.criado_em,
+            "ocorrencia": ocorrencia,
+        })
+
+    # ⚙️ Configuração geral
     settings = Settings.objects.first()
 
     context = {
         "aniversariantes": aniversariantes,
         "total_colaboradores": total_colaboradores,
         "comunicados": comunicados,
+        "recados_usuario": recados_usuario,
+        "alertas_usuario": alertas_usuario,  # ✅ novo bloco enriquecido
         "ultima_atualizacao": ultima_atualizacao,
         "data_atualizacao_formatada": data_atualizacao_formatada,
         "settings": settings,

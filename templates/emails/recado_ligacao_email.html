@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>📞 Recado Recebido</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+
+  <h2 style="color: #2c3e50;">📞 Você recebeu um novo recado!</h2>
+
+  <p><strong>🙋 Quem Ligou:</strong> {{ ligacao.nome }}</p>
+  <p><strong>🏢 Empresa:</strong> {{ ligacao.empresa }}</p>
+  <p><strong>☎️ Telefone:</strong> {{ ligacao.numero }}</p>
+  <p><strong>📅 Data:</strong> {{ ligacao.data|date:"d/m/Y" }} &nbsp; <strong>🕒 Horário:</strong> {{ ligacao.horario|time:"H:i" }}</p>
+
+  <hr style="margin: 20px 0;">
+
+  <p><strong>💬 Recado:</strong></p>
+  <blockquote style="margin-left: 0; border-left: 4px solid #ccc; padding-left: 10px; color: #555;">
+    {{ ligacao.recado|linebreaksbr }}
+  </blockquote>
+
+  <hr style="margin-top: 30px;">
+  <p style="color: gray; font-size: 12px;">
+    Sistema RH-Qualidade • {{ ano }}<br>
+    📧 Este é um e-mail automático. Por favor, não responda.
+  </p>
+</body>
+</html>

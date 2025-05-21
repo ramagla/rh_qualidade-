@@ -299,4 +299,41 @@ def tempo_permanencia(entrada, saida):
         return f"{horas}h {minutos}min"
     return "—"
 
+import re
 
+@register.filter
+def mascarar_telefone(valor):
+    if not valor:
+        return ""
+    valor = re.sub(r"\D", "", valor)  # remove tudo que não for número
+    if len(valor) == 10:
+        return f"({valor[:2]}) {valor[2:6]}-{valor[6:]}"
+    elif len(valor) == 11:
+        return f"({valor[:2]}) {valor[2:7]}-{valor[7:]}"
+    return valor
+
+@register.filter
+def calcular_duracao(obj):
+    """
+    Recebe um objeto com data_inicio, hora_inicio, data_fim, hora_fim e retorna a duração como "hh:mm".
+    """
+    try:
+        data_inicio = getattr(obj, "data_inicio", None)
+        hora_inicio = getattr(obj, "hora_inicio", None)
+        data_fim = getattr(obj, "data_fim", None)
+        hora_fim = getattr(obj, "hora_fim", None)
+
+        if None in [data_inicio, hora_inicio, data_fim, hora_fim]:
+            return "-"
+
+        dt_inicio = datetime.combine(data_inicio, hora_inicio)
+        dt_fim = datetime.combine(data_fim, hora_fim)
+        duracao = dt_fim - dt_inicio
+
+        total_minutos = int(duracao.total_seconds() // 60)
+        horas = total_minutos // 60
+        minutos = total_minutos % 60
+
+        return f"{horas:02d}:{minutos:02d}"
+    except Exception:
+        return "-"

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Registro de Ligação Recebida{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  {% include 'partials/global/_header_titulo.html' with titulo='Registrar Ligação Recebida' icone='bi bi-telephone-plus-fill' emoji='📞' %}
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+    {% include 'partials/global/_form_errors.html' %}
+
+    <!-- Accordion: Dados da Ligação -->
+    <div class="accordion mb-4" id="accordionLigacao">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingLigacao">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLigacao">
+            ☎️ Dados da Ligação
+          </button>
+        </h2>
+        <div id="collapseLigacao" class="accordion-collapse collapse show" data-bs-parent="#accordionLigacao">
+          <div class="accordion-body row g-3">
+
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-person-fill me-2"></i> Quem Ligou</label>
+              {{ form.nome|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label"><i class="bi bi-telephone-fill me-2"></i> Telefone</label>
+              {{ form.numero|add_class:"form-control telefone" }}
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label"><i class="bi bi-building me-2"></i> Empresa / Origem</label>
+              {{ form.empresa|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-person-rolodex me-2"></i> Falar com</label>
+              {{ form.falar_com|add_class:"form-select select2" }}
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label"><i class="bi bi-calendar me-2"></i> Data</label>
+              {{ form.data|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label"><i class="bi bi-clock me-2"></i> Horário</label>
+              {{ form.horario|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label"><i class="bi bi-chat-dots-fill me-2"></i> Recado</label>
+              {{ form.recado|add_class:"form-control" }}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='lista_ligacoes' %}
+  </form>
+</div>
+
+<!-- jQuery + Máscara -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $('.telefone').mask('(00) 00000-0000', {
+      onKeyPress: function(val, e, field, options) {
+        const mask = val.replace(/\D/g, '').length > 10 ? '(00) 00000-0000' : '(00) 0000-0000';
+        field.mask(mask, options);
+      }
+    });
+  });
+</script>
+{% endblock %}

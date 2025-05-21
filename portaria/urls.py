@@ -4,7 +4,8 @@ from portaria.views import veiculo_views
 from portaria.views import controle_visitantes_views
 from portaria.views.api_views import api_veiculos_da_pessoa
 from .views import atrasos_saidas_views
-
+from portaria.views import ligacao_views
+from portaria.views import ocorrencia_views
 
 urlpatterns = [
     path("pessoas/", pessoa_views.lista_pessoas, name="lista_pessoas"),
@@ -30,5 +31,14 @@ urlpatterns = [
     path("atrasos-saidas/cadastrar/", atrasos_saidas_views.cadastrar_atraso_saida, name="cadastrar_atraso_saida"),
     path("atrasos-saidas/editar/<int:pk>/", atrasos_saidas_views.editar_atraso_saida, name="editar_atraso_saida"),
     path("atrasos-saidas/excluir/<int:pk>/", atrasos_saidas_views.excluir_atraso_saida, name="excluir_atraso_saida"),
-
+    path("ligacoes/", ligacao_views.lista_ligacoes, name="lista_ligacoes"),
+    path("ligacoes/cadastrar/", ligacao_views.cadastrar_ligacao, name="cadastrar_ligacao"),
+    path("ligacoes/editar/<int:pk>/", ligacao_views.editar_ligacao, name="editar_ligacao"),
+    path("ligacoes/excluir/<int:pk>/", ligacao_views.excluir_ligacao, name="excluir_ligacao"),
+    path("ligacoes/<int:pk>/disparar-recado/", ligacao_views.disparar_recado, name="disparar_recado"),
+    path("ocorrencias/", ocorrencia_views.listar_ocorrencias, name="listar_ocorrencias"),
+    path("ocorrencias/cadastrar/", ocorrencia_views.cadastrar_ocorrencia, name="cadastrar_ocorrencia"),
+    path("ocorrencias/editar/<int:pk>/", ocorrencia_views.editar_ocorrencia, name="editar_ocorrencia"),
+    path("ocorrencias/visualizar/<int:pk>/", ocorrencia_views.visualizar_ocorrencia, name="visualizar_ocorrencia"),
+    path("ocorrencias/excluir/<int:pk>/", ocorrencia_views.excluir_ocorrencia, name="excluir_ocorrencia"),
 ]

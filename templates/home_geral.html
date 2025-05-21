@@ -2,24 +2,67 @@
 {% block title %}Início do Sistema{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <div class="row g-4">
+<style>
+  .card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+  }
 
-    <!-- Total de Colaboradores -->
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+  }
+
+  .list-group-item {
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+
+  .welcome-banner {
+    border-radius: 10px;
+    background: linear-gradient(90deg, #007bff 0%, #00c6ff 100%);
+    color: white;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  }
+</style>
+
+<div class="container py-4">
+  <!-- Banner Boas-vindas -->
+  <div class="welcome-banner d-flex align-items-center">
+    <i class="bi bi-emoji-smile fs-1 me-3"></i>
+    <div>
+      <h5 class="mb-0">Bem-vindo de volta, {{ user.first_name }}! 👋</h5>
+      <small>Tenha um excelente dia de trabalho.</small>
+    </div>
+  </div>
+
+  <div class="row gy-4 gx-4">
+
+    <!-- Colaboradores -->
     <div class="col-md-4">
-      <div class="card shadow-sm text-center">
+      <div class="card text-center bg-light">
         <div class="card-body">
-          <h5 class="card-title">👥 Colaboradores Ativos</h5>
-          <p class="fs-2">{{ total_colaboradores }}</p>
+          <h5 class="card-title text-primary">👥 Colaboradores Ativos</h5>
+          <p class="fs-2 fw-bold text-dark">{{ total_colaboradores }}</p>
         </div>
       </div>
     </div>
 
     <!-- Última Atualização -->
     <div class="col-md-8">
-      <div class="card shadow-sm">
+      <div class="card bg-white">
         <div class="card-body">
-          <h5 class="card-title"><i class="bi bi-wrench-adjustable-circle"></i> Última Atualização do Sistema</h5>
+          <h5 class="card-title text-success"><i class="bi bi-wrench-adjustable-circle"></i> Última Atualização do Sistema</h5>
           {% if ultima_atualizacao %}
             <p><strong>Versão:</strong> {{ ultima_atualizacao.versao }}</p>
             <p><strong>Concluída em:</strong> {{ data_atualizacao_formatada }}</p>
@@ -35,8 +78,8 @@
 
     <!-- Aniversariantes -->
     <div class="col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-header">
+      <div class="card">
+        <div class="card-header bg-light">
           <strong>🎉 Aniversariantes do Mês</strong>
         </div>
         <div class="card-body">
@@ -63,10 +106,10 @@
       </div>
     </div>
 
-    <!-- Últimos Comunicados -->
+    <!-- Comunicados -->
     <div class="col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-header">
+      <div class="card">
+        <div class="card-header bg-light">
           <strong>📢 Últimos Comunicados</strong>
         </div>
         <div class="card-body">
@@ -90,14 +133,73 @@
         </div>
       </div>
     </div>
+
+    <!-- Recados -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-light">
+          <strong>📨 Seus Recados Recentes</strong>
+        </div>
+        <div class="card-body">
+          {% if recados_usuario %}
+            <ul class="list-group list-group-flush">
+              {% for recado in recados_usuario %}
+                <li class="list-group-item">
+                  <strong>{{ recado.titulo }}</strong><br>
+                  <small class="text-muted">{{ recado.mensagem|linebreaksbr }}</small>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">Nenhum recado recebido recentemente.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-light">
+          <strong>🔔 Seus Alertas Recentes</strong>
+        </div>
+        <div class="card-body">
+          {% if alertas_usuario %}
+            <ul class="list-group list-group-flush">
+              {% for alerta in alertas_usuario %}
+                <li class="list-group-item">
+                  <strong>{{ alerta.titulo }}</strong><br>
+                  <small class="text-muted">{{ alerta.mensagem|linebreaksbr }}</small>
+                  {% if alerta.ocorrencia %}
+                    <hr class="my-2">
+                    <p class="mb-0"><strong>📌 Tipo:</strong> {{ alerta.ocorrencia.get_tipo_ocorrencia_display }}</p>
+                    <p class="mb-0"><strong>📍 Local:</strong> {{ alerta.ocorrencia.local }}</p>
+                    <p class="mb-0"><strong>📊 Status:</strong> {{ alerta.ocorrencia.get_status_display }}</p>
+                    <p class="mb-0"><strong>📅 Início:</strong> {{ alerta.ocorrencia.data_inicio|date:"d/m/Y" }} às {{ alerta.ocorrencia.hora_inicio|time:"H:i" }}</p>
+                    {% if alerta.ocorrencia.data_fim and alerta.ocorrencia.hora_fim %}
+                      <p class="mb-0"><strong>🏁 Fim:</strong> {{ alerta.ocorrencia.data_fim|date:"d/m/Y" }} às {{ alerta.ocorrencia.hora_fim|time:"H:i" }}</p>
+                    {% endif %}
+                    {% if alerta.ocorrencia.foi_registrado_boletim and alerta.ocorrencia.numero_boletim %}
+                      <p class="mb-0"><strong>📄 Nº Boletim:</strong> {{ alerta.ocorrencia.numero_boletim }}</p>
+                    {% endif %}
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">Nenhum alerta recente.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Modal Última Atualização -->
+<!-- Modal Atualização -->
 <div class="modal fade" id="modalAtualizacao" tabindex="-1" aria-labelledby="modalAtualizacaoLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header bg-light">
         <h5 class="modal-title" id="modalAtualizacaoLabel">🛠️ Detalhes da Última Atualização</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
@@ -111,12 +213,12 @@
   </div>
 </div>
 
-<!-- Modais para cada comunicado -->
+<!-- Modais Comunicados -->
 {% for c in comunicados %}
 <div class="modal fade" id="modalComunicado{{ forloop.counter }}" tabindex="-1" aria-labelledby="modalComunicadoLabel{{ forloop.counter }}" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header bg-light">
         <h5 class="modal-title" id="modalComunicadoLabel{{ forloop.counter }}">📢 {{ c.assunto }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>

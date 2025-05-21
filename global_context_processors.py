@@ -406,6 +406,21 @@ def global_menu(request):
                     "icon": "fas fa-user-clock"
                 })
 
+                    # Menu simples: Controle de Ligações
+            if user.has_perm("portaria.view_ligacaoportaria"):
+                menu_cadastros.append({
+                    "name": "Controle de Ligações",
+                    "url": "lista_ligacoes",
+                    "icon": "fas fa-phone-alt"
+                })
+            if user.has_perm("portaria.view_ocorrenciaportaria"):
+                menu_cadastros.append({
+                    "name": "Ocorrências da Portaria",
+                    "url": "listar_ocorrencias",
+                    "icon": "fas fa-exclamation-triangle"
+                })
+
+
            
 
     active_module = request.path.split("/")[1]
