@@ -3,6 +3,7 @@ from portaria.views import pessoa_views
 from portaria.views import veiculo_views
 from portaria.views import controle_visitantes_views
 from portaria.views.api_views import api_veiculos_da_pessoa
+from .views import atrasos_saidas_views
 
 
 urlpatterns = [
@@ -24,5 +25,10 @@ urlpatterns = [
     path("api/pessoa/<int:pk>/foto/", controle_visitantes_views.obter_foto_pessoa, name="obter_foto_pessoa"),
     path("api/pessoa/<int:pessoa_id>/veiculos/", api_veiculos_da_pessoa, name="api_veiculos_da_pessoa"),
     path("controle-visitantes/<int:pk>/saida/", controle_visitantes_views.registrar_saida_visitante, name="registrar_saida_visitante"),
+    path("atrasos-saidas/", atrasos_saidas_views.lista_atrasos_saidas, name="lista_atrasos_saidas"),
+    path("atrasos-saidas/visualizar/<int:pk>/", atrasos_saidas_views.visualizar_atraso_saida, name="visualizar_atraso_saida"),
+    path("atrasos-saidas/cadastrar/", atrasos_saidas_views.cadastrar_atraso_saida, name="cadastrar_atraso_saida"),
+    path("atrasos-saidas/editar/<int:pk>/", atrasos_saidas_views.editar_atraso_saida, name="editar_atraso_saida"),
+    path("atrasos-saidas/excluir/<int:pk>/", atrasos_saidas_views.excluir_atraso_saida, name="excluir_atraso_saida"),
 
 ]

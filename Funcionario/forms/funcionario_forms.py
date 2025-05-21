@@ -1,5 +1,6 @@
 from django import forms
 from django_select2.forms import Select2Widget
+from django.contrib.auth.models import User
 
 from rh_qualidade.utils import title_case
 
@@ -80,8 +81,14 @@ class FuncionarioForm(forms.ModelForm):
     foto = forms.ImageField(required=False, label="Foto")
     assinatura_eletronica = forms.ImageField(
         required=False, label="Assinatura Eletrônica"
-    )  # Novo campo
+    )    
     curriculo = forms.FileField(required=False, label="Currículo")
+    user = forms.ModelChoiceField(
+        queryset=User.objects.filter(funcionario__isnull=True).order_by("username"),
+        required=False,
+        label="Usuário do Sistema",
+        widget=Select2Widget(attrs={"class": "select2 form-select", "data-placeholder": "Selecione um usuário"}),
+    )
     status = forms.ChoiceField(
         choices=Funcionario.STATUS_CHOICES,
         label="Status",
@@ -112,11 +119,20 @@ class FuncionarioForm(forms.ModelForm):
             status="Ativo"
         ).order_by("nome")
 
+        # ⬇️ Adiciona lógica para o campo user
+        from django.contrib.auth.models import User
+        if self.instance and self.instance.user:
+            self.fields["user"].queryset = User.objects.filter(
+                funcionario__isnull=True
+            ) | User.objects.filter(pk=self.instance.user.pk)
+        else:
+            self.fields["user"].queryset = User.objects.filter(funcionario__isnull=True)
+
         # Preenche o local_trabalho com o valor da instância
         if self.instance and self.instance.local_trabalho:
             self.fields["local_trabalho"].initial = self.instance.local_trabalho
 
-        # **Pré-carregar datas no formato ISO (YYYY-MM-DD)**
+        # Pré-carregar datas no formato ISO (YYYY-MM-DD)
         if self.instance and getattr(self.instance, "data_admissao", None):
             self.initial["data_admissao"] = self.instance.data_admissao.strftime("%Y-%m-%d")
         if self.instance and getattr(self.instance, "data_integracao", None):

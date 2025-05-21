@@ -12,6 +12,9 @@ from Funcionario.models import (
     Revisao,
     Settings,
     Treinamento,
+    AvaliacaoTreinamento,
+    JobRotationEvaluation
+    
 )
 
 
@@ -199,13 +202,12 @@ def get_funcionario_ficha(request, id):
         }
 
         # Avaliações de Desempenho
-        avaliacoes_desempenho = AvaliacaoDesempenho.objects.filter(
+        avaliacoes_desempenho = AvaliacaoAnual.objects.filter(
             funcionario=funcionario
         ).values(
             "data_avaliacao",
             "centro_custo",
-            "gerencia",
-            "avaliador__nome",
+            "funcionario__cargo_atual__departamento",
             "postura_seg_trabalho",
             "qualidade_produtividade",
             "trabalho_em_equipe",
@@ -216,8 +218,8 @@ def get_funcionario_ficha(request, id):
             "proatividade",
             "comunicacao",
             "assiduidade",
-            "observacoes",
-        )
+            "avaliacao_global_avaliador",
+             "avaliacao_global_avaliado",        )
         data["avaliacoes_desempenho"] = list(avaliacoes_desempenho)
 
         # Avaliações de Treinamento
@@ -225,19 +227,19 @@ def get_funcionario_ficha(request, id):
             AvaliacaoTreinamento.objects.filter(funcionario=funcionario)
             .select_related("treinamento")
             .values(
-                "data_avaliacao",
-                "treinamento__id",  # ID do treinamento
-                "treinamento__assunto",  # Acesso ao assunto do treinamento através da relação correta
-                "responsavel_1_nome",
-                "responsavel_2_nome",
-                "responsavel_3_nome",
+                 "data_avaliacao",
+                "treinamento__id",           # ID do treinamento
+                "treinamento__nome_curso",   # Nome do curso
+                "responsavel_1__nome",       # Correto acesso à ForeignKey
+                "responsavel_2__nome",
+                "responsavel_3__nome",
                 "avaliacao_geral",
             )
         )
         data["avaliacoes_treinamento"] = list(avaliacoes_treinamento)
 
         # Treinamentos
-        treinamentos = Treinamento.objects.filter(funcionario=funcionario).values(
+        treinamentos = Treinamento.objects.filter(funcionarios=funcionario).values(
             "tipo", "nome_curso", "categoria", "data_inicio", "data_fim", "status"
         )
         data["treinamentos"] = list(treinamentos)
@@ -246,7 +248,7 @@ def get_funcionario_ficha(request, id):
         job_rotations = JobRotationEvaluation.objects.filter(
             funcionario=funcionario
         ).values(
-            "area_atual",
+            "area",            
             "nova_funcao__nome",
             "data_inicio",
             "termino_previsto",

@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Atrasos e Saídas Antecipadas{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Atrasos e Saídas Antecipadas" icone="bi bi-clock-history" emoji="⏳" %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container mt-4">
+
+  <!-- Cards de Indicadores -->
+  <div class="row mb-4">
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Eventos registrados." cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Hoje" valor=total_hoje subtitulo="Ocorrências do dia." cor="info" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Sem Justificativa" valor=total_sem_justificativa subtitulo="Aguardando avaliação." cor="danger" %}
+{% include 'partials/global/_card_indicador.html' with titulo="Hora Extra" valor=total_hora_extra subtitulo="Registros adicionais." cor="success" %}
+
+
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+      <i class="bi bi-funnel-fill text-primary"></i>
+      <strong class="text-primary">Filtros de Ocorrências</strong>
+    </div>
+    <div class="card-body">
+      <form method="get">
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+          <div class="col">
+            <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Funcionário</label>
+            <select name="nome" id="nome" class="form-select select2">
+              <option value="">Todos</option>
+              {% for nome in nomes_disponiveis %}
+                <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col">
+            <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
+            <input type="date" name="data" id="data" value="{{ request.GET.data }}" class="form-control">
+          </div>
+
+          <div class="col">
+            <label for="tipo" class="form-label"><i class="bi bi-exclamation-circle me-1"></i> Tipo</label>
+            <select name="tipo" id="tipo" class="form-select">
+              <option value="">Todos</option>
+              <option value="atraso" {% if request.GET.tipo == 'atraso' %}selected{% endif %}>Atraso</option>
+              <option value="saida" {% if request.GET.tipo == 'saida' %}selected{% endif %}>Saída Antecipada</option>
+            </select>
+          </div>
+
+         
+          
+        </div>
+      </form>
+      <div class="col-12 d-flex justify-content-center">
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </div>
+    </div>
+  </div>
+<!-- Botão de Nova Ocorrência -->
+<div class="text-end mb-4">
+  {% if request.user|has_permission:"portaria.add_atrasosaida" %}
+    <a href="{% url 'cadastrar_atraso_saida' %}" class="btn btn-success">
+      <i class="bi bi-plus-circle-fill"></i> Nova Ocorrência
+    </a>
+  {% endif %}
+</div>
+
+  <!-- Tabela -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Foto</th>
+          <th><i class="bi bi-person"></i> Funcionário</th>
+          <th><i class="bi bi-briefcase"></i> Cargo</th>
+          <th><i class="bi bi-calendar-day"></i> Data</th>
+          <th><i class="bi bi-clock"></i> Horário</th>
+          <th><i class="bi bi-info-circle"></i> Tipo</th>
+          <th><i class="bi bi-eye-fill"></i> Justificativa</th>
+          <th><i class="bi bi-gear"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for evento in eventos %}
+        <tr>
+          <td>
+            <img src="{{ evento.funcionario.foto.url }}" alt="Foto" width="48" class="rounded">
+          </td>
+          <td>{{ evento.funcionario.nome }}</td>
+          <td>{{ evento.funcionario.cargo_atual|default:"-" }}</td>
+          <td>{{ evento.data|date:"d/m/Y" }}</td>
+          <td>{{ evento.horario|default:"-" }}</td>
+          <td>
+            {% if evento.tipo == 'atraso' %}
+              <span class="badge bg-warning text-dark">Atraso</span>
+            {% elif evento.tipo == 'saida' %}
+              <span class="badge bg-info text-dark">Saída</span>
+            {% elif evento.tipo == 'hora_extra' %}
+              <span class="badge bg-success">Hora Extra</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if evento.observacao %}
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#justificativaModal{{ evento.id }}">
+                <i class="bi bi-eye"></i>
+              </button>
+          
+              <!-- Modal -->
+              <div class="modal fade" id="justificativaModal{{ evento.id }}" tabindex="-1" aria-labelledby="justificativaLabel{{ evento.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="justificativaLabel{{ evento.id }}"><i class="bi bi-chat-left-text me-2"></i>Justificativa</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                      {{ evento.observacao }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% else %}
+              <span class="badge bg-danger">Sem Justificativa</span>
+            {% endif %}
+          </td>
+          <td>
+            {% include 'partials/global/_botao_editar.html' with objeto=evento url_editar='editar_atraso_saida' %}
+            {% include 'partials/global/_botao_excluir.html' with objeto=evento url_excluir='excluir_atraso_saida' %}
+          </td>
+        </tr>
+        {% empty %}
+        {% include 'partials/global/_sem_resultados.html' with item_nome="registro" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include 'partials/global/_paginacao.html' %}
+</div>
+
+<!-- Select2 -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    $('.select2').select2({ width: '100%', allowClear: true });
+  });
+</script>
+{% endblock %}

@@ -11,3 +11,4 @@ def api_veiculos_da_pessoa(request, pessoa_id):
         ]
     }
     return JsonResponse(data)
+

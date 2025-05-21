@@ -398,6 +398,15 @@ def global_menu(request):
                     "icon": "fas fa-user-check"
                 })
 
+        # Menu simples: Controle de Atrasos e Saídas Antecipadas
+            if user.has_perm("portaria.view_funcionario"):  # ou crie uma permissão específica se desejar
+                menu_cadastros.append({
+                    "name": "Atrasos e Saídas Antecipadas",
+                    "url": "lista_atrasos_saidas",
+                    "icon": "fas fa-user-clock"
+                })
+
+           
 
     active_module = request.path.split("/")[1]
     if active_module == "metrologia":

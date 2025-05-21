@@ -141,6 +141,12 @@
                             </label>
                             {{ form.numero_registro }}
                         </div>
+                        <div class="col-md-6">
+                            <label for="user" class="form-label">
+                                <i class="bi bi-person-lock me-1"></i> Usuário do Sistema:
+                            </label>
+                            {{ form.user|add_class:"form-select select2" }}
+                        </div>                        
 
                         <div class="col-md-6">
                             <label for="local_trabalho" class="form-label">

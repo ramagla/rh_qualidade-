@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Registrar Atraso/Saída Antecipada{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  {% include 'partials/global/_header_titulo.html' with titulo='Registrar Ocorrência de Atraso/Saída' icone='bi bi-person-dash' emoji='⏳' %}
+
+  <form method="post" id="formularioAtrasoSaida" class="row g-3">
+    {% csrf_token %}
+    {% include 'partials/global/_form_errors.html' %}
+
+    <div class="accordion mb-4" id="accordionOcorrencia">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDados">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDados">
+            📅 Dados da Ocorrência
+          </button>
+        </h2>
+        <div id="collapseDados" class="accordion-collapse collapse show" data-bs-parent="#accordionOcorrencia">
+          <div class="accordion-body row g-3">
+
+            <div class="col-md-12 text-center">
+              <div id="fotoContainer" class="d-none mb-2">
+                <img id="fotoFuncionario" src="" alt="Foto" class="img-thumbnail" style="max-width: 150px;">
+              </div>
+            </div>
+            
+            <div class="col-md-12 text-center">
+              <label class="form-label"><i class="bi bi-person-fill me-2"></i> Colaborador</label>
+              <div class="col-md-6 offset-md-3">
+                {{ form.funcionario|add_attrs:"class=form-select select2,id=id_funcionario" }}
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-info-circle me-2"></i> Tipo</label>
+              {{ form.tipo|add_class:"form-select" }}
+            </div>
+            
+            <div class="col-md-3">
+              <label class="form-label"><i class="bi bi-calendar-event me-2"></i> Data</label>
+              {{ form.data|add_class:"form-control" }}
+            </div>
+            
+            <div class="col-md-3">
+              <label class="form-label"><i class="bi bi-clock me-2"></i> Horário</label>
+              {{ form.horario|add_class:"form-control" }}
+            </div>
+            
+
+            <div class="col-md-12">
+                <label class="form-label"><i class="bi bi-chat-left-text me-2"></i> Observação</label>
+                {{ form.observacao|add_class:"form-control" }}
+              </div>
+              
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='lista_atrasos_saidas' %}
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectFuncionario = $("#id_funcionario");
+    const img = document.getElementById("fotoFuncionario");
+
+    function carregarFoto(funcionarioId) {
+      const fotoContainer = document.getElementById("fotoContainer");
+    
+      if (funcionarioId) {
+        fetch(`/rh/api/funcionario/ficha/${funcionarioId}/`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.foto) {
+              img.src = data.foto;
+              img.classList.remove("d-none");
+              fotoContainer.classList.remove("d-none");
+            } else {
+              img.src = "";
+              img.classList.add("d-none");
+              fotoContainer.classList.add("d-none");
+            }
+          })
+          .catch(() => {
+            img.src = "";
+            img.classList.add("d-none");
+            fotoContainer.classList.add("d-none");
+          });
+      } else {
+        img.src = "";
+        img.classList.add("d-none");
+        fotoContainer.classList.add("d-none");
+      }
+    }
+    
+
+    // Inicializa o select2
+    selectFuncionario.select2({ width: '100%' });
+
+    // Evento especial do Select2
+    selectFuncionario.on("select2:select", function (e) {
+      const funcionarioId = e.params.data.id;
+      carregarFoto(funcionarioId);
+    });
+
+    // Carrega a foto ao abrir, caso já tenha um valor selecionado
+    const funcionarioInicial = selectFuncionario.val();
+    if (funcionarioInicial) {
+      carregarFoto(funcionarioInicial);
+    }
+  });
+</script>
+
+
+
+  
+  
+{% endblock %}

@@ -5,6 +5,7 @@ from django.utils.text import slugify
 
 from .cargo import Cargo
 from .choices_departamento import DEPARTAMENTOS_EMPRESA
+from django.contrib.auth.models import User
 
 
 
@@ -48,6 +49,7 @@ class Funcionario(models.Model):
     ]
 
     nome = models.CharField(max_length=100)
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="funcionario")
     data_admissao = models.DateField()
     cargo_inicial = models.ForeignKey(
         Cargo, related_name="cargo_inicial_funcionarios", on_delete=models.CASCADE

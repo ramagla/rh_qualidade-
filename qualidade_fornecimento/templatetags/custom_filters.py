@@ -298,3 +298,5 @@ def tempo_permanencia(entrada, saida):
         minutos = resto // 60
         return f"{horas}h {minutos}min"
     return "—"
+
+
