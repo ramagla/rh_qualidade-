@@ -21,6 +21,7 @@ class AvaliacaoAnual(models.Model):
     assiduidade = models.IntegerField(blank=True, null=True)
     avaliacao_global_avaliador = models.TextField(blank=True, null=True)
     avaliacao_global_avaliado = models.TextField(blank=True, null=True)
+    anexo = models.FileField(upload_to='avaliacoes/anual/', blank=True, null=True)
 
     def calcular_classificacao(self):
         total_pontos = (

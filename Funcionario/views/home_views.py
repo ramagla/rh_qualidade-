@@ -105,7 +105,9 @@ def home(request):
             })
 
     # 🔧 Atualizações
-    proximas_atualizacoes = AtualizacaoSistema.objects.order_by("-previsao")[:4]
+    proximas_atualizacoes = AtualizacaoSistema.objects.filter(
+        status="em_andamento"
+    ).order_by("previsao")
     ultima_atualizacao_concluida = AtualizacaoSistema.objects.filter(
         status="concluido"
     ).order_by("-data_termino").first()

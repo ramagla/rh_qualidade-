@@ -12,16 +12,17 @@
 {% include "partials/global/_form_errors.html" %}
 
 <div class="container mt-4">
- <form method="post"
-      id="matriz-form"
-      enctype="multipart/form-data"
-      class="row g-3"
-      action="{% if form.instance.pk %}
-                 {% url 'editar_matriz_polivalencia' form.instance.pk %}
-              {% else %}
-                 {% url 'cadastrar_matriz_polivalencia' %}
-              {% endif %}">
-    {% csrf_token %}
+  <form method="post"
+  id="matriz-form"
+  enctype="multipart/form-data"
+  class="row g-3"
+  action="{% if form.instance.pk %}
+             {% url 'editar_matriz_polivalencia' form.instance.pk %}
+          {% else %}
+             {% url 'cadastrar_matriz_polivalencia' %}
+          {% endif %}">
+{% csrf_token %}
+
 
 
   <!-- 🔧 Accordion - Informações Básicas -->
@@ -43,10 +44,13 @@
   <select name="departamento" id="departamento" class="form-select select2">
     <option value="">Selecione o Departamento</option>
     {% for departamento in departamentos %}
-      <option value="{{ departamento }}" {% if form.instance.departamento == departamento %}selected{% endif %}>
-        {{ departamento }}
-      </option>
-    {% endfor %}
+    <option value="{{ departamento.0 }}" {% if form.instance.departamento == departamento.0 %}selected{% endif %}>
+      {{ departamento.1 }}
+    </option>
+  {% endfor %}
+  
+    
+  
   </select>
 </div>
 
@@ -92,20 +96,32 @@
               <label for="select-colaborador" class="form-label"><i class="bi bi-person-plus me-1"></i> Adicionar Colaborador</label>
               <select id="select-colaborador" class="form-select select2">
                 <option value="">Selecione o Colaborador</option>
-                {% for funcionario in funcionarios %}
-                  <option value="{{ funcionario.id }}" data-nome="{{ funcionario.nome }}">{{ funcionario.nome }}</option>
-                {% endfor %}
+                {% for funcionario in funcionarios_disponiveis %}
+                <option value="{{ funcionario.id }}" data-nome="{{ funcionario.nome }}">{{ funcionario.nome }}</option>
+              {% endfor %}
+              
               </select>
+              
+              
             </div>
             <div id="tabela-notas-container">
               <div class="tabela-scroll">
-                <table class="table table-bordered" id="tabela-notas">
+                <table class="table table-bordered table-striped" id="tabela-notas">
                   <thead>
-                    <tr>
-                      <th class="sticky-header sticky-column">Colaborador</th>
-                      <th class="sticky-header sticky-suplente">Perfil</th>
+                    <tr class="align-middle text-center">
+                      <th class="sticky-header align-middle text-center" title="Remover colaborador">
+                        <i class="bi bi-trash3-fill"></i>
+                      </th>
+                      <th class="sticky-header sticky-column align-middle">
+                        <i class="bi bi-person-fill me-1"></i> Colaborador
+                      </th>
+                      <th class="sticky-header sticky-suplente align-middle">
+                        <i class="bi bi-person-badge-fill me-1"></i> Perfil
+                      </th>
                     </tr>
                   </thead>
+                  
+                  
                   <tbody></tbody>
                 </table>
               </div>
@@ -115,6 +131,8 @@
       </div>
 
 {% include "partials/global/_botoes_salvar_cancelar.html" with edicao=form.instance.id url_voltar='lista_matriz_polivalencia' %}
+<input type="hidden" name="colaboradores_removidos" id="colaboradoresRemovidos">
+
   </form>
 </div>
 
@@ -131,7 +149,7 @@
 {% endif %}
 
 
-{{ funcionarios|json_script:"funcionarios-json" }}
+{{ funcionarios_disponiveis|json_script:"funcionarios-json" }}
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -139,19 +157,17 @@
 
     let atividades = [];
 
-    // Carrega atividades ao selecionar departamento
     $('#departamento').on('change', function () {
       const departamentoId = $(this).val();
       if (departamentoId) {
         $.ajax({
-          url: '{% url "get_atividades_e_funcionarios_por_departamento" %}',
+          url: '/rh/get-atividades-e-funcionarios-por-departamento/',
           data: { 'departamento': departamentoId },
           success: function (data) {
             atividades = data.atividades;
             const tabelaNotas = $('#tabela-notas');
 
-            // Cabeçalho
-            let headRow = '<th class="sticky-header sticky-column">Colaborador</th><th class="sticky-header sticky-suplente">Suplente</th>';
+            let headRow = '<th class="sticky-header">#</th><th class="sticky-header sticky-column">Colaborador</th><th class="sticky-header sticky-suplente">Perfil</th>';
             atividades.forEach((atividade, index) => {
               headRow += `
                 <th class="activity-header">
@@ -161,59 +177,70 @@
                   </span>
                 </th>`;
             });
+
             tabelaNotas.find('thead tr').html(headRow);
             tabelaNotas.find('tbody').empty();
             $('#tabela-notas-container').show();
 
-            // Tooltips
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
 
-            // Modo edição – popula colaboradores e notas
             {% if notas_lista %}
-              const notas = JSON.parse(document.getElementById("notas-json").textContent);
-              const funcionariosData = JSON.parse(document.getElementById("funcionarios-json").textContent);
-              const colaboradorIdsJaInseridos = new Set();
+            const notas = JSON.parse(document.getElementById("notas-json").textContent);
+            const funcionariosData = JSON.parse(document.getElementById("funcionarios-json").textContent);
+            const colaboradorIdsJaInseridos = new Set();
 
-              notas.forEach(nota => {
-                if (colaboradorIdsJaInseridos.has(nota.funcionario_id)) return;
-                colaboradorIdsJaInseridos.add(nota.funcionario_id);
+            const selectColaborador = $('#select-colaborador');
+            selectColaborador.find('option:not(:first)').remove();
 
-                const nome = funcionariosData.find(f => f.id === nota.funcionario_id)?.nome || '---';
+            funcionariosData.forEach(func => {
+              const jaTemNota = notas.some(n => n.funcionario_id === func.id);
+              if (!jaTemNota) {
+                selectColaborador.append(`<option value="${func.id}" data-nome="${func.nome}">${func.nome}</option>`);
+              }
+            });
 
-                let row = `<tr id="linha-funcionario-${nota.funcionario_id}">
-                  <td class="sticky-column">${nome}</td>
-                  <td class="sticky-suplente">
-                    <select name="perfil_${nota.funcionario_id}" class="form-select" required>
-                      <option value="">Selecione...</option>
-                      <option value="suplente" ${nota.perfil === 'suplente' ? 'selected' : ''}>Suplente</option>
-                      <option value="treinado" ${nota.perfil === 'treinado' ? 'selected' : ''}>Treinado</option>
-                      <option value="em_treinamento" ${nota.perfil === 'em_treinamento' ? 'selected' : ''}>Em Treinamento</option>
-                      <option value="oficial" ${nota.perfil === 'oficial' ? 'selected' : ''}>Oficial</option>
+            notas.forEach(nota => {
+              if (colaboradorIdsJaInseridos.has(nota.funcionario_id)) return;
+              colaboradorIdsJaInseridos.add(nota.funcionario_id);
+
+              const nome = funcionariosData.find(f => f.id === nota.funcionario_id)?.nome || 'Sem Nome';
+
+              let row = `<tr id="linha-funcionario-${nota.funcionario_id}" class="align-middle text-center">
+                <td>
+                  <button type="button" class="btn btn-outline-danger btn-sm excluir-colaborador" data-id="${nota.funcionario_id}">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </td>
+                <td class="sticky-column">${nome}</td>
+                <td class="sticky-suplente">
+                  <select name="perfil_${nota.funcionario_id}" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    <option value="suplente" ${nota.perfil === 'suplente' ? 'selected' : ''}>Suplente</option>
+                    <option value="treinado" ${nota.perfil === 'treinado' ? 'selected' : ''}>Treinado</option>
+                    <option value="em_treinamento" ${nota.perfil === 'em_treinamento' ? 'selected' : ''}>Em Treinamento</option>
+                    <option value="oficial" ${nota.perfil === 'oficial' ? 'selected' : ''}>Oficial</option>
+                  </select>
+                </td>`;
+
+              atividades.forEach((atividade) => {
+                const valorNota = notas.find(n => n.funcionario_id === nota.funcionario_id && n.atividade_id === atividade.id)?.pontuacao ?? "";
+                row += `
+                  <td>
+                    <select name="nota_${nota.funcionario_id}_${atividade.id}" class="form-select">
+                      <option value="">Selecione a Nota</option>
+                      <option value="0" ${valorNota === 0 ? 'selected' : ''}>0 - Observador</option>
+                      <option value="1" ${valorNota === 1 ? 'selected' : ''}>1 - Aprendiz</option>
+                      <option value="2" ${valorNota === 2 ? 'selected' : ''}>2 - Assistente</option>
+                      <option value="3" ${valorNota === 3 ? 'selected' : ''}>3 - Autônomo</option>
+                      <option value="4" ${valorNota === 4 ? 'selected' : ''}>4 - Instrutor</option>
                     </select>
                   </td>`;
-
-                atividades.forEach((atividade) => {
-                  const notaDoFuncionario = notas.find(n =>
-                    n.funcionario_id === nota.funcionario_id && n.atividade_id === atividade.id
-                  );
-                  const valor = notaDoFuncionario ? notaDoFuncionario.pontuacao : '';
-                  row += `
-                    <td>
-                      <select name="nota_${nota.funcionario_id}_${atividade.id}" class="form-select">
-                        <option value="">Selecione a Nota</option>
-                        <option value="0" ${valor == 0 ? 'selected' : ''}>0 - Observador</option>
-                        <option value="1" ${valor == 1 ? 'selected' : ''}>1 - Aprendiz</option>
-                        <option value="2" ${valor == 2 ? 'selected' : ''}>2 - Assistente</option>
-                        <option value="3" ${valor == 3 ? 'selected' : ''}>3 - Autônomo</option>
-                        <option value="4" ${valor == 4 ? 'selected' : ''}>4 - Instrutor</option>
-                      </select>
-                    </td>`;
-                });
-
-                row += '</tr>';
-                $('#tabela-notas tbody').append(row);
               });
+
+              row += `</tr>`;
+              $('#tabela-notas tbody').append(row);
+            });
             {% endif %}
           }
         });
@@ -222,24 +249,28 @@
       }
     });
 
-    // Adicionar colaborador manualmente
     $('#select-colaborador').on('change', function () {
       const id = $(this).val();
       const nome = $(this).find(':selected').data('nome');
 
       if (!id || $(`#linha-funcionario-${id}`).length > 0) return;
 
-      let row = `<tr id="linha-funcionario-${id}">
+      let row = `<tr id="linha-funcionario-${id}" class="align-middle text-center">
+        <td>
+          <button type="button" class="btn btn-outline-danger btn-sm excluir-colaborador" data-id="${id}">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </td>
         <td class="sticky-column">${nome}</td>
-       <td class="sticky-suplente">
-            <select name="perfil_${id}" class="form-select" required>
-              <option value="">Selecione...</option>
-              <option value="suplente">Suplente</option>
-              <option value="treinado">Treinado</option>
-              <option value="em_treinamento">Em Treinamento</option>
-              <option value="oficial">Oficial</option>
-            </select>
-          </td>`;
+        <td class="sticky-suplente">
+          <select name="perfil_${id}" class="form-select" required>
+            <option value="">Selecione...</option>
+            <option value="suplente">Suplente</option>
+            <option value="treinado">Treinado</option>
+            <option value="em_treinamento">Em Treinamento</option>
+            <option value="oficial">Oficial</option>
+          </select>
+        </td>`;
 
       atividades.forEach((atividade) => {
         row += `
@@ -255,20 +286,31 @@
           </td>`;
       });
 
-      row += '</tr>';
+      row += `</tr>`;
       $('#tabela-notas tbody').append(row);
       $(this).val(null).trigger('change');
     });
 
-    // ⚠️ Gatilho automático no modo edição
     {% if form.instance.pk %}
-      setTimeout(function () {
+      setTimeout(() => {
         $('#departamento').trigger('change');
       }, 200);
     {% endif %}
+
+    $('#tabela-notas').on('click', '.excluir-colaborador', function () {
+      const id = $(this).data('id');
+      $(`#linha-funcionario-${id}`).remove();
+
+      const input = document.getElementById("colaboradoresRemovidos");
+      if (input) {
+        let valores = input.value ? input.value.split(",") : [];
+        if (!valores.includes(id.toString())) {
+          valores.push(id.toString());
+          input.value = valores.join(",");
+        }
+      }
+    });
   });
 </script>
-
-
 
 {% endblock %}
