@@ -17,7 +17,7 @@ DEPARTAMENTOS_EMPRESA = [
     ("MANUTENÇÃO", "Manutenção"),
     ("COMPRESSAO", "Compressão"),
     ("RETIFICA", "Retífica"),
-    ("TORSÃO", "Torção"),
+    ("TORÇÃO", "Torção"),
     ("ESTAMPARIA_BIHLER", "Estamparia Bihler"),
     ("ACABAMENTO", "Acabamento"),
     ("PRENSA", "Prensa"),
