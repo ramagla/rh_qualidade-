@@ -154,11 +154,17 @@ def imprimir_matriz(request, id):
 
 
 
-def salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=False, usar_suplente=False):
+def salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=False, usar_suplente=False, excluir_ids=None):
     """
     Salva ou atualiza notas dos funcionários para as atividades.
+    Ignora funcionários cujo ID esteja na lista `excluir_ids`.
     """
+    excluir_ids = excluir_ids or []
+
     for funcionario in funcionarios:
+        if funcionario.id in excluir_ids:
+            continue  # pula os funcionários removidos
+
         for atividade in atividades:
             nota_key = f"nota_{funcionario.id}_{atividade.id}"
             nota_value = request.POST.get(nota_key)
@@ -183,16 +189,25 @@ def salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=Fal
             )
 
 
+
 @login_required
-def save_matriz_polivalencia(request, form, atividades, funcionarios, is_edit=False):
+def save_matriz_polivalencia(request, form, atividades, funcionarios, is_edit=False, excluir_ids=None):
     if form.is_valid():
         matriz = form.save(commit=False)
         if is_edit:
             matriz.departamento = form.cleaned_data.get("departamento") or matriz.departamento
         matriz.save()
-        salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=True)
+        salvar_notas_funcionarios(
+            request,
+            funcionarios,
+            atividades,
+            usar_perfil=True,
+            excluir_ids=excluir_ids  # repassa lista de funcionários removidos
+        )
         return matriz, True
     return None, False
+
+
 
 @login_required
 def cadastrar_matriz_polivalencia(request):
@@ -229,6 +244,7 @@ def cadastrar_matriz_polivalencia(request):
         },
     )
 
+
 @login_required
 def editar_matriz_polivalencia(request, id):
     matriz = get_object_or_404(
@@ -246,7 +262,7 @@ def editar_matriz_polivalencia(request, id):
 
     todos_funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
 
-    # Dicionário de notas por funcionário
+    # Dicionário com notas por funcionário e atividade
     notas_por_funcionario = {
         funcionario.id: {
             atividade.id: {"pontuacao": None, "perfil": ""}
@@ -263,8 +279,37 @@ def editar_matriz_polivalencia(request, id):
 
     if request.method == "POST":
         form = MatrizPolivalenciaForm(request.POST, instance=matriz)
-        nova_matriz, sucesso = save_matriz_polivalencia(request, form, atividades, todos_funcionarios, is_edit=True)
+
+        # 🔻 Recupera os IDs de colaboradores removidos
+        colaboradores_removidos = request.POST.get("colaboradores_removidos", "")
+        ids_removidos = [int(id.strip()) for id in colaboradores_removidos.split(",") if id.strip().isdigit()]
+
+        # 🔻 Base apenas dos IDs que estavam na tabela antes da edição
+        ids_enviados = set()
+        for key in request.POST.keys():
+            if key.startswith("nota_") or key.startswith("perfil_"):
+                parts = key.split("_")
+                if len(parts) >= 2 and parts[1].isdigit():
+                    ids_enviados.add(int(parts[1]))
+
+        # 🔻 Considera somente os IDs que foram mantidos na tabela (não removidos)
+        ids_mantidos = [fid for fid in ids_enviados if fid not in ids_removidos]
+
+        # 🔻 Busca os objetos Funcionario correspondentes aos mantidos
+        funcionarios_restantes = Funcionario.objects.filter(id__in=ids_mantidos)
+
+        nova_matriz, sucesso = save_matriz_polivalencia(
+            request,
+            form,
+            atividades,
+            funcionarios_restantes,
+            is_edit=True,
+            excluir_ids=ids_removidos
+        )
+
         if sucesso:
+            Nota.objects.filter(funcionario_id__in=ids_removidos, atividade__in=atividades).delete()
+
             messages.success(request, "Matriz de Polivalência atualizada com sucesso.")
             return redirect("lista_matriz_polivalencia")
         else:
@@ -289,12 +334,13 @@ def editar_matriz_polivalencia(request, id):
         {
             "form": form,
             "matriz": matriz,
-            "funcionarios": list(todos_funcionarios.values("id", "nome")),
+            "funcionarios_tabela": list(Funcionario.objects.filter(id__in=notas_por_funcionario.keys()).values("id", "nome")),
+            "funcionarios_disponiveis": list(Funcionario.objects.filter(status="Ativo").values("id", "nome")),
             "atividades": atividades,
             "departamentos": departamentos,
             "notas_lista": notas_lista,
             "departamento_selecionado": matriz.departamento,
-            "campos_responsaveis": ['elaboracao', 'coordenacao', 'validacao'],
+            "campos_responsaveis": ["elaboracao", "coordenacao", "validacao"],
         },
     )
 

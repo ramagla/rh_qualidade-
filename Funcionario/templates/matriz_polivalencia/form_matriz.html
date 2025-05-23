@@ -13,69 +13,144 @@
 
 <div class="container mt-4">
   <form method="post"
-        id="matriz-form"
-        enctype="multipart/form-data"
-        class="row g-3"
-        action="{% if form.instance.pk %}
-                   {% url 'editar_matriz_polivalencia' form.instance.pk %}
-                {% else %}
-                   {% url 'cadastrar_matriz_polivalencia' %}
-                {% endif %}">
-    {% csrf_token %}
+  id="matriz-form"
+  enctype="multipart/form-data"
+  class="row g-3"
+  action="{% if form.instance.pk %}
+             {% url 'editar_matriz_polivalencia' form.instance.pk %}
+          {% else %}
+             {% url 'cadastrar_matriz_polivalencia' %}
+          {% endif %}">
+{% csrf_token %}
 
-    <div class="accordion" id="accordionMatriz">
+
+
+  <!-- 🔧 Accordion - Informações Básicas -->
+<div class="accordion" id="accordionMatriz">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingBasico">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBasico" aria-expanded="true" aria-controls="collapseBasico">
+        <i class="bi bi-building me-2"></i> Informações Básicas
+      </button>
+    </h2>
+    <div id="collapseBasico" class="accordion-collapse collapse show" aria-labelledby="headingBasico" data-bs-parent="#accordionMatriz">
+      <div class="accordion-body">
+        <div class="row">
+
+          <div class="col-md-6">
+  <label for="departamento" class="form-label">
+    <i class="bi bi-diagram-3 me-1"></i> Departamento (Atividade)
+  </label>
+  <select name="departamento" id="departamento" class="form-select select2">
+    <option value="">Selecione o Departamento</option>
+    {% for departamento in departamentos %}
+    <option value="{{ departamento.0 }}" {% if form.instance.departamento == departamento.0 %}selected{% endif %}>
+      {{ departamento.1 }}
+    </option>
+  {% endfor %}
+  
+    
+  
+  </select>
+</div>
+
+
+          <div class="col-md-6">
+            <label for="{{ form.elaboracao.id_for_label }}" class="form-label">
+              <i class="bi bi-pencil-fill me-1"></i> Elaboração
+            </label>
+            {{ form.elaboracao|add_class:"form-select select2" }}
+          </div>
+
+          <div class="col-md-6">
+            <label for="{{ form.coordenacao.id_for_label }}" class="form-label">
+              <i class="bi bi-people-fill me-1"></i> Coordenação
+            </label>
+            {{ form.coordenacao|add_class:"form-select select2" }}
+          </div>
+
+          <div class="col-md-6">
+            <label for="{{ form.validacao.id_for_label }}" class="form-label">
+              <i class="bi bi-check2-square me-1"></i> Validação
+            </label>
+            {{ form.validacao|add_class:"form-select select2" }}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+      <!-- 📊 Accordion - Tabela de Notas -->
       <div class="accordion-item">
-        <h2 class="accordion-header" id="headingBasico">
-          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBasico" aria-expanded="true" aria-controls="collapseBasico">
-            <i class="bi bi-building me-2"></i> Informações Básicas
+        <h2 class="accordion-header" id="headingNotas">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNotas" aria-expanded="false" aria-controls="collapseNotas">
+            <i class="bi bi-table me-2"></i> Tabela de Notas por Atividade
           </button>
         </h2>
-        <div id="collapseBasico" class="accordion-collapse collapse show" aria-labelledby="headingBasico" data-bs-parent="#accordionMatriz">
+        <div id="collapseNotas" class="accordion-collapse collapse" aria-labelledby="headingNotas" data-bs-parent="#accordionMatriz">
           <div class="accordion-body">
-            <div class="row">
-              <div class="col-md-6">
-                <label for="departamento" class="form-label">
-                  <i class="bi bi-diagram-3 me-1"></i> Departamento (Atividade)
-                </label>
-                <select name="departamento" id="departamento" class="form-select select2">
-                  <option value="">Selecione o Departamento</option>
-                  {% for departamento in departamentos %}
-                    <option value="{{ departamento.0 }}" {% if form.instance.departamento == departamento.0 %}selected{% endif %}>{{ departamento.1 }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-
-              <div class="col-md-6">
-                <label for="{{ form.elaboracao.id_for_label }}" class="form-label">
-                  <i class="bi bi-pencil-fill me-1"></i> Elaboração
-                </label>
-                {{ form.elaboracao|add_class:"form-select select2" }}
-              </div>
-
-              <div class="col-md-6">
-                <label for="{{ form.coordenacao.id_for_label }}" class="form-label">
-                  <i class="bi bi-people-fill me-1"></i> Coordenação
-                </label>
-                {{ form.coordenacao|add_class:"form-select select2" }}
-              </div>
-
-              <div class="col-md-6">
-                <label for="{{ form.validacao.id_for_label }}" class="form-label">
-                  <i class="bi bi-check2-square me-1"></i> Validação
-                </label>
-                {{ form.validacao|add_class:"form-select select2" }}
+            <div class="mb-4">
+              <label for="select-colaborador" class="form-label"><i class="bi bi-person-plus me-1"></i> Adicionar Colaborador</label>
+              <select id="select-colaborador" class="form-select select2">
+                <option value="">Selecione o Colaborador</option>
+                {% for funcionario in funcionarios_disponiveis %}
+                <option value="{{ funcionario.id }}" data-nome="{{ funcionario.nome }}">{{ funcionario.nome }}</option>
+              {% endfor %}
+              
+              </select>
+              
+              
+            </div>
+            <div id="tabela-notas-container">
+              <div class="tabela-scroll">
+                <table class="table table-bordered table-striped" id="tabela-notas">
+                  <thead>
+                    <tr class="align-middle text-center">
+                      <th class="sticky-header align-middle text-center" title="Remover colaborador">
+                        <i class="bi bi-trash3-fill"></i>
+                      </th>
+                      <th class="sticky-header sticky-column align-middle">
+                        <i class="bi bi-person-fill me-1"></i> Colaborador
+                      </th>
+                      <th class="sticky-header sticky-suplente align-middle">
+                        <i class="bi bi-person-badge-fill me-1"></i> Perfil
+                      </th>
+                    </tr>
+                  </thead>
+                  
+                  
+                  <tbody></tbody>
+                </table>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {% include 'partials/matriz/_accordion_tabela_notas.html' %}
-    </div>
+{% include "partials/global/_botoes_salvar_cancelar.html" with edicao=form.instance.id url_voltar='lista_matriz_polivalencia' %}
+<input type="hidden" name="colaboradores_removidos" id="colaboradoresRemovidos">
 
-    {% include "partials/global/_botoes_salvar_cancelar.html" with edicao=form.instance.id url_voltar='lista_matriz_polivalencia' %}
   </form>
 </div>
+
+<style>
+  .tabela-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+    border: 1px solid #dee2e6;
+    padding-bottom: 1rem;
+  }
+</style>
+{% if notas_lista %}
+  {{ notas_lista|json_script:"notas-json" }}
+{% endif %}
+
+
+{{ funcionarios_disponiveis|json_script:"funcionarios-json" }}
+
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     $('.select2').select2({ placeholder: 'Selecione uma opção', allowClear: true });
@@ -86,33 +161,22 @@
       const departamentoId = $(this).val();
       if (departamentoId) {
         $.ajax({
-          url: '/rh/api/atividades-por-departamento/',
+          url: '/rh/get-atividades-e-funcionarios-por-departamento/',
           data: { 'departamento': departamentoId },
           success: function (data) {
             atividades = data.atividades;
             const tabelaNotas = $('#tabela-notas');
 
-            let headRow = `
-              <th class="sticky-header align-middle text-center" title="Remover colaborador">
-                <i class="bi bi-trash3-fill"></i>
-              </th>
-              <th class="sticky-header sticky-column align-middle">
-                <i class="bi bi-person-fill me-1"></i> Colaborador
-              </th>
-              <th class="sticky-header sticky-suplente align-middle">
-                <i class="bi bi-person-badge-fill me-1"></i> Perfil
-              </th>`;
-
+            let headRow = '<th class="sticky-header">#</th><th class="sticky-header sticky-column">Colaborador</th><th class="sticky-header sticky-suplente">Perfil</th>';
             atividades.forEach((atividade, index) => {
               headRow += `
                 <th class="activity-header">
                   Atividade ${index + 1}
-                  <span class="info-icon" data-bs-toggle="tooltip" title="${atividade.nome}">
+                  <span class="info-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="${atividade.nome}">
                     <i class="bi bi-info-circle-fill" aria-label="${atividade.nome}"></i>
                   </span>
                 </th>`;
             });
-            headRow += '<th class="text-center">Ações</th>';
 
             tabelaNotas.find('thead tr').html(headRow);
             tabelaNotas.find('tbody').empty();
@@ -140,16 +204,16 @@
               if (colaboradorIdsJaInseridos.has(nota.funcionario_id)) return;
               colaboradorIdsJaInseridos.add(nota.funcionario_id);
 
-              const nome = funcionariosData.find(f => f.id === nota.funcionario_id)?.nome || '---';
+              const nome = funcionariosData.find(f => f.id === nota.funcionario_id)?.nome || 'Sem Nome';
 
               let row = `<tr id="linha-funcionario-${nota.funcionario_id}" class="align-middle text-center">
-                <td class="align-middle text-center">
-                  <button type="button" class="btn btn-outline-danger btn-sm remover-colaborador" data-id="${nota.funcionario_id}">
+                <td>
+                  <button type="button" class="btn btn-outline-danger btn-sm excluir-colaborador" data-id="${nota.funcionario_id}">
                     <i class="bi bi-x-lg"></i>
                   </button>
                 </td>
-                <td class="sticky-column align-middle">${nome}</td>
-                <td class="sticky-suplente align-middle">
+                <td class="sticky-column">${nome}</td>
+                <td class="sticky-suplente">
                   <select name="perfil_${nota.funcionario_id}" class="form-select" required>
                     <option value="">Selecione...</option>
                     <option value="suplente" ${nota.perfil === 'suplente' ? 'selected' : ''}>Suplente</option>
@@ -160,28 +224,21 @@
                 </td>`;
 
               atividades.forEach((atividade) => {
-                const notaDoFuncionario = notas.find(n => n.funcionario_id === nota.funcionario_id && n.atividade_id === atividade.id);
-                const valor = notaDoFuncionario ? notaDoFuncionario.pontuacao : '';
+                const valorNota = notas.find(n => n.funcionario_id === nota.funcionario_id && n.atividade_id === atividade.id)?.pontuacao ?? "";
                 row += `
                   <td>
                     <select name="nota_${nota.funcionario_id}_${atividade.id}" class="form-select">
                       <option value="">Selecione a Nota</option>
-                      <option value="0" ${valor == 0 ? 'selected' : ''}>0 - Observador</option>
-                      <option value="1" ${valor == 1 ? 'selected' : ''}>1 - Aprendiz</option>
-                      <option value="2" ${valor == 2 ? 'selected' : ''}>2 - Assistente</option>
-                      <option value="3" ${valor == 3 ? 'selected' : ''}>3 - Autônomo</option>
-                      <option value="4" ${valor == 4 ? 'selected' : ''}>4 - Instrutor</option>
+                      <option value="0" ${valorNota === 0 ? 'selected' : ''}>0 - Observador</option>
+                      <option value="1" ${valorNota === 1 ? 'selected' : ''}>1 - Aprendiz</option>
+                      <option value="2" ${valorNota === 2 ? 'selected' : ''}>2 - Assistente</option>
+                      <option value="3" ${valorNota === 3 ? 'selected' : ''}>3 - Autônomo</option>
+                      <option value="4" ${valorNota === 4 ? 'selected' : ''}>4 - Instrutor</option>
                     </select>
                   </td>`;
               });
 
-              row += `
-                <td class="text-center">
-                  <button type="button" class="btn btn-sm btn-danger remover-colaborador" data-id="${nota.funcionario_id}" title="Remover">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>`;
+              row += `</tr>`;
               $('#tabela-notas tbody').append(row);
             });
             {% endif %}
@@ -199,13 +256,13 @@
       if (!id || $(`#linha-funcionario-${id}`).length > 0) return;
 
       let row = `<tr id="linha-funcionario-${id}" class="align-middle text-center">
-        <td class="align-middle text-center">
-          <button type="button" class="btn btn-outline-danger btn-sm remover-colaborador" data-id="${id}">
+        <td>
+          <button type="button" class="btn btn-outline-danger btn-sm excluir-colaborador" data-id="${id}">
             <i class="bi bi-x-lg"></i>
           </button>
         </td>
-        <td class="sticky-column align-middle">${nome}</td>
-        <td class="sticky-suplente align-middle">
+        <td class="sticky-column">${nome}</td>
+        <td class="sticky-suplente">
           <select name="perfil_${id}" class="form-select" required>
             <option value="">Selecione...</option>
             <option value="suplente">Suplente</option>
@@ -229,31 +286,31 @@
           </td>`;
       });
 
-      row += `
-        <td class="text-center">
-          <button type="button" class="btn btn-sm btn-danger remover-colaborador" data-id="${id}" title="Remover">
-            <i class="bi bi-trash"></i>
-          </button>
-        </td>
-      </tr>`;
-
+      row += `</tr>`;
       $('#tabela-notas tbody').append(row);
       $(this).val(null).trigger('change');
     });
 
-    $('#tabela-notas').on('click', '.remover-colaborador', function () {
-      const id = $(this).data('id');
-      const nome = $(`#linha-funcionario-${id} td:nth-child(2)`).text();
-      $(`#linha-funcionario-${id}`).remove();
-
-      $('#select-colaborador').append(`<option value="${id}" data-nome="${nome}">${nome}</option>`);
-    });
-
     {% if form.instance.pk %}
-      setTimeout(function () {
+      setTimeout(() => {
         $('#departamento').trigger('change');
       }, 200);
     {% endif %}
+
+    $('#tabela-notas').on('click', '.excluir-colaborador', function () {
+      const id = $(this).data('id');
+      $(`#linha-funcionario-${id}`).remove();
+
+      const input = document.getElementById("colaboradoresRemovidos");
+      if (input) {
+        let valores = input.value ? input.value.split(",") : [];
+        if (!valores.includes(id.toString())) {
+          valores.push(id.toString());
+          input.value = valores.join(",");
+        }
+      }
+    });
   });
 </script>
+
 {% endblock %}
