@@ -219,6 +219,12 @@ def cadastrar_matriz_polivalencia(request):
     )
 
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+from Funcionario.models import Funcionario
+
+
 @login_required
 def editar_matriz_polivalencia(request, id):
     matriz = get_object_or_404(
@@ -230,27 +236,30 @@ def editar_matriz_polivalencia(request, id):
     atividades = Atividade.objects.filter(departamento=departamento_selecionado)
     atividade_ids = atividades.values_list("id", flat=True)
 
-    funcionarios = Funcionario.objects.filter(
+    # Somente quem já tem nota
+    funcionarios_com_nota = Funcionario.objects.filter(
         notas__atividade_id__in=atividade_ids
     ).distinct().order_by("nome")
 
+    # Todos funcionários ativos para popular o select
+    todos_funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+
     departamentos = Atividade.objects.values_list("departamento", flat=True).distinct()
 
+    # Dicionário de notas por funcionário
     notas_por_funcionario = {
-            funcionario.id: {
-                atividade.id: {"pontuacao": None, "perfil": ""}
-                for atividade in atividades
-            }
-            for funcionario in funcionarios
+        funcionario.id: {
+            atividade.id: {"pontuacao": None, "perfil": ""}
+            for atividade in atividades
         }
+        for funcionario in funcionarios_com_nota
+    }
 
-
-    for nota in Nota.objects.filter(funcionario__in=funcionarios, atividade__in=atividades):
+    for nota in Nota.objects.filter(funcionario__in=funcionarios_com_nota, atividade__in=atividades):
         notas_por_funcionario[nota.funcionario.id][nota.atividade.id] = {
             "pontuacao": nota.pontuacao,
             "perfil": nota.perfil,
         }
-
 
     if request.method == "POST":
         form = MatrizPolivalenciaForm(request.POST, instance=matriz)
@@ -259,7 +268,7 @@ def editar_matriz_polivalencia(request, id):
             matriz.departamento = departamento_selecionado
             matriz.save()
 
-            salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=True)
+            salvar_notas_funcionarios(request, todos_funcionarios, atividades, usar_perfil=True)
 
             messages.success(request, "Matriz de Polivalência atualizada com sucesso.")
             return redirect("lista_matriz_polivalencia")
@@ -285,7 +294,7 @@ def editar_matriz_polivalencia(request, id):
         {
             "form": form,
             "matriz": matriz,
-            "funcionarios": list(funcionarios.values("id", "nome")),
+            "funcionarios": list(todos_funcionarios.values("id", "nome")),  # necessário para o JS
             "atividades": atividades,
             "departamentos": departamentos,
             "notas_lista": notas_lista,
@@ -293,6 +302,7 @@ def editar_matriz_polivalencia(request, id):
             "campos_responsaveis": ['elaboracao', 'coordenacao', 'validacao'],
         },
     )
+
 
 
 
