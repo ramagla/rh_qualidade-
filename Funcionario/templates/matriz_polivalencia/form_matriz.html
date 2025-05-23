@@ -43,10 +43,13 @@
   <select name="departamento" id="departamento" class="form-select select2">
     <option value="">Selecione o Departamento</option>
     {% for departamento in departamentos %}
-      <option value="{{ departamento }}" {% if form.instance.departamento == departamento %}selected{% endif %}>
-        {{ departamento }}
-      </option>
-    {% endfor %}
+    <option value="{{ departamento.0 }}" {% if form.instance.departamento == departamento.0 %}selected{% endif %}>
+      {{ departamento.1 }}
+    </option>
+  {% endfor %}
+  
+    
+  
   </select>
 </div>
 
@@ -99,13 +102,22 @@
             </div>
             <div id="tabela-notas-container">
               <div class="tabela-scroll">
-                <table class="table table-bordered" id="tabela-notas">
+                <table class="table table-bordered table-striped" id="tabela-notas">
                   <thead>
-                    <tr>
-                      <th class="sticky-header sticky-column">Colaborador</th>
-                      <th class="sticky-header sticky-suplente">Perfil</th>
+                    <tr class="align-middle text-center">
+                      <th class="sticky-header align-middle text-center" title="Remover colaborador">
+                        <i class="bi bi-trash3-fill"></i>
+                      </th>
+                      <th class="sticky-header sticky-column align-middle">
+                        <i class="bi bi-person-fill me-1"></i> Colaborador
+                      </th>
+                      <th class="sticky-header sticky-suplente align-middle">
+                        <i class="bi bi-person-badge-fill me-1"></i> Perfil
+                      </th>
                     </tr>
                   </thead>
+                  
+                  
                   <tbody></tbody>
                 </table>
               </div>
@@ -151,7 +163,7 @@
             const tabelaNotas = $('#tabela-notas');
 
             // Cabeçalho
-            let headRow = '<th class="sticky-header sticky-column">Colaborador</th><th class="sticky-header sticky-suplente">Suplente</th>';
+            let headRow = '<th class="sticky-header">#</th><th class="sticky-header sticky-column">Colaborador</th><th class="sticky-header sticky-suplente">Suplente</th>';
             atividades.forEach((atividade, index) => {
               headRow += `
                 <th class="activity-header">
@@ -181,9 +193,15 @@
 
                 const nome = funcionariosData.find(f => f.id === nota.funcionario_id)?.nome || '---';
 
-                let row = `<tr id="linha-funcionario-${nota.funcionario_id}">
-                  <td class="sticky-column">${nome}</td>
-                  <td class="sticky-suplente">
+                let row = `<tr id="linha-funcionario-${nota.funcionario_id}" class="align-middle text-center">
+                  <td class="align-middle text-center">
+                    <button type="button" class="btn btn-outline-danger btn-sm excluir-colaborador" data-id="${nota.funcionario_id}">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </td>
+                  <td class="sticky-column align-middle">${nome}</td>
+                  <td class="sticky-suplente align-middle">
+                
                     <select name="perfil_${nota.funcionario_id}" class="form-select" required>
                       <option value="">Selecione...</option>
                       <option value="suplente" ${nota.perfil === 'suplente' ? 'selected' : ''}>Suplente</option>
@@ -229,8 +247,14 @@
 
       if (!id || $(`#linha-funcionario-${id}`).length > 0) return;
 
-      let row = `<tr id="linha-funcionario-${id}">
-        <td class="sticky-column">${nome}</td>
+      let row = `<tr id="linha-funcionario-${id}" class="align-middle text-center">
+        <td class="align-middle text-center">
+          <button type="button" class="btn btn-outline-danger btn-sm excluir-colaborador" data-id="${id}">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </td>
+        <td class="sticky-column align-middle">${nome}</td>
+      
        <td class="sticky-suplente">
             <select name="perfil_${id}" class="form-select" required>
               <option value="">Selecione...</option>
@@ -266,7 +290,14 @@
         $('#departamento').trigger('change');
       }, 200);
     {% endif %}
+     // Evento para remover colaborador da tabela
+$('#tabela-notas').on('click', '.excluir-colaborador', function () {
+  const id = $(this).data('id');
+  $(`#linha-funcionario-${id}`).remove();
+});
   });
+ 
+
 </script>
 
 

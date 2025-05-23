@@ -16,6 +16,7 @@ class AvaliacaoExperiencia(models.Model):
     interesse = models.IntegerField(null=True, blank=True)
     relacionamento_social = models.IntegerField(null=True, blank=True)
     capacidade_aprendizagem = models.IntegerField(null=True, blank=True)
+    anexo = models.FileField(upload_to='avaliacoes/experiencia/', blank=True, null=True)
 
     # Observações e orientação
     observacoes = models.TextField(blank=True, null=True)

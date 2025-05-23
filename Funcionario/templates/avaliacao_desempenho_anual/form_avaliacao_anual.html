@@ -34,7 +34,7 @@
 </div>
 
 <div class="container">
-  <form method="post" action="{% if form.instance.pk %}{% url 'editar_avaliacao_anual' form.instance.pk %}{% else %}{% url 'cadastrar_avaliacao_anual' %}{% endif %}" class="row g-3">
+  <form method="post" enctype="multipart/form-data" action="{% if form.instance.pk %}{% url 'editar_avaliacao_anual' form.instance.pk %}{% else %}{% url 'cadastrar_avaliacao_anual' %}{% endif %}" class="row g-3">
     {% csrf_token %}
     {% include 'partials/global/_form_errors.html' %}
 
@@ -102,28 +102,37 @@
       </div>
 
       <!-- Sessão Avaliações Globais -->
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="headingGlob">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGlob" aria-expanded="false" aria-controls="collapseGlob">
-            🌐 Avaliações Globais
-          </button>
-        </h2>
-        <div id="collapseGlob" class="accordion-collapse collapse" aria-labelledby="headingGlob" data-bs-parent="#accordionPrincipal">
-          <div class="accordion-body row g-3">
-            <div class="col-12">
-              <label for="avaliacao_global_avaliador" class="form-label"><i class="bi bi-chat-dots"></i> Avaliação Global (Visão do Avaliador)</label>
-            {{ form.avaliacao_global_avaliador|safe }}
-            </div>
-            <div class="col-12">
-              <label for="avaliacao_global_avaliado" class="form-label"><i class="bi bi-chat-square-dots"></i> Avaliação Global (Visão do Avaliado)</label>
-              {{ form.avaliacao_global_avaliado|safe }}
-            </div>
-          </div>
-        </div>
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingGlob">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGlob" aria-expanded="false" aria-controls="collapseGlob">
+      🌐 Avaliações Globais
+    </button>
+  </h2>
+  <div id="collapseGlob" class="accordion-collapse collapse" aria-labelledby="headingGlob" data-bs-parent="#accordionPrincipal">
+    <div class="accordion-body row g-3">
+      
+      <div class="col-12">
+        <label for="avaliacao_global_avaliador" class="form-label">
+          <i class="bi bi-chat-dots"></i> Avaliação Global (Visão do Avaliador)
+        </label>
+        {{ form.avaliacao_global_avaliador|safe }}
       </div>
 
-    </div>
+      <div class="col-12">
+        <label for="avaliacao_global_avaliado" class="form-label">
+          <i class="bi bi-chat-square-dots"></i> Avaliação Global (Visão do Avaliado)
+        </label>
+        {{ form.avaliacao_global_avaliado|safe }}
+      </div>
 
+      {% include 'partials/global/_campo_anexo.html' %}
+
+    </div>
+  </div>
+</div>
+
+    
+    
     {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='lista_avaliacao_anual' %}
   </form>
 </div>
