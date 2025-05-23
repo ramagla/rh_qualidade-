@@ -209,3 +209,81 @@ def relatorio_ligacoes_recebidas(request):
     }
 
     return render(request, "relatorios/ligacoes_recebidas_relatorio.html", context)
+
+from portaria.models import OcorrenciaPortaria
+
+@login_required
+@permission_required("portaria.view_ocorrenciaportaria", raise_exception=True)
+def relatorio_ocorrencias(request):
+    # ❌ NÃO usar select_related para campos não relacionais
+    ocorrencias = OcorrenciaPortaria.objects.prefetch_related("pessoas_envolvidas").order_by("-data_inicio")
+
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+    tipo = request.GET.get("tipo_ocorrencia")
+    local = request.GET.get("local")
+
+    if data_inicio:
+        ocorrencias = ocorrencias.filter(data_inicio__date__gte=data_inicio)
+    if data_fim:
+        ocorrencias = ocorrencias.filter(data_inicio__date__lte=data_fim)
+    if tipo:
+        ocorrencias = ocorrencias.filter(tipo_ocorrencia=tipo)
+    if local:
+        ocorrencias = ocorrencias.filter(local__icontains=local)
+
+    tipos_disponiveis = OcorrenciaPortaria.objects.values_list("tipo_ocorrencia", flat=True).distinct()
+    locais_disponiveis = OcorrenciaPortaria.objects.values_list("local", flat=True).distinct()
+
+    context = {
+        "ocorrencias": ocorrencias,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "tipo": tipo,
+        "local": local,
+        "tipos_disponiveis": tipos_disponiveis,
+        "locais_disponiveis": locais_disponiveis,
+    }
+    return render(request, "relatorios/ocorrencias_relatorio.html", context)
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required, permission_required
+from portaria.models import RegistroConsumoAgua
+from datetime import datetime
+from django.db.models import Sum
+
+@login_required
+@permission_required("portaria.view_consumoagua", raise_exception=True)
+def relatorio_consumo_agua(request):
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+
+    consumos = RegistroConsumoAgua.objects.all().order_by("data")
+
+    if data_inicio:
+        consumos = consumos.filter(data__gte=data_inicio)
+    if data_fim:
+        consumos = consumos.filter(data__lte=data_fim)
+
+    total_consumo = sum(
+        (c.leitura_final or 0) - (c.leitura_inicial or 0)
+        for c in consumos
+    )
+
+    # Preparar os dados para o gráfico
+    labels = [c.data.strftime("%d/%m") for c in consumos]
+    valores = [
+        float((c.leitura_final or 0) - (c.leitura_inicial or 0))
+        for c in consumos
+    ]
+
+    context = {
+        "consumos": consumos,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "total_consumo": total_consumo,
+        "labels": labels,
+        "valores": valores,
+    }
+    return render(request, "relatorios/agua_relatorio.html", context)

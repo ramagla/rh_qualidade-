@@ -337,3 +337,10 @@ def calcular_duracao(obj):
         return f"{horas:02d}:{minutos:02d}"
     except Exception:
         return "-"
+
+@register.filter
+def subtrair(val1, val2):
+    try:
+        return float(val1 or 0) - float(val2 or 0)
+    except Exception:
+        return 0

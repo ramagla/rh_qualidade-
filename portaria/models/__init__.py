@@ -4,3 +4,4 @@ from .entrada_visitante import EntradaVisitante
 from .atraso_saida import AtrasoSaida
 from .ligacao import LigacaoPortaria
 from .ocorrencia import OcorrenciaPortaria
+from .consumo_agua import RegistroConsumoAgua

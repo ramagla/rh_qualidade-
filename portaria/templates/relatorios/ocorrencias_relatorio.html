@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Relatório de Ocorrências{% endblock %}
+{% load custom_filters %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'header.html' %}
+
+<div class="mb-4 d-flex justify-content-end">
+  {% include 'partials/global/_botao_impressao.html' %}
+</div>
+
+{% include 'partials/global/_header_titulo.html' with titulo="Relatório de Ocorrências da Portaria" icone="bi bi-exclamation-triangle" emoji="⚠️" %}
+
+<!-- Filtros Aplicados -->
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header bg-light fw-bold d-flex align-items-center">
+    <i class="bi bi-funnel-fill me-2 text-primary"></i> Filtros Aplicados
+  </div>
+  <div class="card-body">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-print-2 g-3">
+      <div class="col print-col">
+        <p class="mb-1 text-muted">Período:</p>
+        <p class="fw-semibold">
+          {% if data_inicio %}{{ data_inicio|date:"d/m/Y" }}{% else %}Início{% endif %} até {% if data_fim %}{{ data_fim|date:"d/m/Y" }}{% else %}Hoje{% endif %}
+        </p>
+      </div>
+      <div class="col print-col">
+        <p class="mb-1 text-muted">Tipo de Ocorrência:</p>
+        <p class="fw-semibold">{{ tipo|default:"Todos" }}</p>
+      </div>
+      <div class="col print-col">
+        <p class="mb-1 text-muted">Local:</p>
+        <p class="fw-semibold">{{ local|default:"Todos" }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filtros -->
+<div class="no-print">
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+      <label class="form-label">Data Início</label>
+      <input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Data Fim</label>
+      <input type="date" name="data_fim" value="{{ data_fim }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Tipo</label>
+      <select name="tipo" class="form-select select2">
+        <option value="">---------</option>
+        {% for t in tipos_disponiveis %}
+          <option value="{{ t }}" {% if t == tipo %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Local</label>
+      <select name="local" class="form-select select2">
+        <option value="">---------</option>
+        {% for l in locais_disponiveis %}
+          <option value="{{ l }}" {% if l == local %}selected{% endif %}>{{ l }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 text-end">
+      {% include "partials/global/_botao_filtrar.html" %}
+    </div>
+  </form>
+</div>
+
+<!-- Tabela -->
+<div class="table-responsive shadow-sm rounded overflow-hidden">
+  <table class="table table-hover table-striped table-bordered align-middle text-center mb-0">
+    <thead class="table-light">
+      <tr class="text-uppercase small text-muted">
+        <th>Início</th>
+        <th>Fim</th>
+        <th>Tipo</th>
+        <th>Local</th>
+        <th>Pessoas Envolvidas</th>
+        <th>Descrição</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in ocorrencias %}
+        <tr>
+            <td>{{ o.data_inicio|date:"d/m/Y" }} {{ o.hora_inicio|default_if_none:"-" }}</td>
+            <td>{{ o.data_fim|date:"d/m/Y" }} {{ o.hora_fim|default_if_none:"-" }}</td>
+            <td>{{ o.get_tipo_ocorrencia_display }}</td>
+            <td>{{ o.local }}</td>
+            <td>
+                {% for p in o.pessoas_envolvidas.all %}
+                  <div>{{ p.nome|primeiro_nome }}</div>
+                {% endfor %}
+              </td>
+          <td class="text-start">{{ o.descricao|safe }}</td>
+        </tr>
+      {% empty %}
+        {% include "partials/global/_sem_resultados.html" with item_nome="ocorrências" %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Rodapé -->
+{% include 'partials/global/_formulario_rodape.html' with numero_formulario="F026 Rev.01" %}
+{% endblock %}

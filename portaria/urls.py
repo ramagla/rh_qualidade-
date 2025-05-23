@@ -51,5 +51,7 @@ urlpatterns = [
     path("relatorio-visitantes/", relatorios_views.relatorio_visitantes, name="relatorio_visitantes"),
     path("relatorio-atrasos-saidas/", relatorios_views.relatorio_atrasos_saidas, name="relatorio_atrasos_saidas"),
     path("relatorio-ligacoes-recebidas/", relatorios_views.relatorio_ligacoes_recebidas, name="relatorio_ligacoes_recebidas"),
+    path("relatorio-ocorrencias/", relatorios_views.relatorio_ocorrencias, name="relatorio_ocorrencias"),
+    path("relatorio-consumo-agua/", relatorios_views.relatorio_consumo_agua, name="relatorio_consumo_agua"),
 
 ]

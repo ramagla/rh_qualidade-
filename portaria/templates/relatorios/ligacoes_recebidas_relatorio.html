@@ -96,9 +96,9 @@
           <td>{{ ligacao.data|date:"d/m/Y" }}</td>
           <td>{{ ligacao.horario }}</td>
           <td>{{ ligacao.nome }}</td>
-          <td>{{ ligacao.empresa_origem }}</td>
-          <td>{{ ligacao.falar_com }}</td>
-          <td class="text-start">{{ ligacao.recado }}</td>
+          <td>{{ ligacao.empresa_origem|default:"-" }}</td>
+          <td>{{ ligacao.falar_com.nome|default:"-" }}</td>
+          <td class="text-start text-wrap" style="word-break: break-word;">{{ ligacao.recado }}</td>
           <td>
             {% if ligacao.recado_enviado %}
               <span class="badge bg-success-subtle text-success">Sim</span>
@@ -115,5 +115,5 @@
 </div>
 
 <!-- Rodapé -->
-{% include 'partials/global/_formulario_rodape.html' with numero_formulario="F025 Rev.01" %}
+{% include 'partials/global/_formulario_rodape.html' with numero_formulario="" %}
 {% endblock %}

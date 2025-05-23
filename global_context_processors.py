@@ -451,12 +451,28 @@ def global_menu(request):
                     "icon": "fas fa-phone"
                 })
 
+            if user.has_perm("portaria.view_ocorrenciaportaria"):
+                submenu_relatorios_portaria.append({
+                    "name": "Ocorrências",
+                    "url": "relatorio_ocorrencias",
+                    "icon": "fas fa-exclamation-triangle"
+                })
+
+            if user.has_perm("portaria.view_registroconsumoagua"):
+                submenu_relatorios_portaria.append({
+                    "name": "Análise de Consumo de Água",
+                    "url": "relatorio_consumo_agua",
+                    "icon": "fas fa-water"
+                })
+
+
             if submenu_relatorios_portaria:
                 menu_relatorios.append({
                     "name": "Relatórios",
                     "icon": "fas fa-file-alt",
                     "submenu": submenu_relatorios_portaria
                 })
+
 
            
 
