@@ -214,6 +214,7 @@ def cadastrar_matriz_polivalencia(request):
     todos_funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
     departamentos = DEPARTAMENTOS_EMPRESA
     atividades = Atividade.objects.none()
+    funcionarios_tabela = list(todos_funcionarios.values("id", "nome"))
 
     if request.method == "POST":
         form = MatrizPolivalenciaForm(request.POST)
@@ -236,13 +237,15 @@ def cadastrar_matriz_polivalencia(request):
         "matriz_polivalencia/form_matriz.html",
         {
             "form": form,
-            "funcionarios": list(todos_funcionarios.values("id", "nome")),
+            "funcionarios_tabela": funcionarios_tabela,
+            "funcionarios_disponiveis": funcionarios_tabela,
             "atividades": atividades,
             "departamentos": departamentos,
             "campos_responsaveis": ["elaboracao", "coordenacao", "validacao"],
             "url_voltar": "lista_matriz_polivalencia",
         },
     )
+
 
 
 @login_required
