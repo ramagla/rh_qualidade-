@@ -6,6 +6,8 @@ from portaria.views.api_views import api_veiculos_da_pessoa
 from .views import atrasos_saidas_views
 from portaria.views import ligacao_views
 from portaria.views import ocorrencia_views
+from portaria.views import consumo_agua_views 
+from portaria.views import relatorios_views
 
 urlpatterns = [
     path("pessoas/", pessoa_views.lista_pessoas, name="lista_pessoas"),
@@ -41,4 +43,13 @@ urlpatterns = [
     path("ocorrencias/editar/<int:pk>/", ocorrencia_views.editar_ocorrencia, name="editar_ocorrencia"),
     path("ocorrencias/visualizar/<int:pk>/", ocorrencia_views.visualizar_ocorrencia, name="visualizar_ocorrencia"),
     path("ocorrencias/excluir/<int:pk>/", ocorrencia_views.excluir_ocorrencia, name="excluir_ocorrencia"),
+
+    path("controle-consumo-agua/", consumo_agua_views.listar_consumo_agua, name="listar_consumo_agua"),
+    path("controle-consumo-agua/cadastrar/", consumo_agua_views.cadastrar_consumo_agua, name="cadastrar_consumo_agua"),
+    path("controle-consumo-agua/editar/<int:pk>/", consumo_agua_views.editar_consumo_agua, name="editar_consumo_agua"),
+    path("controle-consumo-agua/excluir/<int:pk>/", consumo_agua_views.excluir_consumo_agua, name="excluir_consumo_agua"),
+    path("relatorio-visitantes/", relatorios_views.relatorio_visitantes, name="relatorio_visitantes"),
+    path("relatorio-atrasos-saidas/", relatorios_views.relatorio_atrasos_saidas, name="relatorio_atrasos_saidas"),
+    path("relatorio-ligacoes-recebidas/", relatorios_views.relatorio_ligacoes_recebidas, name="relatorio_ligacoes_recebidas"),
+
 ]

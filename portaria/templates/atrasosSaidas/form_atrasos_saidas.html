@@ -49,6 +49,10 @@
               <label class="form-label"><i class="bi bi-clock me-2"></i> Horário</label>
               {{ form.horario|add_class:"form-control" }}
             </div>
+            <div class="col-md-3" id="campoHoraFim" style="display: none;">
+              <label class="form-label"><i class="bi bi-clock-history me-2"></i> Horário Fim</label>
+              {{ form.hora_fim|add_class:"form-control" }}
+            </div>
             
 
             <div class="col-md-12">
@@ -70,10 +74,12 @@
   document.addEventListener("DOMContentLoaded", function () {
     const selectFuncionario = $("#id_funcionario");
     const img = document.getElementById("fotoFuncionario");
+    const campoHoraFim = document.getElementById("campoHoraFim");
+    const selectTipo = document.getElementById("id_tipo");
 
     function carregarFoto(funcionarioId) {
       const fotoContainer = document.getElementById("fotoContainer");
-    
+
       if (funcionarioId) {
         fetch(`/rh/api/funcionario/ficha/${funcionarioId}/`)
           .then(response => response.json())
@@ -99,7 +105,16 @@
         fotoContainer.classList.add("d-none");
       }
     }
-    
+
+    function atualizarVisibilidadeHoraFim() {
+      if (selectTipo && campoHoraFim) {
+        if (selectTipo.value === "hora_extra") {
+          campoHoraFim.style.display = "block";
+        } else {
+          campoHoraFim.style.display = "none";
+        }
+      }
+    }
 
     // Inicializa o select2
     selectFuncionario.select2({ width: '100%' });
@@ -115,8 +130,15 @@
     if (funcionarioInicial) {
       carregarFoto(funcionarioInicial);
     }
+
+    // Evento de mudança no tipo
+    if (selectTipo) {
+      selectTipo.addEventListener("change", atualizarVisibilidadeHoraFim);
+      atualizarVisibilidadeHoraFim(); // Estado inicial
+    }
   });
 </script>
+
 
 
 

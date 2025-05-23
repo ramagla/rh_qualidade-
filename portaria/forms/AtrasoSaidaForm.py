@@ -8,10 +8,12 @@ from django.utils.timezone import localtime
 class AtrasoSaidaForm(forms.ModelForm):
     class Meta:
         model = AtrasoSaida
-        fields = ["funcionario", "data", "horario", "tipo", "observacao"]
+        fields = ["funcionario", "data", "horario", "hora_fim", "tipo", "observacao"]
         widgets = {
             "data": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
             "horario": forms.TimeInput(attrs={"type": "time"}),
+            "hora_fim": forms.TimeInput(attrs={"type": "time"}),
+
         }
 
     def __init__(self, *args, **kwargs):

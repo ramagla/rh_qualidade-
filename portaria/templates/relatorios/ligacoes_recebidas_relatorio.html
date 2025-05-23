@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Relatório de Ligações Recebidas{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'header.html' %}
+
+<div class="mb-4 d-flex justify-content-end">
+  {% include 'partials/global/_botao_impressao.html' %}
+</div>
+
+{% include 'partials/global/_header_titulo.html' with titulo="Relatório de Ligações Recebidas" icone="bi bi-telephone-inbound" emoji="📞" %}
+
+<!-- Filtros Aplicados -->
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header bg-light fw-bold d-flex align-items-center">
+    <i class="bi bi-funnel-fill me-2 text-primary"></i> Filtros Aplicados
+  </div>
+  <div class="card-body">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-print-2 g-3">
+      <div class="col print-col">
+        <p class="mb-1 text-muted">Período:</p>
+        <p class="fw-semibold">
+          {% if data_inicio %}{{ data_inicio|date:"d/m/Y" }}{% else %}Início{% endif %}
+          até
+          {% if data_fim %}{{ data_fim|date:"d/m/Y" }}{% else %}Hoje{% endif %}
+        </p>
+      </div>
+      <div class="col print-col">
+        <p class="mb-1 text-muted">Pessoa que Ligou:</p>
+        <p class="fw-semibold">{{ pessoa_que_ligou|default:"Todas" }}</p>
+      </div>
+      <div class="col print-col">
+        <p class="mb-1 text-muted">Falar com:</p>
+        <p class="fw-semibold">{{ falar_com|default:"Todos" }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filtros -->
+<div class="no-print">
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+      <label class="form-label">Data Início</label>
+      <input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Data Fim</label>
+      <input type="date" name="data_fim" value="{{ data_fim }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Pessoa que Ligou</label>
+      <select name="pessoa_que_ligou" class="form-select select2">
+        <option value="">---------</option>
+        {% for p in pessoas_que_ligaram %}
+          <option value="{{ p }}" {% if p == pessoa_que_ligou %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Falar com</label>
+      <select name="falar_com" class="form-select select2">
+        <option value="">---------</option>
+        {% for f in colaboradores_disponiveis %}
+          <option value="{{ f }}" {% if f == falar_com %}selected{% endif %}>{{ f }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 text-end">
+      {% include "partials/global/_botao_filtrar.html" %}
+    </div>
+  </form>
+</div>
+
+<!-- Tabela -->
+<div class="table-responsive shadow-sm rounded overflow-hidden">
+  <table class="table table-hover table-striped table-bordered align-middle text-center mb-0">
+    <thead class="table-light">
+      <tr class="text-uppercase small text-muted">
+        <th><i class="bi bi-calendar-date me-1"></i>Data</th>
+        <th><i class="bi bi-clock me-1"></i>Horário</th>
+        <th><i class="bi bi-person-lines-fill me-1"></i>Pessoa que Ligou</th>
+        <th><i class="bi bi-building me-1"></i>Empresa/Origem</th>
+        <th><i class="bi bi-person-badge me-1"></i>Falar com</th>
+        <th><i class="bi bi-chat-left-text me-1"></i>Recado</th>
+        <th><i class="bi bi-send-check me-1"></i>Recado Enviado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ligacao in ligacoes %}
+        <tr>
+          <td>{{ ligacao.data|date:"d/m/Y" }}</td>
+          <td>{{ ligacao.horario }}</td>
+          <td>{{ ligacao.nome }}</td>
+          <td>{{ ligacao.empresa_origem }}</td>
+          <td>{{ ligacao.falar_com }}</td>
+          <td class="text-start">{{ ligacao.recado }}</td>
+          <td>
+            {% if ligacao.recado_enviado %}
+              <span class="badge bg-success-subtle text-success">Sim</span>
+            {% else %}
+              <span class="badge bg-danger-subtle text-danger">Não</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        {% include "partials/global/_sem_resultados.html" with item_nome="ligações" %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Rodapé -->
+{% include 'partials/global/_formulario_rodape.html' with numero_formulario="F025 Rev.01" %}
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Controle de Consumo de Água{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Controle de Consumo de Água" icone="bi bi-tropical-storm" emoji="💧" %}
+
+<div class="container mt-4">
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+      <i class="bi bi-funnel-fill text-primary"></i>
+      <strong class="text-primary">Filtros de Consumo</strong>
+    </div>
+    <div class="card-body">
+      <form method="get">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label for="data" class="form-label">Data</label>
+            <input type="date" name="data" id="data" class="form-control" value="{{ request.GET.data }}">
+          </div>
+          <div class="col-md-4">
+            <label for="consumo_minimo" class="form-label">Consumo Mínimo (m³)</label>
+            <input type="number" step="0.01" name="consumo_minimo" class="form-control" value="{{ request.GET.consumo_minimo }}">
+          </div>
+          <div class="col-md-4">
+            <label for="consumo_maximo" class="form-label">Consumo Máximo (m³)</label>
+            <input type="number" step="0.01" name="consumo_maximo" class="form-control" value="{{ request.GET.consumo_maximo }}">
+          </div>
+          <div class="col-md-12 text-end">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-search"></i> Filtrar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Cards de Indicadores -->
+  <div class="row mb-4">
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=registros|length subtitulo="Consumos registrados." cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Consumo Acima da Média" valor=total_acima subtitulo="Acima de 5 m³." cor="warning" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Consumo Normal" valor=total_dentro subtitulo="Até 5 m³." cor="success" %}
+  </div>
+
+  <!-- Botão de Ação -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+    <a href="{% url 'cadastrar_consumo_agua' %}" class="btn btn-success d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle me-1"></i> Novo Registro
+    </a>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover text-center align-middle">
+        <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-calendar-date me-1"></i> Data</th>
+          <th><i class="bi bi-speedometer2 me-1"></i> Leitura Inicial</th>
+          <th><i class="bi bi-speedometer me-1"></i> Leitura Final</th>
+          <th><i class="bi bi-graph-up me-1"></i> Consumo (m³)</th>
+          <th><i class="bi bi-card-text me-1"></i> Observação</th>
+          <th><i class="bi bi-gear me-1"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for registro in registros %}
+        <tr>
+          <td>{{ registro.data|date:"d/m/Y" }}</td>
+          <td>{{ registro.leitura_inicial }}</td>
+          <td>{{ registro.leitura_final }}</td>
+          <td>
+            {% if registro.consumo > 5 %}
+              <span class="text-danger fw-bold">
+                {{ registro.consumo }} <i class="bi bi-exclamation-circle-fill ms-1"></i>
+              </span>
+            {% else %}
+              {{ registro.consumo }}
+            {% endif %}
+          </td>
+                    <td>{{ registro.observacao|default:"—" }}</td>
+          <td>
+            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+                {% include 'partials/global/_botao_editar.html' with objeto=registro url_editar='editar_consumo_agua' label='registro' %}
+                {% include 'partials/global/_botao_excluir.html' with objeto=registro url_excluir='excluir_consumo_agua' label='registro' %}
+                            </div>
+          </td>
+        </tr>
+        {% empty %}
+          {% include 'partials/global/_sem_resultados.html' with colspan=6 %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

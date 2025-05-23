@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Registrar Consumo de Água{% endblock %}
+
+{% block content %}
+{% include "partials/global/_toast_mensagens.html" %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-tropical-storm me-2"></i>
+    {% if registro %}Editar{% else %}Registrar{% endif %} Consumo de Água
+  </h2>
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+    {% if form.errors %}
+      {% include "partials/global/_form_errors.html" %}
+    {% endif %}
+
+    <div class="accordion" id="accordionConsumoAgua">
+
+      <!-- 📊 Dados do Consumo -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingConsumo">
+          <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConsumo" aria-expanded="true" aria-controls="collapseConsumo">
+            <i class="bi bi-info-circle me-2"></i> Dados do Consumo
+          </button>
+        </h2>
+        <div id="collapseConsumo" class="accordion-collapse collapse show" aria-labelledby="headingConsumo" data-bs-parent="#accordionConsumoAgua">
+          <div class="accordion-body row g-3">
+
+            <div class="col-md-4">
+              <label for="data" class="form-label">
+                <i class="bi bi-calendar-date me-1"></i> Data:
+              </label>
+              {{ form.data|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-4">
+              <label for="leitura_inicial" class="form-label">
+                <i class="bi bi-speedometer2 me-1"></i> Leitura Inicial (m³):
+              </label>
+              {{ form.leitura_inicial|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-4">
+              <label for="leitura_final" class="form-label">
+                <i class="bi bi-speedometer me-1"></i> Leitura Final (m³):
+              </label>
+              {{ form.leitura_final|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-12">
+              <label for="observacao" class="form-label">
+                <i class="bi bi-chat-left-text me-1"></i> Observação:
+              </label>
+              {{ form.observacao|add_class:"form-control" }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botões -->
+    <div class="col-12 text-center mt-4">
+      {% include "partials/global/_botoes_salvar_cancelar.html" with edicao=registro url_voltar='listar_consumo_agua' %}
+    </div>
+  </form>
+</div>
+
+<!-- Preencher a data com o dia atual -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const inputData = document.getElementById("id_data");
+    if (inputData && !inputData.value) {
+      inputData.valueAsDate = new Date();
+    }
+  });
+</script>
+{% endblock %}

@@ -12,6 +12,7 @@ class AtrasoSaida(models.Model):
     funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE, related_name="ocorrencias_portaria")
     data = models.DateField()
     horario = models.TimeField(null=True, blank=True)
+    hora_fim = models.TimeField(null=True, blank=True)  
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
     observacao = models.TextField(blank=True, null=True)
 

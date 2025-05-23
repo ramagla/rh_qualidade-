@@ -367,6 +367,7 @@ def global_menu(request):
        
       # Menu Cadastros (agrupando submenus da portaria)
         menu_cadastros = []
+        menu_relatorios = []  # ✅ novo menu de relatórios
 
         if portaria_permitido:
             submenu_portaria = []
@@ -390,7 +391,7 @@ def global_menu(request):
                 "submenu": submenu_portaria
             })
 
-        # Menu simples: Controle de Visitantes
+            # Menus simples
             if user.has_perm("portaria.view_controlevisitantes"):
                 menu_cadastros.append({
                     "name": "Controle de Visitantes",
@@ -398,21 +399,20 @@ def global_menu(request):
                     "icon": "fas fa-user-check"
                 })
 
-        # Menu simples: Controle de Atrasos e Saídas Antecipadas
-            if user.has_perm("portaria.view_funcionario"):  # ou crie uma permissão específica se desejar
+            if user.has_perm("portaria.view_funcionario"):  # ou permissão específica
                 menu_cadastros.append({
                     "name": "Atrasos e Saídas Antecipadas",
                     "url": "lista_atrasos_saidas",
                     "icon": "fas fa-user-clock"
                 })
 
-                    # Menu simples: Controle de Ligações
             if user.has_perm("portaria.view_ligacaoportaria"):
                 menu_cadastros.append({
                     "name": "Controle de Ligações",
                     "url": "lista_ligacoes",
                     "icon": "fas fa-phone-alt"
                 })
+
             if user.has_perm("portaria.view_ocorrenciaportaria"):
                 menu_cadastros.append({
                     "name": "Ocorrências da Portaria",
@@ -420,6 +420,43 @@ def global_menu(request):
                     "icon": "fas fa-exclamation-triangle"
                 })
 
+            if user.has_perm("portaria.view_registroconsumoagua"):
+                menu_cadastros.append({
+                    "name": "Controle de Consumo de Água",
+                    "url": "listar_consumo_agua",
+                    "icon": "fas fa-tint"
+                })
+
+            # ✅ Menu Relatórios da Portaria
+            submenu_relatorios_portaria = []
+
+            if user.has_perm("portaria.view_entradavisitante"):
+                submenu_relatorios_portaria.append({
+                    "name": "Visitantes",
+                    "url": "relatorio_visitantes",
+                    "icon": "fas fa-user-check"
+                })
+
+            if user.has_perm("portaria.view_funcionario"):
+                submenu_relatorios_portaria.append({
+                    "name": "Atrasos e Saídas",
+                    "url": "relatorio_atrasos_saidas",  # nome da url
+                    "icon": "fas fa-user-clock"
+                })
+            
+            if user.has_perm("portaria.view_ligacaoportaria"):
+                submenu_relatorios_portaria.append({
+                    "name": "Ligações Recebidas",
+                    "url": "relatorio_ligacoes_recebidas",
+                    "icon": "fas fa-phone"
+                })
+
+            if submenu_relatorios_portaria:
+                menu_relatorios.append({
+                    "name": "Relatórios",
+                    "icon": "fas fa-file-alt",
+                    "submenu": submenu_relatorios_portaria
+                })
 
            
 
@@ -431,8 +468,9 @@ def global_menu(request):
         menu = menu_qualidade_fornecimento
         modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Qualidade de Fornecimento"), None)
     elif active_module == "portaria":
-        menu = menu_cadastros  # ✅ agora é este o nome correto
+        menu = menu_cadastros + menu_relatorios  # ✅ combinar os dois blocos
         modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Portaria"), None)
+
 
     else:
         menu = menu_recursos_humanos
