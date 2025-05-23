@@ -246,6 +246,7 @@ def editar_matriz_polivalencia(request, id):
 
     todos_funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
 
+    # Dicionário de notas por funcionário
     notas_por_funcionario = {
         funcionario.id: {
             atividade.id: {"pontuacao": None, "perfil": ""}
