@@ -296,11 +296,21 @@ def get_tipos_abnt(request):
 
 def is_tecnico(user):
     return user.groups.filter(name="tecnico").exists()
+from django.utils.timezone import now
 
 @login_required
 def aprovar_normas(request):
     if request.method == "POST":
-        ids = request.POST.getlist("normas_aprovadas")
-        NormaTecnica.objects.filter(id__in=ids).update(aprovada=True)
-        messages.success(request, "Normas aprovadas com sucesso.")
+        id_norma = request.POST.get("normas_aprovadas")
+        if id_norma:
+            norma = NormaTecnica.objects.filter(id=id_norma).first()
+            if norma:
+                norma.aprovada = True
+                norma.aprovado_por = request.user
+                norma.aprovado_em = now()
+                norma.save()
+                messages.success(request, f"Norma '{norma.nome_norma}' aprovada com sucesso por {request.user.get_full_name() or request.user.username}.")
+        else:
+            messages.warning(request, "Nenhuma norma foi selecionada.")
+
     return redirect("lista_normas")

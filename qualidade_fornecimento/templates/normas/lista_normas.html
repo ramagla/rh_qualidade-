@@ -135,36 +135,36 @@
 
 </div>
 <div class="modal fade" id="modalAprovarNormas" tabindex="-1" aria-labelledby="modalAprovarNormasLabel" aria-hidden="true">
-<div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
+  <div class="modal-dialog">
+    <div class="modal-content border-success shadow">
+      <div class="modal-header bg-success text-white">
         <h5 class="modal-title" id="modalAprovarNormasLabel">
-          <i class="bi bi-patch-check me-1"></i> Aprovação de Normas
+          <i class="bi bi-patch-check-fill me-2"></i> Aprovação de Norma
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
-      <div class="modal-body">
-
-        <form method="post" action="{% url 'aprovar_normas' %}">
-          {% csrf_token %}
-          <div class="mb-3">
-  <label for="normas_aprovadas" class="form-label">Selecionar Normas para Aprovação</label>
-<select id="normas_aprovadas" name="normas_aprovadas" class="form-select" multiple required>
-    {% for norma in normas_pendentes %}
-      <option value="{{ norma.id }}">{{ norma.nome_norma }}</option>
-    {% endfor %}
-  </select>
-</div>
-
-
-          <div class="text-end mt-3">
-            <button type="submit" class="btn btn-success">
-              <i class="bi bi-check2-circle me-1"></i> Confirmar Aprovação
-            </button>
-          </div>
-        </form>
-
-      </div>
+      <form method="post" action="{% url 'aprovar_normas' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <label for="normas_aprovadas" class="form-label">
+            <i class="bi bi-file-earmark-text me-1"></i> Selecione a Norma para Aprovação
+          </label>
+          <select id="normas_aprovadas" name="normas_aprovadas" class="form-select" required>
+            <option value="" disabled selected>Selecione...</option>
+            {% for norma in normas_pendentes %}
+              <option value="{{ norma.id }}">{{ norma.nome_norma }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check2-circle me-1"></i> Confirmar Aprovação
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -202,12 +202,22 @@
   </td>
   <td class="text-center align-middle">
     {% if norma.aprovada %}
-      <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Sim</span>
+      <span class="badge bg-success d-inline-flex align-items-center gap-1">
+        <i class="bi bi-check-circle"></i> Sim
+        {% if norma.aprovado_por %}
+          <span class="ms-1 text-white-50 small">
+            ({{ norma.aprovado_por.first_name|default:norma.aprovado_por.username }} – {{ norma.aprovado_em|date:"d/m/Y H:i" }})
+          </span>
+        {% endif %}
+      </span>
     {% else %}
-      <span class="badge bg-secondary"><i class="bi bi-hourglass-split me-1"></i> Não</span>
+      <span class="badge bg-secondary">
+        <i class="bi bi-hourglass-split me-1"></i> Não
+      </span>
     {% endif %}
   </td>
-
+  
+  
             <td class="text-center align-middle">
   <div class="d-inline-flex flex-wrap justify-content-center gap-2">
 
@@ -278,11 +288,13 @@
 
 <script>
   $('#normas_aprovadas').select2({
-  width: '100%',
-  placeholder: "Selecione uma ou mais normas",
-  allowClear: true,
-  dropdownParent: $('#modalAprovarNormas .modal-content')
-});
+    width: '100%',
+    placeholder: "Selecione uma norma",
+    allowClear: false,
+    dropdownParent: $('#modalAprovarNormas .modal-content'),
+    minimumResultsForSearch: 5
+  });
+  
 
 </script>
 
