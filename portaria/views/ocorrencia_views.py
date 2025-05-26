@@ -83,11 +83,20 @@ def editar_ocorrencia(request, pk):
 
 
 
+from django.utils.timezone import now
+
 @login_required
 @permission_required("portaria.view_ocorrenciaportaria", raise_exception=True)
 def visualizar_ocorrencia(request, pk):
     ocorrencia = get_object_or_404(OcorrenciaPortaria, pk=pk)
-    return render(request, "ocorrencias/visualizar.html", {"ocorrencia": ocorrencia})
+    return render(
+        request,
+        "ocorrencias/visualizar_ocorrencia.html",
+        {
+            "ocorrencia": ocorrencia,
+            "now": now(),  # ✅ necessário para uso no template
+        }
+    )
 
 
 @login_required

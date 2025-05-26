@@ -4,11 +4,12 @@ from portaria.models.ligacao import LigacaoPortaria
 from portaria.forms.ligacao_form import LigacaoPortariaForm
 from django.utils.timezone import now
 from datetime import datetime, date
+from django.core.paginator import Paginator
 
 @login_required
 @permission_required("portaria.view_ligacaoportaria", raise_exception=True)
 def lista_ligacoes(request):
-    ligacoes = LigacaoPortaria.objects.select_related("falar_com").order_by("-data", "-horario")
+    ligacoes_queryset = LigacaoPortaria.objects.select_related("falar_com").order_by("-data", "-horario")
 
     # Filtros
     nome = request.GET.get("nome")
@@ -17,24 +18,30 @@ def lista_ligacoes(request):
     data_fim = request.GET.get("data_fim")
 
     if nome:
-        ligacoes = ligacoes.filter(nome=nome)
+        ligacoes_queryset = ligacoes_queryset.filter(nome=nome)
     if empresa:
-        ligacoes = ligacoes.filter(empresa=empresa)
+        ligacoes_queryset = ligacoes_queryset.filter(empresa=empresa)
     if data_inicio:
-        ligacoes = ligacoes.filter(data__gte=data_inicio)
+        ligacoes_queryset = ligacoes_queryset.filter(data__gte=data_inicio)
     if data_fim:
-        ligacoes = ligacoes.filter(data__lte=data_fim)
+        ligacoes_queryset = ligacoes_queryset.filter(data__lte=data_fim)
 
     # Indicadores
-    total_ligacoes = ligacoes.count()
+    total_ligacoes = ligacoes_queryset.count()
     total_hoje = LigacaoPortaria.objects.filter(data=date.today()).count()
 
+    # Paginação
+    paginator = Paginator(ligacoes_queryset, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     # Listas únicas para os filtros
-    nomes = LigacaoPortaria.objects.values_list("nome", flat=True).distinct()
-    empresas = LigacaoPortaria.objects.values_list("empresa", flat=True).exclude(empresa="").distinct()
+    nomes = LigacaoPortaria.objects.values_list("nome", flat=True).distinct().order_by("nome")
+    empresas = LigacaoPortaria.objects.exclude(empresa="").values_list("empresa", flat=True).distinct().order_by("empresa")
 
     context = {
-        "ligacoes": ligacoes,
+        "ligacoes": page_obj,         # usado no for
+        "page_obj": page_obj,         # usado no _paginacao.html
         "total_ligacoes": total_ligacoes,
         "total_hoje": total_hoje,
         "nomes": nomes,

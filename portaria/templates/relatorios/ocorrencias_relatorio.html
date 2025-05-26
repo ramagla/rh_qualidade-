@@ -108,6 +108,32 @@
     </tbody>
   </table>
 </div>
+<style>
+  @media print {
+    body {
+      margin-top: 0 !important;
+    }
+
+    .pdf-container,
+    .pdf-header,
+    .card,
+    .table-responsive {
+      break-before: avoid !important;
+      page-break-before: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+
+    .mb-4, .mt-4, .my-4 {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+  }
+</style>
+
 
 <!-- Rodapé -->
 {% include 'partials/global/_formulario_rodape.html' with numero_formulario="F026 Rev.01" %}

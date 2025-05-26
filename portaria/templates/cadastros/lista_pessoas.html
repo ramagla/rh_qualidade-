@@ -128,18 +128,21 @@
             </td>
             
             <td>
-              {% if request.user|has_permission:"Portaria.view_pessoaportaria" %}
-                {% include 'partials/global/_botao_visualizar.html' with objeto=pessoa url_visualizar='visualizar_pessoa' label="pessoa" %}
-              {% endif %}
-            
-              {% if request.user|has_permission:"Portaria.change_pessoaportaria" %}
-                {% include 'partials/global/_botao_editar.html' with objeto=pessoa url_editar='editar_pessoa' label="pessoa" %}
-              {% endif %}
-            
-              {% if request.user|has_permission:"Portaria.delete_pessoaportaria" %}
-                {% include 'partials/global/_botao_excluir.html' with objeto=pessoa url_excluir='excluir_pessoa' label="pessoa" %}
-              {% endif %}
+              <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+                {% if request.user|has_permission:"Portaria.view_pessoaportaria" %}
+                  {% include 'partials/global/_botao_visualizar.html' with objeto=pessoa url_visualizar='visualizar_pessoa' label="pessoa" %}
+                {% endif %}
+                
+                {% if request.user|has_permission:"Portaria.change_pessoaportaria" %}
+                  {% include 'partials/global/_botao_editar.html' with objeto=pessoa url_editar='editar_pessoa' label="pessoa" %}
+                {% endif %}
+                
+                {% if request.user|has_permission:"Portaria.delete_pessoaportaria" %}
+                  {% include 'partials/global/_botao_excluir.html' with objeto=pessoa url_excluir='excluir_pessoa' label="pessoa" %}
+                {% endif %}
+              </div>
             </td>
+            
             
           </tr>
         {% empty %}

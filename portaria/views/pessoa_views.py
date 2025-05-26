@@ -121,11 +121,20 @@ def editar_pessoa(request, pk):
 
     return render(request, "cadastros/form_pessoa.html", {"form": form})
 
+from django.utils.timezone import now
+
 @login_required
 @permission_required("Portaria.view_pessoaportaria", raise_exception=True)
 def visualizar_pessoa(request, pk):
     pessoa = get_object_or_404(PessoaPortaria, pk=pk)
-    return render(request, "cadastros/pessoa_visualizar.html", {"pessoa": pessoa})
+    return render(
+        request,
+        "cadastros/pessoa_visualizar.html",
+        {
+            "pessoa": pessoa,
+            "now": now(),  # ✅ adiciona data/hora atual ao contexto
+        }
+    )
 
 
 @login_required

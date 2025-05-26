@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load tz %}
+
+{% block title %}Visualização da Ocorrência{% endblock %}
+
+{% block content %}
+  {% include "partials/global/_estilos_impressao.html" %}
+  {% include "partials/global/_botao_impressao.html" %}
+  {% include 'header.html' %}
+
+  <div id="relatorio-area">
+    <div class="pdf-container">
+      <!-- Cabeçalho -->
+      <div class="pdf-header text-center">
+        <h1>🚨 Ocorrência da Portaria</h1>
+        <p>Detalhamento completo da ocorrência registrada</p>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="pdf-content">
+        <div class="table-responsive">
+          <table class="table table-bordered info-table">
+
+            <tr>
+              <th class="align-middle">Tipo da Ocorrência</th>
+              <td class="align-middle">{{ ocorrencia.get_tipo_ocorrencia_display }}</td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Local</th>
+              <td class="align-middle">{{ ocorrencia.local }}</td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Data e Hora de Início</th>
+              <td class="align-middle">{{ ocorrencia.data_inicio|date:"d/m/Y" }} às {{ ocorrencia.hora_inicio|time:"H:i" }}</td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Data e Hora de Fim</th>
+              <td class="align-middle">
+                {% if ocorrencia.data_fim %}
+                  {{ ocorrencia.data_fim|date:"d/m/Y" }} às {{ ocorrencia.hora_fim|default_if_none:"--"|time:"H:i" }}
+                {% else %}
+                  Não encerrada
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Status</th>
+              <td class="align-middle">{{ ocorrencia.get_status_display }}</td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Pessoas Envolvidas</th>
+              <td class="align-middle">
+                {% if ocorrencia.pessoas_envolvidas.exists %}
+                  {% for pessoa in ocorrencia.pessoas_envolvidas.all %}
+                    <span class="badge bg-secondary me-1">{{ pessoa.nome }}</span>
+                  {% endfor %}
+                {% else %}
+                  Nenhuma pessoa vinculada
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Foi Registrado Boletim?</th>
+              <td class="align-middle">
+                {% if ocorrencia.foi_registrado_boletim %}
+                  Sim
+                  {% if ocorrencia.numero_boletim %}
+                    – Nº {{ ocorrencia.numero_boletim }}
+                  {% endif %}
+                {% else %}
+                  Não
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Descrição</th>
+              <td class="align-middle">{{ ocorrencia.descricao|safe }}</td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Arquivo Anexo</th>
+              <td class="align-middle">
+                {% if ocorrencia.arquivo_anexo %}
+                  <a href="{{ ocorrencia.arquivo_anexo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-file-earmark-arrow-down me-1"></i> Baixar Anexo
+                  </a>
+                {% else %}
+                  Nenhum anexo enviado
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Responsável pelo Registro</th>
+              <td class="align-middle">{{ ocorrencia.responsavel_registro.get_full_name|default:ocorrencia.responsavel_registro.username }}</td>
+            </tr>
+
+            <tr>
+              <th class="align-middle">Data do Registro</th>
+              <td class="align-middle">{{ ocorrencia.data_registro|date:"d/m/Y H:i" }}</td>
+            </tr>
+
+          </table>
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="pdf-footer text-center text-muted small">
+        <p class="mb-1">
+          <i class="bi bi-clock me-1" aria-hidden="true"></i>
+          Relatório gerado em {{ now|date:"d/m/Y H:i" }}
+        </p>
+        <p class="mb-0 fst-italic">
+          {% include "partials/global/_rodape_institucional.html" %}
+        </p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

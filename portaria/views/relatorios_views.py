@@ -68,6 +68,8 @@ def relatorio_visitantes(request):
         "entradas": entradas,
         "data_inicio": data_inicio,
         "data_fim": data_fim,
+
+
         "nome": nome,
         "empresa": empresa,
         "pessoa_visitada": pessoa_visitada,

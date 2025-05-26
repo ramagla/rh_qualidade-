@@ -116,9 +116,15 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "funcionario", "emitir_pesquisa_consciencia", "Pode emitir pesquisa de consciência"),
     ("Funcionario", "funcionario", "emitir_capacitacao_pratica", "Pode emitir avaliação de capacitação prática"),
     ("Funcionario", "funcionario", "emitir_f033", "Pode emitir Solicitação de Bolsa-Treinamento (F033)"),
-    ("portaria", "pessoaportaria", "acesso_portaria", "Pode acessar o módulo Portaria")
+    ("portaria", "pessoaportaria", "acesso_portaria", "Pode acessar o módulo Portaria"),
 
-
+    # Portaria – Relatórios
+    ("portaria", "relatorio", "relatorio_visitantes", "Pode acessar relatório de visitantes"),
+    ("portaria", "relatorio", "relatorio_atrasos_saidas", "Pode acessar relatório de atrasos e saídas"),
+    ("portaria", "relatorio", "relatorio_ligacoes_recebidas", "Pode acessar relatório de ligações"),
+    ("portaria", "relatorio", "relatorio_ocorrencias", "Pode acessar relatório de ocorrências"),
+    ("portaria", "relatorio", "relatorio_consumo_agua", "Pode acessar relatório de consumo de água"),
+    ("portaria", "relatorio", "relatorio_horas_extras", "Pode acessar relatório de horas extras"),
 ]
     
 

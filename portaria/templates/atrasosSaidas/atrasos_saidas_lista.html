@@ -64,13 +64,14 @@
     </div>
   </div>
 <!-- Botão de Nova Ocorrência -->
-<div class="text-end mb-4">
-  {% if request.user|has_permission:"portaria.add_atrasosaida" %}
-    <a href="{% url 'cadastrar_atraso_saida' %}" class="btn btn-success">
-      <i class="bi bi-plus-circle-fill"></i> Nova Ocorrência
+{% if request.user|has_permission:"portaria.add_atrasosaida" %}
+  <div class="d-flex justify-content-end mb-4">
+    <a href="{% url 'cadastrar_atraso_saida' %}" class="btn btn-success d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-1"></i> Nova Ocorrência
     </a>
-  {% endif %}
-</div>
+  </div>
+{% endif %}
+
 
   <!-- Tabela -->
   <div class="table-responsive">
@@ -135,9 +136,16 @@
             {% endif %}
           </td>
           <td>
-            {% include 'partials/global/_botao_editar.html' with objeto=evento url_editar='editar_atraso_saida' %}
-            {% include 'partials/global/_botao_excluir.html' with objeto=evento url_excluir='excluir_atraso_saida' %}
+            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+              {% if request.user|has_permission:"portaria.change_atrasosaida" %}
+                {% include 'partials/global/_botao_editar.html' with objeto=evento url_editar='editar_atraso_saida' label='evento' %}
+              {% endif %}
+              {% if request.user|has_permission:"portaria.delete_atrasosaida" %}
+                {% include 'partials/global/_botao_excluir.html' with objeto=evento url_excluir='excluir_atraso_saida' label='evento' %}
+              {% endif %}
+            </div>
           </td>
+          
         </tr>
         {% empty %}
         {% include 'partials/global/_sem_resultados.html' with item_nome="registro" %}

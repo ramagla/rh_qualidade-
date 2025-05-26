@@ -26,10 +26,11 @@
       <div class="col print-col">
         <p class="mb-1 text-muted">Período:</p>
         <p class="fw-semibold">
-          {% if data_inicial %}{{ data_inicial|date:"d/m/Y" }}{% else %}Início{% endif %}
+          {% if data_inicio %}{{ data_inicio|date:"d/m/Y" }}{% else %}Início{% endif %}
           até
-          {% if data_final %}{{ data_final|date:"d/m/Y" }}{% else %}Hoje{% endif %}
+          {% if data_fim %}{{ data_fim|date:"d/m/Y" }}{% else %}Hoje{% endif %}
         </p>
+        
       </div>
       <div class="col print-col">
         <p class="mb-1 text-muted">Visitante:</p>

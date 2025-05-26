@@ -365,128 +365,130 @@ def global_menu(request):
             })
 
        
-      # Menu Cadastros (agrupando submenus da portaria)
+     # Menu Portaria
+    menu_dashboard_portaria = []
+    menu_cadastros = []
+    menu_relatorios = []
 
-        menu_dashboard_portaria = []
-        if portaria_permitido:
-            menu_dashboard_portaria.append({
-                "name": "Dashboard",
-                "url": "portaria_home",
-                "icon": "fas fa-tachometer-alt"
-            })
-        menu_cadastros = []
-        menu_relatorios = []  # ✅ novo menu de relatórios
-        
-        if portaria_permitido:
-            submenu_portaria = []
+    if portaria_permitido:
+        # Dashboard
+        menu_dashboard_portaria.append({
+            "name": "Dashboard",
+            "url": "portaria_home",
+            "icon": "fas fa-tachometer-alt"
+        })
 
+        # Submenu Cadastros agrupado
+        submenu_portaria = []
+
+        if user.has_perm("portaria.view_pessoaportaria"):
             submenu_portaria.append({
                 "name": "Pessoas",
                 "url": "lista_pessoas",
                 "icon": "fas fa-door-open",
             })
 
-            if user.has_perm("portaria.view_veiculoportaria"):
-                submenu_portaria.append({
-                    "name": "Veículos",
-                    "url": "lista_veiculos",
-                    "icon": "fas fa-car-side",
-                })
+        if user.has_perm("portaria.view_veiculoportaria"):
+            submenu_portaria.append({
+                "name": "Veículos",
+                "url": "lista_veiculos",
+                "icon": "fas fa-car-side",
+            })
 
+        if submenu_portaria:
             menu_cadastros.append({
                 "name": "Cadastros",
                 "icon": "fas fa-folder-open",
-                "submenu": submenu_portaria
+                "submenu": submenu_portaria,
             })
 
-            # Menus simples
-            if user.has_perm("portaria.view_controlevisitantes"):
-                menu_cadastros.append({
-                    "name": "Controle de Visitantes",
-                    "url": "listar_controle_visitantes",
-                    "icon": "fas fa-user-check"
-                })
+        # Menus diretos (sem submenu)
+        if user.has_perm("portaria.view_entradavisitante"):
+            menu_cadastros.append({
+                "name": "Controle de Visitantes",
+                "url": "listar_controle_visitantes",
+                "icon": "fas fa-user-check",
+            })
 
-            if user.has_perm("portaria.view_funcionario"):  # ou permissão específica
-                menu_cadastros.append({
-                    "name": "Atrasos e Saídas Antecipadas",
-                    "url": "lista_atrasos_saidas",
-                    "icon": "fas fa-user-clock"
-                })
+        if user.has_perm("portaria.view_funcionario"):  # para atrasos/saídas
+            menu_cadastros.append({
+                "name": "Atrasos e Saídas Antecipadas",
+                "url": "lista_atrasos_saidas",
+                "icon": "fas fa-user-clock",
+            })
 
-            if user.has_perm("portaria.view_ligacaoportaria"):
-                menu_cadastros.append({
-                    "name": "Controle de Ligações",
-                    "url": "lista_ligacoes",
-                    "icon": "fas fa-phone-alt"
-                })
+        if user.has_perm("portaria.view_ligacaoportaria"):
+            menu_cadastros.append({
+                "name": "Controle de Ligações",
+                "url": "lista_ligacoes",
+                "icon": "fas fa-phone-alt",
+            })
 
-            if user.has_perm("portaria.view_ocorrenciaportaria"):
-                menu_cadastros.append({
-                    "name": "Ocorrências da Portaria",
-                    "url": "listar_ocorrencias",
-                    "icon": "fas fa-exclamation-triangle"
-                })
+        if user.has_perm("portaria.view_ocorrenciaportaria"):
+            menu_cadastros.append({
+                "name": "Ocorrências da Portaria",
+                "url": "listar_ocorrencias",
+                "icon": "fas fa-exclamation-triangle",
+            })
 
-            if user.has_perm("portaria.view_registroconsumoagua"):
-                menu_cadastros.append({
-                    "name": "Controle de Consumo de Água",
-                    "url": "listar_consumo_agua",
-                    "icon": "fas fa-tint"
-                })
+        if user.has_perm("portaria.view_registroconsumoagua"):
+            menu_cadastros.append({
+                "name": "Controle de Consumo de Água",
+                "url": "listar_consumo_agua",
+                "icon": "fas fa-tint",
+            })
 
-            # ✅ Menu Relatórios da Portaria
-            submenu_relatorios_portaria = []
+        # Relatórios
+        submenu_relatorios_portaria = []
 
-            if user.has_perm("portaria.view_entradavisitante"):
-                submenu_relatorios_portaria.append({
-                    "name": "Visitantes",
-                    "url": "relatorio_visitantes",
-                    "icon": "fas fa-user-check"
-                })
+        if user.has_perm("portaria.view_entradavisitante"):
+            submenu_relatorios_portaria.append({
+                "name": "Visitantes",
+                "url": "relatorio_visitantes",
+                "icon": "fas fa-user-check",
+            })
 
-            if user.has_perm("portaria.view_funcionario"):
-                submenu_relatorios_portaria.append({
-                    "name": "Atrasos e Saídas",
-                    "url": "relatorio_atrasos_saidas",  # nome da url
-                    "icon": "fas fa-user-clock"
-                })
-            
-            if user.has_perm("portaria.view_ligacaoportaria"):
-                submenu_relatorios_portaria.append({
-                    "name": "Ligações Recebidas",
-                    "url": "relatorio_ligacoes_recebidas",
-                    "icon": "fas fa-phone"
-                })
+        if user.has_perm("portaria.view_funcionario"):
+            submenu_relatorios_portaria.append({
+                "name": "Atrasos e Saídas",
+                "url": "relatorio_atrasos_saidas",
+                "icon": "fas fa-user-clock",
+            })
 
-            if user.has_perm("portaria.view_ocorrenciaportaria"):
-                submenu_relatorios_portaria.append({
-                    "name": "Ocorrências",
-                    "url": "relatorio_ocorrencias",
-                    "icon": "fas fa-exclamation-triangle"
-                })
+        if user.has_perm("portaria.view_ligacaoportaria"):
+            submenu_relatorios_portaria.append({
+                "name": "Ligações Recebidas",
+                "url": "relatorio_ligacoes_recebidas",
+                "icon": "fas fa-phone",
+            })
 
-            if user.has_perm("portaria.view_registroconsumoagua"):
-                submenu_relatorios_portaria.append({
-                    "name": "Análise de Consumo de Água",
-                    "url": "relatorio_consumo_agua",
-                    "icon": "fas fa-water"
-                })
-                
-            if user.has_perm("portaria.view_atrasosaida"):
-                submenu_relatorios_portaria.append({
-                    "name": "Horas Extras",
-                    "url": "relatorio_horas_extras",
-                    "icon": "bi bi-clock-history"
-                })
+        if user.has_perm("portaria.view_ocorrenciaportaria"):
+            submenu_relatorios_portaria.append({
+                "name": "Ocorrências",
+                "url": "relatorio_ocorrencias",
+                "icon": "fas fa-exclamation-triangle",
+            })
 
+        if user.has_perm("portaria.view_registroconsumoagua"):
+            submenu_relatorios_portaria.append({
+                "name": "Análise de Consumo de Água",
+                "url": "relatorio_consumo_agua",
+                "icon": "fas fa-water",
+            })
 
-            if submenu_relatorios_portaria:
-                menu_relatorios.append({
-                    "name": "Relatórios",
-                    "icon": "fas fa-file-alt",
-                    "submenu": submenu_relatorios_portaria
-                })
+        if user.has_perm("portaria.view_atrasosaida"):
+            submenu_relatorios_portaria.append({
+                "name": "Horas Extras",
+                "url": "relatorio_horas_extras",
+                "icon": "bi bi-clock-history",
+            })
+
+        if submenu_relatorios_portaria:
+            menu_relatorios.append({
+                "name": "Relatórios",
+                "icon": "fas fa-file-alt",
+                "submenu": submenu_relatorios_portaria,
+            })
 
 
            

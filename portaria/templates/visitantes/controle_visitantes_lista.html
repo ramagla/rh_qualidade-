@@ -75,6 +75,7 @@
 </div>
 
 
+
   <!-- Tabela -->
   <div class="table-responsive">
     <table class="table table-bordered table-striped text-center align-middle">
@@ -147,9 +148,17 @@
             {% endif %}
           </td>
           <td>
-            {% include 'partials/global/_botao_visualizar.html' with objeto=visita url_visualizar='visualizar_entrada_visitante' label="visita" %}
-            {% include 'partials/global/_botao_editar.html' with objeto=visita url_editar='editar_entrada_visitante' label="visita" %}
-            {% include 'partials/global/_botao_excluir.html' with objeto=visita url_excluir='excluir_entrada_visitante' label="visita" %}
+            {% if request.user|has_permission:"portaria.view_entradavisitante" %}
+              {% include 'partials/global/_botao_visualizar.html' with objeto=visita url_visualizar='visualizar_entrada_visitante' label="visita" %}
+            {% endif %}
+          
+            {% if request.user|has_permission:"portaria.change_entradavisitante" %}
+              {% include 'partials/global/_botao_editar.html' with objeto=visita url_editar='editar_entrada_visitante' label="visita" %}
+            {% endif %}
+          
+            {% if request.user|has_permission:"portaria.delete_entradavisitante" %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=visita url_excluir='excluir_entrada_visitante' label="visita" %}
+            {% endif %}
           
             {% if not visita.hora_saida %}
               <button type="button" class="btn btn-sm btn-dark mt-1"
@@ -159,6 +168,7 @@
               </button>
             {% endif %}
           </td>
+          
           
         </tr>
 
