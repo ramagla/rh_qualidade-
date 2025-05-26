@@ -156,7 +156,7 @@ def disparar_alerta_ocorrencia(request, pk, edicao=False):
 
         send_mail(
             subject="🚨 Ocorrência Atualizada" if edicao else "🚨 Alerta de Ocorrência",
-            message=f"Você foi citado em uma ocorrência {"atualizada" if edicao else "registrada"}.",
+            message=f"Você foi citado em uma ocorrência {'atualizada' if edicao else 'registrada'}.",
             from_email="no-reply@brasmol.com.br",
             recipient_list=[user_destino.email],
             html_message=html_email,
