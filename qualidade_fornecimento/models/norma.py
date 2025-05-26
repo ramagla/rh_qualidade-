@@ -1,6 +1,7 @@
 # qualidade_fornecimento/models/norma.py
 from django.db import models
 
+from django.contrib.auth import get_user_model
 
 class NormaTecnica(models.Model):
     """
@@ -17,6 +18,15 @@ class NormaTecnica(models.Model):
     )
 
     aprovada = models.BooleanField("Norma aprovada para uso?", default=False)
+    aprovado_por = models.ForeignKey(
+    get_user_model(),
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name="normas_aprovadas",
+    verbose_name="Aprovado por"
+)
+    aprovado_em = models.DateTimeField("Data da aprovação", null=True, blank=True)
 
 
     class Meta:

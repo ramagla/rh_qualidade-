@@ -108,7 +108,8 @@ def lista_avaliacao_anual(request):
 @login_required
 def cadastrar_avaliacao_anual(request):
     if request.method == "POST":
-        form = AvaliacaoAnualForm(request.POST)
+        form = AvaliacaoAnualForm(request.POST, request.FILES)
+
         if form.is_valid():
             form.save()
             return redirect("lista_avaliacao_anual")
@@ -146,7 +147,14 @@ def editar_avaliacao_anual(request, id):
     avaliacao = get_object_or_404(AvaliacaoAnual, id=id)
 
     if request.method == "POST":
-        form = AvaliacaoAnualForm(request.POST, instance=avaliacao)
+        form = AvaliacaoAnualForm(request.POST, request.FILES, instance=avaliacao)
+
+        # Exclusão do anexo
+        if request.POST.get("remover_anexo") == "1":
+            if avaliacao.anexo:
+                avaliacao.anexo.delete(save=False)
+                avaliacao.anexo = None
+
         if form.is_valid():
             form.save()
             messages.success(request, "Avaliação anual atualizada com sucesso!")
@@ -181,6 +189,7 @@ def editar_avaliacao_anual(request, id):
             "campos_avaliados": campos_avaliados,
         },
     )
+
 
 
 @login_required
@@ -294,7 +303,8 @@ def cadastrar_type_avaliacao(request):
     ]
 
     if request.method == "POST":
-        form = AvaliacaoAnualForm(request.POST)
+        form = AvaliacaoAnualForm(request.POST, request.FILES)
+
         if form.is_valid():
             avaliacao = form.save()
             # Retorna o ID da avaliação

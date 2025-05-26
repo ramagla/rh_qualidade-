@@ -281,9 +281,9 @@
     });
 
     $(document).on('select2:select', '#relacaoSelect', function () {
-      document.getElementById('btnContinuarF045').click();
+      continuarGeracaoF045();
     });
-
+    
     $(document).on('keypress', '#relacaoSelect', function (e) {
       if (e.which === 13) {
         e.preventDefault();
@@ -292,6 +292,7 @@
     });
   });
 </script>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -300,6 +301,7 @@
     });
   });
 </script>
+
 <script>
   function continuarGeracaoF045() {
     const id = document.getElementById('relacaoSelect').value;
@@ -316,8 +318,20 @@
           const url = '{% url "tb050_f045" 0 %}'.replace('/0/', '/' + id + '/');
           window.location.href = url;
         } else {
+          // Atualiza o nome da norma
           document.getElementById('nomeNormaNaoAprovada').textContent = data.nome || "(Norma não identificada)";
-          new bootstrap.Modal(document.getElementById('modalNormaNaoAprovada')).show();
+
+          // Fecha a modal de seleção F045
+          const modalF045El = document.getElementById('modalF045');
+          const modalF045 = bootstrap.Modal.getInstance(modalF045El);
+          if (modalF045) modalF045.hide();
+
+          // Aguarda a transição do Bootstrap antes de abrir a próxima modal
+          setTimeout(() => {
+            const modalErroEl = document.getElementById('modalNormaNaoAprovada');
+            const modalErro = bootstrap.Modal.getOrCreateInstance(modalErroEl);
+            modalErro.show();
+          }, 500); // tempo suficiente para a animação do Bootstrap terminar
         }
       })
       .catch(error => {
@@ -326,6 +340,7 @@
       });
   }
 </script>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const formFiltrar = document.getElementById('btn-filtrar')?.closest('form');
@@ -361,6 +376,7 @@
     });
   });
 </script>
+
 
 
 {% endblock %}

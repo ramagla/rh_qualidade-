@@ -288,6 +288,23 @@ def home_geral(request):
 
     # ⚙️ Última atualização
     ultima_atualizacao = AtualizacaoSistema.objects.filter(status="concluido").order_by("-data_termino").first()
+    # 🔧 Última atualização concluída do sistema
+    ultima_atualizacao = AtualizacaoSistema.objects.filter(
+        status="concluido"
+    ).order_by("-data_termino").first()
+
+    # 🔧 Lista de atualizações para modal no base.html
+    ultima_atualizacao_concluida = ultima_atualizacao
+    proximas_atualizacoes = AtualizacaoSistema.objects.filter(
+        status="em_andamento"
+    ).order_by("previsao")
+    historico_versoes = AtualizacaoSistema.objects.filter(
+        status="concluido"
+    ).exclude(
+        id=ultima_atualizacao.id if ultima_atualizacao else None
+    ).order_by("-data_termino")
+
+    # Formatação segura da data
     data_atualizacao_formatada = None
     if ultima_atualizacao and ultima_atualizacao.data_termino:
         data = ultima_atualizacao.data_termino
@@ -330,6 +347,9 @@ def home_geral(request):
         "recados_usuario": recados_usuario,
         "alertas_usuario": alertas_usuario,  # ✅ novo bloco enriquecido
         "ultima_atualizacao": ultima_atualizacao,
+        "ultima_atualizacao_concluida": ultima_atualizacao_concluida,
+        "proximas_atualizacoes": proximas_atualizacoes,
+        "historico_versoes": historico_versoes,
         "data_atualizacao_formatada": data_atualizacao_formatada,
         "settings": settings,
     }

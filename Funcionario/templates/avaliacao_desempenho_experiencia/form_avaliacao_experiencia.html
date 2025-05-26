@@ -14,7 +14,7 @@
     {% endif %}
   </h2>
 
-  <form method="post" action="{% if form.instance.pk %}{% url 'editar_avaliacao_experiencia' form.instance.id %}{% else %}{% url 'cadastrar_avaliacao_experiencia' %}{% endif %}" class="row g-3">
+  <form method="post" enctype="multipart/form-data" action="{% if form.instance.pk %}{% url 'editar_avaliacao_experiencia' form.instance.id %}{% else %}{% url 'cadastrar_avaliacao_experiencia' %}{% endif %}" class="row g-3">
     {% csrf_token %}
 
     {% include "partials/global/_form_errors.html" %}
@@ -145,32 +145,41 @@
 </div>
 
 
-      <!-- Seção 3: Resultado -->
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="headingResultado">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResultado" aria-expanded="false" aria-controls="collapseResultado">
-            ✅ Resultado da Avaliação
-          </button>
-        </h2>
-        <div id="collapseResultado" class="accordion-collapse collapse" aria-labelledby="headingResultado" data-bs-parent="#accordionForm">
-          <div class="accordion-body row">
-            <div class="col-12">
-              <label for="observacoes" class="form-label"><i class="bi bi-chat-left-text"></i> Observações</label>
-              {{ form.observacoes }}
-            </div>
+    <!-- Seção 3: Resultado -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingResultado">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResultado" aria-expanded="false" aria-controls="collapseResultado">
+      ✅ Resultado da Avaliação
+    </button>
+  </h2>
+  <div id="collapseResultado" class="accordion-collapse collapse" aria-labelledby="headingResultado" data-bs-parent="#accordionForm">
+    <div class="accordion-body row g-3">
 
-            <div class="col-md-6">
-              <label for="status" class="form-label"><i class="bi bi-bar-chart"></i> Status da Avaliação:</label>
-<input type="text" class="form-control" id="status" name="status"
-       value="{{ form.instance.status }}" readonly aria-describedby="statusHelp">
-
-              <small id="statusHelp" class="form-text text-muted">Este campo é preenchido automaticamente com base nas respostas acima.</small>
-            </div>
-          </div>
-        </div>
+      <div class="col-12">
+        <label for="observacoes" class="form-label">
+          <i class="bi bi-chat-left-text"></i> Observações
+        </label>
+        {{ form.observacoes }}
       </div>
 
+      <div class="col-md-6">
+        <label for="status" class="form-label">
+          <i class="bi bi-bar-chart"></i> Status da Avaliação:
+        </label>
+        <input type="text" class="form-control" id="status" name="status"
+               value="{{ form.instance.status }}" readonly aria-describedby="statusHelp">
+        <small id="statusHelp" class="form-text text-muted">
+          Este campo é preenchido automaticamente com base nas respostas acima.
+        </small>
+      </div>
+
+      {% include 'partials/global/_campo_anexo.html' %}
+
     </div>
+  </div>
+</div>
+
+
 
     <!-- Campo oculto para orientação -->
     <input type="hidden" id="orientacao" name="orientacao">

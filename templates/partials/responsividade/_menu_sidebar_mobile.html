@@ -1,0 +1,71 @@
+{% load permissoes_tags %}
+
+<!-- 🔲 Sidebar do Menu Principal -->
+<div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarMobile">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Menu</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body p-0">
+    <ul class="list-group list-group-flush">
+      {% for item in menu %}
+        {% if not item.perm or request.user|tem_permissao:item.perm %}
+          <li class="list-group-item bg-dark text-white border-0">
+            {% if item.submenu %}
+              <details>
+                <summary class="d-flex align-items-center">
+                  <i class="{{ item.icon }} me-2"></i> {{ item.name }}
+                </summary>
+                <ul class="list-unstyled ms-4 mt-2">
+                  {% for subitem in item.submenu %}
+                    {% if not subitem.perm or request.user|tem_permissao:subitem.perm %}
+                      <li>
+                        <a href="{% if subitem.url %}{% url subitem.url %}{% else %}#{% endif %}" class="text-white text-decoration-none d-block py-1">
+                          <i class="{{ subitem.icon }} me-1"></i> {{ subitem.name }}
+                        </a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </details>
+            {% else %}
+              <a href="{% url item.url %}" class="text-white text-decoration-none d-block py-2">
+                <i class="{{ item.icon }} me-2"></i> {{ item.name }}
+              </a>
+            {% endif %}
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<!-- 🧩 Sidebar do Menu de Módulos -->
+<div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="moduloMobile">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Módulos</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="row g-3">
+      {% for modulo in modulos_disponiveis %}
+        {% if request.user|tem_permissao:modulo.permissao %}
+          <div class="col-6">
+            <a href="{% url modulo.url %}" class="btn w-100 text-white text-center bg-primary">
+              <i class="{{ modulo.icon }} fs-2 d-block"></i>
+              {{ modulo.name }}
+            </a>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+  @media (max-width: 768px) {
+    .sidebar, .navbar {
+      display: none !important;
+    }
+  }
+</style>

@@ -72,7 +72,7 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
             "responsavel_3": forms.Select(attrs={"class": "form-select"}),
             "funcionario": forms.Select(attrs={"class": "form-select"}),
             "treinamento": forms.Select(attrs={"class": "form-select"}),
-            "anexo": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "anexo": forms.FileInput(attrs={"class": "form-control", "accept": ".pdf,.doc,.docx"}),
 
         }
 
@@ -115,6 +115,8 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
                 format="%Y-%m-%d",
                 attrs={"type": "date", "class": "form-control"}
             ),
+            "anexo": forms.FileInput(attrs={"class": "form-control", "accept": ".pdf,.doc,.docx"}),
+
             "adaptacao_trabalho": forms.Select(
                 choices=[
                     (
@@ -215,12 +217,9 @@ class AvaliacaoAnualForm(forms.ModelForm):
         model = AvaliacaoAnual
         fields = "__all__"
         widgets = {
-            "data_avaliacao": forms.DateInput(
-                attrs={"type": "date", "class": "form-control"},
-                format="%Y-%m-%d"
-),
-
-        }
+        "data_avaliacao": forms.DateInput(attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"),
+        "anexo": forms.ClearableFileInput(attrs={"class": "form-control"}),  # Adicionado
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -109,6 +109,7 @@ class RelatorioPlanilhaTreinamentosView(TemplateView):
                 data_inicio__year=ano,
                 data_inicio__month__gte=mes_inicio,
                 data_inicio__month__lte=mes_fim,
+                status="concluido", 
             ).order_by("data_inicio")
 
             for treinamento in treinamentos:

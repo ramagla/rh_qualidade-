@@ -61,7 +61,8 @@ def lista_avaliacao_experiencia(request):
 @login_required
 def cadastrar_avaliacao_experiencia(request):
     if request.method == "POST":
-        form = AvaliacaoExperienciaForm(request.POST)
+        form = AvaliacaoExperienciaForm(request.POST, request.FILES)
+
         if form.is_valid():
             # Salva o formulário sem enviar para o banco ainda
             avaliacao = form.save(commit=False)
@@ -90,22 +91,23 @@ def cadastrar_avaliacao_experiencia(request):
 
 @login_required
 def editar_avaliacao_experiencia(request, id):
-    # Busca a avaliação pelo ID ou retorna 404 se não encontrada
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=id)
 
-    # Carrega o formulário com os dados da avaliação existente
     if request.method == "POST":
-        form = AvaliacaoExperienciaForm(request.POST, instance=avaliacao)
+        form = AvaliacaoExperienciaForm(request.POST, request.FILES, instance=avaliacao)
+
+        # 🗑️ Exclusão do anexo se solicitado
+        if request.POST.get("remover_anexo") == "1" and avaliacao.anexo:
+            avaliacao.anexo.delete(save=False)
+            avaliacao.anexo = None
+
         if form.is_valid():
-            # Calcula o status com base nas respostas
+            # 🔢 Cálculo de pontos e definição de status
             adaptacao_trabalho = int(request.POST.get("adaptacao_trabalho", 0))
             interesse = int(request.POST.get("interesse", 0))
             relacionamento_social = int(request.POST.get("relacionamento_social", 0))
-            capacidade_aprendizagem = int(
-                request.POST.get("capacidade_aprendizagem", 0)
-            )
+            capacidade_aprendizagem = int(request.POST.get("capacidade_aprendizagem", 0))
 
-            # Calcula o total de pontos e a porcentagem
             total_pontos = (
                 adaptacao_trabalho
                 + interesse
@@ -114,7 +116,6 @@ def editar_avaliacao_experiencia(request, id):
             )
             porcentagem = (total_pontos / 16) * 100
 
-            # Define o status de acordo com a pontuação
             if porcentagem >= 85:
                 avaliacao.status = "Ótimo - Efetivar"
                 avaliacao.orientacao = "Efetivar"
@@ -128,22 +129,17 @@ def editar_avaliacao_experiencia(request, id):
                 avaliacao.status = "Ruim - Desligar"
                 avaliacao.orientacao = "Desligar"
 
-            # Salva as alterações no banco de dados
-            avaliacao.save()  # Salvando a instância diretamente
+            # Salva a instância com possíveis alterações no anexo
+            form.save()
             messages.success(request, "Avaliação atualizada com sucesso!")
-            # Redireciona para a lista de avaliações após salvar
-            return redirect(reverse("lista_avaliacao_experiencia"))
+            return redirect("lista_avaliacao_experiencia")
         else:
-            messages.error(
-                request, "Erro ao atualizar a avaliação. Verifique os dados informados."
-            )
+            messages.error(request, "Erro ao atualizar a avaliação. Verifique os dados informados.")
     else:
         form = AvaliacaoExperienciaForm(instance=avaliacao)
 
-    # Pega todos os funcionários para preencher o select de avaliador e avaliado
     funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
 
-    # Renderiza o template de edição com o formulário preenchido
     return render(
         request,
         "avaliacao_desempenho_experiencia/form_avaliacao_experiencia.html",

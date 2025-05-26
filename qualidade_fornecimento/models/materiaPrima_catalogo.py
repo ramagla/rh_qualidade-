@@ -51,17 +51,50 @@ class MateriaPrimaCatalogo(models.Model):
     def save(self, *args, **kwargs):
         import re
 
-        # Converter localização para maiúsculas
+        def capitalizar(texto):
+            if not texto:
+                return ""
+            palavras_ignoradas = {"de", "do", "da", "das", "dos", "e", "para", "em", "com", "a", "o","NM", "ATC"}
+            return " ".join([
+                palavra if palavra in palavras_ignoradas else palavra.capitalize()
+                for palavra in texto.lower().split()
+            ])
+
+        def tratar_descricao(descricao):
+            normas_maiusculas = {"DIN", "NBR", "SAE", "EN", "BTC", "SM", "SL","SH"}
+            palavras = descricao.split()
+            resultado = []
+            for palavra in palavras:
+                if any(palavra.upper().startswith(norma) for norma in normas_maiusculas):
+                    resultado.append(palavra.upper())
+                else:
+                    resultado.append(capitalizar(palavra))
+            return " ".join(resultado)
+
+        # Localização
         if self.localizacao:
             self.localizacao = self.localizacao.upper()
 
-        # Preencher a bitola a partir da descrição (se estiver vazia)
+        # Descrição com norma em maiúsculo
+        if self.descricao:
+            self.descricao = tratar_descricao(self.descricao)
+
+        # Classe, Tipo ABNT, Tipo Material
+        if self.classe:
+            self.classe = capitalizar(self.classe)
+        if self.tipo_abnt:
+            self.tipo_abnt = capitalizar(self.tipo_abnt)
+        if self.tipo_material:
+            self.tipo_material = capitalizar(self.tipo_material)
+
+        # Bitola da descrição
         if not self.bitola and self.descricao:
             match = re.search(r"Ø([\d,.]+)", self.descricao)
             if match:
                 self.bitola = match.group(1).replace(",", ".").strip() + " mm"
 
         super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"{self.codigo} - {self.descricao[:50]}"  # Se quiser limitar para 50 caracteres
