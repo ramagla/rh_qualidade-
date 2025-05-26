@@ -44,7 +44,7 @@
 
   <!-- Cards de Indicadores -->
   <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=registros|length subtitulo="Consumos registrados." cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Consumos registrados." cor="primary" %}
     {% include 'partials/global/_card_indicador.html' with titulo="Consumo Acima da Média" valor=total_acima subtitulo="Acima de 5 m³." cor="warning" %}
     {% include 'partials/global/_card_indicador.html' with titulo="Consumo Normal" valor=total_dentro subtitulo="Até 5 m³." cor="success" %}
   </div>
@@ -98,5 +98,7 @@
       </tbody>
     </table>
   </div>
+  {% include 'partials/global/_paginacao.html' %}
+
 </div>
 {% endblock %}
