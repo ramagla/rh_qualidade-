@@ -8,6 +8,7 @@ from portaria.views import ligacao_views
 from portaria.views import ocorrencia_views
 from portaria.views import consumo_agua_views 
 from portaria.views import relatorios_views
+from portaria.views.home_views import portaria_home
 
 urlpatterns = [
     path("pessoas/", pessoa_views.lista_pessoas, name="lista_pessoas"),
@@ -53,5 +54,7 @@ urlpatterns = [
     path("relatorio-ligacoes-recebidas/", relatorios_views.relatorio_ligacoes_recebidas, name="relatorio_ligacoes_recebidas"),
     path("relatorio-ocorrencias/", relatorios_views.relatorio_ocorrencias, name="relatorio_ocorrencias"),
     path("relatorio-consumo-agua/", relatorios_views.relatorio_consumo_agua, name="relatorio_consumo_agua"),
+    path("relatorio-horas-extras/", relatorios_views.relatorio_horas_extras, name="relatorio_horas_extras"),
+    path("dashboard/", portaria_home, name="portaria_home"),
 
 ]

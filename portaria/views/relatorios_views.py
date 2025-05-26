@@ -287,3 +287,72 @@ def relatorio_consumo_agua(request):
         "valores": valores,
     }
     return render(request, "relatorios/agua_relatorio.html", context)
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+from datetime import date
+from portaria.models import AtrasoSaida
+
+@login_required
+@permission_required("portaria.view_atrasosaida", raise_exception=True)
+def relatorio_horas_extras(request):
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+    colaborador = request.GET.get("colaborador")
+
+    horas_extras = AtrasoSaida.objects.filter(tipo="hora_extra").select_related("funcionario").order_by("funcionario__nome")
+
+    if data_inicio:
+        horas_extras = horas_extras.filter(data__gte=data_inicio)
+    if data_fim:
+        horas_extras = horas_extras.filter(data__lte=data_fim)
+    if colaborador:
+        horas_extras = horas_extras.filter(funcionario_id=colaborador)
+
+    # ⏱️ Total em segundos entre hora_fim e horario
+    total_horas_segundos = sum(
+        (
+            (datetime.combine(datetime.min, h.hora_fim) - datetime.combine(datetime.min, h.horario)).total_seconds()
+            if h.horario and h.hora_fim else 0
+        )
+        for h in horas_extras
+    )
+
+    total_horas_formatado = "{:02.0f}:{:02.0f}".format(
+        total_horas_segundos // 3600,
+        (total_horas_segundos % 3600) // 60
+    )
+
+    # 📊 Dados do gráfico
+    agrupado = {}
+    for h in horas_extras:
+        if h.horario and h.hora_fim:
+            nome = h.funcionario.nome
+            segundos = (datetime.combine(datetime.min, h.hora_fim) - datetime.combine(datetime.min, h.horario)).total_seconds()
+            agrupado[nome] = agrupado.get(nome, 0) + segundos
+
+    grafico = {
+        "labels": list(agrupado.keys()),
+        "valores": [round(seg / 3600, 2) for seg in agrupado.values()]
+    }
+
+    colaboradores_qtd = len(set(h.funcionario_id for h in horas_extras if h.horario and h.hora_fim))
+    total_por_colaborador = {
+        nome: "{:02.0f}:{:02.0f}".format(segundos // 3600, (segundos % 3600) // 60)
+        for nome, segundos in agrupado.items()
+    }
+
+    context = {
+        "horas_extras": horas_extras,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "colaboradores": Funcionario.objects.filter(status="Ativo"),
+        "colaborador_id": colaborador,
+        "total_horas": total_horas_formatado,
+        "colaboradores_qtd": colaboradores_qtd,
+        "grafico": grafico,
+        "total_por_colaborador": total_por_colaborador,
+
+    }
+
+    return render(request, "relatorios/horas_extras_relatorio.html", context)

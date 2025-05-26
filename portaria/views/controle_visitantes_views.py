@@ -232,11 +232,15 @@ def editar_entrada_visitante(request, pk):
             messages.error(request, "Erro ao atualizar. Verifique os campos.")
 
     pessoas = PessoaPortaria.objects.filter(tipo__in=["visitante", "entregador"]).order_by("nome")
+    veiculos_pessoa = VeiculoPortaria.objects.filter(pessoa=entrada.pessoa)
+
     return render(request, "visitantes/entrada_visitante_form.html", {
         "form": form,
         "pessoas": pessoas,
+        "veiculos_pessoa": veiculos_pessoa,
         "edicao": True
     })
+
 
 @login_required
 @permission_required("portaria.view_entradavisitante", raise_exception=True)

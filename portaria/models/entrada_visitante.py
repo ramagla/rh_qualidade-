@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.timezone import now
 from .pessoas import PessoaPortaria
 from .veiculo import VeiculoPortaria
+from rh_qualidade.utils import title_case  # Importa a função de formatação
 
 
 # portaria/models/entrada_visitante.py
@@ -24,3 +25,18 @@ class EntradaVisitante(models.Model):
         ]
     )
     outro_motivo = models.CharField(max_length=100, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+            # Aplicar capitalização inteligente
+            if self.pessoa and self.pessoa.nome:
+                self.pessoa.nome = title_case(self.pessoa.nome)
+                self.pessoa.save(update_fields=['nome'])
+
+            if self.pessoa and self.pessoa.empresa:
+                self.pessoa.empresa = title_case(self.pessoa.empresa)
+                self.pessoa.save(update_fields=['empresa'])
+
+            if self.falar_com:
+                self.falar_com = title_case(self.falar_com)
+
+            super().save(*args, **kwargs)

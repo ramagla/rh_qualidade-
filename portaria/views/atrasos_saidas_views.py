@@ -9,13 +9,22 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from portaria.forms.AtrasoSaidaForm import AtrasoSaidaForm
 from django.db.models import Q
+from django.core.paginator import Paginator
 
 
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+from django.db.models import Q
+from django.core.paginator import Paginator
+from datetime import date
+from Funcionario.models import Funcionario
+from portaria.models import AtrasoSaida
 
 @login_required
 @permission_required("portaria.view_funcionario", raise_exception=True)
 def lista_atrasos_saidas(request):
-    eventos = AtrasoSaida.objects.select_related("funcionario").order_by("-data", "-horario")
+    eventos_queryset = AtrasoSaida.objects.select_related("funcionario").order_by("-data", "-horario")
 
     # Filtros
     nome = request.GET.get("nome")
@@ -23,28 +32,31 @@ def lista_atrasos_saidas(request):
     tipo = request.GET.get("tipo")
 
     if nome:
-        eventos = eventos.filter(funcionario__nome=nome)
+        eventos_queryset = eventos_queryset.filter(funcionario__nome=nome)
     if data_filtro:
-        eventos = eventos.filter(data=data_filtro)
+        eventos_queryset = eventos_queryset.filter(data=data_filtro)
     if tipo in ["atraso", "saida", "hora_extra"]:
-        eventos = eventos.filter(tipo=tipo)
+        eventos_queryset = eventos_queryset.filter(tipo=tipo)
 
     # Indicadores
-    total_registros = eventos.count()
-    total_hoje = eventos.filter(data=date.today()).count()
-
-    # Contar registros sem justificativa (exceto hora extra)
-    total_sem_justificativa = eventos.exclude(tipo="hora_extra").filter(
+    total_registros = eventos_queryset.count()
+    total_hoje = eventos_queryset.filter(data=date.today()).count()
+    total_sem_justificativa = eventos_queryset.exclude(tipo="hora_extra").filter(
         Q(observacao__isnull=True) | Q(observacao__exact="")
     ).count()
+    total_hora_extra = eventos_queryset.filter(tipo="hora_extra").count()
 
-    # Contar registros do tipo hora extra
-    total_hora_extra = eventos.filter(tipo="hora_extra").count()
+    # Paginação
+    paginator = Paginator(eventos_queryset, 10)  # 10 registros por página
+    pagina = request.GET.get("page")
+    eventos = paginator.get_page(pagina)
 
+    # Lista de nomes disponíveis para o filtro
     nomes_disponiveis = Funcionario.objects.filter(status="Ativo").values_list("nome", flat=True).distinct()
 
     context = {
         "eventos": eventos,
+        "page_obj": eventos, 
         "nomes_disponiveis": nomes_disponiveis,
         "total_registros": total_registros,
         "total_hoje": total_hoje,

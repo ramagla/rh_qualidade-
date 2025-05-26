@@ -91,8 +91,12 @@
         {% for evento in eventos %}
         <tr>
           <td>
+            {% if evento.funcionario.foto %}
             <img src="{{ evento.funcionario.foto.url }}" alt="Foto" width="48" class="rounded">
-          </td>
+          {% else %}
+            <img src="{% static 'img/sem-foto.png' %}" alt="Sem Foto" width="48" class="rounded">
+          {% endif %}
+                    </td>
           <td>{{ evento.funcionario.nome }}</td>
           <td>{{ evento.funcionario.cargo_atual|default:"-" }}</td>
           <td>{{ evento.data|date:"d/m/Y" }}</td>

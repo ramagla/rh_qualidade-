@@ -4,39 +4,44 @@ from portaria.models.ocorrencia import OcorrenciaPortaria
 from portaria.forms.ocorrencia_form import OcorrenciaPortariaForm
 from django.contrib import messages
 from django.utils.timezone import now
+from django.core.paginator import Paginator
 
 from django.db.models import Q
 
 @login_required
 @permission_required("portaria.view_ocorrenciaportaria", raise_exception=True)
 def listar_ocorrencias(request):
-    ocorrencias = OcorrenciaPortaria.objects.all().order_by("-data_inicio", "-hora_inicio")
+    ocorrencias_queryset = OcorrenciaPortaria.objects.select_related("responsavel_registro").order_by("-data_inicio", "-hora_inicio")
 
     tipo = request.GET.get("tipo")
     status = request.GET.get("status")
     data = request.GET.get("data")
 
     if tipo:
-        ocorrencias = ocorrencias.filter(tipo_ocorrencia=tipo)
+        ocorrencias_queryset = ocorrencias_queryset.filter(tipo_ocorrencia=tipo)
     if status:
-        ocorrencias = ocorrencias.filter(status=status)
+        ocorrencias_queryset = ocorrencias_queryset.filter(status=status)
     if data:
-        ocorrencias = ocorrencias.filter(data_inicio=data)
+        ocorrencias_queryset = ocorrencias_queryset.filter(data_inicio=data)
 
-    # Indicadores
-    total_abertas = ocorrencias.filter(status="aberta").count()
-    total_analise = ocorrencias.filter(status="analise").count()
-    total_encerradas = ocorrencias.filter(status="encerrada").count()
+    total_abertas = ocorrencias_queryset.filter(status="aberta").count()
+    total_analise = ocorrencias_queryset.filter(status="analise").count()
+    total_encerradas = ocorrencias_queryset.filter(status="encerrada").count()
 
+    paginator = Paginator(ocorrencias_queryset, 10)
+    pagina = request.GET.get("page")
+    page_obj = paginator.get_page(pagina)
 
     context = {
-        "ocorrencias": ocorrencias,
-    "total_abertas": total_abertas,
-    "total_analise": total_analise,
-    "total_encerradas": total_encerradas,
+        "ocorrencias": page_obj,
+        "page_obj": page_obj,
+        "total_abertas": total_abertas,
+        "total_analise": total_analise,
+        "total_encerradas": total_encerradas,
     }
 
     return render(request, "ocorrencias/lista_ocorrencias.html", context)
+
 
 
 

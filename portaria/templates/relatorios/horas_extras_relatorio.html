@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load time_extras %}
+
+{% block title %}Relatório de Horas Extras{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'header.html' %}
+
+<div class="mb-4 d-flex justify-content-end no-print">
+  {% include 'partials/global/_botao_impressao.html' %}
+</div>
+
+{% include 'partials/global/_header_titulo.html' with titulo="Relatório de Horas Extras" icone="bi bi-clock-history" emoji="⏱️" %}
+
+<!-- Filtros -->
+<div class="no-print">
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+      <label for="data_inicio" class="form-label">Data Início</label>
+      <input type="date" class="form-control" name="data_inicio" value="{{ data_inicio }}">
+    </div>
+    <div class="col-md-4">
+      <label for="data_fim" class="form-label">Data Fim</label>
+      <input type="date" class="form-control" name="data_fim" value="{{ data_fim }}">
+    </div>
+    <div class="col-md-4">
+      <label for="colaborador" class="form-label">Colaborador</label>
+      <select name="colaborador" class="form-select select2">
+        <option value="">Todos</option>
+        {% for f in colaboradores %}
+          <option value="{{ f.id }}" {% if f.id|stringformat:"s" == colaborador_id %}selected{% endif %}>{{ f.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 text-end">
+      {% include "partials/global/_botao_filtrar.html" %}
+    </div>
+  </form>
+</div>
+
+<!-- Indicadores -->
+<div class="row g-3 mb-4 row-cols-1 row-cols-md-2 row-cols-print-2">
+    <div class="col print-col">
+      {% include 'partials/global/_card_indicador.html' with titulo="Total de Horas Extras" valor=total_horas subtitulo="Somatório geral (hh:mm)." cor="primary" %}
+    </div>
+    <div class="col print-col">
+      {% include 'partials/global/_card_indicador.html' with titulo="Colaboradores Envolvidos" valor=colaboradores_qtd subtitulo="Com horas extras registradas." cor="info" %}
+    </div>
+  </div>
+  
+
+<!-- Tabela Detalhada -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+      <i class="bi bi-list-check fs-5"></i>
+      <strong>Detalhamento de Horas Extras</strong>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle text-center mb-0">
+        <thead class="table-light">
+          <tr>
+            <th><i class="bi bi-calendar-event"></i> Data</th>
+            <th><i class="bi bi-person-fill"></i> Colaborador</th>
+            <th><i class="bi bi-hourglass-start"></i> Início</th>
+            <th><i class="bi bi-hourglass-end"></i> Fim</th>
+            <th><i class="bi bi-clock-history"></i> Duração</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in horas_extras %}
+            <tr>
+              <td>{{ h.data|date:"d/m/Y" }}</td>
+              <td class="text-start">{{ h.funcionario.nome }}</td>
+              <td><i class="bi bi-play-circle text-success me-1"></i> {{ h.horario|time:"H:i" }}h</td>
+              <td><i class="bi bi-stop-circle text-danger me-1"></i> {{ h.hora_fim|time:"H:i" }}h</td>
+              <td class="fw-bold text-primary">{{ h.horario|diferenca_horas:h.hora_fim }}h</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center text-muted">Nenhuma hora extra registrada no período.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  
+
+<!-- Total por Colaborador -->
+<div class="card shadow-sm">
+  <div class="card-header bg-info text-white d-flex align-items-center gap-2">
+    <i class="bi bi-person-lines-fill fs-5"></i>
+    <strong>Resumo por Colaborador</strong>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-striped align-middle text-center mb-0">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-person-badge"></i> Colaborador</th>
+          <th><i class="bi bi-stopwatch"></i> Total de Horas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for nome, total in total_por_colaborador.items %}
+          <tr>
+            <td class="text-start">{{ nome }}</td>
+            <td class="fw-bold text-success">{{ total }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Gráfico -->
+<div class="card mt-4">
+  <div class="card-header bg-light">
+    <strong><i class="bi bi-bar-chart-line"></i> Horas por Colaborador</strong>
+  </div>
+  <div class="card-body">
+    <div style="width: 100%; max-width: 1000px; margin: auto;">
+      <canvas id="graficoHorasColaborador" style="width: 100% !important; height: auto !important;"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('graficoHorasColaborador').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: {{ grafico.labels|safe }},
+    datasets: [{
+      label: 'Horas Extras',
+      data: {{ grafico.valores|safe }},
+      backgroundColor: 'rgba(54, 162, 235, 0.6)',
+      borderColor: 'rgb(54, 162, 235)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const totalMin = context.raw * 60;
+            const horas = Math.floor(totalMin / 60);
+            const minutos = Math.floor(totalMin % 60);
+            return `Horas Extras: ${horas}:${minutos.toString().padStart(2, '0')}`;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Horas (decimais)'
+        }
+      }
+    }
+  }
+});
+</script>
+
+<style>
+@media print {
+  .print-col {
+    float: left;
+    width: 50%;
+    box-sizing: border-box;
+  }
+
+  .row-cols-print-2::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+</style>
+
+<!-- Rodapé -->
+{% include 'partials/global/_formulario_rodape.html' with numero_formulario="" %}
+{% endblock %}

@@ -2,66 +2,61 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}Controle de Ligações{% endblock %}
+{% block title %}Controle de Visitantes{% endblock %}
 
 {% block content %}
 {% include 'partials/global/_toast_mensagens.html' %}
-{% include 'partials/global/_header_titulo.html' with titulo="Controle de Ligações" icone="bi bi-telephone-fill" emoji="📞" %}
+{% include 'partials/global/_header_titulo.html' with titulo="Controle de Visitantes" icone="bi bi-person-walking" emoji="🛂" %}
 {% include 'partials/global/_styles_componentes.html' %}
 
 <div class="container mt-4">
 
   <!-- Cards de Indicadores -->
   <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Ligações" valor=total_ligacoes subtitulo="Registradas no sistema." cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Hoje" valor=total_hoje subtitulo="Recebidas hoje." cor="info" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Entradas registradas." cor="primary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Visitantes Hoje" valor=total_hoje subtitulo="Entradas no dia atual." cor="info" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Saídas Pendentes" valor=total_pendentes subtitulo="Ainda não deram saída." cor="danger" %}
   </div>
 
   <!-- Filtros -->
   <div class="card mb-4">
     <div class="card-header bg-light d-flex align-items-center gap-2">
       <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-      <strong class="text-primary">Filtros</strong>
+      <strong class="text-primary">Filtros de Visitas</strong>
     </div>
     <div class="card-body">
       <form method="get">
-        <div class="row row-cols-1 row-cols-md-4 g-3">
-
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+          
           <!-- Nome -->
           <div class="col">
-            <label class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
-            <select name="nome" class="form-select select2">
+            <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
+            <select name="nome" id="nome" class="form-select select2 w-100">
               <option value="">Todos</option>
-              {% for nome in nomes %}
+              {% for nome in nomes_disponiveis %}
                 <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
               {% endfor %}
             </select>
           </div>
 
-          <!-- Empresa -->
+          <!-- Data -->
           <div class="col">
-            <label class="form-label"><i class="bi bi-building me-1"></i> Empresa</label>
-            <select name="empresa" class="form-select select2">
-              <option value="">Todas</option>
-              {% for empresa in empresas %}
-                <option value="{{ empresa }}" {% if request.GET.empresa == empresa %}selected{% endif %}>{{ empresa }}</option>
+            <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
+            <input type="date" name="data" id="data" value="{{ request.GET.data }}" class="form-control">
+          </div>
+
+          <!-- Motivo -->
+          <div class="col">
+            <label for="motivo" class="form-label"><i class="bi bi-chat-dots me-1"></i> Motivo</label>
+            <select name="motivo" id="motivo" class="form-select select2 w-100">
+              <option value="">Todos</option>
+              {% for key, label in motivos %}
+                <option value="{{ key }}" {% if request.GET.motivo == key %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
           </div>
 
-          <!-- Data Início -->
-          <div class="col">
-            <label class="form-label"><i class="bi bi-calendar-minus me-1"></i> Data Início</label>
-            <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
-          </div>
-
-          <!-- Data Fim -->
-          <div class="col">
-            <label class="form-label"><i class="bi bi-calendar-plus me-1"></i> Data Fim</label>
-            <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
-          </div>
-
-          <!-- Botão -->
+          <!-- Botão Filtrar -->
           <div class="col-12 d-flex justify-content-end">
             {% include 'partials/global/_botao_filtrar.html' %}
           </div>
@@ -70,65 +65,136 @@
     </div>
   </div>
 
-  <!-- Botão Nova Ligação -->
-  <div class="text-end mb-4">
-    {% if request.user|has_permission:"portaria.add_ligacaoportaria" %}
-    <a href="{% url 'cadastrar_ligacao' %}" class="btn btn-success">
-      <i class="bi bi-plus-circle me-1"></i> Nova Ligação
+  <!-- Botão de Registrar Entrada -->
+<div class="text-end mb-4">
+  {% if request.user|has_permission:"portaria.add_entradavisitante" %}
+    <a href="{% url 'cadastrar_entrada_visitante' %}" class="btn btn-success">
+      <i class="bi bi-person-plus-fill"></i> Registrar Entrada
     </a>
-    {% endif %}
-  </div>
+  {% endif %}
+</div>
+
 
   <!-- Tabela -->
   <div class="table-responsive">
     <table class="table table-bordered table-striped text-center align-middle">
-      <thead class="table-light">
+      <thead class="table-light align-middle">
         <tr>
-          <th><i class="bi bi-calendar-event"></i> Data</th>
-          <th><i class="bi bi-clock"></i> Horário</th>
-          <th><i class="bi bi-person"></i> Quem Ligou</th>
+          <th><i class="bi bi-image"></i> Foto</th>
+          <th><i class="bi bi-person"></i> Visitante</th>
           <th><i class="bi bi-building"></i> Empresa</th>
-          <th><i class="bi bi-telephone"></i> Telefone</th>
-          <th><i class="bi bi-person-rolodex"></i> Falar com</th>
-          <th><i class="bi bi-chat-dots"></i> Recado</th>
+          <th><i class="bi bi-truck"></i> Veículo</th>
+          <th><i class="bi bi-calendar-day"></i> Data</th>
+          <th><i class="bi bi-clock-history"></i> Entrada</th>
+          <th><i class="bi bi-door-closed"></i> Saída</th>
+          <th><i class="bi bi-hourglass-split"></i> Permanência</th>
+          <th><i class="bi bi-person-lines-fill"></i> Falar com</th>
+          <th><i class="bi bi-chat-left-text"></i> Motivo</th>
           <th><i class="bi bi-gear"></i> Ações</th>
         </tr>
       </thead>
       <tbody>
-        {% for ligacao in ligacoes %}
-          <tr>
-            <td>{{ ligacao.data|date:"d/m/Y" }}</td>
-            <td>{{ ligacao.horario|time:"H:i" }}</td>
-            <td>{{ ligacao.nome }}</td>
-            <td>{{ ligacao.empresa }}</td>
-            <td>{{ ligacao.numero }}</td>
-            <td>{{ ligacao.falar_com.nome }}</td>
-            <td>
-              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-recado-{{ ligacao.id }}">
-                <i class="bi bi-eye-fill"></i>
+        {% for visita in visitas %}
+        <tr>
+          <td>
+            {% if visita.pessoa.foto %}
+              <img src="{{ visita.pessoa.foto.url }}" alt="Foto"
+                   class="rounded-circle zoom-foto"
+                   width="48" height="48"
+                   style="cursor:pointer"
+                   data-bs-toggle="modal"
+                   data-bs-target="#modalFoto"
+                   data-img="{{ visita.pessoa.foto.url }}">
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          
+          <td>{{ visita.pessoa.nome }}</td>
+          <td>{{ visita.pessoa.empresa|default:"—" }}</td>
+          <td>
+            {% if visita.veiculo %}
+              {{ visita.veiculo.placa }}<br><small>{{ visita.veiculo.tipo }}</small>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>{{ visita.data|date:"d/m/Y" }}</td>
+          <td>{{ visita.hora_entrada|default:"—" }}</td>
+          <td>
+            {% if visita.hora_saida %}
+              {{ visita.hora_saida }}
+            {% else %}
+              <span class="badge bg-warning text-dark">Pendente</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if visita.hora_entrada and visita.hora_saida %}
+            {% tempo_permanencia visita.hora_entrada visita.hora_saida %}
+
+            {% elif visita.hora_entrada %}
+              <span class="badge bg-info text-dark">Em andamento</span>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>{{ visita.falar_com|default:"—" }}</td>
+          <td>
+            {% if visita.motivo == 'outro' %}
+              <i class="bi bi-pencil"></i> {{ visita.outro_motivo }}
+            {% else %}
+              {{ visita.get_motivo_display }}
+            {% endif %}
+          </td>
+          <td>
+            {% include 'partials/global/_botao_visualizar.html' with objeto=visita url_visualizar='visualizar_entrada_visitante' label="visita" %}
+            {% include 'partials/global/_botao_editar.html' with objeto=visita url_editar='editar_entrada_visitante' label="visita" %}
+            {% include 'partials/global/_botao_excluir.html' with objeto=visita url_excluir='excluir_entrada_visitante' label="visita" %}
+          
+            {% if not visita.hora_saida %}
+              <button type="button" class="btn btn-sm btn-dark mt-1"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalSaida{{ visita.id }}">
+                <i class="bi bi-door-closed-fill"></i> Saída
               </button>
-              <!-- Modal Recado -->
-              <div class="modal fade" id="modal-recado-{{ ligacao.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title">📞 Recado de {{ ligacao.nome }}</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body">
-                      <p>{{ ligacao.recado|linebreaks }}</p>
-                    </div>
-                  </div>
+            {% endif %}
+          </td>
+          
+        </tr>
+
+        {% if not visita.hora_saida %}
+        <!-- Modal Registrar Saída da visita -->
+        <div class="modal fade" id="modalSaida{{ visita.id }}" tabindex="-1" aria-labelledby="modalSaidaLabel{{ visita.id }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+              <form method="post" action="{% url 'registrar_saida_visitante' visita.id %}">
+                {% csrf_token %}
+                <div class="modal-header bg-dark text-white">
+                  <h5 class="modal-title" id="modalSaidaLabel{{ visita.id }}">
+                    <i class="bi bi-clock-history me-1"></i> Registrar Saída
+                  </h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
-              </div>
-            </td>
-            <td>
-              {% include 'partials/global/_botao_editar.html' with objeto=ligacao url_editar='editar_ligacao' label="ligação" %}
-              {% include 'partials/global/_botao_excluir.html' with objeto=ligacao url_excluir='excluir_ligacao' label="ligação" %}
-            </td>
-          </tr>
+                <div class="modal-body">
+                  <label for="hora_saida_{{ visita.id }}" class="form-label">Hora da Saída</label>
+                  <input type="time" name="hora_saida" id="hora_saida_{{ visita.id }}" class="form-control campo-hora-saida" required>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle-fill me-1"></i> Confirmar
+                  </button>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+     
+
+
         {% empty %}
-          {% include 'partials/global/_sem_resultados.html' with item_nome="ligação" %}
+          {% include 'partials/global/_sem_resultados.html' with item_nome="visita" %}
         {% endfor %}
       </tbody>
     </table>
@@ -137,10 +203,53 @@
   {% include 'partials/global/_paginacao.html' %}
 </div>
 
+
+
+
+<!-- Modal de Foto -->
+<div class="modal fade" id="modalFoto" tabindex="-1" aria-labelledby="modalFotoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-body text-center p-0">
+        <img src="" id="fotoModalAmpliada" alt="Foto Ampliada" class="img-fluid rounded w-100">
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Select2 -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     $('.select2').select2({ width: '100%', allowClear: true });
   });
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    $('.select2').select2({ width: '100%', allowClear: true });
+
+    // Foto ampliada
+    const modal = document.getElementById('modalFoto');
+    const imgAmpliada = document.getElementById('fotoModalAmpliada');
+
+    document.querySelectorAll('.zoom-foto').forEach(img => {
+      img.addEventListener('click', () => {
+        const src = img.getAttribute('data-img');
+        imgAmpliada.setAttribute('src', src);
+      });
+    });
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const agora = new Date();
+    const horaAtual = agora.toTimeString().slice(0, 5); // HH:MM
+
+    document.querySelectorAll(".campo-hora-saida").forEach(input => {
+      input.value = horaAtual;
+    });
+  });
+</script>
+
+
+
 {% endblock %}

@@ -291,7 +291,7 @@ def global_menu(request):
     if portaria_permitido:
         modulos_disponiveis.append({
             "name": "Portaria",
-            "url": "lista_pessoas",
+            "url": "portaria_home",  # ⬅️ redireciona corretamente ao dashboard da Portaria
             "icon": "fas fa-door-open",
             "permissao": "portaria.acesso_portaria",
         })
@@ -366,9 +366,17 @@ def global_menu(request):
 
        
       # Menu Cadastros (agrupando submenus da portaria)
+
+        menu_dashboard_portaria = []
+        if portaria_permitido:
+            menu_dashboard_portaria.append({
+                "name": "Dashboard",
+                "url": "portaria_home",
+                "icon": "fas fa-tachometer-alt"
+            })
         menu_cadastros = []
         menu_relatorios = []  # ✅ novo menu de relatórios
-
+        
         if portaria_permitido:
             submenu_portaria = []
 
@@ -464,6 +472,13 @@ def global_menu(request):
                     "url": "relatorio_consumo_agua",
                     "icon": "fas fa-water"
                 })
+                
+            if user.has_perm("portaria.view_atrasosaida"):
+                submenu_relatorios_portaria.append({
+                    "name": "Horas Extras",
+                    "url": "relatorio_horas_extras",
+                    "icon": "bi bi-clock-history"
+                })
 
 
             if submenu_relatorios_portaria:
@@ -484,8 +499,9 @@ def global_menu(request):
         menu = menu_qualidade_fornecimento
         modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Qualidade de Fornecimento"), None)
     elif active_module == "portaria":
-        menu = menu_cadastros + menu_relatorios  # ✅ combinar os dois blocos
+        menu = menu_dashboard_portaria + menu_cadastros + menu_relatorios
         modulo_ativo = next((m for m in modulos_disponiveis if m["name"] == "Portaria"), None)
+
 
 
     else:

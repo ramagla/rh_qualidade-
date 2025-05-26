@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Portaria{% endblock %}
+
+{% block content %}
+<style>
+  .card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+  }
+
+  .list-group-item {
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+
+  .welcome-banner {
+    border-radius: 10px;
+    background: linear-gradient(90deg, #007bff 0%, #00c6ff 100%);
+    color: white;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  }
+</style>
+
+<div class="container py-4">
+  <div class="welcome-banner d-flex align-items-center">
+    <i class="bi bi-shield-lock fs-1 me-3"></i>
+    <div>
+      <h5 class="mb-0">Módulo de Portaria - Olá, {{ user.first_name }}! 📄</h5>
+      <small>Bem-vindo ao controle de acessos, ocorrências e segurança.</small>
+    </div>
+  </div>
+
+  <div class="row gy-4 gx-4">
+
+    <div class="col-md-3">
+      <div class="card text-center bg-light">
+        <div class="card-body">
+          <h5 class="card-title text-primary">👥 Visitantes no Local</h5>
+          <p class="fs-2 fw-bold text-dark">{{ visitantes_ativos }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center bg-light">
+        <div class="card-body">
+          <h5 class="card-title text-success">🚚 Entregadores no Local</h5>
+          <p class="fs-2 fw-bold text-dark">{{ entregadores_ativos }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center bg-light">
+        <div class="card-body">
+          <h5 class="card-title text-warning">📨 Recados Pendentes</h5>
+          <p class="fs-2 fw-bold text-dark">{{ recados_pendentes }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center bg-light">
+        <div class="card-body">
+          <h5 class="card-title text-info">💧 Consumo de Água Hoje</h5>
+          <p class="fs-2 fw-bold text-dark">{{ consumo_agua_hoje }} m³</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-light">
+          <strong>⚠️ Últimas Ocorrências Registradas</strong>
+        </div>
+        <div class="card-body">
+          {% if ultimas_ocorrencias %}
+            <ul class="list-group">
+              {% for o in ultimas_ocorrencias %}
+                <li class="list-group-item">
+                  <strong>{{ o.get_tipo_ocorrencia_display }}</strong> em <strong>{{ o.local }}</strong><br>
+                  <small>📅 {{ o.data_inicio|date:"d/m/Y" }} {{ o.hora_inicio|time:"H:i" }} {% if o.data_fim %}→ {{ o.data_fim|date:"d/m/Y" }} {{ o.hora_fim|time:"H:i" }}{% endif %}</small><br>
+                  <span class="badge bg-secondary">Status: {{ o.get_status_display }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">Nenhuma ocorrência registrada recentemente.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
