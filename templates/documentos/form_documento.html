@@ -52,6 +52,13 @@
               {{ form.status|add_class:"form-select" }}
             </div>
             <div class="col-md-12">
+              <label for="{{ form.departamentos.id_for_label }}" class="form-label">
+                <i class="bi bi-diagram-3 me-1"></i> Departamentos Responsáveis:
+              </label>
+              {{ form.departamentos|add_class:"form-select select2" }}
+            </div>
+            
+            <div class="col-md-12">
               <label for="{{ form.arquivo.id_for_label }}" class="form-label">
                 <i class="bi bi-paperclip me-1"></i> Arquivo (PDF ou Word):
               </label>

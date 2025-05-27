@@ -121,10 +121,11 @@
                   </a>
                 {% endif %}
                 {% if documento.arquivo and request.user|has_permission:'Funcionario.view_documento' %}
-                  <a href="{{ documento.arquivo.url }}" class="btn btn-sm btn-secondary mt-1" title="Baixar Arquivo" aria-label="Download de {{ documento.nome }}" download>
-                    <i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>
-                  </a>
-                {% endif %}
+  <a href="{{ documento.arquivo.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-dark mt-1" title="Visualizar Documento" aria-label="Visualizar {{ documento.nome }}">
+    <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+  </a>
+{% endif %}
+
                 {% if request.user|has_permission:'Funcionario.delete_documento' %}
                   {% include 'partials/global/_botao_excluir.html' with objeto=documento url_excluir='excluir_documento' %}
                 {% endif %}

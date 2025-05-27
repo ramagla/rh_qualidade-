@@ -7,31 +7,44 @@ from Funcionario.forms import DocumentoForm, RevisaoDocForm
 from Funcionario.models import Documento, RevisaoDoc
 
 
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from Funcionario.models import Documento
+
 @login_required
 def lista_documentos(request):
     nome = request.GET.get("nome", "")
     status = request.GET.get("status", "")
 
     documentos = Documento.objects.all()
+
+    # 🔐 Filtrar pelos departamentos do funcionário logado
+    if request.user.is_authenticated and hasattr(request.user, "funcionario"):
+        # Rafael pode ver todos os documentos
+        if request.user.username != "rafael.almeida":
+            departamento_usuario = request.user.funcionario.local_trabalho
+            documentos = documentos.filter(departamentos__codigo=departamento_usuario)
+
+
+    # Aplicar filtros adicionais (nome e status)
     if nome:
         documentos = documentos.filter(nome__icontains=nome)
     if status:
         documentos = documentos.filter(status=status)
 
-    # Nomes únicos para o filtro
-    documentos_distinct = Documento.objects.values("nome").distinct()
+    # Filtros disponíveis no template
+    documentos_distinct = documentos.values("nome").distinct()
     status_choices = Documento.STATUS_CHOICES
 
-    # Dados para os cards
+    # Indicadores
     total_documentos = documentos.count()
     total_aprovados = documentos.filter(status="aprovado").count()
     total_em_revisao = documentos.filter(status="em_revisao").count()
-    total_inativos = documentos.filter(
-        status="inativo"
-    ).count()  # Ajustado para 'inativo'
+    total_inativos = documentos.filter(status="inativo").count()
 
     # Paginação
-    paginator = Paginator(documentos, 10)  # 10 documentos por página
+    paginator = Paginator(documentos, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
@@ -42,8 +55,9 @@ def lista_documentos(request):
         "total_documentos": total_documentos,
         "total_aprovados": total_aprovados,
         "total_em_revisao": total_em_revisao,
-        "total_inativos": total_inativos,  # Corrigido
+        "total_inativos": total_inativos,
     }
+
     return render(request, "documentos/lista_documentos.html", context)
 
 

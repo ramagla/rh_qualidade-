@@ -11,58 +11,62 @@
 
 <div class="container mt-4">
 
-  <!-- Cards de Indicadores -->
-  <div class="row mb-4">
+ 
+ <!-- Filtros -->
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary"></i>
+    <strong class="text-primary">Filtros de Ocorrências</strong>
+  </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
+        <!-- Funcionário -->
+        <div class="col-md-4">
+          <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Funcionário</label>
+          <select name="nome" id="nome" class="form-select select2 w-100">
+            <option value="">Todos</option>
+            {% for nome in nomes_disponiveis %}
+              <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Data -->
+        <div class="col-md-4">
+          <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
+          <input type="date" name="data" id="data" value="{{ request.GET.data }}" class="form-control">
+        </div>
+
+        <!-- Tipo -->
+        <div class="col-md-4">
+          <label for="tipo" class="form-label"><i class="bi bi-exclamation-circle me-1"></i> Tipo</label>
+          <select name="tipo" id="tipo" class="form-select w-100">
+            <option value="">Todos</option>
+            <option value="atraso" {% if request.GET.tipo == 'atraso' %}selected{% endif %}>Atraso</option>
+            <option value="saida" {% if request.GET.tipo == 'saida' %}selected{% endif %}>Saída Antecipada</option>
+          </select>
+        </div>
+
+        <!-- Botão Filtrar -->
+        <div class="col-12 d-flex justify-content-center">
+          {% include 'partials/global/_botao_filtrar.html' %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+   <!-- Cards de Indicadores -->
+   <div class="row mb-4">
     {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Eventos registrados." cor="primary" %}
     {% include 'partials/global/_card_indicador.html' with titulo="Hoje" valor=total_hoje subtitulo="Ocorrências do dia." cor="info" %}
     {% include 'partials/global/_card_indicador.html' with titulo="Sem Justificativa" valor=total_sem_justificativa subtitulo="Aguardando avaliação." cor="danger" %}
 {% include 'partials/global/_card_indicador.html' with titulo="Hora Extra" valor=total_hora_extra subtitulo="Registros adicionais." cor="success" %}
 
 
-  </div>
 
-  <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header bg-light d-flex align-items-center gap-2">
-      <i class="bi bi-funnel-fill text-primary"></i>
-      <strong class="text-primary">Filtros de Ocorrências</strong>
-    </div>
-    <div class="card-body">
-      <form method="get">
-        <div class="row row-cols-1 row-cols-md-3 g-3">
-          <div class="col">
-            <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Funcionário</label>
-            <select name="nome" id="nome" class="form-select select2">
-              <option value="">Todos</option>
-              {% for nome in nomes_disponiveis %}
-                <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="col">
-            <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
-            <input type="date" name="data" id="data" value="{{ request.GET.data }}" class="form-control">
-          </div>
-
-          <div class="col">
-            <label for="tipo" class="form-label"><i class="bi bi-exclamation-circle me-1"></i> Tipo</label>
-            <select name="tipo" id="tipo" class="form-select">
-              <option value="">Todos</option>
-              <option value="atraso" {% if request.GET.tipo == 'atraso' %}selected{% endif %}>Atraso</option>
-              <option value="saida" {% if request.GET.tipo == 'saida' %}selected{% endif %}>Saída Antecipada</option>
-            </select>
-          </div>
-
-         
-          
-        </div>
-      </form>
-      <div class="col-12 d-flex justify-content-center">
-        {% include 'partials/global/_botao_filtrar.html' %}
-      </div>
-    </div>
-  </div>
 <!-- Botão de Nova Ocorrência -->
 {% if request.user|has_permission:"portaria.add_atrasosaida" %}
   <div class="d-flex justify-content-end mb-4">
