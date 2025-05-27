@@ -109,6 +109,7 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "relatorio", "cronograma_treinamentos", "Pode acessar o Cronograma de Treinamentos"),
     ("Funcionario", "relatorio", "cronograma_avaliacao_eficacia", "Pode acessar o Cronograma de Avaliação de Eficácia"),
     ("Funcionario", "relatorio", "relatorio_aniversariantes", "Pode acessar o Relatório de Aniversariantes"),
+    ("Funcionario", "relatorio", "relatorio_banco_horas", "Pode acessar relatório de Banco de Horas"),
 
 
     # Formulários RH
@@ -116,6 +117,9 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "funcionario", "emitir_pesquisa_consciencia", "Pode emitir pesquisa de consciência"),
     ("Funcionario", "funcionario", "emitir_capacitacao_pratica", "Pode emitir avaliação de capacitação prática"),
     ("Funcionario", "funcionario", "emitir_f033", "Pode emitir Solicitação de Bolsa-Treinamento (F033)"),
+    ("Funcionario", "funcionario", "emitir_saida_antecipada", "Pode emitir formulário de Saída Antecipada"),
+
+
     ("portaria", "pessoaportaria", "acesso_portaria", "Pode acessar o módulo Portaria"),
 
     # Portaria – Relatórios
@@ -125,6 +129,20 @@ CUSTOM_PERMISSOES = [
     ("portaria", "relatorio", "relatorio_ocorrencias", "Pode acessar relatório de ocorrências"),
     ("portaria", "relatorio", "relatorio_consumo_agua", "Pode acessar relatório de consumo de água"),
     ("portaria", "relatorio", "relatorio_horas_extras", "Pode acessar relatório de horas extras"),
+
+    # Acesso ao módulo
+    ("metrologia", "tabelatecnica", "acesso_metrologia", "Pode acessar o módulo Metrologia"),
+
+    # Relatórios
+    ("metrologia", "relatorio", "relatorio_equipamentos_calibrar", "Pode acessar o relatório de Equipamentos a Calibrar"),
+    ("metrologia", "relatorio", "relatorio_equipamentos_por_funcionario", "Pode acessar o relatório de Equipamentos por Funcionário"),
+
+    # Cronogramas
+    ("metrologia", "cronograma", "cronograma_calibracao_equipamentos", "Pode acessar o cronograma de Calibração de Equipamentos"),
+    ("metrologia", "cronograma", "cronograma_calibracao_dispositivos", "Pode acessar o cronograma de Calibração de Dispositivos"),
+
+
+
 ]
     
 
@@ -140,3 +158,24 @@ def criar_permissoes_customizadas(sender, **kwargs):
         if not created and perm.name != name:
             perm.name = name
             perm.save()
+
+from Funcionario.models.banco_horas import BancoHoras
+from portaria.models import AtrasoSaida
+
+@receiver(post_save, sender=BancoHoras)
+def atualizar_observacao_ocorrencia(sender, instance, **kwargs):
+    """
+    Atualiza a observação da ocorrência vinculada (de AtrasoSaida)
+    com base na observação do BancoHoras.
+    """
+
+    # Verifica se foi atribuída uma ocorrência via atributo temporário
+    ocorrencia_id = getattr(instance, "_ocorrencia_vinculada_id", None)
+
+    if ocorrencia_id and instance.observacao:
+        try:
+            ocorrencia = AtrasoSaida.objects.get(id=ocorrencia_id)
+            ocorrencia.observacao = instance.observacao
+            ocorrencia.save()
+        except AtrasoSaida.DoesNotExist:
+            pass  # Ocorrência não encontrada, não faz nada

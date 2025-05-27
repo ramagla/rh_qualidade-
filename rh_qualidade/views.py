@@ -271,6 +271,11 @@ from datetime import datetime
 from Funcionario.models import Funcionario, Comunicado, AtualizacaoSistema, Settings
 from alerts.models import AlertaUsuario
 from portaria.models.ocorrencia import OcorrenciaPortaria  # ✅ necessário
+from Funcionario.models import Funcionario, BancoHoras
+from django.db.models import Sum
+
+from django.contrib.sessions.models import Session
+from django.utils.timezone import now as timezone_now
 
 @login_required
 def home_geral(request):
@@ -280,48 +285,46 @@ def home_geral(request):
         data_nascimento__month=now().month
     )
 
-    # 👥 Total de colaboradores
-    total_colaboradores = Funcionario.objects.filter(status="Ativo").count()
+    # 👥 Total de colaboradores logados no sistema
+    active_sessions = Session.objects.filter(expire_date__gte=timezone_now())
+    uid_list = []
+
+    for session in active_sessions:
+        data = session.get_decoded()
+        uid = data.get('_auth_user_id')
+        if uid:
+            uid_list.append(uid)
+
+    total_colaboradores = Funcionario.objects.filter(user__id__in=uid_list, status="Ativo").count()
 
     # 📢 Últimos comunicados
     comunicados = Comunicado.objects.order_by("-data")[:4]
 
     # ⚙️ Última atualização
     ultima_atualizacao = AtualizacaoSistema.objects.filter(status="concluido").order_by("-data_termino").first()
-    # 🔧 Última atualização concluída do sistema
-    ultima_atualizacao = AtualizacaoSistema.objects.filter(
-        status="concluido"
-    ).order_by("-data_termino").first()
 
-    # 🔧 Lista de atualizações para modal no base.html
     ultima_atualizacao_concluida = ultima_atualizacao
-    proximas_atualizacoes = AtualizacaoSistema.objects.filter(
-        status="em_andamento"
-    ).order_by("previsao")
-    historico_versoes = AtualizacaoSistema.objects.filter(
-        status="concluido"
-    ).exclude(
+    proximas_atualizacoes = AtualizacaoSistema.objects.filter(status="em_andamento").order_by("previsao")
+    historico_versoes = AtualizacaoSistema.objects.filter(status="concluido").exclude(
         id=ultima_atualizacao.id if ultima_atualizacao else None
     ).order_by("-data_termino")
 
-    # Formatação segura da data
     data_atualizacao_formatada = None
     if ultima_atualizacao and ultima_atualizacao.data_termino:
         data = ultima_atualizacao.data_termino
         data_atualizacao_formatada = data.strftime("%d/%m/%Y %H:%M") if isinstance(data, datetime) else data.strftime("%d/%m/%Y")
 
-    # 📨 Recados do usuário logado
+    # 📨 Recados
     recados_usuario = AlertaUsuario.objects.filter(
         usuario=request.user,
         tipo="recado"
     ).order_by("-criado_em")[:4]
 
-    # 🔔 Alertas do usuário (ocorrências e outros tipos, exceto recado)
+    # 🔔 Outros alertas
     alertas_raw = AlertaUsuario.objects.filter(
         usuario=request.user
     ).exclude(tipo="recado").order_by("-criado_em")[:4]
 
-    # Enriquecer alertas com ocorrência quando houver
     alertas_usuario = []
     for alerta in alertas_raw:
         ocorrencia = None
@@ -340,18 +343,30 @@ def home_geral(request):
     # ⚙️ Configuração geral
     settings = Settings.objects.first()
 
+    # 🕓 Saldo de banco de horas do usuário logado
+    funcionario = getattr(request.user, 'funcionario', None)
+    saldo_funcionario = None
+
+    if funcionario:
+        total = BancoHoras.objects.filter(funcionario=funcionario).aggregate(
+            saldo_total=Sum('horas_trabalhadas')
+        )['saldo_total']
+        if total:
+            saldo_funcionario = total.total_seconds() / 3600
+
     context = {
         "aniversariantes": aniversariantes,
         "total_colaboradores": total_colaboradores,
         "comunicados": comunicados,
         "recados_usuario": recados_usuario,
-        "alertas_usuario": alertas_usuario,  # ✅ novo bloco enriquecido
+        "alertas_usuario": alertas_usuario,
         "ultima_atualizacao": ultima_atualizacao,
         "ultima_atualizacao_concluida": ultima_atualizacao_concluida,
         "proximas_atualizacoes": proximas_atualizacoes,
         "historico_versoes": historico_versoes,
         "data_atualizacao_formatada": data_atualizacao_formatada,
         "settings": settings,
+        "saldo_funcionario": saldo_funcionario,
     }
 
     return render(request, "home_geral.html", context)

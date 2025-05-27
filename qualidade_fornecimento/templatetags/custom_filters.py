@@ -344,3 +344,17 @@ def subtrair(val1, val2):
         return float(val1 or 0) - float(val2 or 0)
     except Exception:
         return 0
+    
+
+@register.filter
+def primeiro_ultimo_nome(nome_completo):
+    """
+    Retorna o primeiro e último nome de um nome completo.
+    Ex: 'Maria José da Silva Oliveira' -> 'Maria Oliveira'
+    """
+    if not nome_completo:
+        return ""
+    partes = nome_completo.strip().split()
+    if len(partes) == 1:
+        return partes[0]
+    return f"{partes[0]} {partes[-1]}"

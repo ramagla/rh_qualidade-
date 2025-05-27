@@ -48,7 +48,7 @@ from .views.tabelatecnica_views import (
 )
 
 urlpatterns = [
-    path("", home, name="metrologia_home"),
+    path("", home, name="metrologia_home"),  # ✅ Alinha com seu menu
     path(
         "get_dispositivo_info/<int:dispositivo_id>/",
         get_dispositivo_info,

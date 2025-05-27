@@ -103,6 +103,8 @@ funcionario_permissions = {
     "cronograma_treinamentos": "Funcionario.view_treinamento",
     "cronograma_avaliacao_eficacia": "Funcionario.view_avaliacaotreinamento",
     "relatorio_aniversariantes": "Funcionario.view_funcionario",
+    "relatorio_banco_horas": "Funcionario.relatorio_banco_horas",
+
 
     # Documentos
     "lista_documentos": "Funcionario.view_documento",
@@ -124,4 +126,11 @@ funcionario_permissions = {
     "excluir_evento": "Funcionario.delete_evento",
     "exportar_calendario": "Funcionario.view_evento",
     "imprimir_calendario": "Funcionario.view_evento",
+
+    "listar_banco_horas": "Funcionario.view_bancohoras",
+    "cadastrar_banco_horas": "Funcionario.add_bancohoras",
+    "editar_banco_horas": "Funcionario.change_bancohoras",
+    "excluir_banco_horas": "Funcionario.delete_bancohoras",
+
 }
+

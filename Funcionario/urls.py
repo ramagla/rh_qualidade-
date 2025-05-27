@@ -4,6 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import get_object_or_404, render
 from django.urls import path
+from Funcionario.views import banco_horas_views
+
 
 from Funcionario import views
 from Funcionario.models import Cargo, Funcionario
@@ -62,23 +64,14 @@ from .views.comunicados_views import (
     lista_comunicados,
     visualizar_comunicado,
 )
-from .views.documentos_views import (
-    adicionar_documento,
-    cadastrar_documento,
-    editar_documento,
-    excluir_documento,
-    excluir_revisao2,
-    historico_documentos,
-    lista_documentos,
-)
+
 from .views.formularios_views import (
     FormularioCartaCompetenciaView,
     FormularioPesquisaConscienciaView,
-    avaliacao_capacitacao,
-    filtro_carta_competencia,
-    filtro_funcionario,
+    avaliacao_capacitacao,  
     formulario_f033,
-    filtro_funcionario_f033,
+    formulario_saida_antecipada,
+    filtro_funcionario_generico
 )
 from .views.funcionario_views import (
     ImprimirFichaView,
@@ -150,7 +143,8 @@ from .views.relatorios_views import (
     RelatorioPlanilhaTreinamentosView,
     cronograma_avaliacao_eficacia,
     cronograma_treinamentos,
-    relatorio_aniversariantes
+    relatorio_aniversariantes,
+    relatorio_banco_horas
 )
 from .views.treinamento_views import (
     cadastrar_treinamento,
@@ -172,6 +166,13 @@ urlpatterns = [
     path("", home, name="home"),
     path("home/", home, name="home"),
     path("marcar_lidos/", marcar_alertas_como_lidos, name="marcar_alertas_como_lidos"),
+    path("banco-horas/", banco_horas_views.listar_banco_horas, name="listar_banco_horas"),
+    path("banco-horas/cadastrar/", banco_horas_views.cadastrar_banco_horas, name="cadastrar_banco_horas"),
+    path("banco-horas/editar/<int:pk>/", banco_horas_views.editar_banco_horas, name="editar_banco_horas"),    
+    path("banco-horas/visualizar/<int:pk>/", banco_horas_views.visualizar_banco_horas, name="visualizar_banco_horas"),
+    path("banco-horas/excluir/<int:pk>/", banco_horas_views.excluir_banco_horas, name="excluir_banco_horas"),
+    path("banco-horas/ocorrencias/<int:funcionario_id>/", banco_horas_views.buscar_ocorrencias_portaria, name="buscar_ocorrencias_portaria"),
+    path("relatorios/banco-horas/", relatorio_banco_horas, name="relatorio_banco_horas"),
 
     # Funcionários
     path("funcionarios/", lista_funcionarios, name="lista_funcionarios"),
@@ -180,6 +181,10 @@ urlpatterns = [
         visualizar_funcionario,
         name="visualizar_funcionario",
     ),
+    path("formularios/filtro-generico/", filtro_funcionario_generico, name="filtro_funcionario_generico"),
+
+    path("saida-antecipada/<int:funcionario_id>/", formulario_saida_antecipada, name="formulario_saida_antecipada"),
+
     path(
         "funcionarios/cadastrar/", cadastrar_funcionario, name="cadastrar_funcionario"
     ),
@@ -539,19 +544,12 @@ urlpatterns = [
         cronograma_avaliacao_eficacia,
         name="cronograma_avaliacao_eficacia",
     ),
-    # Formularios
-    path("formularios/filtro/", filtro_funcionario, name="filtro_funcionario"),
-    path(
-        "formularios/filtro-carta-competencia/",
-        filtro_carta_competencia,
-        name="filtro_carta_competencia",
-    ),
+    # Formularios    
     path(
     "formularios/solicitacao-bolsa/<int:funcionario_id>/",
     formulario_f033,
     name="formulario_f033",
     ),
-    path("formularios/filtro-f033/", filtro_funcionario_f033, name="filtro_funcionario_f033"),
 
     path(
         "formularios/avaliacao-capacitacao-pratica/carta/<int:funcionario_id>/",
@@ -568,32 +566,7 @@ urlpatterns = [
         FormularioCartaCompetenciaView.as_view(),
         name="formulario_carta_competencia",
     ),
-    # Documentos
-    path("documentos/", lista_documentos, name="lista_documentos"),
-    path("documentos/cadastrar/", cadastrar_documento, name="cadastrar_documento"),
-    path(
-        "documentos/<int:documento_id>/editar/",
-        editar_documento,
-        name="editar_documento",
-    ),
-    path(
-        "documentos/<int:documento_id>/excluir/",
-        excluir_documento,
-        name="excluir_documento",
-    ),
-    path(
-        "documentos/<int:documento_id>/historico-documentos/",
-        historico_documentos,
-        name="historico_documentos",
-    ),
-    path(
-        "documentos/<int:documento_id>/adicionar-documento/",
-        adicionar_documento,
-        name="adicionar_documento",
-    ),
-    path(
-        "revisoes2/<int:revisao_id>/excluir/", excluir_revisao2, name="excluir_revisao2"
-    ),
+   
     path("organograma/", organograma_view, name="organograma"),
     path(
         "historico-cargo/<int:funcionario_id>/",

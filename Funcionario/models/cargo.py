@@ -81,7 +81,9 @@ class Cargo(models.Model):
     )
 
     def __str__(self):
-        return self.nome
+        return f"{self.nome} - DC N° {self.numero_dc.zfill(2)}"
+
+
 
 
 class Revisao(models.Model):

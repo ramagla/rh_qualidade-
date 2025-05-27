@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Início do Sistema{% endblock %}
+{% load custom_filters %}
 
 {% block content %}
 <style>
@@ -35,6 +36,15 @@
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
   }
 </style>
+<style>
+  .card-body.igual-altura {
+    min-height: 170px; /* ajuste conforme o conteúdo */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+</style>
+
 
 <div class="container py-4">
   <!-- Banner Boas-vindas -->
@@ -49,15 +59,43 @@
   <div class="row gy-4 gx-4">
 
     <!-- Colaboradores -->
-    <div class="col-md-4">
-      <div class="card text-center bg-light">
-        <div class="card-body">
-          <h5 class="card-title text-primary">👥 Colaboradores Ativos</h5>
-          <p class="fs-2 fw-bold text-dark">{{ total_colaboradores }}</p>
-        </div>
-      </div>
+<div class="col-md-4">
+  <div class="card text-center bg-light">
+    <div class="card-body igual-altura">
+      <h5 class="card-title text-primary">👥 Colaboradores Ativos</h5>
+      <p class="fs-2 fw-bold text-dark">{{ total_colaboradores }}</p>
+      <small class="text-muted d-block">Usuários logados no momento</small>
     </div>
+  </div>
+</div>
 
+<!-- Saldo de Banco de Horas do Usuário -->
+<div class="col-md-4">
+  <div class="card text-center bg-light">
+    <div class="card-body igual-altura">
+      <h5 class="card-title text-secondary">⏱️ Seu Banco de Horas</h5>
+      
+      {% if saldo_funcionario %}
+        <p class="fs-2 fw-bold {% if saldo_funcionario < 0 %}text-danger{% else %}text-success{% endif %}">
+          {% if saldo_funcionario < 0 %}
+            <i class="bi bi-arrow-down-circle-fill me-1"></i>
+          {% else %}
+            <i class="bi bi-arrow-up-circle-fill me-1"></i>
+          {% endif %}
+          {{ saldo_funcionario|duracao_em_horas }}
+        </p>
+      {% else %}
+        <p class="text-muted">Sem saldo registrado</p>
+      {% endif %}
+      
+      <small class="text-muted d-block">Para dúvidas, procure o departamento de Recursos Humanos</small>
+    </div>
+  </div>
+</div>
+
+
+
+    
     <!-- Última Atualização -->
     <div class="col-md-8">
       <div class="card bg-white">

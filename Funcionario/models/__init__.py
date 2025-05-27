@@ -15,3 +15,4 @@ from .matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
 from .settings import Settings
 from .treinamento import Treinamento
 from .choices_departamento import DEPARTAMENTOS_EMPRESA
+from .banco_horas import BancoHoras

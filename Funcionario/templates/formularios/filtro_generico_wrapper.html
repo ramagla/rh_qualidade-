@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  {% include 'partials/global/_toast_mensagens.html' %}
+  {% include 'partials/global/_header_titulo.html' with titulo=titulo icone=icone emoji=emoji %}
+  {% include 'partials/global/_styles_componentes.html' %}
+
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        {% include 'partials/global/_filtro_generico_funcionario.html' with texto_botao=texto_botao %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

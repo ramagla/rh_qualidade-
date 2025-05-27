@@ -296,55 +296,67 @@
             {% endif %}
         </div>
 
-        <!-- Renderizar os itens do menu com permissão -->
-        {% for item in menu %}
-            {% if not item.perm or request.user|tem_permissao:item.perm %}
-                {% if item.submenu %}
-                    <div class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="{{ item.icon }}"></i>
-                            <span class="sidebar-text" title="{{ item.name }}">{{ item.name }}</span>
-                        </a>
-                        <ul class="dropdown-menu" style="background-color: #343a40; color: white;">
-                            {% for subitem in item.submenu %}
-                                {% if not subitem.perm or request.user|tem_permissao:subitem.perm %}
-                                    <li>
-                                        {% if subitem.modal %}
-                                            <a class="dropdown-item text-white" href="#" data-bs-toggle="modal" data-bs-target="#{{ subitem.modal }}">
-                                                <i class="{{ subitem.icon }}"></i> {{ subitem.name }}
-                                            </a>
-                                        {% elif subitem.url %}
-                                            <a class="dropdown-item text-white" href="{% url subitem.url %}">
-                                                <i class="{{ subitem.icon }}"></i> {{ subitem.name }}
-                                            </a>
-                                        {% else %}
-                                            <span class="dropdown-item text-muted">
-                                                <i class="{{ subitem.icon }}"></i> {{ subitem.name }}
-                                            </span>
-                                        {% endif %}
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% else %}
-                    {% if item.url %}
-                        <a href="{% url item.url %}"
-                           class="{% if request.resolver_match.url_name == item.url %}active{% endif %}"
-                           {% if request.resolver_match.url_name == item.url %}aria-current="page"{% endif %}>
-                            <i class="{{ item.icon }}" aria-hidden="true"></i>
-                            <span class="sidebar-text" title="{{ item.name }}">{{ item.name }}</span>
-                        </a>
-                    {% else %}
-                        <a href="#" class="text-muted">
-                            <i class="{{ item.icon }}" aria-hidden="true"></i>
-                            <span class="sidebar-text" title="{{ item.name }}">{{ item.name }}</span>
-                        </a>
+       <!-- Renderizar os itens do menu com permissão -->
+{% for item in menu %}
+{% if not item.perm or request.user|tem_permissao:item.perm %}
+    {% if item.submenu %}
+        <div class="dropdown">
+            <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="{{ item.icon }}"></i>
+                <span class="sidebar-text" title="{{ item.name }}">{{ item.name }}</span>
+            </a>
+            <ul class="dropdown-menu" style="background-color: #343a40; color: white;">
+                {% for subitem in item.submenu %}
+                    {% if not subitem.perm or request.user|tem_permissao:subitem.perm %}
+                        <li>
+                            {% if subitem.modal %}
+                                <a class="dropdown-item text-white" href="#" data-bs-toggle="modal" data-bs-target="#{{ subitem.modal }}">
+                                    <i class="{{ subitem.icon }}"></i> {{ subitem.name }}
+                                </a>
+                                {% elif subitem.url %}
+                                <a class="dropdown-item text-white"
+                                   href="{% url subitem.url %}{% if subitem.params %}{{ subitem.params }}{% endif %}">
+                                    <i class="{{ subitem.icon }}"></i> {{ subitem.name }}
+                                </a>
+                            
+                          
+                            {% else %}
+                                <span class="dropdown-item text-muted">
+                                    <i class="{{ subitem.icon }}"></i> {{ subitem.name }}
+                                </span>
+                            {% endif %}
+                        </li>
                     {% endif %}
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-    </div>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        {% if item.modal %}
+            <a href="#"
+               data-bs-toggle="modal"
+               data-bs-target="#{{ item.modal }}"
+               class="text-white">
+                <i class="{{ item.icon }}" aria-hidden="true"></i>
+                <span class="sidebar-text" title="{{ item.name }}">{{ item.name }}</span>
+            </a>
+        {% elif item.url %}
+            <a href="{% url item.url %}"
+               class="{% if request.resolver_match.url_name == item.url %}active{% endif %}"
+               {% if request.resolver_match.url_name == item.url %}aria-current="page"{% endif %}>
+                <i class="{{ item.icon }}" aria-hidden="true"></i>
+                <span class="sidebar-text" title="{{ item.name }}">{{ item.name }}</span>
+            </a>
+        {% else %}
+            <a href="#" class="text-muted">
+                <i class="{{ item.icon }}" aria-hidden="true"></i>
+                <span class="sidebar-text" title="{{ item.name }}">{{ item.name }}</span>
+            </a>
+        {% endif %}
+    {% endif %}
+{% endif %}
+{% endfor %}
+</div>
+
 
             <!-- Footer do Sidebar fixado na parte inferior -->
             <div class="sidebar-footer">
@@ -373,11 +385,14 @@
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="moduleDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    {% if modulo_ativo %}
-        <i class="{{ modulo_ativo.icon }}"></i> {{ modulo_ativo.name }}
-    {% else %}
-        <i class="fas fa-th"></i> Trocar Módulo
-    {% endif %}
+                              {% if request.resolver_match.url_name == 'home_geral' %}
+                              <i class="fas fa-th"></i> Selecione o módulo desejado
+                          {% elif modulo_ativo %}
+                              <i class="{{ modulo_ativo.icon }}"></i> {{ modulo_ativo.name }}
+                          {% else %}
+                              <i class="fas fa-th"></i> Trocar Módulo
+                          {% endif %}
+                          
 </a>
 
                             <ul class="dropdown-menu" aria-labelledby="moduleDropdown">
@@ -718,7 +733,8 @@
   
   
   
-  
+  {% include 'partials/qualidade_fornecimento/_modal_tabela_correlacao.html' %}
+
 
 </body>
 </html>
