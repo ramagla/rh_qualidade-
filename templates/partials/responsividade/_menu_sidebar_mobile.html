@@ -29,9 +29,23 @@
                 </ul>
               </details>
             {% else %}
-              <a href="{% url item.url %}" class="text-white text-decoration-none d-block py-2">
-                <i class="{{ item.icon }} me-2"></i> {{ item.name }}
-              </a>
+            <a
+            {% if item.modal %}
+              href="#"
+              data-bs-toggle="modal"
+              data-bs-target="#modalTabelaCorrelacao"
+            {% else %}
+              {% if item.url %}
+                href="{% url item.url %}"
+              {% else %}
+                href="#"
+              {% endif %}
+            {% endif %}
+            class="text-white text-decoration-none d-block py-2"
+          >
+            <i class="{{ item.icon }} me-2"></i> {{ item.name }}
+          </a>
+          
             {% endif %}
           </li>
         {% endif %}

@@ -15,49 +15,59 @@
  
 
   <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header bg-light d-flex align-items-center gap-2">
-      <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-      <strong class="text-primary">Filtros</strong>
-    </div>
-    <div class="card-body">
-      <form method="get">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label">Nome</label>
-            <select name="nome" class="form-select select2">
-              <option value="">Todos</option>
-              {% for nome in nomes %}
-                <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Empresa</label>
-            <select name="empresa" class="form-select select2">
-              <option value="">Todas</option>
-              {% for empresa in empresas %}
-                <option value="{{ empresa }}" {% if request.GET.empresa == empresa %}selected{% endif %}>{{ empresa }}</option>
-              {% endfor %}
-            </select>
-                      </div>
-          <div class="col-md-2">
-            <label class="form-label">Data Início</label>
-            <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Data Fim</label>
-            <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
-          </div>
-          <div class="col-md-12 text-end">
-            <button type="submit" class="btn btn-primary">
-              <i class="bi bi-search"></i> Filtrar
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+    <strong class="text-primary">Filtros</strong>
   </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
+        <!-- Nome -->
+        <div class="col-md-4">
+          <label class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
+          <select name="nome" class="form-select select2 w-100">
+            <option value="">Todos</option>
+            {% for nome in nomes %}
+              <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Empresa -->
+        <div class="col-md-4">
+          <label class="form-label"><i class="bi bi-building me-1"></i> Empresa</label>
+          <select name="empresa" class="form-select select2 w-100">
+            <option value="">Todas</option>
+            {% for empresa in empresas %}
+              <option value="{{ empresa }}" {% if request.GET.empresa == empresa %}selected{% endif %}>{{ empresa }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Data Início -->
+        <div class="col-md-2">
+          <label class="form-label"><i class="bi bi-calendar-date me-1"></i> Data Início</label>
+          <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+        </div>
+
+        <!-- Data Fim -->
+        <div class="col-md-2">
+          <label class="form-label"><i class="bi bi-calendar-date-fill me-1"></i> Data Fim</label>
+          <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+        </div>
+
+        <!-- Botão Filtrar -->
+        <div class="col-12 d-flex justify-content-center">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-search"></i> Filtrar
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 
    <!-- Cards de Indicadores -->
    <div class="row mb-4">

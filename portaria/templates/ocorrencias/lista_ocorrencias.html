@@ -13,47 +13,55 @@
  
 
   <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header bg-light d-flex align-items-center gap-2">
-      <i class="bi bi-funnel-fill text-primary"></i>
-      <strong class="text-primary">Filtros de Ocorrências</strong>
-    </div>
-    <div class="card-body">
-      <form method="get">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label for="tipo" class="form-label">Tipo de Ocorrência</label>
-            <select name="tipo" id="tipo" class="form-select select2">
-              <option value="">Todos</option>
-              <option value="alarme" {% if request.GET.tipo == 'alarme' %}selected{% endif %}>Alarme</option>
-              <option value="acesso_indevido" {% if request.GET.tipo == 'acesso_indevido' %}selected{% endif %}>Acesso Indevido</option>
-              <option value="confusao" {% if request.GET.tipo == 'confusao' %}selected{% endif %}>Confusão</option>
-              <option value="reclamacao" {% if request.GET.tipo == 'reclamacao' %}selected{% endif %}>Reclamação</option>
-              <option value="outros" {% if request.GET.tipo == 'outros' %}selected{% endif %}>Outros</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label for="status" class="form-label">Status</label>
-            <select name="status" id="status" class="form-select select2">
-              <option value="">Todos</option>
-              <option value="aberta" {% if request.GET.status == 'aberta' %}selected{% endif %}>Aberta</option>
-              <option value="analise" {% if request.GET.status == 'analise' %}selected{% endif %}>Em Análise</option>
-              <option value="encerrada" {% if request.GET.status == 'encerrada' %}selected{% endif %}>Encerrada</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label for="data" class="form-label">Data</label>
-            <input type="date" name="data" id="data" class="form-control" value="{{ request.GET.data }}">
-          </div>
-          <div class="col-md-12 text-end">
-            <button type="submit" class="btn btn-primary">
-              <i class="bi bi-search"></i> Filtrar
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary"></i>
+    <strong class="text-primary">Filtros de Ocorrências</strong>
   </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
+        <!-- Tipo de Ocorrência -->
+        <div class="col-md-4">
+          <label for="tipo" class="form-label"><i class="bi bi-exclamation-triangle me-1"></i> Tipo de Ocorrência</label>
+          <select name="tipo" id="tipo" class="form-select select2 w-100">
+            <option value="">Todos</option>
+            <option value="alarme" {% if request.GET.tipo == 'alarme' %}selected{% endif %}>Alarme</option>
+            <option value="acesso_indevido" {% if request.GET.tipo == 'acesso_indevido' %}selected{% endif %}>Acesso Indevido</option>
+            <option value="confusao" {% if request.GET.tipo == 'confusao' %}selected{% endif %}>Confusão</option>
+            <option value="reclamacao" {% if request.GET.tipo == 'reclamacao' %}selected{% endif %}>Reclamação</option>
+            <option value="outros" {% if request.GET.tipo == 'outros' %}selected{% endif %}>Outros</option>
+          </select>
+        </div>
+
+        <!-- Status -->
+        <div class="col-md-4">
+          <label for="status" class="form-label"><i class="bi bi-check-circle me-1"></i> Status</label>
+          <select name="status" id="status" class="form-select select2 w-100">
+            <option value="">Todos</option>
+            <option value="aberta" {% if request.GET.status == 'aberta' %}selected{% endif %}>Aberta</option>
+            <option value="analise" {% if request.GET.status == 'analise' %}selected{% endif %}>Em Análise</option>
+            <option value="encerrada" {% if request.GET.status == 'encerrada' %}selected{% endif %}>Encerrada</option>
+          </select>
+        </div>
+
+        <!-- Data -->
+        <div class="col-md-4">
+          <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
+          <input type="date" name="data" id="data" class="form-control" value="{{ request.GET.data }}">
+        </div>
+
+        <!-- Botão Filtrar -->
+        <div class="col-12 d-flex justify-content-center">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-search"></i> Filtrar
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 
   <!-- Cards de Indicadores -->
   <div class="row mb-4">

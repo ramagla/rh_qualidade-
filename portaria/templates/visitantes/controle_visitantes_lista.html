@@ -11,60 +11,60 @@
 
 <div class="container mt-4">
 
-  <!-- Cards de Indicadores -->
-  <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Entradas registradas." cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Visitantes Hoje" valor=total_hoje subtitulo="Entradas no dia atual." cor="info" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Saídas Pendentes" valor=total_pendentes subtitulo="Ainda não deram saída." cor="danger" %}
-  </div>
+ 
 
   <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header bg-light d-flex align-items-center gap-2">
-      <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-      <strong class="text-primary">Filtros de Visitas</strong>
-    </div>
-    <div class="card-body">
-      <form method="get">
-        <div class="row row-cols-1 row-cols-md-3 g-3">
-          
-          <!-- Nome -->
-          <div class="col">
-            <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
-            <select name="nome" id="nome" class="form-select select2 w-100">
-              <option value="">Todos</option>
-              {% for nome in nomes_disponiveis %}
-                <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <!-- Data -->
-          <div class="col">
-            <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
-            <input type="date" name="data" id="data" value="{{ request.GET.data }}" class="form-control">
-          </div>
-
-          <!-- Motivo -->
-          <div class="col">
-            <label for="motivo" class="form-label"><i class="bi bi-chat-dots me-1"></i> Motivo</label>
-            <select name="motivo" id="motivo" class="form-select select2 w-100">
-              <option value="">Todos</option>
-              {% for key, label in motivos %}
-                <option value="{{ key }}" {% if request.GET.motivo == key %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <!-- Botão Filtrar -->
-          <div class="col-12 d-flex justify-content-end">
-            {% include 'partials/global/_botao_filtrar.html' %}
-          </div>
-        </div>
-      </form>
-    </div>
+<div class="card mb-4">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
+    <strong class="text-primary">Filtros de Visitas</strong>
   </div>
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3">
+        <!-- Nome -->
+        <div class="col-md-4">
+          <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
+          <select name="nome" id="nome" class="form-select select2 w-100">
+            <option value="">Todos</option>
+            {% for nome in nomes_disponiveis %}
+              <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
+        <!-- Data -->
+        <div class="col-md-4">
+          <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
+          <input type="date" name="data" id="data" value="{{ request.GET.data }}" class="form-control">
+        </div>
+
+        <!-- Motivo -->
+        <div class="col-md-4">
+          <label for="motivo" class="form-label"><i class="bi bi-chat-dots me-1"></i> Motivo</label>
+          <select name="motivo" id="motivo" class="form-select select2 w-100">
+            <option value="">Todos</option>
+            {% for key, label in motivos %}
+              <option value="{{ key }}" {% if request.GET.motivo == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Botão Filtrar -->
+        <div class="col-12 d-flex justify-content-center">
+          {% include 'partials/global/_botao_filtrar.html' %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+ <!-- Cards de Indicadores -->
+ <div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Entradas registradas." cor="primary" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Visitantes Hoje" valor=total_hoje subtitulo="Entradas no dia atual." cor="info" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Saídas Pendentes" valor=total_pendentes subtitulo="Ainda não deram saída." cor="danger" %}
+</div>
   <!-- Botão de Registrar Entrada -->
 <div class="text-end mb-4">
   {% if request.user|has_permission:"portaria.add_entradavisitante" %}

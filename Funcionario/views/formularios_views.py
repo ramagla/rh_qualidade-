@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.timezone import now
@@ -64,43 +65,45 @@ class FormularioCartaCompetenciaView(TemplateView):
 
 
 @login_required
-def filtro_funcionario(request):
-    # Define o redirecionamento com base no parâmetro 'next_view'
-    next_view = request.GET.get("next_view", "carta_avaliacao_capacitacao")
+def filtro_funcionario_generico(request):
+    next_view = request.GET.get("next_view") or request.POST.get("next_view")
+    texto_botao = request.GET.get("texto_botao", "Gerar Formulário")
+    titulo = request.GET.get("titulo", "Seleção de Funcionário")
+    icone = request.GET.get("icone", "bi bi-person-lines-fill")
+    emoji = request.GET.get("emoji", "👤")
+
+    # ⚠️ CORREÇÃO: trata "None" string como nulo
+    if next_view in [None, "", "None"]:
+        messages.error(request, "Parâmetro 'next_view' inválido ou ausente.")
+        return redirect("home")
 
     if request.method == "POST":
         funcionario_id = request.POST.get("funcionario")
         return redirect(next_view, funcionario_id=funcionario_id)
 
-    # Filtra funcionários ativos e ordena por nome
     funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
-    return render(
-        request,
-        "formularios/filtro_funcionario.html",
-        {"funcionarios": funcionarios, "next_view": next_view},
-    )
-
-
-@login_required
-def filtro_funcionario_f033(request):
-    if request.method == "POST":
-        funcionario_id = request.POST.get("funcionario")
-        return redirect("formulario_f033", funcionario_id=funcionario_id)
-
-    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
-    return render(request, "formularios/filtro_f033.html", {
-        "funcionarios": funcionarios
+    return render(request, "formularios/filtro_generico_wrapper.html", {
+        "funcionarios": funcionarios,
+        "next_view": next_view,
+        "texto_botao": texto_botao,
+        "titulo": titulo,
+        "icone": icone,
+        "emoji": emoji,
     })
 
-@login_required
-def filtro_carta_competencia(request):
-    if request.method == "POST":
-        # Recupera o ID do funcionário selecionado no formulário
-        funcionario_id = request.POST.get("funcionario")
-        return redirect("formulario_carta_competencia", funcionario_id=funcionario_id)
 
-    # Filtra apenas os funcionários com status ativo
-    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
-    return render(
-        request, "formularios/filtro_funcionario2.html", {"funcionarios": funcionarios}
-    )
+
+
+
+
+
+
+
+
+@login_required
+def formulario_saida_antecipada(request, funcionario_id):
+    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+    return render(request, "formularios/saida_antecipada.html", {
+        "funcionario": funcionario
+    })
+

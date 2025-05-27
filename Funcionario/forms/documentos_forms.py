@@ -12,14 +12,16 @@ class DocumentoForm(forms.ModelForm):
         fields = [
             "nome", "codigo", "arquivo", "responsavel_recuperacao", "status",
             "coleta", "recuperacao", "arquivo_tipo", "local_armazenamento",
-            "tempo_retencao", "descarte"
+            "tempo_retencao", "descarte", "departamentos"
         ]
+
         widgets = {
             "nome": forms.TextInput(attrs={"class": "form-control"}),
             "codigo": forms.TextInput(attrs={"class": "form-control"}),
             "arquivo": forms.FileInput(attrs={"class": "form-control"}),
             "responsavel_recuperacao": Select2Widget(attrs={"class": "select2 form-select"}),
             "status": forms.Select(attrs={"class": "form-select"}),
+            "departamentos": forms.SelectMultiple(attrs={"class": "form-select select2"}),
 
             # Novos campos
             "coleta": forms.TextInput(attrs={"class": "form-control"}),

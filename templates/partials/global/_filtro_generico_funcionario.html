@@ -1,0 +1,42 @@
+{% load static %}
+
+<form method="post" action="">
+    {% csrf_token %}
+    <input type="hidden" name="next_view" value="{{ next_view }}">
+  
+    <fieldset>
+      <legend class="visually-hidden">Selecionar Funcionário</legend>
+  
+      <div class="mb-3">
+        <label for="funcionario-select" class="form-label fw-bold">
+          <i class="bi bi-person-fill me-1"></i> Selecionar Funcionário:
+        </label>
+        <select id="funcionario-select" name="funcionario" class="form-select select2" required>
+          <option value="" selected disabled>Selecione um funcionário</option>
+          {% for funcionario in funcionarios %}
+            <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </fieldset>
+  
+    <div class="col-12 d-flex justify-content-center mt-4">
+      <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
+        <i class="bi bi-send-fill"></i> {{ texto_botao|default:"Gerar Formulário" }}
+      </button>
+    </div>
+  </form>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const select = $('#funcionario-select');
+      if (select.length) {
+        select.select2({
+          placeholder: "Selecione um funcionário",
+          allowClear: true,
+          width: '100%'
+        });
+      }
+    });
+  </script>
+  

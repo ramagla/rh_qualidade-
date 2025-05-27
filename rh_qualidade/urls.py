@@ -13,7 +13,11 @@ from .views import (
     chat_gpt_query,
     copiar_permissoes
 )
-
+from .documentos_views import (
+    lista_documentos, cadastrar_documento, editar_documento,
+    excluir_documento, historico_documentos, adicionar_documento,
+    excluir_revisao2
+)
 from Funcionario.views.home_views import login_view
 from rh_qualidade.views import home_geral
 
@@ -66,6 +70,15 @@ urlpatterns = [
 
     # Integração com ChatGPT
     path("chat-gpt/", chat_gpt_query, name="chat_gpt_query"),
+
+    #Documentos
+    path("documentos/", lista_documentos, name="lista_documentos"),
+    path("documentos/cadastrar/", cadastrar_documento, name="cadastrar_documento"),
+    path("documentos/<int:documento_id>/editar/", editar_documento, name="editar_documento"),
+    path("documentos/<int:documento_id>/excluir/", excluir_documento, name="excluir_documento"),
+    path("documentos/<int:documento_id>/historico-documentos/", historico_documentos, name="historico_documentos"),
+    path("documentos/<int:documento_id>/adicionar-documento/", adicionar_documento, name="adicionar_documento"),
+    path("revisoes2/<int:revisao_id>/excluir/", excluir_revisao2, name="excluir_revisao2"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

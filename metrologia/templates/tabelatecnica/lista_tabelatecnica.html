@@ -11,19 +11,21 @@
 
 <div class="container mt-4">
 
-  <!-- Botões de Ação -->
-  <div class="d-flex justify-content-end mb-4 gap-2">
-    {% if request.user|has_permission:"Metrologia.add_tabelatecnica" %}
+ <!-- Botões de Ação -->
+<div class="d-flex justify-content-end mb-4 gap-2">
+  {% if request.user|has_permission:"metrologia.add_tabelatecnica" %}
     <a href="{% url 'cadastrar_tabelatecnica' %}" class="btn btn-success">
-        <i class="bi bi-plus-circle"></i> Cadastrar
-      </a>
-    {% endif %}
-    {% if request.user|has_permission:"Metrologia.view_tabelatecnica" %}
+      <i class="bi bi-plus-circle"></i> Cadastrar
+    </a>
+  {% endif %}
+  
+  {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
     <a href="{% url 'imprimir_tabelatecnica' %}" class="btn btn-primary" target="_blank">
-        <i class="bi bi-printer"></i> Imprimir
-      </a>
-    {% endif %}
-  </div>
+      <i class="bi bi-printer"></i> Imprimir
+    </a>
+  {% endif %}
+</div>
+
 
   <!-- 🔍 Filtros de Equipamentos -->
 <div class="card mb-4">
@@ -173,13 +175,16 @@
             {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
               {% include 'partials/global/_botao_visualizar.html' with objeto=tabela url_visualizar='visualizar_tabelatecnica' %}
             {% endif %}
-            {% if request.user|has_permission:"Metrologia.change_tabelatecnica" %}
-            {% include 'partials/global/_botao_editar.html' with objeto=tabela url_editar='editar_tabelatecnica' %}
+            
+            {% if request.user|has_permission:"metrologia.change_tabelatecnica" %}
+              {% include 'partials/global/_botao_editar.html' with objeto=tabela url_editar='editar_tabelatecnica' %}
             {% endif %}
-            {% if request.user|has_permission:"Metrologia.delete_tabelatecnica" %}
-            {% include 'partials/global/_botao_excluir.html' with objeto=tabela url_excluir='excluir_tabelatecnica' %}
+            
+            {% if request.user|has_permission:"metrologia.delete_tabelatecnica" %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=tabela url_excluir='excluir_tabelatecnica' %}
             {% endif %}
           </td>
+          
         </tr>
       {% empty %}
         {% include 'partials/global/_sem_resultados.html' with item_nome="equipamento" %}

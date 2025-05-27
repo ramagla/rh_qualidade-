@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% block errors %}
+{% endblock %}
+<div class="container mt-5">
+    <h2 class="text-center">Adicionar Revisão para {{ documento.nome }}</h2>
+
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <!-- Botões Centralizados -->
+        <div class="col-12 text-center mt-3">
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-plus-circle"></i> Adicionar Revisão
+            </button>
+            <a href="{% url 'historico_documentos' documento.id %}" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

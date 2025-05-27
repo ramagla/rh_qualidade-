@@ -66,13 +66,13 @@
 
 
   <!-- Botão Novo -->
-  <div class="d-flex justify-content-end mb-4">
-    {% if request.user|has_permission:"Metrologia.add_dispositivo" %}
+<div class="d-flex justify-content-end mb-4">
+  {% if request.user|has_permission:"metrologia.add_dispositivo" %}
     <a href="{% url 'cadastrar_dispositivo' %}" class="btn btn-success">
-        <i class="bi bi-plus-circle"></i> Novo Dispositivo
-      </a>
-    {% endif %}
-  </div>
+      <i class="bi bi-plus-circle"></i> Novo Dispositivo
+    </a>
+  {% endif %}
+</div>
 
   <!-- Indicadores -->
   <div class="row mb-4">
@@ -121,21 +121,25 @@
           {% endif %}
         </td>
         <td class="d-flex justify-content-center gap-1 flex-wrap">
-          {% if request.user|has_permission:"Metrologia.view_dispositivo" %}
-          {% include 'partials/global/_botao_visualizar.html' with objeto=dispositivo url_visualizar='visualizar_dispositivo' %}
+          {% if request.user|has_permission:"metrologia.view_dispositivo" %}
+            {% include 'partials/global/_botao_visualizar.html' with objeto=dispositivo url_visualizar='visualizar_dispositivo' %}
           {% endif %}
-          {% if request.user|has_permission:"Metrologia.change_dispositivo" %}
-          {% include 'partials/global/_botao_editar.html' with objeto=dispositivo url_editar='editar_dispositivo' %}
+          
+          {% if request.user|has_permission:"metrologia.change_dispositivo" %}
+            {% include 'partials/global/_botao_editar.html' with objeto=dispositivo url_editar='editar_dispositivo' %}
           {% endif %}
-          {% if request.user|has_permission:"Metrologia.view_controleentradasaida" %}
-          <a href="{% url 'historico_movimentacoes' dispositivo.id %}" class="btn btn-sm btn-info mt-1" title="Movimentações" aria-label="Registrar entrada ou saída">
+          
+          {% if request.user|has_permission:"metrologia.view_controleentradasaida" %}
+            <a href="{% url 'historico_movimentacoes' dispositivo.id %}" class="btn btn-sm btn-info mt-1" title="Movimentações" aria-label="Registrar entrada ou saída">
               <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
             </a>
           {% endif %}
-          {% if request.user|has_permission:"Metrologia.delete_dispositivo" %}
-          {% include 'partials/global/_botao_excluir.html' with objeto=dispositivo url_excluir='excluir_dispositivo' label="dispositivo" %}
-        {% endif %}
-                </td>
+          
+          {% if request.user|has_permission:"metrologia.delete_dispositivo" %}
+            {% include 'partials/global/_botao_excluir.html' with objeto=dispositivo url_excluir='excluir_dispositivo' label="dispositivo" %}
+          {% endif %}
+        </td>
+        
       </tr>
       {% empty %}
         {% include 'partials/global/_sem_resultados.html' with item_nome="dispositivo" %}

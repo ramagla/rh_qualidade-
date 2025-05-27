@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load custom_filters %}
+
+{% block title %}Cadastro de Banco de Horas{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_header_titulo.html' with titulo="Novo Registro de Banco de Horas" icone="bi bi-clock-history" %}
+
+<div class="container mt-4">
+  <form method="POST" action="{% if registro %}{% url 'editar_banco_horas' registro.id %}{% else %}{% url 'cadastrar_banco_horas' %}{% endif %}" class="row g-3">
+    {% csrf_token %}
+    <ul class="mb-0">
+      {% for field in form %}
+        {% for error in field.errors %}
+          <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+        {% endfor %}
+      {% endfor %}
+      {% for error in form.non_field_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+    
+  
+
+
+    <div class="accordion" id="accordionBancoHoras">
+
+      <!-- 🧍 Funcionário e Data -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingGeral">
+          <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral" aria-expanded="true" aria-controls="collapseGeral">
+            <i class="bi bi-person-workspace me-2"></i> Dados do Registro
+          </button>
+        </h2>
+        <div id="collapseGeral" class="accordion-collapse collapse show" aria-labelledby="headingGeral" data-bs-parent="#accordionBancoHoras">
+          <div class="accordion-body row g-3">
+            <div class="col-md-6">
+              <label for="id_funcionario" class="form-label"><i class="bi bi-person-fill me-1"></i> Funcionário</label>
+              {{ form.funcionario|add_class:"form-select select2" }}
+            </div>
+                      
+            <div class="col-md-3">
+              <label for="id_data" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data</label>
+              {{ form.data|add_class:"form-control" }}
+            </div>
+            <div class="col-md-3">
+              <label for="id_horas_trabalhadas" class="form-label"><i class="bi bi-clock-fill me-1"></i> Horas Trabalhadas <small>(±HH:MM)</small></label>
+              {{ form.horas_trabalhadas|add_class:"form-control" }}
+            </div>
+            <div class="col-md-12 d-flex align-items-end gap-4">
+              <div class="form-check form-switch mb-3">
+                {{ form.he_50|add_class:"form-check-input" }}
+                <label class="form-check-label" for="{{ form.he_50.id_for_label }}">
+                  <i class="bi bi-plus-circle me-1"></i> Adicionar 50%
+                </label>
+              </div>
+              
+              <div class="form-check form-switch mb-3">
+                {{ form.he_100|add_class:"form-check-input" }}
+                <label class="form-check-label" for="{{ form.he_100.id_for_label }}">
+                  <i class="bi bi-plus-circle me-1"></i> Adicionar 100%
+                </label>
+              </div>
+              {{ form.ocorrencia.as_hidden }}
+
+              
+            </div>
+          </div>
+            <!-- ℹ️ Informativo sobre o cálculo dos adicionais -->
+            <div class="alert alert-info col-12 mt-3 d-flex align-items-start" role="alert">
+              <i class="bi bi-info-circle-fill me-2 fs-4 mt-1 text-primary"></i>
+              <div>
+                <strong>Cálculo de Adicionais:</strong> Ao selecionar uma das opções acima, o sistema aplicará o percentual escolhido sobre o valor inserido em <strong>Horas Trabalhadas</strong>.  
+                <br>Por exemplo:
+                <ul class="mb-0">
+                <li><code>+02:00</code> com adicional de <code>50%</code> resulta em <code>+03:00</code> para o banco de horas.</li>
+                <li><code>+02:00</code> com adicional de <code>100%</code> resulta em <code>+04:00</code> para o banco de horas.</li>
+              </ul>
+              </div>
+            </div>
+        </div>
+        
+      </div>
+            
+      <!-- 📝 Observação -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingObs">
+          <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseObs" aria-expanded="false" aria-controls="collapseObs">
+            <i class="bi bi-pencil-square me-2"></i> Observação
+          </button>
+        </h2>
+        <div id="collapseObs" class="accordion-collapse collapse" aria-labelledby="headingObs" data-bs-parent="#accordionBancoHoras">
+          <div class="accordion-body">
+            <label for="id_observacao" class="form-label"><i class="bi bi-chat-dots me-1"></i> Observação</label>
+            {{ form.observacao }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Ocorrências serão renderizadas aqui, se existirem -->
+      <div id="ocorrenciasContainer"></div>
+
+
+    <!-- Botões -->
+    <div class="col-12 text-center mt-4">
+      {% include "partials/global/_botoes_salvar_cancelar.html" with edicao=registro url_voltar='listar_banco_horas' %}
+    </div>
+  </form>
+</div>
+
+
+<script>
+  // Mapear removidos por funcionário usando sessionStorage
+  function getRemovidos(funcId) {
+    return JSON.parse(sessionStorage.getItem(`removidos_func_${funcId}`)) || [];
+  }
+
+  function addRemovido(funcId, ocorrenciaId) {
+    const atual = getRemovidos(funcId);
+    if (!atual.includes(ocorrenciaId)) {
+      atual.push(ocorrenciaId);
+      sessionStorage.setItem(`removidos_func_${funcId}`, JSON.stringify(atual));
+    }
+  }
+
+  function removerOcorrencia(id, funcionarioId) {
+    addRemovido(funcionarioId, id);
+    const el = document.getElementById(`ocorrencia-${id}`);
+    if (el) el.remove();
+
+    if (document.querySelectorAll(".list-group-item").length === 0) {
+      document.getElementById("accordionOcorrencias")?.remove();
+    }
+  }
+
+  function formatarDataISO(dataBr) {
+    const [dia, mes, ano] = dataBr.split("/");
+    return `${ano}-${mes}-${dia}`;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    $('#id_funcionario').select2({
+      placeholder: "Selecione",
+      allowClear: true,
+      width: '100%'
+    });
+
+    $('#id_funcionario').on("change", function () {
+      const funcionarioId = $(this).val();
+      const container = document.getElementById("ocorrenciasContainer");
+      container.innerHTML = "";
+
+      if (funcionarioId) {
+        fetch(`/rh/banco-horas/ocorrencias/${funcionarioId}/`)
+          .then(res => res.json())
+          .then(data => {
+            const removidos = getRemovidos(funcionarioId);
+            const registros = data.registros.filter(r => !removidos.includes(r.id));
+
+            if (registros.length > 0) {
+              let html = `
+                <div class="accordion-item" id="accordionOcorrencias">
+                  <h2 class="accordion-header" id="headingOcorrencias">
+                    <button class="accordion-button fw-bold collapsed bg-light text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOcorrencias" aria-expanded="false" aria-controls="collapseOcorrencias">
+                      <i class="bi bi-clock-history me-2"></i> Ocorrências Vinculadas
+                    </button>
+                  </h2>
+                  <div id="collapseOcorrencias" class="accordion-collapse collapse show" aria-labelledby="headingOcorrencias">
+                    <div class="accordion-body">
+                      <div class="list-group">`;
+
+              registros.forEach(r => {
+                html += `
+                  <div class="list-group-item d-flex justify-content-between align-items-center" id="ocorrencia-${r.id}">
+                    <div>
+                      <input class="form-check-input me-2" type="radio" name="ocorrencia_unica" value="${r.id}"
+                        data-data="${r.data}" data-duracao="${r.duracao}" data-tipo="${r.tipo.toLowerCase()}">
+                      <strong>${r.tipo}</strong> – ${r.data} ${r.horario}
+                      <small class="text-muted d-block">${r.observacao} (${r.duracao})</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerOcorrencia(${r.id}, ${funcionarioId})">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
+                  </div>`;
+              });
+
+              html += `</div></div></div></div>`;
+              container.innerHTML = html;
+
+              document.querySelectorAll('input[name="ocorrencia_unica"]').forEach(input => {
+                input.addEventListener("change", function () {
+                  const data = this.dataset.data;
+                  const duracao = this.dataset.duracao;
+                  const tipo = this.dataset.tipo;
+
+                  document.getElementById("id_data").value = formatarDataISO(data);
+                  document.getElementById("id_horas_trabalhadas").value = `-${duracao}`;
+
+                  const campoObs = document.getElementById("id_observacao");
+                  if (campoObs) {
+                    if (tipo.includes("atraso")) {
+                      campoObs.value = "Atraso Justificado";
+                    } else if (tipo.includes("saida") || tipo.includes("saída")) {
+                      campoObs.value = "Saída Antecipada Justificada";
+                    }
+                  }
+                });
+              });
+            }
+          })
+          .catch(error => {
+            console.error("Erro ao buscar ocorrências:", error);
+            container.innerHTML = `
+              <div class="alert alert-danger mt-3 text-center">
+                Erro ao carregar ocorrências. Tente novamente.
+              </div>`;
+          });
+      }
+    });
+  });
+
+  // Exclusividade dos switches HE
+  document.addEventListener("DOMContentLoaded", function () {
+    const switch50 = document.getElementById("id_he_50");
+    const switch100 = document.getElementById("id_he_100");
+
+    function alternarSwitch(event) {
+      if (event.target === switch50 && switch50.checked) {
+        switch100.checked = false;
+      } else if (event.target === switch100 && switch100.checked) {
+        switch50.checked = false;
+      }
+    }
+
+    if (switch50 && switch100) {
+      switch50.addEventListener("change", alternarSwitch);
+      switch100.addEventListener("change", alternarSwitch);
+    }
+  });
+</script>
+
+
+
+
+{% endblock %}

@@ -432,3 +432,137 @@ def relatorio_aniversariantes(request):
         'meses': meses,
         'mes_selecionado': mes,
     })
+
+from datetime import datetime
+from collections import defaultdict
+import json
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+from django.utils.safestring import mark_safe
+
+from datetime import date
+from collections import defaultdict
+import json
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+from django.utils.safestring import mark_safe
+
+from Funcionario.models.banco_horas import BancoHoras
+from Funcionario.models import Funcionario
+
+
+from collections import defaultdict
+import json
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+from django.utils.safestring import mark_safe
+from Funcionario.models.banco_horas import BancoHoras
+from Funcionario.models import Funcionario
+
+
+from collections import defaultdict
+from datetime import timedelta
+import json
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+from django.utils.safestring import mark_safe
+
+from Funcionario.models.banco_horas import BancoHoras
+from Funcionario.models import Funcionario
+import math
+
+
+@login_required
+@permission_required("Funcionario.view_bancohoras", raise_exception=True)
+def relatorio_banco_horas(request):
+    # Corrigir datas como objetos
+    data_inicio_raw = request.GET.get("data_inicio")
+    data_fim_raw = request.GET.get("data_fim")
+
+    data_inicio = datetime.strptime(data_inicio_raw, "%Y-%m-%d").date() if data_inicio_raw else None
+    data_fim = datetime.strptime(data_fim_raw, "%Y-%m-%d").date() if data_fim_raw else None
+    funcionario_id = request.GET.get("funcionario")
+
+    registros = BancoHoras.objects.select_related("funcionario").all()
+
+    if data_inicio:
+        registros = registros.filter(data__gte=data_inicio)
+    if data_fim:
+        registros = registros.filter(data__lte=data_fim)
+    if funcionario_id:
+        registros = registros.filter(funcionario_id=funcionario_id)
+
+    registros = registros.order_by("data")
+
+    registros_por_mes = defaultdict(list)
+    saldos_mensais = defaultdict(float)
+    total_he_50 = 0
+    total_he_100 = 0
+    saldo_total = 0
+    total_minutos = 0
+
+    for r in registros:
+        mes = r.data.strftime("%b/%Y")
+        registros_por_mes[mes].append(r)
+
+        horas = r.horas_trabalhadas.total_seconds() / 3600 if r.horas_trabalhadas else 0
+
+        if r.he_50:
+            total_he_50 += horas
+        elif r.he_100:
+            total_he_100 += horas
+
+        saldo_total += horas
+        saldos_mensais[mes] += horas
+        total_minutos += horas * 60
+
+    # Saldo geral (não filtrado)
+    registros_gerais = BancoHoras.objects.filter(funcionario_id=funcionario_id) if funcionario_id else BancoHoras.objects.all()
+    saldo_total_geral = sum(
+        r.horas_trabalhadas.total_seconds() / 3600 for r in registros_gerais if r.horas_trabalhadas
+    )
+
+    # Gráfico de tendência por dia
+    registros_filtrados = registros.order_by("data")
+    grafico_tendencia = {
+        "labels": [r.data.strftime("%d/%m") for r in registros_filtrados],
+        "values": [round(r.horas_trabalhadas.total_seconds() / 3600, 2) if r.horas_trabalhadas else 0 for r in registros_filtrados]
+    }
+
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+
+    funcionario_nome = None
+    if funcionario_id:
+        try:
+            funcionario_nome = Funcionario.objects.get(id=funcionario_id).nome
+        except Funcionario.DoesNotExist:
+            funcionario_nome = "Funcionário não encontrado"
+
+    total_dias = math.floor(abs(total_minutos) / 453)
+    if saldo_total < 0:
+        total_dias = -total_dias
+
+    context = {
+        "registros_por_mes": dict(registros_por_mes),
+        "meses": {mes: mes for mes in saldos_mensais.keys()},
+        "total_he_50": round(total_he_50, 2),
+        "total_he_100": round(total_he_100, 2),
+        "saldo_total_horas": round(saldo_total, 2),
+        "saldo_total_geral": round(saldo_total_geral, 2),
+        "total_dias": total_dias,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "funcionarios": funcionarios,
+        "funcionario_selecionado": funcionario_id,
+        "funcionario_nome": funcionario_nome,
+        "saldos_mensais": mark_safe(json.dumps({
+            "labels": list(saldos_mensais.keys()),
+            "values": [round(v, 2) for v in saldos_mensais.values()],
+        })),
+        "grafico_tendencia": mark_safe(json.dumps(grafico_tendencia)),
+    }
+
+    return render(request, "relatorios/relatorio_banco_horas.html", context)

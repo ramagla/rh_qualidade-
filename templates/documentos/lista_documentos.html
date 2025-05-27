@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Lista de Documentos{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="Lista de Documentos" icone="bi bi-journal-text" emoji="📄" %}
+
+<div class="container mt-4">
+
+  <!-- Botão de Cadastro -->
+  <div class="d-print-none mb-4 text-end">
+    {% if request.user|has_permission:'Funcionario.add_documento' %}
+      <a href="{% url 'cadastrar_documento' %}" class="btn btn-success d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar Documento
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <i class="bi bi-funnel me-1" aria-hidden="true"></i> Filtros
+    </div>
+    <div class="card-body">
+      <form method="get">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label for="nome" class="form-label">Filtrar por Nome:</label>
+            <select name="nome" id="nome" class="form-select select2">
+              <option value="">Todos</option>
+              {% for documento in documentos_distinct %}
+                <option value="{{ documento.nome }}" {% if request.GET.nome == documento.nome %}selected{% endif %}>
+                  {{ documento.nome }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="status" class="form-label">Filtrar por Status:</label>
+            <select name="status" id="status" class="form-select select2">
+              <option value="">Todos</option>
+              {% for key, value in status_choices %}
+                <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>
+                  {{ value }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </form>
+    </div>
+  </div>
+
+  <!-- Indicadores -->
+  <div class="row g-3 mb-4">
+    {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="📁 Total de Documentos" valor=total_documentos subtitulo="Documentos cadastrados." %}
+    {% include 'partials/global/_card_indicador.html' with cor="success" titulo="✔️ Aprovados" valor=total_aprovados subtitulo="Documentos aprovados." %}
+    {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="⏳ Em Revisão" valor=total_em_revisao subtitulo="Aguardando revisão." %}
+    {% include 'partials/global/_card_indicador.html' with cor="danger" titulo="❌ Inativos" valor=total_inativos subtitulo="Documentos inativos." %}
+  </div>
+
+  <!-- Tabela de Documentos -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover align-middle text-center">
+      <caption class="visually-hidden">Tabela de documentos cadastrados</caption>
+      <thead class="table-light align-middle">
+        <tr>
+          <th><i class="bi bi-journal-text me-1"></i> Nome</th>
+          <th><i class="bi bi-upc me-1"></i> Código</th>
+          <th><i class="bi bi-person-badge me-1"></i> Responsável</th>
+          <th><i class="bi bi-flag me-1"></i> Status</th>
+          <th><i class="bi bi-card-checklist me-1"></i> Última Revisão</th>
+          <th><i class="bi bi-calendar-event me-1"></i> Atualização</th>
+          <th><i class="bi bi-gear-fill me-1"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if documentos %}
+          {% for documento in documentos %}
+            <tr>
+              <td>{{ documento.nome }}</td>
+              <td>{{ documento.codigo }}</td>
+              <td>{{ documento.responsavel_recuperacao.nome }}</td>
+              <td>
+                {% if documento.status == 'aprovado' %}
+                  <span class="badge bg-success">{{ documento.get_status_display }}</span>
+                {% elif documento.status == 'em_revisao' %}
+                  <span class="badge bg-warning text-dark">{{ documento.get_status_display }}</span>
+                {% elif documento.status == 'inativo' %}
+                  <span class="badge bg-danger">{{ documento.get_status_display }}</span>
+                {% else %}
+                  <span class="badge bg-secondary">Indefinido</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if documento.revisoes.last %}
+                  {{ documento.revisoes.last.numero_revisao }}
+                {% else %}
+                  <span class="text-muted">Sem revisão</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if documento.revisoes.last %}
+                  {{ documento.revisoes.last.data_revisao|date:"d/m/Y" }}
+                {% else %}
+                  <span class="text-muted">Sem atualização</span>
+                {% endif %}
+              </td>
+              <td class="d-flex justify-content-center flex-wrap gap-1">
+                {% if request.user|has_permission:'Funcionario.change_documento' %}
+                  {% include 'partials/global/_botao_editar.html' with objeto=documento url_editar='editar_documento' %}
+                {% endif %}
+                {% if request.user|has_permission:'Funcionario.view_revisao' %}
+                  <a href="{% url 'historico_documentos' documento.id %}" class="btn btn-sm btn-info mt-1" title="Histórico de Revisões" aria-label="Histórico de {{ documento.nome }}">
+                    <i class="bi bi-clock-history" aria-hidden="true"></i>
+                  </a>
+                {% endif %}
+                {% if documento.arquivo and request.user|has_permission:'Funcionario.view_documento' %}
+  <a href="{{ documento.arquivo.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-dark mt-1" title="Visualizar Documento" aria-label="Visualizar {{ documento.nome }}">
+    <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+  </a>
+{% endif %}
+
+                {% if request.user|has_permission:'Funcionario.delete_documento' %}
+                  {% include 'partials/global/_botao_excluir.html' with objeto=documento url_excluir='excluir_documento' %}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7">
+              {% include 'partials/global/_sem_resultados.html' with item_nome="documento" %}
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginação -->
+  {% include 'partials/global/_paginacao.html' %}
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    $('.select2').select2({
+      placeholder: "Selecione uma opção",
+      allowClear: true
+    });
+  });
+</script>
+{% endblock %}

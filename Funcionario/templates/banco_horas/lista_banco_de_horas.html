@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load time_extras %}
+
+{% block title %}Banco de Horas{% endblock %}
+
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+<div class="container-fluid mt-4">
+  {% include "partials/global/_header_titulo.html" with titulo="Banco de Horas" icone="bi bi-clock-history" emoji="⏱️" %}
+  {% include "partials/global/_toast_mensagens.html" %}    
+
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <i class="bi bi-funnel me-2"></i> Filtros de Banco de Horas
+    </div>
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-4">
+          <label for="funcionario" class="form-label">
+            <i class="bi bi-person-fill me-1"></i> Colaborador
+          </label>
+          <select name="funcionario" id="funcionario" class="form-select select2">
+            <option value="">Todos</option>
+            {% for f in funcionarios %}
+              <option value="{{ f.id }}" {% if request.GET.funcionario == f.id|stringformat:"s" %}selected{% endif %}>
+                {{ f.nome }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="data_inicio" class="form-label">
+            <i class="bi bi-calendar-check me-1"></i> De
+          </label>
+          <input type="date" name="data_inicio" id="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label for="data_fim" class="form-label">
+            <i class="bi bi-calendar-check-fill me-1"></i> Até
+          </label>
+          <input type="date" name="data_fim" id="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+<!-- Cards -->
+<div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Total de Registros" valor=page_obj.paginator.count subtitulo="Lançamentos no período filtrado." %}
+  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Funcionários Únicos" valor=funcionarios_unicos_count subtitulo="Colaboradores com horas registradas." %}
+  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Data Mais Recente" valor=page_obj.0.data|date:"d/m/Y" subtitulo="Último lançamento visível." %}
+  {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Total de Horas" valor=total_horas|formatar_timedelta subtitulo="Soma dos registros listados." %}
+</div>
+
+<!-- Botão Novo Registro -->
+{% if request.user|has_permission:"Funcionario.add_bancohoras" %}
+  <div class="d-flex justify-content-end mb-4">
+    <a href="{% url 'cadastrar_banco_horas' %}" class="btn btn-success d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle me-1"></i> Novo Registro
+    </a>
+  </div>
+{% endif %}
+
+
+
+
+  <!-- Lista -->
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted"></i> 📄 Registros de Banco de Horas
+  </h5>
+
+  <!-- Tabela -->
+<div class="table-responsive zebra-tabela">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-calendar-event"></i> Data</th>
+          <th><i class="bi bi-person-circle"></i> Colaborador</th>
+          <th><i class="bi bi-hourglass-split"></i> Total</th>
+          <th><i class="bi bi-card-text"></i> Observação</th>
+          <th><i class="bi bi-gear"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for registro in page_obj %}
+          <tr>
+            <td>{{ registro.data|date:"d/m/Y" }}</td>
+            <td class="text-start">{{ registro.funcionario.nome }}</td>
+            <td>{{ registro.horas_trabalhadas|formatar_timedelta }}</td>
+            <td>
+              {% if registro.observacao %}
+                <button class="btn btn-link text-primary p-0" data-bs-toggle="modal" data-bs-target="#modalObservacao{{ registro.id }}" title="Visualizar observação">
+                  <i class="bi bi-eye-fill fs-5"></i>
+                </button>
+      
+                <!-- Modal de Observação -->
+                <div class="modal fade" id="modalObservacao{{ registro.id }}" tabindex="-1" aria-labelledby="modalLabel{{ registro.id }}" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="modalLabel{{ registro.id }}">Observação</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                      </div>
+                      <div class="modal-body text-start">
+                        {{ registro.observacao|safe }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+            
+                {% if request.user|has_permission:"Funcionario.change_bancohoras" %}
+                  {% include "partials/global/_botao_editar.html" with objeto=registro url_editar="editar_banco_horas" label="registro" %}
+                {% endif %}
+                {% if request.user|has_permission:"Funcionario.delete_bancohoras" %}
+                  {% include "partials/global/_botao_excluir.html" with objeto=registro url_excluir="excluir_banco_horas" label="registro" %}
+                  {% include "partials/global/_modal_exclusao.html" with objeto=registro url_excluir="excluir_banco_horas" %}
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          {% include "partials/global/_sem_resultados.html" with colspan=5 mensagem="Nenhum registro encontrado." %}
+        {% endfor %}
+      </tbody>
+      
+    </table>
+    {% include 'partials/global/_paginacao.html' %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    $('.select2').select2({ placeholder: "Selecione", allowClear: true, width: '100%' });
+  });
+</script>
+
+<script>
+    function abrirModalEdicaoBancoHoras(registroId) {
+        fetch(`/rh/banco-horas/editar-modal/${registroId}/`)
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById("modal-edicao-container").innerHTML = html;
+          new bootstrap.Modal(document.getElementById("modalEdicaoBancoHoras")).show();
+        });
+    }
+  </script>
+  
+{% endblock %}
