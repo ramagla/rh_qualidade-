@@ -60,33 +60,36 @@
     <thead>
       <tr>
         <th rowspan="2" scope="col" style="
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  text-orientation: mixed;
-  font-size: 7pt;
-  font-weight: bold;
-  text-align: center;
-  vertical-align: middle;
-  padding: 4px;
-  line-height: 1;
-">
-  Colaborador
-</th>
-
-<th rowspan="2" scope="col" style="
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: 7pt;
-  font-weight: bold;
-  text-align: center;
-  vertical-align: middle;
-  padding: 4px;
-  line-height: 1;
-">
-<span style="transform: rotate(180deg); display: inline-block;">
-  Perfil
-</span>
-</th>
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        text-orientation: mixed;
+        font-size: 7pt;
+        font-weight: bold;
+        text-align: center;
+        vertical-align: middle;
+        padding: 4px;
+        width: 90px; /* Aumenta a largura da coluna Colaborador */
+        line-height: 1;
+      ">
+        Colaborador
+      </th>
+      
+      <th rowspan="2" scope="col" style="
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        font-size: 7pt;
+        font-weight: bold;
+        text-align: center;
+        vertical-align: middle;
+        padding: 2px;
+        width: 35px; /* Reduz a largura da coluna Perfil */
+        line-height: 1;
+      ">
+      <span style="transform: rotate(180deg); display: inline-block;">
+        Perfil
+      </span>
+      </th>
+      
 
 
         {% for atividade in atividades %}
@@ -117,9 +120,12 @@
     <tbody>
       {% for colaborador in colaboradores|ordenar_por_perfil %}
       <tr>
-<td style="vertical-align: middle; font-size: 8pt;">
-  {{ colaborador.nome|primeiro_ultimo_nome }}
-</td>
+        <td style="vertical-align: middle; font-size: 8pt; text-align: left; white-space: nowrap; padding-left: 6px; width: 90px;">
+          {{ colaborador.nome|primeiro_ultimo_nome }}
+        </td>
+        
+        
+        
 <td style="vertical-align: middle; text-align: center;">
   {% if colaborador.perfil == "suplente" %}
     <i class="bi bi-people-fill" title="Suplente" aria-label="Suplente"></i>

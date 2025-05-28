@@ -345,16 +345,17 @@ def subtrair(val1, val2):
     except Exception:
         return 0
     
+from django.utils.safestring import mark_safe
 
 @register.filter
 def primeiro_ultimo_nome(nome_completo):
     """
-    Retorna o primeiro e último nome de um nome completo.
-    Ex: 'Maria José da Silva Oliveira' -> 'Maria Oliveira'
+    Retorna o primeiro e último nome de um nome completo em duas linhas.
+    Ex: 'Maria José da Silva Oliveira' -> 'Maria<br>Oliveira'
     """
     if not nome_completo:
         return ""
     partes = nome_completo.strip().split()
     if len(partes) == 1:
-        return partes[0]
-    return f"{partes[0]} {partes[-1]}"
+        return mark_safe(partes[0])
+    return mark_safe(f"{partes[0]}<br>{partes[-1]}")
