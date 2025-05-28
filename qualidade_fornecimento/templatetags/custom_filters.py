@@ -362,6 +362,9 @@ def primeiro_ultimo_nome(nome_completo):
     return mark_safe(f"{partes[0]}<br>{partes[-1]}")
 
 
+# PARA
 @register.filter
 def formatar_titulo(texto):
+    if not texto:
+        return ""
     return title_case(texto)
