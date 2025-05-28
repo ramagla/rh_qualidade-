@@ -22,7 +22,7 @@ DEPARTAMENTOS_EMPRESA = [
     ("ACABAMENTO", "Acabamento"),
     ("PRENSA", "Prensa"),
     ("DOBRADEIRA_CNC", "Dobradeira CNC"),
-    ("ALIVIO_TENSAO", "Alívio de Tensão"),
+    ("ALIVIO_TENSAO", "Forno"),
     ("FERRAMENTARIA", "Ferramentaria"),
     ("PORTARIA", "Portaria"),
     ("FINANCEIRO", "Financeiro"),

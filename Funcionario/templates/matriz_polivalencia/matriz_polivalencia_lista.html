@@ -90,7 +90,7 @@
       <tbody>
         {% for matriz in matrizes %}
         <tr>
-          <td>{{ matriz.departamento }}</td>
+          <td>{{ matriz.get_departamento_display }}</td>
           <td>{{ matriz.elaboracao.nome }}</td>
           <td>{{ matriz.coordenacao.nome }}</td>
           <td>{{ matriz.validacao.nome }}</td>

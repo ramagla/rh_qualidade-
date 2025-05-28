@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 
 from dateutil.relativedelta import relativedelta
 from django import template
+from rh_qualidade.utils import title_case
 
 register = template.Library()
 
@@ -359,3 +360,8 @@ def primeiro_ultimo_nome(nome_completo):
     if len(partes) == 1:
         return mark_safe(partes[0])
     return mark_safe(f"{partes[0]}<br>{partes[-1]}")
+
+
+@register.filter
+def formatar_titulo(texto):
+    return title_case(texto)

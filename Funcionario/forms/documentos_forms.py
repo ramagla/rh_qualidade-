@@ -6,6 +6,8 @@ from Funcionario.models import Documento, RevisaoDoc
 from rh_qualidade.utils import title_case
 
 
+from Funcionario.models.departamento import Departamento  # importe o modelo real
+
 class DocumentoForm(forms.ModelForm):
     class Meta:
         model = Documento
@@ -14,7 +16,6 @@ class DocumentoForm(forms.ModelForm):
             "coleta", "recuperacao", "arquivo_tipo", "local_armazenamento",
             "tempo_retencao", "descarte", "departamentos"
         ]
-
         widgets = {
             "nome": forms.TextInput(attrs={"class": "form-control"}),
             "codigo": forms.TextInput(attrs={"class": "form-control"}),
@@ -22,8 +23,6 @@ class DocumentoForm(forms.ModelForm):
             "responsavel_recuperacao": Select2Widget(attrs={"class": "select2 form-select"}),
             "status": forms.Select(attrs={"class": "form-select"}),
             "departamentos": forms.SelectMultiple(attrs={"class": "form-select select2"}),
-
-            # Novos campos
             "coleta": forms.TextInput(attrs={"class": "form-control"}),
             "recuperacao": forms.TextInput(attrs={"class": "form-control"}),
             "arquivo_tipo": forms.Select(attrs={"class": "form-select"}),
@@ -32,11 +31,10 @@ class DocumentoForm(forms.ModelForm):
             "descarte": forms.Select(attrs={"class": "form-select"}),
         }
 
-    def clean_nome(self):
-        nome = self.cleaned_data.get("nome")
-        if nome:
-            return title_case(nome)
-        return nome
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["departamentos"].queryset = Departamento.objects.all().order_by("codigo")
+
 
 
 class RevisaoDocForm(forms.ModelForm):

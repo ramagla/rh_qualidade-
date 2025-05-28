@@ -30,7 +30,8 @@
         <div style="font-size: 8.5pt; text-transform: uppercase;">
                       <i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>
 
-          MATRIZ DE POLIVALÊNCIA – {{ matriz.departamento }}
+          MATRIZ DE POLIVALÊNCIA – {{ matriz.get_departamento_display|formatar_titulo }}
+
         </div>
       </td>
       <td rowspan="2" class="text-center align-middle" style="width: 15%; font-size: 8pt; border: 0.75pt solid #000;">
@@ -59,40 +60,36 @@
     <caption class="visually-hidden">Matriz de competências dos colaboradores</caption>
     <thead>
       <tr>
+        <!-- Coluna Colaborador -->
         <th rowspan="2" scope="col" style="
-        writing-mode: vertical-rl;
-        transform: rotate(180deg);
-        text-orientation: mixed;
-        font-size: 7pt;
-        font-weight: bold;
-        text-align: center;
-        vertical-align: middle;
-        padding: 4px;
-        width: 90px; /* Aumenta a largura da coluna Colaborador */
-        line-height: 1;
-      ">
-        Colaborador
-      </th>
-      
-      <th rowspan="2" scope="col" style="
-        writing-mode: vertical-rl;
-        text-orientation: mixed;
-        font-size: 7pt;
-        font-weight: bold;
-        text-align: center;
-        vertical-align: middle;
-        padding: 2px;
-        width: 35px; /* Reduz a largura da coluna Perfil */
-        line-height: 1;
-      ">
-      <span style="transform: rotate(180deg); display: inline-block;">
-        Perfil
-      </span>
-      </th>
-      
+          writing-mode: vertical-rl;
+          transform: rotate(180deg);
+          text-orientation: mixed;
+          font-size: 7pt;
+          font-weight: bold;
+          text-align: center;
+          vertical-align: middle;
+          padding: 4px;
+          width: 90px;
+          line-height: 1;">Colaborador</th>
 
+        <!-- Coluna Perfil -->
+        <th rowspan="2" scope="col" style="
+          writing-mode: vertical-rl;
+          text-orientation: mixed;
+          font-size: 7pt;
+          font-weight: bold;
+          text-align: center;
+          vertical-align: middle;
+          padding: 2px;
+          width: 35px;
+          line-height: 1;">
+          <span style="transform: rotate(180deg); display: inline-block;">Perfil</span>
+        </th>
 
+        <!-- Atividades Dinâmicas -->
         {% for atividade in atividades %}
+        {% if atividade.nome|stringformat:"s"|lower not in atividades_fixas_nomes %}
         <th scope="col" style="
   writing-mode: vertical-rl;
   transform: rotate(180deg);
@@ -106,69 +103,84 @@
   padding: 2px 1px;
   font-size: 6pt;
   max-width: 35px;
-  line-height: 1;
-">
+  line-height: 1;">
+  {{ atividade.nome|formatar_titulo|auto_breaks:20|safe }}
+</th>
 
-
-
-            {{ atividade.nome|auto_breaks:20|safe }}
-            </th>
-
+          {% endif %}
         {% endfor %}
+
+        <!-- Atividades Fixas -->
+        <th scope="col" style="writing-mode: vertical-rl; transform: rotate(180deg); text-orientation: mixed; font-weight: bold; text-align: center; vertical-align: middle; padding: 2px 1px; font-size: 6pt; max-width: 35px; line-height: 1;">
+          {{ "Manter o Setor Limpo e Organizado"|auto_breaks:20|safe }}
+        </th>
+        <th scope="col" style="writing-mode: vertical-rl; transform: rotate(180deg); text-orientation: mixed; font-weight: bold; text-align: center; vertical-align: middle; padding: 2px 1px; font-size: 6pt; max-width: 35px; line-height: 1;">
+          {{ "Manusear e Descartar Materiais, Resíduos e Sucatas"|auto_breaks:20|safe }}
+        </th>
+        
       </tr>
     </thead>
     <tbody>
       {% for colaborador in colaboradores|ordenar_por_perfil %}
       <tr>
+        <!-- Nome -->
         <td style="vertical-align: middle; font-size: 8pt; text-align: left; white-space: nowrap; padding-left: 6px; width: 90px;">
           {{ colaborador.nome|primeiro_ultimo_nome }}
         </td>
-        
-        
-        
-<td style="vertical-align: middle; text-align: center;">
-  {% if colaborador.perfil == "suplente" %}
-    <i class="bi bi-people-fill" title="Suplente" aria-label="Suplente"></i>
-  {% elif colaborador.perfil == "treinado" %}
-    <i class="bi bi-person-check" title="Treinado" aria-label="Treinado"></i>
-  {% elif colaborador.perfil == "em_treinamento" %}
-    <i class="bi bi-person-workspace" title="Em Treinamento" aria-label="Em Treinamento"></i>
-  {% elif colaborador.perfil == "oficial" %}
-    <i class="bi bi-award-fill" title="Oficial" aria-label="Oficial"></i>
-  {% else %}
-    &mdash;
-  {% endif %}
-</td>
 
+        <!-- Perfil -->
+        <td style="vertical-align: middle; text-align: center;">
+          {% if colaborador.perfil == "suplente" %}
+            <i class="bi bi-people-fill" title="Suplente"></i>
+          {% elif colaborador.perfil == "treinado" %}
+            <i class="bi bi-person-check" title="Treinado"></i>
+          {% elif colaborador.perfil == "em_treinamento" %}
+            <i class="bi bi-person-workspace" title="Em Treinamento"></i>
+          {% elif colaborador.perfil == "oficial" %}
+            <i class="bi bi-award-fill" title="Oficial"></i>
+          {% else %}
+            &mdash;
+          {% endif %}
+        </td>
 
-        {% for atividade in atividades %}
+        <!-- Notas das Atividades Dinâmicas -->
+{% for atividade in atividades %}
+{% if atividade.nome|lower not in atividades_fixas_nomes %}
   <td style="vertical-align: middle; text-align: center;">
     {% with colaborador.id as colab_id %}
       {% with atividade.id as ativ_id %}
-      {% for nota in notas_lista %}
-      {% if nota.colaborador_id == colab_id and nota.atividade_id == ativ_id %}
-        {% if nota.grafico %}
-          <img src="{% static nota.grafico %}" alt="Nível {{ nota.nivel }}: {{ nota.descricao }}" style="width: 18px; height: auto;">
-        {% else %}
-          <img src="{% static 'icons/barra_0.png' %}" alt="Nível 0: Não Treinado" style="width: 18px; height: auto;">
-        {% endif %}
-      {% endif %}
-    {% endfor %}
-    
+        {% for nota in notas_lista %}
+          {% if nota.colaborador_id == colab_id and nota.atividade_id == ativ_id %}
+          <img src="{% static nota.grafico|default:'icons/barra_0.png' %}" alt="Nível {{ nota.nivel }}" style="width: 18px; height: 36px; object-fit: contain;">
+          {% endif %}
+        {% endfor %}
       {% endwith %}
     {% endwith %}
   </td>
+{% endif %}
 {% endfor %}
+
+
+       <!-- Notas das Atividades Fixas -->
+{% for nome_fixa in atividades_fixas_nomes %}
+<td style="vertical-align: middle; text-align: center;">
+  <img src="{% static 'icons/barra_4.png' %}" alt="Nível 4" style="width: 18px; height: 36px; object-fit: contain;">
+</td>
+{% endfor %}
+
 
       </tr>
       {% empty %}
       <tr>
-        <td colspan="{{ atividades|length|add:2 }}" class="text-center text-muted">Nenhum colaborador com notas nesta matriz.</td>
+        <td colspan="{{ atividades|length|add:2 }}" class="text-center text-muted">
+          Nenhum colaborador com notas nesta matriz.
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
 
 <!-- Legenda de Níveis -->
 <div class="mt-4 pt-3 border-top" style="border-top: 1px solid #000; font-size: 7pt;">
@@ -177,25 +189,25 @@
     <div class="d-flex flex-column align-items-center text-center">
       <strong>0</strong>
       <img src="{% static 'icons/barra_0.png' %}" alt="Nota 0" style="width: 14px;">
-      <span>Não Treinado</span>
+      <span>Não Treinado, Somente Observa as Atividades</span>
     </div>
 
     <div class="d-flex flex-column align-items-center text-center">
       <strong>1</strong>
       <img src="{% static 'icons/barra_1.png' %}" alt="Nota 1" style="width: 14px;">
-      <span>Tarefas básicas com acompanhamento</span>
+      <span>Executa as Tarefas básicas com acompanhamento</span>
     </div>
 
     <div class="d-flex flex-column align-items-center text-center">
       <strong>2</strong>
       <img src="{% static 'icons/barra_2.png' %}" alt="Nota 2" style="width: 14px;">
-      <span>Tarefas chave com acompanhamento</span>
+      <span>Executa as Tarefas chave com acompanhamento</span>
     </div>
 
     <div class="d-flex flex-column align-items-center text-center">
       <strong>3</strong>
       <img src="{% static 'icons/barra_3.png' %}" alt="Nota 3" style="width: 14px;">
-      <span>Qualificado sem acompanhamento</span>
+      <span>Qualificado, Executa todas as tarefas sem acompanhamento</span>
     </div>
 
     <div class="d-flex flex-column align-items-center text-center">

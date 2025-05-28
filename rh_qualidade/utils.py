@@ -1,6 +1,8 @@
 # utils.py
 import re
 
+from Funcionario.models.matriz_polivalencia import Atividade
+
 
 def title_case(text):
     # Lista de palavras para manter em minúsculas (artigos, preposições, conjunções)
@@ -82,6 +84,7 @@ def title_case(text):
         "PIPC",
         "SGS",
         "SGQ",
+        "CIPA",
     ]
 
     # Expressão regular para detectar abreviações seguidas de números (ex: POQ001, PQ002)
@@ -116,5 +119,23 @@ def title_case(text):
 # Teste
 text = "o projeto poq001 foi enviado para a pq002 e aprovado pelo ceo"
 print(title_case(text))
+
+
+def obter_atividades_com_fixas(departamento):
+    """
+    Retorna uma lista de atividades do departamento com as duas atividades fixas
+    sempre ao final, sem duplicar.
+    """
+    atividades = list(Atividade.objects.filter(departamento=departamento))
+
+    nomes_fixos = [
+        "manter o setor limpo e organizado",
+        "manusear e descartar materiais, resíduos e sucatas",
+    ]
+
+    atividades_fixas = [a for a in atividades if a.nome.lower() in nomes_fixos]
+    atividades_outros = [a for a in atividades if a.nome.lower() not in nomes_fixos]
+
+    return atividades_outros + atividades_fixas
 
 

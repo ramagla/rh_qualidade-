@@ -15,7 +15,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-treeview/1.5/jquery.treeview.min.css">
-
+{% comment %}    
+    {% include 'partials/responsividade/_celular.html' %}
+    {% include 'partials/responsividade/_tablet.html' %}
+    {% include 'partials/responsividade/_laptop.html' %}
+    {% include 'partials/responsividade/_desktop.html' %} {% endcomment %}
     {% load static %}
     {% load permissoes_tags %}
 
@@ -214,27 +218,76 @@
     box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
     font-size: 1.25rem;
   }
+
+  #sidebarMobile.offcanvas.show {
+    visibility: visible !important;
+    transform: translateX(0%) !important;
+    opacity: 1 !important;
+    z-index: 1060 !important;
+  }
+
+  
+  
+  details[open] summary {
+    background-color: #1f1f1f;
+  }
+  /* 🔒 Estilos exclusivos para o menu lateral mobile customizado */
+#menuMobileSidebar .menu-mobile-summary {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  background-color: transparent;
+  list-style: none;
+}
+
+#menuMobileSidebar .menu-mobile-summary::-webkit-details-marker {
+  display: none;
+}
+
+#menuMobileSidebar details[open] > .menu-mobile-summary {
+  background-color: #1f1f1f;
+}
+
+#menuMobileSidebar ul {
+  padding-left: 1.5rem;
+}
+
+#menuMobileSidebar li {
+  padding: 4px 0;
+}
+
+  
   
   @media (max-width: 768px) {
     #alerta-flutuante {
       bottom: 15px;
       right: 15px;
     }
+  
     .sidebar {
-        position: fixed;
-        width: 220px;
-        z-index: 1040;
-        overflow-y: auto;
-      }
-    
-      .content {
-        margin-left: 0 !important;
-      }
-    
-      .content.collapsed {
-        margin-left: 0 !important;
-      }
+      display: none !important;
+      position: fixed;
+      width: 220px;
+      z-index: 1040;
+      overflow-y: auto;
+    }
+  
+    .content {
+      margin-left: 0 !important;
+    }
+  
+    .content.collapsed {
+      margin-left: 0 !important;
+    }
+
+    .sidebar:not(.offcanvas) {
+      display: none !important;
+    }
   }
+  
   
   
     </style>
@@ -244,10 +297,12 @@
 
     <!-- 🔘 Barra superior mobile com botões de menu -->
     <div class="d-md-none d-flex justify-content-between align-items-center bg-dark px-3 py-2">
-        <!-- Botão de menu -->
-        <button class="btn btn-dark" data-bs-toggle="offcanvas" data-bs-target="#sidebarMobile">
-          <i class="bi bi-list fs-4"></i>
-        </button>
+       <!-- Botão de menu -->
+<button class="btn btn-dark" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMobileCustom" aria-controls="sidebarMobileCustom">
+  <i class="bi bi-list fs-4"></i>
+</button>
+
+        
       
         <!-- Botão de módulos -->
         <button class="btn btn-dark" data-bs-toggle="offcanvas" data-bs-target="#moduloMobile">
@@ -620,7 +675,7 @@
                     });
             });
         });
-    </script>,
+    </script>
     <!-- Botão flutuante de alertas -->
     {% if alertas_nao_lidos > 0 %}
 <div class="dropdown" id="alerta-flutuante">
@@ -710,23 +765,7 @@
     });
   </script>
   
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const allDetails = document.querySelectorAll('#sidebarMobile details');
-  
-      allDetails.forEach((detail) => {
-        detail.addEventListener('toggle', function () {
-          if (this.open) {
-            allDetails.forEach((el) => {
-              if (el !== this) {
-                el.removeAttribute('open');
-              }
-            });
-          }
-        });
-      });
-    });
-  </script>
+ 
   
   
   
@@ -735,6 +774,7 @@
   
   {% include 'partials/qualidade_fornecimento/_modal_tabela_correlacao.html' %}
 
+  
 
 </body>
 </html>

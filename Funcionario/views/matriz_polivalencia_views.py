@@ -69,9 +69,24 @@ def gerar_grafico_icone(nota):
 
 def imprimir_matriz(request, id):
     matriz = get_object_or_404(MatrizPolivalencia, id=id)
-    atividades = matriz.atividades.all()
-    notas = Nota.objects.filter(atividade__in=atividades)
 
+    atividades_base = list(matriz.atividades.all())
+
+    # Lista de nomes de atividades fixas em minúsculo
+    atividades_fixas_nomes = [
+        "manter o setor limpo e organizado",
+        "manusear e descartar materiais, resíduos e sucatas",
+    ]
+
+    atividades_fixas = list(
+        Atividade.objects.filter(
+            nome__in=[nome.title() for nome in atividades_fixas_nomes]
+        ).order_by("nome")
+    )
+
+    atividades = atividades_base + [a for a in atividades_fixas if a not in atividades_base]
+
+    notas = Nota.objects.filter(atividade__in=atividades)
     colaborador_ids = notas.values_list("funcionario_id", flat=True).distinct()
     colaboradores = Funcionario.objects.filter(id__in=colaborador_ids)
 
@@ -147,9 +162,9 @@ def imprimir_matriz(request, id):
             "atividades": atividades,
             "colaboradores": colaboradores_com_perfil,
             "notas_lista": notas_lista,
+            "atividades_fixas_nomes": atividades_fixas_nomes,
         },
     )
-
 
 
 
@@ -219,7 +234,18 @@ def cadastrar_matriz_polivalencia(request):
     if request.method == "POST":
         form = MatrizPolivalenciaForm(request.POST)
         departamento = request.POST.get("departamento")
-        atividades = Atividade.objects.filter(departamento=departamento)
+
+        # Recupera as atividades do departamento
+        atividades_base = list(Atividade.objects.filter(departamento=departamento))
+
+        # Adiciona as duas atividades fixas obrigatórias ao final
+        atividades_fixas = list(Atividade.objects.filter(nome__in=[
+            "Manter o setor limpo e organizado",
+            "Manusear e descartar materiais, resíduos e sucatas"
+        ]).order_by("nome"))
+
+        # Garante que elas fiquem ao final e não duplicadas
+        atividades = atividades_base + [a for a in atividades_fixas if a not in atividades_base]
 
         matriz, sucesso = save_matriz_polivalencia(request, form, atividades, todos_funcionarios)
         if sucesso:
@@ -256,8 +282,18 @@ def editar_matriz_polivalencia(request, id):
     )
 
     departamentos = DEPARTAMENTOS_EMPRESA
-    atividades = Atividade.objects.filter(departamento=matriz.departamento)
-    atividade_ids = atividades.values_list("id", flat=True)
+    atividades_matriz = list(matriz.atividades.all())
+
+    # Atividades fixas
+    atividades_fixas = list(Atividade.objects.filter(nome__in=[
+        "Manter o setor limpo e organizado",
+        "Manusear e descartar materiais, resíduos e sucatas"
+    ]).order_by("nome"))
+
+    # Garante que as fixas estejam no fim da lista sem duplicar
+    atividades = atividades_matriz + [a for a in atividades_fixas if a not in atividades_matriz]
+
+    atividade_ids = [a.id for a in atividades]
 
     funcionarios_com_nota = Funcionario.objects.filter(
         notas__atividade_id__in=atividade_ids
@@ -265,7 +301,6 @@ def editar_matriz_polivalencia(request, id):
 
     todos_funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
 
-    # Dicionário com notas por funcionário e atividade
     notas_por_funcionario = {
         funcionario.id: {
             atividade.id: {"pontuacao": None, "perfil": ""}
@@ -283,11 +318,9 @@ def editar_matriz_polivalencia(request, id):
     if request.method == "POST":
         form = MatrizPolivalenciaForm(request.POST, instance=matriz)
 
-        # 🔻 Recupera os IDs de colaboradores removidos
         colaboradores_removidos = request.POST.get("colaboradores_removidos", "")
         ids_removidos = [int(id.strip()) for id in colaboradores_removidos.split(",") if id.strip().isdigit()]
 
-        # 🔻 Base apenas dos IDs que estavam na tabela antes da edição
         ids_enviados = set()
         for key in request.POST.keys():
             if key.startswith("nota_") or key.startswith("perfil_"):
@@ -295,10 +328,7 @@ def editar_matriz_polivalencia(request, id):
                 if len(parts) >= 2 and parts[1].isdigit():
                     ids_enviados.add(int(parts[1]))
 
-        # 🔻 Considera somente os IDs que foram mantidos na tabela (não removidos)
         ids_mantidos = [fid for fid in ids_enviados if fid not in ids_removidos]
-
-        # 🔻 Busca os objetos Funcionario correspondentes aos mantidos
         funcionarios_restantes = Funcionario.objects.filter(id__in=ids_mantidos)
 
         nova_matriz, sucesso = save_matriz_polivalencia(
@@ -312,7 +342,6 @@ def editar_matriz_polivalencia(request, id):
 
         if sucesso:
             Nota.objects.filter(funcionario_id__in=ids_removidos, atividade__in=atividades).delete()
-
             messages.success(request, "Matriz de Polivalência atualizada com sucesso.")
             return redirect("lista_matriz_polivalencia")
         else:
@@ -346,7 +375,6 @@ def editar_matriz_polivalencia(request, id):
             "campos_responsaveis": ["elaboracao", "coordenacao", "validacao"],
         },
     )
-
 
 
 
