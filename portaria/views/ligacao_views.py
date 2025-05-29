@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 @login_required
 @permission_required("portaria.view_ligacaoportaria", raise_exception=True)
 def lista_ligacoes(request):
-    ligacoes_queryset = LigacaoPortaria.objects.select_related("falar_com").order_by("-data", "-horario")
+    ligacoes_queryset = LigacaoPortaria.objects.select_related("falar_com").filter(falar_com__status="Ativo").order_by("-data", "-horario")
 
     # Filtros
     nome = request.GET.get("nome")
@@ -36,7 +36,7 @@ def lista_ligacoes(request):
     page_obj = paginator.get_page(page_number)
 
     # Listas únicas para os filtros
-    nomes = LigacaoPortaria.objects.values_list("nome", flat=True).distinct().order_by("nome")
+    nomes = LigacaoPortaria.objects.filter(falar_com__status="Ativo").values_list("nome", flat=True).distinct().order_by("nome")
     empresas = LigacaoPortaria.objects.exclude(empresa="").values_list("empresa", flat=True).distinct().order_by("empresa")
 
     context = {

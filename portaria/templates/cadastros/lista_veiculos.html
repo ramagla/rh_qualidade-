@@ -75,8 +75,8 @@
   
   <!-- Botão de Ação -->
   <div class="text-end mb-4">
-    {% if request.user|has_permission:"Portaria.add_veiculoportaria" %}
-      <a href="{% url 'cadastrar_veiculo' %}" class="btn btn-success">
+    {% if request.user|has_permission:"portaria.add_veiculoportaria" %}
+    <a href="{% url 'cadastrar_veiculo' %}" class="btn btn-success">
         <i class="bi bi-plus-circle"></i> Cadastrar Veículo
       </a>
     {% endif %}
@@ -107,11 +107,11 @@
               {% endif %}
             </td>
             <td>
-              {% if request.user|has_permission:"Portaria.change_veiculoportaria" %}
-                {% include 'partials/global/_botao_editar.html' with objeto=veiculo url_editar='editar_veiculo' label="veículo" %}
+              {% if request.user|has_permission:"portaria.change_veiculoportaria" %}
+              {% include 'partials/global/_botao_editar.html' with objeto=veiculo url_editar='editar_veiculo' label="veículo" %}
               {% endif %}
-              {% if request.user|has_permission:"Portaria.delete_veiculoportaria" %}
-                {% include 'partials/global/_botao_excluir.html' with objeto=veiculo url_excluir='excluir_veiculo' label="veículo" %}
+              {% if request.user|has_permission:"portaria.delete_veiculoportaria" %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=veiculo url_excluir='excluir_veiculo' label="veículo" %}
               {% endif %}
             </td>
           </tr>

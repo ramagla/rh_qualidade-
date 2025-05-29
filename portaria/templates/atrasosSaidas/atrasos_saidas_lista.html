@@ -69,12 +69,13 @@
 
 <!-- Botão de Nova Ocorrência -->
 {% if request.user|has_permission:"portaria.add_atrasosaida" %}
-  <div class="d-flex justify-content-end mb-4">
+  <div class="mt-3 d-flex justify-content-end mb-4">
     <a href="{% url 'cadastrar_atraso_saida' %}" class="btn btn-success d-inline-flex align-items-center">
       <i class="bi bi-plus-circle-fill me-1"></i> Nova Ocorrência
     </a>
   </div>
 {% endif %}
+
 
 
   <!-- Tabela -->

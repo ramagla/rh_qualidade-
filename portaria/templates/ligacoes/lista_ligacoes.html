@@ -77,8 +77,8 @@
   </div>
  <!-- Botão Nova Ligação -->
  <div class="mb-3 text-end">
-  {% if request.user|has_permission:"Portaria.add_ligacao" %}
-    <a href="{% url 'cadastrar_ligacao' %}" class="btn btn-success">
+  {% if request.user|has_permission:"portaria.add_ligacaoportaria" %}
+  <a href="{% url 'cadastrar_ligacao' %}" class="btn btn-success">
       <i class="bi bi-plus-circle me-1"></i> Nova Ligação
     </a>
   {% endif %}
@@ -139,18 +139,18 @@
               </div>
             </td>
             <td>
-              {% if not ligacao.recado_enviado and request.user|has_permission:"Portaria.disparar_recado" %}
-                <a href="{% url 'disparar_recado' ligacao.id %}" class="btn btn-outline-warning btn-sm" title="Disparar Recado">
+              {% if not ligacao.recado_enviado and request.user|has_permission:"portaria.change_ligacaoportaria" %}
+              <a href="{% url 'disparar_recado' ligacao.id %}" class="btn btn-outline-warning btn-sm" title="Disparar Recado">
                   <i class="bi bi-send-check-fill"></i>
                 </a>
               {% endif %}
             
-              {% if request.user|has_permission:"Portaria.change_ligacao" %}
-                {% include 'partials/global/_botao_editar.html' with objeto=ligacao url_editar='editar_ligacao' label="ligação" %}
+              {% if request.user|has_permission:"portaria.change_ligacaoportaria" %}
+              {% include 'partials/global/_botao_editar.html' with objeto=ligacao url_editar='editar_ligacao' label="ligação" %}
               {% endif %}
             
-              {% if request.user|has_permission:"Portaria.delete_ligacao" %}
-                {% include 'partials/global/_botao_excluir.html' with objeto=ligacao url_excluir='excluir_ligacao' label="ligação" %}
+              {% if request.user|has_permission:"portaria.delete_ligacaoportaria" %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=ligacao url_excluir='excluir_ligacao' label="ligação" %}
               {% endif %}
             </td>
             

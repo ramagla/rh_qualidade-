@@ -24,7 +24,7 @@ from portaria.models import AtrasoSaida
 @login_required
 @permission_required("portaria.view_atrasosaida", raise_exception=True)
 def lista_atrasos_saidas(request):
-    eventos_queryset = AtrasoSaida.objects.select_related("funcionario").order_by("-data", "-horario")
+    eventos_queryset = AtrasoSaida.objects.select_related("funcionario").filter(funcionario__status="Ativo").order_by("-data", "-horario")
 
     # Filtros
     nome = request.GET.get("nome")

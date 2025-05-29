@@ -74,8 +74,8 @@
 
     <!-- Botão de ação -->
     <div class="text-end mb-4">
-      {% if request.user|has_permission:"Portaria.add_pessoa" %}
-        <a href="{% url 'cadastrar_pessoa' %}" class="btn btn-success">
+      {% if request.user|has_permission:"portaria.add_pessoaportaria" %}
+      <a href="{% url 'cadastrar_pessoa' %}" class="btn btn-success">
           <i class="bi bi-plus-circle"></i> Cadastrar Pessoa
         </a>
       {% endif %}
@@ -131,16 +131,16 @@
             
             <td>
               <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
-                {% if request.user|has_permission:"Portaria.view_pessoaportaria" %}
-                  {% include 'partials/global/_botao_visualizar.html' with objeto=pessoa url_visualizar='visualizar_pessoa' label="pessoa" %}
+                {% if request.user|has_permission:"portaria.view_pessoaportaria" %}
+                {% include 'partials/global/_botao_visualizar.html' with objeto=pessoa url_visualizar='visualizar_pessoa' label="pessoa" %}
                 {% endif %}
                 
-                {% if request.user|has_permission:"Portaria.change_pessoaportaria" %}
-                  {% include 'partials/global/_botao_editar.html' with objeto=pessoa url_editar='editar_pessoa' label="pessoa" %}
+                {% if request.user|has_permission:"portaria.change_pessoaportaria" %}
+                {% include 'partials/global/_botao_editar.html' with objeto=pessoa url_editar='editar_pessoa' label="pessoa" %}
                 {% endif %}
                 
-                {% if request.user|has_permission:"Portaria.delete_pessoaportaria" %}
-                  {% include 'partials/global/_botao_excluir.html' with objeto=pessoa url_excluir='excluir_pessoa' label="pessoa" %}
+                {% if request.user|has_permission:"portaria.delete_pessoaportaria" %}
+                {% include 'partials/global/_botao_excluir.html' with objeto=pessoa url_excluir='excluir_pessoa' label="pessoa" %}
                 {% endif %}
               </div>
             </td>

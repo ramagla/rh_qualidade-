@@ -71,7 +71,7 @@
     {% include 'partials/global/_card_indicador.html' with titulo="Encerradas" valor=total_encerradas subtitulo="Finalizadas." cor="success" %}
   </div>
 <!-- Botões de Ação -->
-{% if request.user|has_permission:"Portaria.add_ocorrenciaportaria" %}
+{% if request.user|has_permission:"portaria.add_ocorrenciaportaria" %}
   <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
     <a href="{% url 'cadastrar_ocorrencia' %}" class="btn btn-success d-inline-flex align-items-center">
       <i class="bi bi-plus-circle me-1"></i> Nova Ocorrência
@@ -127,16 +127,16 @@
           <td>{{ ocorrencia.responsavel_registro.get_full_name|default:ocorrencia.responsavel_registro.username }}</td>
           <td>
             <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
-              {% if request.user|has_permission:"Portaria.view_ocorrenciaportaria" %}
-                {% include 'partials/global/_botao_visualizar.html' with objeto=ocorrencia url_visualizar='visualizar_ocorrencia' label='ocorrência' %}
+              {% if request.user|has_permission:"portaria.view_ocorrenciaportaria" %}
+              {% include 'partials/global/_botao_visualizar.html' with objeto=ocorrencia url_visualizar='visualizar_ocorrencia' label='ocorrência' %}
               {% endif %}
           
-              {% if request.user|has_permission:"Portaria.change_ocorrenciaportaria" %}
-                {% include 'partials/global/_botao_editar.html' with objeto=ocorrencia url_editar='editar_ocorrencia' label='ocorrência' %}
+              {% if request.user|has_permission:"portaria.change_ocorrenciaportaria" %}
+              {% include 'partials/global/_botao_editar.html' with objeto=ocorrencia url_editar='editar_ocorrencia' label='ocorrência' %}
               {% endif %}
           
-              {% if request.user|has_permission:"Portaria.delete_ocorrenciaportaria" %}
-                {% include 'partials/global/_botao_excluir.html' with objeto=ocorrencia url_excluir='excluir_ocorrencia' label='ocorrência' %}
+              {% if request.user|has_permission:"portaria.delete_ocorrenciaportaria" %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=ocorrencia url_excluir='excluir_ocorrencia' label='ocorrência' %}
               {% endif %}
             </div>
           </td>

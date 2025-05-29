@@ -38,35 +38,35 @@ def menu_portaria(user):
     # Menus diretos (sem submenu)
     if user.has_perm("portaria.view_entradavisitante"):
         menu.append({
-            "name": "Controle de Visitantes",
+            "name": "Visitantes",
             "url": "listar_controle_visitantes",
             "icon": "fas fa-user-check",
         })
 
     if user.has_perm("portaria.view_atrasosaida"):
         menu.append({
-            "name": "Atrasos e Saídas Antecipadas",
+            "name": "Atrasos e Saídas",
             "url": "lista_atrasos_saidas",
             "icon": "fas fa-user-clock",
         })
 
     if user.has_perm("portaria.view_ligacaoportaria"):
         menu.append({
-            "name": "Controle de Ligações",
+            "name": "Ligações",
             "url": "lista_ligacoes",
             "icon": "fas fa-phone-alt",
         })
 
     if user.has_perm("portaria.view_ocorrenciaportaria"):
         menu.append({
-            "name": "Ocorrências da Portaria",
+            "name": "Ocorrências",
             "url": "listar_ocorrencias",
             "icon": "fas fa-exclamation-triangle",
         })
 
     if user.has_perm("portaria.view_registroconsumoagua"):
         menu.append({
-            "name": "Controle de Consumo de Água",
+            "name": "Consumo de Água",
             "url": "listar_consumo_agua",
             "icon": "fas fa-tint",
         })
@@ -104,7 +104,7 @@ def menu_portaria(user):
 
     if user.has_perm("portaria.relatorio_consumo_agua"):
         submenu_relatorios.append({
-            "name": "Análise de Consumo de Água",
+            "name": "Consumo de Água",
             "url": "relatorio_consumo_agua",
             "icon": "fas fa-water",
         })

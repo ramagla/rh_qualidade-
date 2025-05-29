@@ -30,7 +30,7 @@ def menu_qualidade(user):
 
     if user.has_perm("qualidade_fornecimento.view_materiaprimacatalogo"):
         submenu_cadastros.append({
-            "name": "Catálogo de Matéria-Prima",
+            "name": "Matéria-Prima",
             "url": "materiaprima_catalogo_list",
             "icon": "fas fa-tags",
         })
@@ -44,14 +44,14 @@ def menu_qualidade(user):
 
     if user.has_perm("qualidade_fornecimento.view_relacaomateriaprima"):
         menu.append({
-            "name": "TB050 - Relação de Matérias-Primas",
+            "name": "TB050",
             "url": "tb050_list",
             "icon": "fas fa-boxes",
         })
 
     if user.has_perm("qualidade_fornecimento.view_controleservicoexterno"):
         menu.append({
-            "name": "Controle de Serviço Externo",
+            "name": "Serviço Externo",
             "url": "listar_controle_servico_externo",
             "icon": "fas fa-external-link-alt",
         })

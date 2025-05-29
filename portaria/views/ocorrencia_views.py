@@ -11,7 +11,9 @@ from django.db.models import Q
 @login_required
 @permission_required("portaria.view_ocorrenciaportaria", raise_exception=True)
 def listar_ocorrencias(request):
-    ocorrencias_queryset = OcorrenciaPortaria.objects.select_related("responsavel_registro").order_by("-data_inicio", "-hora_inicio")
+    ocorrencias_queryset = OcorrenciaPortaria.objects.select_related("responsavel_registro").filter(
+        pessoas_envolvidas__status="Ativo"
+    ).distinct().order_by("-data_inicio", "-hora_inicio")
 
     tipo = request.GET.get("tipo")
     status = request.GET.get("status")
@@ -124,7 +126,7 @@ from portaria.models.ocorrencia import OcorrenciaPortaria
 def disparar_alerta_ocorrencia(request, pk, edicao=False):
     ocorrencia = get_object_or_404(OcorrenciaPortaria, pk=pk)
 
-    envolvidos = ocorrencia.pessoas_envolvidas.filter(user__isnull=False)
+    envolvidos = ocorrencia.pessoas_envolvidas.filter(user__isnull=False, status="Ativo")
 
     if not envolvidos.exists():
         messages.error(request, "Nenhum dos envolvidos possui usuário vinculado.")
