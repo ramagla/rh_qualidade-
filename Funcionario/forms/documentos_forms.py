@@ -6,7 +6,7 @@ from Funcionario.models import Documento, RevisaoDoc
 from rh_qualidade.utils import title_case
 
 
-from Funcionario.models.departamento import Departamento  # importe o modelo real
+from Funcionario.models.departamentos import Departamentos
 
 class DocumentoForm(forms.ModelForm):
     class Meta:
@@ -33,7 +33,7 @@ class DocumentoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["departamentos"].queryset = Departamento.objects.all().order_by("codigo")
+        self.fields["departamentos"].queryset = Departamentos.objects.all().order_by("nome")
 
 
 

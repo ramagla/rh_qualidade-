@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from ..forms import CargoForm, RevisaoForm
 from ..models import Cargo, Funcionario, Revisao
-from Funcionario.models.choices_departamento import DEPARTAMENTOS_EMPRESA
+from Funcionario.models.departamentos import Departamentos
 
 @login_required
 def organograma_cargos(request):
@@ -86,7 +86,7 @@ def lista_cargos(request):
         {
             "cargos": page_obj,
             "page_obj": page_obj,
-            "departamentos": DEPARTAMENTOS_EMPRESA,
+            "departamentos": Departamentos.objects.all(),
             "todos_cargos": todos_cargos,
             "total_cargos": total_cargos,
             "departamento_mais_frequente": departamento_mais_frequente,

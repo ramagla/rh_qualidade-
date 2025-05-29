@@ -36,3 +36,14 @@ class AtualizacaoSistemaAdmin(admin.ModelAdmin):
     search_fields = ("titulo",)
     list_filter = ("previsao",)
     ordering = ("-previsao",)  # Ordena por previsão mais recente primeiro
+
+
+from django.contrib import admin
+from .models.departamentos import Departamentos
+
+@admin.register(Departamentos)
+class DepartamentosAdmin(admin.ModelAdmin):
+    list_display = ["nome", "sigla", "ativo"]
+    search_fields = ["nome", "sigla"]
+    list_filter = ["ativo"]
+

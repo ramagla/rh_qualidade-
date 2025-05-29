@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from .cargo import Cargo
-from Funcionario.models.departamento import Departamento  # ✅
+from Funcionario.models.departamentos import Departamentos
 
 class Documento(models.Model):
     STATUS_CHOICES = [
@@ -47,7 +47,7 @@ class Documento(models.Model):
     local_armazenamento = models.CharField(max_length=100, blank=True, null=True)
     tempo_retencao = models.CharField(max_length=100, blank=True, null=True)
     descarte = models.CharField(max_length=30, choices=DESCARTE_CHOICES, blank=True, null=True)
-    departamentos = models.ManyToManyField(Departamento, blank=True)  # ✅ Correto agora
+    departamentos = models.ManyToManyField(Departamentos, blank=True)
 
     def __str__(self):
         return self.nome

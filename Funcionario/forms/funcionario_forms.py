@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from rh_qualidade.utils import title_case
 
 from ..models import Cargo, Funcionario
-from ..models import DEPARTAMENTOS_EMPRESA  # ← no topo se necessário
+from ..models.departamentos import Departamentos
 
 
 class FuncionarioForm(forms.ModelForm):
@@ -25,10 +25,11 @@ class FuncionarioForm(forms.ModelForm):
         key=lambda x: x[1],
     )
 
-    local_trabalho = forms.ChoiceField(
-        choices=[("", "Selecione uma opção")] + DEPARTAMENTOS_EMPRESA,
+    local_trabalho = forms.ModelChoiceField(
+        queryset=Departamentos.objects.filter(ativo=True).order_by("nome"),
         label="Local de Trabalho",
         widget=Select2Widget(attrs={"class": "form-select select2"}),
+        required=False,
     )
 
     cargo_inicial = forms.ModelChoiceField(

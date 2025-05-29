@@ -4,7 +4,7 @@ from django.db import models
 from django.utils.text import slugify
 
 from .cargo import Cargo
-from .choices_departamento import DEPARTAMENTOS_EMPRESA
+from .departamentos import Departamentos
 from django.contrib.auth.models import User
 
 
@@ -61,11 +61,16 @@ class Funcionario(models.Model):
         null=True,
     )
     numero_registro = models.CharField(max_length=20, unique=True)
-    local_trabalho = models.CharField(
-            max_length=30,
-            choices=DEPARTAMENTOS_EMPRESA,
-            verbose_name="Local de Trabalho"
-        )
+    local_trabalho = models.ForeignKey(
+        Departamentos,
+        verbose_name="Local de Trabalho",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="funcionarios",
+    )
+
+
 
     data_integracao = models.DateField(blank=True, null=True)
     responsavel = models.ForeignKey(

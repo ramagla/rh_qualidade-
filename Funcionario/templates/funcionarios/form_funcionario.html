@@ -149,11 +149,12 @@
                         </div>                        
 
                         <div class="col-md-6">
-                            <label for="local_trabalho" class="form-label">
+                            <label for="{{ form.local_trabalho.id_for_label }}" class="form-label">
                                 <i class="bi bi-geo-alt-fill me-1"></i> Local de Trabalho:
                             </label>
                             {{ form.local_trabalho|add_class:"form-select select2" }}
                         </div>
+                        
 
                         <div class="col-md-6">
                             <label for="escolaridade" class="form-label">

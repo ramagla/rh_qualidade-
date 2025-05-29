@@ -22,18 +22,21 @@
     <form method="get">
       <div class="row g-3">
 
-        <!-- Departamento -->
-        <div class="col-md-4">
-          <label for="departamento" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-building text-secondary" aria-hidden="true"></i> Departamento
-          </label>
-          <select id="departamento" name="departamento" class="form-select" aria-label="Filtrar por departamento">
-            <option value="">Todos os Departamentos</option>
-            {% for value, label in departamentos %}
-  <option value="{{ value }}" {% if request.GET.departamento == value %}selected{% endif %}>{{ label }}</option>
-{% endfor %}
-          </select>
-        </div>
+       <!-- Departamento -->
+<div class="col-md-4">
+  <label for="departamento" class="form-label d-flex align-items-center gap-2">
+    <i class="bi bi-building text-secondary" aria-hidden="true"></i> Departamento
+  </label>
+  <select id="departamento" name="departamento" class="form-select select2" aria-label="Filtrar por departamento">
+    <option value="">Todos os Departamentos</option>
+    {% for d in departamentos %}
+      <option value="{{ d.id }}" {% if request.GET.departamento == d.id|stringformat:"s" %}selected{% endif %}>
+        {{ d }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
 
         <!-- Data Início -->
         <div class="col-md-4">
@@ -90,7 +93,7 @@
       <tbody>
         {% for matriz in matrizes %}
         <tr>
-          <td>{{ matriz.get_departamento_display }}</td>
+          <td>{{ matriz.departamento }}</td>
           <td>{{ matriz.elaboracao.nome }}</td>
           <td>{{ matriz.coordenacao.nome }}</td>
           <td>{{ matriz.validacao.nome }}</td>

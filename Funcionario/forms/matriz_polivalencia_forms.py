@@ -1,15 +1,16 @@
 from django import forms
 
 from ..models.matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
-from ..models.choices_departamento import DEPARTAMENTOS_EMPRESA
 from django_select2.forms import Select2Widget  # se estiver usando Select2
 from django.forms import TypedChoiceField
+from Funcionario.models.departamentos import Departamentos
+
 
 
 from django import forms
 from django_select2.forms import Select2Widget
 from ..models.matriz_polivalencia import MatrizPolivalencia
-from ..models.choices_departamento import DEPARTAMENTOS_EMPRESA
+
 
 class MatrizPolivalenciaForm(forms.ModelForm):
     class Meta:
@@ -23,12 +24,16 @@ class MatrizPolivalenciaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["departamento"].choices = [("", "Selecione o Departamento")] + list(DEPARTAMENTOS_EMPRESA)
+
+        # Aplica manualmente o id="departamento" para o JS funcionar corretamente
+        self.fields["departamento"].widget.attrs.update({
+            "class": "form-select select2",
+            "id": "departamento"
+        })
+
+        # Torna todos os campos opcionais
         for name, field in self.fields.items():
-            if name != "departamento":
-                field.required = False
-
-
+            field.required = False
 
 
 class AtividadeForm(forms.ModelForm):

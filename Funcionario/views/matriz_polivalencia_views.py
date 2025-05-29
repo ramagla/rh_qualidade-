@@ -8,6 +8,7 @@ from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from Funcionario.models.departamentos import Departamentos
 
 from ..forms.matriz_polivalencia_forms import (
     AtividadeForm,
@@ -18,7 +19,6 @@ from ..models.funcionario import Funcionario
 from ..models.matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
 
 matplotlib.use("Agg")  # Backend para renderização sem GUI
-from Funcionario.models.choices_departamento import DEPARTAMENTOS_EMPRESA
 
 
 @login_required
@@ -30,9 +30,9 @@ def lista_matriz_polivalencia(request):
     # Filtrando as matrizes
     matrizes = MatrizPolivalencia.objects.all()
 
-    # Filtrando matrizes por departamento
+    # Filtrando por departamento (via ID)
     if departamento:
-        matrizes = matrizes.filter(departamento=departamento)
+        matrizes = matrizes.filter(departamento_id=departamento)
 
     # Filtro de datas
     if data_inicio:
@@ -41,18 +41,21 @@ def lista_matriz_polivalencia(request):
     if data_fim:
         matrizes = matrizes.filter(atualizado_em__lte=data_fim)
 
-    departamentos = DEPARTAMENTOS_EMPRESA
-
+    departamentos = Departamentos.objects.filter(ativo=True).order_by("nome")
 
     # Paginação
-    paginator = Paginator(matrizes, 10)  # 10 itens por página
+    paginator = Paginator(matrizes, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     return render(
         request,
         "matriz_polivalencia/matriz_polivalencia_lista.html",
-        {"matrizes": page_obj, "page_obj": page_obj, "departamentos": departamentos},
+        {
+            "matrizes": page_obj,
+            "page_obj": page_obj,
+            "departamentos": departamentos,
+        },
     )
 
 
@@ -227,7 +230,8 @@ def save_matriz_polivalencia(request, form, atividades, funcionarios, is_edit=Fa
 @login_required
 def cadastrar_matriz_polivalencia(request):
     todos_funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
-    departamentos = DEPARTAMENTOS_EMPRESA
+    departamentos = Departamentos.objects.all()
+
     atividades = Atividade.objects.none()
     funcionarios_tabela = list(todos_funcionarios.values("id", "nome"))
 
@@ -281,7 +285,8 @@ def editar_matriz_polivalencia(request, id):
         id=id,
     )
 
-    departamentos = DEPARTAMENTOS_EMPRESA
+    departamentos = Departamentos.objects.all()
+
     atividades_matriz = list(matriz.atividades.all())
 
     # Atividades fixas
@@ -395,52 +400,49 @@ def excluir_matriz_polivalencia(request, id):
     return render(request, "matriz_polivalencia/excluir.html", {"matriz": matriz})
 
 
+@login_required
 def lista_atividades(request):
-    # Pega os filtros do GET
+    # Filtros GET
     departamento = request.GET.get("departamento", "")
     nome = request.GET.get("nome", "")
 
-    # Filtrando as atividades
+    # Query inicial
     atividades = Atividade.objects.all()
 
+    # Filtro por código do departamento
     if departamento:
-        atividades = atividades.filter(departamento=departamento)
+        atividades = atividades.filter(departamento_id=departamento)
+
 
     if nome:
         atividades = atividades.filter(nome__icontains=nome)
 
-    # Adicionando uma ordenação para evitar o erro de "UnorderedObjectListWarning"
-    atividades = atividades.order_by("nome")  # Ou qualquer outro campo desejado
+    # Ordenação
+    atividades = atividades.order_by("nome")
 
     # Paginação
-    paginator = Paginator(atividades, 10)  # 10 itens por página
+    paginator = Paginator(atividades, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # Dados para os cards e acordions
+    # Totais
     total_atividades = atividades.count()
 
-    # Quantidade de atividades por departamento
     atividades_por_departamento = (
         Atividade.objects.values("departamento")
         .annotate(total=Count("departamento"))
         .order_by("departamento")
     )
 
-    return render(
-        request,
-        "matriz_polivalencia/lista_atividades.html",
-        {
-            "page_obj": page_obj,  # Objeto de paginação
-            # Listagem de nomes para filtro
-            "nomes_atividades": Atividade.objects.values_list(
-                "nome", flat=True
-            ).distinct(),
-           "departamentos": DEPARTAMENTOS_EMPRESA,
-            "total_atividades": total_atividades,  # Total de atividades
-            "atividades_por_departamento": atividades_por_departamento,  # Atividades por departamento
-        },
-    )
+    context = {
+        "page_obj": page_obj,
+        "nomes_atividades": Atividade.objects.values_list("nome", flat=True).distinct(),
+        "departamentos": Departamentos.objects.filter(ativo=True).order_by("nome"),  # apenas ativos
+        "total_atividades": total_atividades,
+        "atividades_por_departamento": atividades_por_departamento,
+    }
+
+    return render(request, "matriz_polivalencia/lista_atividades.html", context)
 
 
 @login_required
@@ -561,18 +563,16 @@ def get_atividades_por_departamento(request):
 
 @login_required
 def get_atividades_e_funcionarios_por_departamento(request):
-    departamento = request.GET.get("departamento")
+    departamento_id = request.GET.get("departamento")
 
-    if departamento:
-        # Buscar atividades relacionadas ao departamento
-        atividades = Atividade.objects.filter(departamento=departamento).values("id", "nome")
+    if departamento_id:
+        atividades = Atividade.objects.filter(departamento_id=departamento_id).values("id", "nome")
 
-        # Agrupar funcionários ativos por local_trabalho
         funcionarios = Funcionario.objects.filter(status="Ativo").order_by("local_trabalho", "nome")
         colaboradores_por_departamento = {}
 
         for f in funcionarios:
-            setor = f.local_trabalho or "Sem Setor"
+            setor = str(f.local_trabalho) if f.local_trabalho else "Sem Setor"
             if setor not in colaboradores_por_departamento:
                 colaboradores_por_departamento[setor] = []
             colaboradores_por_departamento[setor].append({

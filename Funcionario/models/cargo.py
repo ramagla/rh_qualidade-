@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from .choices_departamento import DEPARTAMENTOS_EMPRESA
+from Funcionario.models.departamentos import Departamentos
 
 NIVEIS_HIERARQUIA = [
     (1, "Alta Direção / Conselho"),
@@ -20,9 +20,12 @@ class Cargo(models.Model):
     numero_dc = models.CharField(max_length=4)
     
     descricao_arquivo = models.FileField(upload_to="cargos/", blank=True, null=True)
-    departamento = models.CharField(
-        max_length=50,
-        choices=DEPARTAMENTOS_EMPRESA,
+    departamento = models.ForeignKey(
+        Departamentos,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cargos",
         verbose_name="Departamento"
     )
 

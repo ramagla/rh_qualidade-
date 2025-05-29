@@ -38,11 +38,12 @@
               {{ form.numero_dc }}
             </div>
             <div class="col-md-6">
-              <label for="departamento" class="form-label">
+              <label for="{{ form.departamento.id_for_label }}" class="form-label">
                 <i class="bi bi-building me-1" aria-hidden="true"></i> Departamento:
               </label>
-              {{ form.departamento }}
+              {{ form.departamento|add_class:"form-select select2" }}
             </div>
+            
             <div class="col-md-6">
               <label for="nivel" class="form-label">
                 <i class="bi bi-diagram-3-fill me-1" aria-hidden="true"></i> Nível Hierárquico:

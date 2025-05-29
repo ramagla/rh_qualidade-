@@ -37,11 +37,13 @@
           </label>
           <select name="departamento" id="departamento" class="form-select select2" aria-label="Filtrar por departamento">
             <option value="">Selecione</option>
-            {% for value, label in departamentos %}
-  <option value="{{ value }}" {% if request.GET.departamento == value %}selected{% endif %}>
-    {{ label }}
-  </option>
+            {% for d in departamentos %}
+            <option value="{{ d.id }}" {% if request.GET.departamento == d.id|stringformat:"s" %}selected{% endif %}>
+              {{ d }}
+            </option>
+            
 {% endfor %}
+
 
           </select>
         </div>

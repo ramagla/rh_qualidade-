@@ -49,13 +49,14 @@
 {% block scripts %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    $('#departamento').select2({
+    $('.select2').select2({
       placeholder: 'Selecione o Departamento',
       allowClear: true,
       width: '100%',
-      dropdownParent: $('form') // garante que o dropdown funcione bem mesmo em modais
+      dropdownParent: $('form')
     });
   });
 </script>
+
 {% endblock %}
 {% endblock %}

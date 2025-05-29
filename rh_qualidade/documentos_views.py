@@ -4,13 +4,12 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from Funcionario.forms import DocumentoForm, RevisaoDocForm
-from Funcionario.models import Documento, RevisaoDoc
+from Funcionario.models.documentos import Documento, RevisaoDoc
 
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render
-from Funcionario.models import Documento
 
 @login_required
 def lista_documentos(request):

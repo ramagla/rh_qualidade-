@@ -20,7 +20,7 @@ from Funcionario.models.avaliacao_treinamento import AvaliacaoTreinamento
 from Funcionario.models.integracao_funcionario import IntegracaoFuncionario
 from Funcionario.models.job_rotation_evaluation import JobRotationEvaluation
 from Funcionario.models.lista_presenca import ListaPresenca
-from Funcionario.models.choices_departamento import DEPARTAMENTOS_EMPRESA
+from Funcionario.models.departamentos import Departamentos
 
 from ..models.cargo import Cargo
 
@@ -46,21 +46,25 @@ def lista_funcionarios(request):
     )
     total_pendentes = Funcionario.objects.filter(
         Q(curriculo__isnull=True) | Q(curriculo="")
-    ).count()  # Verifica NULL e strings vazias
+    ).count()
 
     # Lista de responsáveis disponíveis
     responsaveis = Funcionario.objects.filter(
         responsavel__isnull=False, status="Ativo"
     ).distinct()
 
-    # Outros filtros
+    # Filtros do formulário
     nome = request.GET.get("nome")
     if nome:
         funcionarios = funcionarios.filter(nome__icontains=nome)
 
     local_trabalho = request.GET.get("local_trabalho")
     if local_trabalho:
-        funcionarios = funcionarios.filter(local_trabalho=local_trabalho)
+        try:
+            local_obj = Departamentos.objects.get(id=local_trabalho)
+            funcionarios = funcionarios.filter(local_trabalho=local_obj)
+        except Departamentos.DoesNotExist:
+            messages.warning(request, "Local de trabalho não encontrado.")
 
     responsavel = request.GET.get("responsavel")
     if responsavel:
@@ -74,28 +78,29 @@ def lista_funcionarios(request):
         funcionarios = funcionarios.filter(escolaridade=escolaridade)
 
     # Paginação
-    paginator = Paginator(funcionarios, 10)  # 10 itens por página
+    paginator = Paginator(funcionarios, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+    # Departamentos para o filtro (lista de objetos, não values_list)
+    departamentos = Departamentos.objects.filter(ativo=True).order_by("nome")
+
     context = {
         "page_obj": page_obj,
-        "departamentos_choices": DEPARTAMENTOS_EMPRESA,
+        "departamentos": departamentos,
         "responsaveis": responsaveis,
         "niveis_escolaridade": Funcionario.objects.filter(status="Ativo")
-        .values_list("escolaridade", flat=True)
-        .distinct(),
-        "status_opcoes": Funcionario.objects.values_list(
-            "status", flat=True
-        ).distinct(),
-        "filtro_status": status,  # Inclui o status aplicado no contexto
+            .values_list("escolaridade", flat=True)
+            .distinct(),
+        "status_opcoes": Funcionario.objects.values_list("status", flat=True).distinct(),
+        "filtro_status": status,
         "total_ativos": total_ativos,
         "total_pendentes": total_pendentes,
         "local_mais_comum": (
             local_mais_comum["local_trabalho"] if local_mais_comum else "N/A"
         ),
         "total_inativos": total_inativos,
-        "funcionarios": funcionarios,  # Apenas funcionários filtrados
+        "funcionarios": funcionarios,
         "funcionarios_paginados": page_obj,
     }
 
