@@ -41,7 +41,7 @@ portaria_permissions = {
     "disparar_recado": "portaria.change_ligacaoportaria",
 
     # Atrasos e saídas
-    "lista_atrasos_saidas": "portaria.view_funcionario",  # baseia-se na permissão do colaborador
+    "lista_atrasos_saidas": "portaria.view_atrasosaida",
     "cadastrar_atraso_saida": "portaria.add_atrasosaida",
     "editar_atraso_saida": "portaria.change_atrasosaida",
     "excluir_atraso_saida": "portaria.delete_atrasosaida",

@@ -23,7 +23,7 @@ def lista_documentos(request):
         # Rafael pode ver todos os documentos
         if request.user.username != "rafael.almeida":
             departamento_usuario = request.user.funcionario.local_trabalho
-            documentos = documentos.filter(departamentos__codigo=departamento_usuario)
+            documentos = documentos.filter(departamentos__sigla=departamento_usuario)
 
 
     # Aplicar filtros adicionais (nome e status)
