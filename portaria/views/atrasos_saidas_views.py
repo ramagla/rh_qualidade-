@@ -22,7 +22,7 @@ from Funcionario.models import Funcionario
 from portaria.models import AtrasoSaida
 
 @login_required
-@permission_required("portaria.view_funcionario", raise_exception=True)
+@permission_required("portaria.view_atrasosaida", raise_exception=True)
 def lista_atrasos_saidas(request):
     eventos_queryset = AtrasoSaida.objects.select_related("funcionario").order_by("-data", "-horario")
 
