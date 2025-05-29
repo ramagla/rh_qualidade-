@@ -91,7 +91,7 @@ def imprimir_matriz(request, id):
 
     notas = Nota.objects.filter(atividade__in=atividades)
     colaborador_ids = notas.values_list("funcionario_id", flat=True).distinct()
-    colaboradores = Funcionario.objects.filter(id__in=colaborador_ids)
+    colaboradores = Funcionario.objects.filter(id__in=colaborador_ids, status="Ativo")
 
     def gerar_grafico_icone(nota):
         icones = {
