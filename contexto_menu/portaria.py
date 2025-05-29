@@ -74,42 +74,42 @@ def menu_portaria(user):
     # Relatórios
     submenu_relatorios = []
 
-    if user.has_perm("portaria.view_entradavisitante"):
+    if user.has_perm("portaria.relatorio_visitantes"):
         submenu_relatorios.append({
             "name": "Visitantes",
             "url": "relatorio_visitantes",
             "icon": "fas fa-user-check",
         })
 
-    if user.has_perm("portaria.view_funcionario"):
+    if user.has_perm("portaria.relatorio_atrasos_saidas"):
         submenu_relatorios.append({
             "name": "Atrasos e Saídas",
             "url": "relatorio_atrasos_saidas",
             "icon": "fas fa-user-clock",
         })
 
-    if user.has_perm("portaria.view_ligacaoportaria"):
+    if user.has_perm("portaria.relatorio_ligacoes_recebidas"):
         submenu_relatorios.append({
             "name": "Ligações Recebidas",
             "url": "relatorio_ligacoes_recebidas",
             "icon": "fas fa-phone",
         })
 
-    if user.has_perm("portaria.view_ocorrenciaportaria"):
+    if user.has_perm("portaria.relatorio_ocorrencias"):
         submenu_relatorios.append({
             "name": "Ocorrências",
             "url": "relatorio_ocorrencias",
             "icon": "fas fa-exclamation-triangle",
         })
 
-    if user.has_perm("portaria.view_registroconsumoagua"):
+    if user.has_perm("portaria.relatorio_consumo_agua"):
         submenu_relatorios.append({
             "name": "Análise de Consumo de Água",
             "url": "relatorio_consumo_agua",
             "icon": "fas fa-water",
         })
 
-    if user.has_perm("portaria.view_atrasosaida"):
+    if user.has_perm("portaria.relatorio_horas_extras"):
         submenu_relatorios.append({
             "name": "Horas Extras",
             "url": "relatorio_horas_extras",

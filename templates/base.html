@@ -506,11 +506,14 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}">
-                                        <i class="bi bi-bell"></i> Alertas
-                                    </a>
-                                </li>
+                                {% if perms.Funcionario.view_alerta %}
+                                  <li>
+                                      <a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}">
+                                          <i class="bi bi-bell"></i> Alertas
+                                      </a>
+                                  </li>
+                                  {% endif %}
+
 
                                 {% if perms.Funcionario.view_feriados %}
                                     <li>
