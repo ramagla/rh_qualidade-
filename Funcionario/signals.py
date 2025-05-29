@@ -76,6 +76,8 @@ CUSTOM_PERMISSOES = [
     ("qualidade_fornecimento", "relatoriof045", "acesso_qualidade", "Pode acessar o módulo Qualidade de Fornecimento"),
     ("qualidade_fornecimento", "relatoriof045", "dashboard_qualidade", "Pode acessar o dashboard de Qualidade de Fornecimento"),
     ("qualidade_fornecimento", "fornecedorqualificado", "importar_excel_fornecedores", "Pode importar fornecedores via Excel"),
+    ("qualidade_fornecimento", "controleservicoexterno", "add_controleservicoexterno", "Pode adicionar Controle de Serviço Externo"),
+    ("qualidade_fornecimento", "relatorioinspecaoservico", "add_relatorioinspecaoservico", "Pode adicionar Relatório de Inspeção de Serviço"),
 
 
 
