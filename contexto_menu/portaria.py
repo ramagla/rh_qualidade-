@@ -43,7 +43,7 @@ def menu_portaria(user):
             "icon": "fas fa-user-check",
         })
 
-    if user.has_perm("portaria.view_funcionario"):
+    if user.has_perm("portaria.relatorio_atrasos_saidas"):
         menu.append({
             "name": "Atrasos e Saídas Antecipadas",
             "url": "lista_atrasos_saidas",
