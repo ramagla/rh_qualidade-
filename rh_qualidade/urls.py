@@ -87,7 +87,9 @@ urlpatterns = [
     path("atualizacoes/cadastrar/", atualizacao_views.cadastrar_atualizacao, name="cadastrar_atualizacao"),
     path("atualizacoes/editar/<int:id>/", atualizacao_views.editar_atualizacao, name="editar_atualizacao"),
     path("atualizacoes/excluir/<int:id>/", atualizacao_views.excluir_atualizacao, name="excluir_atualizacao"),
-    path("atualizacoes/imprimir/<int:id>/", atualizacao_views.imprimir_atualizacao, name="imprimir_atualizacao"),
+    path('atualizacoes/marcar_lida/', atualizacao_views.marcar_atualizacao_lida, name='marcar_atualizacao_lida'),
+    path("ajax/ultima-atualizacao/", atualizacao_views.get_ultima_atualizacao, name="get_ultima_atualizacao"),
+
 
 ]
 

@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from Funcionario.models import AtualizacaoSistema
+from Funcionario.models.atualizacao_sistema import AtualizacaoLida
 from rh_qualidade.forms.atualizacao_form import AtualizacaoSistemaForm
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -9,24 +10,6 @@ from django.utils import timezone
 from django.template.loader import render_to_string
 from weasyprint import HTML
 from django.core.files.base import ContentFile
-
-def _gerar_pdf_atualizacao(atualizacao, request):
-    logo_url = request.build_absolute_uri(static("logo.png"))
-
-    context = {
-        'atualizacao': atualizacao,
-        'data_hoje': now(),
-        'logo_url': logo_url,
-    }
-
-    html_string = render_to_string("configuracoes/atualizacoes/pdf_atualizacao.html", context)
-    html = HTML(string=html_string, base_url=request.build_absolute_uri("/"))
-    pdf_bytes = html.write_pdf()
-
-    filename = f"Atualizacao_{atualizacao.versao}.pdf"
-    atualizacao.arquivo_pdf.save(filename, ContentFile(pdf_bytes))
-    atualizacao.save()
-
 
 
 @login_required
@@ -67,12 +50,9 @@ def lista_atualizacoes(request):
 @permission_required('Funcionario.add_atualizacaosistema', raise_exception=True)
 def cadastrar_atualizacao(request):
     if request.method == 'POST':
-        form = AtualizacaoSistemaForm(request.POST)
+        form = AtualizacaoSistemaForm(request.POST, request.FILES)
         if form.is_valid():
             atualizacao = form.save()
-
-            # Gerar PDF após salvar
-            _gerar_pdf_atualizacao(atualizacao, request)
 
             messages.success(request, 'Atualização cadastrada com sucesso.')
             return redirect('lista_atualizacoes')
@@ -82,29 +62,31 @@ def cadastrar_atualizacao(request):
     return render(request, 'configuracoes/atualizacoes/form.html', {'form': form, 'edicao': False})
 
 
+
 @login_required
 @permission_required('Funcionario.change_atualizacaosistema', raise_exception=True)
 def editar_atualizacao(request, id):
     atualizacao = get_object_or_404(AtualizacaoSistema, pk=id)
 
     if request.method == 'POST':
-        form = AtualizacaoSistemaForm(request.POST, instance=atualizacao)
+        form = AtualizacaoSistemaForm(request.POST, request.FILES, instance=atualizacao)
+
         if form.is_valid():
-            # Excluir PDF antigo (se existir)
-            if atualizacao.arquivo_pdf:
+            if request.POST.get('remover_arquivo_pdf') == '1' and atualizacao.arquivo_pdf:
                 atualizacao.arquivo_pdf.delete(save=False)
+                atualizacao.arquivo_pdf = None
 
             atualizacao = form.save()
 
-            # Gerar PDF novo
-            _gerar_pdf_atualizacao(atualizacao, request)
-
             messages.success(request, 'Atualização editada com sucesso.')
             return redirect('lista_atualizacoes')
+
     else:
         form = AtualizacaoSistemaForm(instance=atualizacao)
 
     return render(request, 'configuracoes/atualizacoes/form.html', {'form': form, 'edicao': True})
+
+
 
 
 @login_required
@@ -117,6 +99,7 @@ def excluir_atualizacao(request, id):
         if atualizacao.arquivo_pdf:
             atualizacao.arquivo_pdf.delete(save=False)
 
+
         atualizacao.delete()
         messages.success(request, 'Atualização excluída com sucesso.')
         return redirect('lista_atualizacoes')
@@ -125,45 +108,46 @@ def excluir_atualizacao(request, id):
     return redirect('lista_atualizacoes')
 
 
-import os
-from django.contrib.auth.decorators import login_required, permission_required
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from django.template.loader import render_to_string
-from django.templatetags.static import static
-from django.utils.timezone import now
-from weasyprint import HTML
-from django.core.files.base import ContentFile
 
+# atualizacao_views.py
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
 
-from Funcionario.models import AtualizacaoSistema
-
+@require_POST
 @login_required
-@permission_required('Funcionario.view_atualizacaosistema', raise_exception=True)
-def imprimir_atualizacao(request, id):
-    atualizacao = get_object_or_404(AtualizacaoSistema, pk=id)
+def marcar_atualizacao_lida(request):
+    data = json.loads(request.body)
+    atualizacao_id = data.get('atualizacao_id')
 
-    logo_url = request.build_absolute_uri(static("logo.png"))
-
-    context = {
-        'atualizacao': atualizacao,
-        'data_hoje': now(),
-        'logo_url': logo_url,
-    }
-
-    html_string = render_to_string("configuracoes/atualizacoes/pdf_atualizacao.html", context)
-    html = HTML(string=html_string, base_url=request.build_absolute_uri("/"))
-    pdf_bytes = html.write_pdf()
-
-    # Salvar no campo arquivo_pdf
-    filename = f"Atualizacao_{atualizacao.versao}.pdf"
-    atualizacao.arquivo_pdf.save(filename, ContentFile(pdf_bytes))
-    atualizacao.save()
-
-    # Retornar para download também
-    response = HttpResponse(pdf_bytes, content_type="application/pdf")
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    return response
+    try:
+        atualizacao = AtualizacaoSistema.objects.get(pk=atualizacao_id)
+        AtualizacaoLida.objects.get_or_create(usuario=request.user, atualizacao=atualizacao)
+        return JsonResponse({'status': 'ok'})
+    except AtualizacaoSistema.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Atualização não encontrada'}, status=404)
 
 
+# rh_qualidade/atualizacao_views.py
+from django.http import JsonResponse
+from Funcionario.models import AtualizacaoSistema, AtualizacaoLida
+
+def get_ultima_atualizacao(request):
+    if request.user.is_authenticated:
+        ultima_atualizacao = AtualizacaoSistema.objects.filter(status='concluido').order_by('-id').first()
+
+        if ultima_atualizacao:
+            lida = AtualizacaoLida.objects.filter(usuario=request.user, atualizacao=ultima_atualizacao).exists()
+
+        return JsonResponse({
+                'show': not lida,
+                'id': ultima_atualizacao.id,  # <<< ADICIONAR AQUI
+                'versao': ultima_atualizacao.versao,
+                'previa': ultima_atualizacao.previa_versao,
+                'pdf_url': ultima_atualizacao.arquivo_pdf.url if ultima_atualizacao.arquivo_pdf else ''
+            })
+
+
+    # Se não autenticado ou não tem atualização
+    return JsonResponse({'show': False})

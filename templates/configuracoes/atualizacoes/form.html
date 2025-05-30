@@ -13,7 +13,7 @@
         {% if edicao %}Editar{% else %}Cadastrar{% endif %} Atualização do Sistema
     </h2>
 
-    <form method="post" class="row g-3" id="atualizacaoForm">
+    <form method="post" enctype="multipart/form-data" class="row g-3" id="atualizacaoForm">
         {% csrf_token %}
 
         {% if form.errors %}
@@ -102,6 +102,59 @@
                     </div>
                 </div>
             </div>
+
+          <!-- 📎 Documento da Versão -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingAnexo">
+        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnexo" aria-expanded="false" aria-controls="collapseAnexo">
+            <i class="bi bi-paperclip me-2"></i> Documento da Versão (PDF)
+        </button>
+    </h2>
+    <div id="collapseAnexo" class="accordion-collapse collapse" aria-labelledby="headingAnexo" data-bs-parent="#accordionAtualizacao">
+        <div class="accordion-body row g-3">
+
+            <div class="col-md-12">
+                <div class="border rounded p-3 bg-light">
+                    <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" for="{{ form.arquivo_pdf.id_for_label }}">
+                        <i class="bi bi-paperclip text-primary"></i>
+                        Documento da Versão (PDF) - Opcional
+                    </label>
+
+                    {% if form.instance.arquivo_pdf %}
+                        <div class="d-flex justify-content-between align-items-center bg-white border rounded px-3 py-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-file-earmark-text text-muted"></i>
+                                <a href="{{ form.instance.arquivo_pdf.url }}" target="_blank" class="link-primary text-truncate" style="max-width: 300px;">
+                                    {{ form.instance.arquivo_pdf.name|cut:"atualizacoes/" }}
+                                </a>
+                            </div>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removerArquivoPDF()">
+                                <i class="bi bi-trash"></i> Excluir
+                            </button>
+                        </div>
+                        <input type="hidden" name="remover_arquivo_pdf" id="remover_arquivo_pdf" value="0">
+                    {% endif %}
+
+                    <input type="file" name="{{ form.arquivo_pdf.html_name }}" id="{{ form.arquivo_pdf.id_for_label }}" class="form-control">
+                    <small class="text-muted d-block mt-1">Nenhum arquivo selecionado.</small>
+                </div>
+            </div>
+
+            <script>
+                function removerArquivoPDF() {
+                    if (confirm("Tem certeza que deseja excluir o documento atual?")) {
+                        document.getElementById("remover_arquivo_pdf").value = "1";
+                        document.getElementById("atualizacaoForm").submit();
+                    }
+                }
+            </script>
+
+        </div>
+    </div>
+</div>
+
+
+
 
         </div> <!-- Fim accordion -->
 

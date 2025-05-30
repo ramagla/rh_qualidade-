@@ -245,8 +245,16 @@
         <p><strong>Versão:</strong> {{ ultima_atualizacao.versao }}</p>
         <p><strong>Data:</strong> {{ data_atualizacao_formatada }}</p>
         <p><strong>Descrição:</strong></p>
-        <div>{{ ultima_atualizacao.descricao|safe }}</div>
+        <div>{{ ultima_atualizacao.previa_versao|safe }}</div>
+      
+        {% if ultima_atualizacao.arquivo_pdf %}
+          <a href="{{ ultima_atualizacao.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-primary mt-3">
+            <i class="bi bi-file-earmark-pdf"></i> Ver Documentação Completa (PDF)
+          </a>
+        {% endif %}
       </div>
+      
+      
     </div>
   </div>
 </div>

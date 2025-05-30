@@ -1,0 +1,60 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      fetch("{% url 'get_ultima_atualizacao' %}")
+      .then(response => response.json())
+      .then(data => {
+          if (data.show) {
+              // Monta o popup
+              const modal = document.createElement("div");
+              modal.innerHTML = `
+                  <div class="modal fade show" id="modalNovaVersao" tabindex="-1" aria-modal="true" role="dialog" style="display: block;">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                      <div class="modal-content shadow">
+                        <div class="modal-header bg-primary text-white">
+                          <h5 class="modal-title">
+                            📢 Nova Atualização Disponível - Versão ${data.versao}
+                          </h5>
+                        </div>
+                        <div class="modal-body">
+                          <div class="mb-3">
+                            ${data.previa}
+                          </div>
+                          <div class="d-flex justify-content-between">
+                            ${data.pdf_url ? `<a href="${data.pdf_url}" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-file-earmark-pdf"></i> Ler Documentação Completa
+                              </a>` : ""}
+                            <button class="btn btn-success" id="btnMarcarComoLido">
+                              <i class="bi bi-check-circle"></i> Li e Entendi
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              `;
+              document.body.appendChild(modal);
+  
+              // Botão marcar como lido
+              document.getElementById('btnMarcarComoLido').addEventListener('click', function() {
+                  fetch("{% url 'marcar_atualizacao_lida' %}", {
+                      method: 'POST',
+                      headers: {
+                          'X-CSRFToken': '{{ csrf_token }}',
+                          'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ atualizacao_id: data.id })
+                  })
+                  .then(response => {
+                      if (response.ok) {
+                          document.getElementById('modalNovaVersao').style.display = 'none';
+                          document.getElementById('modalNovaVersao').classList.remove('show');
+                      } else {
+                          alert('Erro ao marcar como lido. Tente novamente.');
+                      }
+                  });
+              });
+          }
+      });
+  });
+  </script>
+  

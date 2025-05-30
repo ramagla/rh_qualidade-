@@ -65,6 +65,8 @@ from alerts.models import AlertaConfigurado
 
 
 
+from packaging import version  # IMPORTANTE - adicione no topo
+
 @login_required
 def home(request):
     # 🔗 Feriados via API
@@ -108,12 +110,19 @@ def home(request):
     proximas_atualizacoes = AtualizacaoSistema.objects.filter(
         status="em_andamento"
     ).order_by("previsao")
-    ultima_atualizacao_concluida = AtualizacaoSistema.objects.filter(
+
+    # Agora com version.parse para garantir versão correta
+    versoes_concluidas = AtualizacaoSistema.objects.filter(
         status="concluido"
-    ).order_by("-data_termino").first()
-    historico_versoes = AtualizacaoSistema.objects.filter(
-        status="concluido"
-    ).exclude(
+    )
+
+    ultima_atualizacao_concluida = sorted(
+        versoes_concluidas,
+        key=lambda x: (x.data_termino, version.parse(x.versao)),
+        reverse=True
+    )[0] if versoes_concluidas else None
+
+    historico_versoes = versoes_concluidas.exclude(
         id=ultima_atualizacao_concluida.id if ultima_atualizacao_concluida else None
     ).order_by("-data_termino")
 
@@ -130,7 +139,6 @@ def home(request):
     ).exclude(id__in=ids_funcionarios_avaliados)
 
     avaliacoes_pendentes = funcionarios_pendentes.count()
-
 
     treinamentos = Treinamento.objects.filter(data_inicio__gte=now()).prefetch_related("funcionarios")
     treinamentos_agendados = treinamentos.count()
@@ -166,11 +174,12 @@ def home(request):
         "avaliacoes_pendentes": avaliacoes_pendentes,
         "funcionarios_pendentes": funcionarios_pendentes,
     }
-    form = EventoForm()  # <-- ADICIONE ISSO
-    context["form"] = form  # <-- E ISSO
 
+    form = EventoForm()
+    context["form"] = form
 
     return render(request, "dashboard/home.html", context)
+
 
 
 
@@ -185,9 +194,21 @@ from django.shortcuts import render, redirect
 from datetime import datetime
 from Funcionario.models import Settings, AtualizacaoSistema
 
+from packaging import version  # Adicione no topo
+
 def login_view(request):
     settings = Settings.objects.first()
-    ultima_atualizacao = AtualizacaoSistema.objects.order_by("-previsao").first()
+
+    # 🔧 Correção: pegar a maior versão corretamente
+    versoes_concluidas = AtualizacaoSistema.objects.filter(
+        status="concluido"
+    )
+
+    ultima_atualizacao = sorted(
+        versoes_concluidas,
+        key=lambda x: (x.data_termino, version.parse(x.versao)),
+        reverse=True
+    )[0] if versoes_concluidas else None
 
     if request.method == "POST":
         username = request.POST.get("username")
@@ -206,7 +227,7 @@ def login_view(request):
             context = {
                 "settings": settings,
                 "ano_atual": datetime.now().year,
-                "versao": ultima_atualizacao.versao if ultima_atualizacao else "1.0.0",
+                "versao": ultima_atualizacao.versao if ultima_atualizacao else "0.0.0",
                 "erro": "Usuário ou senha inválidos.",
             }
             return render(request, "login.html", context)
@@ -214,9 +235,10 @@ def login_view(request):
     context = {
         "settings": settings,
         "ano_atual": datetime.now().year,
-        "versao": ultima_atualizacao.versao if ultima_atualizacao else "1.0.0",
+        "versao": ultima_atualizacao.versao if ultima_atualizacao else "0.0.0",
     }
     return render(request, "login.html", context)
+
 
 
 

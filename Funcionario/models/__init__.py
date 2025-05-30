@@ -1,4 +1,4 @@
-from .atualizacao_sistema import AtualizacaoSistema
+from .atualizacao_sistema import AtualizacaoSistema, AtualizacaoLida
 from .avaliacao_anual import AvaliacaoAnual
 from .avaliacao_experiencia import AvaliacaoExperiencia
 from .avaliacao_treinamento import AvaliacaoTreinamento

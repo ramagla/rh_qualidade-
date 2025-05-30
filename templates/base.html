@@ -578,9 +578,16 @@
                   <div id="collapseProx{{ forloop.counter }}" class="accordion-collapse collapse"
                        aria-labelledby="headingProx{{ forloop.counter }}"
                        data-bs-parent="#accordionProximasVersoes">
-                    <div class="accordion-body small">
-                      {{ versao.descricao|safe }}
-                    </div>
+                       <div class="accordion-body small">
+                        {{ versao.previa_versao|safe }}
+                      
+                        {% if versao.arquivo_pdf %}
+                          <a href="{{ versao.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+                            <i class="bi bi-file-earmark-pdf"></i> Ver Documentação Completa (PDF)
+                          </a>
+                        {% endif %}
+                      </div>
+                      
                   </div>
                 </div>
               {% endfor %}
@@ -588,16 +595,24 @@
           {% endif %}
   
           <!-- Versão atual -->
-          {% if ultima_atualizacao_concluida %}
-            <div class="mb-4">
-              <h6 class="text-primary">
-                <i class="bi bi-star-fill me-1"></i>
-                Versão Atual: <strong>{{ ultima_atualizacao_concluida.versao }}</strong>
-              </h6>
-              <p>{{ ultima_atualizacao_concluida.descricao|safe }}</p>
-              <p class="text-muted">Entregue em: {{ ultima_atualizacao_concluida.data_termino|date:"d/m/Y" }}</p>
-            </div>
-          {% endif %}
+{% if ultima_atualizacao_concluida %}
+<div class="mb-4">
+  <h6 class="text-primary">
+    <i class="bi bi-star-fill me-1"></i>
+    Versão Atual: <strong>{{ ultima_atualizacao_concluida.versao }}</strong>
+  </h6>
+  <p>{{ ultima_atualizacao_concluida.previa_versao|safe }}</p>
+  <p class="text-muted">Entregue em: {{ ultima_atualizacao_concluida.data_termino|date:"d/m/Y" }}</p>
+
+  {% if ultima_atualizacao_concluida.arquivo_pdf %}
+    <a href="{{ ultima_atualizacao_concluida.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-primary mt-2">
+      <i class="bi bi-file-earmark-pdf"></i> Ver Documentação Completa (PDF)
+    </a>
+  {% endif %}
+  
+</div>
+{% endif %}
+
   
           <!-- Histórico -->
           {% if historico_versoes %}
@@ -616,9 +631,17 @@
                   <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
                        aria-labelledby="heading{{ forloop.counter }}"
                        data-bs-parent="#accordionHistoricoVersoes">
-                    <div class="accordion-body small">
-                      {{ versao.descricao|safe }}
-                    </div>
+                       <div class="accordion-body small">
+                        {{ versao.previa_versao|safe }}
+                      
+                        {% if versao.arquivo_pdf %}
+                          <a href="{{ versao.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+                            <i class="bi bi-file-earmark-pdf"></i> Ver Documentação Completa (PDF)
+                          </a>
+                        {% endif %}
+                      </div>
+                      
+                      
                   </div>
                 </div>
               {% endfor %}
@@ -633,6 +656,7 @@
     </div>
   </div>
   
+  {% include "partials/global/_modal_nova_versao.html" %}
 
 
     <!-- Scripts -->
