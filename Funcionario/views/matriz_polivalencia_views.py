@@ -89,9 +89,13 @@ def imprimir_matriz(request, id):
 
     atividades = atividades_base + [a for a in atividades_fixas if a not in atividades_base]
 
-    notas = Nota.objects.filter(atividade__in=atividades)
-    colaborador_ids = notas.values_list("funcionario_id", flat=True).distinct()
-    colaboradores = Funcionario.objects.filter(id__in=colaborador_ids, status="Ativo")
+    # Busca apenas funcionários que têm nota nas atividades da matriz
+    colaboradores = Funcionario.objects.filter(
+        notas__atividade__in=atividades
+    ).distinct().order_by("nome")
+
+    notas = Nota.objects.filter(funcionario__in=colaboradores, atividade__in=atividades)
+
 
     def gerar_grafico_icone(nota):
         icones = {
