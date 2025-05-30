@@ -6,6 +6,9 @@ from django.utils.timezone import now
 from datetime import datetime, date
 from django.core.paginator import Paginator
 
+from portaria.tasks import enviar_email_recado  # <--- IMPORTANTE: importar a task correta
+
+
 @login_required
 @permission_required("portaria.view_ligacaoportaria", raise_exception=True)
 def lista_ligacoes(request):
@@ -110,7 +113,6 @@ def disparar_recado(request, pk):
 
     user_destino = ligacao.falar_com.user
 
-
     # Alerta in-app
     AlertaUsuario.objects.create(
         usuario=user_destino,
@@ -122,16 +124,15 @@ def disparar_recado(request, pk):
 
     # E-mail
     html_email = render_to_string("emails/recado_ligacao_email.html", {
-    "ligacao": ligacao,
-    "ano": now().year,
+        "ligacao": ligacao,
+        "ano": now().year,
     })
 
-    send_mail(
+    # Envio de e-mail via Celery
+    enviar_email_recado.delay(
         subject="📞 Recado Recebido",
-        message=ligacao.recado,  # Texto simples como fallback
-        from_email="no-reply@brasmol.com.br",
-        recipient_list=[user_destino.email],
-        fail_silently=True,
+        message=ligacao.recado,
+        recipient=user_destino.email,
         html_message=html_email,
     )
 

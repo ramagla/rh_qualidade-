@@ -22,5 +22,12 @@ class AtualizacaoSistema(models.Model):
     # Valor padrão definido como a data atual
     data_termino = models.DateField(default=now, blank=True, null=True)
 
+    previa_versao = CKEditor5Field(
+        config_name="default",
+        blank=True,
+        null=True,
+        verbose_name="Prévia da Versão"
+    )
+
     def __str__(self):
         return f"{self.versao} - {self.titulo}"
