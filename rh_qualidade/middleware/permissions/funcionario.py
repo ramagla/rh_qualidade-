@@ -132,5 +132,12 @@ funcionario_permissions = {
     "editar_banco_horas": "Funcionario.change_bancohoras",
     "excluir_banco_horas": "Funcionario.delete_bancohoras",
 
+
+    # Atualizações do Sistema
+   "lista_atualizacoes": "Funcionario.view_atualizacaosistema",
+    "cadastrar_atualizacao": "Funcionario.add_atualizacaosistema",
+    "editar_atualizacao": "Funcionario.change_atualizacaosistema",
+
+
 }
 

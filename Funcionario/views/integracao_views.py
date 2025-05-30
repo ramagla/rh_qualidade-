@@ -53,13 +53,13 @@ def lista_integracoes(request):
 
     # Obter os valores únicos do campo `local_trabalho` para o filtro de departamento e ordená-los
     departamentos = (
-        Funcionario.objects.filter(
-            integracaofuncionario__isnull=False  # Filtrar funcionários que possuem integração
+    Funcionario.objects.filter(
+                integracaofuncionario__isnull=False
+            )
+            .values_list("local_trabalho__nome", flat=True)
+            .distinct()
+            .order_by("local_trabalho__nome")
         )
-        .values_list("local_trabalho", flat=True)
-        .distinct()
-    )
-    departamentos = sorted(departamentos, key=lambda x: x.lower() if x else "")
 
     # Dados para os cards
     total_integracoes = integracoes.count()

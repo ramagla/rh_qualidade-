@@ -499,13 +499,14 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                {% if perms.Funcionario.view_alerta %}
-                                    <li>
-                                        <a class="dropdown-item" href="{% url 'alertas_emails' %}">
-                                            <i class="bi bi-envelope"></i> Alertas de E-mails
-                                        </a>
-                                    </li>
-                                {% endif %}
+                                {% if perms.Funcionario.view_atualizacaosistema %}
+                                  <li>
+                                      <a class="dropdown-item" href="{% url 'lista_atualizacoes' %}">
+                                          <i class="bi bi-arrow-repeat"></i> Atualizações do Sistema
+                                      </a>
+                                  </li>
+                              {% endif %}
+                            
                                 {% if perms.Funcionario.view_alerta %}
                                   <li>
                                       <a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}">

@@ -21,6 +21,7 @@ class AtualizacaoSistema(models.Model):
     )
     # Valor padrão definido como a data atual
     data_termino = models.DateField(default=now, blank=True, null=True)
+    arquivo_pdf = models.FileField(upload_to='atualizacoes/', blank=True, null=True)
 
     previa_versao = CKEditor5Field(
         config_name="default",

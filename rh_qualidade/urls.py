@@ -20,6 +20,7 @@ from .documentos_views import (
 )
 from Funcionario.views.home_views import login_view
 from rh_qualidade.views import home_geral
+from rh_qualidade import atualizacao_views
 
 urlpatterns = [
     # Admin
@@ -79,7 +80,19 @@ urlpatterns = [
     path("documentos/<int:documento_id>/historico-documentos/", historico_documentos, name="historico_documentos"),
     path("documentos/<int:documento_id>/adicionar-documento/", adicionar_documento, name="adicionar_documento"),
     path("revisoes2/<int:revisao_id>/excluir/", excluir_revisao2, name="excluir_revisao2"),
+
+
+
+    path("atualizacoes/", atualizacao_views.lista_atualizacoes, name="lista_atualizacoes"),
+    path("atualizacoes/cadastrar/", atualizacao_views.cadastrar_atualizacao, name="cadastrar_atualizacao"),
+    path("atualizacoes/editar/<int:id>/", atualizacao_views.editar_atualizacao, name="editar_atualizacao"),
+    path("atualizacoes/excluir/<int:id>/", atualizacao_views.excluir_atualizacao, name="excluir_atualizacao"),
+    path("atualizacoes/imprimir/<int:id>/", atualizacao_views.imprimir_atualizacao, name="imprimir_atualizacao"),
+
 ]
+
+
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

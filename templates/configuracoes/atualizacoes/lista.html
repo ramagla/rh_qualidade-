@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Atualizações do Sistema{% endblock %}
+
+{% block content %}
+
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_header_titulo.html" with titulo="Atualizações do Sistema" icone="bi bi-arrow-repeat" emoji="🔄" %}
+{% include "partials/global/_toast_mensagens.html" %}
+
+<!-- Botões -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% if request.user|has_permission:"Funcionario.add_atualizacaosistema" %}
+    <a href="{% url 'cadastrar_atualizacao' %}" class="btn btn-success d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar Atualização
+    </a>
+    {% endif %}
+</div>
+
+<!-- Cards de Indicadores -->
+<div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Concluídas" valor=total_concluidas subtitulo="Atualizações com status Concluído." %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Em Andamento" valor=total_andamento subtitulo="Atualizações em andamento." %}
+    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Canceladas" valor=total_canceladas subtitulo="Atualizações canceladas." %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Próximas Versões" valor=total_proximas subtitulo="Versões com data futura." %}
+</div>
+
+<!-- Lista de Atualizações -->
+<h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
+    📄 Lista de Atualizações
+</h5>
+
+<div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+        <caption class="visually-hidden">Tabela de Atualizações do Sistema</caption>
+        <thead class="table-light">
+            <tr>
+                <th><i class="bi bi-tag me-1"></i> Versão</th>
+                <th><i class="bi bi-text-left me-1"></i> Título</th>
+                <th><i class="bi bi-calendar-event me-1"></i> Previsão</th>
+                <th><i class="bi bi-hourglass-split me-1"></i> Status</th>
+                <th><i class="bi bi-calendar-check me-1"></i> Data Término</th>
+                <th><i class="bi bi-gear me-1"></i> Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for atualizacao in page_obj %}
+            <tr>
+                <td>{{ atualizacao.versao }}</td>
+                <td class="text-start">{{ atualizacao.titulo }}</td>
+                <td>{{ atualizacao.previsao|date:"d/m/Y" }}</td>
+                <td>
+                    {% if atualizacao.status == 'concluido' %}
+                        <span class="badge bg-success">Concluído</span>
+                    {% elif atualizacao.status == 'em_andamento' %}
+                        <span class="badge bg-warning text-dark">Em Andamento</span>
+                    {% elif atualizacao.status == 'cancelado' %}
+                        <span class="badge bg-danger">Cancelado</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if atualizacao.data_termino %}
+                        {{ atualizacao.data_termino|date:"d/m/Y" }}
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+                
+                        {% if request.user|has_permission:"Funcionario.change_atualizacaosistema" %}
+                            {% include "partials/global/_botao_editar.html" with objeto=atualizacao url_editar="editar_atualizacao" label="atualização" %}
+                        {% endif %}
+                
+                        {% if request.user|has_permission:"Funcionario.delete_atualizacaosistema" %}
+                            {% include "partials/global/_botao_excluir.html" with objeto=atualizacao url_excluir="excluir_atualizacao" label="atualização" %}
+                            {% include "partials/global/_modal_exclusao.html" with objeto=atualizacao url_excluir="excluir_atualizacao" %}
+                        {% endif %}
+                
+                        {% if request.user|has_permission:"Funcionario.view_atualizacaosistema" and atualizacao.arquivo_pdf %}
+                            <a href="{{ atualizacao.arquivo_pdf.url }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Visualizar PDF da Atualização">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                        {% endif %}
+                
+                    </div>
+                </td>
+                
+                
+                
+            </tr>
+            {% empty %}
+            {% include "partials/global/_sem_resultados.html" with colspan=6 mensagem="Nenhuma atualização cadastrada." %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Paginação -->
+    {% include "partials/global/_paginacao.html" %}
+</div>
+
+{% endblock %}

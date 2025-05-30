@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if edicao %}Editar{% else %}Cadastrar{% endif %} Atualização{% endblock %}
+
+{% block content %}
+
+{% block errors %}{% endblock %}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">
+        <i class="bi bi-arrow-repeat me-2"></i>
+        {% if edicao %}Editar{% else %}Cadastrar{% endif %} Atualização do Sistema
+    </h2>
+
+    <form method="post" class="row g-3" id="atualizacaoForm">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            {% include "partials/global/_form_errors.html" %}
+        {% endif %}
+
+        <div class="accordion" id="accordionAtualizacao">
+
+            <!-- 📋 Dados da Atualização -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDados">
+                    <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDados" aria-expanded="true" aria-controls="collapseDados">
+                        <i class="bi bi-info-circle me-2"></i> Dados da Atualização
+                    </button>
+                </h2>
+                <div id="collapseDados" class="accordion-collapse collapse show" aria-labelledby="headingDados" data-bs-parent="#accordionAtualizacao">
+                    <div class="accordion-body row g-3">
+
+                        <div class="col-md-6">
+                            <label for="{{ form.versao.id_for_label }}" class="form-label">
+                                <i class="bi bi-tag-fill me-1"></i> Versão:
+                            </label>
+                            {{ form.versao }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.titulo.id_for_label }}" class="form-label">
+                                <i class="bi bi-text-left me-1"></i> Título:
+                            </label>
+                            {{ form.titulo }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.previsao.id_for_label }}" class="form-label">
+                                <i class="bi bi-calendar-event me-1"></i> Previsão:
+                            </label>
+                            {{ form.previsao }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                <i class="bi bi-hourglass-split me-1"></i> Status:
+                            </label>
+                            {{ form.status|add_class:"form-select" }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.data_termino.id_for_label }}" class="form-label">
+                                <i class="bi bi-calendar-check me-1"></i> Data de Término:
+                            </label>
+                            {{ form.data_termino }}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📝 Prévia da Versão -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingPrevia">
+                    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePrevia" aria-expanded="false" aria-controls="collapsePrevia">
+                        <i class="bi bi-journal-text me-2"></i> Prévia da Versão
+                    </button>
+                </h2>
+                <div id="collapsePrevia" class="accordion-collapse collapse" aria-labelledby="headingPrevia" data-bs-parent="#accordionAtualizacao">
+                    <div class="accordion-body row g-3">
+                        <div class="col-12">
+                            {{ form.previa_versao }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📄 Descrição Completa -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDescricao">
+                    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDescricao" aria-expanded="false" aria-controls="collapseDescricao">
+                        <i class="bi bi-file-earmark-text me-2"></i> Descrição Completa
+                    </button>
+                </h2>
+                <div id="collapseDescricao" class="accordion-collapse collapse" aria-labelledby="headingDescricao" data-bs-parent="#accordionAtualizacao">
+                    <div class="accordion-body row g-3">
+                        <div class="col-12">
+                            {{ form.descricao }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- Fim accordion -->
+
+        <!-- Botões -->
+        <div class="col-12 text-center mt-4">
+            {% include "partials/global/_botoes_salvar_cancelar.html" with edicao=edicao url_voltar='lista_atualizacoes' %}
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}

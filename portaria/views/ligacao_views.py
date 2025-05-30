@@ -134,7 +134,7 @@ def disparar_recado(request, pk):
         message=ligacao.recado,
         from_email="no-reply@brasmol.com.br",
         recipient_list=[user_destino.email],
-        fail_silently=True,
+        fail_silently=False,
         html_message=html_email,
     )
 
