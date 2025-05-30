@@ -308,8 +308,10 @@ def editar_matriz_polivalencia(request, id):
     atividade_ids = [a.id for a in atividades]
 
     funcionarios_com_nota = Funcionario.objects.filter(
+        notas__matriz=matriz,
         notas__atividade_id__in=atividade_ids
     ).distinct().order_by("nome")
+
 
     todos_funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
 
@@ -321,7 +323,7 @@ def editar_matriz_polivalencia(request, id):
         for funcionario in funcionarios_com_nota
     }
 
-    for nota in Nota.objects.filter(funcionario__in=funcionarios_com_nota, atividade__in=atividades):
+    for nota in Nota.objects.filter(matriz=matriz, funcionario__in=funcionarios_com_nota, atividade__in=atividades):
         notas_por_funcionario[nota.funcionario.id][nota.atividade.id] = {
             "pontuacao": nota.pontuacao,
             "perfil": nota.perfil,
