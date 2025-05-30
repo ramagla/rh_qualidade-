@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+import math
 
 import requests
 from django.apps import apps
@@ -346,6 +347,7 @@ def home_geral(request):
     # 🕓 Saldo de banco de horas do usuário logado
     funcionario = getattr(request.user, 'funcionario', None)
     saldo_funcionario = None
+    subordinados_com_saldo = []
 
     if funcionario:
         total = BancoHoras.objects.filter(funcionario=funcionario).aggregate(
@@ -353,6 +355,35 @@ def home_geral(request):
         )['saldo_total']
         if total:
             saldo_funcionario = total.total_seconds() / 3600
+            total_minutos = saldo_funcionario * 60
+            total_dias_funcionario = math.floor(abs(total_minutos) / 453)
+            if saldo_funcionario < 0:
+                total_dias_funcionario = -total_dias_funcionario
+
+        # Subordinados diretos
+        subordinados = Funcionario.objects.filter(responsavel=funcionario, status="Ativo")
+
+        # Para cada subordinado, calcula o saldo
+        for sub in subordinados:
+            saldo_sub = BancoHoras.objects.filter(funcionario=sub).aggregate(
+                saldo_total=Sum('horas_trabalhadas')
+            )['saldo_total']
+
+            saldo_sub_horas = saldo_sub.total_seconds() / 3600 if saldo_sub else 0
+            saldo_sub_minutos = saldo_sub_horas * 60
+            saldo_sub_dias = math.floor(abs(saldo_sub_minutos) / 453)
+            if saldo_sub_horas < 0:
+                saldo_sub_dias = -saldo_sub_dias
+
+            subordinados_com_saldo.append({
+                "nome": sub.nome,
+                "foto": sub.foto.url if sub.foto else None,
+                "saldo": saldo_sub_horas,
+                "dias": saldo_sub_dias
+            })
+
+
+            
 
     context = {
         "aniversariantes": aniversariantes,
@@ -367,6 +398,10 @@ def home_geral(request):
         "data_atualizacao_formatada": data_atualizacao_formatada,
         "settings": settings,
         "saldo_funcionario": saldo_funcionario,
+        "subordinados_com_saldo": subordinados_com_saldo,
+        "total_dias_funcionario": total_dias_funcionario,
+
     }
+
 
     return render(request, "home_geral.html", context)

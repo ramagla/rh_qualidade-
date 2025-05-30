@@ -83,6 +83,7 @@
             <i class="bi bi-arrow-up-circle-fill me-1"></i>
           {% endif %}
           {{ saldo_funcionario|duracao_em_horas }}
+          <span class="text-muted">({{ total_dias_funcionario }} dias)</span>
         </p>
       {% else %}
         <p class="text-muted">Sem saldo registrado</p>
@@ -92,6 +93,52 @@
     </div>
   </div>
 </div>
+<!-- Banco de Horas dos Subordinados (somente se houver) -->
+{% if subordinados_com_saldo %}
+<div class="col-md-4">
+  <div class="card text-center bg-light">
+    <div class="card-body igual-altura d-flex flex-column justify-content-between">
+      <h5 class="card-title text-secondary">⏱️ Banco de Horas dos Subordinados</h5>
+
+      {% if subordinados_com_saldo %}
+        <div class="flex-grow-1 overflow-auto" style="max-height: 80px;"> {# limite interno para scroll #}
+          <ul class="list-group list-group-flush">
+            {% for sub in subordinados_com_saldo %}
+            <li class="list-group-item d-flex align-items-center justify-content-between py-1 px-2">
+              <div class="d-flex align-items-center">
+                {% if sub.foto %}
+                  <img src="{{ sub.foto }}" class="rounded-circle me-2" width="32" height="32">
+                {% else %}
+                  <i class="bi bi-person-circle fs-5 me-2"></i>
+                {% endif %}
+                <strong>{{ sub.nome|primeiro_ultimo_nome_inline }}</strong>
+              </div>
+              <div>
+                <span class="fw-bold {% if sub.saldo < 0 %}text-danger{% else %}text-success{% endif %}">
+                  {% if sub.saldo < 0 %}
+                    <i class="bi bi-arrow-down-circle-fill me-1"></i>
+                  {% else %}
+                    <i class="bi bi-arrow-up-circle-fill me-1"></i>
+                  {% endif %}
+                  {{ sub.saldo|duracao_em_horas }}
+                  <span class="text-muted">({{ sub.dias }} dias)</span>
+
+                </span>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% else %}
+        <p class="text-muted">Sem subordinados registrados</p>
+      {% endif %}
+
+      <small class="text-muted d-block mt-2">Baseado no saldo mais recente</small>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 
 
 

@@ -378,3 +378,17 @@ from rh_qualidade.utils import formatar_nome_atividade_com_siglas
 @register.filter(name="formatar_siglas")
 def formatar_siglas(texto):
     return formatar_nome_atividade_com_siglas(texto)
+
+
+@register.filter
+def primeiro_ultimo_nome_inline(nome_completo):
+    """
+    Retorna o primeiro e último nome de um nome completo, em linha única.
+    Ex: 'Maria José da Silva Oliveira' -> 'Maria Oliveira'
+    """
+    if not nome_completo:
+        return ""
+    partes = nome_completo.strip().split()
+    if len(partes) == 1:
+        return partes[0]
+    return f"{partes[0]} {partes[-1]}"
