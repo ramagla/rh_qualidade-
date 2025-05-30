@@ -176,7 +176,7 @@ def imprimir_matriz(request, id):
 
 
 
-def salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=False, usar_suplente=False, excluir_ids=None):
+def salvar_notas_funcionarios(request, matriz, funcionarios, atividades, usar_perfil=False, usar_suplente=False, excluir_ids=None):
     """
     Salva ou atualiza notas dos funcionários para as atividades.
     Ignora funcionários cujo ID esteja na lista `excluir_ids`.
@@ -205,6 +205,7 @@ def salvar_notas_funcionarios(request, funcionarios, atividades, usar_perfil=Fal
                 dados_nota["suplente"] = request.POST.get(suplente_key, "off") == "on"
 
             Nota.objects.update_or_create(
+                matriz=matriz,
                 funcionario=funcionario,
                 atividade=atividade,
                 defaults=dados_nota
@@ -221,13 +222,15 @@ def save_matriz_polivalencia(request, form, atividades, funcionarios, is_edit=Fa
         matriz.save()
         salvar_notas_funcionarios(
             request,
+            matriz,  # AQUI — passa a matriz
             funcionarios,
             atividades,
             usar_perfil=True,
-            excluir_ids=excluir_ids  # repassa lista de funcionários removidos
+            excluir_ids=excluir_ids
         )
         return matriz, True
     return None, False
+
 
 
 

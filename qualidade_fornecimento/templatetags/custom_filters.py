@@ -21,12 +21,16 @@ def dict_get(d, key):
 
 @register.filter
 def duracao_em_horas(valor):
-    try:
-        horas = int(valor)
-        minutos = round((valor - horas) * 60)
-        return f"{horas:02d}:{minutos:02d}"
-    except:
-        return valor
+    sinal = "-" if valor < 0 else ""
+    valor_abs = abs(valor)
+    horas = int(valor_abs)
+    minutos = int(round((valor_abs - horas) * 60))
+    if minutos == 60:  # caso de arredondamento
+        horas += 1
+        minutos = 0
+    return f"{sinal}{horas}:{minutos:02d}"
+
+
     
 @register.filter
 def formatar_duracao(valor):

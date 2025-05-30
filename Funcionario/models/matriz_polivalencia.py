@@ -4,79 +4,6 @@ from django.utils.timezone import now
 from .funcionario import Funcionario
 from Funcionario.models.departamentos import Departamentos
 
-
-class Atividade(models.Model):
-    nome = models.CharField(max_length=255, verbose_name="Nome da Atividade")
-    # Relacionado ao local_trabalho
-    departamentos = models.ManyToManyField(
-        Departamentos,
-        blank=True,
-        verbose_name="Departamentos",
-        related_name="atividades_departamentos"
-    )
-
-
-    def __str__(self):
-        departamentos = ", ".join([dep.codigo for dep in self.departamentos.all()])
-        return f"{self.nome} ({departamentos})" if departamentos else self.nome
-
-
-
-class Nota(models.Model):
-    PONTUACAO_CHOICES = [
-        (0, "Observador"),
-        (1, "Aprendiz"),
-        (2, "Assistente"),
-        (3, "Autônomo"),
-        (4, "Instrutor"),
-    ]
-
-    PERFIL_CHOICES = [
-    ("suplente", "Suplente"),
-    ("treinado", "Treinado"),
-    ("em_treinamento", "Em Treinamento"),
-    ("oficial", "Oficial"),
-]
-
-    SIM_NAO_CHOICES = [
-        (True, "Sim"),
-        (False, "Não"),
-    ]
-
-    funcionario = models.ForeignKey(
-        Funcionario, on_delete=models.CASCADE, related_name="notas"
-    )
-    atividade = models.ForeignKey(
-        Atividade, on_delete=models.CASCADE, related_name="notas"
-    )
-    pontuacao = models.PositiveSmallIntegerField(
-        choices=PONTUACAO_CHOICES, verbose_name="Pontuação"
-    )
-
-    perfil = models.CharField(
-        max_length=20,
-        choices=PERFIL_CHOICES,
-        verbose_name="Perfil"
-    )
-    
-    class Meta:
-        unique_together = ("funcionario", "atividade")
-
-    def __str__(self):
-        return f"{self.funcionario.nome} - {self.atividade.nome}: {self.get_pontuacao_display()}"
-
-    @staticmethod
-    def get_notas_dict(atividades, funcionarios):
-        notas = Nota.objects.filter(
-            atividade__in=atividades, funcionario__in=funcionarios
-        )
-        notas_dict = {
-            f"{nota.funcionario.id}_{nota.atividade.id}": nota.pontuacao
-            for nota in notas
-        }
-        return notas_dict
-
-
 class MatrizPolivalencia(models.Model):
     departamento = models.ForeignKey(
         Departamentos,
@@ -153,4 +80,80 @@ class MatrizPolivalencia(models.Model):
     def delete(self, *args, **kwargs):
         Nota.objects.filter(atividade__departamentos=self.departamento).delete()
         super().delete(*args, **kwargs)
+
+
+
+class Atividade(models.Model):
+    nome = models.CharField(max_length=255, verbose_name="Nome da Atividade")
+    # Relacionado ao local_trabalho
+    departamentos = models.ManyToManyField(
+        Departamentos,
+        blank=True,
+        verbose_name="Departamentos",
+        related_name="atividades_departamentos"
+    )
+
+
+    def __str__(self):
+        departamentos = ", ".join([dep.codigo for dep in self.departamentos.all()])
+        return f"{self.nome} ({departamentos})" if departamentos else self.nome
+
+
+
+class Nota(models.Model):
+    PONTUACAO_CHOICES = [
+        (0, "Observador"),
+        (1, "Aprendiz"),
+        (2, "Assistente"),
+        (3, "Autônomo"),
+        (4, "Instrutor"),
+    ]
+
+    PERFIL_CHOICES = [
+    ("suplente", "Suplente"),
+    ("treinado", "Treinado"),
+    ("em_treinamento", "Em Treinamento"),
+    ("oficial", "Oficial"),
+]
+
+    SIM_NAO_CHOICES = [
+        (True, "Sim"),
+        (False, "Não"),
+    ]
+    matriz = models.ForeignKey(MatrizPolivalencia, on_delete=models.CASCADE, related_name="notas")
+
+    funcionario = models.ForeignKey(
+        Funcionario, on_delete=models.CASCADE, related_name="notas"
+    )
+    atividade = models.ForeignKey(
+        Atividade, on_delete=models.CASCADE, related_name="notas"
+    )
+    pontuacao = models.PositiveSmallIntegerField(
+        choices=PONTUACAO_CHOICES, verbose_name="Pontuação"
+    )
+
+    perfil = models.CharField(
+        max_length=20,
+        choices=PERFIL_CHOICES,
+        verbose_name="Perfil"
+    )
+    
+    class Meta:
+        unique_together = ("matriz", "funcionario", "atividade")
+
+
+    def __str__(self):
+        return f"{self.funcionario.nome} - {self.atividade.nome}: {self.get_pontuacao_display()}"
+
+    @staticmethod
+    def get_notas_dict(atividades, funcionarios):
+        notas = Nota.objects.filter(
+            atividade__in=atividades, funcionario__in=funcionarios
+        )
+        notas_dict = {
+            f"{nota.funcionario.id}_{nota.atividade.id}": nota.pontuacao
+            for nota in notas
+        }
+        return notas_dict
+
 
