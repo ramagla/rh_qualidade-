@@ -240,7 +240,7 @@ def cadastrar_matriz_polivalencia(request):
         departamento = request.POST.get("departamento")
 
         # Recupera as atividades do departamento
-        atividades_base = list(Atividade.objects.filter(departamento=departamento))
+        atividades_base = list(Atividade.objects.filter(departamentos=departamento))
 
         # Adiciona as duas atividades fixas obrigatórias ao final
         atividades_fixas = list(Atividade.objects.filter(nome__in=[
@@ -411,7 +411,7 @@ def lista_atividades(request):
 
     # Filtro por código do departamento
     if departamento:
-        atividades = atividades.filter(departamento_id=departamento)
+        atividades = atividades.filter(departamentos=departamento)
 
 
     if nome:
@@ -429,10 +429,11 @@ def lista_atividades(request):
     total_atividades = atividades.count()
 
     atividades_por_departamento = (
-        Atividade.objects.values("departamento")
-        .annotate(total=Count("departamento"))
-        .order_by("departamento")
+        Atividade.objects.values("departamentos__id", "departamentos__nome")
+        .annotate(total=Count("id"))
+        .order_by("departamentos__nome")
     )
+
 
     context = {
         "page_obj": page_obj,
@@ -566,7 +567,8 @@ def get_atividades_e_funcionarios_por_departamento(request):
     departamento_id = request.GET.get("departamento")
 
     if departamento_id:
-        atividades = Atividade.objects.filter(departamento_id=departamento_id).values("id", "nome")
+        atividades_queryset = Atividade.objects.filter(departamentos=departamento_id).distinct()
+        atividades = [{"id": a.id, "nome": a.nome} for a in atividades_queryset]
 
         funcionarios = Funcionario.objects.filter(status="Ativo").order_by("local_trabalho", "nome")
         colaboradores_por_departamento = {}
@@ -581,8 +583,76 @@ def get_atividades_e_funcionarios_por_departamento(request):
             })
 
         return JsonResponse({
-            "atividades": list(atividades),
+            "atividades": atividades,
             "colaboradores_por_departamento": colaboradores_por_departamento
         })
 
     return JsonResponse({"error": "Departamento não encontrado"}, status=400)
+
+
+
+import pandas as pd
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from Funcionario.models.matriz_polivalencia import Atividade
+
+@login_required
+@permission_required('Funcionario.add_atividade', raise_exception=True)
+def importar_atividades(request):
+    if request.method == "POST":
+        arquivo = request.FILES.get("arquivo")
+
+        if not arquivo:
+            messages.error(request, "Nenhum arquivo foi enviado.")
+            return redirect("importar_atividades")
+
+        try:
+            df = pd.read_excel(arquivo)
+
+            # Verificação de colunas obrigatórias
+            colunas_esperadas = ["Nome da Atividade", "Departamentos (separados por vírgula)"]
+            if not all(coluna in df.columns for coluna in colunas_esperadas):
+                messages.error(request, "Arquivo inválido. Verifique se o cabeçalho está correto.")
+                return redirect("importar_atividades")
+
+            total_criadas = 0
+            total_existentes = 0
+
+            for _, row in df.iterrows():
+                nome = str(row["Nome da Atividade"]).strip()
+                departamentos = str(row["Departamentos (separados por vírgula)"]).split(",")
+
+                if not nome:
+                    continue
+
+                atividade, criada = Atividade.objects.get_or_create(nome=nome)
+                if criada:
+                    total_criadas += 1
+                else:
+                    total_existentes += 1
+
+                atividade.departamentos.clear()
+                for nome_departamento in departamentos:
+                    nome_dep = nome_departamento.strip()
+                    if not nome_dep:
+                        continue
+                    try:
+                        departamento = Departamentos.objects.get(nome__iexact=nome_dep)
+                        atividade.departamentos.add(departamento)
+                    except Departamentos.DoesNotExist:
+                        messages.warning(request, f"Departamento '{nome_dep}' não encontrado. Ignorado.")
+
+                atividade.save()
+
+            messages.success(
+                request,
+                f"Importação concluída: {total_criadas} atividades criadas, {total_existentes} já existiam."
+            )
+            return redirect("lista_atividades")
+
+        except Exception as e:
+            messages.error(request, f"Erro ao processar o arquivo: {str(e)}")
+            return redirect("importar_atividades")
+
+    return render(request, "matriz_polivalencia/importar_atividades.html")

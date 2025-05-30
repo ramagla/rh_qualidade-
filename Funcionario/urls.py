@@ -137,6 +137,7 @@ from .views.matriz_polivalencia_views import (
     imprimir_matriz,
     lista_atividades,
     lista_matriz_polivalencia,
+    importar_atividades
 )
 from .views.relatorios_views import (
     RelatorioIndicadorAnualView,
@@ -173,6 +174,7 @@ urlpatterns = [
     path("banco-horas/excluir/<int:pk>/", banco_horas_views.excluir_banco_horas, name="excluir_banco_horas"),
     path("banco-horas/ocorrencias/<int:funcionario_id>/", banco_horas_views.buscar_ocorrencias_portaria, name="buscar_ocorrencias_portaria"),
     path("relatorios/banco-horas/", relatorio_banco_horas, name="relatorio_banco_horas"),
+    path("atividades/importar/", importar_atividades, name="importar_atividades"),
 
     # Funcionários
     path("funcionarios/", lista_funcionarios, name="lista_funcionarios"),

@@ -4,6 +4,7 @@ from ..models.matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
 from django_select2.forms import Select2Widget  # se estiver usando Select2
 from django.forms import TypedChoiceField
 from Funcionario.models.departamentos import Departamentos
+from rh_qualidade.utils import formatar_nome_atividade_com_siglas
 
 
 
@@ -36,15 +37,19 @@ class MatrizPolivalenciaForm(forms.ModelForm):
             field.required = False
 
 
+
 class AtividadeForm(forms.ModelForm):
     class Meta:
         model = Atividade
         fields = "__all__"
+        widgets = {
+            "departamentos": forms.SelectMultiple(attrs={"class": "form-select select2", "multiple": "multiple"})
+        }
 
     def clean_nome(self):
         nome = self.cleaned_data.get("nome")
         if nome:
-            return nome.title()  # Aplica Title Case apenas no campo nome
+            return formatar_nome_atividade_com_siglas(nome)
         return nome
 
 

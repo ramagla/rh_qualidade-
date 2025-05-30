@@ -8,17 +8,18 @@ from Funcionario.models.departamentos import Departamentos
 class Atividade(models.Model):
     nome = models.CharField(max_length=255, verbose_name="Nome da Atividade")
     # Relacionado ao local_trabalho
-    departamento = models.ForeignKey(
+    departamentos = models.ManyToManyField(
         Departamentos,
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
-        verbose_name="Departamento",
-        related_name="atividades_departamento"
+        verbose_name="Departamentos",
+        related_name="atividades_departamentos"
     )
 
+
     def __str__(self):
-        return f"{self.nome} ({self.departamento})"
+        departamentos = ", ".join([dep.codigo for dep in self.departamentos.all()])
+        return f"{self.nome} ({departamentos})" if departamentos else self.nome
+
 
 
 class Nota(models.Model):
@@ -116,17 +117,17 @@ class MatrizPolivalencia(models.Model):
 
     @property
     def atividades(self):
-        # Retorna as atividades do departamento associado à matriz
         if self.departamento:
-            return Atividade.objects.filter(departamento=self.departamento)
+            return Atividade.objects.filter(departamentos=self.departamento)
         return Atividade.objects.none()
+
 
     @property
     def funcionarios(self):
-        # Filtra os funcionários com notas vinculadas às atividades deste departamento
-        notas = Nota.objects.filter(atividade__departamento=self.departamento)
+        notas = Nota.objects.filter(atividade__departamentos=self.departamento)
         funcionarios_ids = notas.values_list("funcionario_id", flat=True).distinct()
         return Funcionario.objects.filter(id__in=funcionarios_ids)
+
 
     @property
     def funcionarios_com_notas(self):
@@ -150,6 +151,6 @@ class MatrizPolivalencia(models.Model):
         return notas_por_funcionario
 
     def delete(self, *args, **kwargs):
-        # Exclui todas as notas relacionadas às atividades desta matriz
-        Nota.objects.filter(atividade__departamento=self.departamento).delete()
+        Nota.objects.filter(atividade__departamentos=self.departamento).delete()
         super().delete(*args, **kwargs)
+

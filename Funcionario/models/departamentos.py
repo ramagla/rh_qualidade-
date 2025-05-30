@@ -11,4 +11,5 @@ class Departamentos(models.Model):
         ordering = ["nome"]
 
     def __str__(self):
-        return f"{self.nome} ({self.sigla})" if self.sigla else self.nome
+        return self.nome
+

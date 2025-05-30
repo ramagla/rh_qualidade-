@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Importar Atividades{% endblock %}
+
+{% block content %}
+<main role="main" class="flex-shrink-0">
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">
+      <i class="bi bi-file-earmark-spreadsheet me-2" aria-hidden="true"></i>
+      Importar Atividades do Excel
+    </h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="excel_file" class="form-label">Selecione o arquivo Excel</label>
+        <input type="file" class="form-control" id="excel_file" name="arquivo" accept=".xlsx,.xls" required>
+        <small class="form-text text-muted">
+          Apenas arquivos Excel (.xlsx) são aceitos. As atividades e os departamentos serão vinculados automaticamente.
+        </small>
+      </div>
+
+      <div class="text-center">
+        <button type="submit" id="btn-importar" class="btn btn-primary">
+          <i class="bi bi-upload me-1"></i> 
+          <span id="btn-importar-texto">Importar</span>
+          <span id="btn-importar-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+        </button>
+
+        <a href="{% url 'lista_atividades' %}" class="btn btn-secondary ms-2">
+          <i class="bi bi-arrow-left me-1"></i> Cancelar e Voltar à Lista
+        </a>
+      </div>
+    </form>
+
+    <div class="card mt-5">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="h5 mb-0">
+          <i class="bi bi-table me-2"></i>
+          Modelo Visual para Importação
+        </h3>
+        <a href="{% static 'arquivos/modelo_importacao_atividades.xlsx' %}" 
+           download 
+           class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-download me-1"></i> Baixar Modelo
+        </a>
+      </div>
+      <div class="card-body">
+        <p>Preencha seu arquivo Excel com as seguintes colunas obrigatórias:</p>
+        <div class="table-responsive">
+          <table class="table table-bordered text-center align-middle">
+            <thead>
+              <tr>
+                <th>Nome da Atividade <span class="text-danger">*</span></th>
+                <th>Departamentos (separados por vírgula) <span class="text-danger">*</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Operar Prensa</td>
+                <td>Estamparia, Manutenção</td>
+              </tr>
+              <tr>
+                <td>Ajustar Máquina</td>
+                <td>Manutenção, Ferramentaria</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <footer class="mt-2">
+          <small>
+            <strong>Observação:</strong> Os nomes dos departamentos devem coincidir com os já cadastrados no sistema.
+          </small>
+        </footer>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.querySelector("form");
+  const btnImportar = document.getElementById("btn-importar");
+  const textoImportar = document.getElementById("btn-importar-texto");
+  const spinnerImportar = document.getElementById("btn-importar-spinner");
+  const inputArquivo = document.getElementById("excel_file");
+
+  form.addEventListener("submit", function (event) {
+    const arquivo = inputArquivo.files[0];
+    if (!arquivo) {
+      event.preventDefault();
+      alert("Por favor, selecione um arquivo para importar.");
+      return;
+    }
+
+    const nomeArquivo = arquivo.name.toLowerCase();
+    if (!(nomeArquivo.endsWith(".xls") || nomeArquivo.endsWith(".xlsx"))) {
+      event.preventDefault();
+      alert("Por favor, selecione um arquivo Excel válido (.xls ou .xlsx).");
+      return;
+    }
+
+    btnImportar.disabled = true;
+    textoImportar.textContent = "Importando...";
+    spinnerImportar.classList.remove("d-none");
+  });
+});
+</script>
+{% endblock %}

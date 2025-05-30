@@ -368,3 +368,9 @@ def formatar_titulo(texto):
     if not texto:
         return ""
     return title_case(texto)
+
+from rh_qualidade.utils import formatar_nome_atividade_com_siglas
+
+@register.filter(name="formatar_siglas")
+def formatar_siglas(texto):
+    return formatar_nome_atividade_com_siglas(texto)
