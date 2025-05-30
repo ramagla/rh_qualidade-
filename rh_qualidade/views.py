@@ -347,6 +347,7 @@ def home_geral(request):
     # 🕓 Saldo de banco de horas do usuário logado
     funcionario = getattr(request.user, 'funcionario', None)
     saldo_funcionario = None
+    total_dias_funcionario = 0  # ✅ garantir que sempre exista
     subordinados_com_saldo = []
 
     if funcionario:
@@ -359,6 +360,7 @@ def home_geral(request):
             total_dias_funcionario = math.floor(abs(total_minutos) / 453)
             if saldo_funcionario < 0:
                 total_dias_funcionario = -total_dias_funcionario
+
 
         # Subordinados diretos
         subordinados = Funcionario.objects.filter(responsavel=funcionario, status="Ativo")
