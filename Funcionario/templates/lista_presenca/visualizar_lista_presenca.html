@@ -93,7 +93,7 @@
               <th>Arquivo PDF</th>
               <td>
                 {% if lista.lista_presenca %}
-                  <a href="{{ lista.lista_presenca.url }}" class="btn btn-info btn-sm" download>
+                  <a href="{{ lista.lista_presenca.url }}" class="btn btn-info btn-sm">
                     <i class="bi bi-download"></i> Baixar Lista
                   </a>
                   <span class="small text-muted">({{ lista.lista_presenca.name|basename }})</span>

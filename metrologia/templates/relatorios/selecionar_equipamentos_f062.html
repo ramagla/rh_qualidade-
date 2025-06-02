@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load static %}
+{% include 'partials/global/_toast_mensagens.html' %}
+
+<div class="container mt-4">
+
+  {% include 'partials/global/_header_titulo.html' with titulo="Solicitação de Orçamento para Calibração - F062" icone="bi bi-clipboard-check" emoji="📝" %}
+
+  <form method="post" action="{% url 'gerar_f062' %}" target="_blank">
+    {% csrf_token %}
+
+    <!-- Campos Solicitado por e Aprovado por -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <label for="solicitado_por" class="form-label">
+          <i class="bi bi-person-fill me-1"></i> Solicitado por:
+        </label>
+        <select id="solicitado_por" name="solicitado_por" class="form-select select2" required>
+          <option value="" disabled selected>Selecione</option>
+          {% for funcionario in funcionarios %}
+            <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="aprovado_por" class="form-label">
+          <i class="bi bi-person-fill-check me-1"></i> Aprovado por:
+        </label>
+        <select id="aprovado_por" name="aprovado_por" class="form-select select2" required>
+          <option value="" disabled selected>Selecione</option>
+          {% for funcionario in funcionarios %}
+            <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+<!-- Campos adicionais: Prazo e Descrição do Serviço -->
+<div class="row mb-4">
+  <div class="col-md-6">
+    <label for="prazo_realizacao" class="form-label">
+      <i class="bi bi-calendar-event me-1"></i> Prazo p/ Realização do Serviço:
+    </label>
+    <input type="date" id="prazo_realizacao" name="prazo_realizacao" class="form-control" value="{{ data_atual|date:'Y-m-d' }}" required>
+  </div>
+  <div class="col-md-6">
+    <label for="descricao_servico" class="form-label">
+      <i class="bi bi-card-text me-1"></i> Descrição do Serviço:
+    </label>
+    <input type="text" id="descricao_servico" name="descricao_servico" class="form-control" placeholder="Ex: Calibração em RBC" required>
+  </div>
+</div>
+
+   <!-- Seleção de Equipamentos -->
+<div class="row mb-4">
+  <div class="col-md-12">
+    <label for="equipamentos_selecionados" class="form-label">
+      <i class="bi bi-tools me-1"></i> Equipamentos:
+    </label>
+    <select id="equipamentos_selecionados" name="equipamentos_selecionados" class="form-select select2" multiple="multiple" required>
+      {% for equipamento in equipamentos %}
+        <option value="{{ equipamento.id }}">
+          {{ equipamento.codigo }} - {{ equipamento.nome_equipamento }} ({{ equipamento.fabricante }})
+        </option>
+      {% endfor %}
+    </select>
+    <small class="text-muted d-block mt-2">
+      Você pode selecionar múltiplos equipamentos mantendo <kbd>Ctrl</kbd> (ou <kbd>Cmd</kbd> no Mac) pressionado, ou clicando múltiplas vezes.
+    </small>
+  </div>
+</div>
+
+
+    <!-- Botão Gerar F062 -->
+    <div class="text-center">
+      <button type="submit" class="btn btn-success d-inline-flex align-items-center gap-2">
+        <i class="bi bi-printer"></i> Gerar F062
+      </button>
+    </div>
+  </form>
+
+</div>
+
+
+
+{% endblock %}

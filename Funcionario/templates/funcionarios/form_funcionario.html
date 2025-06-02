@@ -80,7 +80,7 @@
                             <input type="file" id="id_curriculo" name="curriculo" style="display: none;" onchange="document.getElementById('curriculo_filename').value = this.files[0].name;">
                             {% if funcionario.curriculo %}
                                 <div class="mt-2">
-                                    <a href="{{ funcionario.curriculo.url }}" class="btn btn-info" download>Baixar Currículo</a>
+                                    <a href="{{ funcionario.curriculo.url }}" class="btn btn-info">Baixar Currículo</a>
                                     <p>Atualmente: {{ funcionario.curriculo.name }}</p>
                                 </div>
                             {% endif %}

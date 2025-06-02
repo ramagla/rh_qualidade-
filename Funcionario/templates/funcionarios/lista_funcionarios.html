@@ -250,12 +250,13 @@
           <td>
             <div class="d-flex justify-content-center gap-2">
               {% if funcionario.curriculo %}
-                <a href="{{ funcionario.curriculo.url }}" class="text-decoration-none" download target="_blank" title="Currículo">
-                  <i class="bi bi-file-earmark-text fs-5" aria-hidden="true"></i>
-                </a>
+              <a href="{{ funcionario.curriculo.url }}" class="text-decoration-none" target="_blank" title="Currículo">
+                <i class="bi bi-file-earmark-text fs-5" aria-hidden="true"></i>
+              </a>
+              
               {% endif %}
               {% if funcionario.formulario_f146 %}
-                <a href="{{ funcionario.formulario_f146.url }}" class="text-decoration-none" download target="_blank" title="Formulário F146">
+                <a href="{{ funcionario.formulario_f146.url }}" class="text-decoration-none"  target="_blank" title="Formulário F146">
                   <i class="bi bi-award fs-5" aria-hidden="true"></i>
                 </a>
               {% endif %}

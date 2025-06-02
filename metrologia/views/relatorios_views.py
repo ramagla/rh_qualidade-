@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.db.models import DateField, ExpressionWrapper, F, IntegerField, Value
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.timezone import now
 
 from Funcionario.models import Funcionario
@@ -47,18 +47,23 @@ def lista_equipamentos_a_calibrar(request):
 
 
 def listar_equipamentos_funcionario(request, funcionario_id):
-    # Obtém o funcionário pelo ID
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
 
-    # Filtra os equipamentos associados ao funcionário
-    equipamentos = TabelaTecnica.objects.filter(responsavel=funcionario)
+    if request.method == "POST":
+        # Se foi POST, pegar só os equipamentos selecionados
+        equipamentos_selecionados = request.POST.getlist("equipamentos_selecionados")
+        equipamentos = TabelaTecnica.objects.filter(id__in=equipamentos_selecionados)
+    else:
+        # Se foi GET, listar todos do funcionário (opcional, para debug ou acesso direto)
+        equipamentos = TabelaTecnica.objects.filter(responsavel=funcionario)
 
     context = {
         "funcionario": funcionario,
         "equipamentos": equipamentos,
-        "data_atual": now().date(),  # Adiciona a data atual
+        "data_atual": now().date(),
     }
     return render(request, "relatorios/listar_equipamentos_funcionario.html", context)
+
 
 
 def listar_funcionarios_ativos(request):
@@ -67,4 +72,80 @@ def listar_funcionarios_ativos(request):
 
 
 def equipamentos_por_funcionario(request):
-    return render(request, "relatorios/selecionar_funcionario.html")
+    funcionario_id = request.GET.get("funcionario_id") or request.POST.get("funcionario_id")
+    funcionario = None
+    equipamentos = []
+
+    if funcionario_id:
+        funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+        equipamentos = TabelaTecnica.objects.filter(responsavel=funcionario)
+
+    context = {
+        "funcionario": funcionario,
+        "equipamentos": equipamentos,
+    }
+    return render(request, "relatorios/selecionar_funcionario.html", context)
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from Funcionario.models import Funcionario
+from metrologia.models.models_tabelatecnica import TabelaTecnica
+from django.utils.timezone import now
+
+@login_required
+def equipamentos_para_calibracao(request):
+    equipamentos = TabelaTecnica.objects.all().order_by("codigo")
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+
+    context = {
+        "equipamentos": equipamentos,
+        "funcionarios": funcionarios,
+        "data_atual": now().date(),
+    }
+    return render(request, "relatorios/selecionar_equipamentos_f062.html", context)
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render
+from Funcionario.models import Funcionario
+from metrologia.models.models_tabelatecnica import TabelaTecnica
+from django.utils.timezone import now
+
+from datetime import datetime
+
+@login_required
+def gerar_f062(request):
+    if request.method == "POST":
+        equipamentos_selecionados = request.POST.getlist("equipamentos_selecionados")
+        solicitado_por_id = request.POST.get("solicitado_por")
+        aprovado_por_id = request.POST.get("aprovado_por")
+        prazo_realizacao_str = request.POST.get("prazo_realizacao")
+        descricao_servico = request.POST.get("descricao_servico")
+
+        equipamentos = TabelaTecnica.objects.filter(id__in=equipamentos_selecionados)
+        solicitado_por = get_object_or_404(Funcionario, id=solicitado_por_id)
+        aprovado_por = get_object_or_404(Funcionario, id=aprovado_por_id)
+
+        # Converter prazo_realizacao para date
+        prazo_realizacao = None
+        if prazo_realizacao_str:
+            prazo_realizacao = datetime.strptime(prazo_realizacao_str, "%Y-%m-%d").date()
+
+        context = {
+            "equipamentos": equipamentos,
+            "solicitado_por": solicitado_por,
+            "aprovado_por": aprovado_por,
+            "prazo_realizacao": prazo_realizacao,
+            "descricao_servico": descricao_servico,
+            "data_atual": now().date(),
+        }
+
+        return render(request, "relatorios/f062_form.html", context)
+
+    else:
+        return redirect("equipamentos_para_calibracao")
+
+
+
+

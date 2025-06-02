@@ -323,6 +323,12 @@
             {% if perms.Funcionario.view_feriados %}
               <li><a class="dropdown-item" href="{% url 'feriados' %}"><i class="bi bi-calendar-event"></i> Feriados</a></li>
             {% endif %}
+            <li>
+              <a class="dropdown-item" href="{% url 'usuarios_ativos' %}">
+                  <i class="bi bi-people-fill"></i> Usuários Ativos
+              </a>
+          </li>
+          
             <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear"></i> Configurações</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
@@ -484,51 +490,56 @@
                                 <i class="fas fa-cog"></i>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="configDropdown">
-                                {% if perms.Funcionario.view_permissoes %}
-                                    <li>
-                                        <a class="dropdown-item" href="{% url 'permissoes_acesso_lista' %}?usuario_id={{ request.user.id }}">
-                                            <i class="bi bi-shield-lock"></i> Permissões de Acesso
-                                        </a>
-                                        
-                                    </li>
-                                {% endif %}
-                                {% if perms.Funcionario.view_logs %}
-                                    <li>
-                                        <a class="dropdown-item" href="{% url 'logs' %}">
-                                            <i class="bi bi-clipboard-data"></i> Logs
-                                        </a>
-                                    </li>
-                                {% endif %}
-                                {% if perms.Funcionario.view_atualizacaosistema %}
+                              {% if perms.Funcionario.view_permissoes %}
                                   <li>
-                                      <a class="dropdown-item" href="{% url 'lista_atualizacoes' %}">
-                                          <i class="bi bi-arrow-repeat"></i> Atualizações do Sistema
+                                      <a class="dropdown-item" href="{% url 'permissoes_acesso_lista' %}?usuario_id={{ request.user.id }}">
+                                          <i class="bi bi-shield-lock"></i> Permissões de Acesso
                                       </a>
                                   </li>
                               {% endif %}
-                            
-                                {% if perms.Funcionario.view_alerta %}
+                              {% if perms.Funcionario.view_logs %}
                                   <li>
-                                      <a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}">
-                                          <i class="bi bi-bell"></i> Alertas
+                                      <a class="dropdown-item" href="{% url 'logs' %}">
+                                          <i class="bi bi-clipboard-data"></i> Logs
                                       </a>
                                   </li>
-                                  {% endif %}
-
-
-                                {% if perms.Funcionario.view_feriados %}
-                                    <li>
-                                        <a class="dropdown-item" href="{% url 'feriados' %}">
-                                            <i class="bi bi-calendar-event"></i> Feriados
-                                        </a>
-                                    </li>
-                                {% endif %}
+                              {% endif %}
+                              {% if perms.Funcionario.view_atualizacaosistema %}
                                 <li>
-                                    <a class="dropdown-item" href="{% url 'admin:index' %}">
-                                        <i class="bi bi-gear"></i> Configurações
+                                    <a class="dropdown-item" href="{% url 'lista_atualizacoes' %}">
+                                        <i class="bi bi-arrow-repeat"></i> Atualizações do Sistema
                                     </a>
                                 </li>
-                            </ul>
+                              {% endif %}
+                              {% if perms.Funcionario.view_alerta %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}">
+                                        <i class="bi bi-bell"></i> Alertas
+                                    </a>
+                                </li>
+                              {% endif %}
+                              {% if perms.Funcionario.view_feriados %}
+                                  <li>
+                                      <a class="dropdown-item" href="{% url 'feriados' %}">
+                                          <i class="bi bi-calendar-event"></i> Feriados
+                                      </a>
+                                  </li>
+                              {% endif %}
+                          
+                              <!-- 🚀 Adiciona aqui "Usuários Ativos" -->
+                              <li>
+                                  <a class="dropdown-item" href="{% url 'usuarios_ativos' %}">
+                                      <i class="bi bi-people-fill"></i> Usuários Ativos
+                                  </a>
+                              </li>
+                          
+                              <li>
+                                  <a class="dropdown-item" href="{% url 'admin:index' %}">
+                                      <i class="bi bi-gear"></i> Configurações
+                                  </a>
+                              </li>
+                          </ul>
+                          
                         </div>
                     </div>
                 </div>

@@ -287,6 +287,12 @@ def home_geral(request):
     )
 
     # 👥 Total de colaboradores logados no sistema
+    # 👥 Total de colaboradores logados no sistema
+
+    # Primeiro: limpa sessões expiradas
+    Session.objects.filter(expire_date__lt=timezone_now()).delete()
+
+    # Agora busca sessões ativas
     active_sessions = Session.objects.filter(expire_date__gte=timezone_now())
     uid_list = []
 
@@ -297,6 +303,7 @@ def home_geral(request):
             uid_list.append(uid)
 
     total_colaboradores = Funcionario.objects.filter(user__id__in=uid_list, status="Ativo").count()
+
 
     # 📢 Últimos comunicados
     comunicados = Comunicado.objects.order_by("-data")[:4]
@@ -407,3 +414,29 @@ def home_geral(request):
 
 
     return render(request, "home_geral.html", context)
+
+
+from django.contrib.sessions.models import Session
+from django.contrib.auth.models import User
+from django.utils.timezone import now as timezone_now
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+@login_required
+def usuarios_ativos(request):
+    # Primeiro: limpa sessões já expiradas (não precisa mais de cron se fizer isso aqui)
+    Session.objects.filter(expire_date__lt=timezone_now()).delete()
+
+    # Agora busca apenas sessões ativas
+    active_sessions = Session.objects.filter(expire_date__gte=timezone_now())
+    user_ids = []
+
+    for session in active_sessions:
+        data = session.get_decoded()
+        uid = data.get('_auth_user_id')
+        if uid:
+            user_ids.append(uid)
+
+    usuarios = User.objects.filter(id__in=user_ids).order_by('username')
+
+    return render(request, 'configuracoes/usuarios_ativos.html', {'usuarios': usuarios})

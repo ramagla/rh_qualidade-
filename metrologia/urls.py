@@ -34,9 +34,12 @@ from .views.dispositivos_views import (
 )
 from .views.home_views import home
 from .views.relatorios_views import (
+    equipamentos_para_calibracao,
     equipamentos_por_funcionario,
+    gerar_f062,
     listar_equipamentos_funcionario,
     listar_funcionarios_ativos,
+    
 )
 from .views.tabelatecnica_views import (
     cadastrar_tabelatecnica,
@@ -191,6 +194,10 @@ urlpatterns = [
         obter_exatidao_requerida,
         name="obter_exatidao_requerida",
     ),
+
+    path("relatorios/solicitacao-orcamento-calibracao/", equipamentos_para_calibracao, name="equipamentos_para_calibracao"),
+    path("relatorios/gerar-f062/", gerar_f062, name="gerar_f062"),
+
 ]
 
 if settings.DEBUG:

@@ -11,7 +11,8 @@
 
   <main>
     <section>
-      <form id="selecionarFuncionarioForm" class="row justify-content-center">
+      <!-- Form para selecionar o colaborador (GET) -->
+      <form id="selecionarFuncionarioForm" class="row justify-content-center" method="get">
         <div class="col-md-6">
           <label for="funcionario" class="form-label">
             <i class="bi bi-person-badge me-1"></i> Colaborador:
@@ -19,6 +20,9 @@
           <select id="funcionario" name="funcionario_id" class="form-select select2 w-100"
                   aria-label="Selecione um colaborador" required>
             <option value="" disabled selected>Selecione um colaborador</option>
+            {% if funcionario %}
+              <option value="{{ funcionario.id }}" selected>{{ funcionario.nome }}</option>
+            {% endif %}
           </select>
         </div>
 
@@ -31,16 +35,68 @@
         </div>
       </form>
     </section>
+
+    <!-- Se um colaborador foi selecionado, exibir a lista de equipamentos -->
+    {% if funcionario %}
+      <hr class="mt-5 mb-4">
+
+      <h4 class="text-center mb-3">
+        <i class="bi bi-tools me-2"></i> Equipamentos de {{ funcionario.nome }}
+      </h4>
+
+      <!-- Form para gerar F198 com equipamentos selecionados -->
+      <form method="post" action="{% url 'listar_equipamentos_funcionario' funcionario.id %}" target="_blank">
+        {% csrf_token %}
+
+        <div class="table-responsive mb-4">
+          <table class="table table-striped">
+            <thead class="table-light">
+              <tr>
+                <th>Selecionar</th>
+                <th>Código</th>
+                <th>Nome</th>
+                <th>Fabricante</th>
+                <th>Modelo/Resolução</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for equipamento in equipamentos %}
+                <tr>
+                  <td>
+                    <input type="checkbox" name="equipamentos_selecionados" value="{{ equipamento.id }}">
+                  </td>
+                  <td>{{ equipamento.codigo }}</td>
+                  <td>{{ equipamento.nome_equipamento }}</td>
+                  <td>{{ equipamento.fabricante }}</td>
+                  <td>{{ equipamento.modelo }}/{{ equipamento.resolucao }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted">Nenhum equipamento encontrado para este funcionário.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="text-center">
+          <button type="submit" class="btn btn-success d-inline-flex align-items-center gap-2">
+            <i class="bi bi-printer"></i> Gerar F198
+          </button>
+        </div>
+      </form>
+    {% endif %}
   </main>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const select = document.getElementById('funcionario');
-    const form = document.getElementById('selecionarFuncionarioForm');
 
     // Spinner ou placeholder de carregamento
-    select.innerHTML = '<option disabled selected>Carregando colaboradores...</option>';
+    if (!select.querySelector('option[selected]')) {
+      select.innerHTML = '<option disabled selected>Carregando colaboradores...</option>';
+    }
 
     // Buscar e preencher colaboradores
     fetch('/metrologia/listar-funcionarios-ativos/', { cache: "no-store" })
@@ -51,11 +107,19 @@
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           data.sort((a, b) => a.nome.localeCompare(b.nome));
-          select.innerHTML = '<option value="" disabled selected>Selecione um colaborador</option>';
+
+          const selectedId = "{{ funcionario.id|default:'' }}";
+
+          select.innerHTML = '<option value="" disabled>Selecione um colaborador</option>';
           data.forEach(funcionario => {
             const option = document.createElement('option');
             option.value = funcionario.id;
             option.textContent = funcionario.nome;
+
+            if (funcionario.id.toString() === selectedId) {
+              option.selected = true;
+            }
+
             select.appendChild(option);
           });
 
@@ -73,28 +137,6 @@
         console.error('Erro ao carregar funcionários:', error);
         select.innerHTML = '<option value="" disabled>Erro ao carregar colaboradores</option>';
       });
-
-    // Redirecionamento ao enviar
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
-      const funcionarioId = select.value;
-
-      if (funcionarioId) {
-        window.location.href = `/metrologia/equipamentos/funcionario/${funcionarioId}/`;
-      } else {
-        const toast = document.createElement("div");
-        toast.className = "toast align-items-center text-white bg-danger border-0 show position-fixed bottom-0 end-0 m-3";
-        toast.role = "alert";
-        toast.innerHTML = `
-          <div class="d-flex">
-            <div class="toast-body">Por favor, selecione um colaborador.</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
-          </div>
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 5000);
-      }
-    });
   });
 </script>
 {% endblock %}

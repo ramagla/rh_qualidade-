@@ -45,7 +45,7 @@
               <th class="align-middle">PDF da Integração Assinada</th>
               <td class="align-middle">
                 {% if integracao.pdf_integracao %}
-                  <a href="{{ integracao.pdf_integracao.url }}" class="btn btn-info btn-sm" download>
+                  <a href="{{ integracao.pdf_integracao.url }}" class="btn btn-info btn-sm" >
                     <i class="bi bi-download"></i> Baixar
                   </a>
                   <span class="small text-muted">({{ integracao.pdf_integracao.name|basename }})</span>

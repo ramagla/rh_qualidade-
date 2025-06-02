@@ -183,6 +183,14 @@ DATABASES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_CACHE_ALIAS = "default"
 
+# Expiração automática da sessão após 20 minutos de inatividade
+SESSION_COOKIE_AGE = 1200  # 20 minutos (em segundos)
+
+# Renova o tempo de expiração a cada request — evita que a aba "travada" fique aberta indefinidamente
+SESSION_SAVE_EVERY_REQUEST = True
+
+
+
 # Configurações de templates
 TEMPLATES = [
     {

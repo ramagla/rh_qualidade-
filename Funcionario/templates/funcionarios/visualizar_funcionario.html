@@ -63,7 +63,7 @@
               <th class="align-middle">Currículo</th>
               <td class="align-middle">
                 {% if funcionario.curriculo %}
-                  <a href="{{ funcionario.curriculo.url }}" class="btn btn-info btn-sm" download>
+                  <a href="{{ funcionario.curriculo.url }}" class="btn btn-info btn-sm">
                     <i class="bi bi-download"></i> Baixar
                   </a>
                   <span class="small text-muted">({{ funcionario.curriculo.name|basename }})</span>
@@ -76,7 +76,7 @@
               <th class="align-middle">Certificado Ensino Médio</th>
               <td class="align-middle">
                 {% if funcionario.formulario_f146 %}
-                  <a href="{{ funcionario.formulario_f146.url }}" class="btn btn-info btn-sm" download>
+                  <a href="{{ funcionario.formulario_f146.url }}" class="btn btn-info btn-sm">
                     <i class="bi bi-download"></i> Baixar
                   </a>
                   <span class="small text-muted">({{ funcionario.formulario_f146.name|basename }})</span>

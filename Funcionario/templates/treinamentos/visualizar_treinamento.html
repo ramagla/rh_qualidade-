@@ -84,7 +84,7 @@
               <th>Documento (Certificado ou Lista)</th>
               <td>
                 {% if treinamento.anexo %}
-                  <a href="{{ treinamento.anexo.url }}" class="btn btn-info btn-sm d-print-none" download>
+                  <a href="{{ treinamento.anexo.url }}" class="btn btn-info btn-sm d-print-none">
                     <i class="bi bi-download"></i> Baixar Documento
                   </a>
                   <span class="small text-muted">({{ treinamento.anexo.name|basename }})</span>

@@ -21,6 +21,7 @@ from .documentos_views import (
 from Funcionario.views.home_views import login_view
 from rh_qualidade.views import home_geral
 from rh_qualidade import atualizacao_views
+from rh_qualidade.views import usuarios_ativos
 
 urlpatterns = [
     # Admin
@@ -89,6 +90,7 @@ urlpatterns = [
     path("atualizacoes/excluir/<int:id>/", atualizacao_views.excluir_atualizacao, name="excluir_atualizacao"),
     path('atualizacoes/marcar_lida/', atualizacao_views.marcar_atualizacao_lida, name='marcar_atualizacao_lida'),
     path("ajax/ultima-atualizacao/", atualizacao_views.get_ultima_atualizacao, name="get_ultima_atualizacao"),
+    path('usuarios-ativos/', usuarios_ativos, name='usuarios_ativos'),
 
 
 ]

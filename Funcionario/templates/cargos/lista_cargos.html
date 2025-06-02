@@ -122,7 +122,7 @@
           {% endif %}
         
           {% if request.user|has_permission:"Funcionario.view_cargo" and cargo.descricao_arquivo %}
-            <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-sm btn-secondary mt-1" download title="Baixar Descrição" aria-label="Baixar descrição em PDF">
+            <a href="{{ cargo.descricao_arquivo.url }}" class="btn btn-sm btn-secondary mt-1" title="Baixar Descrição" aria-label="Baixar descrição em PDF">
               <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
             </a>
           {% endif %}
