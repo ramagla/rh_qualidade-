@@ -241,19 +241,30 @@
               <td>{{ servico.data_retorno|date:"d/m/Y" }}</td>
               <td>
                 <div class="d-flex flex-wrap justify-content-center gap-1">
-                  {% include "partials/global/_botao_visualizar.html" with objeto=servico url_visualizar='visualizar_controle_servico_externo' %}
-                  {% include "partials/global/_botao_editar.html" with objeto=servico url_editar='editar_controle_servico_externo' %}
-                  {% if servico.inspecao and servico.inspecao.pdf %}
-                    <a href="{{ servico.inspecao.pdf.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                      <i class="bi bi-file-earmark-pdf"></i>
-                    </a>
-                  {% endif %}
-                  {% if servico.inspecao and servico.inspecao.certificado_anexo %}
-                    <a href="{{ servico.inspecao.certificado_anexo.url }}" class="btn btn-sm btn-outline-success" target="_blank">
-                      <i class="bi bi-paperclip"></i>
-                    </a>
-                  {% endif %}
-                  {% include "partials/global/_botao_excluir.html" with objeto=servico url_excluir='excluir_controle_servico_externo' %}
+                  {% if request.user|has_permission:'qualidade_fornecimento.view_controleservicoexterno' %}
+    {% include "partials/global/_botao_visualizar.html" with objeto=servico url_visualizar='visualizar_controle_servico_externo' %}
+{% endif %}
+
+{% if request.user|has_permission:'qualidade_fornecimento.change_controleservicoexterno' %}
+    {% include "partials/global/_botao_editar.html" with objeto=servico url_editar='editar_controle_servico_externo' %}
+{% endif %}
+
+{% if servico.inspecao and servico.inspecao.pdf %}
+    <a href="{{ servico.inspecao.pdf.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+      <i class="bi bi-file-earmark-pdf"></i>
+    </a>
+{% endif %}
+
+{% if servico.inspecao and servico.inspecao.certificado_anexo %}
+    <a href="{{ servico.inspecao.certificado_anexo.url }}" class="btn btn-sm btn-outline-success" target="_blank">
+      <i class="bi bi-paperclip"></i>
+    </a>
+{% endif %}
+
+{% if request.user|has_permission:'qualidade_fornecimento.delete_controleservicoexterno' %}
+    {% include "partials/global/_botao_excluir.html" with objeto=servico url_excluir='excluir_controle_servico_externo' %}
+{% endif %}
+
                 </div>
               </td>
             </tr>
