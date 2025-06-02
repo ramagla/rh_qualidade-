@@ -57,10 +57,15 @@ class ControleServicoExterno(models.Model):
 
 
     def calcular_atraso_em_dias(self):
-        if self.data_retorno:
-            atraso = (self.data_retorno - self.calcular_prev_entrega()).days
-            return max(atraso, 0)
-        return 0
+        prev_entrega = self.calcular_prev_entrega()
+        
+        if not prev_entrega or not self.data_retorno:
+            # Se não tem data de retorno ou previsão, não calcula atraso
+            return 0
+        
+        atraso = (self.data_retorno - prev_entrega).days
+        return atraso if atraso > 0 else 0
+
 
     def calcular_ip(self):
         atraso = self.calcular_atraso_em_dias()
