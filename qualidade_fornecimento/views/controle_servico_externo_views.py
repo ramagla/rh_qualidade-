@@ -63,19 +63,12 @@ def editar_controle_servico_externo(request, id):
         form = ControleServicoExternoForm(request.POST, instance=servico)
         formset = RetornoDiarioFormSet(request.POST, instance=servico, prefix="retornos")
 
-        print("POST recebido")
-        print("Form válido?", form.is_valid())
-        print("Formset válido?", formset.is_valid())
-        print("Erros do formset:", formset.errors)
-
         if form.is_valid() and formset.is_valid():
             servico = form.save(commit=False)
             servico.save()
 
-            # Salva apenas retornos modificados
-            for retorno_form in formset.forms:
-                if retorno_form.has_changed():
-                    retorno_form.save()
+            # ✅ Salva todo o formset (inclui exclusões)
+            formset.save()
 
             # Atualiza campos automáticos
             servico.total = servico.calcular_total()
@@ -103,6 +96,7 @@ def editar_controle_servico_externo(request, id):
             "status_inspecao": status_inspecao,
         },
     )
+
 
 
 @login_required
@@ -212,3 +206,60 @@ def visualizar_controle_servico_externo(request, id):
         "controle_servico_externo/visualizar_controle_servico_externo.html",
         {"servico": servico}
     )
+
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from datetime import datetime
+import json
+
+from qualidade_fornecimento.models import ControleServicoExterno, RetornoDiario
+
+@csrf_exempt
+@login_required
+def registrar_entrega_servico_externo(request, servico_id):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            data_entrega = data.get("data")
+            quantidade = data.get("quantidade")
+
+            if not data_entrega or not quantidade:
+                return JsonResponse({"success": False, "error": "Dados incompletos."})
+
+            data_entrega = datetime.strptime(data_entrega, "%Y-%m-%d").date()
+            quantidade = float(quantidade)
+
+            servico = ControleServicoExterno.objects.get(id=servico_id)
+
+            # Cria a nova entrega
+            retorno = RetornoDiario.objects.create(
+                servico=servico,
+                data=data_entrega,
+                quantidade=quantidade
+            )
+
+            # Atualiza o servico
+            servico.total = servico.calcular_total()
+            servico.status2 = servico.calcular_status2()
+            servico.atraso_em_dias = servico.calcular_atraso_em_dias()
+            servico.ip = servico.calcular_ip()
+            servico.save()
+
+            return JsonResponse({
+                    "success": True,
+                    "nova_entrega_data": retorno.data.strftime("%d/%m/%Y"),
+                    "nova_entrega_quantidade": f"{retorno.quantidade:.2f}",
+                    "novo_status": servico.status2
+                })
+
+
+        except ControleServicoExterno.DoesNotExist:
+            print(f"Erro: Serviço com ID {servico_id} não encontrado.")
+            return JsonResponse({"success": False, "error": "Serviço não encontrado."})
+
+        except Exception as e:
+            print("Erro ao registrar entrega:", e)
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Método não permitido."})

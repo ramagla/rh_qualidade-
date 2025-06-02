@@ -297,58 +297,56 @@
   {% endfor %}
 {% endfor %}
 
-                {{ formset.management_form }}
-              <div id="retorno-formset">
+{{ formset.management_form }}
+
+<div id="retorno-formset">
   {% for retorno_form in formset %}
     <div class="card mb-3 shadow-sm" style="border: 1px solid #dee2e6; border-radius: 0.5rem;">
-      <div class="row g-3 p-3">
+      <div class="row g-3 p-3 align-items-end">
 
         {# ✅ Campos ocultos necessários para o formset funcionar corretamente #}
         {% for hidden_field in retorno_form.hidden_fields %}
           {{ hidden_field }}
         {% endfor %}
 
-        <div class="col-md-6">
-          <i class="bi bi-calendar-check me-2" aria-hidden="true"></i> Data:
+        <div class="col-md-5">
+          <label class="form-label">
+            <i class="bi bi-calendar-check me-2" aria-hidden="true"></i> Data:
+          </label>
           {{ retorno_form.data|add_class:"form-control" | attr:"placeholder:Selecione a data" }}
         </div>
-        <div class="col-md-6">
-          <i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i> Quantidade Retornada:
+
+        <div class="col-md-5">
+          <label class="form-label">
+            <i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i> Quantidade Retornada:
+          </label>
           {{ retorno_form.quantidade|add_class:"form-control" | attr:"placeholder:Ex: 50" }}
         </div>
+
+        <div class="col-md-2 text-end">
+          <label class="form-label d-none d-md-block">&nbsp;</label>
+          
+          {# Campo DELETE oculto #}
+          {{ retorno_form.DELETE|add_class:"d-none" }}
+        
+          <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-2"
+                  onclick="this.previousElementSibling.checked = true; this.closest('.card').style.display='none';">
+            <i class="bi bi-x-circle"></i> Excluir
+          </button>
+        </div>
+
       </div>
     </div>
   {% endfor %}
+
+  <button type="button" class="btn btn-outline-primary mt-3" id="add-retorno">
+    <i class="bi bi-plus-circle"></i> Adicionar Retorno
+  </button>
 </div>
 
+</form>  {# <<< AQUI FECHA O FORM CORRETAMENTE #}
 
-
-                <button type="button" class="btn btn-outline-primary mt-3" id="add-retorno">
-                    <i class="bi bi-plus-circle"></i> Adicionar Retorno
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Botões de Ação -->
-    <div class="col-12 text-center mt-4">
-  <button type="submit" id="btnSalvar" class="btn btn-primary me-2">
-  <span id="spinnerSalvar" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-<i class="bi bi-save" aria-hidden="true"></i> Salvar
-</button>
-
-
-  <a href="{% url 'listar_controle_servico_externo' %}" 
-   id="btnCancelar" 
-   class="btn btn-secondary ms-2" 
-   onclick="desabilitarCancelar()">
-  <span id="spinnerCancelar" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-<i class="bi bi-arrow-left" aria-hidden="true"></i> Cancelar
-</a>
-
-</div>
-
-</form>
+{% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=editar url_voltar='listar_controle_servico_externo' %}
 
 </div>
 

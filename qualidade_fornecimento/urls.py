@@ -43,6 +43,7 @@ from .views.fornecedores_views import (
     visualizar_fornecedor,
 )
 from qualidade_fornecimento.views.home_views import dashboard_qualidade_view
+from qualidade_fornecimento.views.controle_servico_externo_views import registrar_entrega_servico_externo
 
 urlpatterns = [
     # Home
@@ -188,5 +189,9 @@ urlpatterns = [
     path("normas/aprovar/", norma_views.aprovar_normas, name="aprovar_normas"),
     path("norma-aprovada/<int:id>/", norma_aprovada, name="verificar_norma_aprovada"),
 
-
+    path(
+            "controle-servico-externo/<int:servico_id>/registrar-entrega/",
+            registrar_entrega_servico_externo,
+            name="registrar_entrega_servico_externo"
+        ),
 ]

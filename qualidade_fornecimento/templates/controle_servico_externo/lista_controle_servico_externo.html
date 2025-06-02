@@ -74,11 +74,12 @@
         <i class="bi bi-plus-circle me-2"></i> Novo Serviço Externo
       </a>
     {% endif %}
-    {% if request.user|has_permission:'qualidade_fornecimento.add_relatorioinspecaoservico' %}
+    {% if request.user|has_permission:'qualidade_fornecimento.add_inspecaoservicoexterno' %}
     <button type="button" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalNovaInspecao">
         <i class="bi bi-clipboard-check me-2"></i> Nova Inspeção
-      </button>
+    </button>
     {% endif %}
+    
   </div>
 
 <!-- Modal de Nova Inspeção de Serviço -->
@@ -166,37 +167,50 @@
                       </div>
                       <div class="modal-body">
                         {% if servico.retornos.all %}
-                        <div class="table-responsive">
-                          <table class="table table-sm table-bordered text-center align-middle mb-0">
-                            <thead class="table-light">
-                              <tr>
-                                <th><i class="bi bi-calendar-event me-1"></i> Data</th>
-                                <th><i class="bi bi-box-fill me-1"></i> Quantidade</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {% for retorno in servico.retornos.all %}
-                              <tr>
-                                <td>{{ retorno.data|date:"d/m/Y" }}</td>
-                                <td>{{ retorno.quantidade|floatformat:2 }} kg/peças</td>
-                              </tr>
-                              {% endfor %}
-                            </tbody>
-                          </table>
-                        </div>
-                        {% else %}
-                        <p class="text-muted mb-0">Nenhuma entrega registrada.</p>
-                        {% endif %}
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+<div class="table-responsive mb-3">
+  <table class="table table-sm table-bordered text-center align-middle mb-0">
+    <thead class="table-light">
+      <tr>
+        <th><i class="bi bi-calendar-event me-1"></i> Data</th>
+        <th><i class="bi bi-box-fill me-1"></i> Quantidade</th>
+      </tr>
+    </thead>
+    <tbody id="entregas-tbody-{{ servico.id }}">
+      {% for retorno in servico.retornos.all %}
+      <tr>
+        <td>{{ retorno.data|date:"d/m/Y" }}</td>
+        <td>{{ retorno.quantidade|floatformat:2 }} kg/peças</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted mb-3" id="entregas-vazio-{{ servico.id }}">Nenhuma entrega registrada.</p>
+{% endif %}
+
+<!-- Formulário de nova entrega -->
+<div class="border p-2 rounded bg-light">
+  <h6 class="mb-2"><i class="bi bi-plus-circle me-1"></i> Registrar Nova Entrega</h6>
+  <div class="row g-2">
+    <div class="col-md-6">
+      <input type="date" id="nova-entrega-data-{{ servico.id }}" class="form-control" placeholder="Data da entrega">
+    </div>
+    <div class="col-md-6">
+      <input type="number" step="0.01" id="nova-entrega-quantidade-{{ servico.id }}" class="form-control" placeholder="Quantidade">
+    </div>
+  </div>
+  <div class="text-end mt-3">
+    <button type="button" class="btn btn-success btn-sm"
+            onclick="registrarEntrega({{ servico.id }})">
+      <i class="bi bi-check-circle me-1"></i> Salvar Entrega
+    </button>
+  </div>
+</div>
+
                               </td>
               <td>{{ servico.quantidade_enviada|default:"-" }}</td>
-              <td>
+              <td id="status-cell-{{ servico.id }}">
                 {% if servico.status2 == "OK" %}
                   <span class="badge bg-success">OK</span>
                 {% elif servico.status2 == "Atenção Saldo" %}
@@ -205,6 +219,7 @@
                   <span class="badge bg-secondary">Saldo Acima</span>
                 {% endif %}
               </td>
+              
               <td>
                 {% if servico.inspecao %}
                   {% if servico.inspecao.status_geral == "Aprovado" %}
@@ -387,6 +402,76 @@
     </div>
   </div>
 </div>
-
+<script>
+  function registrarEntrega(servicoId) {
+    const data = document.getElementById(`nova-entrega-data-${servicoId}`).value;
+    const quantidade = document.getElementById(`nova-entrega-quantidade-${servicoId}`).value;
+  
+    if (!data || !quantidade) {
+      alert("Por favor, preencha a data e a quantidade.");
+      return;
+    }
+  
+    fetch(`/qualidade/controle-servico-externo/${servicoId}/registrar-entrega/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify({
+        data: data,
+        quantidade: quantidade
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Atualiza a tabela visualmente
+        const tbody = document.getElementById(`entregas-tbody-${servicoId}`);
+        if (tbody) {
+          tbody.insertAdjacentHTML("beforeend", `
+            <tr>
+              <td>${data.nova_entrega_data}</td>
+              <td>${data.nova_entrega_quantidade} kg/peças</td>
+            </tr>
+          `);
+        }
+    
+        // Esconde o texto "Nenhuma entrega registrada", se estava visível
+        const vazioMsg = document.getElementById(`entregas-vazio-${servicoId}`);
+        if (vazioMsg) vazioMsg.style.display = "none";
+    
+        // Limpa campos
+        document.getElementById(`nova-entrega-data-${servicoId}`).value = "";
+        document.getElementById(`nova-entrega-quantidade-${servicoId}`).value = "";
+    
+        // Atualiza a coluna "Status" da lista
+        const statusCell = document.querySelector(`#status-cell-${servicoId}`);
+        if (statusCell) {
+          if (data.novo_status === "OK") {
+            statusCell.innerHTML = '<span class="badge bg-success">OK</span>';
+          } else if (data.novo_status === "Atenção Saldo") {
+            statusCell.innerHTML = '<span class="badge bg-warning text-dark">Atenção Saldo</span>';
+          } else {
+            statusCell.innerHTML = '<span class="badge bg-secondary">Saldo Acima</span>';
+          }
+        }
+    
+        // Fecha a modal automaticamente
+        const modalEntrega = bootstrap.Modal.getInstance(document.getElementById(`modalEntrega${servicoId}`));
+        if (modalEntrega) modalEntrega.hide();
+    
+      } else {
+        alert("Erro ao registrar entrega.");
+      }
+    })
+    
+    .catch(error => {
+      console.error("Erro:", error);
+      alert("Erro ao registrar entrega.");
+    });
+  }
+  </script>
+  
 
 {% endblock %}
