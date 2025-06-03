@@ -118,4 +118,4 @@ def gerar_pdf_e_salvar(f045):
     # Salva no FileField
     f045.pdf.save(filename, ContentFile(pdf_bytes), save=True)
 
-    return f045.pdf.url
+    return os.path.basename(f045.pdf.name)  # só o nome do arquivo

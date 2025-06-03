@@ -164,7 +164,8 @@ def _renderizar_pdf_f045(request, relacao_id, salvar_pdf=False):
 
     if salvar_pdf:
         filename = f"F045_Relatorio_{f045.nro_relatorio}.pdf"
-        relacao.anexo_f045.save(filename, ContentFile(pdf_bytes))
-        return redirect("tb050_list")
+        f045.pdf.save(filename, ContentFile(pdf_bytes))
+        return filename  # ⚠️ Retorna o nome do arquivo!
+
     else:
         return HttpResponse(pdf_bytes, content_type="application/pdf")
