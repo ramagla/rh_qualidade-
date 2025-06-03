@@ -3,6 +3,7 @@
 import base64
 import logging
 from datetime import date
+from django.templatetags.static import static
 
 import openpyxl  # se desejar usar a importação via Excel
 from django.contrib import messages
@@ -391,7 +392,7 @@ def imprimir_etiquetas_tb050(request, id):
                 "rolos": rolos_selecionados,
                 "request": request,
                 "data_atual": date.today().strftime("%d/%m/%Y"),
-                "logo_url": request.build_absolute_uri("/static/logo.png"),
+                "logo_url": request.build_absolute_uri(static("img/logo.png")),
             },
         )
 
