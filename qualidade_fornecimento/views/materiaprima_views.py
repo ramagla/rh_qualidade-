@@ -4,6 +4,8 @@ import base64
 import logging
 from datetime import date
 from django.templatetags.static import static
+from django.conf import settings
+import os
 
 import openpyxl  # se desejar usar a importação via Excel
 from django.contrib import messages
@@ -385,6 +387,8 @@ def imprimir_etiquetas_tb050(request, id):
             rolo.qrcode_url = f"data:image/png;base64,{qr_code_base64}"
 
         # Renderiza o template PDF diretamente
+        logo_url = f"file://{os.path.join(settings.STATIC_ROOT, 'img', 'logo.png')}"
+
         html_string = render_to_string(
             "tb050/etiqueta_lote_pdf.html",
             {
@@ -392,9 +396,10 @@ def imprimir_etiquetas_tb050(request, id):
                 "rolos": rolos_selecionados,
                 "request": request,
                 "data_atual": date.today().strftime("%d/%m/%Y"),
-                "logo_url": request.build_absolute_uri(static("img/logo.png")),
+                "logo_url": logo_url,
             },
         )
+
 
         with tempfile.NamedTemporaryFile(delete=True) as output:
             html = HTML(string=html_string, base_url=request.build_absolute_uri("/"))
@@ -488,6 +493,8 @@ def imprimir_etiquetas_pdf(request, id):
     )
 
     # Renderiza o template PDF com os dados atualizados
+    logo_url = f"file://{os.path.join(settings.STATIC_ROOT, 'img', 'logo.png')}"
+
     html_string = render_to_string(
         "tb050/etiqueta_lote_pdf.html",
         {
@@ -495,9 +502,10 @@ def imprimir_etiquetas_pdf(request, id):
             "rolos": rolos,
             "request": request,
             "data_atual": date.today().strftime("%d/%m/%Y"),
-            "logo_url": request.build_absolute_uri("/static/logo.png"),
+            "logo_url": logo_url,
         },
     )
+
 
     # Geração do PDF utilizando WeasyPrint
     with tempfile.NamedTemporaryFile(delete=True) as output:
