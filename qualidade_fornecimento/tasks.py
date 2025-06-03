@@ -16,9 +16,19 @@ def gerar_pdf_f045_background(f045_id: int):
         print(f"⚠️ Relatório com ID {f045_id} não encontrado. Task abortada.")
         return
 
-    full_path = gerar_pdf_e_salvar(f045)
-    with open(full_path, "rb") as fp:
-        f045.pdf.save(os.path.basename(full_path), File(fp), save=True)
+    # 1️⃣ Gera o PDF e recebe o nome do arquivo
+    nome_arquivo = gerar_pdf_e_salvar(f045)
+
+    # 2️⃣ Monta o path real no disco
+    full_path = os.path.join(settings.MEDIA_ROOT, "f045", nome_arquivo)
+
+    # 3️⃣ Salva no campo pdf
+    if os.path.exists(full_path):
+        with open(full_path, "rb") as fp:
+            f045.pdf.save(nome_arquivo, File(fp), save=True)
+        print(f"✅ PDF salvo com sucesso: {full_path}")
+    else:
+        print(f"❌ ERRO: Arquivo PDF não encontrado: {full_path}")
 
 
 
