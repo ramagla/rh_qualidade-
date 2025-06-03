@@ -133,25 +133,36 @@ def salvar_dispositivo_e_cotas(request, dispositivo_form, cota_formset, disposit
 
 
 def cadastrar_dispositivo(request):
+    CotaFormSet = modelformset_factory(
+        Cota,
+        fields=("numero", "valor_minimo", "valor_maximo"),
+        extra=0,
+        can_delete=True,
+    )
+
     if request.method == "POST":
         dispositivo_form = DispositivoForm(request.POST, request.FILES)
+        cota_formset = CotaFormSet(request.POST, queryset=Cota.objects.none())
 
-        if dispositivo_form.is_valid():
-            salvar_dispositivo_e_cotas(request, dispositivo_form)
+        if dispositivo_form.is_valid() and cota_formset.is_valid():
+            salvar_dispositivo_e_cotas(request, dispositivo_form, cota_formset, None)
             return redirect("lista_dispositivos")
 
     else:
         dispositivo_form = DispositivoForm()
+        cota_formset = CotaFormSet(queryset=Cota.objects.none())
 
     return render(
         request,
         "dispositivos/form_dispositivo.html",
         {
             "form": dispositivo_form,
+            "cotas_forms": cota_formset,
             "edicao": False,
             "url_voltar": "lista_dispositivos",
         },
     )
+
 
 
 def editar_dispositivo(request, dispositivo_id):
