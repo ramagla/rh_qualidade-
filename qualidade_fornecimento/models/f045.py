@@ -34,31 +34,31 @@ class RelatorioF045(models.Model):
 
     # ❸ Resultados da composição química
     c_user = models.DecimalField(
-        "C (%)", max_digits=6, decimal_places=3, null=True, blank=True
+        "C (%)", max_digits=7, decimal_places=4, null=True, blank=True
     )
     mn_user = models.DecimalField(
-        "Mn (%)", max_digits=6, decimal_places=3, null=True, blank=True
+        "Mn (%)", max_digits=7, decimal_places=4, null=True, blank=True
     )
     si_user = models.DecimalField(
-        "Si (%)", max_digits=6, decimal_places=3, null=True, blank=True
+        "Si (%)", max_digits=7, decimal_places=4, null=True, blank=True
     )
     p_user = models.DecimalField(
-        "P (%)", max_digits=6, decimal_places=3, null=True, blank=True
+        "P (%)", max_digits=7, decimal_places=4, null=True, blank=True
     )
     s_user = models.DecimalField(
-        "S (%)", max_digits=6, decimal_places=3, null=True, blank=True
+        "S (%)", max_digits=7, decimal_places=4, null=True, blank=True
     )
     cr_user = models.DecimalField(
-        "Cr (%)", max_digits=6, decimal_places=3, null=True, blank=True
+        "Cr (%)", max_digits=7, decimal_places=4, null=True, blank=True
     )
     ni_user = models.DecimalField(
-        "Ni (%)", max_digits=6, decimal_places=3, null=True, blank=True
+        "Ni (%)", max_digits=7, decimal_places=4, null=True, blank=True
     )
     cu_user = models.DecimalField(
-        "Cu (%)", max_digits=6, decimal_places=3, null=True, blank=True
+        "Cu (%)", max_digits=7, decimal_places=4, null=True, blank=True
     )
     al_user = models.DecimalField(
-        "Al (%)", max_digits=6, decimal_places=3, null=True, blank=True
+        "Al (%)", max_digits=7, decimal_places=4, null=True, blank=True
     )
 
     laudo_composicao = models.CharField(
@@ -113,7 +113,11 @@ class RelatorioF045(models.Model):
         for sigla, (vmin, vmax) in limites.items():
             valor = getattr(self, f"{sigla}_user")
 
-            # >>> [NOVO] Se intervalo for 0–0, ignora a validação (considera aprovado)
+            # Se intervalo não definido → ignora (considera aprovado)
+            if vmin is None or vmax is None:
+                continue
+
+            # Se intervalo for 0–0 → ignora (considera aprovado)
             if vmin == 0 and vmax == 0:
                 continue
 
@@ -124,6 +128,7 @@ class RelatorioF045(models.Model):
                 return "Re"
 
         return "Ap"
+
 
     def avaliar_interno(self):
         rolos = self.relacao.rolos.all()

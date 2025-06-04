@@ -147,9 +147,9 @@ def gerar_f045(request, relacao_id):
         sigla = e["sigla"].lower()
         vmin = parse_decimal(e["min"])
         vmax = parse_decimal(e["max"])
-        # só inclui se ambos forem Decimal válidos
-        if vmin is not None and vmax is not None:
-            limites[sigla] = (vmin, vmax)
+        # INCLUI SEMPRE — mesmo que vmin ou vmax sejam None
+        limites[sigla] = (vmin, vmax)
+
 
     form = RelatorioF045Form(
         request.POST or None, instance=f045, limites_quimicos=limites

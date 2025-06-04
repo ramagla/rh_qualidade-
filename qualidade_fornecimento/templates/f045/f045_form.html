@@ -338,16 +338,18 @@
                     <div class="col-md-2 p-1" style="min-width: 160px;">
                       <div class="d-flex gap-2">
                         <input name="bitola_espessura_{{ rolo.id }}" id="bitola_espessura_{{ rolo.id }}" type="text"
-                               class="form-control text-center"
-                               value="{{ rolo.bitola_espessura|default_if_none:'' }}"
-                               oninput="validarBitolaETracao({{ rolo.id }})"
-                               placeholder="Esp.">
+                            class="form-control text-center"
+                            value="{{ rolo.bitola_espessura|floatformat:4|default_if_none:'' }}"
+                            oninput="validarBitolaETracao({{ rolo.id }})"
+                            placeholder="Esp.">
+                 
                         {% if rolo.tb050.materia_prima.largura %}
-                          <input name="bitola_largura_{{ rolo.id }}" id="bitola_largura_{{ rolo.id }}" type="text"
-                                 class="form-control text-center"
-                                 value="{{ rolo.bitola_largura|default_if_none:'' }}"
-                                 oninput="validarBitolaETracao({{ rolo.id }})"
-                                 placeholder="Larg.">
+                        <input name="bitola_largura_{{ rolo.id }}" id="bitola_largura_{{ rolo.id }}" type="text"
+                            class="form-control text-center"
+                            value="{{ rolo.bitola_largura|floatformat:4|default_if_none:'' }}"
+                            oninput="validarBitolaETracao({{ rolo.id }})"
+                            placeholder="Larg.">
+                 
                         {% endif %}
                       </div>
                     </div>
@@ -370,9 +372,10 @@
 
                   <td>
                     <input name="tracao_{{ rolo.id }}" id="tracao_{{ rolo.id }}" type="text"
-                           class="form-control text-center"
-                           value="{{ rolo.tracao|default_if_none:'' }}"
-                           oninput="validarBitolaETracao({{ rolo.id }})">
+                      class="form-control text-center"
+                      value="{{ rolo.tracao|floatformat:4|default_if_none:'' }}"
+                      oninput="validarBitolaETracao({{ rolo.id }})">
+
                   </td>
 
                   <td>

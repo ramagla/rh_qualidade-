@@ -127,8 +127,8 @@
 
 
 
-      <td>{{ item.min|stringformat:"0.3f" }} – {{ item.max|stringformat:"0.3f" }}</td>
-      <td>{{ item.valor|stringformat:"0.3f" }}</td>
+      <td>{{ item.min|stringformat:"0.4f" }} – {{ item.max|stringformat:"0.4f" }}</td>
+      <td>{{ item.valor|stringformat:"0.4f" }}</td>
       <td>
         {% if item.valor == None or item.valor == "-" or item.valor == "" %}
           <span style="color: green;">✔️</span>

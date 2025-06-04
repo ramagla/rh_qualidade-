@@ -392,3 +392,10 @@ def primeiro_ultimo_nome_inline(nome_completo):
     if len(partes) == 1:
         return partes[0]
     return f"{partes[0]} {partes[-1]}"
+
+@register.filter(name='add_class')
+def add_class(field, css_class):
+    from django.forms.boundfield import BoundField
+    if isinstance(field, BoundField):
+        return field.as_widget(attrs={"class": css_class})
+    return field  # se não for campo, retorna como está (não tenta aplicar .as_widget)

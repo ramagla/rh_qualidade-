@@ -61,11 +61,11 @@ class RelatorioF045Form(forms.ModelForm):
             self.fields[campo] = forms.DecimalField(
                 label=sigla.upper(),
                 required=False,
-                max_digits=6,
-                decimal_places=3,
+                max_digits=7,
+                decimal_places=4,
                 widget=forms.NumberInput(
                     {
-                        "step": "0.001",
+                        "step": "0.0001",
                         "class": "form-control text-center encontrado-input",
                     }
                 ),
@@ -87,11 +87,15 @@ class RelatorioF045Form(forms.ModelForm):
             # ignora N/A (0–0) ou valor vazio
             if valor is None or (vmin == 0 and vmax == 0):
                 continue
+            # Se vmin ou vmax são None, não valida — considera aprovado
+            if vmin is None or vmax is None:
+                continue
             if not (vmin <= valor <= vmax):
                 self.add_error(
                     f"{sigla}_user",
-                    f"{sigla.upper()} fora do intervalo {vmin:g} – {vmax:g} %",
+                    f"{sigla.upper()} fora do intervalo {vmin:g} – {vmax:g} %",
                 )
+
 
         return cleaned
 

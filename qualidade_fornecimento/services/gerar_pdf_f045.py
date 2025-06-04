@@ -20,15 +20,17 @@ def gerar_pdf_e_salvar(f045):
     relacao = f045.relacao
     rolos = relacao.rolos.all()
 
-    dominio = "http://127.0.0.1:8000"
-    logo_url = dominio + static("logo.png")
-    seguranca_url = dominio + static("seguranca.png")
+    logo_path = os.path.join(settings.STATIC_ROOT, "img", "logo.png")
+    seguranca_path = os.path.join(settings.STATIC_ROOT, "img", "seguranca.png")
+
+    logo_url = f"file://{logo_path}"
+    seguranca_url = f"file://{seguranca_path}"
+
 
     try:
         norma = NormaTecnica.objects.get(nome_norma=relacao.materia_prima.norma)
-        composicao = NormaComposicaoElemento.objects.get(
-            norma=norma, tipo_abnt=relacao.materia_prima.tipo_abnt
-        )
+        composicao = NormaComposicaoElemento.objects.filter(norma=norma).first()
+
         bitola = (
             relacao.materia_prima.bitola.replace(",", ".")
             if relacao.materia_prima.bitola
@@ -53,35 +55,44 @@ def gerar_pdf_e_salvar(f045):
         composicao = None
         norma_tracao = None
 
-    encontrados = []
-    if composicao:
-        elementos = [
-            ("C", "Carbono", composicao.c_min, composicao.c_max, getattr(f045, "c_user", None)),
-            ("Mn", "Manganês", composicao.mn_min, composicao.mn_max, getattr(f045, "mn_user", None)),
-            ("Si", "Silício", composicao.si_min, composicao.si_max, getattr(f045, "si_user", None)),
-            ("P", "Fósforo", composicao.p_min, composicao.p_max, getattr(f045, "p_user", None)),
-            ("S", "Enxofre", composicao.s_min, composicao.s_max, getattr(f045, "s_user", None)),
-            ("Cr", "Cromo", composicao.cr_min, composicao.cr_max, getattr(f045, "cr_user", None)),
-            ("Ni", "Níquel", composicao.ni_min, composicao.ni_max, getattr(f045, "ni_user", None)),
-            ("Cu", "Cobre", composicao.cu_min, composicao.cu_max, getattr(f045, "cu_user", None)),
-            ("Al", "Alumínio", composicao.al_min, composicao.al_max, getattr(f045, "al_user", None)),
-        ]
-        for sigla, nome, vmin, vmax, valor in elementos:
-            try:
-                val = Decimal(str(valor).replace(",", ".")) if valor is not None else None
-                ok = (vmin == 0 and vmax == 0) or (val is not None and vmin is not None and vmax is not None and vmin <= val <= vmax)
-            except Exception:
-                val = valor
-                ok = False
+    campos_quimicos = [
+    ("C", "Carbono"),
+    ("Mn", "Manganês"),
+    ("Si", "Silício"),
+    ("P", "Fósforo"),
+    ("S", "Enxofre"),
+    ("Cr", "Cromo"),
+    ("Ni", "Níquel"),
+    ("Cu", "Cobre"),
+    ("Al", "Alumínio"),
+]
 
-            encontrados.append({
-                "sigla": sigla,
-                "nome_elemento": nome,
-                "min": vmin,
-                "max": vmax,
-                "valor": val,
-                "ok": ok,
-            })
+    encontrados = []
+
+    for sigla, nome in campos_quimicos:
+        # Se composicao existir, pega min e max — senão, None
+        vmin = getattr(composicao, f"{sigla.lower()}_min", None) if composicao else None
+        vmax = getattr(composicao, f"{sigla.lower()}_max", None) if composicao else None
+        valor = getattr(f045, f"{sigla.lower()}_user", None)
+
+        try:
+            val = Decimal(str(valor).replace(",", ".")) if valor is not None else None
+            ok = (vmin == 0 and vmax == 0) or (val is not None and vmin is not None and vmax is not None and vmin <= val <= vmax)
+            if vmin is None or vmax is None:
+                ok = True  # Se não tem limites, considera aprovado
+        except Exception:
+            val = valor
+            ok = False
+
+        encontrados.append({
+            "sigla": sigla,
+            "nome_elemento": nome,
+            "min": vmin,
+            "max": vmax,
+            "valor": val,
+            "ok": ok,
+        })
+
 
     assinatura_nome = f045.usuario.get_full_name() or f045.usuario.username
     assinatura_email = f045.usuario.email
@@ -102,8 +113,9 @@ def gerar_pdf_e_salvar(f045):
     }
 
     html_string = render_to_string("f045/f045_pdf.html", context)
-    html = HTML(string=html_string, base_url=dominio)
+    html = HTML(string=html_string, base_url=f"file://{settings.STATIC_ROOT}")
     pdf_bytes = html.write_pdf()
+
 
     # Caminho e nome do arquivo
     filename = f"F045_Relatorio_{f045.nro_relatorio}.pdf"

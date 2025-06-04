@@ -1,8 +1,10 @@
+import os
 import tempfile
 from datetime import date
 from decimal import Decimal
 from io import BytesIO
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.http import HttpResponse
@@ -45,8 +47,11 @@ def _renderizar_pdf_f045(request, relacao_id, salvar_pdf=False):
     f045 = relacao.f045
     rolos = relacao.rolos.all()
 
-    logo_url = request.build_absolute_uri(static("logo.png"))
-    seguranca_url = request.build_absolute_uri(static("seguranca.png"))
+    logo_path = os.path.join(settings.STATIC_ROOT, "img", "logo.png")
+    seguranca_path = os.path.join(settings.STATIC_ROOT, "img", "seguranca.png")
+
+    logo_url = f"file://{logo_path}"
+    seguranca_url = f"file://{seguranca_path}"
 
     # Recuperar norma, composição e faixa de tração
     try:

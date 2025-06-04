@@ -52,15 +52,16 @@ class RelatorioF045Form(forms.ModelForm):
             self.fields[campo] = forms.DecimalField(
                 label=sigla.upper(),
                 required=False,
-                max_digits=6,
-                decimal_places=3,
+                max_digits=7,
+                decimal_places=4,
                 widget=forms.NumberInput(
                     {
-                        "step": "0.001",
+                        "step": "0.0001",
                         "class": "form-control text-center encontrado-input",
                     }
                 ),
             )
+
             if getattr(self.instance, campo, None) is not None:
                 self.fields[campo].initial = getattr(self.instance, campo)
 
