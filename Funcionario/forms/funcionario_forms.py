@@ -104,6 +104,21 @@ class FuncionarioForm(forms.ModelForm):
         widget=forms.Select(attrs={"class": "form-select"}),
     )
 
+
+    # Novo campo Tamanho da Camisa
+    camisa = forms.ChoiceField(
+        choices=Funcionario.TAMANHO_CAMISA_CHOICES,
+        label="Tamanho da Camisa",
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+
+    # Novo campo Número do Calçado
+    calcado = forms.IntegerField(
+        label="Número do Calçado",
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control"})
+    )
     class Meta:
         model = Funcionario
         fields = "__all__"  # Ou liste explicitamente os campos, incluindo 'status'

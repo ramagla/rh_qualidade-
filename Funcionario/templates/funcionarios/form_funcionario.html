@@ -249,6 +249,33 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 📋 EPIs -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingEPIs">
+        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEPIs" aria-expanded="false" aria-controls="collapseEPIs">
+            <i class="bi bi-shield-check me-2"></i> EPIs
+        </button>
+    </h2>
+    <div id="collapseEPIs" class="accordion-collapse collapse" aria-labelledby="headingEPIs" data-bs-parent="#accordionColaborador">
+        <div class="accordion-body row g-3">
+            <div class="col-md-6">
+                <label for="{{ form.camisa.id_for_label }}" class="form-label">
+                    <i class="bi bi-t-shirt me-1"></i> Tamanho da Camisa:
+                </label>
+                {{ form.camisa|add_class:"form-select" }}
+            </div>
+
+            <div class="col-md-6">
+                <label for="{{ form.calcado.id_for_label }}" class="form-label">
+                    <i class="bi bi-bootstrap-reboot me-1"></i> Número do Calçado:
+                </label>
+                {{ form.calcado }}
+            </div>
+        </div>
+    </div>
+</div>
+
         </div>
 
         <!-- Botões -->

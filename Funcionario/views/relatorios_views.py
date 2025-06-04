@@ -566,3 +566,5 @@ def relatorio_banco_horas(request):
     }
 
     return render(request, "relatorios/relatorio_banco_horas.html", context)
+
+

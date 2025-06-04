@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ficha de EPIs{% endblock %}
+
+{% block content %}
+
+<!-- Importando Bootstrap 5 e Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+
+<div class="container my-4">
+
+    {% for funcionario in funcionarios %}
+
+    <!-- Card do Funcionário -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div class="flex-shrink-0">
+                <img src="{% static 'img/logo_branco.png' %}" alt="Logo" style="width: 100px;">
+            </div>
+            <div class="text-center flex-grow-1">
+                <h5 class="mb-0">Recibo de Entrega de Material de Segurança</h5>
+                <small>Norma Regulamentadora n° 6 do Ministério do Trabalho</small>
+            </div>
+            <div class="text-end flex-shrink-0">
+                <strong>Ano:</strong> {{ now|date:"Y" }}
+            </div>
+        </div>
+        
+
+        <div class="card-body">
+            <div class="dados-declaracao-container d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+        
+                <!-- Coluna da foto e dados -->
+                <div class="col-dados flex-grow-1">
+                    <div class="d-flex flex-row w-100 border p-3 rounded bg-white">
+                        <!-- Foto -->
+                        <div class="me-3 foto-funcionario d-flex flex-column align-items-center justify-content-center">
+                            {% if funcionario.foto %}
+                                <img src="{{ funcionario.foto.url }}" class="img-thumbnail mb-2" style="width: 100px; height: 120px; object-fit: cover;">
+                            {% else %}
+                                <div class="border border-secondary mb-2" style="width: 120px; height: 140px;"></div>
+                            {% endif %}
+                            <div class="small"></div>
+                        </div>
+                        
+                
+                        <!-- Tabela de dados -->
+                        <div class="flex-grow-1">
+                            <table class="table table-sm table-bordered mb-0 align-middle">
+                                <tr>
+                                    <th><i class="bi bi-person-fill me-1"></i> Funcionário</th>
+                                    <td>{{ funcionario.nome }}</td>
+                                </tr>
+                                <tr>
+                                    <th><i class="bi bi-building me-1"></i> Setor</th>
+                                    <td>{{ funcionario.local_trabalho }}</td>
+                                </tr>
+                                <tr>
+                                    <th><i class="bi bi-briefcase-fill me-1"></i> Função</th>
+                                    <td>{{ funcionario.cargo_atual }}</td>
+                                </tr>
+                                <tr>
+                                    <th><i class="bi bi-calendar-event me-1 "></i> Data de Admissão</th>
+                                    <td>{{ funcionario.data_admissao|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th><i class="bi bi-tag me-1"></i> Camisa</th>
+                                    <td>{{ funcionario.get_camisa_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th><i class="bi-clipboard-check me-1"></i> Calçado</th>
+                                    <td>{{ funcionario.calcado }}</td>
+                                </tr>
+                                <tr>
+                                    <th><i class="bi bi-card-list me-1"></i> Matrícula</th>
+                                    <td>{{ funcionario.numero_registro }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Coluna da declaração -->
+                <div class="col-declaracao" style="flex: 0 0 35%;">
+                    <div class="border rounded bg-light p-3 d-flex flex-column justify-content-between h-100">
+                        <div>
+                            <h6 class="text-primary"><i class="bi bi-clipboard-check"></i> Declaração</h6>
+                            <p class="small">
+                                Declaro para os devidos fins que recebi gratuitamente os equipamentos de proteção individual especificados neste documento. 
+                                Recebi treinamento e conscientização sobre seu uso adequado e sua importância para minha segurança no trabalho.
+                            </p>
+                            <p class="small mb-4">
+                                Estou ciente de que, em caso de uso inadequado, perda ou mau uso, estarei sujeito a penalidades.
+                            </p>
+                        </div>
+                        <div class="text-center mt-3">
+                            <hr>
+                            <div>___________________________________________</div>
+                            <div class="small">{{ funcionario.nome }}</div>
+                        </div>
+                    </div>
+                </div>
+        
+            </div> <!-- fecha .dados-declaracao-container -->
+        </div> <!-- fecha .card-body -->
+        
+
+            <!-- Tabela de EPIs -->
+            <h6 class="mt-4"><i class="bi bi-box-seam"></i> EPIs Recebidos</h6>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm text-center align-middle table-striped">
+                    <thead class="table-secondary">
+                        <tr class="align-middle table-striped">
+                            <th><i class="bi bi-hash me-1"></i> COD</th>
+                            <th><i class="bi bi-card-text me-1"></i> Descrição</th>
+                            <th><i class="bi bi-123 me-1"></i> QTD</th>
+                            <th><i class="bi bi-shield-check me-1"></i> C.A</th>
+                            <th>
+                                <div class="d-flex flex-column align-items-center">
+                                    <div><i class="bi bi-box-arrow-in-down"></i></div>
+                                    <div style="font-size: 8pt;">ENTREGA</div>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="d-flex flex-column align-items-center">
+                                    <div><i class="bi bi-box-arrow-up"></i></div>
+                                    <div style="font-size: 8pt;">DEVOLUÇÃO</div>
+                                </div>
+                            </th>
+                            <th><i class="bi bi-pen me-1"></i> Assinatura</th>
+                        </tr>
+                        
+                        
+                    </thead>
+                    <tbody>
+                        {% for i in "12345678901234"|make_list %}
+                        <tr>
+                            <td>&nbsp;</td> <!-- COD -->
+                            <td>&nbsp;</td> <!-- Descrição -->
+                            <td>&nbsp;</td> <!-- QTD -->
+                            <td>&nbsp;</td> <!-- C.A -->
+                            <td class="text-center">_____/_____/______</td> <!-- ENTREGA -->
+                            <td class="text-center">_____/_____/______</td> <!-- DEVOLUÇÃO -->
+                            <td>&nbsp;</td> <!-- Assinatura -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    
+                    
+                </table>
+            </div>
+
+           <!-- Legenda com estrutura robusta para impressão -->
+<div class="mt-4 legenda-epis d-flex flex-row flex-wrap justify-content-between align-items-start gap-3" style="page-break-inside: avoid; break-inside: avoid;">
+
+    <div style="flex: 0 0 32%; page-break-inside: avoid; break-inside: avoid;" class="d-flex flex-column">
+        <div class="border rounded p-3 bg-white d-flex flex-column justify-content-between h-100">    
+    
+            <h6 class="text-secondary mb-3">
+                <i class="bi bi-list-ul me-2"></i> Cod / Descrição
+            </h6>
+            <ul class="list-group list-group-flush small">
+                <li class="list-group-item px-1 py-1">2 - Protetor auricular tipo plug</li>
+                <li class="list-group-item px-1 py-1">3 - Protetor auricular tipo concha</li>
+                <li class="list-group-item px-1 py-1">4 - Óculos de Proteção p/ impacto</li>
+                <li class="list-group-item px-1 py-1">5 - Óculos de Proteção p/ corte e solda</li>
+                <li class="list-group-item px-1 py-1">8 - Máscara semi-descartável P1 E /ou P2</li>
+                <li class="list-group-item px-1 py-1">9 - Máscara com cartucho químico rosqueável</li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="flex: 0 0 32%; page-break-inside: avoid; break-inside: avoid;" class="d-flex flex-column">
+        <div class="border rounded p-3 bg-white d-flex flex-column justify-content-between h-100">
+    
+            <h6 class="text-secondary mb-3">
+                <i class="bi bi-list-ul me-2"></i> Cod / Descrição
+            </h6>
+            <ul class="list-group list-group-flush small">
+                <li class="list-group-item px-1 py-1">11 - Avental de PVC</li>
+                <li class="list-group-item px-1 py-1">12 - Avental de tecido</li>
+                <li class="list-group-item px-1 py-1">13 - Avental de couro x capa</li>
+                <li class="list-group-item px-1 py-1">14 - Creme de proteção p/ mão e braço</li>
+                <li class="list-group-item px-1 py-1">15 - Luva de raspa</li>
+                <li class="list-group-item px-1 py-1">17 - Luva de Algodão</li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="flex: 0 0 32%; page-break-inside: avoid; break-inside: avoid;" class="d-flex flex-column">
+        <div class="border rounded p-3 bg-white d-flex flex-column justify-content-between h-100">
+    
+            <h6 class="text-secondary mb-3">
+                <i class="bi bi-list-ul me-2"></i> Cod / Descrição
+            </h6>
+            <ul class="list-group list-group-flush small">
+                <li class="list-group-item px-1 py-1">19 - Luva de Algodão e PVC</li>
+                <li class="list-group-item px-1 py-1">20 - Luva de látex</li>
+                <li class="list-group-item px-1 py-1">23 - Cinto de segurança</li>
+                <li class="list-group-item px-1 py-1">24 - Cotoveleira de raspa (mangote)</li>
+                <li class="list-group-item px-1 py-1">25 - Calçado de segurança c/ biqueira de PVC</li>
+                <li class="list-group-item px-1 py-1">26 - Calçado de segurança</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+
+
+            <!-- Segunda Página -->
+           <!-- Segunda Página -->
+<div class="mt-5 mb-4">
+    <div class="page-break"></div>
+    <h5 class="mb-3 text-center">
+        <i class="bi bi-journal-text"></i> Controle de Entrega / Devolução de EPIs - <strong>{{ funcionario.nome }}</strong>
+    </h5>
+        <div class="table-responsive">
+        <table class="table table-bordered table-sm table-striped text-center align-middle">
+            <thead class="table-secondary">
+                <tr class="align-middle table-striped">
+                    <th><i class="bi bi-hash me-1"></i> COD</th>
+                    <th><i class="bi bi-card-text me-1"></i> Descrição</th>
+                    <th><i class="bi bi-123 me-1"></i> QTD</th>
+                    <th><i class="bi bi-shield-check me-1"></i> C.A</th>
+                    <th>
+                        <div class="d-flex flex-column align-items-center">
+                            <div><i class="bi bi-box-arrow-in-down"></i></div>
+                            <div style="font-size: 8pt;">ENTREGA</div>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="d-flex flex-column align-items-center">
+                            <div><i class="bi bi-box-arrow-up"></i></div>
+                            <div style="font-size: 8pt;">DEVOLUÇÃO</div>
+                        </div>
+                    </th>
+                    <th><i class="bi bi-pen me-1"></i> Assinatura</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in "1234567890123456789012345678901234567890"|make_list %}
+                <tr>
+                    <td>&nbsp;</td> <!-- COD -->
+                    <td>&nbsp;</td> <!-- Descrição -->
+                    <td>&nbsp;</td> <!-- QTD -->
+                    <td>&nbsp;</td> <!-- C.A -->
+                    <td class="text-center">_____/_____/______</td> <!-- ENTREGA -->
+                    <td class="text-center">_____/_____/______</td> <!-- DEVOLUÇÃO -->
+                    <td>&nbsp;</td> <!-- Assinatura -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+            {% include 'partials/global/_formulario_rodape.html' with numero_formulario='' %}
+        </div>
+    </div>
+
+    <!-- Quebra de página para próximo funcionário -->
+    {% if not forloop.last %}
+    <div class="page-break"></div>
+    {% endif %}
+
+    {% endfor %}
+</div>
+
+<!-- Estilo para impressão da Ficha de EPIs -->
+<style>
+
+    .page-break {
+        page-break-before: always;
+    }
+    .legenda-epis .border {
+        min-height: 180px; /* ajuste conforme necessário */
+    }
+    
+    
+    @media print {
+
+        /* Reduzir margens da página */
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-size: 9pt !important;
+            line-height: 1.2 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            background: white !important;
+            overflow: visible !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-size: 10pt !important;
+        }
+
+        /* Cabeçalho formatado corretamente */
+        .card-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 6px 10px !important;
+            background-color: #0d6efd !important;
+            color: white !important;
+        }
+
+        .card-header h5 {
+            font-size: 11pt !important;
+            margin-bottom: 2px !important;
+        }
+
+        .card-header small {
+            font-size: 8pt !important;
+        }
+
+        /* Corpo do card */
+        .card-body {
+            padding: 8px 12px !important;
+        }
+
+        .dados-declaracao-container {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            gap: 8px !important;
+            page-break-inside: avoid !important;
+        }
+
+        .col-dados {
+            flex: 0 0 63% !important;
+            max-width: 63% !important;
+        }
+
+        .col-declaracao {
+            flex: 0 0 35% !important;
+            max-width: 35% !important;
+        }
+
+        /* Reduzir paddings de tabelas */
+        table th, table td {
+            padding: 4px 5px !important;
+            font-size: 9pt !important;
+        }
+
+        /* Legenda */
+        .row .col-md-4.small {
+            font-size: 8pt !important;
+            line-height: 1.2 !important;
+        }
+
+        /* Evitar quebra de tabela e legenda */
+        .table-responsive,
+        .mt-4 {
+            page-break-inside: avoid !important;
+        }
+
+        /* Garantir que imagem não estoure */
+        img {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Esconder menus e navegação */
+        .sidebar, .navbar, .d-print-none, .btn, .btn-group, 
+        #sidebarMobile, #moduloMobile, .offcanvas, .offcanvas-backdrop {
+            display: none !important;
+            visibility: hidden !important;
+            position: absolute !important;
+            left: -9999px !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+        }
+
+        /* Reset de bordas globais */
+        .card, .card-body, .pdf-container, .container {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Se desejar manter layout mais compacto */
+        .mt-4, .mb-4, .mt-5, .mb-5 {
+            margin-top: 6px !important;
+            margin-bottom: 6px !important;
+        }
+
+    }
+
+</style>
+
+
+
+{% endblock %}

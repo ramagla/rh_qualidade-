@@ -120,6 +120,7 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "funcionario", "emitir_capacitacao_pratica", "Pode emitir avaliação de capacitação prática"),
     ("Funcionario", "funcionario", "emitir_f033", "Pode emitir Solicitação de Bolsa-Treinamento (F033)"),
     ("Funcionario", "funcionario", "emitir_saida_antecipada", "Pode emitir formulário de Saída Antecipada"),
+    ("Funcionario", "funcionario", "emitir_ficha_epi", "Pode emitir Ficha de EPIs"),
 
 
     ("portaria", "pessoaportaria", "acesso_portaria", "Pode acessar o módulo Portaria"),

@@ -106,6 +106,23 @@ class Funcionario(models.Model):
     )
     data_nascimento = models.DateField(null=True, blank=True)
 
+    # Campos para Ficha de EPIs
+    TAMANHO_CAMISA_CHOICES = [
+        ("PP", "PP"),
+        ("P", "P"),
+        ("M", "M"),
+        ("G", "G"),
+        ("GG", "GG"),
+        ("XG", "XG"),
+        ("XXG", "XXG"),
+    ]
+
+    camisa = models.CharField(
+        max_length=3, choices=TAMANHO_CAMISA_CHOICES, blank=True, null=True, verbose_name="Tamanho da Camisa"
+    )
+    calcado = models.PositiveSmallIntegerField(
+        blank=True, null=True, verbose_name="Número do Calçado"
+    )
 
     def __str__(self):
         return self.nome

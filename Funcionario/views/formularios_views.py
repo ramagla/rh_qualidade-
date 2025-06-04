@@ -106,4 +106,13 @@ def formulario_saida_antecipada(request, funcionario_id):
     return render(request, "formularios/saida_antecipada.html", {
         "funcionario": funcionario
     })
+from django.contrib.auth.decorators import login_required, permission_required
 
+@permission_required("Funcionario.emitir_ficha_epi", raise_exception=True)
+def imprimir_ficha_epi(request, funcionario_id):
+    funcionario = get_object_or_404(Funcionario, pk=funcionario_id, status="Ativo")
+    context = {
+        "funcionarios": [funcionario],
+        "now": now(),  # ✅ aqui você passa o now para o template
+    }
+    return render(request, "formularios/relatorio_ficha_epi.html", context)

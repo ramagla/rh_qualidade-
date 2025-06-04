@@ -124,6 +124,7 @@ def menu_rh(user):
             "url": "relatorio_banco_horas"
         })
 
+  
     if submenu_relatorios:
         menu.append({
             "name": "Relatórios",
@@ -166,6 +167,13 @@ def menu_rh(user):
             "name": "Saída Antecipada",
             "url": "filtro_funcionario_generico",
             "params": "?next_view=formulario_saida_antecipada&texto_botao=Gerar+Saída&titulo=Funcionário+para+Saída+Antecipada&icone=bi bi-door-open-fill&emoji=🚪"
+        })
+
+    if user.has_perm("Funcionario.emitir_ficha_epi"):
+        submenu_formularios.append({
+            "name": "Ficha de EPIs",
+            "url": "filtro_funcionario_generico",
+            "params": "?next_view=imprimir_ficha_epi&texto_botao=Gerar+Ficha+de+EPIs&titulo=Selecionar+Funcionário+para+Ficha+de+EPIs&icone=bi bi-shield-check&emoji=🛡️"
         })
 
     if submenu_formularios:

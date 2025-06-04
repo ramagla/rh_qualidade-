@@ -73,7 +73,9 @@ from .views.formularios_views import (
     avaliacao_capacitacao,  
     formulario_f033,
     formulario_saida_antecipada,
-    filtro_funcionario_generico
+    filtro_funcionario_generico,
+    imprimir_ficha_epi
+    
 )
 from .views.funcionario_views import (
     ImprimirFichaView,
@@ -147,7 +149,7 @@ from .views.relatorios_views import (
     cronograma_avaliacao_eficacia,
     cronograma_treinamentos,
     relatorio_aniversariantes,
-    relatorio_banco_horas
+    relatorio_banco_horas,
 )
 from .views.treinamento_views import (
     cadastrar_treinamento,
@@ -212,7 +214,8 @@ urlpatterns = [
         "imprimir-ficha/<int:funcionario_id>/",
         ImprimirFichaView.as_view(),
         name="imprimir_ficha",
-    ),
+    ),    
+
     # Cargos
     path("cargos/", lista_cargos, name="lista_cargos"),
     path("cargos/cadastrar/", cadastrar_cargo, name="cadastrar_cargo"),
@@ -258,6 +261,13 @@ urlpatterns = [
         exportar_treinamentos_csv,
         name="exportar_treinamentos",
     ),
+
+    path(
+    "formularios/ficha-epi/<int:funcionario_id>/",
+    imprimir_ficha_epi,
+    name="imprimir_ficha_epi"
+),
+
     # Avaliação de Treinamentos
     path("avaliacoes/", lista_avaliacoes, name="lista_avaliacoes"),
     path("avaliacoes/cadastrar/", cadastrar_avaliacao, name="avaliacao_create"),
