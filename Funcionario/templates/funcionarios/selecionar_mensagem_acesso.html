@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Gerar Mensagem de Acesso{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% include "partials/global/_header_titulo.html" with titulo="Gerar Mensagem de Acesso" icone="bi bi-chat-dots" emoji="📢" %}
+
+    <form method="get" action="{% url 'gerar_mensagem_acesso_redirect' %}">
+        <div class="mb-3">
+            <label for="funcionario_id" class="form-label">Selecione o colaborador:</label>
+            <select id="funcionario_id" name="funcionario_id" class="form-select select2">
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-whatsapp"></i> Gerar Mensagem
+        </button>
+    </form>
+
+    <div class="mt-3">
+        <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+{% endblock %}

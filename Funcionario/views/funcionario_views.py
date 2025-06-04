@@ -470,3 +470,78 @@ def imprimir_organograma(request):
         'aprovador': 'Lilian Fernandes'
     }
     return render(request, 'funcionarios/organograma/organograma_imprimir.html', contexto)
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render
+from Funcionario.models import Funcionario
+
+@login_required
+def gerar_mensagem_acesso(request, funcionario_id):
+    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+
+    # Formatar o usuário (primeira letra maiúscula)
+    username = funcionario.user.username if funcionario.user else "NÃO CADASTRADO"
+
+    # Dados fixos
+    link_sistema = "https://qualidade.brasmol.com.br/"
+    senha_padrao = "Bras@2025"
+    video_redefinir = "https://www.canva.com/design/DAGpUXuwVGg/0jFy_0s06DOnZdXJDWQPDQ/watch?utm_content=DAGpUXuwVGg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h18dd4d813d"
+    video_modulos_colaborador = "https://www.canva.com/design/DAGpUpGtN0s/KypajNUS2msIsvqPpNP26w/watch?utm_content=DAGpUpGtN0s&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h8a4e2a5472"
+    video_modulos_gestor = "https://www.canva.com/design/DAGpUYf4ndI/cZFuSgjjpiXGvJkCqrQkKg/watch?utm_content=DAGpUYf4ndI&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h8546e559f0"
+
+    # Verificar se o funcionário é gestor (possui subordinados)
+    subordinados = Funcionario.objects.filter(responsavel_id=funcionario.id, status="Ativo").exists()
+    video_modulo = video_modulos_gestor if subordinados else video_modulos_colaborador
+
+    # Verificar se possui usuário vinculado
+    email_destino = funcionario.user.email if funcionario.user else "Não cadastrado"
+
+    # Montar a mensagem
+    mensagem = f"""
+📢 Acesso ao Sistema – SIB Bras-Mol
+
+Olá, {funcionario.nome} 👋
+
+Segue abaixo os seus dados de acesso ao sistema da Qualidade Bras-Mol:
+
+🌐 Link de Acesso: {link_sistema}
+👤 Usuário (Login): {username} (Primeira Letra em maiúsculo)
+🔑 Senha Padrão: {senha_padrao}
+
+⚠️ Atenção:
+✅ Ao acessar pela primeira vez, é obrigatório alterar sua senha.
+➡️ Na tela de login, clique em “Esqueci minha senha / Alterar Senha”.
+Um e-mail para redefinição de senha será enviado para: {email_destino} ✉️
+
+🎥 Vídeos de Apoio:
+
+1️⃣ Como Redefinir sua Senha:
+👉 {video_redefinir}
+
+2️⃣ Conheça os Módulos Disponíveis no Sistema:
+👉 {video_modulo}
+"""
+
+    # Retornar no template para copiar
+    return render(request, "funcionarios/mensagem_acesso.html", {
+        "mensagem": mensagem,
+        "funcionario": funcionario
+    })
+
+
+@login_required
+def selecionar_funcionario_mensagem_acesso(request):
+    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
+    return render(request, "funcionarios/selecionar_mensagem_acesso.html", {
+        "funcionarios": funcionarios
+    })
+
+@login_required
+def gerar_mensagem_acesso_redirect(request):
+    funcionario_id = request.GET.get("funcionario_id")
+    if funcionario_id:
+        return redirect("gerar_mensagem_acesso", funcionario_id=funcionario_id)
+    else:
+        # Se não selecionou, volta para seleção
+        return redirect("selecionar_funcionario_mensagem_acesso")

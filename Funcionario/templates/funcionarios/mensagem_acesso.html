@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Mensagem de Acesso{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% include "partials/global/_header_titulo.html" with titulo="Mensagem de Acesso - {{ funcionario.nome }}" icone="bi bi-chat-dots" emoji="📢" %}
+    <p>📋 Copie a mensagem abaixo e envie via WhatsApp:</p>
+
+    <textarea class="form-control" rows="18" readonly onclick="this.select()">{{ mensagem }}</textarea>
+
+    <div class="mt-3">
+        <a href="{% url 'visualizar_funcionario' funcionario.id %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+{% endblock %}

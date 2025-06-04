@@ -5,6 +5,8 @@ from django.conf.urls.static import static
 from django.shortcuts import get_object_or_404, render
 from django.urls import path
 from Funcionario.views import banco_horas_views
+from Funcionario.views.funcionario_views import gerar_mensagem_acesso,gerar_mensagem_acesso_redirect, selecionar_funcionario_mensagem_acesso
+
 
 
 from Funcionario import views
@@ -175,6 +177,10 @@ urlpatterns = [
     path("banco-horas/ocorrencias/<int:funcionario_id>/", banco_horas_views.buscar_ocorrencias_portaria, name="buscar_ocorrencias_portaria"),
     path("relatorios/banco-horas/", relatorio_banco_horas, name="relatorio_banco_horas"),
     path("atividades/importar/", importar_atividades, name="importar_atividades"),
+    path('funcionario/<int:funcionario_id>/gerar_mensagem_acesso/', gerar_mensagem_acesso, name='gerar_mensagem_acesso'),
+    path('gerar_mensagem_acesso/', selecionar_funcionario_mensagem_acesso, name='selecionar_funcionario_mensagem_acesso'),
+    path('gerar_mensagem_acesso_redirect/', gerar_mensagem_acesso_redirect, name='gerar_mensagem_acesso_redirect'),
+    path('funcionario/<int:funcionario_id>/gerar_mensagem_acesso/', gerar_mensagem_acesso, name='gerar_mensagem_acesso'),
 
     # Funcionários
     path("funcionarios/", lista_funcionarios, name="lista_funcionarios"),
