@@ -1,0 +1,50 @@
+<!-- Modal: Treinamentos Agendados -->
+<div class="modal fade" id="modalTreinamentos" tabindex="-1" aria-labelledby="modalTreinamentosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTreinamentosLabel">
+            <i class="bi bi-journal-text me-2"></i> Treinamentos Agendados
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          {% if treinamentos %}
+            <div class="list-group">
+              {% for treinamento in treinamentos %}
+                <div class="list-group-item">
+                  <h6 class="mb-1">
+                    <i class="bi bi-mortarboard-fill me-1 text-primary"></i>
+                    {{ treinamento.nome_curso }}
+                  </h6>
+                  <p class="mb-1 small text-muted">
+                    <i class="bi bi-calendar-event me-1"></i>
+                    {{ treinamento.data_inicio|date:"d/m/Y" }} até {{ treinamento.data_fim|date:"d/m/Y" }} |
+                    <i class="bi bi-clock me-1"></i> {{ treinamento.carga_horaria }} horas
+                  </p>
+                  <strong>Participantes:</strong>
+                  {% if treinamento.funcionarios.all|length > 0 %}
+                  <ul class="mb-0 small ps-3">
+                      {% for participante in treinamento.funcionarios.all %}
+                        <li>{{ participante.nome }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <span class="text-muted small">Nenhum participante registrado.</span>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted text-center mb-0">Nenhum treinamento agendado.</p>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  

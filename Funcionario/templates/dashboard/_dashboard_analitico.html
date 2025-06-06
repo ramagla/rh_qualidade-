@@ -1,0 +1,113 @@
+<!-- partials/dashboard/_dashboard_analitico.html -->
+
+<div class="container-fluid py-4">
+
+    <!-- Funcionários por Idade -->
+    <div class="card mb-4 shadow-sm border-0">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-person-lines-fill text-primary"></i>
+        <strong>Funcionários por Idade</strong>
+      </div>
+      <div class="card-body">
+        <canvas id="chartIdade"></canvas>
+      </div>
+    </div>
+  
+    <!-- Funcionários por Ano de Contratação -->
+    <div class="card mb-4 shadow-sm border-0">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-calendar-range-fill text-success"></i>
+        <strong>Funcionários por Ano de Contratação</strong>
+      </div>
+      <div class="card-body">
+        <canvas id="chartAnoContratacao"></canvas>
+      </div>
+    </div>
+  
+    <!-- Funcionários por Escolaridade -->
+    <div class="card mb-4 shadow-sm border-0">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-mortarboard-fill text-warning"></i>
+        <strong>Funcionários por Escolaridade</strong>
+      </div>
+      <div class="card-body">
+        <canvas id="chartEscolaridade"></canvas>
+      </div>
+    </div>
+  
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+function renderizarGraficos() {
+console.log("Labels Idade:", {{ faixas_idade_labels|default:'[]'|safe }});
+  console.log("Data Idade:", {{ faixas_idade_counts|default:'[]'|safe }});
+  const ctxIdade = document.getElementById('chartIdade').getContext('2d');
+  new Chart(ctxIdade, {
+      type: 'bar',
+      data: {
+          labels: {{ faixas_idade_labels|default:'[]'|safe }},
+          datasets: [{
+              label: 'Funcionários',
+              data: {{ faixas_idade_counts|default:'[]'|safe }},
+              backgroundColor: '#0d6efd',
+          }]
+      },
+      options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          animation: { duration: 800 }  // Suaviza o carregamento
+      }
+  });
+
+  const ctxAno = document.getElementById('chartAnoContratacao').getContext('2d');
+  new Chart(ctxAno, {
+      type: 'bar',
+      data: {
+          labels: {{ anos_contratacao_labels|default:'[]'|safe }},
+          datasets: [{
+              label: 'Funcionários',
+              data: {{ anos_contratacao_counts|default:'[]'|safe }},
+              backgroundColor: '#198754',
+          }]
+      },
+      options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          animation: { duration: 800 }
+      }
+  });
+
+  const ctxEscolaridade = document.getElementById('chartEscolaridade').getContext('2d');
+  new Chart(ctxEscolaridade, {
+      type: 'bar',
+      data: {
+          labels: {{ escolaridade_labels|default:'[]'|safe }},
+          datasets: [{
+              label: 'Funcionários',
+              data: {{ escolaridade_counts|default:'[]'|safe }},
+              backgroundColor: '#ffc107',
+          }]
+      },
+      options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          animation: { duration: 800 }
+      }
+  });
+}
+
+// Evento para renderizar os gráficos quando a aba for ativada
+document.addEventListener('DOMContentLoaded', function () {
+  const tabAnalitico = document.getElementById('tab-analitico-tab');
+  tabAnalitico.addEventListener('shown.bs.tab', function (event) {
+    // Evita recriar várias vezes — opcional
+    if (!tabAnalitico.dataset.graficosRenderizados) {
+      renderizarGraficos();
+      tabAnalitico.dataset.graficosRenderizados = 'true';
+    }
+  });
+});
+</script>
+
