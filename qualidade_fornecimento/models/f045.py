@@ -96,10 +96,13 @@ class RelatorioF045(models.Model):
 
     status_geral = models.CharField(max_length=30, blank=True, editable=False)
 
-    # ❻ Metadados
+   # Metadados
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, editable=False)
     assinado_em = models.DateTimeField(auto_now_add=True)
-    pdf = models.FileField(upload_to="f045/", null=True, blank=True)
+    data_assinatura = models.DateTimeField("Data da assinatura", null=True, blank=True)
+    assinatura_nome = models.CharField("Nome da assinatura", max_length=150, null=True, blank=True)
+    assinatura_cn = models.CharField("CN da assinatura (email)", max_length=150, null=True, blank=True)
+
 
     class Meta:
         verbose_name = "Relatório F‑045"

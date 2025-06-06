@@ -25,6 +25,8 @@ class RelatorioF045Form(forms.ModelForm):
             "torcao_certificado",
             "dureza_certificado",
             "observacoes",
+            "assinatura_nome",   # NOVO
+            "assinatura_cn",     # NOVO
         ]
         widgets = {
             "pedido_compra": forms.TextInput(attrs={"class": "form-control"}),

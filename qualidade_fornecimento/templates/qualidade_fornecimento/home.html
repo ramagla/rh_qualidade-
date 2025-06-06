@@ -48,17 +48,7 @@
       </div>
     </div>
 
-    <!-- Relatórios com PDF -->
-    <div class="col-md-4 col-xl-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <i class="bi bi-file-earmark-pdf fs-4 text-info mb-2"></i>
-          <h6 class="card-title">PDF Gerados</h6>
-          <p class="fs-3 text-info fw-bold">{{ kpi_pdf_ok }}</p>
-        </div>
-      </div>
-    </div>
-
+    
     <!-- IQG Médio -->
     <div class="col-md-4 col-xl-2">
       <div class="card shadow-sm text-center">
@@ -132,10 +122,13 @@
                     </td>
                     <td>{{ rel.assinado_em|date:'d/m/Y' }}</td>
                     <td>
-                      {% if rel.pdf %}
-                        <a href="{{ rel.pdf.url }}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-file-earmark-pdf"></i></a>
+                      {% if rel.data_assinatura %}
+                        <a href="{% url 'visualizar_f045' rel.relacao_id %}" class="btn btn-sm btn-outline-primary mt-1" target="_blank" title="Visualizar F045" aria-label="Visualizar F045">
+                          <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+                        </a>
                       {% endif %}
                     </td>
+                    
                   </tr>
                 {% empty %}
                   <tr><td colspan="5" class="text-center text-muted">Nenhum relatório.</td></tr>

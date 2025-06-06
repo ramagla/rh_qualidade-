@@ -1,0 +1,59 @@
+<style>
+    @page { size: A4 portrait; margin: 12mm; }
+    body { font-family: Arial, sans-serif; font-size: 8.5pt; }
+    
+    h3, h4 { text-align: center; margin: 0 0 3pt; }
+    table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+    th, td { border: 1px solid #000; padding: 2px; text-align: center; }
+    
+    .logo { max-height: 50px; }
+    .seguranca { max-height: 30px; margin-left: 6px; vertical-align: middle; }
+    
+    .circle, .circle-number {
+      display: inline-block;
+      border: 1px solid #000;
+      border-radius: 50%;
+      text-align: center;
+      font-weight: bold;
+      font-size: 8pt;
+    }
+    
+    .circle { width: 20px; height: 20px; line-height: 20px; margin-bottom: 2px; }
+    .circle-number { width: 18px; height: 18px; line-height: 18px; margin-right: 2px; }
+    
+    .assinatura { font-size: 8pt; margin-top: 8px; line-height: 1.2; }
+    
+    .status-aprovado { color: green; font-weight: bold; }
+    .status-condicional { color: orange; font-weight: bold; }
+    .status-reprovado { color: red; font-weight: bold; }
+
+    /* Se for tela (não impressão), não usa fixed no rodapé */
+@media screen {
+  .rodape-f045 {
+    position: relative !important;
+    margin-top: 10px;
+    border-top: 1px solid #000;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7pt;
+  }
+}
+
+/* Se for impressão (ou PDF), mantém fixed */
+@media print {
+  .rodape-f045 {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #000;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7pt;
+  }
+}
+
+    </style>
+    

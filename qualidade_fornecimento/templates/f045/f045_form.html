@@ -532,7 +532,7 @@
 
 
 
-    <div class="col-12 text-end mt-4">
+<div class="col-12 text-end mt-4">
   <div class="d-inline-flex gap-2">
     <!-- Botão de Cancelar -->
     <a href="{% url 'tb050_list' %}" class="btn btn-secondary" aria-label="Cancelar e voltar para a lista de relatórios">
@@ -543,18 +543,9 @@
     <button type="submit" id="btn-salvar" class="btn btn-success" aria-label="Salvar Relatório de Inspeção de Material">
       <i class="bi bi-save" id="icon-salvar"></i> <span id="texto-botao-salvar">Salvar</span>
     </button>
-
-    {% comment %} <!-- Botão de Gerar PDF -->
-    <a href="{% url 'gerar_pdf_f045' relacao.id %}" class="btn btn-danger" target="_blank" aria-label="Gerar o PDF do Relatório de Inspeção">
-      <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
-    </a> {% endcomment %}
-
-    <!-- Botão de Visualizar PDF -->
-    <a href="{% url 'visualizar_pdf_f045' relacao.id %}" class="btn btn-outline-primary" target="_blank" aria-label="Visualizar o PDF do Relatório de Inspeção">
-      <i class="bi bi-eye"></i> Visualizar PDF
-    </a>
   </div>
 </div>
+
 
 
 
@@ -595,24 +586,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // Feedback botão VISUALIZAR PDF
-  const btnVisualizarPDF = document.getElementById("btn-visualizar-pdf");
-  if (btnVisualizarPDF) {
-    btnVisualizarPDF.addEventListener("click", function() {
-      const icon = document.getElementById("icon-visualizar-pdf");
-      const texto = document.getElementById("texto-visualizar-pdf");
-      icon.className = "spinner-border spinner-border-sm me-2";
-      texto.textContent = "Abrindo...";
-      btnVisualizarPDF.disabled = true;
-
-      setTimeout(() => {
-        window.open("{% url 'visualizar_pdf_f045' relacao.id %}", "_blank");
-        icon.className = "bi bi-eye me-2";
-        texto.textContent = "Visualizar PDF";
-        btnVisualizarPDF.disabled = false;
-      }, 1000); // ajuste conforme necessário
-    });
-  }
+  
 
 });
 </script>
