@@ -261,7 +261,7 @@ def gerar_f045(request, relacao_id):
     form = RelatorioF045Form(
         request.POST or None, instance=f045, limites_quimicos=limites
     )
-    formset = RoloFormSet(request.POST or None, instance=relacao)
+    formset = RoloFormSet(request.POST or None, queryset=relacao.rolos.all())
     rolos = relacao.rolos.all()
     tracoes_com_forms = list(zip(rolos, formset.forms))
 
@@ -297,34 +297,36 @@ def gerar_f045(request, relacao_id):
 
             dureza_limite = parse_decimal(dureza_norma)
 
-            for form_rolo in formset.forms:
-                rolo = form_rolo.instance
+            for form_rolo in formset:
+                if not form_rolo.has_changed():
+                    continue  # pular rolos que não mudaram
+
+                rolo = form_rolo.save(commit=False)
+
+                # atribuições manuais:
                 rolo_id = str(rolo.pk)
 
                 rolo.dureza = parse_decimal_seguro(request.POST.get(f"dureza_{rolo_id}"))
                 rolo.tracao = parse_decimal_seguro(request.POST.get(f"tracao_{rolo_id}"))
 
-
                 bitola_espessura = request.POST.get(f"bitola_espessura_{rolo_id}")
                 bitola_largura = request.POST.get(f"bitola_largura_{rolo_id}")
                 bitola_unica = request.POST.get(f"bitola_{rolo_id}")
 
-                if bitola_espessura is not None or bitola_largura is not None:
-                    rolo.bitola_espessura = (
-                        parse_decimal_seguro(bitola_espessura) if bitola_espessura else None
-                    )
-
-                    rolo.bitola_largura = (
-                        parse_decimal(bitola_largura) if bitola_largura else None
-                    )
-                elif bitola_unica is not None:
+                if bitola_espessura or bitola_largura:
+                    rolo.bitola_espessura = parse_decimal_seguro(bitola_espessura) if bitola_espessura else None
+                    rolo.bitola_largura = parse_decimal(bitola_largura) if bitola_largura else None
+                elif bitola_unica:
                     rolo.bitola_espessura = parse_decimal(bitola_unica)
                     rolo.bitola_largura = None
 
                 if "switchMpa" in request.POST and rolo.tracao:
                     rolo.tracao *= Decimal("0.10197")
 
+                # Salva só uma vez!
                 rolo.save()
+
+                # Atualiza laudo
                 rolo.aprova_rolo(
                     bitola_nominal,
                     largura_nominal,
