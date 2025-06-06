@@ -28,12 +28,15 @@ def gerar_pdf_e_salvar(f045):
 
 
     try:
-        norma = NormaTecnica.objects.get(nome_norma=relacao.materia_prima.norma)
+        norma = NormaTecnica.objects.get(nome_norma=f045.relacao.materia_prima.norma)
+
+        tipo_abnt = f045.tipo_abnt  # usa o tipo salvo no F045!
 
         composicao = NormaComposicaoElemento.objects.filter(
             norma=norma,
-            tipo_abnt=relacao.materia_prima.tipo_abnt
-        ).first()
+            tipo_abnt=tipo_abnt
+).first()
+
 
         bitola = (
             relacao.materia_prima.bitola.replace(",", ".")
@@ -45,13 +48,14 @@ def gerar_pdf_e_salvar(f045):
         norma_tracao = (
             NormaTracao.objects.filter(
                 norma=norma,
-                tipo_abnt=relacao.materia_prima.tipo_abnt,
+                tipo_abnt=tipo_abnt,
                 bitola_minima__lte=bitola_float,
                 bitola_maxima__gte=bitola_float,
             ).first()
             if bitola_float
             else None
         )
+
 
     except (
         NormaTecnica.DoesNotExist,
