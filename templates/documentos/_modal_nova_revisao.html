@@ -1,0 +1,74 @@
+<!-- Modal Nova Revisão -->
+<div class="modal fade" id="novaRevisaoModal" tabindex="-1" aria-labelledby="novaRevisaoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="novaRevisaoModalLabel">📄 Nova Revisão de Documento – <span id="novaRevisaoTitulo"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="novaRevisaoDescricao" class="mb-3"></div>
+                <a href="#" id="novaRevisaoPDF" target="_blank" class="btn btn-outline-primary">
+                    <i class="bi bi-file-earmark-pdf"></i> Ver Documento Completo (PDF)
+                </a>
+            </div>
+            <div class="modal-footer">
+                <button id="btnConfirmarLeitura" type="button" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Li e Entendi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    fetch("{% url 'get_ultima_revisao_nao_lida' %}")
+        .then(response => response.json())
+        .then(data => {
+            if (data.show) {
+                document.getElementById("novaRevisaoTitulo").textContent = 
+                    `${data.codigo} - ${data.nome} - Rev. ${data.numero_revisao} - ${data.data_revisao}`;
+            
+                document.getElementById("novaRevisaoDescricao").innerHTML = data.descricao || "";
+                document.getElementById("novaRevisaoPDF").href = data.pdf_url || "#";
+                document.getElementById("btnConfirmarLeitura").setAttribute("data-revisao-id", data.id);
+            
+                var modal = new bootstrap.Modal(document.getElementById('novaRevisaoModal'));
+                modal.show();
+            }
+            
+        });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("btnConfirmarLeitura").addEventListener("click", function () {
+        const revisaoId = this.getAttribute("data-revisao-id");
+        const csrfToken = document.querySelector('#csrf-token-form input[name=csrfmiddlewaretoken]').value;
+
+        fetch("{% url 'marcar_revisao_lida' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ revisao_id: revisaoId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "ok") {
+                // Fecha a modal
+                var modalEl = document.getElementById('novaRevisaoModal');
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+            } else {
+                alert("Erro ao marcar leitura: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Erro na requisição:", error);
+            alert("Erro de conexão ao tentar marcar leitura.");
+        });
+    });
+});
+</script>

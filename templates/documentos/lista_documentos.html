@@ -8,53 +8,79 @@
 {% include 'partials/global/_toast_mensagens.html' %}
 {% include 'partials/global/_header_titulo.html' with titulo="Lista de Documentos" icone="bi bi-journal-text" emoji="📄" %}
 
-<div class="container mt-4">
+<div class="container py-4">
 
   <!-- Botão de Cadastro -->
-  <div class="d-print-none mb-4 text-end">
+  <div class="d-flex justify-content-end mb-4">
     {% if request.user|has_permission:'Funcionario.add_documento' %}
-      <a href="{% url 'cadastrar_documento' %}" class="btn btn-success d-inline-flex align-items-center">
-        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar Documento
+      <a href="{% url 'cadastrar_documento' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle me-2"></i> Cadastrar Documento
       </a>
     {% endif %}
   </div>
 
   <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <i class="bi bi-funnel me-1" aria-hidden="true"></i> Filtros
-    </div>
-    <div class="card-body">
-      <form method="get">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label for="nome" class="form-label">Filtrar por Nome:</label>
-            <select name="nome" id="nome" class="form-select select2">
-              <option value="">Todos</option>
-              {% for documento in documentos_distinct %}
-                <option value="{{ documento.nome }}" {% if request.GET.nome == documento.nome %}selected{% endif %}>
-                  {{ documento.nome }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="col-md-4">
-            <label for="status" class="form-label">Filtrar por Status:</label>
-            <select name="status" id="status" class="form-select select2">
-              <option value="">Todos</option>
-              {% for key, value in status_choices %}
-                <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>
-                  {{ value }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        {% include 'partials/global/_botao_filtrar.html' %}
-      </form>
-    </div>
+<div class="card shadow-sm mb-4 border-0">
+  <div class="card-header bg-light fw-bold">
+    <i class="bi bi-funnel me-2"></i> Filtros
   </div>
+  <div class="card-body">
+    <form method="get" novalidate>
+      <div class="row g-3">
+
+        <!-- Filtro Nome -->
+        <div class="col-md-6 col-lg-3">
+          <label for="nome" class="form-label">Filtrar por Nome</label>
+          <select name="nome" id="nome" class="form-select select2" aria-label="Filtrar por Nome">
+            <option value="">Todos</option>
+            {% for documento in documentos_distinct %}
+              <option value="{{ documento.nome }}" {% if request.GET.nome == documento.nome %}selected{% endif %}>{{ documento.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Filtro Código -->
+        <div class="col-md-6 col-lg-3">
+          <label for="codigo" class="form-label">Filtrar por Código</label>
+          <select name="codigo" id="codigo" class="form-select select2" aria-label="Filtrar por Código">
+            <option value="">Todos</option>
+            {% for codigo in codigos_distinct %}
+              <option value="{{ codigo.codigo }}" {% if request.GET.codigo == codigo.codigo %}selected{% endif %}>{{ codigo.codigo }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Filtro Departamento -->
+        <div class="col-md-6 col-lg-3">
+          <label for="departamento" class="form-label">Filtrar por Departamento</label>
+          <select name="departamento" id="departamento" class="form-select select2" aria-label="Filtrar por Departamento">
+            <option value="">Todos</option>
+            {% for dep_id, dep_nome in departamentos_distinct %}
+              <option value="{{ dep_id }}" {% if request.GET.departamento == dep_id|stringformat:"s" %}selected{% endif %}>{{ dep_nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Filtro Status -->
+        <div class="col-md-6 col-lg-3">
+          <label for="status" class="form-label">Filtrar por Status</label>
+          <select name="status" id="status" class="form-select select2" aria-label="Filtrar por Status">
+            <option value="">Todos</option>
+            {% for key, value in status_choices %}
+              <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>{{ value }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+      </div>
+
+      <div class="mt-4">
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </div>
+    </form>
+  </div>
+</div>
+
 
   <!-- Indicadores -->
   <div class="row g-3 mb-4">
@@ -65,26 +91,27 @@
   </div>
 
   <!-- Tabela de Documentos -->
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped table-hover align-middle text-center">
+  <div class="table-responsive shadow-sm rounded">
+    <table class="table table-hover align-middle text-center">
       <caption class="visually-hidden">Tabela de documentos cadastrados</caption>
-      <thead class="table-light align-middle">
+      <thead class="table-light">
         <tr>
-          <th><i class="bi bi-journal-text me-1"></i> Nome</th>
-          <th><i class="bi bi-upc me-1"></i> Código</th>
-          <th><i class="bi bi-person-badge me-1"></i> Responsável</th>
-          <th><i class="bi bi-flag me-1"></i> Status</th>
-          <th><i class="bi bi-card-checklist me-1"></i> Última Revisão</th>
-          <th><i class="bi bi-calendar-event me-1"></i> Atualização</th>
-          <th><i class="bi bi-gear-fill me-1"></i> Ações</th>
+          <th scope="col"><i class="bi bi-upc me-1"></i> Código</th>
+          <th scope="col"><i class="bi bi-journal-text me-1"></i> Nome</th>
+          <th scope="col"><i class="bi bi-person-badge me-1"></i> Responsável</th>
+          <th scope="col"><i class="bi bi-flag me-1"></i> Status</th>
+          <th scope="col"><i class="bi bi-card-checklist me-1"></i> Última Revisão</th>
+          <th scope="col"><i class="bi bi-calendar-event me-1"></i> Atualização</th>
+          <th scope="col"><i class="bi bi-gear-fill me-1"></i> Ações</th>
         </tr>
       </thead>
       <tbody>
         {% if documentos %}
           {% for documento in documentos %}
             <tr>
-              <td>{{ documento.nome }}</td>
               <td>{{ documento.codigo }}</td>
+
+              <td>{{ documento.nome }}</td>
               <td>{{ documento.responsavel_recuperacao.nome }}</td>
               <td>
                 {% if documento.status == 'aprovado' %}
@@ -111,24 +138,28 @@
                   <span class="text-muted">Sem atualização</span>
                 {% endif %}
               </td>
-              <td class="d-flex justify-content-center flex-wrap gap-1">
-                {% if request.user|has_permission:'Funcionario.change_documento' %}
-                  {% include 'partials/global/_botao_editar.html' with objeto=documento url_editar='editar_documento' %}
-                {% endif %}
-                {% if request.user|has_permission:'Funcionario.view_revisao' %}
+              <td>
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+                  {% if request.user|has_permission:'Funcionario.change_documento' %}
+                    {% include 'partials/global/_botao_editar.html' with objeto=documento url_editar='editar_documento' %}
+                  {% endif %}
+
+                  {% if request.user|has_permission:'Funcionario.view_revisao' %}
                   <a href="{% url 'historico_documentos' documento.id %}" class="btn btn-sm btn-info mt-1" title="Histórico de Revisões" aria-label="Histórico de {{ documento.nome }}">
                     <i class="bi bi-clock-history" aria-hidden="true"></i>
                   </a>
-                {% endif %}
-                {% if documento.arquivo and request.user|has_permission:'Funcionario.view_documento' %}
-  <a href="{{ documento.arquivo.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-dark mt-1" title="Visualizar Documento" aria-label="Visualizar {{ documento.nome }}">
-    <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-  </a>
-{% endif %}
+                  {% endif %}
 
-                {% if request.user|has_permission:'Funcionario.delete_documento' %}
-                  {% include 'partials/global/_botao_excluir.html' with objeto=documento url_excluir='excluir_documento' %}
-                {% endif %}
+                  {% if documento.arquivo and request.user|has_permission:'Funcionario.view_documento' %}
+                  <a href="{{ documento.arquivo.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-dark mt-1" title="Visualizar Documento" aria-label="Visualizar {{ documento.nome }}">
+                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                  </a>
+                  {% endif %}
+
+                  {% if request.user|has_permission:'Funcionario.delete_documento' %}
+                    {% include 'partials/global/_botao_excluir.html' with objeto=documento url_excluir='excluir_documento' %}
+                  {% endif %}
+                </div>
               </td>
             </tr>
           {% endfor %}
@@ -148,11 +179,13 @@
 
 </div>
 
+<!-- Inicialização Select2 -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     $('.select2').select2({
       placeholder: "Selecione uma opção",
-      allowClear: true
+      allowClear: true,
+      width: '100%'
     });
   });
 </script>

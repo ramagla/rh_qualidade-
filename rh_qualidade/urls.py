@@ -16,7 +16,7 @@ from .views import (
 from .documentos_views import (
     lista_documentos, cadastrar_documento, editar_documento,
     excluir_documento, historico_documentos, adicionar_documento,
-    excluir_revisao2
+    excluir_revisao2, get_ultima_revisao_nao_lida, marcar_revisao_lida
 )
 from Funcionario.views.home_views import login_view
 from rh_qualidade.views import home_geral
@@ -82,7 +82,8 @@ urlpatterns = [
     path("documentos/<int:documento_id>/adicionar-documento/", adicionar_documento, name="adicionar_documento"),
     path("revisoes2/<int:revisao_id>/excluir/", excluir_revisao2, name="excluir_revisao2"),
 
-
+    path("ajax/ultima-revisao-nao-lida/", get_ultima_revisao_nao_lida, name="get_ultima_revisao_nao_lida"),
+    path("revisoes/marcar_lida/", marcar_revisao_lida, name="marcar_revisao_lida"),
 
     path("atualizacoes/", atualizacao_views.lista_atualizacoes, name="lista_atualizacoes"),
     path("atualizacoes/cadastrar/", atualizacao_views.cadastrar_atualizacao, name="cadastrar_atualizacao"),

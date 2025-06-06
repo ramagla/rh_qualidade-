@@ -20,16 +20,37 @@
                 <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center gap-2 flex-wrap">
-                      {% if request.user|has_permission:"Funcionario.view_revisao" %}
-                        {% include "partials/global/_botao_visualizar.html" with objeto=revisao url_visualizar=None modal="modalDescricao"|add:revisao.id %}
-                      {% endif %}
-                  
-                      {% if request.user|has_permission:"Funcionario.delete_revisao" %}
-                        {% include "partials/global/_botao_excluir.html" with objeto=revisao url_excluir="excluir_revisao2" label="revisão"|add:" "|add:revisao.numero_revisao %}
-                      {% endif %}
+                        <!-- botão descrição -->
+                        {% if request.user|has_permission:"Funcionario.view_revisao" %}
+                        <button type="button" class="btn btn-sm btn-secondary mt-1"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalDescricao{{ revisao.id }}"
+                            title="Visualizar Descrição da Revisão"
+                            aria-label="Visualizar Descrição da Revisão">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                        {% endif %}
+                
+                        <!-- botão LEITURA -->
+                        {% if request.user|has_permission:"Funcionario.view_revisao" %}
+                        <button type="button" class="btn btn-sm btn-info mt-1"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalLeitura{{ revisao.id }}"
+                            title="Visualizar Leitura da Revisão"
+                            aria-label="Visualizar Leitura da Revisão">
+                            <i class="bi bi-eye-fill" aria-hidden="true"></i>
+                        </button>
+                        {% endif %}
+                
+                        <!-- botão excluir -->
+                        {% if request.user|has_permission:"Funcionario.delete_revisao" %}
+                            {% include "partials/global/_botao_excluir.html" with objeto=revisao url_excluir="excluir_revisao2" label="revisão"|add:" "|add:revisao.numero_revisao %}
+                        {% endif %}
                     </div>
-                  </td>
-                  
+                </td>
+                
+                 
+
             </tr>
 
             <!-- Modal de Descrição -->
@@ -52,6 +73,44 @@
                 </div>
             </div>
             {% endif %}
+
+
+
+<!-- Modal de Leitura -->
+{% if request.user|has_permission:'Funcionario.view_revisao' %}
+<div class="modal fade" id="modalLeitura{{ revisao.id }}" tabindex="-1" aria-labelledby="modalLeituraLabel{{ revisao.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalLeituraLabel{{ revisao.id }}">Leitura da Revisão {{ revisao.numero_revisao }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <h6>✅ Leitores Confirmados:</h6>
+                <ul>
+                    {% for leitor in revisao_leituras|dict_get:revisao.id %}
+                    <li>{{ leitor.get_full_name|default:leitor.username }}</li>
+                    {% empty %}
+                        <li>Nenhum colaborador confirmou ainda.</li>
+                    {% endfor %}
+                </ul>
+
+                <h6 class="mt-3">❌ Faltam Confirmar:</h6>
+                <ul>
+                    {% for faltante in revisao_faltantes|dict_get:revisao.id %}
+                    <li>{{ faltante.get_full_name|default:faltante.username }}</li>
+                    {% empty %}
+                        <li>Todos confirmaram leitura.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 
            <!-- Modal de Exclusão -->

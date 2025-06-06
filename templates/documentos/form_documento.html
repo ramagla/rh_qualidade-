@@ -10,13 +10,14 @@
 {% include "partials/global/_header_titulo.html" with titulo=edicao|yesno:"Editar Documento,Cadastrar Documento" icone="bi bi-journal-text" emoji="📄" %}
 {% include "partials/global/_toast_mensagens.html" %}
 
-<div class="container mt-4">
-  <form method="post" enctype="multipart/form-data" class="row g-3" role="form">
+<div class="container py-4">
+
+  <form method="post" enctype="multipart/form-data" class="row g-4 needs-validation" novalidate>
     {% csrf_token %}
     {% include "partials/global/_form_errors.html" %}
 
     <!-- Acordeon -->
-    <div class="accordion mb-3" id="accordionDocumento">
+    <div class="accordion shadow-sm mb-4" id="accordionDocumento">
 
       <!-- Seção 1: Identificação -->
       <div class="accordion-item">
@@ -26,44 +27,50 @@
           </button>
         </h2>
         <div id="collapseIdentificacao" class="accordion-collapse collapse show" data-bs-parent="#accordionDocumento">
-          <div class="accordion-body row">
+          <div class="accordion-body row g-3">
+
             <div class="col-md-6">
               <label for="{{ form.nome.id_for_label }}" class="form-label">
-                <i class="bi bi-fonts me-1"></i> Nome:
+                <i class="bi bi-fonts me-1"></i> Nome
               </label>
               {{ form.nome|add_class:"form-control" }}
             </div>
+
             <div class="col-md-6">
               <label for="{{ form.codigo.id_for_label }}" class="form-label">
-                <i class="bi bi-upc-scan me-1"></i> Código:
+                <i class="bi bi-upc-scan me-1"></i> Código
               </label>
               {{ form.codigo|add_class:"form-control" }}
             </div>
+
             <div class="col-md-6">
               <label for="{{ form.responsavel_recuperacao.id_for_label }}" class="form-label">
-                <i class="bi bi-person-badge me-1"></i> Responsável pela Recuperação:
+                <i class="bi bi-person-badge me-1"></i> Responsável pela Recuperação
               </label>
               {{ form.responsavel_recuperacao|add_class:"form-select select2" }}
             </div>
+
             <div class="col-md-6">
               <label for="{{ form.status.id_for_label }}" class="form-label">
-                <i class="bi bi-check2-square me-1"></i> Status:
+                <i class="bi bi-check2-square me-1"></i> Status
               </label>
               {{ form.status|add_class:"form-select" }}
             </div>
+
             <div class="col-md-12">
               <label for="{{ form.departamentos.id_for_label }}" class="form-label">
-                <i class="bi bi-diagram-3 me-1"></i> Departamentos Responsáveis:
+                <i class="bi bi-diagram-3 me-1"></i> Departamentos Responsáveis
               </label>
               {{ form.departamentos|add_class:"form-select select2" }}
             </div>
-            
+
             <div class="col-md-12">
               <label for="{{ form.arquivo.id_for_label }}" class="form-label">
-                <i class="bi bi-paperclip me-1"></i> Arquivo (PDF ou Word):
+                <i class="bi bi-paperclip me-1"></i> Arquivo (PDF ou Word)
               </label>
               {{ form.arquivo|add_class:"form-control" }}
             </div>
+
           </div>
         </div>
       </div>
@@ -76,43 +83,50 @@
           </button>
         </h2>
         <div id="collapseQualidade" class="accordion-collapse collapse" data-bs-parent="#accordionDocumento">
-          <div class="accordion-body row">
+          <div class="accordion-body row g-3">
+
             <div class="col-md-6">
               <label for="{{ form.coleta.id_for_label }}" class="form-label">
-                <i class="bi bi-archive me-1"></i> Coleta:
+                <i class="bi bi-archive me-1"></i> Coleta
               </label>
               {{ form.coleta|add_class:"form-control" }}
             </div>
+
             <div class="col-md-6">
               <label for="{{ form.recuperacao.id_for_label }}" class="form-label">
-                <i class="bi bi-search me-1"></i> Recuperação:
+                <i class="bi bi-search me-1"></i> Recuperação
               </label>
               {{ form.recuperacao|add_class:"form-control" }}
             </div>
+
             <div class="col-md-6">
               <label for="{{ form.arquivo_tipo.id_for_label }}" class="form-label">
-                <i class="bi bi-file-earmark-text me-1"></i> Tipo de Arquivo:
+                <i class="bi bi-file-earmark-text me-1"></i> Tipo de Arquivo
               </label>
               {{ form.arquivo_tipo|add_class:"form-select" }}
             </div>
+
             <div class="col-md-6">
               <label for="{{ form.local_armazenamento.id_for_label }}" class="form-label">
-                <i class="bi bi-folder me-1"></i> Local de Armazenamento:
+                <i class="bi bi-folder me-1"></i> Local de Armazenamento
               </label>
               {{ form.local_armazenamento|add_class:"form-control" }}
             </div>
+
             <div class="col-md-6">
               <label for="{{ form.tempo_retencao.id_for_label }}" class="form-label">
-                <i class="bi bi-hourglass-split me-1"></i> Tempo de Retenção:
+                <i class="bi bi-hourglass-split me-1"></i> Tempo de Retenção
               </label>
               {{ form.tempo_retencao|add_class:"form-control" }}
             </div>
+
             <div class="col-md-6">
               <label for="{{ form.descarte.id_for_label }}" class="form-label">
-                <i class="bi bi-trash me-1"></i> Descarte:
+                <i class="bi bi-trash me-1"></i> Descarte
               </label>
               {{ form.descarte|add_class:"form-select" }}
             </div>
+
           </div>
         </div>
       </div>
@@ -121,13 +135,16 @@
 
     {% include "partials/global/_botoes_salvar_cancelar.html" %}
   </form>
+
 </div>
 
+<!-- Inicialização Select2 -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     $('.select2').select2({
       placeholder: "Selecione uma opção",
-      allowClear: true
+      allowClear: true,
+      width: '100%'
     });
   });
 </script>

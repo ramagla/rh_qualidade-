@@ -151,3 +151,4 @@ def get_ultima_atualizacao(request):
 
     # Se não autenticado ou não tem atualização
     return JsonResponse({'show': False})
+
