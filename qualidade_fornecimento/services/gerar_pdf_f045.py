@@ -5,7 +5,6 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
-from django.templatetags.static import static
 from django.utils.timezone import localtime, now
 from weasyprint import HTML
 
@@ -26,17 +25,13 @@ def gerar_pdf_e_salvar(f045):
     logo_url = f"file://{logo_path}"
     seguranca_url = f"file://{seguranca_path}"
 
-
+    # Recuperar norma, composicao e faixa de tracao (igual a VIEW)
     try:
-        norma = NormaTecnica.objects.get(nome_norma=f045.relacao.materia_prima.norma)
-
-        tipo_abnt = f045.tipo_abnt  # usa o tipo salvo no F045!
-
+        norma = NormaTecnica.objects.get(nome_norma=relacao.materia_prima.norma)
         composicao = NormaComposicaoElemento.objects.filter(
             norma=norma,
-            tipo_abnt=tipo_abnt
-).first()
-
+            tipo_abnt = f045.tipo_abnt
+        ).first()
 
         bitola = (
             relacao.materia_prima.bitola.replace(",", ".")
@@ -48,14 +43,13 @@ def gerar_pdf_e_salvar(f045):
         norma_tracao = (
             NormaTracao.objects.filter(
                 norma=norma,
-                tipo_abnt=tipo_abnt,
+                tipo_abnt=relacao.materia_prima.tipo_abnt,
                 bitola_minima__lte=bitola_float,
                 bitola_maxima__gte=bitola_float,
             ).first()
             if bitola_float
             else None
         )
-
 
     except (
         NormaTecnica.DoesNotExist,
@@ -65,45 +59,39 @@ def gerar_pdf_e_salvar(f045):
         composicao = None
         norma_tracao = None
 
-    campos_quimicos = [
-    ("C", "Carbono"),
-    ("Mn", "Manganês"),
-    ("Si", "Silício"),
-    ("P", "Fósforo"),
-    ("S", "Enxofre"),
-    ("Cr", "Cromo"),
-    ("Ni", "Níquel"),
-    ("Cu", "Cobre"),
-    ("Al", "Alumínio"),
-]
-
+    # Composição Química — gerar sempre (igual à VIEW)
     encontrados = []
-
-    for sigla, nome in campos_quimicos:
-        # Se composicao existir, pega min e max — senão, None
-        vmin = getattr(composicao, f"{sigla.lower()}_min", None) if composicao else None
-        vmax = getattr(composicao, f"{sigla.lower()}_max", None) if composicao else None
-        valor = getattr(f045, f"{sigla.lower()}_user", None)
-
+    elementos = [
+        ("C", composicao.c_min if composicao else None, composicao.c_max if composicao else None, getattr(f045, "c_user", None)),
+        ("Mn", composicao.mn_min if composicao else None, composicao.mn_max if composicao else None, getattr(f045, "mn_user", None)),
+        ("Si", composicao.si_min if composicao else None, composicao.si_max if composicao else None, getattr(f045, "si_user", None)),
+        ("P", composicao.p_min if composicao else None, composicao.p_max if composicao else None, getattr(f045, "p_user", None)),
+        ("S", composicao.s_min if composicao else None, composicao.s_max if composicao else None, getattr(f045, "s_user", None)),
+        ("Cr", composicao.cr_min if composicao else None, composicao.cr_max if composicao else None, getattr(f045, "cr_user", None)),
+        ("Ni", composicao.ni_min if composicao else None, composicao.ni_max if composicao else None, getattr(f045, "ni_user", None)),
+        ("Cu", composicao.cu_min if composicao else None, composicao.cu_max if composicao else None, getattr(f045, "cu_user", None)),
+        ("Al", composicao.al_min if composicao else None, composicao.al_max if composicao else None, getattr(f045, "al_user", None)),
+    ]
+    for sigla, vmin, vmax, valor in elementos:
         try:
             val = Decimal(str(valor).replace(",", ".")) if valor is not None else None
-            ok = (vmin == 0 and vmax == 0) or (val is not None and vmin is not None and vmax is not None and vmin <= val <= vmax)
-            if vmin is None or vmax is None:
-                ok = True  # Se não tem limites, considera aprovado
-        except Exception:
+            ok = (
+                vmin <= val <= vmax
+                if val is not None and vmin is not None and vmax is not None
+                else False
+            )
+        except:
             val = valor
             ok = False
-
         encontrados.append({
             "sigla": sigla,
-            "nome_elemento": nome,
             "min": vmin,
             "max": vmax,
             "valor": val,
             "ok": ok,
         })
 
-
+    # Assinatura (igual a VIEW)
     assinatura_nome = f045.usuario.get_full_name() or f045.usuario.username
     assinatura_email = f045.usuario.email
     assinatura_data = localtime(now()).strftime("%d/%m/%Y %H:%M:%S")
@@ -126,7 +114,6 @@ def gerar_pdf_e_salvar(f045):
     html = HTML(string=html_string, base_url=f"file://{settings.STATIC_ROOT}")
     pdf_bytes = html.write_pdf()
 
-
     # Caminho e nome do arquivo
     filename = f"F045_Relatorio_{f045.nro_relatorio}.pdf"
     caminho_pasta = os.path.join(settings.MEDIA_ROOT, "f045")
@@ -140,4 +127,4 @@ def gerar_pdf_e_salvar(f045):
     # Salva no FileField
     f045.pdf.save(filename, ContentFile(pdf_bytes), save=True)
 
-    return os.path.basename(f045.pdf.name)  # só o nome do arquivo
+    return os.path.basename(f045.pdf.name)
