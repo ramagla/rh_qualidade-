@@ -56,7 +56,10 @@ def _renderizar_pdf_f045(request, relacao_id, salvar_pdf=False):
     # Recuperar norma, composição e faixa de tração
     try:
         norma = NormaTecnica.objects.get(nome_norma=relacao.materia_prima.norma)
-        composicao = NormaComposicaoElemento.objects.get(norma=norma)
+        composicao = NormaComposicaoElemento.objects.filter(
+            norma=norma,
+            tipo_abnt=relacao.materia_prima.tipo_abnt
+        ).first()
 
         bitola = (
             relacao.materia_prima.bitola.replace(",", ".")
@@ -66,14 +69,16 @@ def _renderizar_pdf_f045(request, relacao_id, salvar_pdf=False):
         bitola_float = float(bitola) if bitola else None
 
         norma_tracao = (
-            NormaTracao.objects.filter(
-                norma=norma,
-                bitola_minima__lte=bitola_float,
-                bitola_maxima__gte=bitola_float,
-            ).first()
-            if bitola_float
-            else None
-        )
+        NormaTracao.objects.filter(
+            norma=norma,
+            tipo_abnt=relacao.materia_prima.tipo_abnt,
+            bitola_minima__lte=bitola_float,
+            bitola_maxima__gte=bitola_float,
+        ).first()
+        if bitola_float
+        else None
+    )
+
     except (
         NormaTecnica.DoesNotExist,
         NormaComposicaoElemento.DoesNotExist,
