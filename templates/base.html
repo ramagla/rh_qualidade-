@@ -378,10 +378,11 @@
                                 </a>
                                 {% elif subitem.url %}
                                 <a class="dropdown-item text-white"
-                                   href="{% url subitem.url %}{% if subitem.params %}{{ subitem.params }}{% endif %}">
-                                    <i class="{{ subitem.icon }}"></i> {{ subitem.name }}
-                                </a>
-                            
+                                href="{% url subitem.url %}{% if subitem.params %}{{ subitem.params }}{% endif %}">
+                                 <i class="{{ subitem.icon }}"></i>
+                                 <span class="sidebar-text" title="{{ subitem.name }}">{{ subitem.name }}</span>
+                             </a>
+                             
                           
                             {% else %}
                                 <span class="dropdown-item text-muted">
@@ -817,6 +818,26 @@
   {% include 'partials/qualidade_fornecimento/_modal_tabela_correlacao.html' %}
 
   
-
+  {% block extra_css %}
+  <style>
+  /* CSS do menu com "..." */
+  .sidebar-menu li > a > span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      max-width: 180px;
+  }
+  
+  .sidebar-menu .submenu li > a > span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      max-width: 160px;
+  }
+  </style>
+  {% endblock %}
+  
 </body>
 </html>

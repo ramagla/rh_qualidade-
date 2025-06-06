@@ -4,118 +4,190 @@
 {% block title %}Dashboard RH{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid mt-4">
 
-  <section aria-labelledby="titulo-indicadores">
-    <h5 id="titulo-indicadores" class="visually-hidden">Indicadores de RH</h5>
-    <div class="row g-4 mb-4">
-    <!-- 🧾 Cards Resumo Informativo -->
-<section aria-labelledby="titulo-indicadores">
-  <h5 id="titulo-indicadores" class="visually-hidden">Indicadores de RH</h5>
-  <div class="row g-4">
-    
-    <!-- Coluna da esquerda com 4 cards pequenos -->
-    <div class="col-lg-9">
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-2 g-4 h-100">
-        <!-- Total de Colaboradores -->
-        {% if perms.Funcionario.view_funcionario %}
-        <div class="col">
-          <div class="card shadow-sm text-center h-100">
-            <div class="card-body">
-              <h6 class="card-title">👥 Total de Colaboradores</h6>
-              <p class="fs-4">{{ total_colaboradores }}</p>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-        <!-- Avaliações Pendentes -->
-        {% if perms.Funcionario.view_avaliacaoanual %}
-
-<div class="col">
-  <div class="card shadow-sm text-center h-100">
-    <div class="card-body d-flex flex-column justify-content-center">
-      <h6 class="card-title">🧪 Avaliações Pendentes</h6>
-      <p class="fs-4">{{ avaliacoes_pendentes }}</p>
-      {% if avaliacoes_pendentes > 0 %}       
-
-        <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalAvaliacoesPendentes">
-          <i class="bi bi-eye-fill"></i> Ver detalhes
-        </button>
-      {% endif %}
-    </div>
+  <!-- Cabeçalho da Página -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold">
+      <i class="bi bi-people text-primary me-2"></i> Dashboard de Recursos Humanos
+    </h4>
   </div>
-</div>
 
-        <!-- Avaliações por Desempenho -->
-        <div class="col">
-          <div class="card shadow-sm text-center h-100">
-            <div class="card-body">
-              <h6 class="card-title">
-                <i class="bi bi-bar-chart-line-fill me-1"></i> Avaliações por Desempenho
-              </h6>
-              <ul class="list-unstyled mb-0">
-                <li><i class="bi bi-emoji-smile text-success me-1"></i> Ótimo: <strong>{{ classificacao_otimo }}</strong></li>
-                <li><i class="bi bi-emoji-neutral text-primary me-1"></i> Bom: <strong>{{ classificacao_bom }}</strong></li>
-                <li><i class="bi bi-emoji-expressionless text-warning me-1"></i> Regular: <strong>{{ classificacao_regular }}</strong></li>
-                <li><i class="bi bi-emoji-frown text-danger me-1"></i> Ruim: <strong>{{ classificacao_ruim }}</strong></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <!-- Treinamentos Agendados -->
-        <div class="col">
-          <div class="card shadow-sm text-center h-100">
-            <div class="card-body d-flex flex-column justify-content-center">
-              <h6 class="card-title">🏋️ Treinamentos Agendados</h6>
-              <p class="fs-4">{{ treinamentos_agendados }}</p>
-              {% if treinamentos_agendados > 0 %}
-              <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalTreinamentos">
-                <i class="bi bi-eye-fill"></i> Ver detalhes
-              </button>
-              {% endif %}
-            </div>
-          </div>
+  <!-- 🔍 Indicadores Principais -->
+  <div class="row g-4 mb-4">
+    {% if perms.Funcionario.view_funcionario %}
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 h-100 text-center">
+        <div class="card-body d-flex flex-column justify-content-center align-items-center">
+          <i class="bi bi-people-fill fs-1 text-primary mb-3"></i>
+          <h6 class="card-title">Total de Colaboradores</h6>
+          <p class="fs-4 fw-bold">{{ total_colaboradores }}</p>
         </div>
       </div>
     </div>
     {% endif %}
 
-    <!-- Coluna da direita com card alto de aniversariantes -->
-    <div class="col-lg-3 d-flex">
-      <div class="card shadow-sm flex-fill">
-        <div class="card-header d-flex align-items-center gap-2">
-          <i class="bi bi-calendar-event-fill text-primary"></i>
-          <strong id="titulo-aniversariantes">Aniversariantes do Mês</strong>
+    {% if perms.Funcionario.view_avaliacaoanual %}
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 h-100 text-center">
+        <div class="card-body d-flex flex-column justify-content-center align-items-center">
+          <i class="bi bi-clipboard-check-fill fs-1 text-success mb-3"></i>
+          <h6 class="card-title">Avaliações Pendentes</h6>
+          <p class="fs-4 fw-bold">{{ avaliacoes_pendentes }}</p>
+          {% if avaliacoes_pendentes > 0 %}
+          <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalAvaliacoesPendentes">
+            <i class="bi bi-eye-fill"></i> Ver detalhes
+          </button>
+          {% endif %}
         </div>
-        <div class="card-body p-3">
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 h-100 text-center">
+        <div class="card-body d-flex flex-column justify-content-center align-items-center">
+          <i class="bi bi-bar-chart-line-fill fs-1 text-info mb-3"></i>
+          <h6 class="card-title">Avaliações por Desempenho</h6>
+          <ul class="list-unstyled mb-0">
+            <li><i class="bi bi-emoji-smile text-success me-1"></i> Ótimo: <strong>{{ classificacao_otimo }}</strong></li>
+            <li><i class="bi bi-emoji-neutral text-primary me-1"></i> Bom: <strong>{{ classificacao_bom }}</strong></li>
+            <li><i class="bi bi-emoji-expressionless text-warning me-1"></i> Regular: <strong>{{ classificacao_regular }}</strong></li>
+            <li><i class="bi bi-emoji-frown text-danger me-1"></i> Ruim: <strong>{{ classificacao_ruim }}</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 h-100 text-center">
+        <div class="card-body d-flex flex-column justify-content-center align-items-center">
+          <i class="bi bi-calendar-check-fill fs-1 text-warning mb-3"></i>
+          <h6 class="card-title">Treinamentos Agendados</h6>
+          <p class="fs-4 fw-bold">{{ treinamentos_agendados }}</p>
+          {% if treinamentos_agendados > 0 %}
+          <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalTreinamentos">
+            <i class="bi bi-eye-fill"></i> Ver detalhes
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎂 Aniversariantes do Mês -->
+  <div class="row mb-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-light d-flex align-items-center gap-2">
+          <i class="bi bi-calendar-event-fill text-primary"></i>
+          <strong>Aniversariantes do Mês</strong>
+        </div>
+        <div class="card-body">
           {% if aniversariantes %}
-            {% for aniversariante in aniversariantes %}
-              <div class="d-flex align-items-center mb-3">
-                {% if aniversariante.foto %}
-                  <img src="{{ aniversariante.foto.url }}" class="rounded-circle me-3" width="45" height="45" alt="{{ aniversariante.nome }}">
-                {% else %}
-                  <i class="bi bi-person-circle fs-3 me-3"></i>
-                {% endif %}
-                <div>
-                  <strong>{{ aniversariante.nome }}</strong><br>
-                  <span class="text-muted small">
-                    {% if aniversariante.data_nascimento %}
-                      {{ aniversariante.data_nascimento|date:"d/m" }}
-                    {% endif %}
-                  </span>
-                </div>
-              </div>
-            {% endfor %}
+          {% for aniversariante in aniversariantes %}
+          <div class="d-flex align-items-center mb-3">
+            {% if aniversariante.foto %}
+            <img src="{{ aniversariante.foto.url }}" class="rounded-circle me-3" width="45" height="45" alt="{{ aniversariante.nome }}">
+            {% else %}
+            <i class="bi bi-person-circle fs-3 me-3"></i>
+            {% endif %}
+            <div>
+              <strong>{{ aniversariante.nome }}</strong><br>
+              <span class="text-muted small">{{ aniversariante.data_nascimento|date:"d/m" }}</span>
+            </div>
+          </div>
+          {% endfor %}
           {% else %}
-            <p class="text-muted text-center">Nenhum aniversariante este mês</p>
+          <p class="text-muted text-center">Nenhum aniversariante este mês</p>
           {% endif %}
         </div>
       </div>
     </div>
 
+    <!-- Últimos Comunicados -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-light d-flex align-items-center gap-2">
+          <i class="bi bi-megaphone-fill text-primary"></i>
+          <strong>Últimos Comunicados</strong>
+        </div>
+        <div class="card-body">
+          {% if comunicados %}
+          <ul class="list-group list-group-flush">
+            {% for item in comunicados|slice:":3" %}
+            <li class="list-group-item">
+              <strong>{{ item.assunto }}</strong><br>
+              <small class="text-muted">{{ item.data|date:"d/m/Y" }} - {{ item.departamento_responsavel }}</small><br>
+              <button type="button" class="btn btn-link p-0 mt-1" data-bs-toggle="modal" data-bs-target="#modalGenerico" data-id="{{ item.id }}" data-titulo="{{ item.assunto }}">
+                <i class="bi bi-eye"></i> Ver
+              </button>
+              <template id="conteudo-{{ item.id }}">{{ item.descricao|safe }}</template>
+            </li>
+            {% endfor %}
+          </ul>
+          <a href="{% url 'lista_comunicados' %}" class="btn btn-sm btn-outline-primary mt-3 float-end">Ver todos</a>
+          {% else %}
+          <p class="text-muted">Nenhum comunicado recente.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
-</section>
+
+  <!-- 👷 Avaliações Baixas -->
+  <div class="row mb-4">
+    <div class="col">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-light d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+          <strong>Colaboradores com Avaliação Baixa</strong>
+        </div>
+        <div class="card-body">
+          {% if funcionarios_avaliacao_baixa %}
+          <div class="row g-3">
+            {% for item in funcionarios_avaliacao_baixa|slice:":4" %}
+            <div class="col-md-6 d-flex align-items-center">
+              {% if item.foto %}
+              <img src="{{ item.foto }}" class="rounded-circle me-3" width="50" height="50" alt="{{ item.nome }}">
+              {% else %}
+              <i class="bi bi-person-circle fs-3 me-3"></i>
+              {% endif %}
+              <div>
+                <strong>{{ item.nome }}</strong><br>
+                <small>Classificação: {{ item.classificacao|floatformat:1 }}% - 
+                  {% if item.status == 'Ruim' %}
+                  <span class="text-danger">😕 Ruim</span>
+                  {% elif item.status == 'Regular' %}
+                  <span class="text-warning">😊 Regular</span>
+                  {% elif item.status == 'Bom' %}
+                  <span class="text-success">😃 Bom</span>
+                  {% else %}
+                  <span class="text-muted">🤔 Indefinido</span>
+                  {% endif %}
+                </small><br>
+                <button class="btn btn-sm btn-link p-0 mt-1" data-bs-toggle="modal" data-bs-target="#modalGenerico" data-id="{{ item.id }}" data-titulo="Avaliação: {{ item.nome }}">
+                  <i class="bi bi-eye"></i> Detalhes
+                </button>
+                <template id="conteudo-{{ item.id }}">
+                  <p><strong>Classificação:</strong> {{ item.classificacao|floatformat:1 }}%</p>
+                  <p><strong>Status:</strong> {{ item.status }}</p>
+                  <a href="{% url 'visualizar_avaliacao_anual' item.id %}" class="btn btn-sm btn-outline-primary mt-2">Ver Completa</a>
+                </template>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <a href="{% url 'lista_avaliacoes' %}" class="btn btn-sm btn-outline-secondary mt-3 float-end">Ver todos</a>
+          {% else %}
+          <p class="text-muted">Nenhum colaborador em baixa.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
 
 <!-- Modal: Treinamentos Agendados -->
 <div class="modal fade" id="modalTreinamentos" tabindex="-1" aria-labelledby="modalTreinamentosLabel" aria-hidden="true">
@@ -167,8 +239,7 @@
   </div>
 </div>
 
-
-  <!-- Modal: Avaliações Pendentes -->
+<!-- Modal: Avaliações Pendentes -->
 <div class="modal fade" id="modalAvaliacoesPendentes" tabindex="-1" aria-labelledby="modalAvaliacoesPendentesLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -208,120 +279,4 @@
   </div>
 </div>
 
-
-  <!-- 📰 Comunicados Recentes & 👷 Avaliações Baixas -->
-  <div class="row row-cols-1 row-cols-lg-2 g-4">
-
-    <!-- 📰 Comunicados Recentes -->
-    <section class="col" aria-labelledby="titulo-comunicados">
-      <div class="card shadow-sm h-100">
-        <div class="card-header bg-light d-flex align-items-center gap-2">
-          <i class="bi bi-megaphone-fill text-primary"></i>
-          <strong id="titulo-comunicados">Últimos Comunicados</strong>
-        </div>
-        <div class="card-body">
-          {% if comunicados %}
-            <ul class="list-group list-group-flush mb-3">
-              {% for item in comunicados|slice:":3" %}
-                <li class="list-group-item">
-                  <strong>{{ item.assunto }}</strong><br>
-                  <small class="text-muted">{{ item.data|date:"d/m/Y" }} - {{ item.departamento_responsavel }}</small><br>
-                  <button type="button" class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#modalGenerico" data-id="{{ item.id }}" data-titulo="{{ item.assunto }}">
-                    <i class="bi bi-eye"></i> Ver
-                  </button>
-                  <template id="conteudo-{{ item.id }}">{{ item.descricao|safe }}</template>
-                </li>
-              {% endfor %}
-            </ul>
-            <a href="{% url 'lista_comunicados' %}" class="btn btn-sm btn-outline-primary float-end">Ver todos</a>
-          {% else %}
-            <p class="text-muted">Nenhum comunicado recente.</p>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    <!-- 👷 Avaliações Baixas -->
-    <section class="col" aria-labelledby="titulo-avaliacoes-baixas">
-      <div class="card shadow-sm h-100">
-        <div class="card-header bg-light d-flex align-items-center gap-2">
-          <i class="bi bi-person-exclamation text-warning"></i>
-          <strong id="titulo-avaliacoes-baixas">
-            <i class="bi bi-exclamation-triangle-fill text-warning me-2" aria-hidden="true"></i>
-            Colaboradores com Avaliação Baixa
-          </strong>
-                  </div>
-        <div class="card-body">
-          {% if funcionarios_avaliacao_baixa %}
-            {% for item in funcionarios_avaliacao_baixa|slice:":4" %}
-              <div class="d-flex align-items-center mb-3">
-                {% if item.foto %}
-                  <img src="{{ item.foto }}" alt="{{ item.nome }}" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                {% else %}
-                  <div class="rounded-circle bg-light text-muted d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">?</div>
-                {% endif %}
-                <div>
-                  <strong>{{ item.nome }}</strong><br>
-                  <small>Classificação: {{ item.classificacao|floatformat:1 }}% - 
-                    {% if item.status == 'Ruim' %}
-                      <span class="text-danger">😕 Ruim</span>
-                    {% elif item.status == 'Regular' %}
-                      <span class="text-warning">😊 Regular</span>
-                    {% elif item.status == 'Bom' %}
-                      <span class="text-success">😃 Bom</span>
-                    {% else %}
-                      <span class="text-muted">🤔 Indefinido</span>
-                    {% endif %}
-                  </small><br>
-                  <button class="btn btn-sm btn-link p-0" data-bs-toggle="modal" data-bs-target="#modalGenerico" data-id="{{ item.id }}" data-titulo="Avaliação: {{ item.nome }}">
-                    <i class="bi bi-eye"></i> Detalhes
-                  </button>
-                  <template id="conteudo-{{ item.id }}">
-                    <p><strong>Classificação:</strong> {{ item.classificacao|floatformat:1 }}%</p>
-                    <p><strong>Status:</strong> {{ item.status }}</p>
-                    <a href="{% url 'visualizar_avaliacao_anual' item.id %}" class="btn btn-sm btn-outline-primary">Ver Completa</a>
-                  </template>
-                </div>
-              </div>
-            {% endfor %}
-            <a href="{% url 'lista_avaliacoes' %}" class="btn btn-sm btn-outline-secondary float-end">Ver todos</a>
-          {% else %}
-            <p class="text-muted">Nenhum colaborador em baixa.</p>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-  </div>
-</div>
-
-<!-- Modal Reutilizável -->
-<div class="modal fade" id="modalGenerico" tabindex="-1" aria-labelledby="modalGenericoLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalGenericoLabel">Título dinâmico</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body"><p>Carregando conteúdo...</p></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const modal = document.getElementById('modalGenerico');
-  modal?.addEventListener('show.bs.modal', function (event) {
-    const button = event.relatedTarget;
-    const titulo = button.getAttribute('data-titulo') || 'Detalhes';
-    const id = button.getAttribute('data-id');
-    const template = document.getElementById('conteudo-' + id);
-    modal.querySelector('.modal-title').textContent = titulo;
-    modal.querySelector('.modal-body').innerHTML = template?.innerHTML || '<p>Conteúdo não disponível.</p>';
-  });
-});
-</script>
 {% endblock %}

@@ -146,6 +146,13 @@ def visualizar_f045_pdf(request, relacao_id):
 def gerar_f045(request, relacao_id):
     relacao = get_object_or_404(RelacaoMateriaPrima, pk=relacao_id)
 
+    print("====== DEBUG ROLAGEM ======")
+    print(f"Relação ID: {relacao.id} — Nº Relatório: {relacao.nro_relatorio}")
+    print(f"Total de rolos encontrados: {relacao.rolos.count()}")
+    for r in relacao.rolos.all():
+        print(f"Rolo ID: {r.id} | Nro Rolo: {r.nro_rolo} | Enrolamento: {r.enrolamento} | Dobramento: {r.dobramento} | Torção: {r.torcao_residual} | Visual: {r.aspecto_visual} | Alongamento: {r.alongamento} | Flechamento: {r.flechamento}")
+    print("===========================")
+
     try:
         f045 = relacao.f045
         updated = False
@@ -261,9 +268,24 @@ def gerar_f045(request, relacao_id):
     form = RelatorioF045Form(
         request.POST or None, instance=f045, limites_quimicos=limites
     )
-    formset = RoloFormSet(request.POST or None, queryset=relacao.rolos.all())
+    if request.method == "POST":
+        formset = RoloFormSet(request.POST, instance=relacao)
+    else:
+        formset = RoloFormSet(instance=relacao)
+
+        print(f"DEBUG FORMSET — TOTAL FORMS: {formset.total_form_count()}")
+        for i, f in enumerate(formset.forms):
+            print(f"Form {i}: instance.pk={f.instance.pk}, tb050_id={f.instance.tb050_id}, nro_rolo={f.instance.nro_rolo}")
+
+        
+
     rolos = relacao.rolos.all()
     tracoes_com_forms = list(zip(rolos, formset.forms))
+    print(f"==== TESTE 2 — TRACOES_COM_FORMS ====")
+    print(f"Total pares: {len(tracoes_com_forms)}")
+    for i, (rolo, rolo_form) in enumerate(tracoes_com_forms):
+        print(f"Pair {i}: rolo.id={rolo.id}, rolo.nro_rolo={rolo.nro_rolo}, form.instance.pk={rolo_form.instance.pk}, form.tb050_id={rolo_form.instance.tb050_id}")
+
 
     chemical_list = []
     for item in elementos:
@@ -303,6 +325,9 @@ def gerar_f045(request, relacao_id):
 
                 rolo = form_rolo.save(commit=False)
 
+                # 🔥 ESSENCIAL — garante que o formset não quebre
+                rolo.tb050 = relacao
+
                 # atribuições manuais:
                 rolo_id = str(rolo.pk)
 
@@ -337,6 +362,12 @@ def gerar_f045(request, relacao_id):
                     dureza_limite,
                 )
                 rolo.save()
+
+                # ✅ Salva os campos do formset (enrolamento, dobramento, etc.)
+                form_rolo.instance = rolo  # (opcional, mas garante que o formset fique sincronizado)
+                form_rolo.save()
+
+
 
             # >>>>> AQUI entra a avaliação dos químicos
             quimicos_aprovados = True

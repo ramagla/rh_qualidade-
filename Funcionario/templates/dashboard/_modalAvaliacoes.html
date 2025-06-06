@@ -1,0 +1,39 @@
+<!-- Modal: Avaliações Pendentes -->
+<div class="modal fade" id="modalAvaliacoesPendentes" tabindex="-1" aria-labelledby="modalAvaliacoesPendentesLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAvaliacoesPendentesLabel">
+          <i class="bi bi-list-check me-2 text-warning"></i> Colaboradores com Avaliação Pendente
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        {% if funcionarios_pendentes %}
+          <ul class="list-group">
+            {% for funcionario in funcionarios_pendentes %}
+              <li class="list-group-item d-flex align-items-center">
+                {% if funcionario.foto %}
+                  <img src="{{ funcionario.foto.url }}" class="rounded-circle me-3" width="40" height="40" alt="{{ funcionario.nome }}">
+                {% else %}
+                  <i class="bi bi-person-circle fs-4 me-3"></i>
+                {% endif %}
+                <div>
+                  <strong>{{ funcionario.nome }}</strong><br>
+                  <span class="text-muted small">Cargo: {{ funcionario.cargo_atual }}</span>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted text-center mb-0">Nenhum colaborador com avaliação pendente.</p>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

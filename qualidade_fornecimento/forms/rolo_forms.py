@@ -19,6 +19,7 @@ class RoloMateriaPrimaForm(forms.ModelForm):
     class Meta:
         model = RoloMateriaPrima
         fields = [
+            "tb050",  # ✅ ESSENCIAL — é o que falta para o formset funcionar
             "nro_rolo",
             "peso",
             "bitola_espessura",
@@ -33,6 +34,7 @@ class RoloMateriaPrimaForm(forms.ModelForm):
             "flechamento",
         ]
         widgets = {
+            "tb050": forms.HiddenInput(),  # para não exibir — MAS OBRIGATÓRIO no formset
             "peso": forms.NumberInput(attrs={"class": "form-control text-center"}),
             "tracao": forms.HiddenInput(),
             "dureza": forms.HiddenInput(),
@@ -43,6 +45,7 @@ class RoloMateriaPrimaForm(forms.ModelForm):
             "alongamento": forms.Select(attrs={"class": "form-select text-center"}),
             "flechamento": forms.Select(attrs={"class": "form-select text-center"}),
         }
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -61,6 +64,7 @@ class RoloMateriaPrimaForm(forms.ModelForm):
         ]:
             if nome in self.fields:
                 self.fields[nome].choices = CHOICES
+                self.fields[nome].initial = getattr(inst, nome, None)  # 🔥 garante que o valor salvo apareça
 
     def clean(self):
         cleaned = super().clean()
