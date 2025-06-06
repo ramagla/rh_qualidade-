@@ -388,6 +388,7 @@ def imprimir_etiquetas_tb050(request, id):
 
         # Renderiza o template PDF diretamente
         logo_url = f"file://{os.path.join(settings.STATIC_ROOT, 'img', 'logo.png')}"
+        seguranca_url = f"file://{os.path.join(settings.STATIC_ROOT, 'img', 'seguranca.png')}"
 
         html_string = render_to_string(
             "tb050/etiqueta_lote_pdf.html",
@@ -397,6 +398,7 @@ def imprimir_etiquetas_tb050(request, id):
                 "request": request,
                 "data_atual": date.today().strftime("%d/%m/%Y"),
                 "logo_url": logo_url,
+                "seguranca_url": seguranca_url,  # ✅ novo
             },
         )
 

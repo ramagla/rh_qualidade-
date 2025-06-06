@@ -95,8 +95,13 @@ def gerar_f045(request, relacao_id):
     res_min, res_max = None, None
 
     try:
-        norma_obj = NormaTecnica.objects.get(nome_norma=relacao.materia_prima.norma)
-        composicao = NormaComposicaoElemento.objects.filter(norma=norma_obj).first()
+        norma_obj = relacao.materia_prima.norma
+        tipo_abnt = relacao.materia_prima.tipo_abnt
+        composicao = NormaComposicaoElemento.objects.filter(
+            norma=norma_obj,
+            tipo_abnt__iexact=tipo_abnt
+        ).first()
+
 
         if composicao:
             elementos = [

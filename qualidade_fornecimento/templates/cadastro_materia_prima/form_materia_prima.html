@@ -321,6 +321,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Controle do botão Salvar
   form.addEventListener("submit", function () {
+    // ⚠️ Força atualização do Select2 para o campo norma
+    $('#id_norma').trigger('change.select2');
+
     const btn = document.getElementById("btnSalvar");
     const spinner = document.getElementById("spinnerSalvar");
     const texto = document.getElementById("textoSalvar");
@@ -328,7 +331,8 @@ document.addEventListener("DOMContentLoaded", function () {
     btn.disabled = true;
     spinner.classList.remove("d-none");
     texto.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Salvando...';
-  });
+});
+
 
   // Inicializa o comportamento ao carregar a página
   tipoSelect.addEventListener("change", toggleCampos);
@@ -338,59 +342,64 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script>
-$(document).ready(function() {
-  $('#id_norma').select2({
-    theme: 'bootstrap-5',
-    placeholder: 'Selecione a Norma',
-    allowClear: true,
-    width: '100%'
-  });
-
-  $('#id_tipo_abnt').select2({
-    theme: 'bootstrap-5',
-    placeholder: 'Selecione o Tipo ABNT',
-    allowClear: true,
-    width: '100%'
-  });
-
-  $('#id_norma').on('change', function() {
-    const normaSelecionada = $(this).val();  // PEGA O VALUE, que é o ID da norma
-    const tipoAbntSelect = $('#id_tipo_abnt');
-
-    tipoAbntSelect.empty();
-    tipoAbntSelect.append(new Option('Carregando...', '', true, true)).trigger('change');
-
-    if (!normaSelecionada) {
-      tipoAbntSelect.empty();
-      tipoAbntSelect.append(new Option('Selecione a Norma primeiro', '', true, true));
-      tipoAbntSelect.trigger('change');
-      return;
-    }
-
-    $.ajax({
-      url: "{% url 'get_tipos_abnt' %}",
-      type: "GET",
-      dataType: "json",
-      data: { norma_id: normaSelecionada },  // AGORA ENVIA ID
-      success: function(data) {
-        tipoAbntSelect.empty();
-        tipoAbntSelect.append(new Option('Selecione o Tipo ABNT', '', true, true));
-        data.tipos.forEach(function(tipo) {
-          tipoAbntSelect.append(new Option(tipo, tipo));
-        });
-        tipoAbntSelect.trigger('change');
-      },
-      error: function() {
-        tipoAbntSelect.empty();
-        tipoAbntSelect.append(new Option('Erro ao carregar Tipos ABNT', '', true, true)).trigger('change');
-      }
+  $(document).ready(function() {
+    // Inicializa Select2 para o campo NORMA
+    $('#id_norma').select2({
+      theme: 'bootstrap-5',
+      placeholder: 'Selecione a Norma',
+      allowClear: true,
+      width: '100%'
     });
+  
+    // Inicializa Select2 para o campo TIPO ABNT
+    $('#id_tipo_abnt').select2({
+      theme: 'bootstrap-5',
+      placeholder: 'Selecione o Tipo ABNT',
+      allowClear: true,
+      width: '100%'
+    });
+  
+    // Evento: quando a norma muda, carrega os tipos ABNT
+    $('#id_norma').on('change', function() {
+      const normaSelecionada = $(this).val();  // PEGA O VALUE, que é o ID da norma
+      const tipoAbntSelect = $('#id_tipo_abnt');
+  
+      tipoAbntSelect.empty();
+      tipoAbntSelect.append(new Option('Carregando...', '', true, true)).trigger('change');
+  
+      if (!normaSelecionada) {
+        tipoAbntSelect.empty();
+        tipoAbntSelect.append(new Option('Selecione a Norma primeiro', '', true, true));
+        tipoAbntSelect.trigger('change');
+        return;
+      }
+  
+      $.ajax({
+        url: "{% url 'get_tipos_abnt' %}",
+        type: "GET",
+        dataType: "json",
+        data: { norma_id: normaSelecionada },  // AGORA ENVIA ID
+        success: function(data) {
+          tipoAbntSelect.empty();
+          tipoAbntSelect.append(new Option('Selecione o Tipo ABNT', '', true, true));
+          data.tipos.forEach(function(tipo) {
+            tipoAbntSelect.append(new Option(tipo, tipo));
+          });
+          tipoAbntSelect.trigger('change');
+        },
+        error: function() {
+          tipoAbntSelect.empty();
+          tipoAbntSelect.append(new Option('Erro ao carregar Tipos ABNT', '', true, true)).trigger('change');
+        }
+      });
+    });
+  
+    // ⚠️ IMPORTANTE: força o disparo do .change da norma quando a página carregar
+    // Assim o AJAX do Tipo ABNT vai rodar mesmo em modo de EDIÇÃO
+    $('#id_norma').trigger('change');
   });
-});
-
-
-</script>
-
+  </script>
+  
 
 
 {% endblock %}

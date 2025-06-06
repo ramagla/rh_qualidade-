@@ -5,11 +5,12 @@ from qualidade_fornecimento.models.norma import NormaTecnica, NormaComposicaoEle
 
 class MateriaPrimaCatalogoForm(forms.ModelForm):
     norma = forms.ModelChoiceField(
-    queryset=NormaTecnica.objects.all().order_by('nome_norma'),
+    queryset=NormaTecnica.objects.none(),  # inicia vazio
     required=False,
     label='Norma',
     widget=forms.Select(attrs={"class": "form-select select2 select2-norma"})
 )
+
     tipo_abnt = forms.ChoiceField(
     required=False,
     label='Tipo ABNT / Classe',
@@ -42,10 +43,13 @@ class MateriaPrimaCatalogoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Inicialmente sem opções
+        # Garante que a Norma sempre terá o queryset completo
+        self.fields['norma'].queryset = NormaTecnica.objects.all().order_by('nome_norma')
+
+        # Inicialmente sem opções de tipo_abnt
         self.fields["tipo_abnt"].choices = [("", "---------")]
 
-        # Se estiver preenchendo via POST (formulário com valor em 'norma')
+        # Se estiver preenchendo via POST
         if "norma" in self.data:
             try:
                 norma_id = int(self.data.get("norma"))
@@ -61,7 +65,7 @@ class MateriaPrimaCatalogoForm(forms.ModelForm):
             except (ValueError, TypeError):
                 pass
 
-        # Ou se for edição de um registro existente
+        # Ou se for edição
         elif self.instance.pk and self.instance.norma:
             tipos = (
                 NormaComposicaoElemento.objects.filter(norma=self.instance.norma)
@@ -72,6 +76,7 @@ class MateriaPrimaCatalogoForm(forms.ModelForm):
                 .order_by("tipo_abnt")
             )
             self.fields["tipo_abnt"].choices += [(t, t) for t in tipos]
+
 
     def clean_largura(self):
         valor = self.cleaned_data.get("largura")

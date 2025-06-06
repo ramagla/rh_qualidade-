@@ -303,14 +303,25 @@ def importar_materia_prima_excel(request):
 
 def editar_materia_prima(request, pk):
     materia_prima = get_object_or_404(MateriaPrimaCatalogo, pk=pk)
+    
     if request.method == "POST":
         form = MateriaPrimaCatalogoForm(request.POST, instance=materia_prima)
+        
+        # DEBUG: printa o valor que chegou no POST
+        print("### POST - norma:", request.POST.get("norma"))
+        
         if form.is_valid():
+            # DEBUG: printa o cleaned_data antes de salvar
+            print("### CLEANED_DATA - norma:", form.cleaned_data.get("norma"))
+            
             form.save()
+
+            # DEBUG: printa o valor que ficou no instance após salvar
+            print("### INSTANCE - norma após save:", materia_prima.norma)
+
             messages.success(request, "Matéria-prima atualizada com sucesso!")
 
             if "salvar_proximo" in request.POST:
-                # Tenta buscar o próximo ID
                 proxima = (
                     MateriaPrimaCatalogo.objects.filter(id__gt=materia_prima.id)
                     .order_by("id")
@@ -323,14 +334,20 @@ def editar_materia_prima(request, pk):
                     return redirect("materiaprima_catalogo_list")
 
             return redirect("materiaprima_catalogo_list")
+    
     else:
         form = MateriaPrimaCatalogoForm(instance=materia_prima)
+    
+    # DEBUG: ao carregar o form para edição, ver o valor inicial da norma
+    print("### EDIÇÃO - form.initial['norma']:", form.initial.get("norma"))
+    print("### EDIÇÃO - instance.norma:", materia_prima.norma)
 
     return render(
         request,
         "cadastro_materia_prima/form_materia_prima.html",
         {"form": form, "editar": True},
     )
+
 
 
 from django.db.models import ProtectedError

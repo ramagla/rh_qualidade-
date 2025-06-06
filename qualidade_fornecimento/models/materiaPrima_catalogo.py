@@ -54,14 +54,14 @@ class MateriaPrimaCatalogo(models.Model):
         def capitalizar(texto):
             if not texto:
                 return ""
-            palavras_ignoradas = {"de", "do", "da", "das", "dos", "e", "para", "em", "com", "a", "o","NM", "ATC"}
+            palavras_ignoradas = {"de", "do", "da", "das", "dos", "e", "para", "em", "com", "a", "o", "NM", "ATC"}
             return " ".join([
                 palavra if palavra in palavras_ignoradas else palavra.capitalize()
                 for palavra in texto.lower().split()
             ])
 
         def tratar_descricao(descricao):
-            normas_maiusculas = {"DIN", "NBR", "SAE", "EN", "BTC", "SM", "SL","SH"}
+            normas_maiusculas = {"DIN", "NBR", "SAE", "EN", "BTC", "SM", "SL", "SH"}
             palavras = descricao.split()
             resultado = []
             for palavra in palavras:
@@ -92,6 +92,11 @@ class MateriaPrimaCatalogo(models.Model):
             match = re.search(r"Ø([\d,.]+)", self.descricao)
             if match:
                 self.bitola = match.group(1).replace(",", ".").strip() + " mm"
+
+        # ⚠️ Proteção do campo NORMA e TIPO_ABNT se for "Tratamento"
+        if self.tipo == "Tratamento":
+            self.norma = None
+            self.tipo_abnt = ""
 
         super().save(*args, **kwargs)
 
