@@ -14,6 +14,7 @@ class Dispositivo(models.Model):
         ("°C", "Graus Celsius"),
         ("%", "Percentual"),
         ("Ø", "Diâmetro"),
+        ("°", "Graus"),
     ]
 
     ESTUDO_REALIZADO_CHOICES = [
