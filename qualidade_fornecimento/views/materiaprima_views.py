@@ -214,14 +214,17 @@ def editar_tb050(request, id):
 
     if request.method == "POST":
         form = RelacaoMateriaPrimaForm(request.POST, request.FILES, instance=registro)
-        formset = RoloFormSet(request.POST, instance=registro)
+        formset = RoloFormSet(request.POST, instance=registro, prefix="rolos")
 
         if form.is_valid() and formset.is_valid():
             salvar_formulario_tb050(form, formset, registro_existente=registro)
             messages.success(request, "Registro atualizado com sucesso!")
             return redirect("tb050_list")
         else:
+            print("FORM ERRORS:", form.errors.as_data())
+            print("FORMSET ERRORS:", formset.errors)
             messages.error(request, "Corrija os erros no formulário.")
+
 
     else:
         form = RelacaoMateriaPrimaForm(instance=registro)

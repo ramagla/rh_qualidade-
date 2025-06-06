@@ -222,14 +222,20 @@
 
       <div id="rolo-formset" class="row g-3">
         {% for rolo_form in formset %}
-          <div class="col-12 col-md-6">
-  <div class="card mb-3 p-3 shadow-sm position-relative">
-    {{ rolo_form.non_field_errors }}
-    <div class="row g-3">
-      <div class="col-12 col-md-6">
-        <label class="form-label">N° do Rolo:</label>
-<div class="mb-2">
-  {{ rolo_form.nro_rolo|add_class:"form-control"|attr:"placeholder:Informe o número do rolo" }}
+        <div class="col-12 col-md-6">
+          <div class="card mb-3 p-3 shadow-sm position-relative">
+            
+            {{ rolo_form.non_field_errors }}
+      
+            <!-- Campo oculto obrigatório para controle do formset -->
+            {{ rolo_form.id }}
+      
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label">N° do Rolo:</label>
+                <div class="mb-2">
+                  {{ rolo_form.nro_rolo|add_class:"form-control"|attr:"placeholder:Informe o número do rolo" }}
+      
   {% for error in rolo_form.nro_rolo.errors %}
     <div class="text-danger small mt-1">{{ error }}</div>
   {% endfor %}
@@ -420,10 +426,11 @@ document.addEventListener("DOMContentLoaded", function () {
   <div class="card mb-3 p-3">
     <div class="row">
       <div class="col-12 col-md-4">
-
+        {{ formset.empty_form.id }}  <!-- OBRIGATÓRIO -->
         <label class="form-label">N° do Rolo:</label>
         {{ formset.empty_form.nro_rolo|add_class:"form-control" }}
       </div>
+
       <div class="col-12 col-md-4">
 
         <label class="form-label">Peso:</label>

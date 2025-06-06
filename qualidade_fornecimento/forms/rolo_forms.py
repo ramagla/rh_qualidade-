@@ -7,10 +7,13 @@ from qualidade_fornecimento.models.rolo import RoloMateriaPrima
 
 class RoloMateriaPrimaForm(forms.ModelForm):
     nro_rolo = forms.CharField(
-        disabled=True,
         required=False,
         label="N° do Rolo",
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "readonly": "readonly",
+            "placeholder": "Será gerado ao salvar"
+        }),
     )
 
     class Meta:

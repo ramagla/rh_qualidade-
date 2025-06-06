@@ -24,7 +24,9 @@ def lista_documentos(request):
 
     # 🔐 Filtrar pelos departamentos do funcionário logado
     if request.user.is_authenticated and hasattr(request.user, "funcionario"):
-        if request.user.username != "rafael.almeida":
+        usuarios_liberados = ["rafael.almeida", "Agoveia", "Dpereira"]
+
+        if request.user.username not in usuarios_liberados:
             departamento_usuario = request.user.funcionario.local_trabalho
             documentos = documentos.filter(departamentos__sigla=departamento_usuario)
 
