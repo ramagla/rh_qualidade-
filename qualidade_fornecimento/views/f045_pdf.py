@@ -148,11 +148,18 @@ def _renderizar_pdf_f045(request, relacao_id, salvar_pdf=False):
                 {"sigla": sigla, "min": vmin, "max": vmax, "valor": val, "ok": ok}
             )
 
-    # Assinatura
+   # Assinatura
     usuario = request.user
     assinatura_nome = usuario.get_full_name() or usuario.username
     assinatura_email = usuario.email
     assinatura_data = localtime(now()).strftime("%d/%m/%Y %H:%M:%S")
+
+    # Se for salvar, atualiza campos no banco
+    if salvar_pdf:
+        f045.assinatura_nome = assinatura_nome
+        f045.assinatura_cn = assinatura_email
+        f045.data_assinatura = localtime(now())
+        f045.save(update_fields=["assinatura_nome", "assinatura_cn", "data_assinatura"])   
 
     context = {
         "obj": f045,

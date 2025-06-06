@@ -10,7 +10,7 @@ from qualidade_fornecimento.utils import gerar_grafico_velocimetro
 def dashboard_qualidade_view(request):
     total_f045 = RelatorioF045.objects.count()
     total_servico = ControleServicoExterno.objects.count()
-    total_pdf = RelatorioF045.objects.exclude(pdf="").count()
+    total_f045_assinados = RelatorioF045.objects.filter(data_assinatura__isnull=False).count()
 
     # Dados semestrais
     ano_atual = datetime.today().year
@@ -62,7 +62,7 @@ def dashboard_qualidade_view(request):
     return render(request, "qualidade_fornecimento/home.html", {
         "kpi_f045_total": total_f045,
         "kpi_servico_total": total_servico,
-        "kpi_pdf_ok": total_pdf,
+        "kpi_f045_assinados": total_f045_assinados,
         "kpi_iqg": iqg_medio,
         "kpi_iqf": iqf,
         "kpi_ip": ip,

@@ -11,8 +11,8 @@ from qualidade_fornecimento.views.controle_servico_externo_views import (
     listar_controle_servico_externo,
     visualizar_controle_servico_externo
 )
-from qualidade_fornecimento.views.f045_pdf import gerar_pdf_f045, visualizar_f045_pdf
-from qualidade_fornecimento.views.f045_views import f045_status, gerar_f045
+from qualidade_fornecimento.views.f045_pdf import gerar_pdf_f045
+from qualidade_fornecimento.views.f045_views import f045_status, gerar_f045,visualizar_f045_pdf
 from qualidade_fornecimento.views.inspecao_servico_externo_views import (
     cadastrar_inspecao_servico_externo,
     editar_inspecao_servico_externo,
@@ -136,9 +136,9 @@ urlpatterns = [
         name="gerar_pdf_f045",
     ),
     path(
-        "tb050/<int:relacao_id>/f045/pdf/preview/",
+        "tb050/<int:relacao_id>/f045/visualizar/",
         visualizar_f045_pdf,
-        name="visualizar_pdf_f045",
+        name="visualizar_f045",
     ),
     path("f045_status/<int:f045_id>/", f045_status, name="f045_status"),
     path(

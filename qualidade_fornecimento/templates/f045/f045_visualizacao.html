@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/f045/_estilos_f045.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+
+<div id="relatorio-area" class="pdf-container">
+
+<!-- Cabeçalho -->
+<table style="margin-bottom: 6px;">
+  <tr>
+    <td style="width: 20%; padding: 4px;"><img src="{{ logo_url }}" class="logo" alt="Logo"></td>
+    <td style="width: 55%; padding: 4px;">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <span style="font-size: 12pt; font-weight: bold;">Relatório de Inspeção de Material</span>
+        {% if relacao.item_seguranca %}
+          <img src="{% static 'seguranca.png' %}" class="seguranca" alt="Segurança">
+        {% endif %}
+      </div>
+    </td>
+    <td style="width: 20%;">
+      <div style="font-size: 9pt;">N.º</div>
+      <div style="font-size: 16pt; font-weight: bold;">{{ obj.nro_relatorio }}</div>
+    </td>
+  </tr>
+</table>
+
+<!-- Dados do material -->
+<h4>📦 Dados do Material</h4>
+<table style="margin-bottom: 8px;">
+  <tr>
+    <td colspan="2"><strong>Fornecedor:</strong><br>{{ relacao.fornecedor.nome }}</td>
+    <td><strong>NF:</strong><br>{{ relacao.nota_fiscal }}</td>
+    <td><strong>Certificado nº:</strong><br>{{ relacao.numero_certificado }}</td>
+  </tr>
+  <tr>
+    <td colspan="2"><strong>Material:</strong><br>{{ relacao.materia_prima.descricao }}</td>
+    <td colspan="2">
+      <strong>
+        {% if relacao.materia_prima.largura %}
+          Fita Espessura / Largura (mm):
+        {% else %}
+          Bitola:
+        {% endif %}
+      </strong><br>
+      {% if relacao.materia_prima.largura %}
+        {{ obj.bitola }} – {{ relacao.materia_prima.largura }}
+      {% else %}
+        {{ obj.bitola }}
+      {% endif %}
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Qtd. rolos:</strong><br>{{ rolos.count }}</td>
+    <td>
+      <strong>Qtd. carretéis:</strong><br>
+      {% if obj.qtd_carreteis == None or obj.qtd_carreteis == "" or obj.qtd_carreteis == "—" %}
+        N/A
+      {% else %}
+        {{ obj.qtd_carreteis }}
+      {% endif %}
+    </td>
+    <td><strong>Massa líquida (kg):</strong><br>{{ rolos|calc_peso_total }}</td>
+    <td><strong>Pedido Compra:</strong><br>{{ obj.pedido_compra }}</td>
+  </tr>
+</table>
+
+<!-- Composição Química -->
+<h4>🧪 <div class="circle">05</div> Composição Química (%)</h4>
+<table>
+  <thead>
+    <tr><th>Elemento</th><th>Min/Max</th><th>Encontrado</th><th>Laudo</th></tr>
+  </thead>
+  <tbody>
+    {% for item in encontrados %}
+    <tr>
+      <td style="text-align: center; vertical-align: middle;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+          <span style="display: inline-block; border: 1px solid #000; border-radius: 6px; padding: 2px 6px; font-weight: bold; font-size: 8pt;">
+            {{ item.sigla }}
+          </span>
+          <div style="font-size: 7pt;">{{ item.nome_elemento }}</div>
+        </div>
+      </td>
+      <td>{{ item.min|stringformat:"0.4f" }} – {{ item.max|stringformat:"0.4f" }}</td>
+      <td>{{ item.valor|stringformat:"0.4f" }}</td>
+      <td>
+        {% if item.valor == None or item.valor == "-" or item.valor == "" %}
+          <span style="color: green;">✔️</span>
+        {% elif item.ok %}
+          <span style="color: green;">✔️</span>
+        {% else %}
+          <span style="color: red;">❌</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Outras características -->
+<h4 style="margin-top: 10px;">📜 Outras características do certificado</h4>
+<table>
+  <thead>
+    <tr>
+      <th><div class="circle">02</div><br>Tração (kgf/mm²)</th>
+      <th><div class="circle">06</div><br>Escoamento</th>
+      <th><div class="circle">07</div><br>Alongamento (%)</th>
+      <th><div class="circle">08</div><br>Estricção (%)</th>
+      <th><div class="circle">12</div><br>Torção</th>
+      <th><div class="circle">11</div><br>Dureza</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ obj.resistencia_tracao|default:"N/A" }}</td>
+      <td>{{ obj.escoamento|default:"N/A" }}</td>
+      <td>{{ obj.alongamento|default:"N/A" }}</td>
+      <td>{{ obj.estriccao|default:"N/A" }}</td>
+      <td>{{ obj.torcao_certificado|default:"N/A" }}</td>
+      <td>
+        {% if obj.dureza_certificado == "—" or obj.dureza_certificado == None %}
+          N/A
+        {% else %}
+          {{ obj.dureza_certificado }}
+        {% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Inspeção Interna -->
+<h4 style="margin-top: 10px;">🔍 Características Inspecionadas</h4>
+<table>
+  <thead>
+    <tr>
+      <th>Rolo</th><th>Massa</th>
+      <th><span class="circle-number">01</span>
+        {% if relacao.materia_prima.largura %}
+          Esp. / Larg.(mm)
+        {% else %}
+          Bitola (mm)
+        {% endif %}
+      </th>
+      <th><span class="circle-number">02</span>Tração</th>
+      <th><span class="circle-number">11</span>Dureza</th>
+      <th><span class="circle-number">03</span>Enrolamento</th>
+      <th><span class="circle-number">04</span>Dobramento</th>
+      <th><span class="circle-number">12</span>Torção Residual</th>
+      <th><span class="circle-number">09</span>Visual</th>
+      <th><span class="circle-number">07</span>Alongamento</th>
+      <th><span class="circle-number">13</span>Flechamento</th>
+      <th>Laudo</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for rolo in rolos %}
+    <tr>
+      <td>{{ rolo.nro_rolo }}</td>
+      <td>{{ rolo.peso|default:"—" }}</td>
+      <td>
+        {% if relacao.materia_prima.largura %}
+          {% if rolo.bitola_espessura and rolo.bitola_largura %}
+            {{ rolo.bitola_espessura|stringformat:"0.2f" }} – {{ rolo.bitola_largura|stringformat:"0.2f" }}
+          {% elif rolo.bitola_espessura %}
+            {{ rolo.bitola_espessura|stringformat:"0.2f" }}
+          {% else %}
+            —
+          {% endif %}
+        {% else %}
+          {% if rolo.bitola_espessura %}
+            {{ rolo.bitola_espessura|stringformat:"0.2f" }}
+          {% else %}
+            —
+          {% endif %}
+        {% endif %}
+      </td>
+      <td>{{ rolo.tracao|default:"—" }}</td>
+      <td>{{ rolo.dureza|default:"—" }}</td>
+      <td>{{ rolo.enrolamento|default:"—" }}</td>
+      <td>{{ rolo.dobramento|default:"—" }}</td>
+      <td>{{ rolo.torcao_residual|default:"—" }}</td>
+      <td>{{ rolo.aspecto_visual|default:"—" }}</td>
+      <td>{{ rolo.alongamento|default:"—" }}</td>
+      <td>{{ rolo.flechamento|default:"—" }}</td>
+      <td>
+        {% if rolo.enrolamento == "OK" and rolo.dobramento == "OK" and rolo.torcao_residual == "OK" and rolo.aspecto_visual == "OK" %}
+          <span style="color: green;">✔️</span>
+        {% else %}
+          <span style="color: red;">❌</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- (Continue com: Especificação de Norma, Status Geral, Observações, Assinatura, Rodapé) -->
+
+<!-- Especificação de Norma -->
+<h4 style="margin-top: 10px;">📄 Especificação de Norma</h4>
+<table>
+  <thead>
+    <tr>
+      <th>Especificação de Norma</th>
+      <th><div class="circle-number">02</div> Resistência à Tração (kgf/mm²)</th>
+      <th><div class="circle-number">11</div> Dureza (HR/HRb)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        {% if norma_tracao %}
+          {% if norma_tracao.norma.vinculo_norma %}
+            {{ norma_tracao.norma.vinculo_norma }}
+          {% else %}
+            {{ norma_tracao.norma.nome_norma }}
+          {% endif %}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+      <td>
+        {% if norma_tracao %}
+          {{ norma_tracao.resistencia_min|stringformat:"0.2f" }} – {{ norma_tracao.resistencia_max|stringformat:"0.2f" }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+      <td>
+        {% if norma_tracao and norma_tracao.dureza %}
+          {{ norma_tracao.dureza|stringformat:"0.0f" }}
+        {% else %}
+          N/A
+        {% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+<!-- Status -->
+<p><strong>Status Geral:</strong>
+    {% if obj.status_geral == "Aprovado" %}
+      <span class="status-aprovado">APROVADO ✔️</span>
+    {% elif obj.status_geral == "Aprovado Condicionalmente" %}
+      <span class="status-condicional">APROVAÇÃO CONDICIONAL ⚠️</span>
+    {% else %}
+      <span class="status-reprovado">REPROVADO ❌</span>
+    {% endif %}
+  </p>
+  
+<!-- Observações -->
+{% if obj.observacoes or relacao.material_cliente %}
+  <h4>📝 Observações</h4>
+  <div style="font-size: 8pt; margin-bottom: 6px;">
+    {% if relacao.material_cliente %}
+      <p><span style="color: orange;">🛡️ Material do Cliente</span></p>
+    {% endif %}
+    {{ obj.observacoes|linebreaks }}
+  </div>
+  <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+{% endif %}
+<!-- Assinatura -->
+<h4 class="mt-04">🧾 Responsável</h4>
+<div class="assinatura">
+  Assinado digitalmente por <strong>{{ assinatura_nome }}</strong><br>
+  ND: OU=Almoxarifado, o=Bras-Mol Molas e Estampados Ltda, CN={{ assinatura_email }}<br>
+  Razão: Eu estou aprovando este documento<br>
+  Local: Itaquaquecetuba - SP<br>
+  Data: {{ assinatura_data }}
+</div>
+
+<!-- Rodapé institucional -->
+<div class="rodape-f045">
+    <div style="max-width: 85%;">
+      <strong>Legenda:</strong>
+      <span style="color: green;">✔️ Aprovado</span> |
+      <span style="color: red;">❌ Reprovado</span> |
+      <span style="color: orange;">⚠️ Aprovado Condicionalmente</span> |
+      <span style="color: orange;">🛡️ Material do Cliente</span><br>
+      <strong>Características conforme PIRs – Tipo de Amostra e Método:</strong><br>
+      01 e 13 – 1 corpo de prova no início de cada rolo | Medição direta<br>
+      02 – Todos os certificados recebidos do fornecedor | POQ007 – Comparação visual<br>
+      03, 04 – Todos os certificados recebidos do fornecedor | POQ008 – Comparação visual<br>
+      05, 06, 07, 08, 09, 12 – Todos os certificados emitidos pelo fornecedor | Comparação visual<br>
+      11 – 1 corpo de prova no início e no final de cada rolo | POQ009
+    </div>
+    <div style="text-align: right; white-space: nowrap;">
+      <strong>F045 - Rev. 14</strong>
+    </div>
+  </div>
+  
+</div> <!-- fecha relatorio-area -->
+
+{% endblock %}

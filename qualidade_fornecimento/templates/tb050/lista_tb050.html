@@ -206,14 +206,22 @@
                 {% include "partials/global/_botao_visualizar.html" with objeto=item url_visualizar='tb050_visualizar' %}
                 {% include "partials/global/_botao_editar.html" with objeto=item url_editar='tb050_editar' %}
                 {% if request.user|has_permission:'qualidade_fornecimento.selecionar_etiquetas_tb050' %}
-                  <a href="{% url 'tb050_selecionar_etiquetas' item.pk %}" class="btn btn-sm btn-info" title="Imprimir etiquetas"><i class="bi bi-printer"></i></a>
-                {% endif %}
-                {% if item.f045 and item.f045.pdf %}
-                  <a href="{{ item.f045.pdf.url }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Visualizar F045 em PDF"><i class="bi bi-file-earmark-pdf"></i></a>
-                {% endif %}
+                <a href="{% url 'tb050_selecionar_etiquetas' item.pk %}" class="btn btn-sm btn-info mt-1" title="Imprimir etiquetas" aria-label="Imprimir etiquetas">
+                  <i class="bi bi-printer" aria-hidden="true"></i>
+                </a>
+                                {% endif %}
+                {% if item.f045 %}
+                <a href="{% url 'visualizar_f045' item.pk %}" class="btn btn-sm btn-outline-primary mt-1" title="Visualizar F045" aria-label="Visualizar F045">
+                  <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+                </a>
+                
+              {% endif %}
+              
                 {% if item.anexo_certificado %}
-                  <a href="{{ item.anexo_certificado.url }}" target="_blank" class="btn btn-sm btn-outline-success" title="Download do certificado"><i class="bi bi-paperclip"></i></a>
-                {% endif %}
+                <a href="{{ item.anexo_certificado.url }}" target="_blank" class="btn btn-sm btn-outline-success mt-1" title="Download do certificado" aria-label="Download do certificado">
+                  <i class="bi bi-paperclip" aria-hidden="true"></i>
+                </a>
+                                {% endif %}
                 {% if request.user|has_permission:'qualidade_fornecimento.delete_relacaomateriaprima' %}
                   {% include "partials/global/_botao_excluir.html" with objeto=item url_excluir='tb050_excluir' %}
                 {% endif %}

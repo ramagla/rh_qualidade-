@@ -1,5 +1,7 @@
+from django.contrib import messages
 import re
 from decimal import Decimal, InvalidOperation
+from time import localtime
 from qualidade_fornecimento.templatetags.custom_filters import parse_decimal_seguro
 
 from django.contrib.auth.decorators import login_required
@@ -16,8 +18,8 @@ from qualidade_fornecimento.models.norma import (
     NormaTecnica,
     NormaTracao,
 )
-from qualidade_fornecimento.tasks import gerar_pdf_f045_background
-
+from django.templatetags.static import static
+from django.utils.timezone import localtime, now
 
 @login_required
 def f045_status(request, f045_id):
@@ -38,6 +40,106 @@ def parse_decimal(value):
         return Decimal(str(value).replace(",", "."))
     except (InvalidOperation, ValueError, AttributeError):
         return None
+
+
+@login_required
+def visualizar_f045_pdf(request, relacao_id):
+    relacao = get_object_or_404(RelacaoMateriaPrima, pk=relacao_id)
+    f045 = relacao.f045
+    rolos = relacao.rolos.all()
+
+    # Recuperar norma e composição (igual a gerar_f045 — seguro!)
+    try:
+        norma_obj = relacao.materia_prima.norma
+        tipo_abnt = relacao.materia_prima.tipo_abnt
+
+        composicao = NormaComposicaoElemento.objects.filter(
+            norma=norma_obj,
+            tipo_abnt__iexact=tipo_abnt
+        ).first()
+
+        bitola = relacao.materia_prima.bitola.replace(",", ".") if relacao.materia_prima.bitola else None
+        bitola_float = float(bitola) if bitola else None
+
+        if bitola_float and tipo_abnt:
+            norma_tracao = NormaTracao.objects.filter(
+                norma=norma_obj,
+                tipo_abnt__iexact=tipo_abnt,
+                bitola_minima__lte=bitola_float,
+                bitola_maxima__gte=bitola_float
+            ).first()
+        else:
+            norma_tracao = None
+
+    except (NormaTecnica.DoesNotExist, NormaComposicaoElemento.DoesNotExist, ValueError):
+        composicao = None
+        norma_tracao = None
+
+    # Gerar encontrados (composição química)
+    encontrados = []
+    if composicao:
+        elementos = [
+            ("C", composicao.c_min, composicao.c_max, getattr(f045, "c_user", None)),
+            ("Mn", composicao.mn_min, composicao.mn_max, getattr(f045, "mn_user", None)),
+            ("Si", composicao.si_min, composicao.si_max, getattr(f045, "si_user", None)),
+            ("P", composicao.p_min, composicao.p_max, getattr(f045, "p_user", None)),
+            ("S", composicao.s_min, composicao.s_max, getattr(f045, "s_user", None)),
+            ("Cr", composicao.cr_min, composicao.cr_max, getattr(f045, "cr_user", None)),
+            ("Ni", composicao.ni_min, composicao.ni_max, getattr(f045, "ni_user", None)),
+            ("Cu", composicao.cu_min, composicao.cu_max, getattr(f045, "cu_user", None)),
+            ("Al", composicao.al_min, composicao.al_max, getattr(f045, "al_user", None)),
+        ]
+        for sigla, vmin, vmax, valor in elementos:
+            try:
+                val = Decimal(str(valor).replace(",", ".")) if valor is not None else None
+
+                if vmin in [None, 0] and vmax in [None, 0]:
+                    ok = True
+                elif val is not None and vmin is not None and vmax is not None:
+                    ok = vmin <= val <= vmax
+                else:
+                    ok = False
+
+            except:
+                val = valor
+                ok = False
+
+            encontrados.append({
+                "sigla": sigla,
+                "min": vmin,
+                "max": vmax,
+                "valor": val,
+                "ok": ok,
+                "nome_elemento": "",  # você pode preencher se desejar
+            })
+
+    # Assinatura
+    usuario = f045.usuario
+    assinatura_nome = usuario.get_full_name() or usuario.username
+    assinatura_email = usuario.email
+    assinatura_data = (
+        localtime(f045.data_assinatura).strftime("%d/%m/%Y %H:%M:%S")
+        if f045.data_assinatura else "—"
+    )
+
+    # Montar context
+    context = {
+        "obj": f045,
+        "rolos": rolos,
+        "relacao": relacao,
+        "encontrados": encontrados,
+        "norma_tracao": norma_tracao,
+        "logo_url": static('logo.png'),
+        "seguranca_url": static('seguranca.png'),
+        "assinatura_nome": assinatura_nome,
+        "assinatura_email": assinatura_email,
+        "assinatura_data": assinatura_data,
+        "titulo": f"F045 – Relatório {f045.nro_relatorio}",
+    }
+
+    return render(request, "f045/f045_visualizacao.html", context)
+
+
 
 
 @login_required
@@ -274,18 +376,21 @@ def gerar_f045(request, relacao_id):
             # Salva o relatório com as avaliações
             updated_f045.save(limites_quimicos=limites, aprovado_manual=switch_manual)
 
-            # Atualiza o status da relação com base no F045 salvo
+           # Atualiza o status da relação com base no F045 salvo
             relacao.status = updated_f045.status_geral
             relacao.save(update_fields=["status"])
 
-            # Só agora chama a task
-            gerar_pdf_f045_background.delay(updated_f045.pk)
+           # Grava data da assinatura
+            # Grava nome e e-mail do usuário que assinou
+            updated_f045.assinatura_nome = request.user.get_full_name() or request.user.username
+            updated_f045.assinatura_cn = request.user.email
+            updated_f045.data_assinatura = now()
+            updated_f045.save(update_fields=["assinatura_nome", "assinatura_cn", "data_assinatura"])
 
 
-
-
-            request.session["f045_pending"] = updated_f045.pk
+            messages.success(request, "Relatório F045 salvo com sucesso.")
             return redirect("tb050_list")
+
 
     return render(
         request,
@@ -308,3 +413,5 @@ def gerar_f045(request, relacao_id):
 
 
 from django.http import JsonResponse
+
+
