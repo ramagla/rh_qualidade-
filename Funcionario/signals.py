@@ -144,6 +144,7 @@ CUSTOM_PERMISSOES = [
     ("metrologia", "cronograma", "cronograma_calibracao_equipamentos", "Pode acessar o cronograma de Calibração de Equipamentos"),
     ("metrologia", "cronograma", "cronograma_calibracao_dispositivos", "Pode acessar o cronograma de Calibração de Dispositivos"),
 
+    ("comercial", "dashboard", "acesso_comercial", "Pode acessar o módulo Comercial"),
 
 
 ]

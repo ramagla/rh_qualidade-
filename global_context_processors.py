@@ -8,6 +8,7 @@ from contexto_menu.qualidade import menu_qualidade
 from contexto_menu.portaria import menu_portaria
 from contexto_menu.home import menu_home
 from contexto_menu.modulos_disponiveis import listar_modulos
+from contexto_menu.comercial import menu_comercial
 
 
 
@@ -25,6 +26,9 @@ def global_menu(request):
         menu = menu_portaria(user)
     elif active_module == "rh":
         menu = menu_rh(user)
+    elif active_module == "comercial":
+        menu = menu_comercial(user)
+
     else:
         # Módulo principal (home)
         menu = menu_home(user)

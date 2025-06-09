@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Clientes Cadastrados{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+
+{% include "partials/global/_styles_componentes.html" %}
+
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Clientes Cadastrados" icone="bi bi-people-fill" emoji="🏢" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% if request.user|has_permission:"comercial.add_cliente" %}
+    <a href="{% url 'cadastrar_cliente' %}" class="btn btn-success d-inline-flex align-items-center">
+      <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Cadastrar
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <i class="bi bi-funnel me-2" aria-hidden="true"></i> Filtros de Clientes
+    </div>
+    <div class="card-body">
+      <form method="get" class="row g-3">
+
+        <!-- Razão Social -->
+        <div class="col-md-4">
+          <label for="razao_social" class="form-label">
+            <i class="bi bi-building me-1" aria-hidden="true"></i> Razão Social
+          </label>
+          <input type="text" name="razao_social" id="razao_social" class="form-control" placeholder="Razão Social" value="{{ request.GET.razao_social }}">
+        </div>
+
+        <!-- CNPJ -->
+        <div class="col-md-4">
+          <label for="cnpj" class="form-label">
+            <i class="bi bi-123 me-1" aria-hidden="true"></i> CNPJ
+          </label>
+          <input type="text" name="cnpj" id="cnpj" class="form-control" placeholder="CNPJ" value="{{ request.GET.cnpj }}">
+        </div>
+
+        <!-- Status -->
+        <div class="col-md-4">
+          <label for="status" class="form-label">
+            <i class="bi bi-toggle-on me-1" aria-hidden="true"></i> Status
+          </label>
+          <select name="status" id="status" class="form-select select2">
+            <option value="">Todos</option>
+            <option value="Ativo" {% if request.GET.status == "Ativo" %}selected{% endif %}>Ativo</option>
+            <option value="Inativo" {% if request.GET.status == "Inativo" %}selected{% endif %}>Inativo</option>
+          </select>
+        </div>
+
+        <!-- Botão Filtrar -->
+        {% include "partials/global/_botao_filtrar.html" %}
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Clientes Ativos" valor=total_ativos subtitulo="Clientes com status 'Ativo'." %}
+    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Clientes Inativos" valor=total_inativos subtitulo="Clientes com status 'Inativo'." %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Clientes" valor=total_clientes subtitulo="Quantidade total de clientes." %}
+  </div>
+
+  <!-- Lista de Clientes -->
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
+    📄 Lista de Clientes
+  </h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visually-hidden">Tabela de clientes</caption>
+      <thead class="table-light">
+        <tr>
+          <th class="align-middle"><i class="bi bi-image me-1" aria-hidden="true"></i> Logotipo</th>
+          <th class="align-middle"><i class="bi bi-building me-1" aria-hidden="true"></i> Razão Social</th>
+          <th class="align-middle"><i class="bi bi-123 me-1" aria-hidden="true"></i> CNPJ</th>
+          <th class="align-middle"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Cidade</th>
+          <th class="align-middle"><i class="bi bi-telephone me-1" aria-hidden="true"></i> Telefone</th>
+          <th class="align-middle"><i class="bi bi-envelope me-1" aria-hidden="true"></i> E-mail</th>
+          <th class="align-middle"><i class="bi bi-gear me-1" aria-hidden="true"></i> Ações</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for cliente in page_obj %}
+        <tr>
+          <td>
+            {% if cliente.logotipo %}
+            <img src="{{ cliente.logotipo.url }}" alt="Logotipo de {{ cliente.razao_social }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid black;">
+            {% else %}
+            <span>Sem Logotipo</span>
+            {% endif %}
+          </td>
+          <td class="text-start">{{ cliente.razao_social }}</td>
+          <td>{{ cliente.cnpj }}</td>
+          <td>{{ cliente.cidade }} - {{ cliente.uf }}</td>
+          <td>{{ cliente.telefone }}</td>
+          <td>{{ cliente.email }}</td>
+          <td>
+            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+              {% if request.user|has_permission:"comercial.view_cliente" %}
+              {% include "partials/global/_botao_visualizar.html" with objeto=cliente url_visualizar="visualizar_cliente" label="cliente" %}
+              {% endif %}
+              {% if request.user|has_permission:"comercial.change_cliente" %}
+              {% include "partials/global/_botao_editar.html" with objeto=cliente url_editar="editar_cliente" label="cliente" %}
+              {% endif %}
+              {% if request.user|has_permission:"comercial.delete_cliente" %}
+              {% include "partials/global/_botao_excluir.html" with objeto=cliente url_excluir="excluir_cliente" label="cliente" %}
+              {% include "partials/global/_modal_exclusao.html" with objeto=cliente url_excluir="excluir_cliente" %}
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        {% include "partials/global/_sem_resultados.html" with colspan=7 mensagem="Nenhum cliente cadastrado." %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    {% include 'partials/global/_paginacao.html' %}
+  </div>
+
+</div>
+
+{% endblock %}

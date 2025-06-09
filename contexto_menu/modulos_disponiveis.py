@@ -33,4 +33,13 @@ def listar_modulos(user):
             "permissao": "portaria.acesso_portaria",
         })
 
+    if user.has_perm("comercial.acesso_comercial"):
+        modulos.append({
+            "name": "Comercial",
+            "url": "comercial_home",
+            "icon": "fas fa-chart-line",
+            "permissao": "comercial.acesso_comercial",
+        })
+
+
     return modulos

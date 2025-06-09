@@ -92,6 +92,7 @@ urlpatterns = [
     path('atualizacoes/marcar_lida/', atualizacao_views.marcar_atualizacao_lida, name='marcar_atualizacao_lida'),
     path("ajax/ultima-atualizacao/", atualizacao_views.get_ultima_atualizacao, name="get_ultima_atualizacao"),
     path('usuarios-ativos/', usuarios_ativos, name='usuarios_ativos'),
+    path("comercial/", include("comercial.urls")),
 
 
 ]
