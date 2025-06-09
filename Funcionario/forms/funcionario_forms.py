@@ -113,6 +113,22 @@ class FuncionarioForm(forms.ModelForm):
         widget=forms.Select(attrs={"class": "form-select"})
     )
 
+    data_desligamento = forms.DateField(
+        label="Data de Desligamento",
+        required=False,
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date", "class": "form-control"}
+        ),
+        input_formats=["%Y-%m-%d"],
+    )
+
+    genero = forms.ChoiceField(
+        choices=Funcionario.GENERO_CHOICES,
+        label="Gênero",
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
     # Novo campo Número do Calçado
     calcado = forms.IntegerField(
         label="Número do Calçado",
@@ -191,8 +207,11 @@ class FuncionarioForm(forms.ModelForm):
 
         # Preencher o cargo_responsavel com base no campo responsavel selecionado
         if instance.responsavel:
-            # Certifique-se de que `cargo_atual` é uma instância válida de `Cargo`
             instance.cargo_responsavel = instance.responsavel.cargo_atual
+
+        # Forçar status para Inativo se data de desligamento estiver preenchida
+        if instance.data_desligamento:
+            instance.status = "Inativo"
 
         if commit:
             instance.save()

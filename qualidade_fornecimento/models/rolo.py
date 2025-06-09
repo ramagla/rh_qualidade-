@@ -106,10 +106,11 @@ class RoloMateriaPrima(models.Model):
         return self.laudo
 
     def save(self, *args, **kwargs):
-        if not self.nro_rolo:
-            ultimo = RoloMateriaPrima.objects.order_by("-id").first()
+        if not self.nro_rolo or self.nro_rolo == "Será gerado ao salvar":
+            ultimo = RoloMateriaPrima.objects.filter(tb050=self.tb050).order_by("-id").first()
             ultimo_numero = (
                 int(ultimo.nro_rolo) if ultimo and ultimo.nro_rolo.isdigit() else 49999
             )
             self.nro_rolo = str(ultimo_numero + 1)
         super().save(*args, **kwargs)
+

@@ -197,6 +197,28 @@ def home(request):
     escolaridade_labels = list(sorted(escolaridade_dict.keys()))
     escolaridade_counts = [escolaridade_dict[label] for label in escolaridade_labels]
 
+    # >>> GÊNERO
+    genero_labels = []
+    genero_counts = []
+
+    for g in Funcionario.objects.values_list('genero', flat=True):
+        if g not in genero_labels:
+            genero_labels.append(g)
+            genero_counts.append(1)
+        else:
+            index = genero_labels.index(g)
+            genero_counts[index] += 1
+
+    # >>> TURNOVER (Exemplo simples: quantidade de desligados por mês)
+    from django.db.models.functions import TruncMonth
+    from django.db.models import Count
+
+    turnover_qs = Funcionario.objects.filter(data_desligamento__isnull=False).annotate(
+        mes=TruncMonth('data_desligamento')
+    ).values('mes').annotate(qtd=Count('id')).order_by('mes')
+
+    turnover_labels = [item['mes'].strftime("%m/%Y") for item in turnover_qs]
+    turnover_counts = [item['qtd'] for item in turnover_qs]
 
     context = {
         "nome_modulo": "Recursos Humanos",
@@ -227,6 +249,10 @@ def home(request):
         "anos_contratacao_counts": json.dumps(list(anos_contratacao_counts)),
         "escolaridade_labels": json.dumps(escolaridade_labels),
         "escolaridade_counts": json.dumps(escolaridade_counts),
+        "genero_labels": json.dumps(genero_labels),
+        "genero_counts": json.dumps(genero_counts),
+        "turnover_labels": json.dumps(turnover_labels),
+        "turnover_counts": json.dumps(turnover_counts),
     }
 
     form = EventoForm()

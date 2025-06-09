@@ -48,6 +48,14 @@ class Funcionario(models.Model):
         ),
     ]
 
+    GENERO_CHOICES = [
+        ("Masculino", "Masculino"),
+        ("Feminino", "Feminino"),
+        ("Outro", "Outro"),
+        ("Não Informado", "Não Informado"),
+    ]
+
+
     nome = models.CharField(max_length=100)
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="funcionario")
     data_admissao = models.DateField()
@@ -88,6 +96,14 @@ class Funcionario(models.Model):
         related_name="responsaveis",
     )
     escolaridade = models.CharField(max_length=100, blank=True, null=True)
+    data_desligamento = models.DateField(null=True, blank=True)  # ➜ NOVO CAMPO
+
+    genero = models.CharField(
+        max_length=20,
+        choices=GENERO_CHOICES,
+        default="Não Informado",
+        verbose_name="Gênero",
+    )
     experiencia_profissional = models.CharField(
         max_length=3, choices=EXPERIENCIA_CHOICES, default="Sim"
     )
