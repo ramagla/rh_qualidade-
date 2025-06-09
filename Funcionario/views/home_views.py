@@ -149,9 +149,11 @@ def home(request):
     )
 
     settings = Settings.objects.first()
+
     # Faixas etárias
-    faixas_idade_labels = ['<= 20', '21-30', '31-40', '41-50', '51-60', '61-70', '> 70']
-    faixas_idade_counts = [0] * len(faixas_idade_labels)
+    # Faixas etárias com Nome + Idade
+    faixas_idade_labels = []
+    faixas_idade_counts = []
 
     # Ano de contratação
     anos_contratacao_dict = {}
@@ -159,57 +161,10 @@ def home(request):
     # Escolaridade
     escolaridade_dict = {}
 
-    # Processamento
-    for f in Funcionario.objects.filter(status='Ativo'):
-        print(f"Funcionario: {f.nome} - Nascimento: {f.data_nascimento} - Admissao: {f.data_admissao} - Escolaridade: {f.escolaridade}")
+    # Gênero
+    genero_dict = {}
 
-        # Idade
-        idade = (now().date() - f.data_nascimento).days // 365 if f.data_nascimento else 0
-        if idade <= 20:
-            faixas_idade_counts[0] += 1
-        elif 21 <= idade <= 30:
-            faixas_idade_counts[1] += 1
-        elif 31 <= idade <= 40:
-            faixas_idade_counts[2] += 1
-        elif 41 <= idade <= 50:
-            faixas_idade_counts[3] += 1
-        elif 51 <= idade <= 60:
-            faixas_idade_counts[4] += 1
-        elif 61 <= idade <= 70:
-            faixas_idade_counts[5] += 1
-        else:
-            faixas_idade_counts[6] += 1
-
-        # Ano de contratação (protegido)
-        if f.data_admissao:
-            ano_contratacao = f.data_admissao.year
-            anos_contratacao_dict[ano_contratacao] = anos_contratacao_dict.get(ano_contratacao, 0) + 1
-
-        # Escolaridade
-        esc = f.escolaridade.strip() if f.escolaridade else "Não Informado"
-        escolaridade_dict[esc] = escolaridade_dict.get(esc, 0) + 1
-
-    # Ordena ano de contratação
-    anos_contratacao_labels = list(sorted(anos_contratacao_dict.keys()))
-    anos_contratacao_counts = [anos_contratacao_dict[ano] for ano in anos_contratacao_labels]
-
-    # Ordena escolaridade alfabeticamente
-    escolaridade_labels = list(sorted(escolaridade_dict.keys()))
-    escolaridade_counts = [escolaridade_dict[label] for label in escolaridade_labels]
-
-    # >>> GÊNERO
-    genero_labels = []
-    genero_counts = []
-
-    for g in Funcionario.objects.values_list('genero', flat=True):
-        if g not in genero_labels:
-            genero_labels.append(g)
-            genero_counts.append(1)
-        else:
-            index = genero_labels.index(g)
-            genero_counts[index] += 1
-
-    # >>> TURNOVER (Exemplo simples: quantidade de desligados por mês)
+    # Turnover (desligados por mês)
     from django.db.models.functions import TruncMonth
     from django.db.models import Count
 
@@ -219,6 +174,37 @@ def home(request):
 
     turnover_labels = [item['mes'].strftime("%m/%Y") for item in turnover_qs]
     turnover_counts = [item['qtd'] for item in turnover_qs]
+
+    # Processamento geral
+    for f in Funcionario.objects.filter(status='Ativo'):
+        # Idade
+        idade = (now().date() - f.data_nascimento).days // 365 if f.data_nascimento else 0
+        nome_completo = f"{f.nome}"  # Se tiver campo sobrenome, pode usar: f"{f.nome} {f.sobrenome}"
+        faixas_idade_labels.append(f"{nome_completo} ({idade} anos)")
+        faixas_idade_counts.append(idade)
+
+        # Ano de contratação
+        if f.data_admissao:
+            ano = f.data_admissao.year
+            anos_contratacao_dict[ano] = anos_contratacao_dict.get(ano, 0) + 1
+
+        # Escolaridade
+        esc = f.escolaridade.strip() if f.escolaridade else "Não Informado"
+        escolaridade_dict[esc] = escolaridade_dict.get(esc, 0) + 1
+
+        # Gênero
+        genero = f.genero.strip() if f.genero else "Não Informado"
+        genero_dict[genero] = genero_dict.get(genero, 0) + 1
+
+    # Preparar labels e counts
+    anos_contratacao_labels = sorted(anos_contratacao_dict.keys())
+    anos_contratacao_counts = [anos_contratacao_dict[ano] for ano in anos_contratacao_labels]
+
+    escolaridade_labels = sorted(escolaridade_dict.keys())
+    escolaridade_counts = [escolaridade_dict[label] for label in escolaridade_labels]
+
+    genero_labels = sorted(genero_dict.keys())
+    genero_counts = [genero_dict[label] for label in genero_labels]
 
     context = {
         "nome_modulo": "Recursos Humanos",
@@ -241,12 +227,13 @@ def home(request):
         "classificacao_regular": classificacao_counter.get("Regular", 0),
         "classificacao_bom": classificacao_counter.get("Bom", 0),
         "classificacao_otimo": classificacao_counter.get("Ótimo", 0),
-        "avaliacoes_pendentes": avaliacoes_pendentes,
         "funcionarios_pendentes": funcionarios_pendentes,
+
+        # Gráficos
         "faixas_idade_labels": json.dumps(faixas_idade_labels),
         "faixas_idade_counts": json.dumps(faixas_idade_counts),
-        "anos_contratacao_labels": json.dumps(list(anos_contratacao_labels)),
-        "anos_contratacao_counts": json.dumps(list(anos_contratacao_counts)),
+        "anos_contratacao_labels": json.dumps(anos_contratacao_labels),
+        "anos_contratacao_counts": json.dumps(anos_contratacao_counts),
         "escolaridade_labels": json.dumps(escolaridade_labels),
         "escolaridade_counts": json.dumps(escolaridade_counts),
         "genero_labels": json.dumps(genero_labels),
@@ -259,6 +246,7 @@ def home(request):
     context["form"] = form
 
     return render(request, "dashboard/home.html", context)
+
 
 
 
