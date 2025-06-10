@@ -6,7 +6,9 @@
 {% include 'partials/global/_estilos_impressao.html' %}
 {% include 'header.html' %}
 {% include 'partials/global/_botao_impressao.html' %}
-{% include 'partials/global/_header_titulo.html' with titulo="F070 – Registro de Saída Antecipada" icone="bi bi-door-open-fill" %}
+<h1 class="titulo-impressao" style="text-align: center;">
+  📋 Registro de Saída Antecipada
+</h1>
 {% include 'partials/global/_formulario_rodape.html' with numero_formulario="" %}
 
 <div class="container pdf-container" style="font-size: 11pt;">
@@ -30,7 +32,7 @@
               <td><i class="bi bi-briefcase-fill me-1 text-secondary"></i> <strong>Cargo:</strong> {{ funcionario.cargo_atual }}</td>
             </tr>
             <tr>
-              <td colspan="2"><i class="bi bi-geo-alt-fill me-1 text-secondary"></i> <strong>Setor:</strong> {{ funcionario.get_local_trabalho_display }}</td>
+              <td colspan="2"><i class="bi bi-geo-alt-fill me-1 text-secondary"></i> <strong>Setor:</strong> {{ funcionario.local_trabalho }}</td>
             </tr>
           </tbody>
         </table>
@@ -49,14 +51,20 @@
         <table class="table table-bordered info-table align-middle mb-0">
           <tbody>
             <tr>
-              <td><i class="bi bi-calendar-check me-1 text-secondary"></i> <strong>Data:</strong> ___/___/____</td>
-              <td><i class="bi bi-clock me-1 text-secondary"></i> <strong>Horário de Saída:</strong> ____:____</td>
+              <td>
+                <i class="bi bi-calendar-check me-1 text-secondary"></i> <strong>Data:</strong>
+                <input type="date" class="form-control d-inline w-auto" style="max-width: 150px;" />
+              </td>
+              <td>
+                <i class="bi bi-clock me-1 text-secondary"></i> <strong>Horário de Saída:</strong>
+                <input type="time" class="form-control d-inline w-auto" style="max-width: 100px;" />
+              </td>
             </tr>
             <tr>
-              <td colspan="2"><i class="bi bi-justify-left me-1 text-secondary"></i> <strong>Motivo:</strong></td>
-            </tr>
-            <tr>
-              <td colspan="2" style="height: 60px;"></td>
+              <td colspan="2">
+                <i class="bi bi-justify-left me-1 text-secondary"></i> <strong>Motivo:</strong>
+                <textarea rows="2" class="form-control mt-1" placeholder="Descreva o motivo..." style="resize: none;"></textarea>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -143,6 +151,41 @@
   </section>
 
 </div>
+<style media="print">
+  input,
+  textarea,
+  select {
+    border: none !important;
+    outline: none !important;
+    background: none !important;
+    font-size: 11pt !important;
+    color: black !important;
+  }
+
+  /* Esconde o checkbox original */
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid black;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 4px 0 0;
+    position: relative;
+  }
+
+  /* Mostra o ✔ quando marcado */
+  input[type="checkbox"]:checked::before {
+    content: "✔";
+    position: absolute;
+    top: -1px;
+    left: 1px;
+    font-size: 12px;
+    color: black;
+  }
+</style>
+
 
 
   

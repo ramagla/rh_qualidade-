@@ -175,13 +175,30 @@ def home(request):
     turnover_labels = [item['mes'].strftime("%m/%Y") for item in turnover_qs]
     turnover_counts = [item['qtd'] for item in turnover_qs]
 
-    # Processamento geral
-    for f in Funcionario.objects.filter(status='Ativo'):
-        # Idade
+    from collections import defaultdict
+
+    faixas_idade_labels = ["< 20", "20-29", "30-39", "40-49", "50+"]
+    faixas_idade_counts = [0] * 5
+    faixas_idade_tooltips = defaultdict(list)
+
+    for f in Funcionario.objects.filter(status="Ativo"):
         idade = (now().date() - f.data_nascimento).days // 365 if f.data_nascimento else 0
-        nome_completo = f"{f.nome}"  # Se tiver campo sobrenome, pode usar: f"{f.nome} {f.sobrenome}"
-        faixas_idade_labels.append(f"{nome_completo} ({idade} anos)")
-        faixas_idade_counts.append(idade)
+        nome = f.nome
+
+        if idade < 20:
+            idx = 0
+        elif idade < 30:
+            idx = 1
+        elif idade < 40:
+            idx = 2
+        elif idade < 50:
+            idx = 3
+        else:
+            idx = 4
+
+        faixas_idade_counts[idx] += 1
+        faixas_idade_tooltips[idx].append(f"{nome} ({idade} anos)")
+
 
         # Ano de contratação
         if f.data_admissao:
@@ -232,6 +249,7 @@ def home(request):
         # Gráficos
         "faixas_idade_labels": json.dumps(faixas_idade_labels),
         "faixas_idade_counts": json.dumps(faixas_idade_counts),
+        "faixas_idade_tooltips": [", ".join(faixas_idade_tooltips[i]) for i in range(5)],
         "anos_contratacao_labels": json.dumps(anos_contratacao_labels),
         "anos_contratacao_counts": json.dumps(anos_contratacao_counts),
         "escolaridade_labels": json.dumps(escolaridade_labels),

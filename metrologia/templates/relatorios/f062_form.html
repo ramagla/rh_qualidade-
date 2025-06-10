@@ -10,50 +10,55 @@
 
   {% include 'partials/global/_header_titulo.html' with titulo="Solicitação de Orçamento para Calibração de Equipamentos" icone="bi bi-clipboard-check" emoji="📋" %}
 
-  <!-- Informações Gerais -->
-  <section class="mt-4">
-    <div class="card shadow-sm border rounded">
-      <div class="card-header bg-light d-flex align-items-center gap-2">
-        <i class="bi bi-info-circle-fill text-primary"></i>
-        <strong>Informações Gerais da Solicitação</strong>
-      </div>
-      <div class="card-body row g-4">
-        <div class="col-md-6">
+  <div class="row row-print-cols-2 mt-4 g-3">
+    <!-- Informações Gerais -->
+    <div class="col-md-6">
+      <div class="card shadow-sm border rounded h-100">
+        <div class="card-header bg-light d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle-fill text-primary"></i>
+          <strong>Informações Gerais da Solicitação</strong>
+        </div>
+        <div class="card-body">
           <p class="mb-1"><strong>Descrição do Serviço:</strong></p>
-          <p class="border rounded p-2 bg-white">{{ descricao_servico }}</p>
-        </div>
-        <div class="col-md-3">
-          <p class="mb-1"><strong>Prazo para Realização:</strong></p>
-          <p class="border rounded p-2 bg-white">{{ prazo_realizacao|date:"d/m/Y" }}</p>
-        </div>
-        <div class="col-md-3">
-          <p class="mb-1"><strong>Data da Solicitação:</strong></p>
-          <p class="border rounded p-2 bg-white">{{ data_atual|date:"d/m/Y" }}</p>
+          <p class="p-1 m-0">{{ descricao_servico }}</p>
+  
+          <p class="mb-1 mt-3"><strong>Prazo para Realização:</strong></p>
+          <p class="p-2 bg-white">{{ prazo_realizacao|date:"d/m/Y" }}</p>
+  
+          <p class="mb-1 mt-3"><strong>Data da Solicitação:</strong></p>
+          <p class="p-2 bg-white">{{ data_atual|date:"d/m/Y" }}</p>
         </div>
       </div>
     </div>
-  </section>
-
-  <!-- Responsáveis -->
-  <section class="mt-4">
-    <div class="card shadow-sm border rounded">
-      <div class="card-header bg-light d-flex align-items-center gap-2">
-        <i class="bi bi-people-fill text-success"></i>
-        <strong>Responsáveis pela Solicitação</strong>
-      </div>
-      <div class="card-body row g-4">
-        <div class="col-md-6">
+  
+    <!-- Responsáveis -->
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-light d-flex align-items-center gap-2">
+          <i class="bi bi-people-fill text-success"></i>
+          <strong>Responsáveis pela Solicitação</strong>
+        </div>
+        <div class="card-body">
           <p class="mb-1"><strong>Solicitado por:</strong></p>
-          <p class="border rounded p-2 bg-white">{{ solicitado_por.nome }}</p>
-        </div>
-        <div class="col-md-6">
-          <p class="mb-1"><strong>Aprovado por:</strong></p>
-          <p class="border rounded p-2 bg-white">{{ aprovado_por.nome }}</p>
+          <p class=" p-2 bg-white">{{ solicitado_por.nome }}</p>
+  
+          <p class="mb-1 mt-3"><strong>Aprovado por:</strong></p>
+          <p class="p-2 bg-white">{{ aprovado_por.nome }}</p>
         </div>
       </div>
     </div>
-  </section>
-
+  </div>
+  
+  <style>
+    @media print {
+      .row-print-cols-2 > div {
+        float: left !important;
+        width: 50% !important;
+        box-sizing: border-box;
+      }
+    }
+    </style>
+    
   <!-- Equipamentos Selecionados -->
   <section class="mt-4">
     <div class="card shadow-sm border rounded">

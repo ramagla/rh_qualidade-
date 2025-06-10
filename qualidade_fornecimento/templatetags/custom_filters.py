@@ -399,3 +399,15 @@ def add_class(field, css_class):
     if isinstance(field, BoundField):
         return field.as_widget(attrs={"class": css_class})
     return field  # se não for campo, retorna como está (não tenta aplicar .as_widget)
+
+
+@register.filter
+def to(value, arg):
+    """
+    Gera uma lista de números de 'value' até 'arg' inclusive.
+    Exemplo: 1|to:31 -> [1, 2, ..., 31]
+    """
+    try:
+        return range(int(value), int(arg)+1)
+    except:
+        return []

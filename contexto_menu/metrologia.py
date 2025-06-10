@@ -95,6 +95,8 @@ def menu_metrologia(user):
             "icon": "fas fa-file-signature",
             "perm": "metrologia.relatorio_f062_solicitacao_orcamento",
         })
+
+    
     if relatorios:
         menu.append({
             "name": "Relatórios",

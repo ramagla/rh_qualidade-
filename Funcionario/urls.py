@@ -74,7 +74,8 @@ from .views.formularios_views import (
     formulario_f033,
     formulario_saida_antecipada,
     filtro_funcionario_generico,
-    imprimir_ficha_epi
+    imprimir_ficha_epi,
+    formulario_folha_ponto
     
 )
 from .views.funcionario_views import (
@@ -605,6 +606,12 @@ urlpatterns = [
     path('funcionarios/imprimir-organograma/', imprimir_organograma, name='imprimir_organograma'),
     path("cargos/organograma/", organograma_cargos, name="organograma_cargos"),
     path('relatorios/aniversariantes/', relatorio_aniversariantes, name='relatorio_aniversariantes'),
+
+    path(
+    "formularios/folha-ponto/<int:funcionario_id>/",
+    formulario_folha_ponto,
+    name="formulario_folha_ponto",
+),
 
 ]
 
