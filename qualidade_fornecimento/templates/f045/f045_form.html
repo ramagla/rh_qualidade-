@@ -38,14 +38,19 @@
 
 
   <form method="post" class="row g-3" onsubmit="atualizarStatusGeral()">
-  {% csrf_token %}
-  {{ formset.management_form }}
-
-  {% for form in formset.forms %}
-    {% for hidden in form.hidden_fields %}
-      {{ hidden }}
+    {% csrf_token %}
+    {# 🚨 Management form precisa vir **antes** dos hidden_fields #}
+    {{ formset.management_form }}
+    
+    {# Agora o loop dos forms, com hidden_fields e nro_rolo oculto #}
+    {% for form in formset.forms %}
+      {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+      {% endfor %}
+      {{ form.nro_rolo.as_hidden }}
     {% endfor %}
-  {% endfor %}
+    
+
 
 
 
@@ -321,12 +326,16 @@
             <tbody>
               {% for rolo, rolo_form in tracoes_com_forms %}
                 <tr>
+                  {# Campos ocultos originais do formset #}
                   {% for hidden in rolo_form.hidden_fields %}
                     {{ hidden }}
                   {% endfor %}
+                  {# Garante envio do nro_rolo na submissão #}
+                  {{ rolo_form.nro_rolo.as_hidden }}
+            
                   <td>{{ rolo.nro_rolo }}</td>
                   <td style="display:none;">{{ rolo_form.peso }}</td>
-
+            
                   <td>
                     {% if rolo.tb050.materia_prima.tolerancia_largura %}
                       {{ rolo.tb050.materia_prima.tolerancia }} - {{ rolo.tb050.materia_prima.tolerancia_largura }}
@@ -334,69 +343,98 @@
                       {{ rolo.tb050.materia_prima.tolerancia|default:"—" }}
                     {% endif %}
                   </td>
-
+            
                   <td class="p-1" style="min-width: 160px;">
                     <div class="col-md-2 p-1" style="min-width: 160px;">
                       <div class="d-flex gap-2">
-                        <input name="bitola_espessura_{{ rolo.id }}" id="bitola_espessura_{{ rolo.id }}" type="text"
-                            class="form-control text-center"
-                            value="{{ rolo.bitola_espessura|floatformat:4|default_if_none:'' }}"
-                            oninput="validarBitolaETracao({{ rolo.id }})"
-                            placeholder="Esp.">
-                 
+                        <input
+                          name="bitola_espessura_{{ rolo.nro_rolo }}"
+                          id="bitola_espessura_{{ rolo.nro_rolo }}"
+                          type="text"
+                          class="form-control text-center"
+                          value="{{ rolo.bitola_espessura|floatformat:4|default_if_none:'' }}"
+                          oninput="validarBitolaETracao('{{ rolo.nro_rolo }}')"
+                          placeholder="Esp.">
+            
                         {% if rolo.tb050.materia_prima.largura %}
-                        <input name="bitola_largura_{{ rolo.id }}" id="bitola_largura_{{ rolo.id }}" type="text"
+                          <input
+                            name="bitola_largura_{{ rolo.nro_rolo }}"
+                            id="bitola_largura_{{ rolo.nro_rolo }}"
+                            type="text"
                             class="form-control text-center"
                             value="{{ rolo.bitola_largura|floatformat:4|default_if_none:'' }}"
-                            oninput="validarBitolaETracao({{ rolo.id }})"
+                            oninput="validarBitolaETracao('{{ rolo.nro_rolo }}')"
                             placeholder="Larg.">
-                 
                         {% endif %}
                       </div>
                     </div>
-
-                    <input type="hidden" id="bitola_nominal_{{ rolo.id }}" value="{{ bitola_nominal|default_if_none:'0' }}">
-<input type="hidden" id="largura_nominal_{{ rolo.id }}" value="{{ largura_nominal|floatformat:2 }}">
-                    <input type="hidden" id="tolerancia_espessura_{{ rolo.id }}" value="{{ rolo.tb050.materia_prima.tolerancia|default_if_none:'0' }}">
-                    <input type="hidden" id="tolerancia_largura_{{ rolo.id }}" value="{{ rolo.tb050.materia_prima.tolerancia_largura|default_if_none:'0' }}">
+            
+                    <input
+                      type="hidden"
+                      id="bitola_nominal_{{ rolo.nro_rolo }}"
+                      value="{{ bitola_nominal|default_if_none:'0' }}">
+                    <input
+                      type="hidden"
+                      id="largura_nominal_{{ rolo.nro_rolo }}"
+                      value="{{ largura_nominal|floatformat:2 }}">
+                    <input
+                      type="hidden"
+                      id="tolerancia_espessura_{{ rolo.nro_rolo }}"
+                      value="{{ rolo.tb050.materia_prima.tolerancia|default_if_none:'0' }}">
+                    <input
+                      type="hidden"
+                      id="tolerancia_largura_{{ rolo.nro_rolo }}"
+                      value="{{ rolo.tb050.materia_prima.tolerancia_largura|default_if_none:'0' }}">
                   </td>
-
-                  <td id="rmin_{{ rolo.id }}">
+            
+                  <td id="rmin_{{ rolo.nro_rolo }}">
                     {{ res_min|default:"—" }}
-                    <input type="hidden" id="rmin_valor_{{ rolo.id }}" value="{{ res_min|default:0 }}">
+                    <input
+                      type="hidden"
+                      id="rmin_valor_{{ rolo.nro_rolo }}"
+                      value="{{ res_min|default:0 }}">
                   </td>
-
-                  <td id="rmax_{{ rolo.id }}">
+            
+                  <td id="rmax_{{ rolo.nro_rolo }}">
                     {{ res_max|default:"—" }}
-                    <input type="hidden" id="rmax_valor_{{ rolo.id }}" value="{{ res_max|default:0 }}">
+                    <input
+                      type="hidden"
+                      id="rmax_valor_{{ rolo.nro_rolo }}"
+                      value="{{ res_max|default:0 }}">
                   </td>
-
+            
                   <td>
-                    <input name="tracao_{{ rolo.id }}" id="tracao_{{ rolo.id }}" type="text"
+                    <input
+                      name="tracao_{{ rolo.nro_rolo }}"
+                      id="tracao_{{ rolo.nro_rolo }}"
+                      type="text"
                       class="form-control text-center"
                       value="{{ rolo.tracao|floatformat:4|default_if_none:'' }}"
-                      oninput="validarBitolaETracao({{ rolo.id }})">
-
+                      oninput="validarBitolaETracao('{{ rolo.nro_rolo }}')">
                   </td>
-
+            
                   <td>
-                    <input name="dureza_{{ rolo.id }}" id="dureza_{{ rolo.id }}" type="text"
-                           class="form-control text-center"
-                           value="{{ rolo.dureza|default_if_none:'' }}"
-                           data-dureza-norma="{{ dureza_padrao|floatformat:2|default:'' }}"
-                           oninput="validarBitolaETracao({{ rolo.id }})">
+                    <input
+                      name="dureza_{{ rolo.nro_rolo }}"
+                      id="dureza_{{ rolo.nro_rolo }}"
+                      type="text"
+                      class="form-control text-center"
+                      value="{{ rolo.dureza|default_if_none:'' }}"
+                      data-dureza-norma="{{ dureza_padrao|floatformat:2|default:'' }}"
+                      oninput="validarBitolaETracao('{{ rolo.nro_rolo }}')">
                   </td>
-
+            
                   <td>{{ rolo_form.enrolamento }}</td>
                   <td>{{ rolo_form.dobramento }}</td>
                   <td>{{ rolo_form.torcao_residual }}</td>
                   <td>{{ rolo_form.aspecto_visual }}</td>
                   <td>{{ rolo_form.alongamento }}</td>
                   <td>{{ rolo_form.flechamento }}</td>
-                  <td id="laudo_{{ rolo.id }}">—</td>
+                  <td id="laudo_{{ rolo.nro_rolo }}">—</td>
                 </tr>
               {% endfor %}
             </tbody>
+            
           </table>
         </div>
 

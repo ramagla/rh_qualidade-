@@ -150,8 +150,12 @@ def gerar_f045(request, relacao_id):
     print(f"Relação ID: {relacao.id} — Nº Relatório: {relacao.nro_relatorio}")
     print(f"Total de rolos encontrados: {relacao.rolos.count()}")
     for r in relacao.rolos.all():
-        print(f"Rolo ID: {r.id} | Nro Rolo: {r.nro_rolo} | Enrolamento: {r.enrolamento} | Dobramento: {r.dobramento} | Torção: {r.torcao_residual} | Visual: {r.aspecto_visual} | Alongamento: {r.alongamento} | Flechamento: {r.flechamento}")
-    print("===========================")
+        print(
+            f"Rolo nº: {r.nro_rolo} | Enrolamento: {r.enrolamento} | Dobramento: {r.dobramento} | "
+            f"Torção: {r.torcao_residual} | Visual: {r.aspecto_visual} | Alongamento: {r.alongamento} | "
+            f"Flechamento: {r.flechamento}"
+        )
+
 
     try:
         f045 = relacao.f045
@@ -269,9 +273,10 @@ def gerar_f045(request, relacao_id):
         request.POST or None, instance=f045, limites_quimicos=limites
     )
     if request.method == "POST":
-        formset = RoloFormSet(request.POST, instance=relacao)
+        formset = RoloFormSet(request.POST, instance=relacao, prefix="rolos")
     else:
-        formset = RoloFormSet(instance=relacao)
+        formset = RoloFormSet(instance=relacao, prefix="rolos")
+
 
         print(f"DEBUG FORMSET — TOTAL FORMS: {formset.total_form_count()}")
         for i, f in enumerate(formset.forms):
@@ -284,7 +289,11 @@ def gerar_f045(request, relacao_id):
     print(f"==== TESTE 2 — TRACOES_COM_FORMS ====")
     print(f"Total pares: {len(tracoes_com_forms)}")
     for i, (rolo, rolo_form) in enumerate(tracoes_com_forms):
-        print(f"Pair {i}: rolo.id={rolo.id}, rolo.nro_rolo={rolo.nro_rolo}, form.instance.pk={rolo_form.instance.pk}, form.tb050_id={rolo_form.instance.tb050_id}")
+        print(
+            f"Pair {i}: rolo.nro_rolo={rolo.nro_rolo}, "
+            f"form.instance.pk={rolo_form.instance.pk}, form.tb050_id={rolo_form.instance.tb050_id}"
+        )
+
 
 
     chemical_list = []
@@ -329,7 +338,7 @@ def gerar_f045(request, relacao_id):
                 rolo.tb050 = relacao
 
                 # atribuições manuais:
-                rolo_id = str(rolo.pk)
+                rolo_id = rolo.nro_rolo
 
                 rolo.dureza = parse_decimal_seguro(request.POST.get(f"dureza_{rolo_id}"))
                 rolo.tracao = parse_decimal_seguro(request.POST.get(f"tracao_{rolo_id}"))
