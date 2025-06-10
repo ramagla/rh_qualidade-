@@ -5,200 +5,146 @@
 {% block title %}Visualização da Norma Técnica{% endblock %}
 
 {% block content %}
-<style>
-  .pdf-container {
-    width: 210mm;
-    margin: 0 auto;
-    padding: 20mm;
-    background: #fff;
-    border: 1px solid #ccc;
-    font-family: Arial, sans-serif;
-    font-size: 12pt;
-  }
-  .pdf-header, .pdf-footer {
-    text-align: center;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 10px;
-  }
-  .pdf-footer {
-    border-top: 1px solid #ccc;
-    margin-top: 20px;
-    padding-top: 10px;
-  }
-  .pdf-content {
-    margin-top: 20px;
-  }
-  .info-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .info-table th, .info-table td {
-  border: 1px solid #ccc;
-  padding: 6px;
-  text-align: center;
-  vertical-align: middle;
-}
 
-
-  @media print {
-  @page {
-    size: A4 portrait;
-    margin: 15mm;
-  }
-
-  html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    background: white !important;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  .sidebar, .navbar, .d-print-none, .btn, .btn-group, .text-end {
-    display: none !important;
-  }
-
-  .main, .container, .container-fluid, .content, .page-content, .pdf-container {
-    all: unset !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    display: block !important;
-    position: static !important;
-  }
-
-  .info-table th, .info-table td {
-    text-align: center !important;
-    font-size: 10pt !important;
-    padding: 6px !important;
-  }
-}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
 
 
 
-</style>
-
-<div class="text-end mb-3 d-print-none">
-  <button class="btn btn-outline-primary" onclick="window.print()" aria-label="Imprimir relatório">
-    🖨️ Imprimir
-  </button>
-</div>
-
-<div id="relatorio-area">
-  <div class="pdf-container">
+<div id="relatorio-area" class="pdf-container">
     <div class="pdf-header">
-  <h1 class="text-primary d-flex align-items-center justify-content-center gap-2">
-    <i class="bi bi-journal-check" aria-hidden="true"></i>
-    <span class="fw-bold">Norma Técnica</span>
-  </h1>
-  <p class="text-muted small fst-italic">Visualização Completa</p>
-</div>
+        <h1 class="text-primary">
+            <i class="bi bi-file-earmark-spreadsheet-fill" aria-hidden="true"></i>
+            <span class="fw-bold">Norma Técnica</span>
+        </h1>
+        <p class="text-muted small fst-italic">Visualização Completa do Documento</p>
+    </div>
 
     <div class="pdf-content">
-      <table class="info-table mb-4">
-        <tr>
-          <th>Nome da Norma</th>
-          <td>{{ norma.nome_norma }}</td>
-        </tr>
-        <tr>
-          <th>Norma Vinculada</th>
-          <td>{{ norma.vinculo_norma|default:"-" }}</td>
-        </tr>
-        <tr>
-          <th>Arquivo PDF</th>
-          <td>
-            {% if norma.arquivo_norma %}
-<a href="{{ norma.arquivo_norma.url }}" class="btn btn-link btn-sm text-decoration-none" target="_blank">
-  <i class="bi bi-download me-1"></i> Baixar PDF
-</a>
-            {% else %}
-              Nenhum arquivo disponível
-            {% endif %}
-          </td>
-        </tr>
-      </table>
-
-<h5 class="mt-4 border-bottom pb-1">
-  🧪 Composição Química (por Tipo ABNT)
-</h5>      {% if norma.elementos.all %}
-        <div class="table-responsive">
-          <table class="info-table">
-            <thead>
-              <tr>
-                <th>Tipo ABNT</th>
-                <th>C </th>
-                <th>Mn</th><th>Si</th><th>P</th><th>S</th>
-                <th>Cr</th><th>Ni</th><th>Cu</th><th>Al</th>
-              </tr>
-            </thead>
-            <tbody>
-  {% for elem in norma.elementos.all %}
-    <tr>
-      <td>{{ elem.tipo_abnt }}</td>
-      <td>{{ elem.c_min|floatformat:2 }} - {{ elem.c_max|floatformat:2 }}</td>
-      <td>{{ elem.mn_min|floatformat:2 }} - {{ elem.mn_max|floatformat:2 }}</td>
-      <td>{{ elem.si_min|floatformat:2 }} - {{ elem.si_max|floatformat:2 }}</td>
-      <td>{{ elem.p_min|floatformat:2 }} - {{ elem.p_max|floatformat:2 }}</td>
-      <td>{{ elem.s_min|floatformat:2 }} - {{ elem.s_max|floatformat:2 }}</td>
-      <td>{{ elem.cr_min|floatformat:2 }} - {{ elem.cr_max|floatformat:2 }}</td>
-      <td>{{ elem.ni_min|floatformat:2 }} - {{ elem.ni_max|floatformat:2 }}</td>
-      <td>{{ elem.cu_min|floatformat:2 }} - {{ elem.cu_max|floatformat:2 }}</td>
-      <td>{{ elem.al_min|floatformat:2 }} - {{ elem.al_max|floatformat:2 }}</td>
-    </tr>
-  {% endfor %}
-</tbody>
-
-          </table>
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Detalhes da Norma
+            </div>
+            <div class="card-body">
+                <table class="info-table">
+                    <tr>
+                        <th><i class="bi bi-journal-text me-2"></i>Nome da Norma</th>
+                        <td>{{ norma.nome_norma }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="bi bi-link-45deg me-2"></i>Norma Vinculada</th>
+                        <td>{{ norma.vinculo_norma|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="bi bi-file-earmark-pdf-fill me-2"></i>Arquivo PDF</th>
+                        <td>
+                            {% if norma.arquivo_norma %}
+                                <a href="{{ norma.arquivo_norma.url }}" class="btn btn-link btn-sm text-decoration-none p-0" target="_blank">
+                                    <i class="bi bi-download me-1"></i> Baixar PDF
+                                </a>
+                            {% else %}
+                                <span class="text-muted-custom">Nenhum arquivo disponível</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
         </div>
-      {% else %}
-        <p class="text-muted">Nenhuma composição química registrada.</p>
-      {% endif %}
 
-<h5 class="mt-4 border-bottom pb-1">
-  💪 Faixas de Resistência à Tração
-</h5>      {% if norma.tracoes.all %}
-        <div class="table-responsive">
-          <table class="info-table">
-            <thead>
-              <tr>
-                <th>Tipo ABNT</th>
-                <th>Bitola (mm)</th>
-                <th>Resistência à Tração (Kgf/mm²)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for trac in norma.tracoes.all %}
-                <tr>
-                  <td>{{ trac.tipo_abnt }}</td>
-                  <td>{{ trac.bitola_minima }} - {{ trac.bitola_maxima }}</td>
-                  <td>{{ trac.resistencia_min }} - {{ trac.resistencia_max }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-secondary text-white">
+                <i class="bi bi-flask-fill me-2"></i>
+                Composição Química (por Tipo ABNT)
+            </div>
+            <div class="card-body">
+                {% if norma.elementos.all %}
+                <div class="table-responsive">
+                  <table class="info-table table-striped align-middle">
+                      <thead>
+                          <tr class="align-middle">
+                              <th>Tipo ABNT</th>
+                              <th>C</th>
+                              <th>Mn</th>
+                              <th>Si</th>
+                              <th>P</th>
+                              <th>S</th>
+                              <th>Cr</th>
+                              <th>Ni</th>
+                              <th>Cu</th>
+                              <th>Al</th>
+                          </tr>
+                      </thead>
+                            <tbody>
+                                {% for elem in norma.elementos.all %}
+                                    <tr class="align-middle">
+                                        <td>{{ elem.tipo_abnt }}</td>
+                                        <td>{{ elem.c_min|floatformat:3 }} - {{ elem.c_max|floatformat:3 }}</td>
+                                        <td>{{ elem.mn_min|floatformat:3 }} - {{ elem.mn_max|floatformat:3 }}</td>
+                                        <td>{{ elem.si_min|floatformat:3 }} - {{ elem.si_max|floatformat:3 }}</td>
+                                        <td>{{ elem.p_min|floatformat:3 }} - {{ elem.p_max|floatformat:3 }}</td>
+                                        <td>{{ elem.s_min|floatformat:3 }} - {{ elem.s_max|floatformat:3 }}</td>
+                                        <td>{{ elem.cr_min|floatformat:3 }} - {{ elem.cr_max|floatformat:3 }}</td>
+                                        <td>{{ elem.ni_min|floatformat:3 }} - {{ elem.ni_max|floatformat:3 }}</td>
+                                        <td>{{ elem.cu_min|floatformat:3 }} - {{ elem.cu_max|floatformat:3 }}</td>
+                                        <td>{{ elem.al_min|floatformat:3 }} - {{ elem.al_max|floatformat:3 }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted-custom">Nenhuma composição química registrada para esta norma.</p>
+                {% endif %}
+            </div>
         </div>
-      {% else %}
-        <p class="text-muted">Nenhuma faixa de tração registrada.</p>
-      {% endif %}
+
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-activity me-2"></i>
+                Faixas de Resistência à Tração
+            </div>
+            <div class="card-body">
+                {% if norma.tracoes.all %}
+                    <div class="table-responsive">
+                        <table class="info-table">
+                            <thead>
+                                <tr>
+                                    <th class"align-middle">Tipo ABNT</th>
+                                    <th>Bitola (mm)</th>
+                                    <th>Resistência à Tração (Kgf/mm²)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trac in norma.tracoes.all %}
+                                    <tr>
+                                        <td>{{ trac.tipo_abnt }}</td>
+                                        <td>{{ trac.bitola_minima }} - {{ trac.bitola_maxima }}</td>
+                                        <td>{{ trac.resistencia_min }} - {{ trac.resistencia_max }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted-custom">Nenhuma faixa de tração registrada para esta norma.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
-    <div class="pdf-footer text-muted small">
-      <p class="mb-1">
-        <i class="bi bi-clock me-1" aria-hidden="true"></i>
-        Relatório gerado automaticamente em {{ now|date:"d/m/Y H:i" }}
-      </p>
-      <p class="mb-0 fst-italic">Sistema de Qualidade – Bras-Mol Molas e Estampados Ltda</p>
+    <div class="pdf-footer">
+        <p class="mb-1">
+            <i class="bi bi-clock me-1" aria-hidden="true"></i>
+            Relatório gerado automaticamente em {% now "d/m/Y H:i" %}
+        </p>
+        <p class="mb-0 fst-italic">Sistema de Qualidade – Bras-Mol Molas e Estampados Ltda</p>
     </div>
-  </div>
 </div>
 
 <script>
-  if (window.location.search.includes('imprimir=1')) {
-    setTimeout(() => window.print(), 500);
-  }
+    if (window.location.search.includes('imprimir=1')) {
+        setTimeout(() => window.print(), 500);
+    }
 </script>
 {% endblock %}
