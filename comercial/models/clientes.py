@@ -34,7 +34,9 @@ class Cliente(models.Model):
     transportadora_cep = models.CharField(max_length=9)
     transportadora_uf = models.CharField(max_length=2)
     transportadora_telefone = models.CharField(max_length=20, blank=True, null=True)
-    coleta = models.BooleanField(default=False)
+    coleta = models.BooleanField(default=False)    
+    transportadora_email = models.EmailField(blank=True, null=True)
+
 
     # Outros
     icms = models.DecimalField(max_digits=5, decimal_places=2)

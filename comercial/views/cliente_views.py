@@ -106,7 +106,11 @@ def editar_cliente(request, pk):
 @permission_required('comercial.view_cliente', raise_exception=True)
 def visualizar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
-    return render(request, 'comercial/clientes_visualizar.html', {'cliente': cliente})
+    print(f"ICMS do cliente {cliente.razao_social}: {cliente.icms}")
+    print(f"IPI do cliente {cliente.razao_social}: {cliente.ipi}")
+    print(f"Observação do cliente {cliente.razao_social}: {cliente.observacao}") # Verifique a observação também
+
+    return render(request, 'cadastros/clientes_visualizar.html', {'cliente': cliente})
 
 @login_required
 @permission_required('comercial.delete_cliente', raise_exception=True)

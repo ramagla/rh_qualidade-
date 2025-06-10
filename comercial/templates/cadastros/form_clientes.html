@@ -4,7 +4,6 @@
 {% block title %}{% if cliente %}Editar{% else %}Cadastrar{% endif %} Cliente{% endblock %}
 
 {% block content %}
-{% block errors %}{% endblock %}
 
 <div class="container mt-5">
     <h2 class="text-center mb-4">
@@ -15,69 +14,84 @@
     <form method="post" enctype="multipart/form-data" class="row g-3" id="clienteForm">
         {% csrf_token %}
 
-        {% if form.errors %}
-            {% include "partials/global/_form_errors.html" %}
+        {# Seção de Mensagens para o Usuário - Erros do Django Form #}
+        {# Exibe erros gerais do formulário (non-field errors) #}
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                <strong class="font-bold">Erro(s) do Formulário:</strong>
+                <ul>
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         {% endif %}
+
+        {# Seção de Mensagens para o Usuário - Erros do JavaScript (inicialmente escondida) #}
+        <div id="messageBox" class="hidden alert alert-warning" role="alert"> {# Alterado para alert-warning para distinção #}
+            <strong class="font-bold">Aviso:</strong>
+            <span class="block sm:inline" id="messageText"></span>
+        </div>
 
         <div class="accordion" id="accordionCliente">
 
-          <!-- Documentação do Cliente -->
-<div class="accordion-item">
-    <h2 class="accordion-header" id="headingDocumentacao">
-        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDocumentacao" aria-expanded="true" aria-controls="collapseDocumentacao">
-            <i class="bi bi-folder me-2"></i> Documentação do Cliente
-        </button>
-    </h2>
-    <div id="collapseDocumentacao" class="accordion-collapse collapse show" aria-labelledby="headingDocumentacao" data-bs-parent="#accordionCliente">
-        <div class="accordion-body row g-3">
-
-            <!-- Logotipo -->
-            <div class="col-md-6">
-                <label for="logotipo" class="form-label">
-                    <i class="bi bi-image me-1"></i> Logotipo:
-                </label>
-                <div class="input-group mb-3">
-                    <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_logotipo').click();">
-                        <i class="bi bi-image"></i>
+            <!-- Documentação do Cliente -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDocumentacao">
+                    <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDocumentacao" aria-expanded="true" aria-controls="collapseDocumentacao">
+                        <i class="bi bi-folder me-2"></i> Documentação do Cliente
                     </button>
-                    <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="logotipo_filename" readonly>
-                </div>
-                <input type="file" id="id_logotipo" name="logotipo" style="display: none;" onchange="document.getElementById('logotipo_filename').value = this.files[0].name;">
-                {% if cliente and cliente.logotipo %}
-                    <div class="mt-2 text-center">
-                        <img src="{{ cliente.logotipo.url }}" alt="Logotipo do Cliente" style="max-width: 200px; height: auto;">
-                    </div>
-                {% endif %}
-            </div>
+                </h2>
+                <div id="collapseDocumentacao" class="accordion-collapse collapse show" aria-labelledby="headingDocumentacao" data-bs-parent="#accordionCliente">
+                    <div class="accordion-body row g-3">
 
-            <!-- Documentos (formset) -->
-            <div class="col-12">
-                <label class="form-label"><i class="bi bi-files me-1"></i> Documentos do Cliente:</label>
-                {{ formset.management_form }}
-                <div class="row g-3">
-                    {% for form_doc in formset %}
-                        <div class="col-md-4">
-                            <label class="form-label">Tipo:</label>
-                            {{ form_doc.tipo|add_class:"form-select mb-2" }}
-                        </div>
+                        <!-- Logotipo -->
                         <div class="col-md-6">
-                            <label class="form-label">Arquivo:</label>
-                            {{ form_doc.arquivo|add_class:"form-control mb-2" }}
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            {% if form_doc.instance.pk %}
-                                <label class="form-check-label me-2">Excluir:</label>
-                                {{ form_doc.DELETE }}
+                            <label for="logotipo" class="form-label">
+                                <i class="bi bi-image me-1"></i> Logotipo:
+                            </label>
+                            <div class="input-group mb-3">
+                                <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_logotipo').click();">
+                                    <i class="bi bi-image"></i>
+                                </button>
+                                <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="logotipo_filename" readonly>
+                            </div>
+                            <input type="file" id="id_logotipo" name="logotipo" style="display: none;" onchange="document.getElementById('logotipo_filename').value = this.files[0].name;">
+                            {% if cliente and cliente.logotipo %}
+                                <div class="mt-2 text-center">
+                                    <img src="{{ cliente.logotipo.url }}" alt="Logotipo do Cliente" style="max-width: 200px; height: auto;">
+                                </div>
                             {% endif %}
                         </div>
-                        <hr class="my-2">
-                    {% endfor %}
+
+                        <!-- Documentos (formset) -->
+                        <div class="col-12">
+                            <label class="form-label"><i class="bi bi-files me-1"></i> Documentos do Cliente:</label>
+                            {{ formset.management_form }}
+                            <div class="row g-3">
+                                {% for form_doc in formset %}
+                                    <div class="col-md-4">
+                                        <label class="form-label">Tipo:</label>
+                                        {{ form_doc.tipo|add_class:"form-select mb-2" }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Arquivo:</label>
+                                        {{ form_doc.arquivo|add_class:"form-control mb-2" }}
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        {% if form_doc.instance.pk %}
+                                            <label class="form-check-label me-2">Excluir:</label>
+                                            {{ form_doc.DELETE }}
+                                        {% endif %}
+                                    </div>
+                                    <hr class="my-2">
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
-
-        </div>
-    </div>
-</div>
 
 
             <!-- Dados do Cliente -->
@@ -95,7 +109,8 @@
                                 <i class="bi bi-123 me-1"></i> CNPJ:
                             </label>
                             <div class="input-group">
-                                {{ form.cnpj|add_class:"form-control" }}
+                                <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                                {{ form.cnpj|add_class:"form-control"|attr:"id:id_cnpj" }}
                                 <button type="button" class="btn btn-primary" onclick="buscarCNPJ()">Buscar dados</button>
                             </div>
                         </div>
@@ -104,47 +119,56 @@
                             <label for="{{ form.razao_social.id_for_label }}" class="form-label">
                                 <i class="bi bi-building me-1"></i> Razão Social:
                             </label>
-                            {{ form.razao_social|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.razao_social|add_class:"form-control"|attr:"id:id_razao_social" }}
                         </div>
 
                         <div class="col-md-6">
                             <label for="{{ form.ie.id_for_label }}" class="form-label">I.E.:</label>
-                            {{ form.ie|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.ie|add_class:"form-control"|attr:"id:id_ie" }}
                         </div>
 
                         <div class="col-md-6">
                             <label for="{{ form.endereco.id_for_label }}" class="form-label">Endereço:</label>
-                            {{ form.endereco|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.endereco|add_class:"form-control"|attr:"id:id_endereco" }}
                         </div>
 
                         <div class="col-md-3">
                             <label for="{{ form.numero.id_for_label }}" class="form-label">Número:</label>
-                            {{ form.numero|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.numero|add_class:"form-control"|attr:"id:id_numero" }}
                         </div>
 
                         <div class="col-md-3">
                             <label for="{{ form.complemento.id_for_label }}" class="form-label">Complemento:</label>
-                            {{ form.complemento|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.complemento|add_class:"form-control"|attr:"id:id_complemento" }}
                         </div>
 
                         <div class="col-md-6">
                             <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro:</label>
-                            {{ form.bairro|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.bairro|add_class:"form-control"|attr:"id:id_bairro" }}
                         </div>
 
                         <div class="col-md-6">
                             <label for="{{ form.cidade.id_for_label }}" class="form-label">Cidade:</label>
-                            {{ form.cidade|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.cidade|add_class:"form-control"|attr:"id:id_cidade" }}
                         </div>
 
                         <div class="col-md-3">
                             <label for="{{ form.cep.id_for_label }}" class="form-label">CEP:</label>
-                            {{ form.cep|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.cep|add_class:"form-control"|attr:"id:id_cep" }}
                         </div>
 
                         <div class="col-md-3">
                             <label for="{{ form.uf.id_for_label }}" class="form-label">UF:</label>
-                            {{ form.uf|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.uf|add_class:"form-control"|attr:"id:id_uf" }}
                         </div>
 
                         <div class="col-md-6">
@@ -176,71 +200,81 @@
                         <div class="col-md-6">
                             <label for="{{ form.transportadora_cnpj.id_for_label }}" class="form-label">CNPJ:</label>
                             <div class="input-group">
-                                {{ form.transportadora_cnpj|add_class:"form-control" }}
+                                <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                                {{ form.transportadora_cnpj|add_class:"form-control"|attr:"id:id_transportadora_cnpj" }}
                                 <button type="button" class="btn btn-primary" onclick="buscarCNPJTransportadora()">Buscar dados</button>
                             </div>
                         </div>
-                        
 
                         <div class="col-md-6">
                             <label for="{{ form.transportadora_razao_social.id_for_label }}" class="form-label">Razão Social:</label>
-                            {{ form.transportadora_razao_social|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.transportadora_razao_social|add_class:"form-control"|attr:"id:id_transportadora_razao_social" }}
                         </div>
-
-                       
 
                         <div class="col-md-6">
                             <label for="{{ form.transportadora_ie.id_for_label }}" class="form-label">I.E.:</label>
-                            {{ form.transportadora_ie|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.transportadora_ie|add_class:"form-control"|attr:"id:id_transportadora_ie" }}
                         </div>
 
                         <div class="col-md-6">
                             <label for="{{ form.transportadora_endereco.id_for_label }}" class="form-label">Endereço:</label>
-                            {{ form.transportadora_endereco|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.transportadora_endereco|add_class:"form-control"|attr:"id:id_transportadora_endereco" }}
                         </div>
 
                         <div class="col-md-3">
                             <label for="{{ form.transportadora_numero.id_for_label }}" class="form-label">Número:</label>
-                            {{ form.transportadora_numero|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.transportadora_numero|add_class:"form-control"|attr:"id:id_transportadora_numero" }}
                         </div>
 
                         <div class="col-md-3">
                             <label for="{{ form.transportadora_complemento.id_for_label }}" class="form-label">Complemento:</label>
-                            {{ form.transportadora_complemento|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.transportadora_complemento|add_class:"form-control"|attr:"id:id_transportadora_complemento" }}
                         </div>
 
                         <div class="col-md-6">
                             <label for="{{ form.transportadora_bairro.id_for_label }}" class="form-label">Bairro:</label>
-                            {{ form.transportadora_bairro|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.transportadora_bairro|add_class:"form-control"|attr:"id:id_transportadora_bairro" }}
                         </div>
 
                         <div class="col-md-6">
                             <label for="{{ form.transportadora_cidade.id_for_label }}" class="form-label">Cidade:</label>
-                            {{ form.transportadora_cidade|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.transportadora_cidade|add_class:"form-control"|attr:"id:id_transportadora_cidade" }}
                         </div>
 
                         <div class="col-md-3">
                             <label for="{{ form.transportadora_cep.id_for_label }}" class="form-label">CEP:</label>
-                            {{ form.transportadora_cep|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.transportadora_cep|add_class:"form-control"|attr:"id:id_transportadora_cep" }}
                         </div>
 
                         <div class="col-md-3">
                             <label for="{{ form.transportadora_uf.id_for_label }}" class="form-label">UF:</label>
-                            {{ form.transportadora_uf|add_class:"form-control" }}
+                            <!-- GARANTINDO O ID PARA O JAVASCRIPT -->
+                            {{ form.transportadora_uf|add_class:"form-control"|attr:"id:id_transportadora_uf" }}
                         </div>
 
                         <div class="col-md-6">
                             <label for="{{ form.transportadora_telefone.id_for_label }}" class="form-label">Telefone:</label>
                             {{ form.transportadora_telefone|add_class:"form-control" }}
                         </div>
-
+                        <div class="col-md-6">
+                            <label for="{{ form.transportadora_email.id_for_label }}" class="form-label">Email:</label>
+                            {{ form.transportadora_email|add_class:"form-control" }}
+                        </div>
                         <div class="col-md-6">
                             <label for="{{ form.coleta.id_for_label }}" class="form-label">Coleta:</label>
                             <div class="form-check form-switch mt-4">
                                 {{ form.coleta|add_class:"form-check-input" }}
                                 <label class="form-check-label" for="{{ form.coleta.id_for_label }}">Coleta</label>
                             </div>
-                                                    </div>
+                        </div>
 
                     </div>
                 </div>
@@ -316,8 +350,8 @@
         $('#id_transportadora_cnpj').mask('00.000.000/0000-00');
     
         // I.E.
-        $('#id_ie').mask('00.000.000.000.000');
-        $('#id_transportadora_ie').mask('00.000.000.000.000');
+        $('#id_ie').mask('000.000.000.000');
+        $('#id_transportadora_ie').mask('000.000.000.000');
     
         // CEP
         $('#id_cep').mask('00000-000');
@@ -353,51 +387,149 @@
     });
     </script>
     
-
 <script>
+    /**
+     * Exibe uma mensagem de erro na caixa de mensagens personalizada.
+     * @param {string} message - A mensagem a ser exibida.
+     */
+    function showMessage(message) {
+        const messageBox = document.getElementById("messageBox");
+        const messageText = document.getElementById("messageText");
+        messageText.textContent = message;
+        messageBox.classList.remove("hidden");
+        // Oculta a mensagem após 5 segundos
+        setTimeout(() => {
+            messageBox.classList.add("hidden");
+        }, 5000);
+    }
+
+    /**
+     * Limpa todos os campos do formulário principal de CNPJ.
+     */
+    function clearMainForm() {
+        document.getElementById("id_razao_social").value = "";
+        document.getElementById("id_endereco").value = "";
+        document.getElementById("id_numero").value = "";
+        document.getElementById("id_complemento").value = "";
+        document.getElementById("id_bairro").value = "";
+        document.getElementById("id_cidade").value = "";
+        document.getElementById("id_cep").value = "";
+        document.getElementById("id_uf").value = "";
+        document.getElementById("id_ie").value = "";
+    }
+
+    /**
+     * Limpa todos os campos do formulário de CNPJ da transportadora.
+     */
+    function clearTransportadoraForm() {
+        document.getElementById("id_transportadora_razao_social").value = "";
+        document.getElementById("id_transportadora_endereco").value = "";
+        document.getElementById("id_transportadora_numero").value = "";
+        document.getElementById("id_transportadora_complemento").value = "";
+        document.getElementById("id_transportadora_bairro").value = "";
+        document.getElementById("id_transportadora_cidade").value = "";
+        document.getElementById("id_transportadora_cep").value = "";
+        document.getElementById("id_transportadora_uf").value = "";
+        document.getElementById("id_transportadora_ie").value = "";
+    }
+
+    /**
+     * Função para buscar dados do CNPJ na BrasilAPI.
+     * Preenche os campos do formulário principal com os dados retornados.
+     */
     function buscarCNPJ() {
-        const cnpj = document.getElementById("id_cnpj").value.replace(/\D/g, "");
+        const cnpjInput = document.getElementById("id_cnpj");
+        const cnpj = cnpjInput.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+
         if (cnpj.length !== 14) {
-            alert("CNPJ inválido!");
+            showMessage("CNPJ inválido! Por favor, insira 14 dígitos.");
+            clearMainForm(); // Limpa os campos se o CNPJ for inválido
             return;
         }
-    
+
+        // Limpa mensagens anteriores e campos antes de uma nova busca
+        document.getElementById("messageBox").classList.add("hidden");
+        clearMainForm();
+
         fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    // Se a resposta não for OK (ex: 404, 500), lança um erro
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
+                // Loga o objeto data para inspeção no console do navegador
+                console.log("Dados do CNPJ (Principal):", data);
+                console.log("descricao_tipo_de_logradouro (Principal):", data.descricao_tipo_de_logradouro);
+                console.log("logradouro (Principal):", data.logradouro);
+
                 if (data.razao_social) {
                     document.getElementById("id_razao_social").value = data.razao_social || "";
-                    document.getElementById("id_endereco").value = data.descricao_tipo_logradouro + " " + data.logradouro || "";
+                    // Combina o tipo de logradouro (se existir) com o logradouro
+                    document.getElementById("id_endereco").value =
+                        (data.descricao_tipo_de_logradouro ? data.descricao_tipo_de_logradouro + " " : "") +
+                        (data.logradouro || "");
                     document.getElementById("id_numero").value = data.numero || "";
                     document.getElementById("id_complemento").value = data.complemento || "";
                     document.getElementById("id_bairro").value = data.bairro || "";
                     document.getElementById("id_cidade").value = data.municipio || "";
                     document.getElementById("id_cep").value = data.cep || "";
                     document.getElementById("id_uf").value = data.uf || "";
+                    // Verifica se inscricoes_estaduais existe e se o primeiro elemento existe
                     document.getElementById("id_ie").value = data.inscricoes_estaduais && data.inscricoes_estaduais[0] ? data.inscricoes_estaduais[0].numero : "";
                 } else {
-                    alert("CNPJ não encontrado ou inválido.");
+                    showMessage("CNPJ não encontrado ou inválido. Por favor, verifique e tente novamente.");
                 }
             })
             .catch(error => {
-                console.error("Erro ao buscar CNPJ:", error);
-                alert("Erro ao buscar CNPJ.");
+                console.error("Erro ao buscar CNPJ (Principal):", error);
+                showMessage(`Erro ao buscar CNPJ: ${error.message || "Problema de rede ou API."}`);
+                clearMainForm();
             });
     }
-    
+
+    /**
+     * Função para buscar dados do CNPJ da Transportadora na BrasilAPI.
+     * Preenche os campos do formulário da transportadora com os dados retornados.
+     */
     function buscarCNPJTransportadora() {
-        const cnpj = document.getElementById("id_transportadora_cnpj").value.replace(/\D/g, "");
+        const cnpjInput = document.getElementById("id_transportadora_cnpj");
+        const cnpj = cnpjInput.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+
         if (cnpj.length !== 14) {
-            alert("CNPJ inválido!");
+            showMessage("CNPJ da transportadora inválido! Por favor, insira 14 dígitos.");
+            clearTransportadoraForm(); // Limpa os campos se o CNPJ for inválido
             return;
         }
-    
+
+        // Limpa mensagens anteriores e campos antes de uma nova busca
+        document.getElementById("messageBox").classList.add("hidden");
+        clearTransportadoraForm();
+
         fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
+                // Loga o objeto data para inspeção no console do navegador
+                console.log("Dados do CNPJ (Transportadora):", data);
+                console.log("descricao_tipo_de_logradouro (Transportadora):", data.descricao_tipo_de_logradouro);
+                console.log("logradouro (Transportadora):", data.logradouro);
+
                 if (data.razao_social) {
                     document.getElementById("id_transportadora_razao_social").value = data.razao_social || "";
-                    document.getElementById("id_transportadora_endereco").value = data.descricao_tipo_logradouro + " " + data.logradouro || "";
+                    document.getElementById("id_transportadora_endereco").value =
+                        (data.descricao_tipo_de_logradouro ? data.descricao_tipo_de_logradouro + " " : "") +
+                        (data.logradouro || "");
                     document.getElementById("id_transportadora_numero").value = data.numero || "";
                     document.getElementById("id_transportadora_complemento").value = data.complemento || "";
                     document.getElementById("id_transportadora_bairro").value = data.bairro || "";
@@ -406,14 +538,15 @@
                     document.getElementById("id_transportadora_uf").value = data.uf || "";
                     document.getElementById("id_transportadora_ie").value = data.inscricoes_estaduais && data.inscricoes_estaduais[0] ? data.inscricoes_estaduais[0].numero : "";
                 } else {
-                    alert("CNPJ da transportadora não encontrado ou inválido.");
+                    showMessage("CNPJ da transportadora não encontrado ou inválido. Por favor, verifique e tente novamente.");
                 }
             })
             .catch(error => {
                 console.error("Erro ao buscar CNPJ da transportadora:", error);
-                alert("Erro ao buscar CNPJ da transportadora.");
+                showMessage(`Erro ao buscar CNPJ da transportadora: ${error.message || "Problema de rede ou API."}`);
+                clearTransportadoraForm();
             });
     }
-    </script>
+</script>
     
 {% endblock %}
