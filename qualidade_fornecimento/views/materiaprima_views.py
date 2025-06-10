@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from qualidade_fornecimento.forms.tb050_forms import RelacaoMateriaPrimaForm
+from qualidade_fornecimento.models.f045 import RelatorioF045
 from qualidade_fornecimento.models.rolo import RoloMateriaPrima
 
 logger = logging.getLogger(__name__)
@@ -164,16 +165,24 @@ def salvar_formulario_tb050(form, formset, registro_existente=None):
                 form.instance.delete()
 
     # 3️⃣ Depois salva os novos ou editados
+    # … dentro de salvar_formulario_tb050 …
     for rolo in rolos:
-     if not rolo.nro_rolo or rolo.nro_rolo.strip() in ["", "Será gerado ao salvar"]:
-        ultimo = RoloMateriaPrima.objects.order_by("-id").first()
-        ultimo_numero = (
-            int(ultimo.nro_rolo) if ultimo and str(ultimo.nro_rolo).isdigit() else 49999
-        )
-        rolo.nro_rolo = str(ultimo_numero + 1)
+        if not rolo.nro_rolo or rolo.nro_rolo.strip() in ["", "Será gerado ao salvar"]:
+            # ✅ filtra apenas os rolos desta relação
+            qs = RoloMateriaPrima.objects.filter(tb050=tb050)
+            # extrai apenas strings numéricas e converte em int
+            numeros = [
+                int(n) for n in qs.values_list("nro_rolo", flat=True)
+                if n and n.isdigit()
+            ]
+            # se não houver nenhum, começa em 50000
+            ultimo_numero = max(numeros) if numeros else 49999
+            rolo.nro_rolo = str(ultimo_numero + 1)
 
+        # garante FK antes de salvar qualquer rolo (novo ou editado)
         rolo.tb050 = tb050
         rolo.save()
+
 
     formset.save_m2m()
 
@@ -184,29 +193,25 @@ def salvar_formulario_tb050(form, formset, registro_existente=None):
 def cadastrar_tb050(request):
     if request.method == "POST":
         form = RelacaoMateriaPrimaForm(request.POST, request.FILES)
-        formset = RoloFormSet(request.POST)
-
-        if form.is_valid() and formset.is_valid():
-            salvar_formulario_tb050(form, formset)
+        if form.is_valid():
+            # Assegura que novo registro já venha com status "Aguardando F045"
+            tb050 = form.save(commit=False)
+            tb050.status = "Aguardando F045"
+            tb050.save()
             messages.success(request, "Registro da TB050 cadastrado com sucesso!")
             return redirect("tb050_list")
-        else:
-            messages.error(request, "Corrija os erros no formulário.")
-
     else:
         form = RelacaoMateriaPrimaForm()
-        formset = RoloFormSet()
 
     return render(
         request,
         "tb050/form_tb050.html",
-        {
-            "form": form,
-            "formset": formset,
-            "titulo_pagina": "Cadastrar Relação de Matérias-Primas (TB050)",
-        },
+        {"form": form, "titulo_pagina": "Cadastrar Relação de Matérias-Primas (TB050)"},
     )
 
+
+
+from qualidade_fornecimento.forms.inline_rolo_formset import RoloFormSet
 
 @login_required
 def editar_tb050(request, id):
@@ -214,32 +219,25 @@ def editar_tb050(request, id):
 
     if request.method == "POST":
         form = RelacaoMateriaPrimaForm(request.POST, request.FILES, instance=registro)
-        formset = RoloFormSet(request.POST, instance=registro, prefix="rolos")
-
-        if form.is_valid() and formset.is_valid():
-            salvar_formulario_tb050(form, formset, registro_existente=registro)
+        if form.is_valid():
+            tb050 = form.save(commit=False)
+            try:
+                tb050.status = tb050.f045.status_geral
+            except RelatorioF045.DoesNotExist:
+                tb050.status = "Aguardando F045"
+            tb050.save()
             messages.success(request, "Registro atualizado com sucesso!")
             return redirect("tb050_list")
-        else:
-            print("FORM ERRORS:", form.errors.as_data())
-            print("FORMSET ERRORS:", formset.errors)
-            messages.error(request, "Corrija os erros no formulário.")
-
-
     else:
         form = RelacaoMateriaPrimaForm(instance=registro)
-        formset = RoloFormSet(instance=registro)
 
-    return render(
-        request,
-        "tb050/form_tb050.html",
-        {
-            "form": form,
-            "formset": formset,
-            "registro": registro,
-            "titulo_pagina": "Editar Relação de Matérias-Primas (TB050)",
-        },
-    )
+    return render(request, "tb050/form_tb050.html", {
+        "form": form,
+        "registro": registro,
+        "titulo_pagina": "Editar Relação de Matérias-Primas (TB050)",
+    })
+
+
 
 
 @login_required
@@ -338,7 +336,7 @@ def selecionar_etiquetas_tb050(request, id):
 
     # Debug: Verifique se os valores estão sendo carregados
     for rolo in rolos:
-        print(f"Rolo ID: {rolo.id}, Peso: {rolo.peso}")
+        print(f"Rolo ID: {rolo.nro_rolo}, Peso: {rolo.peso}")
 
     return render(
         request,
@@ -360,11 +358,13 @@ def imprimir_etiquetas_tb050(request, id):
         rolos_selecionados = []
 
         for rolo_id in rolos_ids:
-            rolo = RoloMateriaPrima.objects.get(id=rolo_id)
+            # Busca pelo campo correto
+            rolo = RoloMateriaPrima.objects.get(nro_rolo=rolo_id)
 
-            # Captura o peso e a quantidade informados
-            peso_str = request.POST.get(f"peso_{rolo.id}")
-            qtd_str = request.POST.get(f"quantidade_{rolo.id}")
+            # Campos do POST usando rolo.nro_rolo
+            peso_str = request.POST.get(f"peso_{rolo.nro_rolo}")
+            qtd_str  = request.POST.get(f"quantidade_{rolo.nro_rolo}")
+
 
             # Atualiza os valores no rolo (sem salvar no banco, apenas em memória)
             rolo.peso = float(peso_str.replace(",", ".")) if peso_str else 0.0
@@ -428,13 +428,14 @@ def get_rolos_peso(request, id):
     data = {
         "rolos": [
             {
-                "id": rolo.id,
+                "id": rolo.nro_rolo,
                 "nro_rolo": rolo.nro_rolo,
                 "peso": float(rolo.peso) if rolo.peso is not None else 0.0,
             }
             for rolo in rolos
         ]
     }
+
 
     return JsonResponse(data)
 
@@ -467,14 +468,14 @@ def imprimir_etiquetas_pdf(request, id):
         # Agora, pega os rolos que foram selecionados via checkbox
         rolos_ids = request.POST.getlist("rolos")
         if rolos_ids:
-            rolos_queryset = rolos_queryset.filter(id__in=rolos_ids)
+            rolos_queryset = rolos_queryset.filter(nro_rolo__in=rolos_ids)
         # Caso não haja rolos selecionados explicitamente, usa todos os que passaram nos filtros
 
         # Atualiza os valores de peso e quantidade conforme o formulário
         rolos = []
-        for rolo in rolos_queryset:
-            peso_str = request.POST.get(f"peso_{rolo.id}")
-            qtd_str = request.POST.get(f"quantidade_{rolo.id}")
+        for rolo in rolos:
+            peso_str = request.POST.get(f"peso_{rolo.nro_rolo}")
+            qtd_str  = request.POST.get(f"quantidade_{rolo.nro_rolo}")
             rolo.peso = float(peso_str.replace(",", ".")) if peso_str else 0.0
             rolo.qtd_etiquetas = int(qtd_str) if qtd_str else 1
             rolos.append(rolo)
@@ -539,3 +540,21 @@ def norma_aprovada(request, id):
 
     except (NormaTecnica.DoesNotExist, RelacaoMateriaPrima.DoesNotExist):
         return JsonResponse({"aprovada": False})
+    
+from qualidade_fornecimento.models.rolo import RoloMateriaPrima
+from qualidade_fornecimento.forms.rolo_forms import RoloMateriaPrimaForm
+
+@login_required
+def adicionar_rolo(request, id):
+    relacao = get_object_or_404(RelacaoMateriaPrima, pk=id)
+
+    if request.method == "POST":
+        form = RoloMateriaPrimaForm(request.POST)
+        if form.is_valid():
+            rolo = form.save(commit=False)
+            rolo.tb050 = relacao
+            rolo.save()  # agora usa o save() do modelo para definir nro_rolo
+            messages.success(request, f"Rolo #{rolo.nro_rolo} adicionado com sucesso!")
+        else:
+            messages.error(request, "Erro ao adicionar rolo. Verifique os dados.")
+    return redirect("tb050_list")

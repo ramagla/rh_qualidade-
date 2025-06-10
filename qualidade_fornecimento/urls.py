@@ -30,7 +30,8 @@ from qualidade_fornecimento.views.materiaprima_views import (
     lista_tb050,
     selecionar_etiquetas_tb050,
     visualizar_tb050,
-    norma_aprovada
+    norma_aprovada,
+    adicionar_rolo
 )
 from qualidade_fornecimento.views.relatorio_avaliacao import relatorio_avaliacao_view
 
@@ -194,4 +195,7 @@ urlpatterns = [
             registrar_entrega_servico_externo,
             name="registrar_entrega_servico_externo"
         ),
+
+    path("tb050/<int:id>/adicionar-rolo/", adicionar_rolo, name="tb050_adicionar_rolo"),
+
 ]

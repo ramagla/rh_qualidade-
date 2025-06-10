@@ -9,7 +9,7 @@ class RoloMateriaPrima(models.Model):
     tb050 = models.ForeignKey(
         RelacaoMateriaPrima, related_name="rolos", on_delete=models.CASCADE
     )
-    nro_rolo = models.CharField("N° do Rolo", max_length=50, blank=True)
+    nro_rolo = models.CharField("N° do Rolo", max_length=50, blank=True, primary_key=True, serialize=False  )
     peso = models.DecimalField(
         "Peso", max_digits=10, decimal_places=2, blank=True, null=True
     )
@@ -106,11 +106,13 @@ class RoloMateriaPrima(models.Model):
         return self.laudo
 
     def save(self, *args, **kwargs):
-        if not self.nro_rolo or self.nro_rolo == "Será gerado ao salvar":
-            ultimo = RoloMateriaPrima.objects.filter(tb050=self.tb050).order_by("-id").first()
-            ultimo_numero = (
-                int(ultimo.nro_rolo) if ultimo and ultimo.nro_rolo.isdigit() else 49999
-            )
-            self.nro_rolo = str(ultimo_numero + 1)
+        # só gera sequência na criação, quando nro_rolo estiver em branco
+        if self._state.adding and not (self.nro_rolo and self.nro_rolo.strip()):
+            # pega todos os nro_rolo da tabela, independentemente de TB050
+            existing = RoloMateriaPrima.objects.values_list("nro_rolo", flat=True)
+            numeros = [int(n) for n in existing if n and n.isdigit()]
+            proximo = max(numeros) + 1 if numeros else 50000
+            self.nro_rolo = str(proximo)
+
         super().save(*args, **kwargs)
 
