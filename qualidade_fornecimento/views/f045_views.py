@@ -20,6 +20,8 @@ from qualidade_fornecimento.models.norma import (
 )
 from django.templatetags.static import static
 from django.utils.timezone import localtime, now
+from assinatura_eletronica.models import AssinaturaEletronica
+from assinatura_eletronica.utils import gerar_assinatura
 
 @login_required
 def f045_status(request, f045_id):
@@ -439,6 +441,20 @@ def gerar_f045(request, relacao_id):
             updated_f045.data_assinatura = now()
             updated_f045.save(update_fields=["assinatura_nome", "assinatura_cn", "data_assinatura"])
 
+            # Cria ou atualiza a assinatura eletrônica associada
+            conteudo_hash = f"{updated_f045.nro_relatorio}|{updated_f045.material}|{updated_f045.numero_certificado}|{updated_f045.status_geral}"
+            assinatura_hash = gerar_assinatura(updated_f045, request.user)
+
+            AssinaturaEletronica.objects.update_or_create(
+                origem_model="RelatorioF045",
+                origem_id=updated_f045.id,
+                defaults={
+                    "hash": assinatura_hash,
+                    "conteudo": conteudo_hash,
+                    "usuario": request.user,
+                    "data_assinatura": updated_f045.data_assinatura,
+                }
+            )
 
             messages.success(request, "Relatório F045 salvo com sucesso.")
             return redirect("tb050_list")
