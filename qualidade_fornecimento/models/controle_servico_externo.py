@@ -32,6 +32,7 @@ class ControleServicoExterno(models.Model):
     observacao = models.TextField(blank=True)
     lead_time = models.PositiveIntegerField(null=True, blank=True)
     previsao_entrega = models.DateField(null=True, blank=True)  # ✅ novo campo
+    data_negociada = models.DateField("Data Negociada", null=True, blank=True)  # ✅ novo campo
 
     total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
@@ -57,14 +58,11 @@ class ControleServicoExterno(models.Model):
 
 
     def calcular_atraso_em_dias(self):
-        prev_entrega = self.calcular_prev_entrega()
-        
-        if not prev_entrega or not self.data_retorno:
-            # Se não tem data de retorno ou previsão, não calcula atraso
+        base_entrega = self.data_negociada or self.calcular_prev_entrega()
+        if not base_entrega or not self.data_retorno:
             return 0
-        
-        atraso = (self.data_retorno - prev_entrega).days
-        return atraso if atraso > 0 else 0
+        atraso = (self.data_retorno - base_entrega).days
+        return max(atraso, 0)  # 🔒 Garante que não seja negativo
 
 
     def calcular_ip(self):
@@ -85,6 +83,8 @@ class ControleServicoExterno(models.Model):
     
     def save(self, *args, **kwargs):
         self.previsao_entrega = self.calcular_prev_entrega()
+        self.atraso_em_dias = self.calcular_atraso_em_dias()
+        self.ip = self.calcular_ip()
         super().save(*args, **kwargs)
 
     def __str__(self):

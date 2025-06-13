@@ -1,6 +1,6 @@
 # Ignorar o diretório do ambiente virtual
 venv/
-media
+/media/
 
 # Ignorar arquivos de cache do Python
 __pycache__/

@@ -85,7 +85,9 @@
                  <span class="input-group-text bg-light text-muted" title="Campo automático">🔒</span>
         </div>
       </div>
-
+      
+      
+      
       <!-- Atraso em Dias -->
       <div class="col-12 col-sm-6 col-md-4">
         <label for="atraso_dias_auto" class="form-label fw-bold">
@@ -237,7 +239,12 @@
   </label>
   {{ form.data_retorno|add_class:"form-control" }}
 </div>
-
+<div class="col-md-3">
+  <label class="form-label">
+    <i class="bi bi-calendar-plus me-2" aria-hidden="true"></i> Data Negociada:
+  </label>
+  {{ form.data_negociada|add_class:"form-control" }}
+</div>
 
 
                 {% comment %} <div class="col-md-3">
@@ -371,190 +378,190 @@
 </div>
 
 <script>
-function exibirToast(mensagem, tipo) {
-  const toast = document.createElement("div");
-  toast.className = `toast align-items-center text-white bg-${tipo} border-0 show position-fixed bottom-0 end-0 m-3`;
-  toast.role = "alert";
-  toast.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body">${mensagem}</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
-    </div>
-  `;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const statusInspecao = "{{ status_inspecao|default:'' }}";
-
-  // ✅ Debounce deve estar fora da função para funcionar globalmente
-  function debounce(func, delay) {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), delay);
-    };
+  function exibirToast(mensagem, tipo) {
+    const toast = document.createElement("div");
+    toast.className = `toast align-items-center text-white bg-${tipo} border-0 show position-fixed bottom-0 end-0 m-3`;
+    toast.role = "alert";
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${mensagem}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
   }
-
-  const calcularCamposAutomaticosDebounced = debounce(calcularCamposAutomaticos, 300);
-
-  // Ativa select2
-  $('#id_fornecedor, #id_codigo_bm').select2({
-    placeholder: "Selecione...",
-    width: '100%',
-    allowClear: true
-  });
-
-  $(document).on('select2:open', function () {
-    document.querySelectorAll('.select2-search__field').forEach(input => {
-      input.setAttribute('aria-label', 'Pesquisar opção');
+  </script>
+  
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const statusInspecao = "{{ status_inspecao|default:'' }}";
+  
+    function debounce(func, delay) {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+  
+    const calcularCamposAutomaticosDebounced = debounce(calcularCamposAutomaticos, 300);
+  
+    $('#id_fornecedor, #id_codigo_bm').select2({
+      placeholder: "Selecione...",
+      width: '100%',
+      allowClear: true
+    });
+  
+    $(document).on('select2:open', function () {
+      document.querySelectorAll('.select2-search__field').forEach(input => {
+        input.setAttribute('aria-label', 'Pesquisar opção');
+      });
+    });
+  
+    $('#id_fornecedor').on('select2:select', function (e) {
+      const fornecedorId = e.params.data.id;
+  
+      fetch(`/qualidade/api/fornecedor/${fornecedorId}/leadtime/`)
+        .then(res => res.json())
+        .then(data => {
+          const leadInput = document.getElementById('id_lead_time');
+          const leadValue = parseInt(data.lead_time);
+  
+          if (!isNaN(leadValue) && leadValue > 0) {
+            leadInput.value = leadValue;
+            calcularCamposAutomaticosDebounced();
+            exibirToast("Campos automáticos atualizados com sucesso!", "success");
+          } else {
+            leadInput.value = "";
+            exibirToast("Fornecedor sem Lead Time cadastrado.", "danger");
+          }
+        })
+        .catch(() => {
+          exibirToast("Erro ao buscar Lead Time. Tente novamente.", "danger");
+        });
+    });
+  
+    function calcularCamposAutomaticos() {
+      const totalRecebido = [...document.querySelectorAll('input[name$="-quantidade"]')]
+        .map(input => parseFloat(input.value.replace(",", ".")) || 0)
+        .reduce((a, b) => a + b, 0);
+  
+      const receb = document.getElementById("total_recebido_auto");
+      const enviada = parseFloat(document.getElementById("id_quantidade_enviada")?.value.replace(",", ".")) || 0;
+      const lead = parseInt(document.getElementById("id_lead_time")?.value) || 0;
+      const dataEnvio = document.getElementById("id_data_envio")?.value;
+      const dataRetorno = document.getElementById("id_data_retorno")?.value;
+      const dataNegociada = document.getElementById("id_data_negociada")?.value;
+  
+      const status = document.getElementById("status2_auto");
+      const prev = document.getElementById("prev_entrega_auto");
+      const atraso = document.getElementById("atraso_dias_auto");
+      const ip = document.getElementById("ip_auto");
+      const iqf = document.getElementById("iqf_auto");
+  
+      if (receb) receb.value = totalRecebido.toFixed(2);
+  
+      if (status) {
+        status.value = enviada ? (
+          totalRecebido < enviada ? "Atenção Saldo" :
+          totalRecebido === enviada ? "OK" :
+          "Saldo maior que o enviado"
+        ) : "";
+      }
+  
+      if (prev && dataEnvio && lead > 0) {
+        const data = new Date(dataEnvio);
+        data.setDate(data.getDate() + lead);
+        const dia = String(data.getDate()).padStart(2, '0');
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const ano = data.getFullYear();
+        prev.value = `${dia}/${mes}/${ano}`;
+      }
+  
+      if (dataRetorno && (dataNegociada || prev?.value)) {
+        let baseEntrega = dataNegociada || prev.value;
+  
+        if (baseEntrega.includes("/")) {
+          const [dia, mes, ano] = baseEntrega.split('/');
+          baseEntrega = `${ano}-${mes}-${dia}`;
+        }
+  
+        const prevDate = new Date(baseEntrega);
+        const atrasoDias = Math.max(0, Math.round((new Date(dataRetorno) - prevDate) / (1000 * 60 * 60 * 24)));
+  
+        if (atraso) atraso.value = atrasoDias;
+  
+        if (ip) {
+          let valorIP = 0;
+          if (atrasoDias >= 21) valorIP = 30;
+          else if (atrasoDias >= 16) valorIP = 20;
+          else if (atrasoDias >= 11) valorIP = 15;
+          else if (atrasoDias >= 7) valorIP = 10;
+          else if (atrasoDias >= 4) valorIP = 5;
+          else if (atrasoDias >= 1) valorIP = 2;
+          ip.value = valorIP;
+        }
+      } else {
+        if (atraso) atraso.value = "";
+        if (ip) ip.value = "";
+      }
+  
+      if (iqf) {
+        iqf.value = statusInspecao === "Aprovado" ? "Aprovado" :
+                    statusInspecao === "Aprovado Condicionalmente" ? "Aprovado Condicionalmente" :
+                    statusInspecao === "Reprovado" ? "Reprovado" : "—";
+      }
+    }
+  
+    // Disparo automático nos campos
+    document.getElementById("id_quantidade_enviada")?.addEventListener("input", calcularCamposAutomaticosDebounced);
+    document.getElementById("id_data_envio")?.addEventListener("change", calcularCamposAutomaticosDebounced);
+    document.getElementById("id_data_retorno")?.addEventListener("change", calcularCamposAutomaticosDebounced);
+    document.getElementById("id_data_negociada")?.addEventListener("change", calcularCamposAutomaticosDebounced);
+  
+    function atualizarDataRetorno() {
+      const camposData = document.querySelectorAll('input[name$="-data"]');
+      const datasValidas = [...camposData].map(el => el.value).filter(val => val);
+      if (datasValidas.length === 0) return;
+      const ultimaData = datasValidas.sort().reverse()[0];
+      const campoRetorno = document.getElementById('id_data_retorno');
+      if (campoRetorno) {
+        campoRetorno.value = ultimaData;
+      }
+    }
+  
+    const btnAdd = document.getElementById("add-retorno");
+    const formsetContainer = document.getElementById("retorno-formset");
+    const totalFormsInput = document.getElementById("id_retornos-TOTAL_FORMS");
+  
+    btnAdd?.addEventListener("click", function () {
+      const count = parseInt(totalFormsInput.value);
+      const html = document.getElementById("empty-form-template").innerHTML.replace(/__prefix__/g, count);
+      formsetContainer.insertAdjacentHTML("beforeend", html);
+      totalFormsInput.value = count + 1;
+      calcularCamposAutomaticosDebounced();
+      atualizarDataRetorno();
+    });
+  
+    document.getElementById("retorno-formset")?.addEventListener("input", function () {
+      calcularCamposAutomaticosDebounced();
+      atualizarDataRetorno();
+    });
+  
+    calcularCamposAutomaticos();
+    atualizarDataRetorno();
+  
+    const form = document.querySelector("form");
+    const btnSalvar = document.getElementById("btnSalvar");
+    const spinnerSalvar = document.getElementById("spinnerSalvar");
+    form?.addEventListener("submit", function () {
+      btnSalvar.disabled = true;
+      spinnerSalvar.classList.remove("d-none");
     });
   });
-
-  // Fetch do Lead Time
-  $('#id_fornecedor').on('select2:select', function (e) {
-    const fornecedorId = e.params.data.id;
-
-    fetch(`/qualidade/api/fornecedor/${fornecedorId}/leadtime/`)
-      .then(res => res.json())
-      .then(data => {
-        const leadInput = document.getElementById('id_lead_time');
-        const leadValue = parseInt(data.lead_time);
-
-        if (!isNaN(leadValue) && leadValue > 0) {
-          leadInput.value = leadValue;
-          calcularCamposAutomaticosDebounced();
-          exibirToast("Campos automáticos atualizados com sucesso!", "success");
-        } else {
-          leadInput.value = "";
-          exibirToast("Fornecedor sem Lead Time cadastrado.", "danger");
-        }
-      })
-      .catch(() => {
-        exibirToast("Erro ao buscar Lead Time. Tente novamente.", "danger");
-      });
-  });
-
-  // Cálculo dos campos automáticos
-  function calcularCamposAutomaticos() {
-    const totalRecebido = [...document.querySelectorAll('input[name$="-quantidade"]')]
-      .map(input => parseFloat(input.value.replace(",", ".")) || 0)
-      .reduce((a, b) => a + b, 0);
-
-    const receb = document.getElementById("total_recebido_auto");
-    const enviada = parseFloat(document.getElementById("id_quantidade_enviada")?.value.replace(",", ".")) || 0;
-    const lead = parseInt(document.getElementById("id_lead_time")?.value) || 0;
-    const dataEnvio = document.getElementById("id_data_envio")?.value;
-    const dataRetorno = document.getElementById("id_data_retorno")?.value;
-
-    const status = document.getElementById("status2_auto");
-    const prev = document.getElementById("prev_entrega_auto");
-    const atraso = document.getElementById("atraso_dias_auto");
-    const ip = document.getElementById("ip_auto");
-    const iqf = document.getElementById("iqf_auto");
-
-    if (receb) receb.value = totalRecebido.toFixed(2);
-
-    if (status) {
-      status.value = enviada ? (
-        totalRecebido < enviada ? "Atenção Saldo" :
-        totalRecebido === enviada ? "OK" :
-        "Saldo maior que o enviado"
-      ) : "";
-    }
-
-    if (prev && dataEnvio && lead > 0) {
-      const data = new Date(dataEnvio);
-      data.setDate(data.getDate() + lead);
-      const dia = String(data.getDate()).padStart(2, '0');
-      const mes = String(data.getMonth() + 1).padStart(2, '0');
-      const ano = data.getFullYear();
-      prev.value = `${dia}/${mes}/${ano}`;
-    }
-
-    if (dataRetorno && prev?.value) {
-      const [diaPrev, mesPrev, anoPrev] = prev.value.split('/');
-      const prevDate = new Date(`${anoPrev}-${mesPrev}-${diaPrev}`);
-      const atrasoDias = Math.max(0, Math.round((new Date(dataRetorno) - prevDate) / (1000 * 60 * 60 * 24)));
-      if (atraso) atraso.value = atrasoDias;
-
-      if (ip) {
-        let valorIP = 0;
-        if (atrasoDias >= 21) valorIP = 30;
-        else if (atrasoDias >= 16) valorIP = 20;
-        else if (atrasoDias >= 11) valorIP = 15;
-        else if (atrasoDias >= 7) valorIP = 10;
-        else if (atrasoDias >= 4) valorIP = 5;
-        else if (atrasoDias >= 1) valorIP = 2;
-        ip.value = valorIP;
-      }
-    } else {
-      if (atraso) atraso.value = "";
-      if (ip) ip.value = "";
-    }
-
-    if (iqf) {
-      iqf.value = statusInspecao === "Aprovado" ? "Aprovado" :
-                  statusInspecao === "Aprovado Condicionalmente" ? "Aprovado Condicionalmente" :
-                  statusInspecao === "Reprovado" ? "Reprovado" : "—";
-    }
-  }
-
-  // Disparo automático nos campos
-  document.getElementById("id_quantidade_enviada")?.addEventListener("input", calcularCamposAutomaticosDebounced);
-  document.getElementById("id_data_envio")?.addEventListener("change", calcularCamposAutomaticosDebounced);
-  document.getElementById("id_data_retorno")?.addEventListener("change", calcularCamposAutomaticosDebounced);
-
-  // Atualiza Data de Retorno com base nos retornos diários
-  function atualizarDataRetorno() {
-    const camposData = document.querySelectorAll('input[name$="-data"]');
-    const datasValidas = [...camposData].map(el => el.value).filter(val => val);
-    if (datasValidas.length === 0) return;
-
-    const ultimaData = datasValidas.sort().reverse()[0];
-    const campoRetorno = document.getElementById('id_data_retorno');
-    if (campoRetorno) {
-      campoRetorno.value = ultimaData;
-    }
-  }
-
-  // Botão Adicionar Retorno
-  const btnAdd = document.getElementById("add-retorno");
-  const formsetContainer = document.getElementById("retorno-formset");
-  const totalFormsInput = document.getElementById("id_retornos-TOTAL_FORMS");
-
-  btnAdd?.addEventListener("click", function () {
-    const count = parseInt(totalFormsInput.value);
-    const html = document.getElementById("empty-form-template").innerHTML.replace(/__prefix__/g, count);
-    formsetContainer.insertAdjacentHTML("beforeend", html);
-    totalFormsInput.value = count + 1;
-    calcularCamposAutomaticosDebounced();
-    atualizarDataRetorno();
-  });
-
-  // Atualização ao editar retornos
-  document.getElementById("retorno-formset")?.addEventListener("input", function () {
-    calcularCamposAutomaticosDebounced();
-    atualizarDataRetorno();
-  });
-
-  // Execução inicial
-  calcularCamposAutomaticos();
-  atualizarDataRetorno();
-
-  // Spinner salvar
-  const form = document.querySelector("form");
-  const btnSalvar = document.getElementById("btnSalvar");
-  const spinnerSalvar = document.getElementById("spinnerSalvar");
-  form?.addEventListener("submit", function () {
-    btnSalvar.disabled = true;
-    spinnerSalvar.classList.remove("d-none");
-  });
-});
-</script>
+  </script>
+  
 
 
 {% endblock %}

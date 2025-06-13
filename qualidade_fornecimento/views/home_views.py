@@ -37,20 +37,21 @@ def dashboard_qualidade_view(request):
     periodo = request.GET.get("periodo")
     status = request.GET.get("status")
 
-    relatorios = RelatorioF045.objects.all()
+    relatorios = RelacaoMateriaPrima.objects.select_related("f045", "fornecedor", "materia_prima")
 
     if periodo:
         try:
             dias = int(periodo)
             data_limite = timezone.now() - timedelta(days=dias)
-            relatorios = relatorios.filter(assinado_em__gte=data_limite)
+            relatorios = relatorios.filter(atualizado_em__gte=data_limite)
         except ValueError:
             pass
 
     if status:
-        relatorios = relatorios.filter(status_geral=status)
+        relatorios = relatorios.filter(status=status)
 
-    ultimos_relatorios = relatorios.order_by("-id")[:50]
+    ultimos_relatorios = relatorios.order_by("-atualizado_em")[:50]
+
 
     ultimas_inspecoes = (
         InspecaoServicoExterno.objects.select_related("servico", "servico__fornecedor")

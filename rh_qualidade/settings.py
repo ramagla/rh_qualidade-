@@ -51,7 +51,9 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "alerts",
     "qualidade_fornecimento",
-    "portaria"
+    "portaria",
+    "assinatura_eletronica",
+
 ]
 
 DATE_FORMAT = "d 'de' F 'de' Y"

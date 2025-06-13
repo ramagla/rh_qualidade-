@@ -136,7 +136,7 @@
             <th><i class="bi bi-upc-scan me-1"></i> Código BM</th>
             <th><i class="bi bi-people-fill me-1"></i> Fornecedor</th>
             <th><i class="bi bi-truck me-1"></i> Entrega</th>
-            <th><i class="bi bi-collection-fill me-1"></i> Total</th>
+            <th><i class="bi bi-calculator-fill me-1"></i> Saldo</th>
             <th><i class="bi bi-check-circle-fill me-1"></i> Status</th>
             <th><i class="bi bi-clipboard-check me-1"></i> Status Inspeção</th>
             <th><i class="bi bi-alarm me-1"></i> Atraso</th>
@@ -209,8 +209,8 @@
 </div>
 
                               </td>
-              <td>{{ servico.quantidade_enviada|default:"-" }}</td>
-              <td id="status-cell-{{ servico.id }}">
+                              <td>{{ servico.calcular_total|floatformat:2 }} kg</td>
+                              <td id="status-cell-{{ servico.id }}">
                 {% if servico.status2 == "OK" %}
                   <span class="badge bg-success">OK</span>
                 {% elif servico.status2 == "Atenção Saldo" %}
@@ -249,16 +249,28 @@
     {% include "partials/global/_botao_editar.html" with objeto=servico url_editar='editar_controle_servico_externo' %}
 {% endif %}
 
-{% if servico.inspecao and servico.inspecao.pdf %}
-    <a href="{{ servico.inspecao.pdf.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
-      <i class="bi bi-file-earmark-pdf"></i>
-    </a>
+{% if servico.inspecao and servico.inspecao.status_geral == "Aprovado" %}
+<a href="{% url 'visualizar_inspecao_servico_externo' servico.inspecao.id %}"
+   class="btn btn-sm btn-outline-primary mt-1"
+   title="Visualizar inspeção"
+   aria-label="Visualizar inspeção"
+   target="_blank">
+  <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+</a>
+
+
 {% endif %}
 
+
 {% if servico.inspecao and servico.inspecao.certificado_anexo %}
-    <a href="{{ servico.inspecao.certificado_anexo.url }}" class="btn btn-sm btn-outline-success" target="_blank">
-      <i class="bi bi-paperclip"></i>
-    </a>
+<a href="{{ servico.inspecao.certificado_anexo.url }}"
+class="btn btn-sm btn-outline-success mt-1"
+title="Anexo do Certificado"
+aria-label="Anexo do Certificado"
+target="_blank">
+<i class="bi bi-paperclip" aria-hidden="true"></i>
+</a>
+
 {% endif %}
 
 {% if request.user|has_permission:'qualidade_fornecimento.delete_controleservicoexterno' %}
@@ -338,29 +350,6 @@
 
 
 
-{% if inspecao_pending %}
-<script>
-  const inspecaoId = "{{ inspecao_pending|default:'' }}";
-
-  if (inspecaoId) {
-    (function pollInspecaoPDF(){
-      fetch(`/qualidade/inspecao/status/${inspecaoId}/`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.ready) {
-            document.getElementById('linkDownloadInspecao').href = data.url;
-            const modal = new bootstrap.Modal(document.getElementById('modalSucessoInspecao'));
-            modal.show();
-          } else {
-            setTimeout(pollInspecaoPDF, 5000);
-          }
-        })
-        .catch(console.error);
-    })();
-  }
-</script>
-
-
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const form = document.querySelector("form");
@@ -387,7 +376,6 @@
 </script>
 
 
-{% endif %}
 <!-- Modal de Sucesso PDF -->
 <div class="modal fade" id="modalSucessoInspecao" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
