@@ -211,7 +211,9 @@ class RelatorioIndicadorAnualView(TemplateView):
         total_colaboradores = 0
 
         for ano in anos:
-            avaliacoes_ano = avaliacoes.filter(data_avaliacao__year=ano)
+            avaliacoes_ano = avaliacoes.filter(
+                data_avaliacao__year=ano
+            ).exclude(funcionario_id__in=[77, 15, 20, 78, 81])
             somatoria_notas = sum(
                 a.calcular_classificacao()["percentual"] for a in avaliacoes_ano
             )

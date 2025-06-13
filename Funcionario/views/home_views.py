@@ -222,7 +222,55 @@ def home(request):
 
     genero_labels = sorted(genero_dict.keys())
     genero_counts = [genero_dict[label] for label in genero_labels]
+   
+    # Filtrar somente funcionários ativos com flag de representante_cipa
+    cipa_ativos = Funcionario.objects.filter(representante_cipa=True, status="Ativo")
 
+    # Listas separadas
+    cipa_empregados = []
+    cipa_empregador = []
+
+    for f in cipa_ativos:
+        membro = {
+        "nome": f.nome,
+        "setor": f.local_trabalho.nome if f.local_trabalho else "N/D",
+        "cargo": f.cargo_atual.nome if f.cargo_atual else "N/D",
+        "tipo": f.tipo_cipa,
+        "ordem": f"{f.ordem_cipa}º" if f.ordem_cipa else None,
+        "foto": f.foto.url if f.foto else None  # ← garante o caminho completo para exibir no <img>
+    }
+
+        if f.tipo_representacao_cipa == "Empregados":
+            cipa_empregados.append(membro)
+        elif f.tipo_representacao_cipa == "Empregador":
+            cipa_empregador.append(membro)
+
+    # Ordenar por TITULAR/SUPLENTE e depois por nome
+    def ordenar_membros(lista):
+        ordem_tipo = {"Titular": 1, "Suplente": 2}
+        lista.sort(key=lambda x: (
+            ordem_tipo.get(x["tipo"], 99),
+            int(x["ordem"].replace("º", "")) if x["ordem"] else 99
+        ))
+
+    brigadistas = []
+
+    brigada_ativos = Funcionario.objects.filter(representante_brigada=True, status="Ativo")
+    for f in brigada_ativos:
+        membro = {
+            "nome": f.nome,
+            "setor": f.local_trabalho.nome if f.local_trabalho else "N/D",
+            "cargo": f.cargo_atual.nome if f.cargo_atual else "N/D",
+            "ordem": f"{f.ordem_cipa}º" if f.ordem_cipa else None,
+            "foto": f.foto.url if f.foto else None
+        }
+        brigadistas.append(membro)
+
+    # Organizar por ordem e nome
+    brigadistas.sort(key=lambda x: int(x["ordem"].replace("º", "")) if x["ordem"] else 99)
+
+    ordenar_membros(cipa_empregados)
+    ordenar_membros(cipa_empregador)
     context = {
         "nome_modulo": "Recursos Humanos",
         "icone_modulo": "bi-people",
@@ -258,6 +306,12 @@ def home(request):
         "genero_counts": json.dumps(genero_counts),
         "turnover_labels": json.dumps(turnover_labels),
         "turnover_counts": json.dumps(turnover_counts),
+        "cipa_empregados": cipa_empregados,
+        "cipa_empregador": cipa_empregador,
+
+        'brigadistas': brigadistas
+
+        
     }
 
     form = EventoForm()
@@ -544,3 +598,74 @@ def marcar_alertas_como_lidos(request):
     alertas.update(lido=True)
     return JsonResponse({"status": "ok"})
 
+# views/cipa_views.py
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from datetime import datetime
+
+from Funcionario.models import Funcionario
+
+@login_required
+def imprimir_cipa_view(request):
+    # Filtrar funcionários ativos e marcados como representantes da CIPA
+    cipa_ativos = Funcionario.objects.filter(representante_cipa=True, status="Ativo")
+
+    # Listas separadas
+    cipa_empregados = []
+    cipa_empregador = []
+
+    for f in cipa_ativos:
+        membro = {
+            "nome": f.nome,
+            "setor": f.local_trabalho.nome if f.local_trabalho else "N/D",
+            "cargo": f.cargo_atual.nome if f.cargo_atual else "N/D",
+            "tipo": f.tipo_cipa,
+            "ordem": f"{f.ordem_cipa}º" if f.ordem_cipa else None,
+            "foto": f.foto.url if f.foto else None
+        }
+
+        if f.tipo_representacao_cipa == "Empregados":
+            cipa_empregados.append(membro)
+        elif f.tipo_representacao_cipa == "Empregador":
+            cipa_empregador.append(membro)
+
+    # Ordenar por tipo (Titular/Suplente) e depois por ordem
+    def ordenar_membros(lista):
+        ordem_tipo = {"Titular": 1, "Suplente": 2}
+        lista.sort(key=lambda x: (
+            ordem_tipo.get(x["tipo"], 99),
+            int(x["ordem"].replace("º", "")) if x["ordem"] else 99
+        ))
+
+    ordenar_membros(cipa_empregados)
+    ordenar_membros(cipa_empregador)
+
+    return render(request, 'dashboard/impressao_cipa.html', {
+        'cipa_empregados': cipa_empregados,
+        'cipa_empregador': cipa_empregador,
+        'ano': datetime.now().year
+    })
+
+
+@login_required
+def imprimir_brigada_view(request):
+    brigadistas = []
+
+    brigada_ativos = Funcionario.objects.filter(representante_brigada=True, status="Ativo")
+    for f in brigada_ativos:
+        membro = {
+            "nome": f.nome,
+            "setor": f.local_trabalho.nome if f.local_trabalho else "N/D",
+            "cargo": f.cargo_atual.nome if f.cargo_atual else "N/D",
+            "ordem": f"{f.ordem_cipa}º" if f.ordem_cipa else None,
+            "foto": f.foto.url if f.foto else None
+        }
+        brigadistas.append(membro)
+
+    brigadistas.sort(key=lambda x: int(x["ordem"].replace("º", "")) if x["ordem"] else 99)
+
+    return render(request, 'dashboard/impressao_brigada.html', {
+        'brigadistas': brigadistas,
+        'ano': datetime.now().year
+    })

@@ -14,33 +14,54 @@
   </div>
 
   <!-- Abas de navegação -->
-  <ul class="nav nav-tabs mb-4" id="tabDashboard" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="tab-principal-tab" data-bs-toggle="tab" data-bs-target="#tab-principal" type="button" role="tab">
-        <i class="bi bi-speedometer2 me-1"></i> Dashboard RH
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="tab-analitico-tab" data-bs-toggle="tab" data-bs-target="#tab-analitico" type="button" role="tab">
-        <i class="bi bi-graph-up-arrow me-1"></i> Dashboard Analítico
-      </button>
-    </li>
-  </ul>
+<ul class="nav nav-tabs mb-4" id="tabDashboard" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="tab-principal-tab" data-bs-toggle="tab" data-bs-target="#tab-principal" type="button" role="tab">
+      <i class="bi bi-speedometer2 me-1"></i> Dashboard RH
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-analitico-tab" data-bs-toggle="tab" data-bs-target="#tab-analitico" type="button" role="tab">
+      <i class="bi bi-graph-up-arrow me-1"></i> Dashboard Analítico
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-cipa-tab" data-bs-toggle="tab" data-bs-target="#tab-cipa" type="button" role="tab">
+      <i class="bi bi-person-badge-fill me-1"></i> CIPA
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-brigada-tab" data-bs-toggle="tab" data-bs-target="#tab-brigada" type="button" role="tab">
+      <i class="bi bi-fire me-1"></i> Brigada
+    </button>
+  </li>
+</ul>
+
 
   <!-- Conteúdo das abas -->
-  <div class="tab-content" id="tabDashboardContent">
+<div class="tab-content" id="tabDashboardContent">
 
-    <!-- Aba 1 - Dashboard RH -->
-    <div class="tab-pane fade show active" id="tab-principal" role="tabpanel" aria-labelledby="tab-principal-tab">
-      {% include 'dashboard/_dashboard_rh.html' %}
-    </div>
-
-    <!-- Aba 2 - Dashboard Analítico -->
-    <div class="tab-pane fade" id="tab-analitico" role="tabpanel" aria-labelledby="tab-analitico-tab">
-      {% include 'dashboard/_dashboard_analitico.html' %}
-    </div>
-
+  <!-- Aba 1 - Dashboard RH -->
+  <div class="tab-pane fade show active" id="tab-principal" role="tabpanel" aria-labelledby="tab-principal-tab">
+    {% include 'dashboard/_dashboard_rh.html' %}
   </div>
+
+  <!-- Aba 2 - Dashboard Analítico -->
+  <div class="tab-pane fade" id="tab-analitico" role="tabpanel" aria-labelledby="tab-analitico-tab">
+    {% include 'dashboard/_dashboard_analitico.html' %}
+  </div>
+
+  <!-- Aba 3 - CIPA -->
+  <div class="tab-pane fade" id="tab-cipa" role="tabpanel" aria-labelledby="tab-cipa-tab">
+    {% include 'dashboard/_dashboard_cipa.html' %}
+  </div>
+
+  <!-- Aba 4 - Brigada -->
+  <div class="tab-pane fade" id="tab-brigada" role="tabpanel" aria-labelledby="tab-brigada-tab">
+    {% include 'dashboard/_dashboard_brigada.html' %}
+  </div>
+
+</div>
 
 </div>
 

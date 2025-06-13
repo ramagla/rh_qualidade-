@@ -102,7 +102,9 @@ from .views.home_views import (
     exportar_calendario,
     home,
     imprimir_calendario,
+    imprimir_cipa_view,
     marcar_alertas_como_lidos,
+    imprimir_brigada_view
 )
 from .views.integracao_views import (
     cadastrar_integracao,
@@ -612,6 +614,11 @@ urlpatterns = [
     formulario_folha_ponto,
     name="formulario_folha_ponto",
 ),
+    path("cipa/imprimir/", imprimir_cipa_view, name="imprimir_cipa"),
+    path("brigada/imprimir/", imprimir_brigada_view, name="imprimir_brigada"),
+
+
+
 
 ]
 
