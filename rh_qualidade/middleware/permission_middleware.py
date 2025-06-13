@@ -32,6 +32,7 @@ class PermissionMiddleware:
             "/senha/enviado/",
             "/senha/finalizado/",
             "/senha/nova/",  # cobre /senha/nova/<uidb64>/<token>/
+            "/assinatura/validar/",
         ]
 
         if not request.user.is_authenticated:
