@@ -1,67 +1,85 @@
 <!-- partials/dashboard/_dashboard_rh.html -->
 
-<!-- 🔍 Indicadores Principais -->
 <div class="row g-4 mb-4">
-    {% if perms.Funcionario.view_funcionario %}
-    <div class="col-md-3">
-      <div class="card shadow-sm border-0 h-100 text-center">
-        <div class="card-body d-flex flex-column justify-content-center align-items-center">
-          <i class="bi bi-people-fill fs-1 text-primary mb-3"></i>
-          <h6 class="card-title">Total de Colaboradores</h6>
-          <p class="fs-4 fw-bold">{{ total_colaboradores }}</p>
-        </div>
+
+  {% if perms.Funcionario.view_funcionario %}
+  <div class="col">
+    <div class="card indicador-card border-0 shadow-sm h-100 text-center p-3">
+      <div class="mb-2 text-primary">
+        <i class="bi bi-people-fill fs-1"></i>
       </div>
-    </div>
-    {% endif %}
-  
-    {% if perms.Funcionario.view_avaliacaoanual %}
-    <div class="col-md-3">
-      <div class="card shadow-sm border-0 h-100 text-center">
-        <div class="card-body d-flex flex-column justify-content-center align-items-center">
-          <i class="bi bi-clipboard-check-fill fs-1 text-success mb-3"></i>
-          <h6 class="card-title">Avaliações Pendentes</h6>
-          <p class="fs-4 fw-bold">{{ avaliacoes_pendentes }}</p>
-          {% if avaliacoes_pendentes > 0 %}
-          <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalAvaliacoesPendentes">
-            <i class="bi bi-eye-fill"></i> Ver detalhes
-          </button>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    {% endif %}
-  
-    <div class="col-md-3">
-      <div class="card shadow-sm border-0 h-100 text-center">
-        <div class="card-body d-flex flex-column justify-content-center align-items-center">
-          <i class="bi bi-bar-chart-line-fill fs-1 text-info mb-3"></i>
-          <h6 class="card-title">Avaliações por Desempenho</h6>
-          <ul class="list-unstyled mb-0">
-            <li><i class="bi bi-emoji-smile text-success me-1"></i> Ótimo: <strong>{{ classificacao_otimo }}</strong></li>
-            <li><i class="bi bi-emoji-neutral text-primary me-1"></i> Bom: <strong>{{ classificacao_bom }}</strong></li>
-            <li><i class="bi bi-emoji-expressionless text-warning me-1"></i> Regular: <strong>{{ classificacao_regular }}</strong></li>
-            <li><i class="bi bi-emoji-frown text-danger me-1"></i> Ruim: <strong>{{ classificacao_ruim }}</strong></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  
-    <div class="col-md-3">
-      <div class="card shadow-sm border-0 h-100 text-center">
-        <div class="card-body d-flex flex-column justify-content-center align-items-center">
-          <i class="bi bi-calendar-check-fill fs-1 text-warning mb-3"></i>
-          <h6 class="card-title">Treinamentos Agendados</h6>
-          <p class="fs-4 fw-bold">{{ treinamentos_agendados }}</p>
-          {% if treinamentos_agendados > 0 %}
-          <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalTreinamentos">
-            <i class="bi bi-eye-fill"></i> Ver detalhes
-          </button>
-          {% endif %}
-        </div>
-      </div>
+      <h2 class="fw-bold text-primary mb-0">{{ total_colaboradores }}</h2>
+      <p class="text-uppercase fw-semibold small text-muted mt-1">Total de Colaboradores</p>
+      <!-- Sem subtítulo -->
     </div>
   </div>
-  
+  {% endif %}
+
+  {% if perms.Funcionario.view_avaliacaoanual %}
+  <div class="col">
+    <div class="card indicador-card border-0 shadow-sm h-100 text-center p-3">
+      <div class="mb-2 text-success">
+        <i class="bi bi-clipboard-check-fill fs-1"></i>
+      </div>
+      <h2 class="fw-bold text-success mb-0">{{ avaliacoes_pendentes }}</h2>
+      <p class="text-uppercase fw-semibold small text-muted mt-1">Avaliações Pendentes</p>
+      {% if avaliacoes_pendentes > 0 %}
+      <div class="mt-2">
+        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAvaliacoesPendentes">
+          <i class="bi bi-eye-fill"></i> Ver detalhes
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="col">
+    <div class="card indicador-card border-0 shadow-sm h-100 text-center p-3">
+      <div class="mb-2 text-info">
+        <i class="bi bi-bar-chart-line-fill fs-1"></i>
+      </div>
+      <h6 class="text-uppercase fw-semibold small text-muted mt-1 mb-3">Avaliações por Desempenho</h6>
+      <ul class="list-unstyled text-start small mb-0 px-2">
+        <li><i class="bi bi-emoji-smile text-success me-1"></i> Ótimo: <strong>{{ classificacao_otimo }}</strong></li>
+        <li><i class="bi bi-emoji-neutral text-primary me-1"></i> Bom: <strong>{{ classificacao_bom }}</strong></li>
+        <li><i class="bi bi-emoji-expressionless text-warning me-1"></i> Regular: <strong>{{ classificacao_regular }}</strong></li>
+        <li><i class="bi bi-emoji-frown text-danger me-1"></i> Ruim: <strong>{{ classificacao_ruim }}</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card indicador-card border-0 shadow-sm h-100 text-center p-3">
+      <div class="mb-2 text-warning">
+        <i class="bi bi-calendar-check-fill fs-1"></i>
+      </div>
+      <h2 class="fw-bold text-warning mb-0">{{ treinamentos_agendados }}</h2>
+      <p class="text-uppercase fw-semibold small text-muted mt-1">Treinamentos Agendados</p>
+      {% if treinamentos_agendados > 0 %}
+      <div class="mt-2">
+        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTreinamentos">
+          <i class="bi bi-eye-fill"></i> Ver detalhes
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<style>
+.indicador-card {
+  border-radius: 1rem;
+  background: linear-gradient(to bottom right, #ffffff, #f1f5f9);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.indicador-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+</style>
+
   <!-- 🎂 Aniversariantes do Mês -->
   <div class="row mb-4">
     <div class="col-lg-4">

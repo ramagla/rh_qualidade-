@@ -1,0 +1,49 @@
+{# partials/global/_filtros_colapsaveis.html #}
+
+<style>
+    /* Fixa o botão no topo ao lado de outros botões */
+    #botao-filtros-superior {
+      position: absolute;
+      top: 1rem;
+      right: 2rem;
+      z-index: 1045;
+    }
+  
+    /* Garante que o offcanvas fique por cima de tudo */
+    #offcanvasFiltros {
+      z-index: 1060;
+    }
+  </style>
+  
+  <!-- Botão no canto superior direito -->
+  <div id="botao-filtros-superior" class="d-print-none">
+    <button class="btn btn-outline-primary"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#offcanvasFiltros"
+            aria-controls="offcanvasFiltros"
+            title="Abrir Filtros">
+      <i class="bi bi-funnel-fill me-1"></i> Filtros
+    </button>
+  </div>
+  
+  <!-- Painel lateral de filtros -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasFiltros" aria-labelledby="offcanvasFiltrosLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasFiltrosLabel">
+        <i class="bi bi-funnel me-2"></i> Filtros Avançados
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+  
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        {% block filtros_conteudo %}
+          <!-- os filtros serão inseridos dinamicamente pelo bloco -->
+        {% endblock %}
+  
+        {% include "partials/global/_botao_filtrar.html" %}
+      </form>
+    </div>
+  </div>
+  

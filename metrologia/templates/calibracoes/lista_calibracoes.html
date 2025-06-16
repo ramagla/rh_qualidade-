@@ -11,25 +11,34 @@
   {% include 'partials/global/_header_titulo.html' with titulo="Lista de Calibrações" icone="bi bi-check2-square" emoji="📊" %}
   {% include 'partials/global/_toast_mensagens.html' %}
 
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
   {% if request.user|has_permission:"metrologia.add_calibracao" %}
-  <div class="d-flex justify-content-end mb-3">
-    <a href="{% url 'cadastrar_calibracao' %}" class="btn btn-success d-flex align-items-center gap-2">
-      <i class="bi bi-plus-circle"></i> Nova Calibração
+    <a href="{% url 'cadastrar_calibracao' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Nova Calibração
     </a>
-  </div>
   {% endif %}
+</div>
+
+  
 
   <!-- Filtros -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header bg-light d-flex align-items-center gap-2">
-      <i class="bi bi-funnel-fill text-primary"></i>
-      <strong>Filtros de Pesquisa</strong>
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Pesquisa
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
     </div>
-    <div class="card-body">
-      <form method="get" class="row g-3 align-items-end">
-        <div class="col-md-3">
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+  
+        <div class="col-12">
           <label for="codigo" class="form-label">
-            <i class="bi bi-upc-scan me-1"></i> Código:
+            <i class="bi bi-upc-scan me-1"></i> Código
           </label>
           <select id="codigo" name="codigo" class="form-select select2">
             <option value="">Selecione</option>
@@ -38,9 +47,10 @@
             {% endfor %}
           </select>
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="laboratorio" class="form-label">
-            <i class="bi bi-building me-1"></i> Laboratório:
+            <i class="bi bi-building me-1"></i> Laboratório
           </label>
           <select id="laboratorio" name="laboratorio" class="form-select select2">
             <option value="">Selecione</option>
@@ -49,9 +59,10 @@
             {% endfor %}
           </select>
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="proprietario" class="form-label">
-            <i class="bi bi-person-badge me-1"></i> Proprietário:
+            <i class="bi bi-person-badge me-1"></i> Proprietário
           </label>
           <select id="proprietario" name="proprietario" class="form-select select2">
             <option value="">Todos</option>
@@ -60,9 +71,10 @@
             {% endfor %}
           </select>
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="status" class="form-label">
-            <i class="bi bi-clipboard2-check me-1"></i> Status:
+            <i class="bi bi-clipboard2-check me-1"></i> Status
           </label>
           <select id="status" name="status" class="form-select select2">
             <option value="">Todos</option>
@@ -70,9 +82,10 @@
             <option value="Reprovado" {% if request.GET.status == "Reprovado" %}selected{% endif %}>Reprovado</option>
           </select>
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="tipo" class="form-label">
-            <i class="bi bi-list-ul me-1"></i> Tipo:
+            <i class="bi bi-list-ul me-1"></i> Tipo
           </label>
           <select id="tipo" name="tipo" class="form-select select2">
             <option value="">Todos</option>
@@ -81,29 +94,36 @@
             <option value="dimensional" {% if request.GET.tipo == "dimensional" %}selected{% endif %}>Dimensional</option>
           </select>
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="data_inicio" class="form-label">
-            <i class="bi bi-calendar-event me-1"></i> Data Início:
+            <i class="bi bi-calendar-event me-1"></i> Data Início
           </label>
           <input type="date" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="data_fim" class="form-label">
-            <i class="bi bi-calendar2-check me-1"></i> Data Fim:
+            <i class="bi bi-calendar2-check me-1"></i> Data Fim
           </label>
           <input type="date" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
         </div>
-        {% include 'partials/global/_botao_filtrar.html' %}
+  
+        <div class="col-12 mt-2">
+          {% include 'partials/global/_botao_filtrar.html' %}
+        </div>
+  
       </form>
     </div>
   </div>
+  
+<!-- Indicadores -->
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with cor='success' titulo='Total' subtitulo='Calibrações' valor=total_calibracoes icone='bi-list-check' %}
+  {% include 'partials/global/_card_indicador.html' with cor='danger' titulo='Reprovadas' subtitulo='Calibrações' valor=total_reprovadas icone='bi-x-circle-fill' %}
+  {% include 'partials/global/_card_indicador.html' with cor='primary' titulo='Aprovadas' subtitulo='Calibrações' valor=total_aprovadas icone='bi-check-circle-fill' %}
+</div>
 
-  <!-- Indicadores -->
-  <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with cor='success' titulo='Total' subtitulo='Calibrações' valor=total_calibracoes %}
-    {% include 'partials/global/_card_indicador.html' with cor='danger' titulo='Reprovadas' subtitulo='Calibrações' valor=total_reprovadas %}
-    {% include 'partials/global/_card_indicador.html' with cor='primary' titulo='Aprovadas' subtitulo='Calibrações' valor=total_aprovadas %}
-  </div>
 
   <!-- Tabela -->
   <table class="table table-bordered table-striped align-middle text-center">

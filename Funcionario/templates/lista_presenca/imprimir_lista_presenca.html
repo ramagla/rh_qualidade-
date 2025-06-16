@@ -33,11 +33,10 @@
         <td colspan="5">{{ lista.descricao|safe }}</td>
       </tr>
       <tr>
-        <th scope="col"><i class="bi bi-clock-fill me-1" aria-hidden="true"></i> Horário</th>
-        <td>{{ lista.horario_inicio }} - {{ lista.horario_fim }}</td>
         <th scope="col"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i> Duração</th>
-        <td colspan="3">{{ lista.duracao|formatar_duracao }} horas</td>
+        <td colspan="5">{{ lista.duracao|formatar_duracao }} horas</td>
       </tr>
+      
       <tr>
         <th scope="col"><i class="bi bi-person-badge-fill me-1" aria-hidden="true"></i> Instrutor</th>
         <td>{{ lista.instrutor }}</td>

@@ -116,3 +116,45 @@ def imprimir_ficha_epi(request, funcionario_id):
         "now": now(),  # ✅ aqui você passa o now para o template
     }
     return render(request, "formularios/relatorio_ficha_epi.html", context)
+
+from calendar import monthrange, month_name
+import locale
+from datetime import date
+
+@login_required
+def formulario_folha_ponto(request, funcionario_id):
+    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+    settings = Settings.objects.first()
+
+    # Valores padrão (mês/ano atual)
+    mes = request.GET.get("mes")
+    ano = request.GET.get("ano")
+
+    try:
+        mes = int(mes) if mes else now().month
+        ano = int(ano) if ano else now().year
+    except ValueError:
+        mes = now().month
+        ano = now().year
+
+    total_dias = monthrange(ano, mes)[1]
+    dias_do_mes = range(1, total_dias + 1)
+
+    # Mês por extenso em português
+    try:
+        locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
+    except:
+        locale.setlocale(locale.LC_TIME, "Portuguese_Brazil.1252")
+
+    data_base = date(ano, mes, 1)
+    nome_mes = data_base.strftime("%B").capitalize()
+
+    context = {
+        "funcionario": funcionario,
+        "settings": settings,
+        "mes": mes,
+        "ano": ano,
+        "dias_do_mes": dias_do_mes,
+        "nome_mes": nome_mes,
+    }
+    return render(request, "formularios/folha_ponto.html", context)

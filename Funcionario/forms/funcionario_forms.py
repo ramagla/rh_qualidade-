@@ -112,6 +112,32 @@ class FuncionarioForm(forms.ModelForm):
         required=False,
         widget=forms.Select(attrs={"class": "form-select"})
     )
+    representante_cipa = forms.BooleanField(label="Representante CIPA", required=False)
+    tipo_cipa = forms.ChoiceField(
+        choices=[("", "---------"), ("Titular", "Titular"), ("Suplente", "Suplente")],
+        required=False,
+        label="Tipo CIPA",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+    tipo_representacao_cipa = forms.ChoiceField(
+        choices=[("", "---------"), ("Empregados", "Empregados"), ("Empregador", "Empregador")],
+        required=False,
+        label="Representa",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+    vigencia_cipa = forms.DateField(required=False, widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "class": "form-control"}), label="Vigência CIPA")
+
+    representante_brigada = forms.BooleanField(label="Representante Brigada", required=False)
+    vigencia_brigada = forms.DateField(required=False, widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "class": "form-control"}), label="Vigência Brigada")
+    ordem_cipa = forms.ChoiceField(
+        label="Ordem na CIPA",
+        choices=[("", "---------"), (1, "1º"), (2, "2º"), (3, "3º"), (4, "4º")],
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+
+
+    
 
     data_desligamento = forms.DateField(
         label="Data de Desligamento",
@@ -128,6 +154,13 @@ class FuncionarioForm(forms.ModelForm):
         label="Gênero",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
+
+    tipo = forms.ChoiceField(
+    choices=Funcionario.TIPO_CHOICES,
+    label="Tipo do Colaborador",
+    widget=forms.Select(attrs={"class": "form-select"}),
+)
+
 
     # Novo campo Número do Calçado
     calcado = forms.IntegerField(
@@ -191,16 +224,8 @@ class FuncionarioForm(forms.ModelForm):
         nome = self.cleaned_data.get("nome")
         if nome:
             return title_case(nome)  # Aplica a função title_case personalizada
-        return nome
+        return nome  
 
-    def clean_local_trabalho(self):
-        return self.cleaned_data.get("local_trabalho")
-
-    def clean_responsavel(self):
-        responsavel = self.cleaned_data.get("responsavel", None)
-        return responsavel  # Não altera mais o nome do responsável diretamente
-
-        # Método save para preencher o cargo_responsavel automaticamente
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -216,3 +241,20 @@ class FuncionarioForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+    def clean(self):
+        cleaned_data = super().clean()
+        representante_brigada = cleaned_data.get("representante_brigada")
+        vigencia_brigada = cleaned_data.get("vigencia_brigada")
+
+        if representante_brigada:
+            if not vigencia_brigada:
+                self.add_error("vigencia_brigada", "Informe a vigência da brigada para marcar o representante.")
+
+        return cleaned_data
+    
+    def clean_ordem_cipa(self):
+        ordem = self.cleaned_data.get("ordem_cipa")
+        if ordem in ("", None):
+            return None
+        return ordem

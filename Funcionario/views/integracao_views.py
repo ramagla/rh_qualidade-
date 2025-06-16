@@ -19,7 +19,7 @@ def lista_integracoes(request):
     # Obter os filtros do GET
     funcionario_id = request.GET.get("funcionario")
     # O filtro do departamento vem como 'departamento'
-    local_trabalho = request.GET.get("departamento")
+    departamento_id = request.GET.get("departamento")
     requer_treinamento = request.GET.get("requer_treinamento")
     grupo_whatsapp = request.GET.get("grupo_whatsapp")
 
@@ -27,8 +27,9 @@ def lista_integracoes(request):
     integracoes = IntegracaoFuncionario.objects.all()
     if funcionario_id:
         integracoes = integracoes.filter(funcionario_id=funcionario_id)
-    if local_trabalho:
-        integracoes = integracoes.filter(funcionario__local_trabalho=local_trabalho)
+    if departamento_id and departamento_id != "None":
+        integracoes = integracoes.filter(funcionario__local_trabalho__nome=departamento_id)
+
     if requer_treinamento:
         integracoes = integracoes.filter(
             requer_treinamento=(requer_treinamento == "True")

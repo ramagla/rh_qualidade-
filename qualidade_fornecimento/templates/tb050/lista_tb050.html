@@ -10,61 +10,83 @@
 {% include "partials/global/_toast_mensagens.html" %}
 {% include "partials/global/_styles_componentes.html" %}
 
-<form method="get">
-  <div class="row row-cols-1 row-cols-md-3 g-3">
-    <div class="col">
-      <label for="data_inicial" class="form-label"><i class="bi bi-calendar-date me-1"></i> Data Inicial</label>
-      <input type="date" class="form-control" id="data_inicial" name="data_inicial" value="{{ data_inicial|default_if_none:'' }}">
-    </div>
-    <div class="col">
-      <label for="data_final" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data Final</label>
-      <input type="date" class="form-control" id="data_final" name="data_final" value="{{ data_final|default_if_none:'' }}">
-    </div>
-    <div class="col">
-      <label for="status" class="form-label"><i class="bi bi-check2-square me-1"></i> Status</label>
-      <select class="form-select" id="status" name="status">
-        <option value="">-- Todos --</option>
-        {% for st in filter_status %}
-          <option value="{{ st }}" {% if status_filter == st %}selected{% endif %}>{{ st }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col">
-      <label for="nro_rolo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Nº Rolo</label>
-      <input type="text" class="form-control" id="nro_rolo" name="nro_rolo" placeholder="Ex: 12345" value="{{ request.GET.nro_rolo }}">
-    </div>
-    <div class="col">
-      <label for="nro_relatorio" class="form-label"><i class="bi bi-file-earmark-text me-1"></i> Nº Relatório</label>
-      <input type="text" class="form-control" id="nro_relatorio" name="nro_relatorio" placeholder="Ex: 2025-0001" value="{{ request.GET.nro_relatorio }}">
-    </div>
-    <div class="col">
-      <label for="nro_certificado" class="form-label"><i class="bi bi-award me-1"></i> Nº Certificado</label>
-      <input type="text" class="form-control" id="nro_certificado" name="nro_certificado" placeholder="Ex: CERT-1234" value="{{ request.GET.nro_certificado }}">
-    </div>
-    <div class="col">
-      <label for="fornecedor" class="form-label"><i class="bi bi-truck me-1"></i> Fornecedor</label>
-      <select class="form-select select2" id="fornecedor" name="fornecedor">
-        <option value="">-- Todos --</option>
-        {% for forn in lista_fornecedores %}
-          <option value="{{ forn.pk }}" {% if request.GET.fornecedor == forn.pk|stringformat:"s" %}selected{% endif %}>{{ forn.nome }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col">
-      <label for="materia_prima" class="form-label"><i class="bi bi-boxes me-1"></i> Matéria‑Prima</label>
-      <select class="form-select select2" id="materia_prima" name="materia_prima">
-        <option value="">-- Todas --</option>
-        {% for mp in lista_materiasprimas %}
-          <option value="{{ mp.pk }}" {% if request.GET.materia_prima == mp.pk|stringformat:"s" %}selected{% endif %}>
-            {{ mp.codigo }} - {{ mp.descricao }}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
+<!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros TB050
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="col-12 text-center mt-3">
-    {% include 'partials/global/_botao_filtrar.html' %}
+  <div class="offcanvas-body">
+    <form method="get" id="formFiltroTB050">
+      <div class="row row-cols-1 g-3">
+
+        <div class="col">
+          <label for="data_inicial" class="form-label"><i class="bi bi-calendar-date me-1"></i> Data Inicial</label>
+          <input type="date" class="form-control" id="data_inicial" name="data_inicial" value="{{ data_inicial|default_if_none:'' }}">
+        </div>
+
+        <div class="col">
+          <label for="data_final" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data Final</label>
+          <input type="date" class="form-control" id="data_final" name="data_final" value="{{ data_final|default_if_none:'' }}">
+        </div>
+
+        <div class="col">
+          <label for="status" class="form-label"><i class="bi bi-check2-square me-1"></i> Status</label>
+          <select class="form-select" id="status" name="status">
+            <option value="">-- Todos --</option>
+            {% for st in filter_status %}
+              <option value="{{ st }}" {% if status_filter == st %}selected{% endif %}>{{ st }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col">
+          <label for="nro_rolo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Nº Rolo</label>
+          <input type="text" class="form-control" id="nro_rolo" name="nro_rolo" placeholder="Ex: 12345" value="{{ request.GET.nro_rolo }}">
+        </div>
+
+        <div class="col">
+          <label for="nro_relatorio" class="form-label"><i class="bi bi-file-earmark-text me-1"></i> Nº Relatório</label>
+          <input type="text" class="form-control" id="nro_relatorio" name="nro_relatorio" placeholder="Ex: 2025-0001" value="{{ request.GET.nro_relatorio }}">
+        </div>
+
+        <div class="col">
+          <label for="nro_certificado" class="form-label"><i class="bi bi-award me-1"></i> Nº Certificado</label>
+          <input type="text" class="form-control" id="nro_certificado" name="nro_certificado" placeholder="Ex: CERT-1234" value="{{ request.GET.nro_certificado }}">
+        </div>
+
+        <div class="col">
+          <label for="fornecedor" class="form-label"><i class="bi bi-truck me-1"></i> Fornecedor</label>
+          <select class="form-select select2" id="fornecedor" name="fornecedor">
+            <option value="">-- Todos --</option>
+            {% for forn in lista_fornecedores %}
+              <option value="{{ forn.pk }}" {% if request.GET.fornecedor == forn.pk|stringformat:"s" %}selected{% endif %}>{{ forn.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col">
+          <label for="materia_prima" class="form-label"><i class="bi bi-boxes me-1"></i> Matéria‑Prima</label>
+          <select class="form-select select2" id="materia_prima" name="materia_prima">
+            <option value="">-- Todas --</option>
+            {% for mp in lista_materiasprimas %}
+              <option value="{{ mp.pk }}" {% if request.GET.materia_prima == mp.pk|stringformat:"s" %}selected{% endif %}>
+                {{ mp.codigo }} - {{ mp.descricao }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 text-center mt-3">
+          {% include 'partials/global/_botao_filtrar.html' %}
+        </div>
+
+      </div>
+    </form>
   </div>
+</div>
 
   <!-- Modal Gerar F045 -->
 <div class="modal fade" id="modalF045" tabindex="-1" aria-labelledby="modalF045Label" aria-hidden="true">
@@ -126,31 +148,40 @@
 
 </form>
 
-<div class="d-flex justify-content-end mb-4 gap-2">
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<!-- Ações -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
   {% if request.user|has_permission:'qualidade_fornecimento.add_relacaomateriaprima' %}
-    <a href="{% url 'tb050_cadastrar' %}" class="btn btn-success d-inline-flex align-items-center" data-bs-toggle="tooltip" title="Cadastrar nova relação de matérias‑primas">
-      <i class="bi bi-plus-circle me-1"></i> Novo
+    <a href="{% url 'tb050_cadastrar' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center" data-bs-toggle="tooltip" title="Cadastrar nova relação de matérias‑primas">
+      <i class="bi bi-plus-circle-fill me-2"></i> Novo
     </a>
   {% endif %}
+
   {% if request.user|has_permission:'qualidade_fornecimento.importar_excel_tb050' %}
-    <a href="{% url 'tb050_importar_excel' %}" class="btn btn-secondary d-inline-flex align-items-center" data-bs-toggle="tooltip" title="Importar dados a partir de planilha Excel">
-      <i class="bi bi-file-earmark-excel me-1"></i> Importar Excel
+    <a href="{% url 'tb050_importar_excel' %}" class="btn btn-outline-secondary btn-acao-personalizado d-inline-flex align-items-center" data-bs-toggle="tooltip" title="Importar dados a partir de planilha Excel">
+      <i class="bi bi-file-earmark-excel me-2"></i> Importar Excel
     </a>
   {% endif %}
+
   {% if request.user|has_permission:"qualidade_fornecimento.gerar_f045" %}
-    <button type="button" class="btn btn-warning d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalF045">
-      <i class="bi bi-file-earmark-text me-1"></i> Gerar F045
+    <button type="button" class="btn btn-warning btn-acao-personalizado d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalF045">
+      <i class="bi bi-file-earmark-text me-2"></i> Gerar F045
     </button>
   {% endif %}
 </div>
 
+
 <!-- Cards de Indicadores -->
 <div class="row mb-4">
-  {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Cadastrados no sistema." cor="info" %}
-  {% include 'partials/global/_card_indicador.html' with titulo="Aprovados" valor=total_aprovados subtitulo="Materiais aprovados." cor="success" %}
-  {% include 'partials/global/_card_indicador.html' with titulo="Reprovados" valor=total_reprovados subtitulo="Materiais reprovados." cor="danger" %}
-  {% include 'partials/global/_card_indicador.html' with titulo="Atrasados" valor=total_atrasados subtitulo="Matérias‑primas em atraso." cor="warning" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Cadastrados no sistema." cor="info" icone="bi-clipboard-data-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Aprovados" valor=total_aprovados subtitulo="Materiais aprovados." cor="success" icone="bi-check-circle-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Reprovados" valor=total_reprovados subtitulo="Materiais reprovados." cor="danger" icone="bi-x-circle-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Atrasados" valor=total_atrasados subtitulo="Matérias‑primas em atraso." cor="warning" icone="bi-exclamation-triangle-fill" %}
 </div>
+
 
 <h5 class="mb-3">
   <i class="bi bi-table me-2 text-muted"></i> 📄 Lista de Materiais

@@ -130,19 +130,19 @@ def cadastrar_norma(request):
                     obj.delete()
 
                 # tração
+                from decimal import Decimal
+                fator = Decimal('0.10197162129779')
+                usar_mpa = request.POST.get("usar_mpa") == "true"
+
                 for trac in fset_tracao.save(commit=False):
                     trac.norma = norma
 
                     # Conversão de MPa para Kgf/mm² antes de salvar
-                    usar_mpa = request.POST.get("usar_mpa") == "true"
                     if usar_mpa:
-                        from decimal import Decimal
-                        fator = Decimal('0.10197162129779')
-                        if trac.resistencia_min:
+                        if trac.resistencia_min is not None:
                             trac.resistencia_min = round(trac.resistencia_min * fator, 2)
-                        if trac.resistencia_max:
+                        if trac.resistencia_max is not None:
                             trac.resistencia_max = round(trac.resistencia_max * fator, 2)
-
 
                     trac.save()
 
@@ -162,10 +162,11 @@ def cadastrar_norma(request):
         "form": header_form,
         "elementos_formset": fset_elementos,
         "tracao_formset": fset_tracao,
-        "campos_comp": CAMPOS_COMP,  #  <<<  passa a lista p/ o template
-        "editar": False,  #  sinaliza modo cadastro
+        "campos_comp": CAMPOS_COMP,
+        "editar": False,
     }
     return render(request, "normas/cadastrar_norma.html", ctx)
+
 
 
 @login_required
@@ -199,21 +200,20 @@ def editar_norma(request, id):
                     obj.delete()
 
                 # Atualiza Tração
+                from decimal import Decimal
+                fator = Decimal('0.10197162129779')
+                usar_mpa = request.POST.get("usar_mpa") == "true"
+
                 tracoes = fset_tracao.save(commit=False)
                 for trac in tracoes:
                     trac.norma = norma
 
                     # Conversão de MPa para Kgf/mm² antes de salvar
-                    usar_mpa = request.POST.get("usar_mpa") == "true"
                     if usar_mpa:
-                        from decimal import Decimal
-                        fator = Decimal('0.10197162129779')
-                        if trac.resistencia_min:
+                        if trac.resistencia_min is not None:
                             trac.resistencia_min = round(trac.resistencia_min * fator, 2)
-                        if trac.resistencia_max:
+                        if trac.resistencia_max is not None:
                             trac.resistencia_max = round(trac.resistencia_max * fator, 2)
-
-
 
                     trac.save()
 
@@ -240,20 +240,11 @@ def editar_norma(request, id):
         "form": form,
         "elementos_formset": fset_elementos,
         "tracao_formset": fset_tracao,
-        "campos_comp": [
-            "c_min", "c_max",
-            "mn_min", "mn_max",
-            "si_min", "si_max",
-            "p_min", "p_max",
-            "s_min", "s_max",
-            "cr_min", "cr_max",
-            "ni_min", "ni_max",
-            "cu_min", "cu_max",
-            "al_min", "al_max",
-        ],
+        "campos_comp": CAMPOS_COMP,
         "editar": True,
     }
     return render(request, "normas/cadastrar_norma.html", context)
+
 
 
 

@@ -15,9 +15,18 @@
 
     <form method="post" enctype="multipart/form-data" class="row g-3" id="funcionarioForm">
         {% csrf_token %}
-          {% if form.errors %}
-    {% include "partials/global/_form_errors.html" %}
-  {% endif %}
+        {% if messages %}
+  <div class="col-12">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+          
         <div class="accordion" id="accordionColaborador">
             <!-- 📸 Foto e Arquivos -->
             <div class="accordion-item">
@@ -169,7 +178,13 @@
                             </label>
                             {{ form.genero|add_class:"form-select" }}
                         </div>
-                        
+                        <div class="col-md-6">
+                            <label for="{{ form.tipo.id_for_label }}" class="form-label">
+                              <i class="bi bi-diagram-3 me-1"></i> Tipo do Colaborador:
+                            </label>
+                            {{ form.tipo|add_class:"form-select" }}
+                          </div>
+                          
 
                     </div>
                 </div>
@@ -268,31 +283,99 @@
 </div>
 
 
-            <!-- 📋 EPIs -->
+<!-- 🔐 Segurança do Trabalho -->
 <div class="accordion-item">
-    <h2 class="accordion-header" id="headingEPIs">
-        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEPIs" aria-expanded="false" aria-controls="collapseEPIs">
-            <i class="bi bi-shield-check me-2"></i> EPIs
-        </button>
+    <h2 class="accordion-header" id="headingSeguranca">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEPIs" aria-expanded="false" aria-controls="collapseEPIs">
+        <i class="bi bi-shield-check me-2"></i> Segurança do Trabalho
+      </button>
     </h2>
-    <div id="collapseEPIs" class="accordion-collapse collapse" aria-labelledby="headingEPIs" data-bs-parent="#accordionColaborador">
-        <div class="accordion-body row g-3">
-            <div class="col-md-6">
-                <label for="{{ form.camisa.id_for_label }}" class="form-label">
-                    <i class="bi bi-t-shirt me-1"></i> Tamanho da Camisa:
-                </label>
-                {{ form.camisa|add_class:"form-select" }}
-            </div>
-
-            <div class="col-md-6">
-                <label for="{{ form.calcado.id_for_label }}" class="form-label">
-                    <i class="bi bi-bootstrap-reboot me-1"></i> Número do Calçado:
-                </label>
-                {{ form.calcado }}
-            </div>
+    <div id="collapseEPIs" class="accordion-collapse collapse" aria-labelledby="headingSeguranca" data-bs-parent="#accordionColaborador">
+      <div class="accordion-body row g-3">
+  
+        <!-- Camisa -->
+        <div class="col-md-6">
+          <label for="{{ form.camisa.id_for_label }}" class="form-label">
+            <i class="bi bi-t-shirt me-1"></i> Tamanho da Camisa:
+          </label>
+          {{ form.camisa|add_class:"form-select" }}
         </div>
+  
+        <!-- Calçado -->
+        <div class="col-md-6">
+          <label for="{{ form.calcado.id_for_label }}" class="form-label">
+            <i class="bi bi-bootstrap-reboot me-1"></i> Número do Calçado:
+          </label>
+          {{ form.calcado }}
+        </div>
+  
+        <!-- Switch Representante CIPA -->
+        <div class="col-md-3">
+          <div class="form-check form-switch mt-4">
+            {{ form.representante_cipa|add_class:"form-check-input" }}
+            <label class="form-check-label" for="{{ form.representante_cipa.id_for_label }}">
+              Representante CIPA
+            </label>
+          </div>
+        </div>
+  
+        <!-- Campos Condicionais da CIPA -->
+        <div id="cipa_campos" class="row g-3">
+          <div class="col-md-3">
+            <label for="{{ form.tipo_cipa.id_for_label }}" class="form-label">
+              <i class="bi bi-person-lines-fill me-1"></i> Tipo (Titular/Suplente):
+            </label>
+            {{ form.tipo_cipa|add_class:"form-select" }}
+          </div>
+  
+          <div class="col-md-3">
+            <label for="{{ form.tipo_representacao_cipa.id_for_label }}" class="form-label">
+              <i class="bi bi-people-fill me-1"></i> Representa:
+            </label>
+            {{ form.tipo_representacao_cipa|add_class:"form-select" }}
+          </div>
+
+          <div class="col-md-3">
+            <label for="{{ form.ordem_cipa.id_for_label }}" class="form-label">
+              <i class="bi bi-list-ol me-1"></i> Ordem na CIPA:
+            </label>
+            {{ form.ordem_cipa }}
+          </div>
+          
+  
+          <div class="col-md-3">
+            <label for="{{ form.vigencia_cipa.id_for_label }}" class="form-label">
+              <i class="bi bi-calendar-event me-1"></i> Vigência CIPA:
+            </label>
+            {{ form.vigencia_cipa }}
+          </div>
+        </div>
+  
+     <!-- Switch Representante Brigada -->
+<div class="col-md-3">
+    <div class="form-check form-switch mt-4">
+        {% render_field form.representante_brigada class="form-check-input" %}
+        <label class="form-check-label" for="{{ form.representante_brigada.id_for_label }}">
+        Representante Brigada
+      </label>
     </div>
-</div>
+  </div>
+  
+  <!-- Campo Condicional da Brigada -->
+  <div id="brigada_campos" class="col-md-3">
+    <label for="{{ form.vigencia_brigada.id_for_label }}" class="form-label">
+      <i class="bi bi-calendar-event me-1"></i> Vigência Brigada:
+    </label>
+    {{ form.vigencia_brigada }}
+  </div>
+  
+  
+  
+      </div>
+    </div>
+  </div>
+  
+  
 
         </div>
 
@@ -398,5 +481,28 @@ function mascaraData(input) {
 }
 
 </script>
-
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const chkCipa = document.getElementById("id_representante_cipa");
+      const divCipa = document.getElementById("cipa_campos");
+  
+      const chkBrigada = document.getElementById("id_representante_brigada");
+      const divBrigada = document.getElementById("brigada_campos");
+  
+      function toggleCamposCipa() {
+        divCipa.style.display = chkCipa.checked ? "flex" : "none";
+      }
+  
+      function toggleCamposBrigada() {
+        divBrigada.style.display = chkBrigada.checked ? "block" : "none";
+      }
+  
+      chkCipa.addEventListener("change", toggleCamposCipa);
+      chkBrigada.addEventListener("change", toggleCamposBrigada);
+  
+      toggleCamposCipa();      // Inicial
+      toggleCamposBrigada();  // Inicial
+    });
+  </script>
+  
 {% endblock %}

@@ -62,7 +62,7 @@ def lista_tb050(request):
     if materia_prima_filter:
         qs = qs.filter(materia_prima_id=materia_prima_filter)
     if nro_rolo:
-        qs = qs.filter(rolo__nro_rolo__icontains=nro_rolo).distinct()
+        qs = qs.filter(rolos__nro_rolo__icontains=nro_rolo).distinct()
     if nro_relatorio:
         qs = qs.filter(nro_relatorio__icontains=nro_relatorio)
     if nro_certificado:

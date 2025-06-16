@@ -13,84 +13,89 @@
 
   {% include 'partials/global/_header_titulo.html' with titulo="Listas de Presença" icone="bi bi-journal-check" emoji="📝" %}
 
-  <!-- Botão de Cadastro -->
-  <div class="text-end mb-4 d-print-none">
-    {% if request.user|has_permission:"Funcionario.add_listapresenca" %}
-      <a href="{% url 'cadastrar_lista_presenca' %}" class="btn btn-success">
-        <i class="bi bi-plus-circle"></i> Cadastrar
-      </a>
-    {% endif %}
-  </div>
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
 
-  <!-- Filtros de Lista de Presença -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros de Listas de Presença</strong>
-  </div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row g-3">
+<!-- Botão de Cadastro -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4 d-print-none">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
 
-        <!-- Instrutor -->
-        <div class="col-md-4">
-          <label for="instrutor" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-person-badge text-secondary"></i> Instrutor
-          </label>
-          <select name="instrutor" id="instrutor" class="form-select select2" aria-label="Filtrar por instrutor">
-            <option value="">Selecione</option>
+  {% if request.user|has_permission:"Funcionario.add_listapresenca" %}
+    <a href="{% url 'cadastrar_lista_presenca' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+    </a>
+  {% endif %}
+</div>
+
+  
+
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Listas de Presença
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+  
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12">
+          <label for="instrutor" class="form-label"><i class="bi bi-person-badge me-1"></i> Instrutor</label>
+          <select name="instrutor" id="instrutor" class="form-select select2">
+            <option value="">Todos</option>
             {% for instrutor in instrutores %}
               <option value="{{ instrutor }}" {% if request.GET.instrutor == instrutor %}selected{% endif %}>{{ instrutor }}</option>
             {% endfor %}
           </select>
         </div>
-
-        <!-- Data Início -->
-        <div class="col-md-4">
-          <label for="data_inicio" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-calendar-event text-secondary"></i> Data Início
-          </label>
+  
+        <div class="col-12">
+          <label for="participante" class="form-label"><i class="bi bi-person-fill me-1"></i> Participante</label>
+          <select name="participante" id="participante" class="form-select select2">
+            <option value="">Todos</option>
+            {% for participante in participantes %}
+              <option value="{{ participante.id }}" {% if request.GET.participante == participante.id|stringformat:"s" %}selected{% endif %}>
+                {{ participante.nome }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+  
+        <div class="col-12">
+          <label for="data_inicio" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data Início</label>
           <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
         </div>
-
-        <!-- Data Fim -->
-        <div class="col-md-4">
-          <label for="data_fim" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-calendar-check text-secondary"></i> Data Fim
-          </label>
+  
+        <div class="col-12">
+          <label for="data_fim" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data Fim</label>
           <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
         </div>
-
-        <!-- Situação -->
-        <div class="col-md-4">
-          <label for="situacao" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-info-circle text-secondary"></i> Situação
-          </label>
-          <select name="situacao" id="situacao" class="form-select select2" aria-label="Filtrar por situação">
+  
+        <div class="col-12">
+          <label for="situacao" class="form-label"><i class="bi bi-info-circle me-1"></i> Situação</label>
+          <select name="situacao" id="situacao" class="form-select select2">
             <option value="">Todas</option>
             <option value="finalizado" {% if request.GET.situacao == "finalizado" %}selected{% endif %}>Finalizado</option>
             <option value="em_andamento" {% if request.GET.situacao == "em_andamento" %}selected{% endif %}>Em Andamento</option>
             <option value="indefinido" {% if request.GET.situacao == "indefinido" %}selected{% endif %}>Indefinido</option>
           </select>
         </div>
-
-        <!-- Botão Filtrar -->
-        {% include 'partials/global/_botao_filtrar.html' %}
-
-      </div>
-    </form>
+  
+        <div class="col-12 mt-3">
+          {% include 'partials/global/_botao_filtrar.html' %}
+        </div>
+      </form>
+    </div>
   </div>
-</div>
+  
 
 
-  <!-- Indicadores -->
   <div class="row mb-4 mt-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Listas" valor=total_listas subtitulo="Total de listas cadastradas" cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Finalizadas" valor=listas_finalizadas subtitulo="Listas finalizadas" cor="success" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Em Andamento" valor=listas_em_andamento subtitulo="Listas em andamento" cor="warning" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Indefinidas" valor=listas_indefinidas subtitulo="Situação indefinida" cor="secondary" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Total de Listas" valor=total_listas subtitulo="Total de listas cadastradas" cor="primary" icone="bi-card-checklist" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Finalizadas" valor=listas_finalizadas subtitulo="Listas finalizadas" cor="success" icone="bi-check2-square" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Em Andamento" valor=listas_em_andamento subtitulo="Listas em andamento" cor="warning" icone="bi-hourglass-split" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Indefinidas" valor=listas_indefinidas subtitulo="Situação indefinida" cor="secondary" icone="bi-question-circle-fill" %}
   </div>
-
+  
  <!-- Título da Tabela -->
 <h5 class="text-center my-4 d-flex align-items-center justify-content-center gap-2">
   <i class="bi bi-table" aria-hidden="true"></i>

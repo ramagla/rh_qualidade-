@@ -28,3 +28,7 @@ def portaria_home(request):
         "ultimas_ocorrencias": ultimas_ocorrencias,
     }
     return render(request, "portaria_home.html", context)
+
+@login_required
+def zona_monitoramento_modal(request):
+    return render(request, "portaria/modais/_zona_monitoramento_modal.html")

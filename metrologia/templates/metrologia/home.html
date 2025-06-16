@@ -12,7 +12,6 @@
 
   <div class="accordion accordion-flush" id="accordionDashboard">
 
-    <!-- Equipamentos Recentes -->
     <div class="accordion-item">
       <h2 class="accordion-header" id="headingEquip">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEquip" aria-expanded="false" aria-controls="collapseEquip">
@@ -25,7 +24,7 @@
             {% if equipamentos_recente %}
               {% for equipamento in equipamentos_recente %}
                 <div class="col-12 col-md-6 col-lg-4">
-                  <div class="card h-100 shadow-sm">
+                  <div class="card indicador-card shadow-sm h-100">
                     <div class="card-body p-3">
                       <h6 class="card-title small mb-2">{{ equipamento.codigo }} – {{ equipamento.nome_equipamento }}</h6>
                       <p class="card-text small">
@@ -43,8 +42,19 @@
         </div>
       </div>
     </div>
-
-    <!-- Dispositivos Recentes -->
+    
+    <style>
+    .indicador-card {
+      border-radius: 1rem;
+      background: linear-gradient(to bottom right, #ffffff, #f1f5f9);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .indicador-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+    </style>
+    
     <div class="accordion-item">
       <h2 class="accordion-header" id="headingDisp">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDisp" aria-expanded="false" aria-controls="collapseDisp">
@@ -57,7 +67,7 @@
             {% if dispositivos_recente %}
               {% for dispositivo in dispositivos_recente %}
                 <div class="col-12 col-md-6 col-lg-4">
-                  <div class="card h-100 shadow-sm">
+                  <div class="card indicador-card shadow-sm h-100">
                     <div class="card-body p-3">
                       <h6 class="card-title small mb-2">{{ dispositivo.codigo }} – {{ dispositivo.descricao }}</h6>
                       <p class="card-text small">
@@ -75,7 +85,19 @@
         </div>
       </div>
     </div>
-
+    
+    <style>
+    .indicador-card {
+      border-radius: 1rem;
+      background: linear-gradient(to bottom right, #ffffff, #f1f5f9);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .indicador-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+    </style>
+    
     <!-- Alertas de Calibração -->
     <div class="accordion-item">
       <h2 class="accordion-header" id="headingAlertas">

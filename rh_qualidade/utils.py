@@ -85,3 +85,5 @@ def obter_atividades_com_fixas(departamento):
     atividades_outros = [a for a in atividades if a.nome.lower() not in nomes_fixos]
 
     return atividades_outros + atividades_fixas
+
+

@@ -29,16 +29,19 @@
 </style>
 
   <!-- Filtro -->
-<div class="card mb-4">
-  <div class="card-header">Filtros</div>
-  <div class="card-body">
-    <form method="get" class="row g-3">
-      
-      <!-- Nome da Norma -->
-      <div class="col-md-4">
-        <label for="nome_norma" class="form-label">Nome da Norma</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-file-earmark-text"></i></span>
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Normas Técnicas
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+  
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+  
+        <div class="col-12">
+          <label for="nome_norma" class="form-label">Nome da Norma</label>
           <select id="nome_norma" name="nome_norma" class="form-select">
             <option value="">Todas</option>
             {% for nome in lista_normas %}
@@ -46,94 +49,61 @@
             {% endfor %}
           </select>
         </div>
-      </div>
-
-      <!-- Faixa de Tração Existente -->
-      <div class="col-md-4">
-        <label for="tem_tracao" class="form-label">Possui Faixa de Tração?</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-graph-up"></i></span>
+  
+        <div class="col-12">
+          <label for="tem_tracao" class="form-label">Possui Faixa de Tração?</label>
           <select id="tem_tracao" name="tem_tracao" class="form-select">
             <option value="">Todas</option>
             <option value="sim" {% if tem_tracao == 'sim' %}selected{% endif %}>Sim</option>
             <option value="nao" {% if tem_tracao == 'nao' %}selected{% endif %}>Não</option>
           </select>
         </div>
-      </div>
-
-      <!-- Composição Existente -->
-      <div class="col-md-4">
-        <label for="tem_composicao" class="form-label">Possui Composição Química?</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-clipboard-data"></i></span>
+  
+        <div class="col-12">
+          <label for="tem_composicao" class="form-label">Possui Composição Química?</label>
           <select id="tem_composicao" name="tem_composicao" class="form-select">
             <option value="">Todas</option>
             <option value="sim" {% if tem_composicao == 'sim' %}selected{% endif %}>Sim</option>
             <option value="nao" {% if tem_composicao == 'nao' %}selected{% endif %}>Não</option>
           </select>
         </div>
-      </div>
-
-      <!-- Botão de Filtrar -->
-      <div class="col-md-3 d-flex align-items-end justify-content-center">
-        <button type="submit" class="btn btn-primary w-100" aria-label="Aplicar filtros">
-          <i class="bi bi-search me-1" aria-hidden="true"></i> Filtrar
-        </button>
-      </div>
-
-    </form>
-  </div>
-</div>
-
-
-  <!-- Cards Resumo -->
-<div class="row mb-4">
-  <div class="col-md-4">
-    <div class="card text-white bg-success border-0 shadow-sm card-status">
-      <div class="card-header text-center">Total de Normas</div>
-      <div class="card-body text-center">
-        <h5 class="card-title">{{ total_normas }}</h5>
-        <p class="card-text">Normas cadastradas no sistema.</p>
-      </div>
+  
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
     </div>
   </div>
-  <div class="col-md-4">
-    <div class="card text-white bg-secondary border-0 shadow-sm card-status">
-      <div class="card-header text-center">Com Arquivo</div>
-      <div class="card-body text-center">
-        <h5 class="card-title">{{ normas_com_arquivo }}</h5>
-        <p class="card-text">Normas com PDF vinculado.</p>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card text-white bg-warning border-0 shadow-sm card-status">
-      <div class="card-header text-center">Sem Vinculação</div>
-      <div class="card-body text-center">
-        <h5 class="card-title">{{ normas_sem_vinculo }}</h5>
-        <p class="card-text">Normas sem vínculo.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
+  
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
 
   <!-- Botão de Cadastro -->
- <div class="d-flex justify-content-end gap-2 mb-3">
-
-  {% if request.user|has_permission:'qualidade_fornecimento.add_normatecnica' %}
-  <a href="{% url 'cadastrar_norma' %}" class="btn btn-success me-2">
-    <i class="bi bi-plus-circle"></i> Nova Norma
-  </a>
-  {% endif %}
-
-{% if request.user|has_permission:'qualidade_fornecimento.aprovar_normatecnica' %}
-   <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAprovarNormas">
-    <i class="bi bi-patch-check"></i> Aprovar Normas
-  </button>
-  {% endif %}
-
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  
+    {% if request.user|has_permission:'qualidade_fornecimento.add_normatecnica' %}
+      <a href="{% url 'cadastrar_norma' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2"></i> Nova Norma
+      </a>
+    {% endif %}
+  
+    {% if request.user|has_permission:'qualidade_fornecimento.aprovar_normatecnica' %}
+      <button type="button" class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalAprovarNormas">
+        <i class="bi bi-patch-check me-2"></i> Aprovar Normas
+      </button>
+    {% endif %}
+  </div>
+  
+<!-- Cards Resumo -->
+<div class="row mb-4">
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Total de Normas" valor=total_normas subtitulo="Normas cadastradas no sistema." icone="bi-journal-bookmark-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="secondary" titulo="Com Arquivo" valor=normas_com_arquivo subtitulo="Normas com PDF vinculado." icone="bi-file-earmark-pdf-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Sem Vinculação" valor=normas_sem_vinculo subtitulo="Normas sem vínculo." icone="bi-exclamation-triangle-fill" %}
 </div>
+
+
+  
+  
 <div class="modal fade" id="modalAprovarNormas" tabindex="-1" aria-labelledby="modalAprovarNormasLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content border-success shadow">

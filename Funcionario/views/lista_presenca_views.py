@@ -21,9 +21,12 @@ from Funcionario.templatetags.conversores import horas_formatadas
 # Função lista_presenca
 @login_required
 def lista_presenca(request):
-    listas_presenca = ListaPresenca.objects.all().order_by(
-        "-data_inicio"
-    )  # Ordenar por assunto
+    listas_presenca = ListaPresenca.objects.all().order_by("-data_inicio")
+
+    # Participantes distintos relacionados às listas
+    participantes = Funcionario.objects.filter(
+        id__in=listas_presenca.values_list("participantes__id", flat=True)
+    ).distinct().order_by("nome")
 
     # Contadores para os cards
     total_listas = listas_presenca.count()
@@ -33,10 +36,11 @@ def lista_presenca(request):
 
     # Filtros
     instrutores = ListaPresenca.objects.values_list("instrutor", flat=True).distinct()
-    instrutor_filtro = request.GET.get("instrutor", None)
+    instrutor_filtro = request.GET.get("instrutor")
     situacao_filtro = request.GET.get("situacao")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
+    participante_filtro = request.GET.get("participante")
 
     if instrutor_filtro:
         listas_presenca = listas_presenca.filter(instrutor=instrutor_filtro)
@@ -49,6 +53,9 @@ def lista_presenca(request):
             data_inicio__gte=data_inicio, data_fim__lte=data_fim
         )
 
+    if participante_filtro:
+        listas_presenca = listas_presenca.filter(participantes__id=participante_filtro)
+
     # Paginação
     paginator = Paginator(listas_presenca, 10)  # 10 itens por página
     page_number = request.GET.get("page")
@@ -60,8 +67,8 @@ def lista_presenca(request):
         {
             "listas_presenca": page_obj,
             "page_obj": page_obj,
-            "listas_presenca": listas_presenca,
             "instrutores": instrutores,
+            "participantes": participantes,
             "situacao_opcoes": ListaPresenca.SITUACAO_CHOICES,
             "total_listas": total_listas,
             "listas_finalizadas": listas_finalizadas,
@@ -71,21 +78,40 @@ def lista_presenca(request):
     )
 
 
+
 def processar_lista_presenca(lista_presenca):
-    # Regras de criação
+    from datetime import date
+    from Funcionario.models import Treinamento, AvaliacaoTreinamento
+
     if (
         lista_presenca.situacao == "finalizado"
         or (lista_presenca.situacao == "em_andamento" and lista_presenca.planejado == "sim")
     ):
-        treinamento_existente = Treinamento.objects.filter(
-            nome_curso=lista_presenca.assunto,
-            data_inicio=lista_presenca.data_inicio,
-            data_fim=lista_presenca.data_fim,
-            descricao=lista_presenca.descricao,
-            carga_horaria=lista_presenca.duracao,
-        ).first()
+        treinamento_existente = None
 
+        # Se o campo contém um ID, tenta buscar pelo ID primeiro
+        if lista_presenca.treinamento and lista_presenca.treinamento.isdigit():
+            treinamento_existente = Treinamento.objects.filter(id=int(lista_presenca.treinamento)).first()
+
+        # Se não encontrou, tenta localizar por nome do curso
         if not treinamento_existente:
+            treinamento_existente = Treinamento.objects.filter(
+                nome_curso=lista_presenca.assunto
+            ).order_by("-data_inicio").first()
+
+        if treinamento_existente:
+            treinamento_existente.nome_curso = lista_presenca.assunto
+            treinamento_existente.data_inicio = lista_presenca.data_inicio
+            treinamento_existente.data_fim = lista_presenca.data_fim
+            treinamento_existente.carga_horaria = lista_presenca.duracao
+            treinamento_existente.descricao = lista_presenca.descricao
+            treinamento_existente.status = (
+                "planejado" if lista_presenca.situacao == "em_andamento" else "concluido"
+            )
+            treinamento_existente.planejado = lista_presenca.planejado
+            treinamento_existente.save()
+            treinamento_existente.funcionarios.clear()
+        else:
             treinamento_existente = Treinamento.objects.create(
                 tipo="interno",
                 categoria="treinamento",
@@ -99,13 +125,15 @@ def processar_lista_presenca(lista_presenca):
                 situacao="aprovado",
                 planejado=lista_presenca.planejado,
             )
+            # Salva o ID como string no campo treinamento
+            lista_presenca.treinamento = str(treinamento_existente.id)
+            lista_presenca.save()
 
-        else:
-            treinamento_existente.funcionarios.clear()
-
+        # Associa os participantes
         for participante in lista_presenca.participantes.all():
             treinamento_existente.funcionarios.add(participante)
 
+        # Cria/atualiza avaliações se necessário
         if lista_presenca.necessita_avaliacao:
             for participante in lista_presenca.participantes.all():
                 avaliacao, criada = AvaliacaoTreinamento.objects.get_or_create(
@@ -131,6 +159,9 @@ def processar_lista_presenca(lista_presenca):
                     avaliacao.descricao_melhorias = "Aguardando avaliação"
                     avaliacao.avaliacao_geral = None
                     avaliacao.save()
+
+
+
 
 @login_required
 def cadastrar_lista_presenca(request):

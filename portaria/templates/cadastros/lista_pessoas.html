@@ -14,18 +14,21 @@
  
 
   <!-- Filtros -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros de Pessoas</strong>
+<!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Pessoas
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
-    <form method="get">
+  <div class="offcanvas-body">
+    <form method="get" id="formFiltroPessoas">
       <div class="row g-3">
         <!-- Nome -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
-          <select name="nome" id="nome" class="form-select select2 w-100">
+          <select name="nome" id="nome" class="form-select select2">
             <option value="">Todos</option>
             {% for nome in nomes_disponiveis %}
               <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
@@ -34,9 +37,9 @@
         </div>
 
         <!-- Tipo -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="tipo" class="form-label"><i class="bi bi-person-badge me-1"></i> Tipo</label>
-          <select name="tipo" id="tipo" class="form-select select2 w-100">
+          <select name="tipo" id="tipo" class="form-select select2">
             <option value="">Todos</option>
             {% for key, label in tipos %}
               <option value="{{ key }}" {% if request.GET.tipo == key %}selected{% endif %}>{{ label }}</option>
@@ -45,9 +48,9 @@
         </div>
 
         <!-- Empresa -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="empresa" class="form-label"><i class="bi bi-building me-1"></i> Empresa</label>
-          <select name="empresa" id="empresa" class="form-select select2 w-100">
+          <select name="empresa" id="empresa" class="form-select select2">
             <option value="">Todas</option>
             {% for empresa in empresas_disponiveis %}
               <option value="{{ empresa }}" {% if request.GET.empresa == empresa %}selected{% endif %}>{{ empresa }}</option>
@@ -56,7 +59,7 @@
         </div>
 
         <!-- Botão Filtrar -->
-        <div class="col-12 d-flex justify-content-center">
+        <div class="col-12 text-center mt-3">
           {% include 'partials/global/_botao_filtrar.html' %}
         </div>
       </div>
@@ -64,22 +67,29 @@
   </div>
 </div>
 
+{% include "partials/global/_estilos_botoes_acoes.html" %}
 
-   <!-- Cards de Indicadores -->
-   <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Pessoas" valor=total_pessoas subtitulo="Cadastradas no sistema." cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Visitantes" valor=visitantes subtitulo="Registrados como visitantes." cor="info" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Entregadores" valor=entregadores subtitulo="Registrados como entregadores." cor="warning" %}
-  </div>
+<!-- Ações Superiores -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include 'partials/global/_botao_filtros_offcanvas.html' %}
 
-    <!-- Botão de ação -->
-    <div class="text-end mb-4">
-      {% if request.user|has_permission:"portaria.add_pessoaportaria" %}
-      <a href="{% url 'cadastrar_pessoa' %}" class="btn btn-success">
-          <i class="bi bi-plus-circle"></i> Cadastrar Pessoa
-        </a>
-      {% endif %}
-    </div>
+  {% if request.user|has_permission:"portaria.add_pessoaportaria" %}
+    <a href="{% url 'cadastrar_pessoa' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar Pessoa
+    </a>
+  {% endif %}
+</div>
+
+
+<!-- Cards de Indicadores -->
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Pessoas" valor=total_pessoas subtitulo="Cadastradas no sistema." cor="primary" icone="bi-people-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Visitantes" valor=visitantes subtitulo="Registrados como visitantes." cor="info" icone="bi-person-badge" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Entregadores" valor=entregadores subtitulo="Registrados como entregadores." cor="warning" icone="bi-truck" %}
+</div>
+
+
+   
   
 
   <!-- Tabela de pessoas -->

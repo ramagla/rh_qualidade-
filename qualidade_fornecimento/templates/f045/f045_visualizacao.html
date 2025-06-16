@@ -265,14 +265,34 @@
   <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
 {% endif %}
 <!-- Assinatura -->
-<h4 class="mt-04">🧾 Responsável</h4>
-<div class="assinatura">
-  Assinado digitalmente por <strong>{{ assinatura_nome }}</strong><br>
-  ND: OU=Almoxarifado, o=Bras-Mol Molas e Estampados Ltda, CN={{ assinatura_email }}<br>
-  Razão: Eu estou aprovando este documento<br>
-  Local: Itaquaquecetuba - SP<br>
-  Data: {{ assinatura_data }}
+<h4 class="mt-4" style="margin-bottom: 10px;">✍️ Assinatura Digital</h4>
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+  <!-- Dados da assinatura -->
+  <div style="flex: 1 1 60%; min-width: 250px; font-size: 13px; line-height: 1.5;">
+    <div class="assinatura">
+      Assinado digitalmente por <strong>{{ assinatura_nome }}</strong><br>
+      ND: OU={{ assinatura_departamento }}, o=Bras-Mol Molas e Estampados Ltda,<br>
+      CN={{ assinatura_email }}<br>
+      Hash do documento: <code style="word-break: break-word;">{{ assinatura_hash }}</code><br>
+      Razão: Eu estou aprovando este documento<br>
+      Local: Itaquaquecetuba - SP<br>
+      Data: {{ assinatura_data|date:"d/m/Y H:i" }}
+    </div>
+  </div>
+
+  <!-- QR Code com título alinhado -->
+  {% if qr_base64 %}
+  <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; flex: 0 0 120px; min-width: 120px;">
+    <img src="data:image/png;base64,{{ qr_base64 }}"
+         alt="QR Code Assinatura"
+         width="100" height="100"
+         style="border: 1px solid #ccc; padding: 4px; border-radius: 4px;">
+  </div>
+  {% endif %}
 </div>
+
+
 
 <!-- Rodapé institucional -->
 <div class="rodape-f045">

@@ -123,4 +123,15 @@ def menu_portaria(user):
             "submenu": submenu_relatorios,
         })
 
+        # Acesso à Zona de Monitoramento (abre modal)
+    if user.has_perm("portaria.acesso_portaria"):
+       menu.append({
+            "name": "Zona de Monitoramento",
+            "icon": "fas fa-video",
+            "modal": "modalZonaMonitoramento"
+        })
+
+
+
+
     return menu

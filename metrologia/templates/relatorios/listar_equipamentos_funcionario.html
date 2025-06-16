@@ -8,7 +8,7 @@
 {% include 'header.html' %}
 
 <div class="container mt-5 print-container">
-  {% include 'partials/global/_header_titulo.html' with titulo="Termo de Responsabilidade pelo Uso de Equipamentos" icone="bi bi-clipboard-check" emoji="📋" %}
+  {% include 'partials/global/_header_titulo.html' with titulo=eh_devolucao|yesno:"Termo de Devolução de Equipamentos,Termo de Responsabilidade pelo Uso de Equipamentos" icone="bi bi-clipboard-check" emoji="📋" %}
 
   <section class="info-section mt-4" aria-labelledby="titulo-funcionario">
     <div class="card shadow-sm border rounded">
@@ -35,7 +35,7 @@
     </div>
   </section>
   
-
+  {% if not eh_devolucao %}
   <section class="declaracao-section mt-4">
     <div class="card shadow-sm border rounded">
       <div class="card-header bg-light d-flex align-items-center gap-2">
@@ -55,7 +55,8 @@
       </div>
     </div>
   </section>
-  
+  {% endif %}
+
 
   <section class="mt-4">
     <div class="card shadow-sm border rounded">
@@ -97,10 +98,12 @@
   </section>
   
 
-  {% include 'partials/global/_assinaturas_padrao.html' %} 
+  {% if not eh_devolucao %}
+  {% include 'partials/global/_assinaturas_padrao.html' %}
+{% endif %}
   
   
-
+{% if eh_devolucao %}
   <section class="devolucao mt-5">
     <div class="card shadow-sm border rounded">
       <div class="card-header bg-light d-flex align-items-center gap-2">
@@ -130,9 +133,12 @@
       </div>
     </div>
   </section>
-  
+  {% endif %}
+
+  {% if eh_devolucao %}
 
   {% include 'partials/global/_assinaturas_padrao.html' %}
+  {% endif %}
 
   
 

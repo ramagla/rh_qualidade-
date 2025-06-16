@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao_paisagem.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+
+<div class="container pdf-container print-area" style="font-size: 9pt;">
+
+  <!-- Cabeçalho do Documento -->
+  <table class="custom-table info-table mb-4" style="font-size: 9pt;">
+    <thead>
+      <tr>
+        <td rowspan="2" class="text-center align-middle" style="width: 10%; border: 0.75pt solid #000; position: relative;">
+          <img src="{% static 'img/logo.png' %}" alt="Logo da empresa" style="width: 60px; height: auto;">
+          <div style="position: absolute; top: 0; right: 0; width: 1px; height: 100%; background: #000;"></div>
+        </td>
+        
+        
+
+        <td colspan="3" class="text-center fw-bold align-middle" style="border: 0.75pt solid #000; border-left: none;">
+          <div style="font-size: 8.5pt; text-transform: uppercase;">
+            REPRESENTANTES DA CIPA – GESTÃO {{ ano }}
+          </div>
+        </td>
+
+        <td rowspan="2" class="text-center align-middle" style="width: 15%; border: 0.75pt solid #000;">
+          <img src="{% static 'img/cipa.png' %}" alt="Logo da CIPA" style="max-width: 60px; height: auto;">
+        </td>
+        
+      </tr>
+      <tr>
+        <td style="border: 0.75pt solid #000;"><strong>Responsável:</strong> Romeu Afonso</td>
+        <td style="border: 0.75pt solid #000;"><strong>Coordenação:</strong> Lilian Fernandes</td>
+        <td style="border: 0.75pt solid #000;"><strong>Validação:</strong> Lilian Fernandes</td>
+      </tr>
+    </thead>
+  </table>
+
+ <!-- Cards dos Representantes -->
+<h5 class="text-success fw-bold text-center mt-2 mb-2">REPRESENTANTES DOS EMPREGADOS</h5>
+<div class="cipa-grid mb-4">
+  {% for membro in cipa_empregados %}
+    <div class="business-card {% if membro.ordem == '1º' %}destaque{% endif %}">
+      <div class="card-content">
+        <div class="profile-image">
+          {% if membro.foto %}
+            <img src="{{ membro.foto }}" alt="{{ membro.nome }}">
+          {% else %}
+            <i class="bi bi-person-circle fs-1"></i>
+          {% endif %}
+        </div>
+        <h1>{{ membro.nome }}</h1>
+        <p><strong>{{ membro.ordem }}</strong> - {{ membro.tipo }}</p>
+        <div class="contact-info">
+          <p><strong>Setor:</strong> <i>{{ membro.setor }}</i></p>
+          <p><strong>Cargo:</strong> <i>{{ membro.cargo }}</i></p>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<h5 class="text-primary fw-bold text-center mt-2 mb-2">REPRESENTANTES DO EMPREGADOR</h5>
+<div class="cipa-grid">
+  {% for membro in cipa_empregador %}
+    <div class="business-card {% if membro.ordem == '1º' %}destaque{% endif %}">
+      <div class="card-content">
+        <div class="profile-image">
+          {% if membro.foto %}
+            <img src="{{ membro.foto }}" alt="{{ membro.nome }}">
+          {% else %}
+            <i class="bi bi-person-circle fs-1"></i>
+          {% endif %}
+        </div>
+        <h1>{{ membro.nome }}</h1>
+        <p><strong>{{ membro.ordem }}</strong> - {{ membro.tipo }}</p>
+        <div class="contact-info">
+          <p><strong>Setor:</strong> <i>{{ membro.setor }}</i></p>
+          <p><strong>Cargo:</strong> <i>{{ membro.cargo }}</i></p>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+
+  {% include 'partials/global/_formulario_rodape.html' with numero_formulario="F-CIPA001 Rev. 01" %}
+</div>
+
+<style>
+    .cipa-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+    }
+  
+    .business-card {
+      position: relative;
+      border-radius: 12px;
+      width: 150px;
+      animation: none;
+      page-break-inside: avoid;
+    }
+  
+    .business-card.destaque .card-content {
+      background: linear-gradient(315deg, #6da8ff, #cfe2ff);
+      color: #fff;
+    }
+  
+    .card-content {
+      background: linear-gradient(315deg, #9FA5D5, #E8F5C8);
+      border-radius: 12px;
+      padding: 10px;
+      color: #606060;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      min-height: 200px;
+      font-size: 9pt;
+    }
+  
+    .profile-image img {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      border: 1px solid #fff;
+      object-fit: cover;
+    }
+  
+    h1 {
+      font-size: 11pt;
+      margin-bottom: 4px;
+    }
+  
+    .contact-info p {
+      font-size: 8pt;
+      margin-bottom: 2px;
+    }
+  
+    .card-content p {
+      font-size: 8pt;
+      margin: 0;
+    }
+  
+    @media print {
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100%;
+        width: 100%;
+      }
+  
+      .pdf-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: start;
+      }
+  
+      .cipa-grid {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 8px !important;
+      }
+  
+      body * {
+        visibility: hidden;
+      }
+  
+      .print-area, .print-area * {
+        visibility: visible !important;
+      }
+  
+      .print-area {
+        position: relative !important;
+        width: 100%;
+        padding: 0.5cm 0.8cm;
+        box-sizing: border-box;
+      }
+      
+  
+      .print-area img[alt*="Logo"] {
+        max-height: 40px !important;
+        max-width: 60px !important;
+      }
+  
+      .business-card {
+        width: 150px !important;
+        margin: 0.3cm !important;
+      }
+  
+      .card-content {
+        padding: 30px !important;
+        min-height: 280px !important;
+        box-shadow: none !important;
+      }
+  
+      .profile-image img {
+        width: 75px !important;
+        height: 75px !important;
+      }
+  
+      h1 {
+        font-size: 9pt !important;
+      }
+  
+      .contact-info p, p, strong {
+        font-size: 7.5pt !important;
+        line-height: 1.2 !important;
+      }
+  
+      h4, h5, p.text-muted {
+        margin-bottom: 2px !important;
+        font-size: 8pt !important;
+      }
+  
+      .shadow, .rounded-4 {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+  
+      .d-print-none {
+        display: none !important;
+      }
+    }
+  </style>
+  
+  
+  
+{% endblock %}

@@ -12,17 +12,20 @@
 <div class="container mt-4">
 
  
- <!-- Filtros -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary"></i>
-    <strong class="text-primary">Filtros de Ocorrências</strong>
+ <!-- Offcanvas Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Ocorrências
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
+  <div class="offcanvas-body">
     <form method="get">
       <div class="row g-3">
+
         <!-- Funcionário -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Funcionário</label>
           <select name="nome" id="nome" class="form-select select2 w-100">
             <option value="">Todos</option>
@@ -33,23 +36,22 @@
         </div>
 
         <!-- Data -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
           <input type="date" name="data" id="data" value="{{ request.GET.data }}" class="form-control">
         </div>
 
         <!-- Tipo -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="tipo" class="form-label"><i class="bi bi-exclamation-circle me-1"></i> Tipo</label>
-          <select name="tipo" id="tipo" class="form-select w-100">
+          <select name="tipo" id="tipo" class="form-select">
             <option value="">Todos</option>
             <option value="atraso" {% if request.GET.tipo == 'atraso' %}selected{% endif %}>Atraso</option>
             <option value="saida" {% if request.GET.tipo == 'saida' %}selected{% endif %}>Saída Antecipada</option>
           </select>
         </div>
 
-        <!-- Botão Filtrar -->
-        <div class="col-12 d-flex justify-content-center">
+        <div class="col-12 text-center mt-2">
           {% include 'partials/global/_botao_filtrar.html' %}
         </div>
       </div>
@@ -58,28 +60,35 @@
 </div>
 
 
-   <!-- Cards de Indicadores -->
-   <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Eventos registrados." cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Hoje" valor=total_hoje subtitulo="Ocorrências do dia." cor="info" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Sem Justificativa" valor=total_sem_justificativa subtitulo="Aguardando avaliação." cor="danger" %}
-{% include 'partials/global/_card_indicador.html' with titulo="Hora Extra" valor=total_hora_extra subtitulo="Registros adicionais." cor="success" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
 
-
-
-<!-- Botão de Nova Ocorrência -->
-{% if request.user|has_permission:"portaria.add_atrasosaida" %}
-  <div class="mt-3 d-flex justify-content-end mb-4">
-    <a href="{% url 'cadastrar_atraso_saida' %}" class="btn btn-success d-inline-flex align-items-center">
+<!-- Botões de Ação -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include 'partials/global/_botao_filtros_offcanvas.html' %}
+  
+  {% if request.user|has_permission:"portaria.add_atrasosaida" %}
+    <a href="{% url 'cadastrar_atraso_saida' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
       <i class="bi bi-plus-circle-fill me-1"></i> Nova Ocorrência
     </a>
-  </div>
-{% endif %}
+  {% endif %}
+</div>
+
+
+  <!-- Cards de Indicadores -->
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Eventos registrados." cor="primary" icone="bi-journal-check" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Hoje" valor=total_hoje subtitulo="Ocorrências do dia." cor="info" icone="bi-calendar-day" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Sem Justificativa" valor=total_sem_justificativa subtitulo="Aguardando avaliação." cor="danger" icone="bi-exclamation-triangle-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Hora Extra" valor=total_hora_extra subtitulo="Registros adicionais." cor="success" icone="bi-clock-history" %}
+</div>
+
+
+
 
 
 
   <!-- Tabela -->
-  <div class="table-responsive">
+  <div class="table-responsive mt-5">
     <table class="table table-bordered table-striped text-center align-middle">
       <thead class="table-light">
         <tr>

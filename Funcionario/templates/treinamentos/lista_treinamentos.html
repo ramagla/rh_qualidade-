@@ -8,34 +8,42 @@
 
 {% include 'partials/global/_toast_mensagens.html' %}
 
-<div class="container mt-5">
-    {% include 'partials/global/_header_titulo.html' with titulo="Treinamentos Cadastrados" icone="bi bi-mortarboard" emoji="🎓" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
 
-    <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
-      {% if request.user|has_permission:"Funcionario.imprimir_treinamento" %}
-      <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary d-flex align-items-center">
-            <i class="bi bi-download me-2"></i> Exportar para Excel
-          </a>
-        {% endif %}
-      
-        <div class="ms-auto d-flex flex-wrap gap-2">
-          {% if request.user|has_permission:"Funcionario.add_treinamento" %}
-            <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-success d-flex align-items-center">
-              <i class="bi bi-plus-circle me-2"></i> Cadastrar
-            </a>
-          {% endif %}
-      
-          {% if request.user|has_permission:"Funcionario.imprimir_treinamento" %}
-          <button type="button" class="btn btn-info d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
-              <i class="bi bi-printer me-2"></i> Imprimir
-            </button>
-      
-            <a href="{% url 'levantamento_treinamento' %}" class="btn btn-secondary d-flex align-items-center">
-              <i class="bi bi-file-earmark-spreadsheet me-2"></i> Levantamento de Necessidades
-            </a>
-          {% endif %}
-        </div>
-      </div>
+<div class="container mt-5">
+  {% include 'partials/global/_header_titulo.html' with titulo="Treinamentos Cadastrados" icone="bi bi-mortarboard" emoji="🎓" %}
+
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
+    {% if request.user|has_permission:"Funcionario.add_treinamento" %}
+      <a href="{% url 'cadastrar_treinamento' %}" class="btn btn-cadastrar-personalizado d-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+      </a>
+    {% endif %}
+
+    {% if request.user|has_permission:"Funcionario.imprimir_treinamento" %}
+      <button type="button" class="btn btn-info btn-acao-personalizado d-flex align-items-center"
+              data-bs-toggle="modal" data-bs-target="#imprimirF003Modal">
+        <i class="bi bi-printer me-2" aria-hidden="true"></i> Imprimir
+      </button>
+    {% endif %}
+
+    {% if request.user|has_permission:"Funcionario.imprimir_treinamento" %}
+      <a href="{% url 'levantamento_treinamento' %}" class="btn btn-secondary btn-acao-personalizado d-flex align-items-center">
+        <i class="bi bi-file-earmark-spreadsheet me-2" aria-hidden="true"></i> Levantamento de Necessidades
+      </a>
+    {% endif %}
+
+    {% if request.user|has_permission:"Funcionario.imprimir_treinamento" %}
+      <a href="{% url 'exportar_treinamentos' %}" class="btn btn-secondary btn-acao-personalizado d-flex align-items-center">
+        <i class="bi bi-download me-2" aria-hidden="true"></i> Exportar para Excel
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+    
       
 
     <!-- Modal de Impressao -->
@@ -65,63 +73,51 @@
         </div>
     </div>
 
-    <!-- Filtros de Treinamento -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros de Treinamento</strong>
+   <!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Treinamentos
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row g-3">
 
-        <!-- Filtro: Colaborador -->
-        <div class="col-md-4">
-          <label for="funcionario" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-person-badge text-secondary"></i> Colaborador
-          </label>
-          <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtro por colaborador">
-            <option value="">Todos</option>
-            {% for func in funcionarios %}
-              <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
-            {% endfor %}
-          </select>
-        </div>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
 
-        <!-- Filtro: Tipo de Treinamento -->
-        <div class="col-md-4">
-          <label for="tipo" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-journal-bookmark-fill text-secondary"></i> Tipo de Treinamento
-          </label>
-          <select name="tipo" id="tipo" class="form-select select2" aria-label="Filtro por tipo de treinamento">
-            <option value="">Todos</option>
-            {% for tipo_choice in tipos_treinamento %}
-              <option value="{{ tipo_choice.0 }}" {% if request.GET.tipo == tipo_choice.0 %}selected{% endif %}>{{ tipo_choice.1 }}</option>
-            {% endfor %}
-          </select>
-        </div>
+      <div class="col-12">
+        <label for="funcionario" class="form-label"><i class="bi bi-person-badge me-1"></i> Colaborador</label>
+        <select name="funcionario" id="funcionario" class="form-select select2">
+          <option value="">Todos</option>
+          {% for func in funcionarios %}
+            <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-        <!-- Filtro: Status -->
-        <div class="col-md-4">
-          <label for="status" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-graph-up-arrow text-secondary"></i> Status
-          </label>
-          <select name="status" id="status" class="form-select select2" aria-label="Filtro por status">
-            <option value="">Todos</option>
-            <option value="cursando" {% if request.GET.status == "cursando" %}selected{% endif %}>Cursando</option>
-            <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
-            <option value="trancado" {% if request.GET.status == "trancado" %}selected{% endif %}>Trancado</option>
-            <option value="requerido" {% if request.GET.status == "requerido" %}selected{% endif %}>Requerido</option>
-          </select>
-        </div>
+      <div class="col-12">
+        <label for="tipo" class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> Tipo de Treinamento</label>
+        <select name="tipo" id="tipo" class="form-select select2">
+          <option value="">Todos</option>
+          {% for tipo_choice in tipos_treinamento %}
+            <option value="{{ tipo_choice.0 }}" {% if request.GET.tipo == tipo_choice.0 %}selected{% endif %}>{{ tipo_choice.1 }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-        <!-- Botão Filtrar -->
-        <div class="col-12 text-center mt-2">
-          <button type="submit" class="btn btn-primary d-inline-flex align-items-center">
-            <i class="bi bi-search me-2"></i> Filtrar
-          </button>
-        </div>
+      <div class="col-12">
+        <label for="status" class="form-label"><i class="bi bi-graph-up-arrow me-1"></i> Status</label>
+        <select name="status" id="status" class="form-select select2">
+          <option value="">Todos</option>
+          <option value="cursando" {% if request.GET.status == "cursando" %}selected{% endif %}>Cursando</option>
+          <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
+          <option value="trancado" {% if request.GET.status == "trancado" %}selected{% endif %}>Trancado</option>
+          <option value="requerido" {% if request.GET.status == "requerido" %}selected{% endif %}>Requerido</option>
+        </select>
+      </div>
 
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
       </div>
     </form>
   </div>
@@ -131,13 +127,13 @@
 
 
 
-    <!-- Indicadores -->
-    <div class="row mb-4">
-        {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Treinamentos" valor=total_treinamentos subtitulo="Todos os treinamentos cadastrados." %}
-        {% include 'partials/global/_card_indicador.html' with cor="success" titulo="Concluídos" valor=treinamentos_concluidos subtitulo="Treinamentos finalizados." %}
-        {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="Em Andamento" valor=treinamentos_em_andamento subtitulo="Treinamentos em curso." %}
-        {% include 'partials/global/_card_indicador.html' with cor="info" titulo="Requeridos" valor=treinamentos_requeridos subtitulo="Treinamentos planejados." %}
-    </div>
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Treinamentos" valor=total_treinamentos subtitulo="Todos os treinamentos cadastrados." icone="bi-mortarboard-fill" %}
+  {% include 'partials/global/_card_indicador.html' with cor="success" titulo="Concluídos" valor=treinamentos_concluidos subtitulo="Treinamentos finalizados." icone="bi-check-circle-fill" %}
+  {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="Em Andamento" valor=treinamentos_em_andamento subtitulo="Treinamentos em curso." icone="bi-hourglass-split" %}
+  {% include 'partials/global/_card_indicador.html' with cor="info" titulo="Requeridos" valor=treinamentos_requeridos subtitulo="Treinamentos planejados." icone="bi-calendar2-event-fill" %}
+</div>
+
 
     <!-- Tabela de Treinamentos -->
     <div class="table-responsive">

@@ -12,16 +12,18 @@
 
 
   <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <i class="bi bi-funnel me-2"></i> Filtros de Banco de Horas
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Banco de Horas
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
     </div>
-    <div class="card-body">
+  
+    <div class="offcanvas-body">
       <form method="get" class="row g-3">
-        <div class="col-md-4">
-          <label for="funcionario" class="form-label">
-            <i class="bi bi-person-fill me-1"></i> Colaborador
-          </label>
+        <div class="col-12">
+          <label for="funcionario" class="form-label"><i class="bi bi-person-fill me-1"></i> Colaborador</label>
           <select name="funcionario" id="funcionario" class="form-select select2">
             <option value="">Todos</option>
             {% for f in funcionarios %}
@@ -31,41 +33,52 @@
             {% endfor %}
           </select>
         </div>
-        <div class="col-md-3">
-          <label for="data_inicio" class="form-label">
-            <i class="bi bi-calendar-check me-1"></i> De
-          </label>
+  
+        <div class="col-12">
+          <label for="data_inicio" class="form-label"><i class="bi bi-calendar-check me-1"></i> De</label>
           <input type="date" name="data_inicio" id="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
         </div>
-        <div class="col-md-3">
-          <label for="data_fim" class="form-label">
-            <i class="bi bi-calendar-check-fill me-1"></i> Até
-          </label>
+  
+        <div class="col-12">
+          <label for="data_fim" class="form-label"><i class="bi bi-calendar-check-fill me-1"></i> Até</label>
           <input type="date" name="data_fim" id="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
         </div>
-        <div class="col-md-2 d-flex align-items-end">
+  
+        <div class="col-12 mt-3">
           {% include "partials/global/_botao_filtrar.html" %}
         </div>
       </form>
     </div>
   </div>
+  
+
+
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botão Novo Registro -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  
+    {% if request.user|has_permission:"Funcionario.add_bancohoras" %}
+      <a href="{% url 'cadastrar_banco_horas' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Novo Registro
+      </a>
+    {% endif %}
+  </div>
+  
 
 <!-- Cards -->
 <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
-  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Total de Registros" valor=page_obj.paginator.count subtitulo="Lançamentos no período filtrado." %}
-  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Funcionários Únicos" valor=funcionarios_unicos_count subtitulo="Colaboradores com horas registradas." %}
-  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Data Mais Recente" valor=page_obj.0.data|date:"d/m/Y" subtitulo="Último lançamento visível." %}
-  {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Total de Horas" valor=total_horas|formatar_timedelta subtitulo="Soma dos registros listados." %}
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Total de Registros" valor=page_obj.paginator.count subtitulo="Lançamentos no período filtrado." icone="bi-list-check" %}
+  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Funcionários Únicos" valor=funcionarios_unicos_count subtitulo="Colaboradores com horas registradas." icone="bi-people-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Data Mais Recente" valor=page_obj.0.data|date:"d/m/Y" subtitulo="Último lançamento visível." icone="bi-calendar-event" %}
+  {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Total de Horas" valor=total_horas|formatar_timedelta subtitulo="Soma dos registros listados." icone="bi-clock-history" %}
 </div>
 
-<!-- Botão Novo Registro -->
-{% if request.user|has_permission:"Funcionario.add_bancohoras" %}
-  <div class="d-flex justify-content-end mb-4">
-    <a href="{% url 'cadastrar_banco_horas' %}" class="btn btn-success d-inline-flex align-items-center">
-      <i class="bi bi-plus-circle me-1"></i> Novo Registro
-    </a>
-  </div>
-{% endif %}
+
+
+
+
 
 
 

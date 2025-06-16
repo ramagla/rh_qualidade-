@@ -175,13 +175,30 @@ def home(request):
     turnover_labels = [item['mes'].strftime("%m/%Y") for item in turnover_qs]
     turnover_counts = [item['qtd'] for item in turnover_qs]
 
-    # Processamento geral
-    for f in Funcionario.objects.filter(status='Ativo'):
-        # Idade
+    from collections import defaultdict
+
+    faixas_idade_labels = ["< 20", "20-29", "30-39", "40-49", "50+"]
+    faixas_idade_counts = [0] * 5
+    faixas_idade_tooltips = defaultdict(list)
+
+    for f in Funcionario.objects.filter(status="Ativo"):
         idade = (now().date() - f.data_nascimento).days // 365 if f.data_nascimento else 0
-        nome_completo = f"{f.nome}"  # Se tiver campo sobrenome, pode usar: f"{f.nome} {f.sobrenome}"
-        faixas_idade_labels.append(f"{nome_completo} ({idade} anos)")
-        faixas_idade_counts.append(idade)
+        nome = f.nome
+
+        if idade < 20:
+            idx = 0
+        elif idade < 30:
+            idx = 1
+        elif idade < 40:
+            idx = 2
+        elif idade < 50:
+            idx = 3
+        else:
+            idx = 4
+
+        faixas_idade_counts[idx] += 1
+        faixas_idade_tooltips[idx].append(f"{nome} ({idade} anos)")
+
 
         # Ano de contratação
         if f.data_admissao:
@@ -206,6 +223,80 @@ def home(request):
     genero_labels = sorted(genero_dict.keys())
     genero_counts = [genero_dict[label] for label in genero_labels]
 
+
+
+   # Tipo (Administrativo x Operacional)
+    tipo_dict = {}
+    for f in Funcionario.objects.filter(status="Ativo"):
+        tipo = f.tipo if f.tipo else "Não Informado"
+        tipo_dict[tipo] = tipo_dict.get(tipo, 0) + 1
+
+    tipo_labels = sorted(tipo_dict.keys())
+    tipo_counts = [tipo_dict[label] for label in tipo_labels]
+
+    # Porcentagem real atual
+    total_funcionarios = sum(tipo_counts)
+    percentual_admin = round(100 * tipo_dict.get("administrativo", 0) / total_funcionarios, 1) if total_funcionarios else 0
+    percentual_operacional = round(100 * tipo_dict.get("operacional", 0) / total_funcionarios, 1) if total_funcionarios else 0
+
+    # Para gráfico comparativo
+    grafico_comparativo_labels = ["Administrativo", "Operacional"]
+    grafico_comparativo_dados_atual = [percentual_admin, percentual_operacional]
+    grafico_comparativo_dados_ref_min = [10, 80]
+    grafico_comparativo_dados_ref_max = [20, 90]
+    grafico_comparativo_quantidades = {
+        "Atual": [tipo_dict.get("administrativo", 0), tipo_dict.get("operacional", 0)],
+        "Total": total_funcionarios
+    }
+   
+    # Filtrar somente funcionários ativos com flag de representante_cipa
+    cipa_ativos = Funcionario.objects.filter(representante_cipa=True, status="Ativo")
+
+    # Listas separadas
+    cipa_empregados = []
+    cipa_empregador = []
+
+    for f in cipa_ativos:
+        membro = {
+        "nome": f.nome,
+        "setor": f.local_trabalho.nome if f.local_trabalho else "N/D",
+        "cargo": f.cargo_atual.nome if f.cargo_atual else "N/D",
+        "tipo": f.tipo_cipa,
+        "ordem": f"{f.ordem_cipa}º" if f.ordem_cipa else None,
+        "foto": f.foto.url if f.foto else None  # ← garante o caminho completo para exibir no <img>
+    }
+
+        if f.tipo_representacao_cipa == "Empregados":
+            cipa_empregados.append(membro)
+        elif f.tipo_representacao_cipa == "Empregador":
+            cipa_empregador.append(membro)
+
+    # Ordenar por TITULAR/SUPLENTE e depois por nome
+    def ordenar_membros(lista):
+        ordem_tipo = {"Titular": 1, "Suplente": 2}
+        lista.sort(key=lambda x: (
+            ordem_tipo.get(x["tipo"], 99),
+            int(x["ordem"].replace("º", "")) if x["ordem"] else 99
+        ))
+
+    brigadistas = []
+
+    brigada_ativos = Funcionario.objects.filter(representante_brigada=True, status="Ativo")
+    for f in brigada_ativos:
+        membro = {
+            "nome": f.nome,
+            "setor": f.local_trabalho.nome if f.local_trabalho else "N/D",
+            "cargo": f.cargo_atual.nome if f.cargo_atual else "N/D",
+            "ordem": f"{f.ordem_cipa}º" if f.ordem_cipa else None,
+            "foto": f.foto.url if f.foto else None
+        }
+        brigadistas.append(membro)
+
+    # Organizar por ordem e nome
+    brigadistas.sort(key=lambda x: int(x["ordem"].replace("º", "")) if x["ordem"] else 99)
+
+    ordenar_membros(cipa_empregados)
+    ordenar_membros(cipa_empregador)
     context = {
         "nome_modulo": "Recursos Humanos",
         "icone_modulo": "bi-people",
@@ -232,6 +323,7 @@ def home(request):
         # Gráficos
         "faixas_idade_labels": json.dumps(faixas_idade_labels),
         "faixas_idade_counts": json.dumps(faixas_idade_counts),
+        "faixas_idade_tooltips": [", ".join(faixas_idade_tooltips[i]) for i in range(5)],
         "anos_contratacao_labels": json.dumps(anos_contratacao_labels),
         "anos_contratacao_counts": json.dumps(anos_contratacao_counts),
         "escolaridade_labels": json.dumps(escolaridade_labels),
@@ -240,6 +332,20 @@ def home(request):
         "genero_counts": json.dumps(genero_counts),
         "turnover_labels": json.dumps(turnover_labels),
         "turnover_counts": json.dumps(turnover_counts),
+        "cipa_empregados": cipa_empregados,
+        "cipa_empregador": cipa_empregador,
+
+        'brigadistas': brigadistas,
+        "tipo_labels": json.dumps(tipo_labels),
+        "tipo_counts": json.dumps(tipo_counts),
+        "grafico_comparativo_labels": json.dumps(grafico_comparativo_labels),
+        "grafico_comparativo_dados_atual": json.dumps(grafico_comparativo_dados_atual),
+        "grafico_comparativo_dados_ref_min": json.dumps(grafico_comparativo_dados_ref_min),
+        "grafico_comparativo_dados_ref_max": json.dumps(grafico_comparativo_dados_ref_max),
+        "grafico_comparativo_quantidades": json.dumps(grafico_comparativo_quantidades),
+
+
+        
     }
 
     form = EventoForm()
@@ -526,3 +632,74 @@ def marcar_alertas_como_lidos(request):
     alertas.update(lido=True)
     return JsonResponse({"status": "ok"})
 
+# views/cipa_views.py
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from datetime import datetime
+
+from Funcionario.models import Funcionario
+
+@login_required
+def imprimir_cipa_view(request):
+    # Filtrar funcionários ativos e marcados como representantes da CIPA
+    cipa_ativos = Funcionario.objects.filter(representante_cipa=True, status="Ativo")
+
+    # Listas separadas
+    cipa_empregados = []
+    cipa_empregador = []
+
+    for f in cipa_ativos:
+        membro = {
+            "nome": f.nome,
+            "setor": f.local_trabalho.nome if f.local_trabalho else "N/D",
+            "cargo": f.cargo_atual.nome if f.cargo_atual else "N/D",
+            "tipo": f.tipo_cipa,
+            "ordem": f"{f.ordem_cipa}º" if f.ordem_cipa else None,
+            "foto": f.foto.url if f.foto else None
+        }
+
+        if f.tipo_representacao_cipa == "Empregados":
+            cipa_empregados.append(membro)
+        elif f.tipo_representacao_cipa == "Empregador":
+            cipa_empregador.append(membro)
+
+    # Ordenar por tipo (Titular/Suplente) e depois por ordem
+    def ordenar_membros(lista):
+        ordem_tipo = {"Titular": 1, "Suplente": 2}
+        lista.sort(key=lambda x: (
+            ordem_tipo.get(x["tipo"], 99),
+            int(x["ordem"].replace("º", "")) if x["ordem"] else 99
+        ))
+
+    ordenar_membros(cipa_empregados)
+    ordenar_membros(cipa_empregador)
+
+    return render(request, 'dashboard/impressao_cipa.html', {
+        'cipa_empregados': cipa_empregados,
+        'cipa_empregador': cipa_empregador,
+        'ano': datetime.now().year
+    })
+
+
+@login_required
+def imprimir_brigada_view(request):
+    brigadistas = []
+
+    brigada_ativos = Funcionario.objects.filter(representante_brigada=True, status="Ativo")
+    for f in brigada_ativos:
+        membro = {
+            "nome": f.nome,
+            "setor": f.local_trabalho.nome if f.local_trabalho else "N/D",
+            "cargo": f.cargo_atual.nome if f.cargo_atual else "N/D",
+            "ordem": f"{f.ordem_cipa}º" if f.ordem_cipa else None,
+            "foto": f.foto.url if f.foto else None
+        }
+        brigadistas.append(membro)
+
+    brigadistas.sort(key=lambda x: int(x["ordem"].replace("º", "")) if x["ordem"] else 99)
+
+    return render(request, 'dashboard/impressao_brigada.html', {
+        'brigadistas': brigadistas,
+        'ano': datetime.now().year
+    })

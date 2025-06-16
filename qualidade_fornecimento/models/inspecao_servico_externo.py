@@ -31,6 +31,11 @@ class InspecaoServicoExterno(models.Model):
         upload_to="inspecao_servico_externo_pdfs/", blank=True, null=True
     )
 
+
+    assinatura_nome = models.CharField(max_length=255, blank=True, null=True)
+    assinatura_email = models.EmailField(blank=True, null=True)
+    assinatura_data = models.DateTimeField(blank=True, null=True)
+    
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 

@@ -20,6 +20,8 @@ from qualidade_fornecimento.models.norma import (
 )
 from django.templatetags.static import static
 from django.utils.timezone import localtime, now
+from assinatura_eletronica.models import AssinaturaEletronica
+from assinatura_eletronica.utils import gerar_assinatura
 
 @login_required
 def f045_status(request, f045_id):
@@ -42,40 +44,29 @@ def parse_decimal(value):
         return None
 
 
+
+from assinatura_eletronica.models import AssinaturaEletronica
+from assinatura_eletronica.utils import gerar_qrcode_base64
 @login_required
 def visualizar_f045_pdf(request, relacao_id):
     relacao = get_object_or_404(RelacaoMateriaPrima, pk=relacao_id)
     f045 = relacao.f045
     rolos = relacao.rolos.all()
 
-    # Recuperar norma e composição (igual a gerar_f045 — seguro!)
+    # Norma e composição
     try:
         norma_obj = relacao.materia_prima.norma
         tipo_abnt = relacao.materia_prima.tipo_abnt
-
-        composicao = NormaComposicaoElemento.objects.filter(
-            norma=norma_obj,
-            tipo_abnt__iexact=tipo_abnt
-        ).first()
-
+        composicao = NormaComposicaoElemento.objects.filter(norma=norma_obj, tipo_abnt__iexact=tipo_abnt).first()
         bitola = relacao.materia_prima.bitola.replace(",", ".") if relacao.materia_prima.bitola else None
         bitola_float = float(bitola) if bitola else None
-
-        if bitola_float and tipo_abnt:
-            norma_tracao = NormaTracao.objects.filter(
-                norma=norma_obj,
-                tipo_abnt__iexact=tipo_abnt,
-                bitola_minima__lte=bitola_float,
-                bitola_maxima__gte=bitola_float
-            ).first()
-        else:
-            norma_tracao = None
-
+        norma_tracao = NormaTracao.objects.filter(norma=norma_obj, tipo_abnt__iexact=tipo_abnt,
+                                                  bitola_minima__lte=bitola_float, bitola_maxima__gte=bitola_float).first() if bitola_float and tipo_abnt else None
     except (NormaTecnica.DoesNotExist, NormaComposicaoElemento.DoesNotExist, ValueError):
         composicao = None
         norma_tracao = None
 
-    # Gerar encontrados (composição química)
+    # Verificação química
     encontrados = []
     if composicao:
         elementos = [
@@ -92,37 +83,50 @@ def visualizar_f045_pdf(request, relacao_id):
         for sigla, vmin, vmax, valor in elementos:
             try:
                 val = Decimal(str(valor).replace(",", ".")) if valor is not None else None
-
                 if vmin in [None, 0] and vmax in [None, 0]:
                     ok = True
                 elif val is not None and vmin is not None and vmax is not None:
                     ok = vmin <= val <= vmax
                 else:
                     ok = False
-
             except:
                 val = valor
                 ok = False
 
             encontrados.append({
-                "sigla": sigla,
-                "min": vmin,
-                "max": vmax,
-                "valor": val,
-                "ok": ok,
-                "nome_elemento": "",  # você pode preencher se desejar
+                "sigla": sigla, "min": vmin, "max": vmax,
+                "valor": val, "ok": ok,
+                "nome_elemento": "",  # Opcional
             })
 
-    # Assinatura
-    usuario = f045.usuario
-    assinatura_nome = usuario.get_full_name() or usuario.username
-    assinatura_email = usuario.email
-    assinatura_data = (
-        localtime(f045.data_assinatura).strftime("%d/%m/%Y %H:%M:%S")
-        if f045.data_assinatura else "—"
-    )
+    # Assinatura padrão (fallback)
+    assinatura_nome = f045.usuario.get_full_name() or f045.usuario.username
+    assinatura_email = f045.usuario.email
+    assinatura_data = localtime(f045.data_assinatura) if f045.data_assinatura else None
+    assinatura_hash = None
+    assinatura_departamento = "Não informado"
+    qr_base64 = None
+    url_validacao = None
 
-    # Montar context
+    # Se tiver assinatura eletrônica, sobrescreve os dados
+    assinatura_eletronica = AssinaturaEletronica.objects.filter(
+        origem_model="RelatorioF045",
+        origem_id=f045.id
+    ).first()
+
+    if assinatura_eletronica:
+        assinatura_hash = assinatura_eletronica.hash
+        url_validacao = request.build_absolute_uri(f"/assinatura/validar/{assinatura_hash}/")
+        qr_base64 = gerar_qrcode_base64(url_validacao)
+
+        usuario_assinatura = assinatura_eletronica.usuario
+        assinatura_nome = usuario_assinatura.get_full_name() or usuario_assinatura.username
+        assinatura_email = usuario_assinatura.email
+
+        funcionario = getattr(usuario_assinatura, 'funcionario', None)
+        if funcionario and funcionario.local_trabalho:
+            assinatura_departamento = funcionario.local_trabalho.nome
+
     context = {
         "obj": f045,
         "rolos": rolos,
@@ -131,9 +135,17 @@ def visualizar_f045_pdf(request, relacao_id):
         "norma_tracao": norma_tracao,
         "logo_url": static('logo.png'),
         "seguranca_url": static('seguranca.png'),
+
+        # Assinatura digital
         "assinatura_nome": assinatura_nome,
         "assinatura_email": assinatura_email,
         "assinatura_data": assinatura_data,
+        "assinatura_hash": assinatura_hash,
+        "assinatura_departamento": assinatura_departamento,
+        "qr_base64": qr_base64,
+        "url_validacao": url_validacao,
+
+        # Título
         "titulo": f"F045 – Relatório {f045.nro_relatorio}",
     }
 
@@ -429,6 +441,20 @@ def gerar_f045(request, relacao_id):
             updated_f045.data_assinatura = now()
             updated_f045.save(update_fields=["assinatura_nome", "assinatura_cn", "data_assinatura"])
 
+            # Cria ou atualiza a assinatura eletrônica associada
+            conteudo_hash = f"{updated_f045.nro_relatorio}|{updated_f045.material}|{updated_f045.numero_certificado}|{updated_f045.status_geral}"
+            assinatura_hash = gerar_assinatura(updated_f045, request.user)
+
+            AssinaturaEletronica.objects.update_or_create(
+                origem_model="RelatorioF045",
+                origem_id=updated_f045.id,
+                defaults={
+                    "hash": assinatura_hash,
+                    "conteudo": conteudo_hash,
+                    "usuario": request.user,
+                    "data_assinatura": updated_f045.data_assinatura,
+                }
+            )
 
             messages.success(request, "Relatório F045 salvo com sucesso.")
             return redirect("tb050_list")

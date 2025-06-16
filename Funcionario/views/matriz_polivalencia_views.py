@@ -19,44 +19,57 @@ from ..models.funcionario import Funcionario
 from ..models.matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
 
 matplotlib.use("Agg")  # Backend para renderização sem GUI
+from django.utils import timezone
+from django.db.models import Avg, Count
 
+from django.utils import timezone
+from django.db.models import Count
 
 @login_required
 def lista_matriz_polivalencia(request):
     departamento = request.GET.get("departamento")
-    data_inicio = request.GET.get("data_inicio")
-    data_fim = request.GET.get("data_fim")
+    data_inicio  = request.GET.get("data_inicio")
+    data_fim     = request.GET.get("data_fim")
 
-    # Filtrando as matrizes
-    matrizes = MatrizPolivalencia.objects.all()
-
-    # Filtrando por departamento (via ID)
+    # --- filtros existentes ---
+    qs = MatrizPolivalencia.objects.all()
     if departamento:
-        matrizes = matrizes.filter(departamento_id=departamento)
-
-    # Filtro de datas
+        qs = qs.filter(departamento_id=departamento)
     if data_inicio:
-        matrizes = matrizes.filter(atualizado_em__gte=data_inicio)
-
+        qs = qs.filter(atualizado_em__gte=data_inicio)
     if data_fim:
-        matrizes = matrizes.filter(atualizado_em__lte=data_fim)
-
-    departamentos = Departamentos.objects.filter(ativo=True).order_by("nome")
+        qs = qs.filter(atualizado_em__lte=data_fim)
 
     # Paginação
-    paginator = Paginator(matrizes, 10)
+    paginator  = Paginator(qs, 10)
     page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    page_obj   = paginator.get_page(page_number)
 
-    return render(
-        request,
-        "matriz_polivalencia/matriz_polivalencia_lista.html",
-        {
-            "matrizes": page_obj,
-            "page_obj": page_obj,
-            "departamentos": departamentos,
-        },
-    )
+    # --- indicadores ---
+    total_matrizes     = qs.count()
+    mes_atual          = timezone.now().month
+    matrizes_mes       = qs.filter(atualizado_em__month=mes_atual).count()
+    total_departamentos = Departamentos.objects.filter(
+        matrizes_polivalencia__isnull=False
+    ).distinct().count()
+
+    # média de atividades por matriz (propriedade .atividades)
+    todas_matrizes    = qs  # já é QuerySet
+    # carregar lista para poder chamar .atividades (que roda outra query por matriz)
+    atividades_counts = [m.atividades.count() for m in todas_matrizes]
+    media_atividades  = int(sum(atividades_counts) / total_matrizes) if total_matrizes else 0
+    mes_ano = timezone.now().strftime('%m/%Y')
+
+    return render(request, "matriz_polivalencia/matriz_polivalencia_lista.html", {
+        "matrizes":             page_obj,
+        "departamentos":        Departamentos.objects.filter(ativo=True).order_by("nome"),
+        # indicadores
+        "total_matrizes":       total_matrizes,
+        "matrizes_mes":         matrizes_mes,
+        "total_departamentos":  total_departamentos,
+        "media_atividades":     media_atividades,
+        "mes_ano":              mes_ano, 
+    })
 
 
 def gerar_grafico_icone(nota):

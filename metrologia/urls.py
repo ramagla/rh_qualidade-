@@ -197,6 +197,7 @@ urlpatterns = [
 
     path("relatorios/solicitacao-orcamento-calibracao/", equipamentos_para_calibracao, name="equipamentos_para_calibracao"),
     path("relatorios/gerar-f062/", gerar_f062, name="gerar_f062"),
+    
 
 ]
 

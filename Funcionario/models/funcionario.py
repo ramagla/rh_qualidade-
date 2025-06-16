@@ -7,7 +7,8 @@ from .cargo import Cargo
 from .departamentos import Departamentos
 from django.contrib.auth.models import User
 
-
+from django.utils import timezone
+from django.db.models import BooleanField, DateField, CharField
 
 # Função para renomear o arquivo de currículo
 def renomear_curriculo(instance, filename):
@@ -133,11 +134,52 @@ class Funcionario(models.Model):
         ("XXG", "XXG"),
     ]
 
+    TIPO_CHOICES = [
+    ("operacional", "Operacional"),
+    ("administrativo", "Administrativo"),
+]
+
+
     camisa = models.CharField(
         max_length=3, choices=TAMANHO_CAMISA_CHOICES, blank=True, null=True, verbose_name="Tamanho da Camisa"
     )
     calcado = models.PositiveSmallIntegerField(
         blank=True, null=True, verbose_name="Número do Calçado"
+    )
+
+    representante_cipa = BooleanField(default=False)
+    tipo_cipa = CharField(max_length=20, blank=True, null=True, choices=[
+        ("Titular", "Titular"),
+        ("Suplente", "Suplente"),
+    ])
+    ordem_cipa = models.PositiveSmallIntegerField(
+    blank=True,
+    null=True,
+    choices=[(1, "1º"), (2, "2º"), (3, "3º"), (4, "4º")],
+    verbose_name="Ordem na CIPA"
+)
+    tipo_representacao_cipa = CharField(max_length=20, blank=True, null=True, choices=[
+        ("Empregados", "Empregados"),
+        ("Empregador", "Empregador"),
+    ])
+    vigencia_cipa = DateField(blank=True, null=True)
+
+    representante_brigada = BooleanField(default=False)
+    vigencia_brigada = DateField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        today = timezone.now().date()
+        if self.vigencia_cipa and self.vigencia_cipa < today:
+            self.representante_cipa = False
+        if self.vigencia_brigada and self.vigencia_brigada < today:
+            self.representante_brigada = False
+        super().save(*args, **kwargs)
+
+    tipo = models.CharField(
+        max_length=20,
+        choices=TIPO_CHOICES,
+        default="operacional",
+        verbose_name="Tipo do Colaborador"
     )
 
     def __str__(self):

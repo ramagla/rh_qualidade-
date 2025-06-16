@@ -59,6 +59,16 @@ class ControleServicoExternoForm(forms.ModelForm):
                     "title": "Preenchido automaticamente"
                 }
             )
+            
+        if "data_negociada" in self.fields:
+            self.fields["data_negociada"].widget = forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={
+                    "type": "date",
+                    "class": "form-control",
+                    "placeholder": "Data negociada (opcional)"
+                }
+            )
 
         if "lead_time" in self.fields:
             self.fields["lead_time"].widget.attrs.update({

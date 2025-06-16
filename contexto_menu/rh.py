@@ -189,6 +189,15 @@ def menu_rh(user):
             "icon": "fas fa-shield-alt"
         })
 
+    if user.has_perm("Funcionario.emitir_folha_ponto_manual"):
+        submenu_formularios.append({
+            "name": "Folha de Ponto Manual",
+            "url": "filtro_funcionario_generico",
+            "params": "?next_view=formulario_folha_ponto&texto_botao=Gerar+Folha+de+Ponto&titulo=Selecionar+Funcionário+para+Folha+de+Ponto+Manual&icone=bi bi-calendar2-week&emoji=🕒",
+            "icon": "fas fa-calendar-week"
+        })
+
+
     if submenu_formularios:
         menu.append({
             "name": "Formulários",

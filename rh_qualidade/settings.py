@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     "qualidade_fornecimento",
     "portaria",
     "comercial",
+    "assinatura_eletronica",
+
 ]
 
 DATE_FORMAT = "d 'de' F 'de' Y"

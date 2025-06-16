@@ -46,44 +46,14 @@
   </div>
 
   <div class="row gy-4 gx-4">
+    {% include 'partials/global/_card_indicador.html' with titulo="Visitantes no Local" valor=visitantes_ativos subtitulo="" cor="primary" icone="bi-people-fill" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Entregadores no Local" valor=entregadores_ativos subtitulo="" cor="success" icone="bi-truck" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Recados Pendentes" valor=recados_pendentes subtitulo="" cor="warning" icone="bi-envelope-exclamation" %}
+    {% include 'partials/global/_card_indicador.html' with titulo="Consumo de Água Hoje" valor=consumo_agua_hoje|floatformat:2|stringformat:"s" subtitulo="m³" cor="info" icone="bi-droplet-fill" %}
+  </div>
+  
 
-    <div class="col-md-3">
-      <div class="card text-center bg-light">
-        <div class="card-body">
-          <h5 class="card-title text-primary">👥 Visitantes no Local</h5>
-          <p class="fs-2 fw-bold text-dark">{{ visitantes_ativos }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3">
-      <div class="card text-center bg-light">
-        <div class="card-body">
-          <h5 class="card-title text-success">🚚 Entregadores no Local</h5>
-          <p class="fs-2 fw-bold text-dark">{{ entregadores_ativos }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3">
-      <div class="card text-center bg-light">
-        <div class="card-body">
-          <h5 class="card-title text-warning">📨 Recados Pendentes</h5>
-          <p class="fs-2 fw-bold text-dark">{{ recados_pendentes }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3">
-      <div class="card text-center bg-light">
-        <div class="card-body">
-          <h5 class="card-title text-info">💧 Consumo de Água Hoje</h5>
-          <p class="fs-2 fw-bold text-dark">{{ consumo_agua_hoje }} m³</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12">
+    <div class="col-12 mt-5">
       <div class="card">
         <div class="card-header bg-light">
           <strong>⚠️ Últimas Ocorrências Registradas</strong>
@@ -108,4 +78,6 @@
 
   </div>
 </div>
+{% include "partials/portaria/_modal_zona_monitoramento.html" %}
+
 {% endblock %}

@@ -12,17 +12,19 @@
 <div class="container mt-4">
  
 
-  <!-- Filtros -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary"></i>
-    <strong class="text-primary">Filtros de Ocorrências</strong>
+  <!-- Offcanvas Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Ocorrências
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
+  <div class="offcanvas-body">
     <form method="get">
       <div class="row g-3">
-        <!-- Tipo de Ocorrência -->
-        <div class="col-md-4">
+        <!-- Tipo -->
+        <div class="col-12">
           <label for="tipo" class="form-label"><i class="bi bi-exclamation-triangle me-1"></i> Tipo de Ocorrência</label>
           <select name="tipo" id="tipo" class="form-select select2 w-100">
             <option value="">Todos</option>
@@ -35,7 +37,7 @@
         </div>
 
         <!-- Status -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="status" class="form-label"><i class="bi bi-check-circle me-1"></i> Status</label>
           <select name="status" id="status" class="form-select select2 w-100">
             <option value="">Todos</option>
@@ -46,15 +48,15 @@
         </div>
 
         <!-- Data -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
           <input type="date" name="data" id="data" class="form-control" value="{{ request.GET.data }}">
         </div>
 
-        <!-- Botão Filtrar -->
-        <div class="col-12 d-flex justify-content-center">
+        <!-- Botão -->
+        <div class="col-12 text-center mt-2">
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-search"></i> Filtrar
+            <i class="bi bi-search me-1"></i> Filtrar
           </button>
         </div>
       </div>
@@ -62,22 +64,29 @@
   </div>
 </div>
 
+{% include "partials/global/_estilos_botoes_acoes.html" %}
 
-  <!-- Cards de Indicadores -->
-  <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Ocorrências" valor=ocorrencias|length subtitulo="Registradas no sistema." cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Abertas" valor=total_abertas subtitulo="Status aberta." cor="danger" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Em Análise" valor=total_analise subtitulo="Em andamento." cor="warning" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Encerradas" valor=total_encerradas subtitulo="Finalizadas." cor="success" %}
-  </div>
 <!-- Botões de Ação -->
-{% if request.user|has_permission:"portaria.add_ocorrenciaportaria" %}
-  <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
-    <a href="{% url 'cadastrar_ocorrencia' %}" class="btn btn-success d-inline-flex align-items-center">
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+  {% include 'partials/global/_botao_filtros_offcanvas.html' %}
+  
+  {% if request.user|has_permission:"portaria.add_ocorrenciaportaria" %}
+    <a href="{% url 'cadastrar_ocorrencia' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
       <i class="bi bi-plus-circle me-1"></i> Nova Ocorrência
     </a>
-  </div>
-{% endif %}
+  {% endif %}
+</div>
+
+
+
+  <!-- Cards de Indicadores -->
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Ocorrências" valor=ocorrencias|length subtitulo="Registradas no sistema." cor="primary" icone="bi-journal-text" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Abertas" valor=total_abertas subtitulo="Status aberta." cor="danger" icone="bi-exclamation-circle-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Em Análise" valor=total_analise subtitulo="Em andamento." cor="warning" icone="bi-hourglass-split" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Encerradas" valor=total_encerradas subtitulo="Finalizadas." cor="success" icone="bi-check-circle-fill" %}
+</div>
+
 
   <!-- Tabela -->
   <div class="table-responsive">

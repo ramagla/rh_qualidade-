@@ -14,18 +14,20 @@
  
 
   <!-- Filtros -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros de Visitas</strong>
+<!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Visitas
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
-    <form method="get">
+  <div class="offcanvas-body">
+    <form method="get" id="formFiltroVisitantes">
       <div class="row g-3">
-        <!-- Nome -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
-          <select name="nome" id="nome" class="form-select select2 w-100">
+          <select name="nome" id="nome" class="form-select select2">
             <option value="">Todos</option>
             {% for nome in nomes_disponiveis %}
               <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
@@ -33,16 +35,14 @@
           </select>
         </div>
 
-        <!-- Data -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
           <input type="date" name="data" id="data" value="{{ request.GET.data }}" class="form-control">
         </div>
 
-        <!-- Motivo -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="motivo" class="form-label"><i class="bi bi-chat-dots me-1"></i> Motivo</label>
-          <select name="motivo" id="motivo" class="form-select select2 w-100">
+          <select name="motivo" id="motivo" class="form-select select2">
             <option value="">Todos</option>
             {% for key, label in motivos %}
               <option value="{{ key }}" {% if request.GET.motivo == key %}selected{% endif %}>{{ label }}</option>
@@ -50,8 +50,7 @@
           </select>
         </div>
 
-        <!-- Botão Filtrar -->
-        <div class="col-12 d-flex justify-content-center">
+        <div class="col-12 text-center mt-3">
           {% include 'partials/global/_botao_filtrar.html' %}
         </div>
       </div>
@@ -59,20 +58,28 @@
   </div>
 </div>
 
- <!-- Cards de Indicadores -->
- <div class="row mb-4">
-  {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Entradas registradas." cor="primary" %}
-  {% include 'partials/global/_card_indicador.html' with titulo="Visitantes Hoje" valor=total_hoje subtitulo="Entradas no dia atual." cor="info" %}
-  {% include 'partials/global/_card_indicador.html' with titulo="Saídas Pendentes" valor=total_pendentes subtitulo="Ainda não deram saída." cor="danger" %}
-</div>
-  <!-- Botão de Registrar Entrada -->
-<div class="text-end mb-4">
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<!-- Ações -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include 'partials/global/_botao_filtros_offcanvas.html' %}
+
   {% if request.user|has_permission:"portaria.add_entradavisitante" %}
-    <a href="{% url 'cadastrar_entrada_visitante' %}" class="btn btn-success">
-      <i class="bi bi-person-plus-fill"></i> Registrar Entrada
+    <a href="{% url 'cadastrar_entrada_visitante' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-person-plus-fill me-2"></i> Registrar Entrada
     </a>
   {% endif %}
 </div>
+
+
+<!-- Cards de Indicadores -->
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Entradas registradas." cor="primary" icone="bi-journal-check" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Visitantes Hoje" valor=total_hoje subtitulo="Entradas no dia atual." cor="info" icone="bi-person-check" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Saídas Pendentes" valor=total_pendentes subtitulo="Ainda não deram saída." cor="danger" icone="bi-clock-history" %}
+</div>
+
+  <!-- Botão de Registrar Entrada -->
 
 
 

@@ -1,0 +1,211 @@
+{% load static %}
+<a href="{% url 'imprimir_cipa' %}" class="btn btn-outline-primary" target="_blank">
+    <i class="bi bi-printer me-1"></i> Imprimir
+  </a>
+  
+<style>
+  .business-card {
+    position: relative;
+    border-radius: 20px;
+    margin: 10px;
+    width: 220px;
+    animation: floating 3s ease-in-out infinite;
+  }
+
+  .business-card.destaque .card-content {
+    background: linear-gradient(315deg, #6da8ff, #cfe2ff);
+    color: #fff;
+  }
+
+  .card-content {
+    background: linear-gradient(315deg, #9FA5D5, #E8F5C8);
+    border-radius: 20px;
+    padding: 20px;
+    color: #606060;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    width: 220px;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .profile-image img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    border: 2px solid #fff;
+    object-fit: cover;
+  }
+
+  h1 {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+
+  .contact-info p {
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+
+  @keyframes floating {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+  }
+
+  @media print {
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      height: 100%;
+      width: 100%;
+    }
+  
+    .pdf-container {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+    }
+  
+    body * {
+      visibility: hidden;
+    }
+  
+    .print-area, .print-area * {
+      visibility: visible !important;
+    }
+  
+    .print-area {
+      position: absolute !important;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      padding: 0.5cm 1cm;
+      box-sizing: border-box;
+    }
+  
+    .print-area img[alt*="Logo"] {
+      max-height: 40px !important;
+      max-width: 60px !important;
+    }
+  
+    .business-card {
+      width: 15% !important;
+      margin: 0.4cm !important;
+      page-break-inside: avoid;
+    }
+  
+    .card-content {
+      padding: 6px !important;
+      min-height: 135px !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      background: #e6e6e6 !important;
+    }
+  
+    .profile-image img {
+      width: 45px !important;
+      height: 45px !important;
+    }
+  
+    h1 {
+      font-size: 10px !important;
+      margin-bottom: 2px !important;
+    }
+  
+    .contact-info p,
+    p, strong {
+      font-size: 9px !important;
+      line-height: 1.2 !important;
+    }
+  
+    h4, h5, p.text-muted {
+      margin-bottom: 2px !important;
+      font-size: 9px !important;
+    }
+  
+    .shadow, .rounded-4 {
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+  }
+  
+</style>
+
+<div class="pdf-container print-area">
+  <div class="text-center mb-4">
+    <img src="{% static 'img/logo.png' %}" alt="Logo Bras-Mol" style="max-width: 120px;" class="me-3">
+    <img src="{% static 'img/cipa.png' %}" alt="Logo CIPA" height="60">
+  </div>
+
+  <h4 class="text-center text-primary fw-bold mb-1">REPRESENTANTES CIPA</h4>
+  <p class="text-center text-muted">GESTÃO {{ ano_atual }}</p>
+
+  <div class="row">
+    <!-- Representantes dos Empregados -->
+    <div class="col-md-6">
+      <h5 class="text-success fw-bold text-center mb-4">REPRESENTANTES DOS EMPREGADOS</h5>
+      <div class="d-flex flex-wrap justify-content-center gap-4">
+        {% for membro in cipa_empregados %}
+          <div class="business-card {% if membro.ordem == '1º' %}destaque{% endif %}">
+            <div class="card-content">
+              <div class="profile-image">
+                {% if membro.foto %}
+                  <img src="{{ membro.foto }}" alt="{{ membro.nome }}">
+                {% else %}
+                  <i class="bi bi-person-circle fs-1"></i>
+                {% endif %}
+              </div>
+              <h1>{{ membro.nome }}</h1>
+              <p><strong>{{ membro.ordem }}</strong> - {{ membro.tipo }}</p>
+              <div class="contact-info">
+                <p><strong>Setor:</strong> <i>{{ membro.setor }}</i></p>
+                <p><strong>Cargo:</strong> <i>{{ membro.cargo }}</i></p>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-muted">Nenhum representante encontrado.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Representantes do Empregador -->
+    <div class="col-md-6">
+      <h5 class="text-primary fw-bold text-center mb-4">REPRESENTANTES DO EMPREGADOR</h5>
+      <div class="d-flex flex-wrap justify-content-center gap-4">
+        {% for membro in cipa_empregador %}
+          <div class="business-card {% if membro.ordem == '1º' %}destaque{% endif %}">
+            <div class="card-content">
+              <div class="profile-image">
+                {% if membro.foto %}
+                  <img src="{{ membro.foto }}" alt="{{ membro.nome }}">
+                {% else %}
+                  <i class="bi bi-person-circle fs-1"></i>
+                {% endif %}
+              </div>
+              <h1>{{ membro.nome }}</h1>
+              <p><strong>{{ membro.ordem }}</strong> - {{ membro.tipo }}</p>
+              <div class="contact-info">
+                <p><strong>Setor:</strong> <i>{{ membro.setor }}</i></p>
+                <p><strong>Cargo:</strong> <i>{{ membro.cargo }}</i></p>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-muted">Nenhum representante encontrado.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% include 'partials/global/_formulario_rodape.html' with numero_formulario="" %}
+</div>

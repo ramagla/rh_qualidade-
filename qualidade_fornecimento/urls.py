@@ -18,6 +18,7 @@ from qualidade_fornecimento.views.inspecao_servico_externo_views import (
     editar_inspecao_servico_externo,
     inspecao_status,
     selecionar_servico_para_inspecao,
+   visualizar_inspecao_servico_externo
 )
 from qualidade_fornecimento.views.materiaprima_views import (
     cadastrar_tb050,
@@ -197,5 +198,6 @@ urlpatterns = [
         ),
 
     path("tb050/<int:id>/adicionar-rolo/", adicionar_rolo, name="tb050_adicionar_rolo"),
+    path("controle-servico-externo/inspecao/visualizar/<int:id>/", visualizar_inspecao_servico_externo, name="visualizar_inspecao_servico_externo")
 
 ]

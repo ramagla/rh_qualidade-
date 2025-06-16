@@ -12,70 +12,84 @@
     {% include 'partials/global/_header_titulo.html' with titulo="Integrações dos Colaboradores" icone="bi bi-person-badge-fill" emoji="🧾" %}
 
     <!-- Botão de Cadastro -->
-    <div class="text-end mb-4">
-        {% if request.user|has_permission:"Funcionario.add_integracaofuncionario" %}
-            <a href="{% url 'cadastrar_integracao' %}" class="btn btn-success d-inline-flex align-items-center gap-2">
-                <i class="bi bi-plus-circle"></i> Nova Integração
-            </a>
-        {% endif %}
-    </div>
+    
+    {% include "partials/global/_estilos_botoes_acoes.html" %}
 
-     <!-- Filtros -->
-    <div class="card mb-4 shadow-sm border-0">
-      <div class="card-header bg-light d-flex align-items-center gap-2">
-        <i class="bi bi-funnel-fill"></i>
-        <strong>Filtros de Busca</strong>
-      </div>
-      <div class="card-body">
-        <form method="get">
-          <div class="row gx-3 gy-2 align-items-end">
-            <div class="col-md-3">
-              <label for="funcionario" class="form-label">Colaborador:</label>
-              <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtro por colaborador">
-                <option value="">Selecione</option>
-                {% for func in funcionarios %}
-                  <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label for="departamento" class="form-label">Departamento:</label>
-              <select name="departamento" id="departamento" class="form-select select2" aria-label="Filtro por departamento">
-                <option value="">Selecione</option>
-                {% for dept in departamentos %}
-                  <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>{{ dept }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label for="requer_treinamento" class="form-label">Requer Treinamento:</label>
-              <select name="requer_treinamento" id="requer_treinamento" class="form-select select2" aria-label="Filtro por treinamento">
-                <option value="">Selecione</option>
-                <option value="True" {% if request.GET.requer_treinamento == 'True' %}selected{% endif %}>Sim</option>
-                <option value="False" {% if request.GET.requer_treinamento == 'False' %}selected{% endif %}>Não</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label for="grupo_whatsapp" class="form-label">Grupo WhatsApp:</label>
-              <select name="grupo_whatsapp" id="grupo_whatsapp" class="form-select select2" aria-label="Filtro por grupo WhatsApp">
-                <option value="">Selecione</option>
-                <option value="True" {% if request.GET.grupo_whatsapp == 'True' %}selected{% endif %}>Sim</option>
-                <option value="False" {% if request.GET.grupo_whatsapp == 'False' %}selected{% endif %}>Não</option>
-              </select>
-            </div>
-          </div>
-          {% include 'partials/global/_botao_filtrar.html' %}
-        </form>
-      </div>
+    <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+      {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    
+      {% if request.user|has_permission:"Funcionario.add_integracaofuncionario" %}
+        <a href="{% url 'cadastrar_integracao' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+          <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Nova Integração
+        </a>
+      {% endif %}
     </div>
+    
+    
 
-    <!-- Cards de Indicadores -->
-    <div class="row mb-4">
-        {% include 'partials/global/_card_indicador.html' with titulo="Total de Integrações" valor=total_integracoes subtitulo="Integrações realizadas." cor="primary" %}
-        {% include 'partials/global/_card_indicador.html' with titulo="Requer Treinamento" valor=total_requer_treinamento subtitulo="Requerem treinamento." cor="warning" %}
-        {% include 'partials/global/_card_indicador.html' with titulo="Grupo WhatsApp" valor=total_grupo_whatsapp subtitulo="Funcionários no grupo." cor="info" %}
-        {% include 'partials/global/_card_indicador.html' with titulo="Sem PDF Anexado" valor=total_sem_pdf subtitulo="Sem PDF vinculado." cor="danger" %}
-    </div>
+     <!-- Offcanvas com os filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Integrações
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+      <div class="col-12">
+        <label for="funcionario" class="form-label"><i class="bi bi-person me-1"></i> Colaborador</label>
+        <select name="funcionario" id="funcionario" class="form-select select2">
+          <option value="">Todos</option>
+          {% for func in funcionarios %}
+            <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="departamento" class="form-label"><i class="bi bi-building me-1"></i> Departamento</label>
+        <select name="departamento" id="departamento" class="form-select select2">
+          <option value="">Todos</option>
+          {% for dept in departamentos %}
+            <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>{{ dept }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="requer_treinamento" class="form-label"><i class="bi bi-journal-check me-1"></i> Requer Treinamento</label>
+        <select name="requer_treinamento" id="requer_treinamento" class="form-select select2">
+          <option value="">Todos</option>
+          <option value="True" {% if request.GET.requer_treinamento == 'True' %}selected{% endif %}>Sim</option>
+          <option value="False" {% if request.GET.requer_treinamento == 'False' %}selected{% endif %}>Não</option>
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="grupo_whatsapp" class="form-label"><i class="bi bi-whatsapp me-1"></i> Grupo WhatsApp</label>
+        <select name="grupo_whatsapp" id="grupo_whatsapp" class="form-select select2">
+          <option value="">Todos</option>
+          <option value="True" {% if request.GET.grupo_whatsapp == 'True' %}selected{% endif %}>Sim</option>
+          <option value="False" {% if request.GET.grupo_whatsapp == 'False' %}selected{% endif %}>Não</option>
+        </select>
+      </div>
+
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Integrações" valor=total_integracoes subtitulo="Integrações realizadas." cor="primary" icone="bi-person-plus-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Requer Treinamento" valor=total_requer_treinamento subtitulo="Requerem treinamento." cor="warning" icone="bi-journal-check" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Grupo WhatsApp" valor=total_grupo_whatsapp subtitulo="Funcionários no grupo." cor="info" icone="bi-whatsapp" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Sem PDF Anexado" valor=total_sem_pdf subtitulo="Sem PDF vinculado." cor="danger" icone="bi-file-earmark-excel-fill" %}
+</div>
+
 
     <!-- Tabela -->
 <table class="table table-bordered table-striped table-hover text-center mt-4">

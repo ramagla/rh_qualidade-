@@ -50,17 +50,23 @@ def listar_equipamentos_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
 
     if request.method == "POST":
-        # Se foi POST, pegar só os equipamentos selecionados
         equipamentos_selecionados = request.POST.getlist("equipamentos_selecionados")
         equipamentos = TabelaTecnica.objects.filter(id__in=equipamentos_selecionados)
+
+        # Detecta se é devolução
+        eh_devolucao = request.POST.get("eh_devolucao") == "on"
+        condicoes_devolucao = request.POST.get("condicoes") if eh_devolucao else ""
     else:
-        # Se foi GET, listar todos do funcionário (opcional, para debug ou acesso direto)
         equipamentos = TabelaTecnica.objects.filter(responsavel=funcionario)
+        eh_devolucao = False
+        condicoes_devolucao = ""
 
     context = {
         "funcionario": funcionario,
         "equipamentos": equipamentos,
         "data_atual": now().date(),
+        "eh_devolucao": eh_devolucao,
+        "condicoes_devolucao": condicoes_devolucao,
     }
     return render(request, "relatorios/listar_equipamentos_funcionario.html", context)
 

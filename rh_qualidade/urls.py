@@ -3,6 +3,8 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
+from assinatura_eletronica.views import  validar_assinatura
+
 from .views import (
     acesso_negado,
     alertas_emails,
@@ -93,6 +95,8 @@ urlpatterns = [
     path("ajax/ultima-atualizacao/", atualizacao_views.get_ultima_atualizacao, name="get_ultima_atualizacao"),
     path('usuarios-ativos/', usuarios_ativos, name='usuarios_ativos'),
     path("comercial/", include("comercial.urls")),
+    path("assinatura/validar/<str:hash_assinatura>/", validar_assinatura, name="validar_assinatura"),
+
 
 
 ]

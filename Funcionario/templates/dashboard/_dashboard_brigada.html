@@ -1,0 +1,32 @@
+<a href="{% url 'imprimir_brigada' %}" class="btn btn-outline-danger" target="_blank">
+  <i class="bi bi-printer me-1"></i> Imprimir Brigada
+</a>
+
+
+
+<!-- Representantes da Brigada -->
+<div class="col-12 mt-4">
+  <h5 class="text-danger fw-bold text-center mb-4">BRIGADA DE INCÊNDIO</h5>
+  <div class="d-flex flex-wrap justify-content-center gap-4">
+    {% for membro in brigadistas %}
+    <div class="business-card">
+      <div class="card-content">
+          <div class="profile-image">
+            {% if membro.foto %}
+              <img src="{{ membro.foto }}" alt="{{ membro.nome }}">
+            {% else %}
+              <i class="bi bi-person-circle fs-1"></i>
+            {% endif %}
+          </div>
+          <h1>{{ membro.nome }}</h1>
+          <div class="contact-info">
+            <p><strong>Setor:</strong> <i>{{ membro.setor }}</i></p>
+            <p><strong>Cargo:</strong> <i>{{ membro.cargo }}</i></p>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-muted text-center">Nenhum brigadista encontrado.</p>
+    {% endfor %}
+  </div>
+</div>

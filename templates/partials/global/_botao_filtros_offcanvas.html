@@ -1,0 +1,75 @@
+<style>
+    .btn-filtro-personalizado {
+      background: linear-gradient(135deg, #0d6efd, #5b9dfd);
+      color: white;
+      font-weight: 500;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 18px;
+      box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+      transition: all 0.3s ease;
+    }
+  
+    .btn-filtro-personalizado i {
+      font-size: 1.2rem;
+    }
+  
+    .btn-filtro-personalizado:hover {
+      background: linear-gradient(135deg, #0b5ed7, #4d88f7);
+      box-shadow: 0 6px 16px rgba(13, 110, 253, 0.35);
+      transform: translateY(-1px);
+    }
+  </style>
+  
+  <button class="btn btn-filtro-personalizado d-inline-flex align-items-center"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#filtrosOffcanvas"
+          aria-controls="filtrosOffcanvas">
+    <i class="bi bi-funnel-fill me-2" aria-hidden="true"></i> Filtros
+  </button>
+  
+  <style>
+    .offcanvas-modern {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-left: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+      border-radius: 0.75rem 0 0 0.75rem;
+      padding: 1.5rem;
+    }
+  
+    .offcanvas-modern .offcanvas-title i {
+      color: #0d6efd;
+    }
+  
+    .offcanvas-modern label {
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      display: inline-block;
+      color: #343a40;
+    }
+  
+    .offcanvas-modern .form-select,
+    .offcanvas-modern .form-control {
+      border-radius: 0.375rem;
+      border: 1px solid #ced4da;
+      font-size: 0.95rem;
+    }
+  
+    .offcanvas-modern .form-select:focus,
+    .offcanvas-modern .form-control:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+  
+    .offcanvas-modern .btn {
+      transition: all 0.2s ease-in-out;
+    }
+  
+    .offcanvas-modern .btn:hover {
+      transform: translateY(-1px);
+    }
+  </style>
+  
