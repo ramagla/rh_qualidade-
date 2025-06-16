@@ -11,76 +11,95 @@
   {% include "partials/global/_header_titulo.html" with titulo="Controle de Serviço Externo" %}
   {% include "partials/global/_toast_mensagens.html" %}
 
-  <div class="card mb-4">
-    <div class="card-header">
-      <i class="bi bi-funnel me-1"></i> Filtros
-    </div>
-    <div class="card-body">
-      <form method="get">
-        <div class="row row-cols-1 row-cols-md-3 g-2">
-          <div class="col">
-            <label for="pedido" class="form-label"><i class="bi bi-receipt me-1"></i> Pedido</label>
-            <select class="form-select form-select-sm select2" id="pedido" name="pedido">
-              <option value="">-- Todos --</option>
-              {% for p in pedidos %}
-                <option value="{{ p }}" {% if request.GET.pedido == p %}selected{% endif %}>{{ p }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col">
-            <label for="codigo_bm" class="form-label">Código BM</label>
-            <select class="form-select form-select-sm select2" id="codigo_bm" name="codigo_bm">
-                            <option value="">-- Todos --</option>
-              {% for bm in codigos_bm %}
-                <option value="{{ bm }}" {% if request.GET.codigo_bm == bm %}selected{% endif %}>{{ bm }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label for="fornecedor" class="form-label">Fornecedor</label>
-            <select class="form-select select2" id="fornecedor" name="fornecedor">
-              <option value="">-- Todos --</option>
-              {% for f in fornecedores %}
-                <option value="{{ f }}" {% if request.GET.fornecedor == f %}selected{% endif %}>{{ f }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label for="status2" class="form-label">Status</label>
-            <select class="form-select select2" id="status2" name="status2">
-              <option value="">-- Todos --</option>
-              <option value="OK" {% if request.GET.status2 == "OK" %}selected{% endif %}>OK</option>
-              <option value="Atenção Saldo" {% if request.GET.status2 == "Atenção Saldo" %}selected{% endif %}>Atenção Saldo</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label for="data_inicio" class="form-label">Data Início</label>
-            <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}">
-          </div>
-          <div class="col-md-3">
-            <label for="data_fim" class="form-label">Data Fim</label>
-            <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}">
-          </div>
+  <!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Serviço Externo
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <form method="get" id="formFiltroServExterno">
+      <div class="row row-cols-1 g-3">
+
+        <div class="col">
+          <label for="pedido" class="form-label"><i class="bi bi-receipt me-1"></i> Pedido</label>
+          <select class="form-select select2" id="pedido" name="pedido">
+            <option value="">-- Todos --</option>
+            {% for p in pedidos %}
+              <option value="{{ p }}" {% if request.GET.pedido == p %}selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+          </select>
         </div>
 
-        {% include "partials/global/_botao_filtrar.html" %}
-      </form>
-    </div>
-  </div>
+        <div class="col">
+          <label for="codigo_bm" class="form-label">Código BM</label>
+          <select class="form-select select2" id="codigo_bm" name="codigo_bm">
+            <option value="">-- Todos --</option>
+            {% for bm in codigos_bm %}
+              <option value="{{ bm }}" {% if request.GET.codigo_bm == bm %}selected{% endif %}>{{ bm }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-  <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
-    {% if request.user|has_permission:'qualidade_fornecimento.add_controleservicoexterno' %}
-    <a href="{% url 'cadastrar_controle_servico_externo' %}" class="btn btn-success d-flex align-items-center">
-        <i class="bi bi-plus-circle me-2"></i> Novo Serviço Externo
-      </a>
-    {% endif %}
-    {% if request.user|has_permission:'qualidade_fornecimento.add_inspecaoservicoexterno' %}
-    <button type="button" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalNovaInspecao">
-        <i class="bi bi-clipboard-check me-2"></i> Nova Inspeção
-    </button>
-    {% endif %}
-    
+        <div class="col">
+          <label for="fornecedor" class="form-label">Fornecedor</label>
+          <select class="form-select select2" id="fornecedor" name="fornecedor">
+            <option value="">-- Todos --</option>
+            {% for f in fornecedores %}
+              <option value="{{ f }}" {% if request.GET.fornecedor == f %}selected{% endif %}>{{ f }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col">
+          <label for="status2" class="form-label">Status</label>
+          <select class="form-select select2" id="status2" name="status2">
+            <option value="">-- Todos --</option>
+            <option value="OK" {% if request.GET.status2 == "OK" %}selected{% endif %}>OK</option>
+            <option value="Atenção Saldo" {% if request.GET.status2 == "Atenção Saldo" %}selected{% endif %}>Atenção Saldo</option>
+          </select>
+        </div>
+
+        <div class="col">
+          <label for="data_inicio" class="form-label">Data Início</label>
+          <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}">
+        </div>
+
+        <div class="col">
+          <label for="data_fim" class="form-label">Data Fim</label>
+          <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}">
+        </div>
+
+        <div class="col-12 text-center mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+
+      </div>
+    </form>
   </div>
+</div>
+
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<!-- Ações -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
+  {% if request.user|has_permission:'qualidade_fornecimento.add_controleservicoexterno' %}
+    <a href="{% url 'cadastrar_controle_servico_externo' %}" class="btn btn-cadastrar-personalizado d-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2"></i> Novo Serviço Externo
+    </a>
+  {% endif %}
+
+  {% if request.user|has_permission:'qualidade_fornecimento.add_inspecaoservicoexterno' %}
+    <button type="button" class="btn btn-acao-personalizado btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalNovaInspecao">
+      <i class="bi bi-clipboard-check me-2"></i> Nova Inspeção
+    </button>
+  {% endif %}
+</div>
+
 
 <!-- Modal de Nova Inspeção de Serviço -->
 <div class="modal fade"
@@ -120,12 +139,13 @@
   </div>
 </div>
 
-  <div class="row mb-4">
-    {% include "partials/global/_card_indicador.html" with titulo="Total Enviados" valor=total_enviados subtitulo="Pedidos registrados" cor="info" %}
-    {% include "partials/global/_card_indicador.html" with titulo="Total OK" valor=total_ok subtitulo="Pedidos concluídos" cor="success" %}
-    {% include "partials/global/_card_indicador.html" with titulo="Pendentes" valor=total_pendentes subtitulo="Pedidos com saldo" cor="danger" %}
-    {% include "partials/global/_card_indicador.html" with titulo="Com Atraso" valor=total_atrasados subtitulo="Entregas atrasadas" cor="warning" %}
-  </div>
+<div class="row mb-4">
+  {% include "partials/global/_card_indicador.html" with titulo="Total Enviados" valor=total_enviados subtitulo="Pedidos registrados" cor="info" icone="bi-send-fill" %}
+  {% include "partials/global/_card_indicador.html" with titulo="Total OK" valor=total_ok subtitulo="Pedidos concluídos" cor="success" icone="bi-check2-circle" %}
+  {% include "partials/global/_card_indicador.html" with titulo="Pendentes" valor=total_pendentes subtitulo="Pedidos com saldo" cor="danger" icone="bi-hourglass-split" %}
+  {% include "partials/global/_card_indicador.html" with titulo="Com Atraso" valor=total_atrasados subtitulo="Entregas atrasadas" cor="warning" icone="bi-exclamation-triangle-fill" %}
+</div>
+
 
   {% if servicos_paginados %}
     <div class="table-responsive">

@@ -14,17 +14,20 @@
 
  
 
-  <!-- Filtros -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros</strong>
+  <!-- Offcanvas Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Ligações
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
+  <div class="offcanvas-body">
     <form method="get">
       <div class="row g-3">
+
         <!-- Nome -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
           <select name="nome" class="form-select select2 w-100">
             <option value="">Todos</option>
@@ -35,7 +38,7 @@
         </div>
 
         <!-- Empresa -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label class="form-label"><i class="bi bi-building me-1"></i> Empresa</label>
           <select name="empresa" class="form-select select2 w-100">
             <option value="">Todas</option>
@@ -45,20 +48,18 @@
           </select>
         </div>
 
-        <!-- Data Início -->
-        <div class="col-md-2">
+        <!-- Datas -->
+        <div class="col-md-6">
           <label class="form-label"><i class="bi bi-calendar-date me-1"></i> Data Início</label>
           <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
         </div>
 
-        <!-- Data Fim -->
-        <div class="col-md-2">
+        <div class="col-md-6">
           <label class="form-label"><i class="bi bi-calendar-date-fill me-1"></i> Data Fim</label>
           <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
         </div>
 
-        <!-- Botão Filtrar -->
-        <div class="col-12 d-flex justify-content-center">
+        <div class="col-12 text-center mt-2">
           <button type="submit" class="btn btn-primary">
             <i class="bi bi-search"></i> Filtrar
           </button>
@@ -67,22 +68,25 @@
     </form>
   </div>
 </div>
+{% include "partials/global/_estilos_botoes_acoes.html" %}
 
-
-   <!-- Cards de Indicadores -->
-   <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Ligações" valor=total_ligacoes subtitulo="Registradas no sistema." cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Registradas Hoje" valor=total_hoje subtitulo="Ligações de hoje." cor="info" %}
-
-  </div>
- <!-- Botão Nova Ligação -->
- <div class="mb-3 text-end">
+<!-- Botões de Ação -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include 'partials/global/_botao_filtros_offcanvas.html' %}
+  
   {% if request.user|has_permission:"portaria.add_ligacaoportaria" %}
-  <a href="{% url 'cadastrar_ligacao' %}" class="btn btn-success">
+    <a href="{% url 'cadastrar_ligacao' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
       <i class="bi bi-plus-circle me-1"></i> Nova Ligação
     </a>
   {% endif %}
 </div>
+
+  <!-- Cards de Indicadores -->
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Ligações" valor=total_ligacoes subtitulo="Registradas no sistema." cor="primary" icone="bi-telephone-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Registradas Hoje" valor=total_hoje subtitulo="Ligações de hoje." cor="info" icone="bi-clock-history" %}
+</div>
+
 
   <!-- Tabela de Ligações -->
   <div class="table-responsive">

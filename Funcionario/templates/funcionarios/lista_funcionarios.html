@@ -6,6 +6,7 @@
 {% load custom_filters %}
 
 {% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
 
 
 <div class="container-fluid mt-5">
@@ -13,32 +14,38 @@
     {% include "partials/global/_toast_mensagens.html" %}
 
 
-    <!-- Botões -->
-    <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    <!-- Estilos padronizados dos botões -->
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<!-- Botões -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
   {% if request.user|has_permission:"Funcionario.add_funcionario" %}
-    <a href="{% url 'cadastrar_funcionario' %}" class="btn btn-success d-inline-flex align-items-center">
-      <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Cadastrar
+    <a href="{% url 'cadastrar_funcionario' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
     </a>
   {% endif %}
 
   {% if request.user|has_permission:"Funcionario.change_funcionario" or request.user|has_permission:"Funcionario.view_funcionario" %}
-    <a href="{% url 'organograma' %}" class="btn btn-info d-inline-flex align-items-center">
-      <i class="bi bi-diagram-2 me-1" aria-hidden="true"></i> Organograma
+    <a href="{% url 'organograma' %}" class="btn btn-info btn-acao-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-diagram-2 me-2" aria-hidden="true"></i> Organograma
     </a>
   {% endif %}
 
   {% if request.user|has_permission:"Funcionario.change_funcionario" or request.user|has_permission:"Funcionario.view_funcionario" %}
-    <button class="btn btn-primary d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalSelecionarFuncionario">
-      <i class="bi bi-clock-history me-1" aria-hidden="true"></i> Histórico de Cargos
+    <button class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalSelecionarFuncionario">
+      <i class="bi bi-clock-history me-2" aria-hidden="true"></i> Histórico de Cargos
     </button>
   {% endif %}
 
   {% if request.user|has_permission:"Funcionario.imprimir_ficha" %}
-  <button class="btn btn-primary d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#imprimirModal">
-      <i class="bi bi-printer me-1" aria-hidden="true"></i> Imprimir Ficha
+    <button class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#imprimirModal">
+      <i class="bi bi-printer me-2" aria-hidden="true"></i> Imprimir Ficha
     </button>
   {% endif %}
 </div>
+
 
     
     
@@ -112,18 +119,21 @@
 
 
 
-    <div class="card mb-4">
-  <div class="card-header">
-    <i class="bi bi-funnel me-2" aria-hidden="true"></i> Filtros de Colaboradores
+
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Colaboradores
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
+
+  <div class="offcanvas-body">
     <form method="get" class="row g-3">
-      
+
       <!-- Nome -->
-      <div class="col-md-3">
-        <label for="nome" class="form-label">
-          <i class="bi bi-person me-1" aria-hidden="true"></i> Nome do Colaborador
-        </label>
+      <div class="col-12 filtro-wrapper">
+        <label for="nome"><i class="bi bi-person me-1"></i> Nome do Colaborador</label>
         <select name="nome" id="nome" class="form-select select2">
           <option value="">Todos</option>
           {% for funcionario in funcionarios %}
@@ -135,27 +145,21 @@
       </div>
 
       <!-- Local de Trabalho -->
-      <div class="col-md-3">
-        <label for="local_trabalho" class="form-label">
-          <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Local de Trabalho
-        </label>
+      <div class="col-12 filtro-wrapper">
+        <label for="local_trabalho"><i class="bi bi-geo-alt me-1"></i> Local de Trabalho</label>
         <select name="local_trabalho" id="local_trabalho" class="form-select select2">
           <option value="">Selecione</option>
           {% for departamento in departamentos %}
-  <option value="{{ departamento.id }}" {% if request.GET.local_trabalho == departamento.id|stringformat:"s" %}selected{% endif %}>
-    {{ departamento.nome }}
-  </option>
-{% endfor %}
-
+            <option value="{{ departamento.id }}" {% if request.GET.local_trabalho == departamento.id|stringformat:"s" %}selected{% endif %}>
+              {{ departamento.nome }}
+            </option>
+          {% endfor %}
         </select>
-        
       </div>
 
       <!-- Responsável -->
-      <div class="col-md-3">
-        <label for="responsavel" class="form-label">
-          <i class="bi bi-person-badge me-1" aria-hidden="true"></i> Responsável
-        </label>
+      <div class="col-12 filtro-wrapper">
+        <label for="responsavel"><i class="bi bi-person-badge me-1"></i> Responsável</label>
         <select name="responsavel" id="responsavel" class="form-select select2">
           <option value="">Selecione</option>
           <option value="None" {% if request.GET.responsavel == "None" %}selected{% endif %}>Sem responsável</option>
@@ -168,10 +172,8 @@
       </div>
 
       <!-- Escolaridade -->
-      <div class="col-md-3">
-        <label for="escolaridade" class="form-label">
-          <i class="bi bi-mortarboard me-1" aria-hidden="true"></i> Escolaridade
-        </label>
+      <div class="col-12 filtro-wrapper">
+        <label for="escolaridade"><i class="bi bi-mortarboard me-1"></i> Escolaridade</label>
         <select name="escolaridade" id="escolaridade" class="form-select select2">
           <option value="">Selecione</option>
           {% for nivel in niveis_escolaridade %}
@@ -181,10 +183,8 @@
       </div>
 
       <!-- Status -->
-      <div class="col-md-3">
-        <label for="status" class="form-label">
-          <i class="bi bi-toggle-on me-1" aria-hidden="true"></i> Status
-        </label>
+      <div class="col-12 filtro-wrapper">
+        <label for="status"><i class="bi bi-toggle-on me-1"></i> Status</label>
         <select name="status" id="status" class="form-select select2">
           {% for opcao in status_opcoes %}
             <option value="{{ opcao }}" {% if filtro_status == opcao %}selected{% endif %}>{{ opcao }}</option>
@@ -193,18 +193,23 @@
       </div>
 
       <!-- Botão Filtrar -->
-      {% include "partials/global/_botao_filtrar.html" %}
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
     </form>
   </div>
 </div>
 
 
+
+
 <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
-  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Colaboradores Ativos" valor=total_ativos subtitulo="Colaboradores com status 'Ativo'." %}
-  {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Colaboradores Inativos" valor=total_inativos subtitulo="Colaboradores com status 'Inativo'." %}
-  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Local Mais Comum" valor=local_mais_comum subtitulo="Local de trabalho mais frequente." %}
-  {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Colaboradores sem Currículo" valor=total_pendentes subtitulo="Colaboradores sem Currículo." %}
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Colaboradores Ativos" valor=total_ativos subtitulo="" icone="bi-person-check-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Colaboradores Inativos" valor=total_inativos subtitulo="" icone="bi-person-x-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Local Mais Comum" valor=local_mais_comum subtitulo="" icone="bi-geo-alt-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Colaboradores sem Currículo" valor=total_pendentes subtitulo="" icone="bi-file-earmark-text-fill" %}
 </div>
+
 
 
     

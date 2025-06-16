@@ -11,96 +11,95 @@
     {% include "partials/global/_toast_mensagens.html" %}
 
 
-<!-- Botão de Cadastrar Comunicado e Imprimir -->
-<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
-  {% if request.user|has_permission:"Funcionario.add_comunicado" %}
-    <a href="{% url 'cadastrar_comunicado' %}" class="btn btn-success d-inline-flex align-items-center">
-      <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar
-    </a>
-  {% endif %}
+    {% include "partials/global/_estilos_botoes_acoes.html" %}
 
-  {% if request.user|has_permission:"Funcionario.imprimir_comunicado" or request.user|has_permission:"Funcionario.imprimir_assinaturas" %}
-  <div class="btn-group">
-      <button type="button" class="btn btn-info dropdown-toggle d-inline-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-printer me-1" aria-hidden="true"></i> Imprimir
-      </button>
-      <ul class="dropdown-menu">
-        <li>
-          {% if request.user|has_permission:"Funcionario.imprimir_comunicado" %}
-      <a class="dropdown-item" href="#" onclick="abrirModalImpressao('comunicado')" aria-label="Abrir modal para imprimir comunicado">
-  <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i> Imprimir Comunicado
-</a>
-        </li>
-        {% endif %}
-        {% if request.user|has_permission:"Funcionario.imprimir_assinaturas" %}
-
-  <a class="dropdown-item" href="#" onclick="abrirModalImpressao('assinatura')" aria-label="Abrir modal para imprimir lista de assinaturas">
-  <i class="bi bi-card-checklist me-1" aria-hidden="true"></i> Imprimir Lista de Assinaturas
-</a>
-        </li>
-        {% endif %}
-      </ul>
+    <!-- Botões: Filtro, Cadastrar e Imprimir -->
+    <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+      {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    
+      {% if request.user|has_permission:"Funcionario.add_comunicado" %}
+        <a href="{% url 'cadastrar_comunicado' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+          <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+        </a>
+      {% endif %}
+    
+      {% if request.user|has_permission:"Funcionario.imprimir_comunicado" or request.user|has_permission:"Funcionario.imprimir_assinaturas" %}
+        <div class="btn-group">
+          <button type="button" class="btn btn-info btn-acao-personalizado dropdown-toggle d-inline-flex align-items-center"
+                  data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-printer me-2" aria-hidden="true"></i> Imprimir
+          </button>
+          <ul class="dropdown-menu">
+            {% if request.user|has_permission:"Funcionario.imprimir_comunicado" %}
+              <li>
+                <a class="dropdown-item" href="#" onclick="abrirModalImpressao('comunicado')" aria-label="Abrir modal para imprimir comunicado">
+                  <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i> Imprimir Comunicado
+                </a>
+              </li>
+            {% endif %}
+            {% if request.user|has_permission:"Funcionario.imprimir_assinaturas" %}
+              <li>
+                <a class="dropdown-item" href="#" onclick="abrirModalImpressao('assinatura')" aria-label="Abrir modal para imprimir lista de assinaturas">
+                  <i class="bi bi-card-checklist me-1" aria-hidden="true"></i> Imprimir Lista de Assinaturas
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      {% endif %}
     </div>
-  {% endif %}
-</div>
+    
 
     
 <!-- Filtros em Card -->
-<div class="card mb-4">
-  <div class="card-header">
-    <i class="bi bi-funnel me-2" aria-hidden="true"></i> Filtros de Comunicados
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Comunicados
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
+
+  <div class="offcanvas-body">
     <form method="get" class="row g-3">
 
-     <div class="col-md-3">
-  <label for="filter_tipo" class="form-label">
-    <i class="bi bi-tag me-1" aria-hidden="true"></i> Tipo de Comunicado
-  </label>
-  <select name="tipo" id="filter_tipo" class="form-select select2">
-    <option value="">Todos</option>
-    {% for valor, nome in tipo_choices %}
-      <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ nome }}</option>
-    {% endfor %}
-  </select>
-</div>
-
-
-     <div class="col-md-3">
-  <label for="filter_departamento" class="form-label">
-    <i class="bi bi-building me-1" aria-hidden="true"></i> Departamento
-  </label>
-  <select name="departamento" id="filter_departamento" class="form-select select2">
-    <option value="">Todos</option>
-    {% for dep in departamentos %}
-      <option value="{{ dep }}" {% if departamento == dep %}selected{% endif %}>{{ dep }}</option>
-    {% endfor %}
-  </select>
-</div>
-
-      <div class="col-md-3">
-        <label for="filter_data_inicio" class="form-label">Data Início</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
-          <input type="date" name="data_inicio" id="filter_data_inicio" class="form-control" value="{{ data_inicio }}">
-        </div>
+      <div class="col-12">
+        <label for="filter_tipo" class="form-label"><i class="bi bi-tag me-1"></i> Tipo de Comunicado</label>
+        <select name="tipo" id="filter_tipo" class="form-select select2">
+          <option value="">Todos</option>
+          {% for valor, nome in tipo_choices %}
+            <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ nome }}</option>
+          {% endfor %}
+        </select>
       </div>
 
-      <div class="col-md-3">
-        <label for="filter_data_fim" class="form-label">Data Fim</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
-          <input type="date" name="data_fim" id="filter_data_fim" class="form-control" value="{{ data_fim }}">
-        </div>
+      <div class="col-12">
+        <label for="filter_departamento" class="form-label"><i class="bi bi-building me-1"></i> Departamento</label>
+        <select name="departamento" id="filter_departamento" class="form-select select2">
+          <option value="">Todos</option>
+          {% for dep in departamentos %}
+            <option value="{{ dep }}" {% if departamento == dep %}selected{% endif %}>{{ dep }}</option>
+          {% endfor %}
+        </select>
       </div>
 
-      <div class="col-12 text-center mt-2">
+      <div class="col-12">
+        <label for="filter_data_inicio" class="form-label"><i class="bi bi-calendar-date me-1"></i> Data Início</label>
+        <input type="date" name="data_inicio" id="filter_data_inicio" class="form-control" value="{{ data_inicio }}">
+      </div>
+
+      <div class="col-12">
+        <label for="filter_data_fim" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data Fim</label>
+        <input type="date" name="data_fim" id="filter_data_fim" class="form-control" value="{{ data_fim }}">
+      </div>
+
+      <div class="col-12 mt-3">
         {% include "partials/global/_botao_filtrar.html" %}
       </div>
-
     </form>
   </div>
 </div>
+
 
 
 

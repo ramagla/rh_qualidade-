@@ -8,68 +8,77 @@
 <div class="container mt-5">
   {% include "partials/global/_header_titulo.html" with titulo="Lista de Descrições de Cargos" icone="bi bi-briefcase-fill" emoji="📄" %}
 
-  <div class="d-flex justify-content-end gap-2 mb-4">
-    {% if request.user|has_permission:"Funcionario.add_cargo" %}
-      <a href="{% url 'cadastrar_cargo' %}" class="btn btn-success" aria-label="Cadastrar novo cargo">
-        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar
-      </a>
-      {% endif %}
-      {% if request.user|has_permission:"Funcionario.view_cargo" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
 
-      <a href="{% url 'organograma_cargos' %}" class="btn btn-primary" aria-label="Visualizar organograma dos cargos">
-        <i class="bi bi-diagram-3-fill me-1" aria-hidden="true"></i> Organograma
-      </a>
-    {% endif %}
-  </div>
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
+  {% if request.user|has_permission:"Funcionario.add_cargo" %}
+    <a href="{% url 'cadastrar_cargo' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+    </a>
+  {% endif %}
+
+  {% if request.user|has_permission:"Funcionario.view_cargo" %}
+    <a href="{% url 'organograma_cargos' %}" class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-diagram-3-fill me-2" aria-hidden="true"></i> Organograma
+    </a>
+  {% endif %}
+</div>
+
+  
   
 
   {% include "partials/global/_toast_mensagens.html" %}
 
-  <!-- Formulário de filtro -->
-<div class="card mb-4 shadow-sm border-0">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill"></i>
-    <strong>Filtros de Busca</strong>
-  </div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row">
-        <div class="col-md-6">
-          <label for="departamento" class="form-label">Filtrar por Departamento:</label>
-          <select name="departamento" id="departamento" class="form-select select2" autocomplete="off">
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Cargos
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+  
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12">
+          <label for="departamento" class="form-label"><i class="bi bi-building me-1"></i> Departamento</label>
+          <select name="departamento" id="departamento" class="form-select select2">
             <option value="">Todos</option>
             {% for departamento in departamentos %}
-            <option value="{{ departamento.id }}" {% if request.GET.departamento == departamento.id|stringformat:"s" %}selected{% endif %}>
-              {{ departamento }}
-            </option>
-          {% endfor %}
-          
+              <option value="{{ departamento.id }}" {% if request.GET.departamento == departamento.id|stringformat:"s" %}selected{% endif %}>
+                {{ departamento }}
+              </option>
+            {% endfor %}
           </select>
-          
         </div>
-        <div class="col-md-6">
-          <label for="cargo" class="form-label">Filtrar por Cargo:</label>
-          <select name="cargo" id="cargo" class="form-select select2" autocomplete="off">
+  
+        <div class="col-12">
+          <label for="cargo" class="form-label"><i class="bi bi-person-workspace me-1"></i> Cargo</label>
+          <select name="cargo" id="cargo" class="form-select select2">
             <option value="">Todos</option>
             {% for cargo in todos_cargos %}
               <option value="{{ cargo.nome }}" {% if request.GET.cargo == cargo.nome %}selected{% endif %}>{{ cargo.nome }}</option>
             {% endfor %}
           </select>
         </div>
-      </div>
-      {% include "partials/global/_botao_filtrar.html" %}
-    </form>
+  
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
   </div>
-</div>
+  
 
 
-  <!-- Indicadores -->
   <div class="row row-cols-1 row-cols-md-4 mb-4">
-    {% include "partials/global/_card_indicador.html" with titulo="Total de Cargos" valor=total_cargos subtitulo="Cargos cadastrados no sistema." cor="primary" %}
-    {% include "partials/global/_card_indicador.html" with titulo="Departamento Mais Frequente" valor=departamento_mais_frequente subtitulo="Departamento com mais cargos." cor="info" %}
-    {% include "partials/global/_card_indicador.html" with titulo="Última Revisão" valor=ultima_revisao subtitulo="Última revisão registrada." cor="warning" %}
-    {% include "partials/global/_card_indicador.html" with titulo="Cargos Sem Descrição" valor=cargos_sem_descricao subtitulo="Cargos sem descrição anexada." cor="danger" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Total de Cargos" valor=total_cargos subtitulo="Cargos cadastrados no sistema." cor="primary" icone="bi-briefcase-fill" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Departamento Mais Frequente" valor=departamento_mais_frequente subtitulo="Departamento com mais cargos." cor="info" icone="bi-diagram-3-fill" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Última Revisão" valor=ultima_revisao subtitulo="Última revisão registrada." cor="warning" icone="bi-clock-history" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Cargos Sem Descrição" valor=cargos_sem_descricao subtitulo="Cargos sem descrição anexada." cor="danger" icone="bi-exclamation-circle-fill" %}
   </div>
+  
 
   <!-- Tabela -->
   <table class="table table-bordered table-striped table-hover text-center mt-4">

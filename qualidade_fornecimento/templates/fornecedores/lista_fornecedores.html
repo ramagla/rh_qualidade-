@@ -30,107 +30,99 @@
 
 
   <!-- Filtros em Card -->
-<div class="card mb-4">
-  <div class="card-header">Filtros</div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row g-3">
-
-        <div class="col-md-3">
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Fornecedores
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+  
+        <div class="col-12">
           <label for="data_inicial" class="form-label">Data Inicial</label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
-            <input type="date" class="form-control" id="data_inicial" name="data_inicial" value="{{ request.GET.data_inicial }}">
-          </div>
+          <input type="date" class="form-control" id="data_inicial" name="data_inicial" value="{{ request.GET.data_inicial }}">
         </div>
-
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="data_final" class="form-label">Data Final</label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
-            <input type="date" class="form-control" id="data_final" name="data_final" value="{{ request.GET.data_final }}">
-          </div>
+          <input type="date" class="form-control" id="data_final" name="data_final" value="{{ request.GET.data_final }}">
         </div>
-
-        <div class="col-md-2">
+  
+        <div class="col-12">
           <label for="produto" class="form-label">Produto/Serviço</label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
-            <select class="form-select" id="produto" name="produto">
-              <option value="">Todos</option>
-              {% for prod in filter_produtos %}
-                <option value="{{ prod }}" {% if request.GET.produto == prod %}selected{% endif %}>{{ prod }}</option>
-              {% endfor %}
-            </select>
-          </div>
+          <select class="form-select" id="produto" name="produto">
+            <option value="">Todos</option>
+            {% for prod in filter_produtos %}
+              <option value="{{ prod }}" {% if request.GET.produto == prod %}selected{% endif %}>{{ prod }}</option>
+            {% endfor %}
+          </select>
         </div>
-
-        <div class="col-md-2">
+  
+        <div class="col-12">
           <label for="certificacao" class="form-label">Certificação</label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-award"></i></span>
-            <select class="form-select" id="certificacao" name="certificacao">
-              <option value="">Todas</option>
-              {% for cert in filter_certificacoes %}
-                <option value="{{ cert }}" {% if request.GET.certificacao == cert %}selected{% endif %}>{{ cert }}</option>
-              {% endfor %}
-            </select>
-          </div>
+          <select class="form-select" id="certificacao" name="certificacao">
+            <option value="">Todas</option>
+            {% for cert in filter_certificacoes %}
+              <option value="{{ cert }}" {% if request.GET.certificacao == cert %}selected{% endif %}>{{ cert }}</option>
+            {% endfor %}
+          </select>
         </div>
-
-        <div class="col-md-2">
+  
+        <div class="col-12">
           <label for="status" class="form-label">Status</label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-check2-square"></i></span>
-            <select class="form-select" id="status" name="status">
-              <option value="">Todos</option>
-              {% for stat in filter_status %}
-                <option value="{{ stat }}" {% if request.GET.status == stat %}selected{% endif %}>{{ stat }}</option>
-              {% endfor %}
-            </select>
-          </div>
+          <select class="form-select" id="status" name="status">
+            <option value="">Todos</option>
+            {% for stat in filter_status %}
+              <option value="{{ stat }}" {% if request.GET.status == stat %}selected{% endif %}>{{ stat }}</option>
+            {% endfor %}
+          </select>
         </div>
-
-        <div class="col-12 text-center mt-2">
-          <button type="submit" class="btn btn-primary d-inline-flex align-items-center">
-            <i class="bi bi-search me-2"></i> Filtrar
-          </button>
+  
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
         </div>
-
-      </div>
-    </form>
+  
+      </form>
+    </div>
   </div>
-</div>
+  
 
+
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
 
   <!-- Botão para Cadastrar -->
-<div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  
+    {% if request.user|has_permission:'qualidade_fornecimento.add_fornecedorqualificado' %}
+      <a href="{% url 'cadastrar_fornecedor' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2"></i> Cadastrar Fornecedor
+      </a>
+    {% endif %}
+  
+    {% if request.user|has_permission:'qualidade_fornecimento.importar_excel_fornecedores' %}
+      <a href="{% url 'importar_excel_fornecedores' %}" class="btn btn-outline-secondary btn-acao-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-file-earmark-excel me-2"></i> Importar Excel
+      </a>
+    {% endif %}
+  </div>
+  
+  
 
-  {% if request.user|has_permission:'qualidade_fornecimento.add_fornecedorqualificado' %}
-  <a href="{% url 'cadastrar_fornecedor' %}" class="btn btn-success" aria-label="Cadastrar novo fornecedor">
-    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Cadastrar Fornecedor
-  </a>
-  {% endif %}
-
-  {% if request.user|has_permission:'qualidade_fornecimento.importar_excel_fornecedores' %}
-  <a href="{% url 'importar_excel_fornecedores' %}" class="btn btn-secondary" aria-label="Importar fornecedores via Excel">
-    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Importar Excel
-  </a>
-  {% endif %}
-
-</div>
 
 
 
 
-
-  <!-- Cards com Indicadores -->
+<!-- Cards com Indicadores -->
 <div class="row mb-4">
-  {% include 'partials/global/_card_indicador.html' with titulo="Total de Fornecedores" valor=total_fornecedores subtitulo="Cadastrados no sistema." cor="success" %}
-  {% include 'partials/global/_card_indicador.html' with titulo="Certificações Vencidas" valor=total_vencidas subtitulo="Certificados expirados." cor="danger" %}
-  {% include 'partials/global/_card_indicador.html' with titulo="Certificações Próx.Vencimento" valor=total_proximas subtitulo="Até 30 dias para vencer." cor="warning" %}
-  {% include 'partials/global/_card_indicador.html' with titulo="Alto Risco" valor=total_alto_risco subtitulo="Classificados com risco alto." cor="laranja" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Fornecedores" valor=total_fornecedores subtitulo="Cadastrados no sistema." cor="success" icone="bi-truck" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Certificações Vencidas" valor=total_vencidas subtitulo="Certificados expirados." cor="danger" icone="bi-exclamation-triangle-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Certificações Próx.Vencimento" valor=total_proximas subtitulo="Até 30 dias para vencer." cor="warning" icone="bi-clock-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Alto Risco" valor=total_alto_risco subtitulo="Classificados com risco alto." cor="warning" icone="bi-exclamation-circle-fill" %}
 </div>
+
 
 
   <!-- Lista de Fornecedores -->

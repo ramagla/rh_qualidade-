@@ -1,6 +1,10 @@
-<div class="col-12 text-center mt-2">
+<!-- Botões principais -->
+<div class="col-12 text-center mt-3 d-flex justify-content-center gap-3 flex-wrap">
   <button type="submit" class="btn btn-primary d-inline-flex align-items-center" id="btn-filtrar">
     <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true" id="spinner-filtrar"></span>
     <i class="bi bi-search me-2"></i> Filtrar
   </button>
+  <a href="{% url request.resolver_match.view_name %}" class="btn btn-outline-secondary d-inline-flex align-items-center">
+    <i class="bi bi-x-circle me-2"></i> Limpar Filtros
+  </a>
 </div>

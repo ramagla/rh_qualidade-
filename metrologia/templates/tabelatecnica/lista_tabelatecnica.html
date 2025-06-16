@@ -11,124 +11,117 @@
 
 <div class="container mt-4">
 
- <!-- Botões de Ação -->
-<div class="d-flex justify-content-end mb-4 gap-2">
-  {% if request.user|has_permission:"metrologia.add_tabelatecnica" %}
-    <a href="{% url 'cadastrar_tabelatecnica' %}" class="btn btn-success">
-      <i class="bi bi-plus-circle"></i> Cadastrar
-    </a>
-  {% endif %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões de Ação -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
   
-  {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
-    <a href="{% url 'imprimir_tabelatecnica' %}" class="btn btn-primary" target="_blank">
-      <i class="bi bi-printer"></i> Imprimir
-    </a>
-  {% endif %}
-</div>
+    {% if request.user|has_permission:"metrologia.add_tabelatecnica" %}
+      <a href="{% url 'cadastrar_tabelatecnica' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+      </a>
+    {% endif %}
+  
+    {% if request.user|has_permission:"metrologia.view_tabelatecnica" %}
+      <a href="{% url 'imprimir_tabelatecnica' %}" class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center" target="_blank">
+        <i class="bi bi-printer me-2" aria-hidden="true"></i> Imprimir
+      </a>
+    {% endif %}
+  </div>
+  
+
+
 
 
   <!-- 🔍 Filtros de Equipamentos -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros de Equipamentos</strong>
-  </div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row g-3">
-
-        <!-- Código -->
-        <div class="col-md-3">
-          <label for="codigo" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-upc-scan text-secondary" aria-hidden="true"></i> Código
-          </label>
-          <select id="codigo" name="codigo" class="form-select select2" aria-label="Filtro por código">
-            <option value="">Selecione</option>
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Equipamentos
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        
+        <div class="col-12">
+          <label for="codigo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código</label>
+          <select name="codigo" id="codigo" class="form-select select2">
+            <option value="">Todos</option>
             {% for codigo in codigos %}
               <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>{{ codigo }}</option>
             {% endfor %}
           </select>
         </div>
-
-        <!-- Nome do Equipamento -->
-        <div class="col-md-3">
-          <label for="nome_equipamento" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-gear-wide-connected text-secondary" aria-hidden="true"></i> Nome do Equipamento
-          </label>
-          <select id="nome_equipamento" name="nome_equipamento" class="form-select select2" aria-label="Filtro por nome do equipamento">
-            <option value="">Selecione</option>
+  
+        <div class="col-12">
+          <label for="nome_equipamento" class="form-label"><i class="bi bi-gear-wide-connected me-1"></i> Nome</label>
+          <select name="nome_equipamento" id="nome_equipamento" class="form-select select2">
+            <option value="">Todos</option>
             {% for equipamento in equipamentos %}
               <option value="{{ equipamento }}" {% if equipamento == request.GET.nome_equipamento %}selected{% endif %}>{{ equipamento }}</option>
             {% endfor %}
           </select>
         </div>
-
-        <!-- Unidade de Medida -->
-        <div class="col-md-3">
-          <label for="unidade_medida" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-rulers text-secondary" aria-hidden="true"></i> Unidade de Medida
-          </label>
-          <select id="unidade_medida" name="unidade_medida" class="form-select select2" aria-label="Filtro por unidade de medida">
-            <option value="">Selecione</option>
+  
+        <div class="col-12">
+          <label for="unidade_medida" class="form-label"><i class="bi bi-rulers me-1"></i> Unidade de Medida</label>
+          <select name="unidade_medida" id="unidade_medida" class="form-select select2">
+            <option value="">Todas</option>
             {% for symbol, name in unidades_medida.items %}
               <option value="{{ symbol }}" {% if request.GET.unidade_medida == symbol %}selected{% endif %}>{{ name }}</option>
             {% endfor %}
           </select>
         </div>
-
-        <!-- Status -->
-        <div class="col-md-3">
-          <label for="status" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-circle-half text-secondary" aria-hidden="true"></i> Status
-          </label>
-          <select id="status" name="status" class="form-select select2" aria-label="Filtro por status">
+  
+        <div class="col-12">
+          <label for="status" class="form-label"><i class="bi bi-circle-half me-1"></i> Status</label>
+          <select name="status" id="status" class="form-select select2">
             <option value="">Todos</option>
             <option value="ativo" {% if status_selecionado == "ativo" %}selected{% endif %}>Ativo</option>
             <option value="inativo" {% if status_selecionado == "inativo" %}selected{% endif %}>Inativo</option>
           </select>
         </div>
-
-        <!-- Responsável -->
-        <div class="col-md-3">
-          <label for="responsavel" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-person-badge text-secondary" aria-hidden="true"></i> Responsável
-          </label>
-          <select id="responsavel" name="responsavel" class="form-select select2" aria-label="Filtro por responsável">
-            <option value="">Selecione</option>
+  
+        <div class="col-12">
+          <label for="responsavel" class="form-label"><i class="bi bi-person-badge me-1"></i> Responsável</label>
+          <select name="responsavel" id="responsavel" class="form-select select2">
+            <option value="">Todos</option>
             {% for responsavel in responsaveis %}
-              <option value="{{ responsavel.id }}" {% if responsavel.id|stringformat:"s" == request.GET.responsavel %}selected{% endif %}>{{ responsavel.nome }}</option>
+              <option value="{{ responsavel.id }}" {% if responsavel.id|stringformat:"s" == request.GET.responsavel %}selected{% endif %}>
+                {{ responsavel.nome }}
+              </option>
             {% endfor %}
           </select>
         </div>
-
-        <!-- Fabricante -->
-        <div class="col-md-3">
-          <label for="fabricante" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-tools text-secondary" aria-hidden="true"></i> Fabricante
-          </label>
-          <select id="fabricante" name="fabricante" class="form-select select2" aria-label="Filtro por fabricante">
-            <option value="">Selecione</option>
+  
+        <div class="col-12">
+          <label for="fabricante" class="form-label"><i class="bi bi-tools me-1"></i> Fabricante</label>
+          <select name="fabricante" id="fabricante" class="form-select select2">
+            <option value="">Todos</option>
             {% for fabricante in fabricantes %}
               <option value="{{ fabricante }}" {% if fabricante == request.GET.fabricante %}selected{% endif %}>{{ fabricante }}</option>
             {% endfor %}
           </select>
         </div>
-
-        <!-- Botão de Filtrar -->
-        {% include 'partials/global/_botao_filtrar.html' %}
-
-      </div>
-    </form>
+  
+        <div class="col-12 mt-3">
+          {% include 'partials/global/_botao_filtrar.html' %}
+        </div>
+      </form>
+    </div>
   </div>
+  
+
+
+ <!-- Cards de Indicadores -->
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Equipamentos" valor=total_tabelas subtitulo="Equipamentos cadastrados" icone="bi-rulers" %}
+  {% include 'partials/global/_card_indicador.html' with cor="danger" titulo="Fora do Prazo" valor=total_fora_prazo subtitulo="Calibração vencida" icone="bi-exclamation-triangle-fill" %}
+  {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="Próximo do Prazo" valor=total_proximo_prazo subtitulo="Próximo do vencimento" icone="bi-clock-fill" %}
 </div>
 
-
-  <!-- Cards de Indicadores -->
-  <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Equipamentos" valor=total_tabelas subtitulo="Equipamentos cadastrados" %}
-    {% include 'partials/global/_card_indicador.html' with cor="danger" titulo="Fora do Prazo" valor=total_fora_prazo subtitulo="Calibração vencida" %}
-    {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="Próximo do Prazo" valor=total_proximo_prazo subtitulo="Próximo do vencimento" %}
-  </div>
 
   <!-- Tabela -->
   <table class="table table-bordered table-striped text-center mt-4">

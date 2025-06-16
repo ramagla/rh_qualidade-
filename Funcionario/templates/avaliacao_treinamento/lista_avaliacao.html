@@ -11,75 +11,67 @@
 
 <div class="container mt-4">
 
-  <!-- Botões de ação -->
-  <div class="text-end mb-4">
-    {% if request.user|has_permission:"Funcionario.add_avaliacaotreinamento" %}
-      <a href="{% url 'avaliacao_create' %}" class="btn btn-success">
-        <i class="bi bi-plus-circle"></i> Cadastrar
-      </a>
-    {% endif %}
-  </div>
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
+  {% if request.user|has_permission:"Funcionario.add_avaliacaotreinamento" %}
+    <a href="{% url 'avaliacao_create' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+    </a>
+  {% endif %}
+</div>
+
+  
 <!-- Filtros de Avaliações -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros de Avaliações</strong>
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Avaliações
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row row-cols-1 row-cols-md-2 g-3">
 
-        <!-- Treinamento -->
-        <div class="col-12 col-md-6">
-          <label for="treinamento" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-journal-check text-secondary"></i> Treinamento/Curso
-          </label>
-          <select name="treinamento" id="treinamento" class="form-select select2 w-100">
-            <option value="">Selecione</option>
-            {% for treinamento in listas_presenca %}
-              <option value="{{ treinamento.id }}" {% if request.GET.treinamento == treinamento.id|stringformat:"s" %}selected{% endif %}>
-                {{ treinamento.nome_curso }} - {{ treinamento.data_inicio|date:"d/m/Y" }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
 
-        <!-- Funcionário -->
-        <div class="col-12 col-md-6">
-          <label for="funcionario" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-person text-secondary"></i> Funcionário
-          </label>
-          <select name="funcionario" id="funcionario" class="form-select select2 w-100">
-            <option value="">Selecione</option>
-            {% for funcionario in funcionarios_ativos %}
-              <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
-                {{ funcionario.nome }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
+      <div class="col-12">
+        <label for="treinamento" class="form-label"><i class="bi bi-journal-check me-1"></i> Treinamento/Curso</label>
+        <select name="treinamento" id="treinamento" class="form-select select2">
+          <option value="">Todos</option>
+          {% for treinamento in listas_presenca %}
+            <option value="{{ treinamento.id }}" {% if request.GET.treinamento == treinamento.id|stringformat:"s" %}selected{% endif %}>
+              {{ treinamento.nome_curso }} - {{ treinamento.data_inicio|date:"d/m/Y" }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
 
-        <!-- Data Início -->
-        <div class="col-12 col-md-6">
-          <label for="data_inicio" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-calendar-event text-secondary"></i> Data Início
-          </label>
-          <input type="date" name="data_inicio" id="data_inicio" class="form-control w-100" value="{{ request.GET.data_inicio }}">
-        </div>
+      <div class="col-12">
+        <label for="funcionario" class="form-label"><i class="bi bi-person me-1"></i> Funcionário</label>
+        <select name="funcionario" id="funcionario" class="form-select select2">
+          <option value="">Todos</option>
+          {% for funcionario in funcionarios_ativos %}
+            <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
+              {{ funcionario.nome }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
 
-        <!-- Data Fim -->
-        <div class="col-12 col-md-6">
-          <label for="data_fim" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-calendar-check text-secondary"></i> Data Fim
-          </label>
-          <input type="date" name="data_fim" id="data_fim" class="form-control w-100" value="{{ request.GET.data_fim }}">
-        </div>
+      <div class="col-12">
+        <label for="data_inicio" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data Início</label>
+        <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+      </div>
 
-        <!-- Botão Filtrar -->
-        <div class="col-12 d-flex justify-content-end">
-          {% include 'partials/global/_botao_filtrar.html' %}
-        </div>
+      <div class="col-12">
+        <label for="data_fim" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data Fim</label>
+        <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+      </div>
 
+      <div class="col-12 mt-3">
+        {% include 'partials/global/_botao_filtrar.html' %}
       </div>
     </form>
   </div>
@@ -87,13 +79,14 @@
 
 
 
-  <!-- Indicadores -->
-  <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Avaliações" valor=total_avaliacoes|default:0 subtitulo="Total cadastradas" cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Muito Eficaz" valor=muito_eficaz|default:0 subtitulo="Avaliações muito eficazes" cor="success" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Eficaz" valor=eficaz|default:0 subtitulo="Avaliações eficazes" cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Pouco Eficaz" valor=pouco_eficaz|default:0 subtitulo="Avaliações pouco eficazes" cor="danger" %}
-  </div>
+
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Avaliações" valor=total_avaliacoes|default:0 subtitulo="Total cadastradas" cor="primary" icone="bi-clipboard-data-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Muito Eficaz" valor=muito_eficaz|default:0 subtitulo="Avaliações muito eficazes" cor="success" icone="bi-emoji-laughing-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Eficaz" valor=eficaz|default:0 subtitulo="Avaliações eficazes" cor="primary" icone="bi-emoji-smile-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Pouco Eficaz" valor=pouco_eficaz|default:0 subtitulo="Avaliações pouco eficazes" cor="danger" icone="bi-emoji-frown-fill" %}
+</div>
+
 
   <!-- Tabela de avaliações -->
   <div class="table-responsive">

@@ -10,68 +10,67 @@
 
     {% include "partials/global/_toast_mensagens.html" %}
 
-    <!-- Botões -->
-    <div class="d-flex justify-content-end mb-3">
-        {% if request.user|has_permission:'Funcionario.add_jobrotationevaluation' %}
-        <a href="{% url 'cadastrar_jobrotation_evaluation' %}" class="btn btn-success me-2">
-            <i class="bi bi-plus-circle"></i> Cadastrar
-        </a>
-        {% endif %}   
-    </div>
+    {% include "partials/global/_estilos_botoes_acoes.html" %}
 
-    <!-- Filtros de Avaliações -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros de Avaliações</strong>
-  </div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row g-3">
-        <!-- Funcionário -->
-        <div class="col-md-6">
-          <label for="funcionario" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-person text-secondary"></i> Funcionário
-          </label>
-          <select name="funcionario" id="funcionario" class="form-select select2" aria-label="Filtrar por funcionário">
-            <option value="">Selecione</option>
-            {% for funcionario in funcionarios %}
-              <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>{{ funcionario.nome }}</option>
-            {% endfor %}
-          </select>
-        </div>
+<!-- Botões -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
 
-        <!-- Data Início -->
-        <div class="col-md-3">
-          <label for="data_inicio" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-calendar-event text-secondary"></i> Data Início
-          </label>
-          <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
-        </div>
-
-        <!-- Data Fim -->
-        <div class="col-md-3">
-          <label for="data_fim" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-calendar-check text-secondary"></i> Data Fim
-          </label>
-          <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
-        </div>
-
-        <!-- Botão Filtrar -->
-        {% include 'partials/global/_botao_filtrar.html' %}
-      </div>
-    </form>
-  </div>
+  {% if request.user|has_permission:'Funcionario.add_jobrotationevaluation' %}
+    <a href="{% url 'cadastrar_jobrotation_evaluation' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+    </a>
+  {% endif %}
 </div>
 
-
-    <!-- Cards de Indicadores -->
-    <div class="row justify-content-center mb-4 mt-4">
-        {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Avaliações" valor=total_avaliacoes subtitulo="Avaliações cadastradas" %}
-        {% include "partials/global/_card_indicador.html" with cor="success" titulo="Apto" valor=apto subtitulo="Funcionários aptos" %}
-        {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Prorrogar TN" valor=prorrogar subtitulo="Prorrogações necessárias" %}
-        {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Inapto" valor=inapto subtitulo="Funcionários inaptos" %}
+    <!-- Filtros de Avaliações -->
+    <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+          <i class="bi bi-funnel-fill me-2"></i>Filtros de Avaliações de Job Rotation
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+      </div>
+    
+      <div class="offcanvas-body">
+        <form method="get" class="row g-3">
+    
+          <div class="col-12">
+            <label for="funcionario" class="form-label"><i class="bi bi-person me-1"></i> Funcionário</label>
+            <select name="funcionario" id="funcionario" class="form-select select2">
+              <option value="">Todos</option>
+              {% for funcionario in funcionarios %}
+                <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>{{ funcionario.nome }}</option>
+              {% endfor %}
+            </select>
+          </div>
+    
+          <div class="col-12">
+            <label for="data_inicio" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data Início</label>
+            <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+          </div>
+    
+          <div class="col-12">
+            <label for="data_fim" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data Fim</label>
+            <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+          </div>
+    
+          <div class="col-12 mt-3">
+            {% include 'partials/global/_botao_filtrar.html' %}
+          </div>
+        </form>
+      </div>
     </div>
+    
+
+
+    <div class="row justify-content-center mb-4 mt-4">
+      {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Avaliações" valor=total_avaliacoes subtitulo="Avaliações cadastradas" icone="bi-clipboard-data-fill" %}
+      {% include "partials/global/_card_indicador.html" with cor="success" titulo="Apto" valor=apto subtitulo="Funcionários aptos" icone="bi-person-check-fill" %}
+      {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Prorrogar TN" valor=prorrogar subtitulo="Prorrogações necessárias" icone="bi-clock-history" %}
+      {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Inapto" valor=inapto subtitulo="Funcionários inaptos" icone="bi-person-x-fill" %}
+    </div>
+    
 
     <!-- Lista de Avaliações -->
     <div class="table-responsive">

@@ -1,9 +1,24 @@
-<div class="col-md-3">
-  <div class="card text-white bg-{{ cor }} border-0 shadow-sm card-status h-100">
-    <div class="card-header text-center">{{ titulo }}</div>
-    <div class="card-body text-center d-flex flex-column justify-content-between">
-      <h5 class="card-title">{{ valor }}</h5>
-      <p class="card-text">{{ subtitulo }}</p>
+<div class="col">
+  <div class="card indicador-card border-0 shadow-sm h-100 text-center p-3">
+    <div class="mb-2 text-{{ cor }}">
+      <i class="bi {{ icone|default:'bi-bar-chart-fill' }} fs-1"></i>
     </div>
+    <h2 class="fw-bold text-{{ cor }} mb-0">{{ valor }}</h2>
+    <p class="text-uppercase fw-semibold small text-muted mt-1">{{ titulo }}</p>
+    {% if subtitulo %}
+      <p class="text-muted small mb-0">{{ subtitulo }}</p>
+    {% endif %}
   </div>
 </div>
+
+<style>
+.indicador-card {
+  border-radius: 1rem;
+  background: linear-gradient(to bottom right, #ffffff, #f1f5f9);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.indicador-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+</style>

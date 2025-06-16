@@ -11,19 +11,26 @@
 {% include 'partials/global/_header_titulo.html' with titulo="Lista de Calibrações de Dispositivos" icone="bi bi-tools" emoji="🛠️" %}
 
 <div class="container mt-4">
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
   <!-- Botões superiores -->
-<div class="d-flex justify-content-end gap-2 mb-3">
-  {% if request.user|has_permission:"metrologia.add_calibracaodispositivo" %}
-    <a href="{% url 'cadastrar_calibracao_dispositivo' %}" class="btn btn-success d-flex align-items-center gap-2">
-      <i class="bi bi-plus-circle"></i> Nova Calibração
-    </a>
-  {% endif %}
-  {% if request.user|has_permission:"metrologia.view_calibracaodispositivo" %}
-    <button class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#imprimirModal">
-      <i class="bi bi-printer"></i> Imprimir
-    </button>
-  {% endif %}
-</div>
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  
+    {% if request.user|has_permission:"metrologia.add_calibracaodispositivo" %}
+      <a href="{% url 'cadastrar_calibracao_dispositivo' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Nova Calibração
+      </a>
+    {% endif %}
+  
+    {% if request.user|has_permission:"metrologia.view_calibracaodispositivo" %}
+      <button class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#imprimirModal">
+        <i class="bi bi-printer me-2" aria-hidden="true"></i> Imprimir
+      </button>
+    {% endif %}
+  </div>
+  
+  
 
 <!-- Modal para Seleção de Dispositivo para Impressão -->
 <div class="modal fade" id="imprimirModal" tabindex="-1" aria-labelledby="imprimirModalLabel" aria-hidden="true">
@@ -60,14 +67,17 @@
   </div>
 </div>
   <!-- Filtros -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header bg-light d-flex align-items-center gap-2">
-      <i class="bi bi-funnel-fill text-primary"></i>
-      <strong>Filtros de Pesquisa</strong>
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Calibração de Dispositivos
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
     </div>
-    <div class="card-body">
-      <form method="get" class="row g-3 align-items-end">
-        <div class="col-md-3">
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+  
+        <div class="col-12">
           <label for="codigo_dispositivo" class="form-label">
             <i class="bi bi-upc-scan me-1"></i> Código do Dispositivo:
           </label>
@@ -78,7 +88,8 @@
             {% endfor %}
           </select>
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="instrumento_utilizado" class="form-label">
             <i class="bi bi-hammer me-1"></i> Instrumento Utilizado:
           </label>
@@ -89,7 +100,8 @@
             {% endfor %}
           </select>
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="status" class="form-label">
             <i class="bi bi-clipboard2-check me-1"></i> Status:
           </label>
@@ -99,29 +111,35 @@
             <option value="Reprovado" {% if request.GET.status == "Reprovado" %}selected{% endif %}>Reprovado</option>
           </select>
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="data_inicio" class="form-label">
             <i class="bi bi-calendar-event me-1"></i> Data Início:
           </label>
           <input type="date" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
         </div>
-        <div class="col-md-3">
+  
+        <div class="col-12">
           <label for="data_fim" class="form-label">
             <i class="bi bi-calendar2-check me-1"></i> Data Fim:
           </label>
           <input type="date" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
         </div>
-        {% include 'partials/global/_botao_filtrar.html' %}
+  
+        <div class="col-12 mt-2">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+  
       </form>
     </div>
   </div>
-
-  <!-- Indicadores -->
-  <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with cor='success' titulo='Total de Calibrações' valor=total_calibracoes subtitulo='' %}
-    {% include 'partials/global/_card_indicador.html' with cor='primary' titulo='Aprovadas' valor=total_aprovadas subtitulo='' %}
-    {% include 'partials/global/_card_indicador.html' with cor='danger' titulo='Reprovadas' valor=total_reprovadas subtitulo='' %}
-  </div>
+  
+ <!-- Indicadores -->
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with cor='success' titulo='Total de Calibrações' valor=total_calibracoes subtitulo='' icone='bi-list-check' %}
+  {% include 'partials/global/_card_indicador.html' with cor='primary' titulo='Aprovadas' valor=total_aprovadas subtitulo='' icone='bi-check-circle-fill' %}
+  {% include 'partials/global/_card_indicador.html' with cor='danger' titulo='Reprovadas' valor=total_reprovadas subtitulo='' icone='bi-x-circle-fill' %}
+</div>
 
   <!-- Tabela -->
   <table class="table table-striped table-bordered align-middle text-center">

@@ -13,69 +13,73 @@
 <div class="container mt-4">
 
   <!-- 🔍 Filtros das Matrizes -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros de Matrizes</strong>
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Matrizes
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+  
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12">
+          <label for="departamento" class="form-label"><i class="bi bi-building me-1"></i> Departamento</label>
+          <select name="departamento" id="departamento" class="form-select select2">
+            <option value="">Todos</option>
+            {% for d in departamentos %}
+              <option value="{{ d.id }}" {% if request.GET.departamento == d.id|stringformat:"s" %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+  
+        <div class="col-12">
+          <label for="data_inicio" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data Início</label>
+          <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+        </div>
+  
+        <div class="col-12">
+          <label for="data_fim" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data Fim</label>
+          <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+        </div>
+  
+        <div class="col-12 mt-3">
+          {% include 'partials/global/_botao_filtrar.html' %}
+        </div>
+      </form>
+    </div>
   </div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row g-3">
+  
 
-       <!-- Departamento -->
-<div class="col-md-4">
-  <label for="departamento" class="form-label d-flex align-items-center gap-2">
-    <i class="bi bi-building text-secondary" aria-hidden="true"></i> Departamento
-  </label>
-  <select id="departamento" name="departamento" class="form-select select2" aria-label="Filtrar por departamento">
-    <option value="">Todos os Departamentos</option>
-    {% for d in departamentos %}
-      <option value="{{ d.id }}" {% if request.GET.departamento == d.id|stringformat:"s" %}selected{% endif %}>
-        {{ d }}
-      </option>
-    {% endfor %}
-  </select>
+
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<!-- Ações -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
+  {% if request.user|has_permission:'Funcionario.add_matrizpolivalencia' %}
+    <a href="{% url 'cadastrar_matriz_polivalencia' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Nova Matriz
+    </a>
+  {% endif %}
+
+  {% if request.user|has_permission:'Funcionario.view_atividade' %}
+    <a href="{% url 'lista_atividades' %}" class="btn btn-outline-secondary btn-acao-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-tools me-2" aria-hidden="true"></i> Atividades
+    </a>
+  {% endif %}
+</div>
+
+<div class="row mb-4 mt-4">
+  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Matrizes" valor=total_matrizes subtitulo="Matrizes cadastradas" icone="bi-diagram-3-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Atualizadas este Mês" valor=matrizes_mes subtitulo="Atualizadas em {{ mes_ano }}" icone="bi-calendar-event" %}  
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Departamentos" valor=total_departamentos subtitulo="Com matrizes ativas" icone="bi-building" %}
+  {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Média de Atividades" valor=media_atividades subtitulo="Atividades por matriz" icone="bi-list-check" %}
 </div>
 
 
-        <!-- Data Início -->
-        <div class="col-md-4">
-          <label for="data_inicio" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-calendar-event text-secondary" aria-hidden="true"></i> Data Início
-          </label>
-          <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}" aria-label="Data inicial">
-        </div>
-
-        <!-- Data Fim -->
-        <div class="col-md-4">
-          <label for="data_fim" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-calendar-check text-secondary" aria-hidden="true"></i> Data Fim
-          </label>
-          <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}" aria-label="Data final">
-        </div>
-
-        <!-- Botão Filtrar -->
-        {% include 'partials/global/_botao_filtrar.html' %}
-
-      </div>
-    </form>
-  </div>
-</div>
-
-
-  <!-- Ações -->
-  <div class="text-end mb-4 d-flex flex-wrap justify-content-end gap-2">
-    {% if request.user|has_permission:'Funcionario.add_matrizpolivalencia' %}
-      <a href="{% url 'cadastrar_matriz_polivalencia' %}" class="btn btn-success">
-        <i class="bi bi-plus-circle"></i> Nova Matriz
-      </a>
-    {% endif %}
-    {% if request.user|has_permission:'Funcionario.view_atividade' %}
-      <a href="{% url 'lista_atividades' %}" class="btn btn-light" title="Gerenciar Atividades" aria-label="Gerenciar atividades">
-        <i class="bi bi-tools"></i> Gerenciar Atividades
-      </a>
-    {% endif %}
-  </div>
+  
 
   <!-- Tabela -->
   <div class="table-responsive">

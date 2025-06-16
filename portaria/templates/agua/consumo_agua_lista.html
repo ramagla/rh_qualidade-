@@ -11,59 +11,67 @@
 
 <div class="container mt-4">
 
- <!-- Filtros -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary"></i>
-    <strong class="text-primary">Filtros de Consumo</strong>
+ <!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Consumo
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
+  <div class="offcanvas-body">
     <form method="get">
       <div class="row g-3">
         <!-- Data -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
           <input type="date" name="data" id="data" class="form-control" value="{{ request.GET.data }}">
         </div>
 
         <!-- Consumo Mínimo -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="consumo_minimo" class="form-label"><i class="bi bi-arrow-down-short me-1"></i> Consumo Mínimo (m³)</label>
           <input type="number" step="0.01" name="consumo_minimo" class="form-control" value="{{ request.GET.consumo_minimo }}">
         </div>
 
         <!-- Consumo Máximo -->
-        <div class="col-md-4">
+        <div class="col-12">
           <label for="consumo_maximo" class="form-label"><i class="bi bi-arrow-up-short me-1"></i> Consumo Máximo (m³)</label>
           <input type="number" step="0.01" name="consumo_maximo" class="form-control" value="{{ request.GET.consumo_maximo }}">
         </div>
 
-        <!-- Botão Filtrar -->
-        <div class="col-12 d-flex justify-content-center">
+        <!-- Botão -->
+        <div class="col-12 text-center mt-2">
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-search"></i> Filtrar
+            <i class="bi bi-search me-1"></i> Filtrar
           </button>
         </div>
       </div>
     </form>
   </div>
 </div>
+{% include 'partials/global/_estilos_botoes_acoes.html' %}
 
-
-  <!-- Cards de Indicadores -->
-  <div class="row mb-4">
-    {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Consumos registrados." cor="primary" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Consumo Acima da Média" valor=total_acima subtitulo="Acima de 5 m³." cor="warning" %}
-    {% include 'partials/global/_card_indicador.html' with titulo="Consumo Normal" valor=total_dentro subtitulo="Até 5 m³." cor="success" %}
-  </div>
-
+<!-- Botões -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include 'partials/global/_botao_filtros_offcanvas.html' %}
+  
   {% if request.user|has_permission:"portaria.add_registroconsumoagua" %}
-  <div class="d-flex justify-content-end mb-3">
-    <a href="{% url 'cadastrar_consumo_agua' %}" class="btn btn-success d-inline-flex align-items-center">
+    <a href="{% url 'cadastrar_consumo_agua' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
       <i class="bi bi-plus-circle me-1"></i> Novo Registro
     </a>
-  </div>
-{% endif %}
+  {% endif %}
+</div>
+
+
+<!-- Cards de Indicadores -->
+<div class="row mb-4">
+  {% include 'partials/global/_card_indicador.html' with titulo="Total de Registros" valor=total_registros subtitulo="Consumos registrados." cor="primary" icone="bi-droplet-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Consumo Acima da Média" valor=total_acima subtitulo="Acima de 5 m³." cor="warning" icone="bi-arrow-up-circle-fill" %}
+  {% include 'partials/global/_card_indicador.html' with titulo="Consumo Normal" valor=total_dentro subtitulo="Até 5 m³." cor="success" icone="bi-check-circle-fill" %}
+</div>
+
+  
 
 
 

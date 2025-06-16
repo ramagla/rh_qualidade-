@@ -11,32 +11,35 @@
 
 <div class="container mt-4">
 
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
   <!-- Botão cadastrar -->
-  <div class="d-flex justify-content-end mb-4">
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  
     {% if request.user|has_permission:'Funcionario.add_avaliacaoexperiencia' %}
-      <a href="{% url 'cadastrar_avaliacao_experiencia' %}" class="btn btn-primary me-2">
-        <i class="bi bi-plus-circle"></i> Cadastrar
+      <a href="{% url 'cadastrar_avaliacao_experiencia' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
       </a>
     {% endif %}
   </div>
-
+  
+  
   <!-- 🔎 Filtros de Avaliações -->
-<div class="card mb-4">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
-    <i class="bi bi-funnel-fill text-primary" aria-hidden="true"></i>
-    <strong class="text-primary">Filtros de Avaliações</strong>
-  </div>
-  <div class="card-body">
-    <form method="get">
-      <div class="row row-cols-1 row-cols-md-2 g-3">
-        
-        <!-- Colaborador -->
-        <div>
-          <label for="funcionario" class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-person text-secondary" aria-hidden="true"></i> Colaborador
-          </label>
-          <select name="funcionario" id="funcionario" class="form-select select2 w-100" aria-label="Filtrar por colaborador">
-            <option value="">Selecione</option>
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Avaliações de Experiência
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+  
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12">
+          <label for="funcionario" class="form-label"><i class="bi bi-person me-1"></i> Colaborador</label>
+          <select name="funcionario" id="funcionario" class="form-select select2">
+            <option value="">Todos</option>
             {% for funcionario in funcionarios %}
               <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
                 {{ funcionario.nome }}
@@ -44,43 +47,35 @@
             {% endfor %}
           </select>
         </div>
-
-        <!-- Período de Avaliação -->
-        <div>
-          <label class="form-label d-flex align-items-center gap-2">
-            <i class="bi bi-calendar-range text-secondary" aria-hidden="true"></i> Período de Avaliação
-          </label>
+  
+        <div class="col-12">
+          <label class="form-label"><i class="bi bi-calendar-range me-1"></i> Período de Avaliação</label>
           <div class="row g-2">
-            <div class="col-12 col-sm-6">
-              <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}" aria-label="Data de Início">
+            <div class="col-6">
+              <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
             </div>
-            <div class="col-12 col-sm-6">
-              <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}" aria-label="Data de Fim">
+            <div class="col-6">
+              <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
             </div>
           </div>
         </div>
-
-      </div>
-
-      <!-- Botão de Filtrar centralizado em telas pequenas -->
-      <div class="row mt-3">
-        <div class="col d-flex justify-content-md-end justify-content-center">
+  
+        <div class="col-12 mt-3">
           {% include "partials/global/_botao_filtrar.html" %}
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
-</div>
+  
 
 
-
-  <!-- Cards indicadores -->
   <div class="row justify-content-center mb-4">
-    {% include "partials/global/_card_indicador.html" with titulo="Total de Avaliações" cor="info" valor=total_avaliacoes subtitulo="Avaliações cadastradas" %}
-    {% include "partials/global/_card_indicador.html" with titulo="Efetivar" cor="success" valor=efetivar subtitulo="Orientação Efetivar" %}
-    {% include "partials/global/_card_indicador.html" with titulo="Treinamento" cor="warning" valor=treinamento subtitulo="Encaminhar p/ Treinamento" %}
-    {% include "partials/global/_card_indicador.html" with titulo="Desligar" cor="danger" valor=desligar subtitulo="Orientação Desligar" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Total de Avaliações" cor="info" valor=total_avaliacoes subtitulo="Avaliações cadastradas" icone="bi-clipboard-data-fill" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Efetivar" cor="success" valor=efetivar subtitulo="Orientação Efetivar" icone="bi-person-check-fill" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Treinamento" cor="warning" valor=treinamento subtitulo="Encaminhar p/ Treinamento" icone="bi-journal-check" %}
+    {% include "partials/global/_card_indicador.html" with titulo="Desligar" cor="danger" valor=desligar subtitulo="Orientação Desligar" icone="bi-person-x-fill" %}
   </div>
+  
 
   <!-- Tabela de Avaliações -->
   <div class="table-responsive">
