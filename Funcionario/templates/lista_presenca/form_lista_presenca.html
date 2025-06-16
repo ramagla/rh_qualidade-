@@ -67,24 +67,16 @@
             </label>              
             {{ form.data_fim|add_class:"form-control" }}
             </div>
-            <div class="col-md-3">
-            <label for="horario_inicio" class="form-label">
-            <i class="bi bi-clock-history me-1"></i> Horário Início:
-            </label>              
-            {{ form.horario_inicio|add_class:"form-control" }}
-            </div>
-            <div class="col-md-3">
-            <label for="horario_fim" class="form-label">
-            <i class="bi bi-clock me-1"></i> Horário Fim:
-            </label>              
-            {{ form.horario_fim|add_class:"form-control" }}
+            <div class="d-none">
+              {{ form.horario_inicio }}
+              {{ form.horario_fim }}
             </div>
             <div class="col-md-6">
             <label for="duracao" class="form-label">
             <i class="bi bi-hourglass-split me-1"></i> Duração (horas):
             </label>
-              <input type="text" id="duracao" name="duracao" class="form-control" value="{{ form.instance.duracao }}" readonly aria-label="Duração calculada automaticamente">
-            </div>
+            {{ form.duracao|add_class:"form-control" }}
+          </div>
           </div>
         </div>
       </div>
@@ -238,22 +230,8 @@
       width: '100%',
       placeholder: "Selecione os participantes",
       allowClear: true
-    });
-
-    // Cálculo de duração com base nos horários
-    const calcDuracao = () => {
-      const inicio = document.getElementById('id_horario_inicio')?.value;
-      const fim = document.getElementById('id_horario_fim')?.value;
-      if (inicio && fim) {
-        const start = new Date(`1970-01-01T${inicio}Z`);
-        const end = new Date(`1970-01-01T${fim}Z`);
-        const diff = (end - start) / 3600000;
-        document.getElementById('duracao').value = diff >= 0 ? diff.toFixed(2) : '';
-      }
-    };
-
-    document.getElementById('id_horario_inicio')?.addEventListener('change', calcDuracao);
-    document.getElementById('id_horario_fim')?.addEventListener('change', calcDuracao);
+    });  
+   
   });
 </script>
 {% endblock %}

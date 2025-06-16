@@ -24,15 +24,15 @@ class ListaPresencaForm(forms.ModelForm):
             ),
             "participantes": forms.SelectMultiple(attrs={"class": "form-select"}),
             "horario_inicio": forms.TimeInput(
-                attrs={"type": "time", "class": "form-control"},
+                attrs={"type": "time", "class": "form-control d-none"},
                 format="%H:%M"
             ),
             "horario_fim": forms.TimeInput(
-                attrs={"type": "time", "class": "form-control"},
+                attrs={"type": "time", "class": "form-control d-none"},
                 format="%H:%M"
             ),
             "duracao": forms.NumberInput(
-                attrs={"class": "form-control", "readonly": "readonly"}
+                attrs={"class": "form-control", "step": "0.25", "min": "0"}
             ),
             "instrutor": forms.TextInput(attrs={"class": "form-control"}),
             "assunto": forms.TextInput(attrs={"class": "form-control"}),
@@ -42,7 +42,12 @@ class ListaPresencaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Garante que as datas sejam exibidas corretamente no formato do input type="date"
+
+        # Oculta os campos de hora (mesmo carregando valor se existir)
+        self.fields["horario_inicio"].widget = forms.HiddenInput()
+        self.fields["horario_fim"].widget = forms.HiddenInput()
+
+        # Garante o formato correto das datas
         for field in ["data_inicio", "data_fim"]:
             if self.instance and getattr(self.instance, field):
                 self.initial[field] = getattr(self.instance, field).strftime("%Y-%m-%d")
@@ -51,8 +56,6 @@ class ListaPresencaForm(forms.ModelForm):
         cleaned_data = super().clean()
         data_inicio = cleaned_data.get("data_inicio")
         data_fim = cleaned_data.get("data_fim")
-        horario_inicio = cleaned_data.get("horario_inicio")
-        horario_fim = cleaned_data.get("horario_fim")
 
         if not data_inicio:
             raise ValidationError(

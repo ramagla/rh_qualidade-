@@ -134,6 +134,12 @@ class Funcionario(models.Model):
         ("XXG", "XXG"),
     ]
 
+    TIPO_CHOICES = [
+    ("operacional", "Operacional"),
+    ("administrativo", "Administrativo"),
+]
+
+
     camisa = models.CharField(
         max_length=3, choices=TAMANHO_CAMISA_CHOICES, blank=True, null=True, verbose_name="Tamanho da Camisa"
     )
@@ -169,7 +175,12 @@ class Funcionario(models.Model):
             self.representante_brigada = False
         super().save(*args, **kwargs)
 
-
+    tipo = models.CharField(
+        max_length=20,
+        choices=TIPO_CHOICES,
+        default="operacional",
+        verbose_name="Tipo do Colaborador"
+    )
 
     def __str__(self):
         return self.nome

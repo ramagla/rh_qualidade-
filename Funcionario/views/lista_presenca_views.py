@@ -21,9 +21,12 @@ from Funcionario.templatetags.conversores import horas_formatadas
 # Função lista_presenca
 @login_required
 def lista_presenca(request):
-    listas_presenca = ListaPresenca.objects.all().order_by(
-        "-data_inicio"
-    )  # Ordenar por assunto
+    listas_presenca = ListaPresenca.objects.all().order_by("-data_inicio")
+
+    # Participantes distintos relacionados às listas
+    participantes = Funcionario.objects.filter(
+        id__in=listas_presenca.values_list("participantes__id", flat=True)
+    ).distinct().order_by("nome")
 
     # Contadores para os cards
     total_listas = listas_presenca.count()
@@ -33,10 +36,11 @@ def lista_presenca(request):
 
     # Filtros
     instrutores = ListaPresenca.objects.values_list("instrutor", flat=True).distinct()
-    instrutor_filtro = request.GET.get("instrutor", None)
+    instrutor_filtro = request.GET.get("instrutor")
     situacao_filtro = request.GET.get("situacao")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
+    participante_filtro = request.GET.get("participante")
 
     if instrutor_filtro:
         listas_presenca = listas_presenca.filter(instrutor=instrutor_filtro)
@@ -49,6 +53,9 @@ def lista_presenca(request):
             data_inicio__gte=data_inicio, data_fim__lte=data_fim
         )
 
+    if participante_filtro:
+        listas_presenca = listas_presenca.filter(participantes__id=participante_filtro)
+
     # Paginação
     paginator = Paginator(listas_presenca, 10)  # 10 itens por página
     page_number = request.GET.get("page")
@@ -60,8 +67,8 @@ def lista_presenca(request):
         {
             "listas_presenca": page_obj,
             "page_obj": page_obj,
-            "listas_presenca": listas_presenca,
             "instrutores": instrutores,
+            "participantes": participantes,
             "situacao_opcoes": ListaPresenca.SITUACAO_CHOICES,
             "total_listas": total_listas,
             "listas_finalizadas": listas_finalizadas,
@@ -69,6 +76,7 @@ def lista_presenca(request):
             "listas_indefinidas": listas_indefinidas,
         },
     )
+
 
 
 def processar_lista_presenca(lista_presenca):

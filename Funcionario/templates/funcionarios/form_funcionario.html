@@ -178,7 +178,13 @@
                             </label>
                             {{ form.genero|add_class:"form-select" }}
                         </div>
-                        
+                        <div class="col-md-6">
+                            <label for="{{ form.tipo.id_for_label }}" class="form-label">
+                              <i class="bi bi-diagram-3 me-1"></i> Tipo do Colaborador:
+                            </label>
+                            {{ form.tipo|add_class:"form-select" }}
+                          </div>
+                          
 
                     </div>
                 </div>

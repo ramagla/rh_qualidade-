@@ -155,6 +155,13 @@ class FuncionarioForm(forms.ModelForm):
         widget=forms.Select(attrs={"class": "form-select"}),
     )
 
+    tipo = forms.ChoiceField(
+    choices=Funcionario.TIPO_CHOICES,
+    label="Tipo do Colaborador",
+    widget=forms.Select(attrs={"class": "form-select"}),
+)
+
+
     # Novo campo Número do Calçado
     calcado = forms.IntegerField(
         label="Número do Calçado",

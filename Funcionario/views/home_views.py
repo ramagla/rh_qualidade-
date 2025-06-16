@@ -222,6 +222,30 @@ def home(request):
 
     genero_labels = sorted(genero_dict.keys())
     genero_counts = [genero_dict[label] for label in genero_labels]
+
+
+
+   # Tipo (Administrativo x Operacional)
+    tipo_dict = {}
+    for f in Funcionario.objects.filter(status="Ativo"):
+        tipo = f.tipo if f.tipo else "Não Informado"
+        tipo_dict[tipo] = tipo_dict.get(tipo, 0) + 1
+
+    tipo_labels = sorted(tipo_dict.keys())
+    tipo_counts = [tipo_dict[label] for label in tipo_labels]
+
+    # Porcentagem real atual
+    total_funcionarios = sum(tipo_counts)
+    percentual_admin = round(100 * tipo_dict.get("administrativo", 0) / total_funcionarios, 1) if total_funcionarios else 0
+    percentual_operacional = round(100 * tipo_dict.get("operacional", 0) / total_funcionarios, 1) if total_funcionarios else 0
+
+    # Para gráfico comparativo
+    grafico_comparativo_labels = ["Administrativo", "Operacional"]
+    grafico_comparativo_dados_atual = [percentual_admin, percentual_operacional]
+    grafico_comparativo_dados_ref_min = [10, 80]
+    grafico_comparativo_dados_ref_max = [20, 90]
+
+
    
     # Filtrar somente funcionários ativos com flag de representante_cipa
     cipa_ativos = Funcionario.objects.filter(representante_cipa=True, status="Ativo")
@@ -309,7 +333,15 @@ def home(request):
         "cipa_empregados": cipa_empregados,
         "cipa_empregador": cipa_empregador,
 
-        'brigadistas': brigadistas
+        'brigadistas': brigadistas,
+        "tipo_labels": json.dumps(tipo_labels),
+        "tipo_counts": json.dumps(tipo_counts),
+        "grafico_comparativo_dados_atual": json.dumps(grafico_comparativo_dados_atual),
+        "grafico_comparativo_dados_ref_min": json.dumps(grafico_comparativo_dados_ref_min),
+        "grafico_comparativo_dados_ref_max": json.dumps(grafico_comparativo_dados_ref_max),
+        "grafico_comparativo_labels": json.dumps(grafico_comparativo_labels),
+
+
 
         
     }
