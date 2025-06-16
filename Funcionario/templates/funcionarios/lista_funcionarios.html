@@ -112,91 +112,80 @@
 
 
 
-    <div class="card mb-4">
-  <div class="card-header">
-    <i class="bi bi-funnel me-2" aria-hidden="true"></i> Filtros de Colaboradores
+    <!-- Botão flutuante e painel lateral de filtros -->
+{% include "partials/global/_filtros_colapsaveis.html" %}
+
+<!-- Conteúdo específico dos filtros -->
+{% block filtros_conteudo %}
+
+  <div class="col-md-12">
+    <label for="nome" class="form-label">
+      <i class="bi bi-person me-1"></i> Nome do Colaborador
+    </label>
+    <select name="nome" id="nome" class="form-select select2">
+      <option value="">Todos</option>
+      {% for funcionario in funcionarios %}
+        <option value="{{ funcionario.nome }}" {% if request.GET.nome == funcionario.nome %}selected{% endif %}>
+          {{ funcionario.nome }}
+        </option>
+      {% endfor %}
+    </select>
   </div>
-  <div class="card-body">
-    <form method="get" class="row g-3">
-      
-      <!-- Nome -->
-      <div class="col-md-3">
-        <label for="nome" class="form-label">
-          <i class="bi bi-person me-1" aria-hidden="true"></i> Nome do Colaborador
-        </label>
-        <select name="nome" id="nome" class="form-select select2">
-          <option value="">Todos</option>
-          {% for funcionario in funcionarios %}
-            <option value="{{ funcionario.nome }}" {% if request.GET.nome == funcionario.nome %}selected{% endif %}>
-              {{ funcionario.nome }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
 
-      <!-- Local de Trabalho -->
-      <div class="col-md-3">
-        <label for="local_trabalho" class="form-label">
-          <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Local de Trabalho
-        </label>
-        <select name="local_trabalho" id="local_trabalho" class="form-select select2">
-          <option value="">Selecione</option>
-          {% for departamento in departamentos %}
-  <option value="{{ departamento.id }}" {% if request.GET.local_trabalho == departamento.id|stringformat:"s" %}selected{% endif %}>
-    {{ departamento.nome }}
-  </option>
-{% endfor %}
-
-        </select>
-        
-      </div>
-
-      <!-- Responsável -->
-      <div class="col-md-3">
-        <label for="responsavel" class="form-label">
-          <i class="bi bi-person-badge me-1" aria-hidden="true"></i> Responsável
-        </label>
-        <select name="responsavel" id="responsavel" class="form-select select2">
-          <option value="">Selecione</option>
-          <option value="None" {% if request.GET.responsavel == "None" %}selected{% endif %}>Sem responsável</option>
-          {% for resp in responsaveis %}
-            <option value="{{ resp.id }}" {% if request.GET.responsavel == resp.id|stringformat:"s" %}selected{% endif %}>
-              {{ resp.nome }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <!-- Escolaridade -->
-      <div class="col-md-3">
-        <label for="escolaridade" class="form-label">
-          <i class="bi bi-mortarboard me-1" aria-hidden="true"></i> Escolaridade
-        </label>
-        <select name="escolaridade" id="escolaridade" class="form-select select2">
-          <option value="">Selecione</option>
-          {% for nivel in niveis_escolaridade %}
-            <option value="{{ nivel }}" {% if request.GET.escolaridade == nivel %}selected{% endif %}>{{ nivel }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <!-- Status -->
-      <div class="col-md-3">
-        <label for="status" class="form-label">
-          <i class="bi bi-toggle-on me-1" aria-hidden="true"></i> Status
-        </label>
-        <select name="status" id="status" class="form-select select2">
-          {% for opcao in status_opcoes %}
-            <option value="{{ opcao }}" {% if filtro_status == opcao %}selected{% endif %}>{{ opcao }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <!-- Botão Filtrar -->
-      {% include "partials/global/_botao_filtrar.html" %}
-    </form>
+  <div class="col-md-12">
+    <label for="local_trabalho" class="form-label">
+      <i class="bi bi-geo-alt me-1"></i> Local de Trabalho
+    </label>
+    <select name="local_trabalho" id="local_trabalho" class="form-select select2">
+      <option value="">Selecione</option>
+      {% for departamento in departamentos %}
+        <option value="{{ departamento.id }}" {% if request.GET.local_trabalho == departamento.id|stringformat:"s" %}selected{% endif %}>
+          {{ departamento.nome }}
+        </option>
+      {% endfor %}
+    </select>
   </div>
-</div>
+
+  <div class="col-md-12">
+    <label for="responsavel" class="form-label">
+      <i class="bi bi-person-badge me-1"></i> Responsável
+    </label>
+    <select name="responsavel" id="responsavel" class="form-select select2">
+      <option value="">Selecione</option>
+      <option value="None" {% if request.GET.responsavel == "None" %}selected{% endif %}>Sem responsável</option>
+      {% for resp in responsaveis %}
+        <option value="{{ resp.id }}" {% if request.GET.responsavel == resp.id|stringformat:"s" %}selected{% endif %}>
+          {{ resp.nome }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-12">
+    <label for="escolaridade" class="form-label">
+      <i class="bi bi-mortarboard me-1"></i> Escolaridade
+    </label>
+    <select name="escolaridade" id="escolaridade" class="form-select select2">
+      <option value="">Selecione</option>
+      {% for nivel in niveis_escolaridade %}
+        <option value="{{ nivel }}" {% if request.GET.escolaridade == nivel %}selected{% endif %}>{{ nivel }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-12">
+    <label for="status" class="form-label">
+      <i class="bi bi-toggle-on me-1"></i> Status
+    </label>
+    <select name="status" id="status" class="form-select select2">
+      {% for opcao in status_opcoes %}
+        <option value="{{ opcao }}" {% if filtro_status == opcao %}selected{% endif %}>{{ opcao }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+{% endblock %}
+
 
 
 <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">

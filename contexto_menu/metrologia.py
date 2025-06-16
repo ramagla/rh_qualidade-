@@ -88,7 +88,7 @@ def menu_metrologia(user):
             "perm": "metrologia.relatorio_equipamentos_por_funcionario",
         })
 
-    if user.has_perm("metrologia.relatorio_f062_solicitacao_orcamento"):
+    if user.has_perm("metrologia.relatorio_f062"):
         relatorios.append({
             "name": "Solicitação de Orçamento (F062)",
             "url": "equipamentos_para_calibracao",
