@@ -250,7 +250,19 @@ new Chart(document.getElementById('chartIndicadorTipo'), {
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        return `${context.dataset.label}: ${context.raw}%`;
+                        const tipo = context.label;
+                        const valor = context.raw;
+                        const datasetLabel = context.dataset.label;
+
+                        const quantidades = JSON.parse('{{ grafico_comparativo_quantidades|escapejs }}');
+                        const indice = context.dataIndex;
+
+                        let qtd = '';
+                        if (datasetLabel === "Atual") {
+                            qtd = ` (${quantidades.Atual[indice]} colaboradores)`;
+                        }
+
+                        return `${datasetLabel}: ${valor}%${qtd}`;
                     }
                 }
             }
@@ -268,6 +280,7 @@ new Chart(document.getElementById('chartIndicadorTipo'), {
         }
     }
 });
+
 
 
 

@@ -244,8 +244,10 @@ def home(request):
     grafico_comparativo_dados_atual = [percentual_admin, percentual_operacional]
     grafico_comparativo_dados_ref_min = [10, 80]
     grafico_comparativo_dados_ref_max = [20, 90]
-
-
+    grafico_comparativo_quantidades = {
+        "Atual": [tipo_dict.get("administrativo", 0), tipo_dict.get("operacional", 0)],
+        "Total": total_funcionarios
+    }
    
     # Filtrar somente funcionários ativos com flag de representante_cipa
     cipa_ativos = Funcionario.objects.filter(representante_cipa=True, status="Ativo")
@@ -336,11 +338,11 @@ def home(request):
         'brigadistas': brigadistas,
         "tipo_labels": json.dumps(tipo_labels),
         "tipo_counts": json.dumps(tipo_counts),
+        "grafico_comparativo_labels": json.dumps(grafico_comparativo_labels),
         "grafico_comparativo_dados_atual": json.dumps(grafico_comparativo_dados_atual),
         "grafico_comparativo_dados_ref_min": json.dumps(grafico_comparativo_dados_ref_min),
         "grafico_comparativo_dados_ref_max": json.dumps(grafico_comparativo_dados_ref_max),
-        "grafico_comparativo_labels": json.dumps(grafico_comparativo_labels),
-
+        "grafico_comparativo_quantidades": json.dumps(grafico_comparativo_quantidades),
 
 
         
