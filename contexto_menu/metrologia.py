@@ -93,7 +93,7 @@ def menu_metrologia(user):
             "name": "Solicitação de Orçamento (F062)",
             "url": "equipamentos_para_calibracao",
             "icon": "fas fa-file-signature",
-            "perm": "metrologia.relatorio_f062_solicitacao_orcamento",
+            "perm": "metrologia.relatorio_f062",
         })
 
     
