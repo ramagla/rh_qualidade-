@@ -26,62 +26,15 @@
   
   <div class="row g-4">
 
-    <!-- Relatórios F045 Gerados -->
-    <div class="col-md-4 col-xl-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <i class="bi bi-file-earmark-bar-graph fs-4 text-primary mb-2"></i>
-          <h6 class="card-title">Relatórios F045</h6>
-          <p class="fs-3 text-primary fw-bold">{{ kpi_f045_total }}</p>
-        </div>
-      </div>
-    </div>
+    <!-- Cards -->
+<div class="row mb-4 mt-5">
+  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Relatórios F045" valor=kpi_f045_total subtitulo="" icone="bi-file-earmark-bar-graph" %}
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Serviço Externo" valor=kpi_servico_total subtitulo="" icone="bi-tools" %}
+  {% include "partials/global/_card_indicador.html" with cor="warning" titulo="IQG Semestral" valor=kpi_iqg|stringformat:"d" subtitulo="%" icone="bi-speedometer2" %}
+  {% include "partials/global/_card_indicador.html" with cor="secondary" titulo="IQF Semestral" valor=kpi_iqf|stringformat:"d" subtitulo="%" icone="bi-award" %}
+  {% include "partials/global/_card_indicador.html" with cor="dark" titulo="IP Semestral" valor=kpi_ip|stringformat:"d" subtitulo="%" icone="bi-clock-history" %}
+</div>
 
-    <!-- Inspeções Serviço Externo -->
-    <div class="col-md-4 col-xl-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <i class="bi bi-tools fs-4 text-success mb-2"></i>
-          <h6 class="card-title">Serviço Externo</h6>
-          <p class="fs-3 text-success fw-bold">{{ kpi_servico_total }}</p>
-        </div>
-      </div>
-    </div>
-
-    
-    <!-- IQG Médio -->
-    <div class="col-md-4 col-xl-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <i class="bi bi-speedometer2 fs-4 text-warning mb-2"></i>
-          <h6 class="card-title">IQG Semestral</h6>
-          <p class="fs-3 text-warning fw-bold">{{ kpi_iqg }}%</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- IQF Médio -->
-    <div class="col-md-4 col-xl-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <i class="bi bi-award fs-4 text-secondary mb-2"></i>
-          <h6 class="card-title">IQF Semestral</h6>
-          <p class="fs-3 text-secondary fw-bold">{{ kpi_iqf }}%</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- IP Médio -->
-    <div class="col-md-4 col-xl-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <i class="bi bi-clock-history fs-4 text-dark mb-2"></i>
-          <h6 class="card-title">IP Semestral</h6>
-          <p class="fs-3 text-dark fw-bold">{{ kpi_ip }}%</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Gráfico IQG -->
   <div class="row my-5">
