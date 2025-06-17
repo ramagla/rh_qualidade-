@@ -13,8 +13,7 @@
 
  
 
-  <!-- Filtros -->
-<!-- Offcanvas de Filtros -->
+ <!-- Offcanvas de Filtros -->
 <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
@@ -25,10 +24,11 @@
   <div class="offcanvas-body">
     <form method="get">
       <div class="row g-3">
+
         <!-- Placa -->
         <div class="col-12">
           <label for="placa" class="form-label"><i class="bi bi-input-cursor-text me-1"></i> Placa</label>
-          <select name="placa" id="placa" class="form-select select2">
+          <select name="placa" id="placa" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todas</option>
             {% for placa in placas_disponiveis %}
               <option value="{{ placa }}" {% if request.GET.placa == placa %}selected{% endif %}>{{ placa }}</option>
@@ -39,7 +39,7 @@
         <!-- Tipo -->
         <div class="col-12">
           <label for="tipo" class="form-label"><i class="bi bi-car-front me-1"></i> Tipo</label>
-          <select name="tipo" id="tipo" class="form-select select2">
+          <select name="tipo" id="tipo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todos</option>
             {% for key, label in tipos %}
               <option value="{{ key }}" {% if request.GET.tipo == key %}selected{% endif %}>{{ label }}</option>
@@ -50,7 +50,7 @@
         <!-- Pessoa -->
         <div class="col-12">
           <label for="pessoa" class="form-label"><i class="bi bi-person me-1"></i> Pessoa</label>
-          <select name="pessoa" id="pessoa" class="form-select select2">
+          <select name="pessoa" id="pessoa" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todas</option>
             {% for pessoa in pessoas_disponiveis %}
               <option value="{{ pessoa.nome }}" {% if request.GET.pessoa == pessoa.nome %}selected{% endif %}>{{ pessoa.nome }}</option>
@@ -62,10 +62,12 @@
         <div class="col-12 text-center mt-3">
           {% include 'partials/global/_botao_filtrar.html' %}
         </div>
+        
       </div>
     </form>
   </div>
 </div>
+
 {% include "partials/global/_estilos_botoes_acoes.html" %}
 
 <!-- Ações -->

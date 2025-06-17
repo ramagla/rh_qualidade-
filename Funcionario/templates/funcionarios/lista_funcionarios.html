@@ -119,7 +119,6 @@
 
 
 
-
 <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
@@ -134,7 +133,7 @@
       <!-- Nome -->
       <div class="col-12 filtro-wrapper">
         <label for="nome"><i class="bi bi-person me-1"></i> Nome do Colaborador</label>
-        <select name="nome" id="nome" class="form-select select2">
+        <select name="nome" id="nome" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           {% for funcionario in funcionarios %}
             <option value="{{ funcionario.nome }}" {% if request.GET.nome == funcionario.nome %}selected{% endif %}>
@@ -147,7 +146,7 @@
       <!-- Local de Trabalho -->
       <div class="col-12 filtro-wrapper">
         <label for="local_trabalho"><i class="bi bi-geo-alt me-1"></i> Local de Trabalho</label>
-        <select name="local_trabalho" id="local_trabalho" class="form-select select2">
+        <select name="local_trabalho" id="local_trabalho" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Selecione</option>
           {% for departamento in departamentos %}
             <option value="{{ departamento.id }}" {% if request.GET.local_trabalho == departamento.id|stringformat:"s" %}selected{% endif %}>
@@ -160,7 +159,7 @@
       <!-- Responsável -->
       <div class="col-12 filtro-wrapper">
         <label for="responsavel"><i class="bi bi-person-badge me-1"></i> Responsável</label>
-        <select name="responsavel" id="responsavel" class="form-select select2">
+        <select name="responsavel" id="responsavel" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Selecione</option>
           <option value="None" {% if request.GET.responsavel == "None" %}selected{% endif %}>Sem responsável</option>
           {% for resp in responsaveis %}
@@ -174,7 +173,7 @@
       <!-- Escolaridade -->
       <div class="col-12 filtro-wrapper">
         <label for="escolaridade"><i class="bi bi-mortarboard me-1"></i> Escolaridade</label>
-        <select name="escolaridade" id="escolaridade" class="form-select select2">
+        <select name="escolaridade" id="escolaridade" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Selecione</option>
           {% for nivel in niveis_escolaridade %}
             <option value="{{ nivel }}" {% if request.GET.escolaridade == nivel %}selected{% endif %}>{{ nivel }}</option>
@@ -185,7 +184,7 @@
       <!-- Status -->
       <div class="col-12 filtro-wrapper">
         <label for="status"><i class="bi bi-toggle-on me-1"></i> Status</label>
-        <select name="status" id="status" class="form-select select2">
+        <select name="status" id="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           {% for opcao in status_opcoes %}
             <option value="{{ opcao }}" {% if filtro_status == opcao %}selected{% endif %}>{{ opcao }}</option>
           {% endfor %}
@@ -199,6 +198,7 @@
     </form>
   </div>
 </div>
+
 
 
 

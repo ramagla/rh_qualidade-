@@ -63,9 +63,10 @@
   <div class="offcanvas-body">
     <form method="get" class="row g-3">
 
+      <!-- Tipo de Comunicado -->
       <div class="col-12">
         <label for="filter_tipo" class="form-label"><i class="bi bi-tag me-1"></i> Tipo de Comunicado</label>
-        <select name="tipo" id="filter_tipo" class="form-select select2">
+        <select name="tipo" id="filter_tipo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           {% for valor, nome in tipo_choices %}
             <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ nome }}</option>
@@ -73,9 +74,10 @@
         </select>
       </div>
 
+      <!-- Departamento -->
       <div class="col-12">
         <label for="filter_departamento" class="form-label"><i class="bi bi-building me-1"></i> Departamento</label>
-        <select name="departamento" id="filter_departamento" class="form-select select2">
+        <select name="departamento" id="filter_departamento" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           {% for dep in departamentos %}
             <option value="{{ dep }}" {% if departamento == dep %}selected{% endif %}>{{ dep }}</option>
@@ -83,22 +85,26 @@
         </select>
       </div>
 
+      <!-- Data Início -->
       <div class="col-12">
         <label for="filter_data_inicio" class="form-label"><i class="bi bi-calendar-date me-1"></i> Data Início</label>
         <input type="date" name="data_inicio" id="filter_data_inicio" class="form-control" value="{{ data_inicio }}">
       </div>
 
+      <!-- Data Fim -->
       <div class="col-12">
         <label for="filter_data_fim" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data Fim</label>
         <input type="date" name="data_fim" id="filter_data_fim" class="form-control" value="{{ data_fim }}">
       </div>
 
+      <!-- Botão Filtrar -->
       <div class="col-12 mt-3">
         {% include "partials/global/_botao_filtrar.html" %}
       </div>
     </form>
   </div>
 </div>
+
 
 
 

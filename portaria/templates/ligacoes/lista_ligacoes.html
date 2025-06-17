@@ -13,8 +13,7 @@
  
 
  
-
-  <!-- Offcanvas Filtros -->
+<!-- Offcanvas Filtros -->
 <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
@@ -29,7 +28,7 @@
         <!-- Nome -->
         <div class="col-12">
           <label class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
-          <select name="nome" class="form-select select2 w-100">
+          <select name="nome" class="form-select select2 w-100" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todos</option>
             {% for nome in nomes %}
               <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
@@ -40,7 +39,7 @@
         <!-- Empresa -->
         <div class="col-12">
           <label class="form-label"><i class="bi bi-building me-1"></i> Empresa</label>
-          <select name="empresa" class="form-select select2 w-100">
+          <select name="empresa" class="form-select select2 w-100" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todas</option>
             {% for empresa in empresas %}
               <option value="{{ empresa }}" {% if request.GET.empresa == empresa %}selected{% endif %}>{{ empresa }}</option>
@@ -64,10 +63,12 @@
             <i class="bi bi-search"></i> Filtrar
           </button>
         </div>
+
       </div>
     </form>
   </div>
 </div>
+
 {% include "partials/global/_estilos_botoes_acoes.html" %}
 
 <!-- Botões de Ação -->

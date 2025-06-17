@@ -147,6 +147,7 @@ CUSTOM_PERMISSOES = [
     ("comercial", "dashboard", "acesso_comercial", "Pode acessar o módulo Comercial"),
     ("metrologia", "relatorio", "relatorio_f062", "Pode acessar o relatório Solicitação de Orçamento para Calibração (F062)"),
     ("metrologia", "relatorio", "gerar_f062", "Pode gerar a Solicitação de Orçamento para Calibração (F062)"),
+    ("metrologia", "controleentradasaida", "view_controleentradasaida", "Pode visualizar movimentações de dispositivo"),
 
 
 

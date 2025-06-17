@@ -27,7 +27,7 @@
     
     
 
-     <!-- Offcanvas com os filtros -->
+    <!-- Offcanvas com os filtros -->
 <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
@@ -38,9 +38,11 @@
 
   <div class="offcanvas-body">
     <form method="get" class="row g-3">
+      
+      <!-- Colaborador -->
       <div class="col-12">
         <label for="funcionario" class="form-label"><i class="bi bi-person me-1"></i> Colaborador</label>
-        <select name="funcionario" id="funcionario" class="form-select select2">
+        <select name="funcionario" id="funcionario" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           {% for func in funcionarios %}
             <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
@@ -48,9 +50,10 @@
         </select>
       </div>
 
+      <!-- Departamento -->
       <div class="col-12">
         <label for="departamento" class="form-label"><i class="bi bi-building me-1"></i> Departamento</label>
-        <select name="departamento" id="departamento" class="form-select select2">
+        <select name="departamento" id="departamento" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           {% for dept in departamentos %}
             <option value="{{ dept }}" {% if request.GET.departamento == dept %}selected{% endif %}>{{ dept }}</option>
@@ -58,30 +61,34 @@
         </select>
       </div>
 
+      <!-- Requer Treinamento -->
       <div class="col-12">
         <label for="requer_treinamento" class="form-label"><i class="bi bi-journal-check me-1"></i> Requer Treinamento</label>
-        <select name="requer_treinamento" id="requer_treinamento" class="form-select select2">
+        <select name="requer_treinamento" id="requer_treinamento" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           <option value="True" {% if request.GET.requer_treinamento == 'True' %}selected{% endif %}>Sim</option>
           <option value="False" {% if request.GET.requer_treinamento == 'False' %}selected{% endif %}>Não</option>
         </select>
       </div>
 
+      <!-- Grupo WhatsApp -->
       <div class="col-12">
         <label for="grupo_whatsapp" class="form-label"><i class="bi bi-whatsapp me-1"></i> Grupo WhatsApp</label>
-        <select name="grupo_whatsapp" id="grupo_whatsapp" class="form-select select2">
+        <select name="grupo_whatsapp" id="grupo_whatsapp" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           <option value="True" {% if request.GET.grupo_whatsapp == 'True' %}selected{% endif %}>Sim</option>
           <option value="False" {% if request.GET.grupo_whatsapp == 'False' %}selected{% endif %}>Não</option>
         </select>
       </div>
 
+      <!-- Botão Filtrar -->
       <div class="col-12 mt-3">
         {% include "partials/global/_botao_filtrar.html" %}
       </div>
     </form>
   </div>
 </div>
+
 
 <div class="row mb-4">
   {% include 'partials/global/_card_indicador.html' with titulo="Total de Integrações" valor=total_integracoes subtitulo="Integrações realizadas." cor="primary" icone="bi-person-plus-fill" %}

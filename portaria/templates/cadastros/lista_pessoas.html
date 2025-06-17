@@ -13,8 +13,7 @@
 
  
 
-  <!-- Filtros -->
-<!-- Offcanvas de Filtros -->
+ <!-- Offcanvas de Filtros -->
 <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
@@ -25,10 +24,11 @@
   <div class="offcanvas-body">
     <form method="get" id="formFiltroPessoas">
       <div class="row g-3">
+
         <!-- Nome -->
         <div class="col-12">
           <label for="nome" class="form-label"><i class="bi bi-person-lines-fill me-1"></i> Nome</label>
-          <select name="nome" id="nome" class="form-select select2">
+          <select name="nome" id="nome" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todos</option>
             {% for nome in nomes_disponiveis %}
               <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
@@ -39,7 +39,7 @@
         <!-- Tipo -->
         <div class="col-12">
           <label for="tipo" class="form-label"><i class="bi bi-person-badge me-1"></i> Tipo</label>
-          <select name="tipo" id="tipo" class="form-select select2">
+          <select name="tipo" id="tipo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todos</option>
             {% for key, label in tipos %}
               <option value="{{ key }}" {% if request.GET.tipo == key %}selected{% endif %}>{{ label }}</option>
@@ -50,7 +50,7 @@
         <!-- Empresa -->
         <div class="col-12">
           <label for="empresa" class="form-label"><i class="bi bi-building me-1"></i> Empresa</label>
-          <select name="empresa" id="empresa" class="form-select select2">
+          <select name="empresa" id="empresa" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todas</option>
             {% for empresa in empresas_disponiveis %}
               <option value="{{ empresa }}" {% if request.GET.empresa == empresa %}selected{% endif %}>{{ empresa }}</option>
@@ -62,10 +62,12 @@
         <div class="col-12 text-center mt-3">
           {% include 'partials/global/_botao_filtrar.html' %}
         </div>
+        
       </div>
     </form>
   </div>
 </div>
+
 
 {% include "partials/global/_estilos_botoes_acoes.html" %}
 

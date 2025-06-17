@@ -30,7 +30,7 @@
 
         <div class="col">
           <label class="form-label"><i class="bi bi-upc-scan me-1"></i> Código</label>
-          <select class="form-select select2" name="codigo">
+          <select class="form-select select2" name="codigo" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Selecione</option>
             {% for c in codigos_disponiveis %}
               <option value="{{ c }}" {% if request.GET.codigo == c %}selected{% endif %}>{{ c }}</option>
@@ -40,7 +40,7 @@
 
         <div class="col">
           <label class="form-label"><i class="bi bi-card-text me-1"></i> Descrição</label>
-          <select class="form-select select2" name="descricao">
+          <select class="form-select select2" name="descricao" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Selecione</option>
             {% for d in descricoes_disponiveis %}
               <option value="{{ d }}" {% if request.GET.descricao == d %}selected{% endif %}>{{ d }}</option>
@@ -50,19 +50,17 @@
 
         <div class="col">
           <label class="form-label"><i class="bi bi-journal-text me-1"></i> Norma</label>
-          <select class="form-select select2" name="norma">
+          <select class="form-select select2" name="norma" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Selecione</option>
             {% for n in normas_disponiveis %}
-              <option value="{{ n.id }}" {% if request.GET.norma == n.id|stringformat:"s" %}selected{% endif %}>
-                {{ n.nome_norma }}
-              </option>
+              <option value="{{ n.id }}" {% if request.GET.norma == n.id|stringformat:"s" %}selected{% endif %}>{{ n.nome_norma }}</option>
             {% endfor %}
           </select>
         </div>
 
         <div class="col">
           <label class="form-label"><i class="bi bi-diagram-3 me-1"></i> Tipo de Material</label>
-          <select class="form-select select2" name="tipo_material">
+          <select class="form-select select2" name="tipo_material" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Selecione</option>
             {% for tm in tipos_materiais_disponiveis %}
               <option value="{{ tm }}" {% if request.GET.tipo_material == tm %}selected{% endif %}>{{ tm }}</option>
@@ -72,7 +70,7 @@
 
         <div class="col">
           <label class="form-label"><i class="bi bi-award me-1"></i> Tipo ABNT/Classe</label>
-          <select class="form-select select2" name="tipo_abnt">
+          <select class="form-select select2" name="tipo_abnt" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Selecione</option>
             {% for ta in tipos_abnt_disponiveis %}
               <option value="{{ ta }}" {% if request.GET.tipo_abnt == ta %}selected{% endif %}>{{ ta }}</option>
@@ -82,7 +80,7 @@
 
         <div class="col">
           <label class="form-label"><i class="bi bi-tags me-1"></i> Tipo de Cadastro</label>
-          <select class="form-select select2" name="tipo">
+          <select class="form-select select2" name="tipo" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Selecione</option>
             <option value="Materia-Prima" {% if request.GET.tipo == "Materia-Prima" %}selected{% endif %}>Matéria-Prima</option>
             <option value="Tratamento" {% if request.GET.tipo == "Tratamento" %}selected{% endif %}>Tratamento</option>

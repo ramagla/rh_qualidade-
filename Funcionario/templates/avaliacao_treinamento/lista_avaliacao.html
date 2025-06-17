@@ -36,9 +36,10 @@
   <div class="offcanvas-body">
     <form method="get" class="row g-3">
 
+      <!-- Treinamento -->
       <div class="col-12">
         <label for="treinamento" class="form-label"><i class="bi bi-journal-check me-1"></i> Treinamento/Curso</label>
-        <select name="treinamento" id="treinamento" class="form-select select2">
+        <select name="treinamento" id="treinamento" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           {% for treinamento in listas_presenca %}
             <option value="{{ treinamento.id }}" {% if request.GET.treinamento == treinamento.id|stringformat:"s" %}selected{% endif %}>
@@ -48,9 +49,10 @@
         </select>
       </div>
 
+      <!-- Funcionário -->
       <div class="col-12">
         <label for="funcionario" class="form-label"><i class="bi bi-person me-1"></i> Funcionário</label>
-        <select name="funcionario" id="funcionario" class="form-select select2">
+        <select name="funcionario" id="funcionario" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           {% for funcionario in funcionarios_ativos %}
             <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
@@ -60,22 +62,26 @@
         </select>
       </div>
 
+      <!-- Data Início -->
       <div class="col-12">
         <label for="data_inicio" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data Início</label>
         <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
       </div>
 
+      <!-- Data Fim -->
       <div class="col-12">
         <label for="data_fim" class="form-label"><i class="bi bi-calendar-check me-1"></i> Data Fim</label>
         <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
       </div>
 
+      <!-- Botão Filtrar -->
       <div class="col-12 mt-3">
         {% include 'partials/global/_botao_filtrar.html' %}
       </div>
     </form>
   </div>
 </div>
+
 
 
 

@@ -85,9 +85,10 @@
   <div class="offcanvas-body">
     <form method="get" class="row g-3">
 
+      <!-- Colaborador -->
       <div class="col-12">
         <label for="funcionario" class="form-label"><i class="bi bi-person-badge me-1"></i> Colaborador</label>
-        <select name="funcionario" id="funcionario" class="form-select select2">
+        <select name="funcionario" id="funcionario" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           {% for func in funcionarios %}
             <option value="{{ func.id }}" {% if request.GET.funcionario == func.id|stringformat:"s" %}selected{% endif %}>{{ func.nome }}</option>
@@ -95,9 +96,10 @@
         </select>
       </div>
 
+      <!-- Tipo de Treinamento -->
       <div class="col-12">
         <label for="tipo" class="form-label"><i class="bi bi-journal-bookmark-fill me-1"></i> Tipo de Treinamento</label>
-        <select name="tipo" id="tipo" class="form-select select2">
+        <select name="tipo" id="tipo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           {% for tipo_choice in tipos_treinamento %}
             <option value="{{ tipo_choice.0 }}" {% if request.GET.tipo == tipo_choice.0 %}selected{% endif %}>{{ tipo_choice.1 }}</option>
@@ -105,9 +107,10 @@
         </select>
       </div>
 
+      <!-- Status -->
       <div class="col-12">
         <label for="status" class="form-label"><i class="bi bi-graph-up-arrow me-1"></i> Status</label>
-        <select name="status" id="status" class="form-select select2">
+        <select name="status" id="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
           <option value="">Todos</option>
           <option value="cursando" {% if request.GET.status == "cursando" %}selected{% endif %}>Cursando</option>
           <option value="concluido" {% if request.GET.status == "concluido" %}selected{% endif %}>Concluído</option>
@@ -116,12 +119,14 @@
         </select>
       </div>
 
+      <!-- Botão Filtrar -->
       <div class="col-12 mt-3">
         {% include "partials/global/_botao_filtrar.html" %}
       </div>
     </form>
   </div>
 </div>
+
 
 
 
