@@ -129,6 +129,7 @@
             {{ materiais_formset.management_form }}
             {% for material_form in materiais_formset %}
             <div class="row g-2 border-bottom pb-2 mb-2 align-items-end material-form-row">
+                {{ material_form.id }}
                 <div class="col-md-5">
                     <label class="form-label">
                         <i class="bi bi-box me-1"></i> Nome:
@@ -184,6 +185,8 @@
             {{ mo_formset.management_form }}
             {% for mo_form in mo_formset %}
             <div class="row g-2 border-bottom pb-2 mb-2">
+                {{ mo_form.id }}
+
                 <div class="col-md-4">
                     <label class="form-label"><i class="bi bi-person-vcard me-1"></i> Tipo:</label>
                     {{ mo_form.tipo|add_class:"form-select" }}
@@ -227,6 +230,8 @@
             {{ servico_formset.management_form }}
             {% for serv_form in servico_formset %}
             <div class="row g-2 border-bottom pb-2 mb-2">
+                {{ serv_form.id }}
+
                 <div class="col-md-4">
                     <label class="form-label"><i class="bi bi-gear-wide-connected me-1"></i> Tipo de Serviço:</label>
                     {{ serv_form.tipo_servico|add_class:"form-select" }}

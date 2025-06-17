@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load comercial_formatos %}
 
 {% block title %}Detalhes do Cliente - {{ cliente.razao_social }}{% endblock %}
 
@@ -78,27 +79,31 @@
     </style>
       
   <!-- Documentos Anexados -->
-  <div class="card mb-4 shadow-sm">
-    <div class="card-header bg-secondary text-white">
-      <h4 class="mb-0 text-white"><i class="bi bi-folder-fill me-2"></i> Documentos Anexados</h4>
-    </div>
-    <div class="card-body">
-      {% if cliente.documentos.all %}
-        <ul class="list-group list-group-flush">
-          {% for documento in cliente.documentos.all %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span><i class="bi bi-file-earmark-text me-2"></i> {{ documento.tipo }}:</span>
-              <a href="{{ documento.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-download me-1"></i> Visualizar
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="text-muted">Nenhum documento anexado para este cliente.</p>
-      {% endif %}
-    </div>
+<div class="card mb-4 shadow-sm">
+  <div class="card-header bg-secondary text-white">
+    <h4 class="mb-0 text-white"><i class="bi bi-folder-fill me-2"></i> Documentos Anexados</h4>
   </div>
+  <div class="card-body">
+    {% if cliente.documentos.exists %}
+      <ul class="list-group list-group-flush">
+        {% for documento in cliente.documentos.all %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+              <i class="bi bi-file-earmark-text me-2"></i>
+              {{ documento.tipo|default:"Tipo não informado" }}
+            </span>
+            <a href="{{ documento.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-download me-1"></i> Download
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted mb-0">Nenhum documento anexado para este cliente.</p>
+    {% endif %}
+  </div>
+</div>
+
 
   <!-- Dados de Contato -->
   <div class="card mb-4 shadow-sm">
@@ -114,41 +119,163 @@
   </div>
 
   <!-- Dados da Transportadora -->
-  <div class="card mb-4 shadow-sm">
-    <div class="card-header bg-info text-white">
-      <h4 class="mb-0 text-white"><i class="bi bi-truck-flatbed me-2"></i> Dados da Transportadora</h4>
-    </div>
-    <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-md-6"><p><strong><i class="bi bi-building me-1"></i> Razão Social:</strong> {{ cliente.transportadora_razao_social }}</p></div>
-        <div class="col-md-6"><p><strong><i class="bi bi-123 me-1"></i> CNPJ:</strong> {{ cliente.transportadora_cnpj }}</p></div>
-        <div class="col-md-6"><p><strong><i class="bi bi-journal-text me-1"></i> I.E.:</strong> {{ cliente.transportadora_ie|default:"Não informado" }}</p></div>
-        <div class="col-md-6"><p><strong><i class="bi bi-phone me-1"></i> Telefone:</strong> {{ cliente.transportadora_telefone|default:"Não informado" }}</p></div>
-        <div class="col-md-6"><p><strong><i class="bi bi-envelope me-1"></i> Email:</strong> {{ cliente.transportadora_email|default:"Não informado" }}</p></div>
-        <div class="col-md-6"><p><strong><i class="bi bi-box-seam me-1"></i> Coleta:</strong> {% if cliente.coleta %}Sim{% else %}Não{% endif %}</p></div>
-      </div>
-      <h5 class="mt-4"><i class="bi bi-geo-alt-fill me-1"></i> Endereço da Transportadora:</h5>
-      <p>{{ cliente.transportadora_endereco }}, {{ cliente.transportadora_numero }}{% if cliente.transportadora_complemento %}, {{ cliente.transportadora_complemento }}{% endif %}</p>
-      <p>{{ cliente.transportadora_bairro }}, {{ cliente.transportadora_cidade }} - {{ cliente.transportadora_uf }}, CEP: {{ cliente.transportadora_cep }}</p>
-    </div>
+{% if cliente.transportadora %}
+<div class="card mb-4 shadow-sm">
+  <div class="card-header bg-info text-white">
+    <h4 class="mb-0 text-white"><i class="bi bi-truck-flatbed me-2"></i> Dados da Transportadora</h4>
   </div>
+  <div class="card-body">
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <p><strong><i class="bi bi-building me-1"></i> Razão Social:</strong> {{ cliente.transportadora.razao_social }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong><i class="bi bi-123 me-1"></i> CNPJ:</strong> {{ cliente.transportadora.cnpj }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong><i class="bi bi-journal-text me-1"></i> I.E.:</strong> {{ cliente.transportadora.ie|default:"Não informado" }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong><i class="bi bi-phone me-1"></i> Telefone:</strong> {{ cliente.transportadora.telefone|default:"Não informado" }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong><i class="bi bi-envelope me-1"></i> Email:</strong> {{ cliente.transportadora.email|default:"Não informado" }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong><i class="bi bi-box-seam me-1"></i> Coleta:</strong> {% if cliente.coleta %}Sim{% else %}Não{% endif %}</p>
+      </div>
+    </div>
+    <h5 class="mt-4"><i class="bi bi-geo-alt-fill me-1"></i> Endereço da Transportadora:</h5>
+    <p>
+      {{ cliente.transportadora.endereco }},
+      {{ cliente.transportadora.numero }}
+      {% if cliente.transportadora.complemento %}, {{ cliente.transportadora.complemento }}{% endif %}
+    </p>
+    <p>
+      {{ cliente.transportadora.bairro }},
+      {{ cliente.transportadora.cidade }} - {{ cliente.transportadora.uf }},
+      CEP: {{ cliente.transportadora.cep }}
+    </p>
+  </div>
+</div>
+{% endif %}
 
-  <!-- Outras Informacoes -->
-  <div class="card mb-4 shadow-sm">
-    <div class="card-header bg-warning text-dark">
-      <h4 class="mb-0 text-dark"><i class="bi bi-gear-fill me-2"></i> Outras Informações</h4>
-    </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-4"><p><strong><i class="bi bi-calculator me-1"></i> ICMS:</strong> {{ cliente.icms|default:"0.00"|stringformat:"%.2f" }}%</p></div>
-        <div class="col-md-4"><p><strong><i class="bi bi-calculator me-1"></i> IPI:</strong> {{ cliente.ipi|default:"0.00"|stringformat:"%.2f" }}%</p></div>
-        <div class="col-md-4"><p><strong><i class="bi bi-hash me-1"></i> CFOP:</strong> {{ cliente.cfop }}</p></div>
-        <div class="col-md-6"><p><strong><i class="bi bi-credit-card-2-front me-1"></i> Condição de Pagamento:</strong> {{ cliente.cond_pagamento }}</p></div>
-        <div class="col-md-6"><p><strong><i class="bi bi-qr-code me-1"></i> Código BM:</strong> {{ cliente.cod_bm }}</p></div>
-        <div class="col-12"><p><strong><i class="bi bi-chat-dots-fill me-1"></i> Observação:</strong> {{ cliente.observacao|default:"Nenhuma observação." }}</p></div>
+
+ <!-- Outras Informacoes -->
+<div class="card mb-4 shadow-sm">
+  <div class="card-header bg-warning text-dark">
+    <h4 class="mb-0 text-dark"><i class="bi bi-gear-fill me-2"></i> Outras Informações</h4>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <p><strong><i class="bi bi-calculator me-1"></i> ICMS:</strong> {{ cliente.icms|default:"0.00"|floatformat:2 }}%</p>
+      </div>
+      <div class="col-md-4">
+        <p><strong><i class="bi bi-hash me-1"></i> CFOP:</strong> {{ cliente.cfop }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong><i class="bi bi-credit-card-2-front me-1"></i> Condição de Pagamento:</strong> {{ cliente.cond_pagamento }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong><i class="bi bi-qr-code me-1"></i> Código BM:</strong> {{ cliente.cod_bm }}</p>
+      </div>
+      <div class="col-12">
+        <p><strong><i class="bi bi-chat-dots-fill me-1"></i> Observação:</strong> {{ cliente.observacao|default:"Nenhuma observação." }}</p>
       </div>
     </div>
   </div>
+</div>
+<div class="page-break"></div> <!-- Força quebra de página na impressão -->
+
+<div class="card mb-4 shadow-sm">
+  <div class="card-header bg-success text-white">
+    <h4 class="mb-0 text-white"><i class="bi bi-boxes me-2"></i> Itens Relacionados</h4>
+  </div>
+  <div class="card-body">
+    {% if itens %}
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead class="table-light">
+         <thead class="table-light text-center align-middle">
+  <tr>
+    <th><i class="bi bi-upc-scan me-1"></i> Código</th>
+    <th><i class="bi bi-card-text me-1"></i> Descrição</th>
+    <th><i class="bi bi-hash me-1"></i> NCM</th>
+    <th><i class="bi bi-percent me-1"></i> IPI (%)</th>
+    <th><i class="bi bi-boxes me-1"></i> Lote Mínimo</th>
+    <th><i class="bi bi-car-front me-1"></i> Automotivo OEM</th>
+    <th><i class="bi bi-ui-checks-grid me-1"></i> Requisito Específico</th>
+    <th><i class="bi bi-shield-lock me-1"></i> Item de Segurança</th>
+  </tr>
+</thead>
+
+        </thead>
+        <tbody>
+          {% for item in itens %}
+          <tr>
+            <td class="align-middle">{{ item.codigo }}</td>
+            <td class="align-middle">{{ item.descricao }}</td>
+            <td class="align-middle">{{ item.ncm }}</td>
+            <td class="align-middle">{{ item.ipi|default:"0.00"|floatformat:2 }}</td>
+            <td class="align-middle">{{ item.lote_minimo }}</td>
+            <td class="align-middle">{% if item.automotivo_oem %}Sim{% else %}Não{% endif %}</td>
+            <td class="align-middle">{% if item.requisito_especifico %}Sim{% else %}Não{% endif %}</td>
+            <td class="align-middle">{% if item.item_seguranca %}Sim{% else %}Não{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted">Nenhum item cadastrado para este cliente.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card mb-4 shadow-sm">
+  <div class="card-header bg-info text-white">
+    <h4 class="mb-0"><i class="bi bi-tools me-2"></i> Ferramentas Vinculadas</h4>
+  </div>
+  <div class="card-body">
+    {% if cliente.ferramentas.exists %}
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped text-center align-middle">
+        <thead class="table-light">
+          <tr>
+            <th><i class="bi bi-upc me-1"></i> Código</th>
+            <th><i class="bi bi-card-text me-1"></i> Descrição</th>
+            <th><i class="bi bi-tags me-1"></i> Tipo</th>
+            <th><i class="bi bi-bar-chart me-1"></i> Vida útil</th>
+            <th><i class="bi bi-currency-dollar me-1"></i> Valor Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ferramenta in cliente.ferramentas.all %}
+          <tr>
+            <td class="align-middle">{{ ferramenta.codigo }}</td>
+            <td class="align-middle">{{ ferramenta.descricao }}</td>
+            <td class="align-middle">{{ ferramenta.get_tipo_display }}</td>
+            <td class="align-middle">{{ ferramenta.vida_util_em_pecas }}</td>
+            <td class="align-middle">R$ {{ ferramenta.valor_total|brl }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted">Nenhuma ferramenta cadastrada para este cliente.</p>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+
 
   <div class="text-center mt-5">
     <a href="{% url 'editar_cliente' cliente.pk %}" class="btn btn-warning me-2">

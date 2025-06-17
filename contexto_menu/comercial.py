@@ -55,4 +55,13 @@ def menu_comercial(user):
             "submenu": cadastro_submenu,
         })
 
+    if user.has_perm("comercial.view_cotacao"):
+        menu.append({
+            "name": "Cotações",
+            "url": "lista_cotacoes",
+            "icon": "fas fa-file-signature",
+            "perm": "comercial.view_cotacao",
+        })
+
+
     return menu

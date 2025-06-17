@@ -138,7 +138,7 @@ def editar_ferramenta(request, pk):
 
     if request.method == "POST":
         form = FerramentaForm(request.POST, request.FILES, instance=ferramenta)
-        materiais_formset = MaterialFerramentaFormSet(instance=ferramenta, prefix="material")
+        materiais_formset = MaterialFerramentaFormSet(request.POST, request.FILES, instance=ferramenta, prefix="material")
         mo_formset = MaoDeObraFormSet(request.POST, instance=ferramenta, prefix="mo")
         servico_formset = ServicoFormSet(request.POST, instance=ferramenta, prefix="servico")
 

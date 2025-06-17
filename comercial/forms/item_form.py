@@ -7,21 +7,13 @@ class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = [
-            "cliente",
-            "codigo",
-            "descricao",
-            "ncm",
-            "ferramenta",
-            "lote_minimo",
-            "codigo_cliente",
-            "descricao_cliente",
-            "automotivo_oem",
-            "requisito_especifico",
-            "item_seguranca",
-            "desenho",
-            "revisao",
-            "data_revisao",
-        ]
+                "cliente", "codigo", "descricao", "ncm", "ipi",  # ⬅️ novo campo
+                "ferramenta", "lote_minimo",
+                "codigo_cliente", "descricao_cliente",
+                "automotivo_oem", "requisito_especifico", "item_seguranca",
+                "desenho", "revisao", "data_revisao",
+            ]
+
         widgets = {
             "cliente": Select(attrs={"class": "form-select select2"}),
             "ferramenta": Select(attrs={"class": "form-select select2"}),
@@ -37,6 +29,8 @@ class ItemForm(forms.ModelForm):
             "desenho": FileInput(attrs={"class": "form-control"}),
             "revisao": TextInput(attrs={"class": "form-control", "placeholder": "Ex: A, B1"}),
             "data_revisao": DateInput(attrs={"class": "form-control", "type": "date"}),
+            "ipi": TextInput(attrs={"class": "form-control", "placeholder": "Ex: 5.00"}),
+
         }
         labels = {
             "cliente": "Cliente",

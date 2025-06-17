@@ -26,52 +26,65 @@
 
 
   <!-- Offcanvas Filtros Clientes -->
-<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
-      <i class="bi bi-funnel-fill me-2"></i>Filtros de Clientes
-    </h5>
-    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Clientes
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+  
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+  
+        <!-- Razão Social -->
+        <div class="col-12 filtro-wrapper">
+          <label for="razao_social" class="form-label">
+            <i class="bi bi-building me-1" aria-hidden="true"></i> Razão Social
+          </label>
+          <input type="text" name="razao_social" id="razao_social" class="form-control" placeholder="Razão Social" value="{{ request.GET.razao_social }}">
+        </div>
+  
+        <!-- CNPJ -->
+        <div class="col-12 filtro-wrapper">
+          <label for="cnpj" class="form-label">
+            <i class="bi bi-123 me-1" aria-hidden="true"></i> CNPJ
+          </label>
+          <input type="text" name="cnpj" id="cnpj" class="form-control" placeholder="CNPJ" value="{{ request.GET.cnpj }}">
+        </div>
+  
+        <!-- Tipo de Cadastro -->
+        <div class="col-12 filtro-wrapper">
+          <label for="tipo_cadastro" class="form-label">
+            <i class="bi bi-truck-front me-1"></i> Tipo de Cadastro
+          </label>
+          <select name="tipo_cadastro" id="tipo_cadastro" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            <option value="Cliente" {% if request.GET.tipo_cadastro == "Cliente" or not request.GET.tipo_cadastro %}selected{% endif %}>Cliente</option>
+            <option value="Transportadora" {% if request.GET.tipo_cadastro == "Transportadora" %}selected{% endif %}>Transportadora</option>
+          </select>
+        </div>
+  
+        <!-- Status -->
+        <div class="col-12 filtro-wrapper">
+          <label for="status" class="form-label">
+            <i class="bi bi-toggle-on me-1" aria-hidden="true"></i> Status
+          </label>
+          <select name="status" id="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            <option value="Ativo" {% if request.GET.status == "Ativo" or not request.GET.status %}selected{% endif %}>Ativo</option>
+            <option value="Inativo" {% if request.GET.status == "Inativo" %}selected{% endif %}>Inativo</option>
+          </select>
+        </div>
+  
+        <!-- Botão Filtrar -->
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
   </div>
-  <div class="offcanvas-body">
-    <form method="get" class="row g-3">
-
-      <!-- Razão Social -->
-      <div class="col-12 filtro-wrapper">
-        <label for="razao_social" class="form-label">
-          <i class="bi bi-building me-1" aria-hidden="true"></i> Razão Social
-        </label>
-        <input type="text" name="razao_social" id="razao_social" class="form-control" placeholder="Razão Social" value="{{ request.GET.razao_social }}">
-      </div>
-
-      <!-- CNPJ -->
-      <div class="col-12 filtro-wrapper">
-        <label for="cnpj" class="form-label">
-          <i class="bi bi-123 me-1" aria-hidden="true"></i> CNPJ
-        </label>
-        <input type="text" name="cnpj" id="cnpj" class="form-control" placeholder="CNPJ" value="{{ request.GET.cnpj }}">
-      </div>
-
-      <!-- Status -->
-      <div class="col-12 filtro-wrapper">
-        <label for="status" class="form-label">
-          <i class="bi bi-toggle-on me-1" aria-hidden="true"></i> Status
-        </label>
-        <select name="status" id="status" class="form-select select2">
-          <option value="">Todos</option>
-          <option value="Ativo" {% if request.GET.status == "Ativo" %}selected{% endif %}>Ativo</option>
-          <option value="Inativo" {% if request.GET.status == "Inativo" %}selected{% endif %}>Inativo</option>
-        </select>
-      </div>
-
-      <!-- Botão -->
-      <div class="col-12 mt-3">
-        {% include "partials/global/_botao_filtrar.html" %}
-      </div>
-
-    </form>
-  </div>
-</div>
+  
 
 
 <!-- Indicadores -->
@@ -101,6 +114,8 @@
           <th class="align-middle"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Cidade</th>
           <th class="align-middle"><i class="bi bi-telephone me-1" aria-hidden="true"></i> Telefone</th>
           <th class="align-middle"><i class="bi bi-envelope me-1" aria-hidden="true"></i> E-mail</th>
+          <th class="align-middle"><i class="bi bi-folder2-open me-1" aria-hidden="true"></i> Anexos</th>
+
           <th class="align-middle"><i class="bi bi-gear me-1" aria-hidden="true"></i> Ações</th>
         </tr>
       </thead>
@@ -120,6 +135,49 @@
           <td>{{ cliente.cidade }} - {{ cliente.uf }}</td>
           <td>{{ cliente.telefone }}</td>
           <td>{{ cliente.email }}</td>
+          <td>
+            {% if cliente.documentos.exists %}
+              <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAnexos{{ cliente.id }}">
+                <i class="bi bi-eye"></i>
+              </button>
+          
+              <!-- Modal de Anexos -->
+              <div class="modal fade" id="modalAnexos{{ cliente.id }}" tabindex="-1" aria-labelledby="modalAnexosLabel{{ cliente.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                      <h5 class="modal-title" id="modalAnexosLabel{{ cliente.id }}">
+                        <i class="bi bi-folder2-open me-2"></i> Documentos de {{ cliente.razao_social }}
+                      </h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                      {% if cliente.documentos.all %}
+                        <ul class="list-group list-group-flush">
+                          {% for doc in cliente.documentos.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                              <span><i class="bi bi-file-earmark-text me-2"></i>{{ doc.tipo|default:"Sem tipo" }}</span>
+                              <a href="{{ doc.arquivo.url }}" class="btn btn-sm btn-outline-success" target="_blank">
+                                <i class="bi bi-download me-1"></i> Baixar
+                              </a>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <p class="text-muted">Nenhum documento anexado.</p>
+                      {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          
           <td>
             <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
               {% if request.user|has_permission:"comercial.view_cliente" %}

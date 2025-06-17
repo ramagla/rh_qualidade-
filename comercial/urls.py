@@ -2,6 +2,8 @@ from django.urls import path
 from comercial.views import centro_custo_views, cliente_views, ferramenta_views
 from comercial.views import item_views
 from comercial.views import dashboard_views
+from comercial.views import cotacao_views
+
 
 urlpatterns = [
     # Dashboard
@@ -13,6 +15,7 @@ urlpatterns = [
     path("clientes/editar/<int:pk>/", cliente_views.editar_cliente, name="editar_cliente"),
     path("clientes/visualizar/<int:pk>/", cliente_views.visualizar_cliente, name="visualizar_cliente"),
     path("clientes/excluir/<int:pk>/", cliente_views.excluir_cliente, name="excluir_cliente"),
+    path("clientes/verificar-cnpj/", cliente_views.verificar_cnpj_existente, name="verificar_cnpj_existente"),
 
     # Itens
     path("itens/", item_views.lista_itens, name="lista_itens"),
@@ -37,6 +40,14 @@ urlpatterns = [
     path("centros-custo/cadastrar/", centro_custo_views.cadastrar_centro_custo, name="cadastrar_centro_custo"),
     path("centros-custo/editar/<int:pk>/", centro_custo_views.editar_centro_custo, name="editar_centro_custo"),
     path("centros-custo/visualizar/<int:pk>/", centro_custo_views.visualizar_centro_custo, name="visualizar_centro_custo"),
+
+
+    # Cotações
+    path("cotacoes/", cotacao_views.lista_cotacoes, name="lista_cotacoes"),
+    path("cotacoes/cadastrar/", cotacao_views.cadastrar_cotacao, name="cadastrar_cotacao"),
+    path("cotacoes/editar/<int:pk>/", cotacao_views.editar_cotacao, name="editar_cotacao"),
+    path("cotacoes/excluir/<int:pk>/", cotacao_views.excluir_cotacao, name="excluir_cotacao"),
+    path("cotacoes/visualizar/<int:pk>/", cotacao_views.visualizar_cotacao, name="visualizar_cotacao"),
 
 
 ]
