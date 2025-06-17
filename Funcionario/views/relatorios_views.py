@@ -310,42 +310,55 @@ class RelatorioIndicadorAnualView(TemplateView):
 from Funcionario.models.departamentos import Departamentos  # Import necessário
 
 
+from Funcionario.models.departamentos import Departamentos
+
+from django.shortcuts import get_object_or_404
+
+from datetime import datetime
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from Funcionario.models import Treinamento
+from Funcionario.models.departamentos import Departamentos
+
 @login_required
 def cronograma_treinamentos(request):
-    # Obtém os filtros
-    ano = request.GET.get("ano", None)
-    departamento = request.GET.get("departamento", None)
+    ano = request.GET.get("ano")
+    departamento_id = request.GET.get("departamento")
 
-    # Define o ano padrão como o ano atual, se necessário
-    ano = int(ano) if ano else datetime.now().year
+    ano = int(ano) if ano and ano.isdigit() else datetime.now().year
 
-    # Filtra os treinamentos
     treinamentos = Treinamento.objects.filter(data_inicio__year=ano)
-    if departamento:
-        treinamentos = treinamentos.filter(funcionarios__local_trabalho=departamento)
 
-    # Obter anos disponíveis para o filtro
+    if departamento_id:
+        try:
+            departamento_id = int(departamento_id)
+            treinamentos = treinamentos.filter(funcionarios__local_trabalho_id=departamento_id)
+        except (ValueError, TypeError):
+            # Ignora filtro se não for um número válido
+            pass
+
     anos_disponiveis = Treinamento.objects.dates("data_inicio", "year", order="DESC")
-    anos_disponiveis = [data.year for data in anos_disponiveis]
+    anos_disponiveis = [d.year for d in anos_disponiveis]
 
-    # Buscar departamentos ativos ordenados por nome
     departamentos = Departamentos.objects.filter(ativo=True).order_by("nome")
 
-    # Gerar os meses dinamicamente com base no ano filtrado
     meses = [datetime(ano, mes, 1).strftime("%b/%y").capitalize() for mes in range(1, 13)]
 
-    # Monta o contexto para o template
     context = {
-        "treinamentos": treinamentos,
+        "treinamentos": treinamentos.distinct(),
         "anos_disponiveis": anos_disponiveis,
         "departamentos": departamentos,
         "ano": ano,
-        "filtro_departamento": departamento,
+        "filtro_departamento": departamento_id if departamento_id and str(departamento_id).isdigit() else None,
         "data_atual": datetime.now().strftime("%d/%m/%Y"),
         "meses": meses,
     }
 
     return render(request, "relatorios/cronograma_treinamentos.html", context)
+
+
+
+
 
 
 @login_required

@@ -61,15 +61,21 @@
         <label for="departamento" class="form-label">
           <i class="bi bi-building me-1" aria-hidden="true"></i> Departamento:
         </label>
-        <select name="departamento" id="departamento" class="form-select select2">
-          <option value="">Todos os departamentos</option>
-          {% for dept in departamentos %}
-  <option value="{{ dept.nome }}" {% if filtro_departamento == dept.nome %}selected{% endif %}>
-    {{ dept.nome }}
-  </option>
-{% endfor %}
-
+        <select name="departamento" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos os Departamentos</option>
+          {% for dep in departamentos %}
+            <option value="{{ dep.id }}" {% if filtro_departamento == dep.id %}selected{% endif %}>
+              {{ dep.nome }}
+            </option>
+          {% endfor %}
         </select>
+        
+        
+        
+        
+        
+        
+        
       </div>
       {% include 'partials/global/_botao_filtrar.html' %}
     </form>
