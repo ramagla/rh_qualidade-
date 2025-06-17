@@ -24,98 +24,100 @@
 </div>
 
   
-
-  <!-- Filtros -->
-  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
-        <i class="bi bi-funnel-fill me-2"></i>Filtros de Pesquisa
-      </h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-    </div>
-    <div class="offcanvas-body">
-      <form method="get" class="row g-3">
-  
-        <div class="col-12">
-          <label for="codigo" class="form-label">
-            <i class="bi bi-upc-scan me-1"></i> Código
-          </label>
-          <select id="codigo" name="codigo" class="form-select select2">
-            <option value="">Selecione</option>
-            {% for codigo in codigos %}
-              <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>{{ codigo }}</option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="laboratorio" class="form-label">
-            <i class="bi bi-building me-1"></i> Laboratório
-          </label>
-          <select id="laboratorio" name="laboratorio" class="form-select select2">
-            <option value="">Selecione</option>
-            {% for lab in laboratorios %}
-              <option value="{{ lab }}" {% if request.GET.laboratorio == lab %}selected{% endif %}>{{ lab }}</option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="proprietario" class="form-label">
-            <i class="bi bi-person-badge me-1"></i> Proprietário
-          </label>
-          <select id="proprietario" name="proprietario" class="form-select select2">
-            <option value="">Todos</option>
-            {% for prop in proprietarios %}
-              <option value="{{ prop }}" {% if filtro_proprietario == prop %}selected{% endif %}>{{ prop }}</option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="status" class="form-label">
-            <i class="bi bi-clipboard2-check me-1"></i> Status
-          </label>
-          <select id="status" name="status" class="form-select select2">
-            <option value="">Todos</option>
-            <option value="Aprovado" {% if request.GET.status == "Aprovado" %}selected{% endif %}>Aprovado</option>
-            <option value="Reprovado" {% if request.GET.status == "Reprovado" %}selected{% endif %}>Reprovado</option>
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="tipo" class="form-label">
-            <i class="bi bi-list-ul me-1"></i> Tipo
-          </label>
-          <select id="tipo" name="tipo" class="form-select select2">
-            <option value="">Todos</option>
-            <option value="deslocamento" {% if request.GET.tipo == "deslocamento" %}selected{% endif %}>Deslocamento</option>
-            <option value="carga" {% if request.GET.tipo == "carga" %}selected{% endif %}>Carga</option>
-            <option value="dimensional" {% if request.GET.tipo == "dimensional" %}selected{% endif %}>Dimensional</option>
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="data_inicio" class="form-label">
-            <i class="bi bi-calendar-event me-1"></i> Data Início
-          </label>
-          <input type="date" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
-        </div>
-  
-        <div class="col-12">
-          <label for="data_fim" class="form-label">
-            <i class="bi bi-calendar2-check me-1"></i> Data Fim
-          </label>
-          <input type="date" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
-        </div>
-  
-        <div class="col-12 mt-2">
-          {% include 'partials/global/_botao_filtrar.html' %}
-        </div>
-  
-      </form>
-    </div>
+<!-- Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Pesquisa
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
+
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+
+      <div class="col-12">
+        <label for="codigo" class="form-label">
+          <i class="bi bi-upc-scan me-1"></i> Código
+        </label>
+        <select id="codigo" name="codigo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Selecione</option>
+          {% for codigo in codigos %}
+            <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>{{ codigo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="laboratorio" class="form-label">
+          <i class="bi bi-building me-1"></i> Laboratório
+        </label>
+        <select id="laboratorio" name="laboratorio" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Selecione</option>
+          {% for lab in laboratorios %}
+            <option value="{{ lab }}" {% if request.GET.laboratorio == lab %}selected{% endif %}>{{ lab }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="proprietario" class="form-label">
+          <i class="bi bi-person-badge me-1"></i> Proprietário
+        </label>
+        <select id="proprietario" name="proprietario" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for prop in proprietarios %}
+            <option value="{{ prop }}" {% if filtro_proprietario == prop %}selected{% endif %}>{{ prop }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="status" class="form-label">
+          <i class="bi bi-clipboard2-check me-1"></i> Status
+        </label>
+        <select id="status" name="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          <option value="Aprovado" {% if request.GET.status == "Aprovado" %}selected{% endif %}>Aprovado</option>
+          <option value="Reprovado" {% if request.GET.status == "Reprovado" %}selected{% endif %}>Reprovado</option>
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="tipo" class="form-label">
+          <i class="bi bi-list-ul me-1"></i> Tipo
+        </label>
+        <select id="tipo" name="tipo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          <option value="deslocamento" {% if request.GET.tipo == "deslocamento" %}selected{% endif %}>Deslocamento</option>
+          <option value="carga" {% if request.GET.tipo == "carga" %}selected{% endif %}>Carga</option>
+          <option value="dimensional" {% if request.GET.tipo == "dimensional" %}selected{% endif %}>Dimensional</option>
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="data_inicio" class="form-label">
+          <i class="bi bi-calendar-event me-1"></i> Data Início
+        </label>
+        <input type="date" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
+      </div>
+
+      <div class="col-12">
+        <label for="data_fim" class="form-label">
+          <i class="bi bi-calendar2-check me-1"></i> Data Fim
+        </label>
+        <input type="date" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
+      </div>
+
+      <div class="col-12 mt-2">
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
   
 <!-- Indicadores -->
 <div class="row mb-4">

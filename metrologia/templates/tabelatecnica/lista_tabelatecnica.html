@@ -35,83 +35,85 @@
 
 
   <!-- 🔍 Filtros de Equipamentos -->
-  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
-        <i class="bi bi-funnel-fill me-2"></i>Filtros de Equipamentos
-      </h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-    </div>
-    <div class="offcanvas-body">
-      <form method="get" class="row g-3">
-        
-        <div class="col-12">
-          <label for="codigo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código</label>
-          <select name="codigo" id="codigo" class="form-select select2">
-            <option value="">Todos</option>
-            {% for codigo in codigos %}
-              <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>{{ codigo }}</option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="nome_equipamento" class="form-label"><i class="bi bi-gear-wide-connected me-1"></i> Nome</label>
-          <select name="nome_equipamento" id="nome_equipamento" class="form-select select2">
-            <option value="">Todos</option>
-            {% for equipamento in equipamentos %}
-              <option value="{{ equipamento }}" {% if equipamento == request.GET.nome_equipamento %}selected{% endif %}>{{ equipamento }}</option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="unidade_medida" class="form-label"><i class="bi bi-rulers me-1"></i> Unidade de Medida</label>
-          <select name="unidade_medida" id="unidade_medida" class="form-select select2">
-            <option value="">Todas</option>
-            {% for symbol, name in unidades_medida.items %}
-              <option value="{{ symbol }}" {% if request.GET.unidade_medida == symbol %}selected{% endif %}>{{ name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="status" class="form-label"><i class="bi bi-circle-half me-1"></i> Status</label>
-          <select name="status" id="status" class="form-select select2">
-            <option value="">Todos</option>
-            <option value="ativo" {% if status_selecionado == "ativo" %}selected{% endif %}>Ativo</option>
-            <option value="inativo" {% if status_selecionado == "inativo" %}selected{% endif %}>Inativo</option>
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="responsavel" class="form-label"><i class="bi bi-person-badge me-1"></i> Responsável</label>
-          <select name="responsavel" id="responsavel" class="form-select select2">
-            <option value="">Todos</option>
-            {% for responsavel in responsaveis %}
-              <option value="{{ responsavel.id }}" {% if responsavel.id|stringformat:"s" == request.GET.responsavel %}selected{% endif %}>
-                {{ responsavel.nome }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="fabricante" class="form-label"><i class="bi bi-tools me-1"></i> Fabricante</label>
-          <select name="fabricante" id="fabricante" class="form-select select2">
-            <option value="">Todos</option>
-            {% for fabricante in fabricantes %}
-              <option value="{{ fabricante }}" {% if fabricante == request.GET.fabricante %}selected{% endif %}>{{ fabricante }}</option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12 mt-3">
-          {% include 'partials/global/_botao_filtrar.html' %}
-        </div>
-      </form>
-    </div>
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Equipamentos
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
+
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+      
+      <div class="col-12">
+        <label for="codigo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código</label>
+        <select name="codigo" id="codigo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for codigo in codigos %}
+            <option value="{{ codigo }}" {% if codigo == request.GET.codigo %}selected{% endif %}>{{ codigo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="nome_equipamento" class="form-label"><i class="bi bi-gear-wide-connected me-1"></i> Nome</label>
+        <select name="nome_equipamento" id="nome_equipamento" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for equipamento in equipamentos %}
+            <option value="{{ equipamento }}" {% if equipamento == request.GET.nome_equipamento %}selected{% endif %}>{{ equipamento }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="unidade_medida" class="form-label"><i class="bi bi-rulers me-1"></i> Unidade de Medida</label>
+        <select name="unidade_medida" id="unidade_medida" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todas</option>
+          {% for symbol, name in unidades_medida.items %}
+            <option value="{{ symbol }}" {% if request.GET.unidade_medida == symbol %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="status" class="form-label"><i class="bi bi-circle-half me-1"></i> Status</label>
+        <select name="status" id="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          <option value="ativo" {% if status_selecionado == "ativo" %}selected{% endif %}>Ativo</option>
+          <option value="inativo" {% if status_selecionado == "inativo" %}selected{% endif %}>Inativo</option>
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="responsavel" class="form-label"><i class="bi bi-person-badge me-1"></i> Responsável</label>
+        <select name="responsavel" id="responsavel" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for responsavel in responsaveis %}
+            <option value="{{ responsavel.id }}" {% if responsavel.id|stringformat:"s" == request.GET.responsavel %}selected{% endif %}>
+              {{ responsavel.nome }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="fabricante" class="form-label"><i class="bi bi-tools me-1"></i> Fabricante</label>
+        <select name="fabricante" id="fabricante" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for fabricante in fabricantes %}
+            <option value="{{ fabricante }}" {% if fabricante == request.GET.fabricante %}selected{% endif %}>{{ fabricante }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 mt-3">
+        {% include 'partials/global/_botao_filtrar.html' %}
+      </div>
+    </form>
+  </div>
+</div>
+
   
 
 

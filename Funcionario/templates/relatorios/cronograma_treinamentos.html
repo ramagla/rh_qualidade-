@@ -64,10 +64,11 @@
         <select name="departamento" id="departamento" class="form-select select2">
           <option value="">Todos os departamentos</option>
           {% for dept in departamentos %}
-          <option value="{{ dept }}" {% if filtro_departamento == dept %}selected{% endif %}>
-            {{ dept }}
-          </option>
-          {% endfor %}
+  <option value="{{ dept.nome }}" {% if filtro_departamento == dept.nome %}selected{% endif %}>
+    {{ dept.nome }}
+  </option>
+{% endfor %}
+
         </select>
       </div>
       {% include 'partials/global/_botao_filtrar.html' %}

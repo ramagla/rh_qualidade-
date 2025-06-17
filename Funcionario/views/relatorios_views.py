@@ -307,6 +307,8 @@ class RelatorioIndicadorAnualView(TemplateView):
 
         return base64.b64encode(image_png).decode("utf-8")
 
+from Funcionario.models.departamentos import Departamentos  # Import necessário
+
 
 @login_required
 def cronograma_treinamentos(request):
@@ -326,15 +328,11 @@ def cronograma_treinamentos(request):
     anos_disponiveis = Treinamento.objects.dates("data_inicio", "year", order="DESC")
     anos_disponiveis = [data.year for data in anos_disponiveis]
 
-    # Obter departamentos únicos
-    departamentos = Funcionario.objects.values_list(
-        "local_trabalho", flat=True
-    ).distinct()
+    # Buscar departamentos ativos ordenados por nome
+    departamentos = Departamentos.objects.filter(ativo=True).order_by("nome")
 
     # Gerar os meses dinamicamente com base no ano filtrado
-    meses = [
-        datetime(ano, mes, 1).strftime("%b/%y").capitalize() for mes in range(1, 13)
-    ]
+    meses = [datetime(ano, mes, 1).strftime("%b/%y").capitalize() for mes in range(1, 13)]
 
     # Monta o contexto para o template
     context = {

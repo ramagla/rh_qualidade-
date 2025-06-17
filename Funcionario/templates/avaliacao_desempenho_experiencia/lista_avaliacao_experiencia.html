@@ -26,46 +26,51 @@
   
   
   <!-- 🔎 Filtros de Avaliações -->
-  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
-        <i class="bi bi-funnel-fill me-2"></i>Filtros de Avaliações de Experiência
-      </h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-    </div>
-  
-    <div class="offcanvas-body">
-      <form method="get" class="row g-3">
-        <div class="col-12">
-          <label for="funcionario" class="form-label"><i class="bi bi-person me-1"></i> Colaborador</label>
-          <select name="funcionario" id="funcionario" class="form-select select2">
-            <option value="">Todos</option>
-            {% for funcionario in funcionarios %}
-              <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
-                {{ funcionario.nome }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label class="form-label"><i class="bi bi-calendar-range me-1"></i> Período de Avaliação</label>
-          <div class="row g-2">
-            <div class="col-6">
-              <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
-            </div>
-            <div class="col-6">
-              <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
-            </div>
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Avaliações de Experiência
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+
+      <!-- Colaborador -->
+      <div class="col-12">
+        <label for="funcionario" class="form-label"><i class="bi bi-person me-1"></i> Colaborador</label>
+        <select name="funcionario" id="funcionario" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for funcionario in funcionarios %}
+            <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
+              {{ funcionario.nome }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Período -->
+      <div class="col-12">
+        <label class="form-label"><i class="bi bi-calendar-range me-1"></i> Período de Avaliação</label>
+        <div class="row g-2">
+          <div class="col-6">
+            <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+          </div>
+          <div class="col-6">
+            <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
           </div>
         </div>
-  
-        <div class="col-12 mt-3">
-          {% include "partials/global/_botao_filtrar.html" %}
-        </div>
-      </form>
-    </div>
+      </div>
+
+      <!-- Botão Filtrar -->
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+    </form>
   </div>
+</div>
+
   
 
 

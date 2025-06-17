@@ -41,9 +41,11 @@
   
     <div class="offcanvas-body">
       <form method="get" class="row g-3">
+  
+        <!-- Departamento -->
         <div class="col-12">
           <label for="departamento" class="form-label"><i class="bi bi-building me-1"></i> Departamento</label>
-          <select name="departamento" id="departamento" class="form-select select2">
+          <select name="departamento" id="departamento" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todos</option>
             {% for departamento in departamentos %}
               <option value="{{ departamento.id }}" {% if request.GET.departamento == departamento.id|stringformat:"s" %}selected{% endif %}>
@@ -53,9 +55,10 @@
           </select>
         </div>
   
+        <!-- Cargo -->
         <div class="col-12">
           <label for="cargo" class="form-label"><i class="bi bi-person-workspace me-1"></i> Cargo</label>
-          <select name="cargo" id="cargo" class="form-select select2">
+          <select name="cargo" id="cargo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todos</option>
             {% for cargo in todos_cargos %}
               <option value="{{ cargo.nome }}" {% if request.GET.cargo == cargo.nome %}selected{% endif %}>{{ cargo.nome }}</option>
@@ -63,12 +66,14 @@
           </select>
         </div>
   
+        <!-- Botão Filtrar -->
         <div class="col-12 mt-3">
           {% include "partials/global/_botao_filtrar.html" %}
         </div>
       </form>
     </div>
   </div>
+  
   
 
 

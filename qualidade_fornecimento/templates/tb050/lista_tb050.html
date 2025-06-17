@@ -34,7 +34,7 @@
 
         <div class="col">
           <label for="status" class="form-label"><i class="bi bi-check2-square me-1"></i> Status</label>
-          <select class="form-select" id="status" name="status">
+          <select class="form-select select2" id="status" name="status" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">-- Todos --</option>
             {% for st in filter_status %}
               <option value="{{ st }}" {% if status_filter == st %}selected{% endif %}>{{ st }}</option>
@@ -59,7 +59,7 @@
 
         <div class="col">
           <label for="fornecedor" class="form-label"><i class="bi bi-truck me-1"></i> Fornecedor</label>
-          <select class="form-select select2" id="fornecedor" name="fornecedor">
+          <select class="form-select select2" id="fornecedor" name="fornecedor" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">-- Todos --</option>
             {% for forn in lista_fornecedores %}
               <option value="{{ forn.pk }}" {% if request.GET.fornecedor == forn.pk|stringformat:"s" %}selected{% endif %}>{{ forn.nome }}</option>
@@ -69,7 +69,7 @@
 
         <div class="col">
           <label for="materia_prima" class="form-label"><i class="bi bi-boxes me-1"></i> Matéria‑Prima</label>
-          <select class="form-select select2" id="materia_prima" name="materia_prima">
+          <select class="form-select select2" id="materia_prima" name="materia_prima" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">-- Todas --</option>
             {% for mp in lista_materiasprimas %}
               <option value="{{ mp.pk }}" {% if request.GET.materia_prima == mp.pk|stringformat:"s" %}selected{% endif %}>
@@ -87,6 +87,7 @@
     </form>
   </div>
 </div>
+
 
   <!-- Modal Gerar F045 -->
 <div class="modal fade" id="modalF045" tabindex="-1" aria-labelledby="modalF045Label" aria-hidden="true">

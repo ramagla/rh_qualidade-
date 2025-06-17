@@ -25,7 +25,7 @@
 
         <div class="col">
           <label for="pedido" class="form-label"><i class="bi bi-receipt me-1"></i> Pedido</label>
-          <select class="form-select select2" id="pedido" name="pedido">
+          <select class="form-select select2" id="pedido" name="pedido" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">-- Todos --</option>
             {% for p in pedidos %}
               <option value="{{ p }}" {% if request.GET.pedido == p %}selected{% endif %}>{{ p }}</option>
@@ -35,7 +35,7 @@
 
         <div class="col">
           <label for="codigo_bm" class="form-label">Código BM</label>
-          <select class="form-select select2" id="codigo_bm" name="codigo_bm">
+          <select class="form-select select2" id="codigo_bm" name="codigo_bm" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">-- Todos --</option>
             {% for bm in codigos_bm %}
               <option value="{{ bm }}" {% if request.GET.codigo_bm == bm %}selected{% endif %}>{{ bm }}</option>
@@ -45,7 +45,7 @@
 
         <div class="col">
           <label for="fornecedor" class="form-label">Fornecedor</label>
-          <select class="form-select select2" id="fornecedor" name="fornecedor">
+          <select class="form-select select2" id="fornecedor" name="fornecedor" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">-- Todos --</option>
             {% for f in fornecedores %}
               <option value="{{ f }}" {% if request.GET.fornecedor == f %}selected{% endif %}>{{ f }}</option>
@@ -55,7 +55,7 @@
 
         <div class="col">
           <label for="status2" class="form-label">Status</label>
-          <select class="form-select select2" id="status2" name="status2">
+          <select class="form-select select2" id="status2" name="status2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">-- Todos --</option>
             <option value="OK" {% if request.GET.status2 == "OK" %}selected{% endif %}>OK</option>
             <option value="Atenção Saldo" {% if request.GET.status2 == "Atenção Saldo" %}selected{% endif %}>Atenção Saldo</option>
@@ -80,6 +80,7 @@
     </form>
   </div>
 </div>
+
 
 {% include "partials/global/_estilos_botoes_acoes.html" %}
 

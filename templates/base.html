@@ -702,6 +702,20 @@
                         placeholder: "Selecione uma opção",
                         allowClear: true
                     });
+
+            // Garante que os select2 dentro do offcanvas sejam reativados corretamente ao abrir
+              const filtrosOffcanvas = document.getElementById("filtrosOffcanvas");
+              if (filtrosOffcanvas) {
+                filtrosOffcanvas.addEventListener("shown.bs.offcanvas", function () {
+                  $('#filtrosOffcanvas .select2').select2({
+                    placeholder: "Selecione uma opção",
+                    allowClear: true,
+                    width: '100%',
+                    language: "pt-BR"
+                  });
+                });
+              }
+
                 });
             } else {
                 console.error('jQuery não está definido. Verifique o carregamento do script.');

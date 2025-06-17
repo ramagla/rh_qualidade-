@@ -66,73 +66,74 @@
     </div>
   </div>
 </div>
-  <!-- Filtros -->
-  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
-        <i class="bi bi-funnel-fill me-2"></i>Filtros de Calibração de Dispositivos
-      </h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-    </div>
-    <div class="offcanvas-body">
-      <form method="get" class="row g-3">
-  
-        <div class="col-12">
-          <label for="codigo_dispositivo" class="form-label">
-            <i class="bi bi-upc-scan me-1"></i> Código do Dispositivo:
-          </label>
-          <select id="codigo_dispositivo" name="codigo_dispositivo" class="form-select select2">
-            <option value="">Selecione</option>
-            {% for codigo in codigos %}
-              <option value="{{ codigo }}" {% if request.GET.codigo_dispositivo == codigo %}selected{% endif %}>{{ codigo }}</option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="instrumento_utilizado" class="form-label">
-            <i class="bi bi-hammer me-1"></i> Instrumento Utilizado:
-          </label>
-          <select id="instrumento_utilizado" name="instrumento_utilizado" class="form-select select2">
-            <option value="">Selecione</option>
-            {% for instrumento in instrumentos %}
-              <option value="{{ instrumento }}" {% if request.GET.instrumento_utilizado == instrumento %}selected{% endif %}>{{ instrumento }}</option>
-            {% endfor %}
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="status" class="form-label">
-            <i class="bi bi-clipboard2-check me-1"></i> Status:
-          </label>
-          <select id="status" name="status" class="form-select select2">
-            <option value="">Todos</option>
-            <option value="Aprovado" {% if request.GET.status == "Aprovado" %}selected{% endif %}>Aprovado</option>
-            <option value="Reprovado" {% if request.GET.status == "Reprovado" %}selected{% endif %}>Reprovado</option>
-          </select>
-        </div>
-  
-        <div class="col-12">
-          <label for="data_inicio" class="form-label">
-            <i class="bi bi-calendar-event me-1"></i> Data Início:
-          </label>
-          <input type="date" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
-        </div>
-  
-        <div class="col-12">
-          <label for="data_fim" class="form-label">
-            <i class="bi bi-calendar2-check me-1"></i> Data Fim:
-          </label>
-          <input type="date" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
-        </div>
-  
-        <div class="col-12 mt-2">
-          {% include "partials/global/_botao_filtrar.html" %}
-        </div>
-  
-      </form>
-    </div>
+ <!-- Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Calibração de Dispositivos
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+
+      <div class="col-12">
+        <label for="codigo_dispositivo" class="form-label">
+          <i class="bi bi-upc-scan me-1"></i> Código do Dispositivo:
+        </label>
+        <select id="codigo_dispositivo" name="codigo_dispositivo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Selecione</option>
+          {% for codigo in codigos %}
+            <option value="{{ codigo }}" {% if request.GET.codigo_dispositivo == codigo %}selected{% endif %}>{{ codigo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="instrumento_utilizado" class="form-label">
+          <i class="bi bi-hammer me-1"></i> Instrumento Utilizado:
+        </label>
+        <select id="instrumento_utilizado" name="instrumento_utilizado" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Selecione</option>
+          {% for instrumento in instrumentos %}
+            <option value="{{ instrumento }}" {% if request.GET.instrumento_utilizado == instrumento %}selected{% endif %}>{{ instrumento }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="status" class="form-label">
+          <i class="bi bi-clipboard2-check me-1"></i> Status:
+        </label>
+        <select id="status" name="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          <option value="Aprovado" {% if request.GET.status == "Aprovado" %}selected{% endif %}>Aprovado</option>
+          <option value="Reprovado" {% if request.GET.status == "Reprovado" %}selected{% endif %}>Reprovado</option>
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label for="data_inicio" class="form-label">
+          <i class="bi bi-calendar-event me-1"></i> Data Início:
+        </label>
+        <input type="date" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
+      </div>
+
+      <div class="col-12">
+        <label for="data_fim" class="form-label">
+          <i class="bi bi-calendar2-check me-1"></i> Data Fim:
+        </label>
+        <input type="date" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
+      </div>
+
+      <div class="col-12 mt-2">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+
+    </form>
+  </div>
+</div>
+
   
  <!-- Indicadores -->
 <div class="row mb-4">
