@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if centro %}Editar{% else %}Cadastrar{% endif %} Centro de Custo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-cash-coin me-2"></i>
+    {% if centro %}Editar{% else %}Cadastrar{% endif %} Centro de Custo
+  </h2>
+
+  <form method="post" class="row g-3" id="centroForm">
+    {% csrf_token %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <strong>Erros no formulário:</strong>
+        <ul class="mt-2 mb-0">
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li><strong>Erro geral:</strong> {{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="accordion" id="accordionCentroCusto">
+
+      <!-- Dados do Centro de Custo -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDados">
+          <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDados" aria-expanded="true" aria-controls="collapseDados">
+            <i class="bi bi-bank2 me-2"></i> Dados do Centro de Custo
+          </button>
+        </h2>
+        <div id="collapseDados" class="accordion-collapse collapse show" aria-labelledby="headingDados" data-bs-parent="#accordionCentroCusto">
+          <div class="accordion-body row g-3">
+
+            <div class="col-md-6">
+              <label for="{{ form.departamento.id_for_label }}" class="form-label">
+                <i class="bi bi-diagram-3 me-1"></i> Departamento:
+              </label>
+              {{ form.departamento|add_class:"form-select" }}
+            </div>
+
+            <div class="col-md-6">
+              <label for="{{ form.vigencia.id_for_label }}" class="form-label">
+                <i class="bi bi-calendar-range me-1"></i> Vigência:
+              </label>
+              {{ form.vigencia|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-6">
+              <label for="{{ form.custo_atual.id_for_label }}" class="form-label">
+                <i class="bi bi-currency-dollar me-1"></i> Custo Atual (R$):
+              </label>
+              {{ form.custo_atual|add_class:"form-control" }}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Outros Dados -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOutros">
+          <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutros" aria-expanded="false" aria-controls="collapseOutros">
+            <i class="bi bi-info-circle-fill me-2"></i> Outros Dados
+          </button>
+        </h2>
+        <div id="collapseOutros" class="accordion-collapse collapse" aria-labelledby="headingOutros" data-bs-parent="#accordionCentroCusto">
+          <div class="accordion-body row g-3">
+
+            <div class="col-md-12">
+              <label for="{{ form.observacao.id_for_label }}" class="form-label">
+                <i class="bi bi-chat-left-text me-1"></i> Observação:
+              </label>
+              {{ form.observacao|add_class:"form-control" }}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div> <!-- /accordion -->
+
+    <!-- Botões -->
+    <div class="col-12 text-center mt-4">
+      {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=centro url_voltar='lista_centros_custo' %}
+    </div>
+
+  </form>
+</div>
+{% endblock %}

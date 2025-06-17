@@ -6,6 +6,7 @@ class CentroDeCusto(models.Model):
     departamento = models.OneToOneField(Departamentos, on_delete=models.CASCADE, related_name="centro_custo")
     custo_atual = models.DecimalField("Custo do Setor", max_digits=12, decimal_places=2)
     vigencia = models.DateField("Início da Vigência")
+    observacao = models.TextField("Observação", blank=True, null=True)  # ← CAMPO ADICIONADO
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -15,6 +16,17 @@ class CentroDeCusto(models.Model):
 
     def __str__(self):
         return f"{self.departamento.nome} – R$ {self.custo_atual}"
+    
+    @property
+    def custo_vigente(self):
+        hoje = timezone.now().date()
+        if self.vigencia <= hoje:
+            return self.custo_atual
+        else:
+            ultimo_historico = self.historico_custos.filter(alterado_em__lt=self.vigencia).order_by("-alterado_em").first()
+            if ultimo_historico:
+                return ultimo_historico.custo_anterior
+            return None  # ou 0, se preferir exibir zero
 
     def save(self, *args, **kwargs):
         if self.pk:

@@ -67,7 +67,9 @@ from django.db.models.query import QuerySet  # no topo se necessário
 def cadastrar_ferramenta(request):
     if request.method == "POST":
         form = FerramentaForm(request.POST, request.FILES)
-        materiais_formset = MaterialFerramentaFormSet(request.POST, instance=ferramenta, prefix="material")
+
+        # Inicializa os formsets *sem* instance
+        materiais_formset = MaterialFerramentaFormSet(request.POST, prefix="material")
         mo_formset = MaoDeObraFormSet(request.POST, prefix="mo")
         servico_formset = ServicoFormSet(request.POST, prefix="servico")
 
@@ -95,24 +97,39 @@ def cadastrar_ferramenta(request):
 
                 messages.success(request, "Ferramenta cadastrada com sucesso!")
                 return redirect("lista_ferramentas")
+        else:
+            ferramenta = None  # caso form seja inválido
     else:
         form = FerramentaForm()
         materiais_formset = MaterialFerramentaFormSet(queryset=MaterialFerramenta.objects.none(), prefix="material")
         mo_formset = MaoDeObraFormSet(queryset=MaoDeObraFerramenta.objects.none(), prefix="mo")
         servico_formset = ServicoFormSet(queryset=ServicoFerramenta.objects.none(), prefix="servico")
+        ferramenta = None
 
     return render(request, "cadastros/form_ferramentas.html", {
         "form": form,
         "materiais_formset": materiais_formset,
         "mo_formset": mo_formset,
         "servico_formset": servico_formset,
-            "formsets_agrupados": [
-            materiais_formset,
-            mo_formset,
-            servico_formset
-        ],
-        "ferramenta": ferramenta if 'ferramenta' in locals() else None
+        "formsets_agrupados": [materiais_formset, mo_formset, servico_formset],
+        "ferramenta": ferramenta
     })
+
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from django.db import transaction
+
+from comercial.models import Ferramenta
+from comercial.forms.ferramenta_form import (
+    FerramentaForm,
+    MaterialFerramentaFormSet,
+    MaoDeObraFormSet,
+    ServicoFormSet
+)
+from comercial.models.ferramenta import MaterialFerramenta, MaoDeObraFerramenta, ServicoFerramenta
+
 
 @login_required
 @permission_required("comercial.change_ferramenta", raise_exception=True)
@@ -121,9 +138,10 @@ def editar_ferramenta(request, pk):
 
     if request.method == "POST":
         form = FerramentaForm(request.POST, request.FILES, instance=ferramenta)
-        materiais_formset = MaterialFerramentaFormSet(request.POST, instance=ferramenta, prefix="material")
-        mo_formset = MaoDeObraFormSet(request.POST, queryset=ferramenta.mao_obra.all(), prefix="mo")
-        servico_formset = ServicoFormSet(request.POST, queryset=ferramenta.servicos.all(), prefix="servico")
+        materiais_formset = MaterialFerramentaFormSet(instance=ferramenta, prefix="material")
+        mo_formset = MaoDeObraFormSet(request.POST, instance=ferramenta, prefix="mo")
+        servico_formset = ServicoFormSet(request.POST, instance=ferramenta, prefix="servico")
+
 
         if form.is_valid() and materiais_formset.is_valid() and mo_formset.is_valid() and servico_formset.is_valid():
             with transaction.atomic():
@@ -149,21 +167,15 @@ def editar_ferramenta(request, pk):
 
                 messages.success(request, "Ferramenta atualizada com sucesso!")
                 return redirect("lista_ferramentas")
-        # ⚠️ Se o form não for válido, renderize novamente com erros:
-        return render(request, "cadastros/form_ferramentas.html", {
-            "form": form,
-            "materiais_formset": materiais_formset,
-            "mo_formset": mo_formset,
-            "servico_formset": servico_formset,
-            "formsets_agrupados": [materiais_formset, mo_formset, servico_formset],
-            "ferramenta": ferramenta
-        })
+        else:
+            messages.error(request, "Corrija os erros abaixo para continuar.")
 
     else:
         form = FerramentaForm(instance=ferramenta)
-        materiais_formset = MaterialFerramentaFormSet(queryset=ferramenta.materiais.all(), prefix="material")
-        mo_formset = MaoDeObraFormSet(queryset=ferramenta.mao_obra.all(), prefix="mo")
-        servico_formset = ServicoFormSet(queryset=ferramenta.servicos.all(), prefix="servico")
+        materiais_formset = MaterialFerramentaFormSet(instance=ferramenta, prefix="material")
+        mo_formset = MaoDeObraFormSet(instance=ferramenta, prefix="mo")
+        servico_formset = ServicoFormSet(instance=ferramenta, prefix="servico")
+
 
     return render(request, "cadastros/form_ferramentas.html", {
         "form": form,
@@ -173,6 +185,7 @@ def editar_ferramenta(request, pk):
         "formsets_agrupados": [materiais_formset, mo_formset, servico_formset],
         "ferramenta": ferramenta
     })
+
 
 
 @login_required
@@ -241,8 +254,9 @@ def enviar_cotacao_ferramenta(request, pk):
 
 def formulario_cotacao(request, token):
     ferramenta = get_object_or_404(Ferramenta, token_cotacao=token)
-    materiais = ferramenta.materiais.all()
-    servicos = ferramenta.servicos.all()
+    materiais = ferramenta.materiais.filter(valor_unitario__isnull=True)
+    servicos = ferramenta.servicos.filter(valor_unitario__isnull=True)
+
 
     # Verifica se todos os valores já foram preenchidos
     cotacao_finalizada = all(m.valor_unitario is not None for m in materiais) and \
@@ -293,9 +307,45 @@ def visualizar_ferramenta(request, pk):
     servicos = ferramenta.servicos.all()
     mao_de_obra = ferramenta.mao_obra.all()
 
+    total_materiais = sum((m.valor_total for m in materiais if m.valor_unitario), 0)
+    total_servicos = sum((s.valor_total for s in servicos if s.valor_unitario), 0)
+    total_mo = sum((mo.valor_total for mo in mao_de_obra if mo.valor_hora), 0)
+    total_geral = total_materiais + total_servicos + total_mo
+
     return render(request, "cadastros/visualizar_ferramenta.html", {
         "ferramenta": ferramenta,
         "materiais": materiais,
         "servicos": servicos,
         "mao_de_obra": mao_de_obra,
+        "total_materiais": total_materiais,
+        "total_servicos": total_servicos,
+        "total_mo": total_mo,
+        "total_geral": total_geral
     })
+
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.utils.timezone import now
+from comercial.models import CentroDeCusto
+
+@login_required
+def ajax_valor_hora_centro_custo(request):
+    tipo = request.GET.get("tipo")
+    nome_departamento = "Ferramentaria" if tipo == "Ferramentaria" else "Projeto" if tipo == "Projeto" else None
+
+    if not nome_departamento:
+        return JsonResponse({"sucesso": False, "erro": "Tipo inválido"})
+
+    centro = (
+        CentroDeCusto.objects
+        .select_related("departamento")
+        .filter(departamento__nome__icontains=nome_departamento, vigencia__lte=now().date())
+        .order_by("-vigencia")
+        .first()
+    )
+
+    if centro:
+        return JsonResponse({"sucesso": True, "valor": float(centro.custo_atual)})
+    else:
+        return JsonResponse({"sucesso": False, "erro": "Nenhum custo vigente encontrado"})

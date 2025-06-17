@@ -46,6 +46,7 @@
         </div>
       {% endfor %}
 
+      {% if servicos %}
       <h4 class="mt-4"><i class="bi bi-tools me-2 text-secondary"></i>Serviços Terceiros</h4>
       {% for s in servicos %}
         <div class="row mb-3">
@@ -57,6 +58,8 @@
           </div>
         </div>
       {% endfor %}
+    {% endif %}
+    
 
       <div class="text-end mt-4">
         <button type="submit" class="btn btn-success">

@@ -27,14 +27,21 @@ class Ferramenta(models.Model):
     @property
     def valor_total(self):
         total = 0
+
         for m in self.materiais.all():
             if m.valor_unitario:
                 total += m.quantidade * m.valor_unitario
+
         for s in self.servicos.all():
             if s.valor_unitario:
                 total += s.quantidade * s.valor_unitario
+
+        for mo in self.mao_obra.all():
+            if mo.valor_hora:
+                total += mo.horas * mo.valor_hora
+
         return total
-    
+
 
     @property
     def status_cotacao(self):

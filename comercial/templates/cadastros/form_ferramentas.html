@@ -324,7 +324,35 @@
     }
 </script>
 
-
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tipoFieldSelector = '[name$="-tipo"]';
+        const valorHoraFieldSelector = '[name$="-valor_hora"]';
+    
+        document.querySelectorAll(tipoFieldSelector).forEach(function (select, index) {
+            select.addEventListener("change", function () {
+                const selectedValue = select.value;
+                const valorHoraInput = document.querySelectorAll(valorHoraFieldSelector)[index];
+    
+                if (selectedValue === "Ferramentaria" || selectedValue === "Projeto") {
+                    fetch(`/comercial/ajax/valor_hora_centro_custo/?tipo=${selectedValue}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.sucesso) {
+                                valorHoraInput.value = data.valor;
+                            } else {
+                                valorHoraInput.value = "";
+                                alert("Valor da hora não encontrado.");
+                            }
+                        });
+                } else {
+                    valorHoraInput.value = "";
+                }
+            });
+        });
+    });
+    </script>
+    
     
     
 {% endblock %}

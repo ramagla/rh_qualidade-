@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{{ titulo_pagina }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">
+        <i class="bi bi-box-seam me-2"></i>
+        {{ titulo_pagina }}
+    </h2>
+
+    <form method="post" enctype="multipart/form-data" class="row g-3" id="itemForm">
+        {% csrf_token %}
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+
+        {% if form.errors %}
+          <div class="alert alert-danger">
+            <strong>Erros no formulário:</strong>
+            <ul class="mt-2 mb-0">
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li><strong>Erro geral:</strong> {{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <div class="accordion" id="accordionItem">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingItem">
+                    <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseItem" aria-expanded="true" aria-controls="collapseItem">
+                        <i class="bi bi-clipboard-data me-2"></i> Dados do Item
+                    </button>
+                </h2>
+                <div id="collapseItem" class="accordion-collapse collapse show" aria-labelledby="headingItem" data-bs-parent="#accordionItem">
+                    <div class="accordion-body row g-3">
+
+                        <div class="col-md-4">
+                            <label for="{{ form.codigo.id_for_label }}" class="form-label"><i class="bi bi-upc me-1"></i> Código:</label>
+                            {{ form.codigo|add_class:"form-control" }}
+                        </div>
+
+                        <div class="col-md-8">
+                            <label for="{{ form.descricao.id_for_label }}" class="form-label"><i class="bi bi-text-paragraph me-1"></i> Descrição:</label>
+                            {{ form.descricao|add_class:"form-control" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.ncm.id_for_label }}" class="form-label"><i class="bi bi-hash me-1"></i> NCM:</label>
+                            {{ form.ncm|add_class:"form-control" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.lote_minimo.id_for_label }}" class="form-label"><i class="bi bi-boxes me-1"></i> Lote Mínimo:</label>
+                            {{ form.lote_minimo|add_class:"form-control" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.ferramenta.id_for_label }}" class="form-label"><i class="bi bi-tools me-1"></i> Ferramenta:</label>
+                            {{ form.ferramenta|add_class:"form-select select2" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.cliente.id_for_label }}" class="form-label"><i class="bi bi-person-badge me-1"></i> Cliente:</label>
+                            {{ form.cliente|add_class:"form-select select2" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.codigo_cliente.id_for_label }}" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código no Cliente:</label>
+                            {{ form.codigo_cliente|add_class:"form-control" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.descricao_cliente.id_for_label }}" class="form-label"><i class="bi bi-card-text me-1"></i> Descrição no Cliente:</label>
+                            {{ form.descricao_cliente|add_class:"form-control" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.revisao.id_for_label }}" class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Revisão:</label>
+                            {{ form.revisao|add_class:"form-control" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.data_revisao.id_for_label }}" class="form-label"><i class="bi bi-calendar-date me-1"></i> Data da Revisão:</label>
+                            {{ form.data_revisao|add_class:"form-control" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.drawing.id_for_label }}" class="form-label">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> Desenho (PDF):
+                            </label>
+                            {{ form.drawing|add_class:"form-control" }}
+                        
+                            {% if item and item.desenho %}
+                                <div class="mt-2">
+                                    <i class="bi bi-link-45deg me-1"></i>
+                                    <a href="{{ item.desenho.url }}" target="_blank">Visualizar arquivo atual</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+
+                        <div class="col-md-4">
+                            <div class="form-check form-switch mt-4">
+                                {{ form.automotivo_oem|add_class:"form-check-input" }}
+                                <label class="form-check-label" for="{{ form.automotivo_oem.id_for_label }}">
+                                    <i class="bi bi-car-front me-1"></i> Automotivo OEM
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-check form-switch mt-4">
+                                {{ form.requisito_especifico|add_class:"form-check-input" }}
+                                <label class="form-check-label" for="{{ form.requisito_especifico.id_for_label }}">
+                                    <i class="bi bi-ui-checks me-1"></i> Requisito Específico
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-check form-switch mt-4">
+                                {{ form.item_seguranca|add_class:"form-check-input" }}
+                                <label class="form-check-label" for="{{ form.item_seguranca.id_for_label }}">
+                                    <i class="bi bi-shield-lock me-1"></i> Item de Segurança
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="col-12 text-center mt-4">
+            {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=edicao url_voltar='lista_itens' %}
+        </div>
+    </form>
+</div>
+{% endblock %}

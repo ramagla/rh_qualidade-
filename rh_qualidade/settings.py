@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     "portaria",
     "comercial",
     "assinatura_eletronica",
+    "django.contrib.humanize",
+
 
 ]
 

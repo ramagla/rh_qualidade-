@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load comercial_formatos %}
+{% load humanize %}
+
+{% block title %}Visualização da Ferramenta{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container pdf-container mt-4">
+
+  <!-- Cabeçalho -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-2 text-center">
+      <img src="{% static 'logo.png' %}" alt="Logo" class="img-fluid" style="max-height: 60px;">
+    </div>
+    <div class="col-8 text-center">
+      <h4 class="mb-0">ANÁLISE DE FERRAMENTAL</h4>
+      <small>
+        Código da Peça: <strong>{{ ferramenta.codigo }}</strong><br>
+        Tipo: <strong>{{ ferramenta.get_tipo_display }}</strong><br>
+        Vida útil: <strong>{{ ferramenta.vida_util_em_pecas|intcomma }}</strong> peças
+      </small>
+    </div>
+  </div>
+
+  <!-- Cliente/Peça -->
+  <table class="table table-bordered mb-4">
+    <tr><th>Nome da Peça</th><td>{{ ferramenta.descricao }}</td></tr>
+    <tr><th>Cliente</th><td>{{ ferramenta.proprietario }}</td></tr>
+  </table>
+
+  <!-- Materiais -->
+  <h5 class="text-primary mt-4"><i class="bi bi-box me-1"></i> Materiais</h5>
+  <table class="table table-bordered table-sm text-center">
+    <thead class="table-light">
+      <tr><th>Material</th><th>Unid.</th><th>Qtd</th><th>Val. Unitário</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      {% for m in materiais %}
+        <tr>
+          <td>{{ m.nome_material }}</td>
+          <td>{{ m.unidade_medida }}</td>
+          <td>{{ m.quantidade }}</td>
+          <td>{{ m.valor_unitario|brl }}</td>
+          <td>{{ m.valor_total|brl }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="text-muted">Nenhum material informado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Mão de Obra -->
+  <h5 class="text-primary mt-4"><i class="bi bi-person-workspace me-1"></i> Mão de Obra</h5>
+  <table class="table table-bordered table-sm text-center">
+    <thead class="table-light">
+      <tr><th>Tipo</th><th>Horas</th><th>Val. Hora</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      {% for mo in mao_de_obra %}
+        <tr>
+          <td>{{ mo.get_tipo_display }}</td>
+          <td>{{ mo.horas }}</td>
+          <td>{{ mo.valor_hora|brl }}</td>
+          <td>{{ mo.valor_total|brl }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="text-muted">Nenhuma mão de obra cadastrada.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Serviços Terceiros -->
+  <h5 class="text-primary mt-4"><i class="bi bi-gear-wide-connected me-1"></i> Serviços Terceiros</h5>
+  <table class="table table-bordered table-sm text-center">
+    <thead class="table-light">
+      <tr><th>Serviço</th><th>Qtd</th><th>Val. Unitário</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      {% for s in servicos %}
+        <tr>
+          <td>{{ s.get_tipo_servico_display }}</td>
+          <td>{{ s.quantidade }}</td>
+          <td>{{ s.valor_unitario|brl }}</td>
+          <td>{{ s.valor_total|brl }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="text-muted">Nenhum serviço informado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Totais -->
+  <div class="mt-4 totais-impressao-forcada">
+    <h5 class="text-success d-flex align-items-center">
+      <i class="bi bi-cash-stack me-2"></i> Totais
+    </h5>
+    <table class="table table-bordered table-sm text-end align-middle">
+      <tbody>
+        <tr>
+          <th class="bg-light text-start">Materiais:</th>
+          <td>{{ total_materiais|brl }}</td>
+        </tr>
+        <tr>
+          <th class="bg-light text-start">Mão de Obra:</th>
+          <td>{{ total_mo|brl }}</td>
+        </tr>
+        <tr>
+          <th class="bg-light text-start">Serviços Terceiros:</th>
+          <td>{{ total_servicos|brl }}</td>
+        </tr>
+        <tr class="table-success fw-bold">
+          <th class="text-start">Total Geral:</th>
+          <td>{{ total_geral|brl }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  {% include "partials/global/_formulario_rodape.html" with numero_formulario="" %}
+</div>
+
+<!-- Estilo exclusivo para impressão -->
+<style>
+  @media print {
+    .totais-impressao-forcada {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: static !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+
+    .totais-impressao-forcada table {
+      font-size: 0.9rem !important;
+      color: #000 !important;
+      border: 1px solid #000 !important;
+    }
+
+    .totais-impressao-forcada th,
+    .totais-impressao-forcada td {
+      padding: 4px 8px !important;
+      border: 1px solid #000 !important;
+      color: #000 !important;
+    }
+
+    .totais-impressao-forcada .table-success {
+      background-color: #d1e7dd !important;
+    }
+
+    .totais-impressao-forcada .bg-light {
+      background-color: #f8f9fa !important;
+    }
+  }
+</style>
+{% endblock %}

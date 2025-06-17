@@ -4,6 +4,7 @@
 
 {% block content %}
 {% load custom_filters %}
+{% load comercial_formatos %}
 
 {% include "partials/global/_styles_componentes.html" %}
 
@@ -104,7 +105,8 @@
               <span class="text-muted">Não anexado</span>
             {% endif %}
           </td>
-          <td>R$ {{ ferramenta.valor_total|floatformat:2 }}</td>
+          <td>{{ ferramenta.valor_total|brl }}</td>
+
 <td>
   {% if ferramenta.status_cotacao == "OK" %}
     <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> OK</span>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Centros de Custo{% endblock %}
 
@@ -13,12 +14,14 @@
   <!-- Botões -->
   <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
     {% include "partials/global/_botao_filtros_offcanvas.html" %}
-    {% if request.user|has_permission:"Funcionario.add_centrodecusto" %}
-    <a href="{% url 'cadastrar_centro_custo' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
-      <i class="bi bi-plus-circle me-2"></i> Cadastrar
-    </a>
-    {% endif %}
+    {% if perms.comercial.add_centrodecusto %}
+  <a href="{% url 'cadastrar_centro_custo' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+    <i class="bi bi-plus-circle me-2"></i> Cadastrar
+  </a>
+{% endif %}
+
   </div>
+  
 
   <!-- Offcanvas Filtros -->
   <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
@@ -46,6 +49,13 @@
     </div>
   </div>
 
+<!-- Indicadores -->
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Vigentes" valor=vigentes subtitulo="Centros com vigência ativa" icone="bi-calendar-check" %}
+  {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Futuros" valor=futuros subtitulo="Centros com vigência futura" icone="bi-calendar-plus" %}
+  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Centros" valor=total_centros subtitulo="Total geral registrados" icone="bi-card-list" %}
+</div>
+
   <!-- Lista -->
   <h5 class="mb-3">
     <i class="bi bi-table me-2 text-muted"></i> 📄 Lista de Centros de Custo
@@ -57,31 +67,89 @@
         <tr>
           <th><i class="bi bi-diagram-3"></i> Departamento</th>
           <th><i class="bi bi-currency-dollar"></i> Custo Atual (R$)</th>
-          <th><i class="bi bi-calendar-check"></i> Vigência</th>
+          <th><i class="bi bi-calendar-check"></i> Valido Até</th>
+          <th><i class="bi bi-clock-history"></i> Histórico de Custos</th>
+
           <th><i class="bi bi-gear"></i> Ações</th>
         </tr>
       </thead>
       <tbody>
-        {% for centro in centros %}
-        <tr>
-          <td class="text-start">{{ centro.departamento.nome }}</td>
-          <td>R$ {{ centro.custo_atual|floatformat:2 }}</td>
-          <td>{{ centro.vigencia|date:"d/m/Y" }}</td>
-          <td>
-            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
-              {% if request.user|has_permission:"Funcionario.view_centrodecusto" %}
-              {% include "partials/global/_botao_visualizar.html" with objeto=centro url_visualizar="visualizar_centro_custo" label="centro de custo" %}
+        {% for centro in page_obj %}
+          <tr>
+            <td class="text-start">{{ centro.departamento.nome }}</td>
+            <td>
+              {% if centro.custo_vigente %}
+                R$ {{ centro.custo_vigente|floatformat:2 }}
+              {% else %}
+                <span class="text-muted">Sem custo vigente</span>
               {% endif %}
-              {% if request.user|has_permission:"Funcionario.change_centrodecusto" %}
-              {% include "partials/global/_botao_editar.html" with objeto=centro url_editar="editar_centro_custo" label="centro de custo" %}
-              {% endif %}
-            </div>
-          </td>
-        </tr>
+            </td>
+                        <td>{{ centro.vigencia|date:"d/m/Y" }}</td>
+            <td>
+              <!-- Botão de modal -->
+              <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHistorico{{ centro.id }}">
+                <i class="bi bi-eye"></i>
+              </button>
+      
+              <!-- Modal -->
+              <div class="modal fade" id="modalHistorico{{ centro.id }}" tabindex="-1" aria-labelledby="modalLabel{{ centro.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="modalLabel{{ centro.id }}">
+                        Histórico de Custos - {{ centro.departamento.nome }}
+                      </h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                      {% if centro.historico_custos.exists %}
+                        <table class="table table-sm table-bordered">
+                          <thead>
+                            <tr>
+                              <th>💲 Custo Anterior</th>
+                              <th>📅 Vigência</th>
+                              <th>🕒 Data da Alteração</th>
+                              <th>💰 Novo Custo</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for h in centro.historico_custos.all %}
+                              <tr>
+                                <td>R$ {{ h.custo_anterior|floatformat:2 }}</td>
+                                <td>{{ h.centro.vigencia|date:"d/m/Y" }}</td>
+                                <td>{{ h.alterado_em|date:"d/m/Y H:i" }}</td>
+                                <td>R$ {{ h.novo_custo|floatformat:2 }}</td>
+                              </tr>
+                            {% empty %}
+                              <tr>
+                                <td colspan="4" class="text-center text-muted">Nenhum histórico registrado.</td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      {% else %}
+                        <p class="text-muted">Nenhuma alteração registrada.</p>
+                      {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+                {% include "partials/global/_botao_visualizar.html" with objeto=centro url_visualizar="visualizar_centro_custo" label="centro de custo" %}
+                {% include "partials/global/_botao_editar.html" with objeto=centro url_editar="editar_centro_custo" label="centro de custo" %}
+              </div>
+            </td>
+          </tr>
         {% empty %}
-        {% include "partials/global/_sem_resultados.html" with colspan=4 mensagem="Nenhum centro de custo encontrado." %}
+          {% include "partials/global/_sem_resultados.html" with colspan=5 mensagem="Nenhum centro de custo encontrado." %}
         {% endfor %}
       </tbody>
+      
     </table>
   </div>
 </div>

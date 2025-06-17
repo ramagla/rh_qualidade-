@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Itens Cadastrados{% endblock %}
+{% load custom_filters %}
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Itens Cadastrados" icone="bi bi-box-seam" emoji="📦" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"comercial.add_item" %}
+    <a href="{% url 'cadastrar_item' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2"></i> Cadastrar
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Filtros Offcanvas (Opcional para Itens) -->
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title"><i class="bi bi-funnel-fill me-2"></i>Filtros de Itens</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12 filtro-wrapper">
+          <label for="descricao" class="form-label"><i class="bi bi-fonts me-1"></i> Descrição</label>
+          <input type="text" name="descricao" id="descricao" class="form-control" value="{{ request.GET.descricao }}">
+        </div>
+        <div class="col-12 filtro-wrapper">
+          <label for="codigo" class="form-label"><i class="bi bi-upc me-1"></i> Código</label>
+          <input type="text" name="codigo" id="codigo" class="form-control" value="{{ request.GET.codigo }}">
+        </div>
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Itens" valor=total_itens subtitulo="Itens cadastrados." icone="bi-box-seam" %}
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Automotivo OEM" valor=total_automotivo subtitulo="Com opção OEM marcada." icone="bi-check-circle" %}
+    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Item de Segurança" valor=total_item_seguranca subtitulo="Itens críticos de segurança." icone="bi-shield-lock" %}
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Com Desenho" valor=total_com_desenho subtitulo="Possuem arquivo técnico." icone="bi-file-earmark-pdf" %}
+  </div>
+  
+
+  <!-- Lista de Itens -->
+  <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📄 Lista de Itens</h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visually-hidden">Tabela de Itens</caption>
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-upc me-1"></i> Código</th>
+          <th><i class="bi bi-fonts me-1"></i> Descrição</th>
+          <th><i class="bi bi-person-badge me-1"></i> Cliente</th>
+          <th><i class="bi bi-tools me-1"></i> Ferramenta</th>
+          <th><i class="bi bi-stack me-1"></i> Lote Mínimo</th>
+          <th><i class="bi bi-file-earmark me-1"></i> Revisão</th>
+          <th><i class="bi bi-gear me-1"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in page_obj %}
+        <tr>
+          <td>{{ item.codigo }}</td>
+          <td class="text-start">{{ item.descricao }}</td>
+          <td>{{ item.cliente.razao_social }}</td>
+          <td>
+            {% if item.ferramenta %}
+              {{ item.ferramenta.codigo }}
+            {% else %}
+              <span class="text-muted">Sem ferramenta</span>
+            {% endif %}
+          </td>
+                    <td>{{ item.lote_minimo }}</td>
+          <td>{{ item.revisao }}</td>
+          <td>
+            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+              {% if request.user|has_permission:"comercial.view_item" %}
+              {% include "partials/global/_botao_visualizar.html" with objeto=item url_visualizar="visualizar_item" label="item" %}
+              {% endif %}
+              {% if request.user|has_permission:"comercial.change_item" %}
+              {% include "partials/global/_botao_editar.html" with objeto=item url_editar="editar_item" label="item" %}
+              {% endif %}
+              {% if request.user|has_permission:"comercial.delete_item" %}
+              {% include "partials/global/_botao_excluir.html" with objeto=item url_excluir="excluir_item" label="item" %}
+              {% include "partials/global/_modal_exclusao.html" with objeto=item url_excluir="excluir_item" %}
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        {% include "partials/global/_sem_resultados.html" with colspan=7 mensagem="Nenhum item cadastrado." %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+
+</div>
+{% endblock %}
