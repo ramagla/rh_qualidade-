@@ -3,139 +3,173 @@
 {% block title %}Detalhes do Cliente - {{ cliente.razao_social }}{% endblock %}
 
 {% block content %}
-{% include 'partials/global/_estilos_impressao.html' %} {# Se você tiver estilos específicos para impressão #}
-{% include 'header.html' %} {# Se você tiver um cabeçalho global #}
-{% include 'partials/global/_botao_impressao.html' %} {# Botão de impressão, se aplicável #}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'header.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
 {% include 'partials/global/_header_titulo.html' with titulo="Detalhes do Cliente" icone="bi bi-building" emoji="🏢" %}
 
 <div class="container pdf-container">
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-primary text-white d-flex align-items-center">
-            <h4 class="mb-0 text-white"><i class="bi bi-info-circle-fill me-2"></i> Dados Gerais do Cliente</h4>
-            {% if cliente.logotipo %}
-                <img src="{{ cliente.logotipo.url }}" alt="Logotipo do Cliente" class="ms-auto" style="max-height: 50px; border-radius: 5px;">
-            {% endif %}
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-building me-1"></i> Razão Social:</strong> {{ cliente.razao_social }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-123 me-1"></i> CNPJ:</strong> {{ cliente.cnpj }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-journal-text me-1"></i> I.E.:</strong> {{ cliente.ie|default:"Não informado" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-phone me-1"></i> Telefone:</strong> {{ cliente.telefone }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-envelope me-1"></i> Email:</strong> {{ cliente.email|default:"Não informado" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-toggle-on me-1"></i> Status:</strong> <span class="badge {% if cliente.status == 'Ativo' %}bg-success{% else %}bg-danger{% endif %}">{{ cliente.status }}</span></p>
-                </div>
-            </div>
-
-            <h5 class="mt-4"><i class="bi bi-geo-alt-fill me-1"></i> Endereço do Cliente:</h5>
-            <p>{{ cliente.endereco }}, {{ cliente.numero }}{% if cliente.complemento %}, {{ cliente.complemento }}{% endif %}</p>
-            <p>{{ cliente.bairro }}, {{ cliente.cidade }} - {{ cliente.uf }}, CEP: {{ cliente.cep }}</p>
-        </div>
+  <!-- Dados Gerais do Cliente -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white d-flex align-items-center">
+      <h4 class="mb-0 text-white"><i class="bi bi-info-circle-fill me-2"></i> Dados Gerais do Cliente</h4>
+      {% if cliente.logotipo %}
+        <img src="{{ cliente.logotipo.url }}" alt="Logotipo do Cliente" class="ms-auto" style="max-height: 50px; border-radius: 5px;">
+      {% endif %}
     </div>
-
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-secondary text-white">
-            <h4 class="mb-0 text-white"><i class="bi bi-folder-fill me-2"></i> Documentos Anexados</h4>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <p><strong><i class="bi bi-building me-1"></i> Razão Social:</strong> {{ cliente.razao_social }}</p>
+          <p><strong><i class="bi bi-journal-text me-1"></i> I.E.:</strong> {{ cliente.ie|default:"Não informado" }}</p>
+          <p><strong><i class="bi bi-envelope me-1"></i> Email:</strong> {{ cliente.email|default:"Não informado" }}</p>
         </div>
-        <div class="card-body">
-            {% if cliente.documentos.all %}
-                <ul class="list-group list-group-flush">
-                    {% for documento in cliente.documentos.all %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="bi bi-file-earmark-text me-2"></i> {{ documento.tipo }}:</span>
-                            <a href="{{ documento.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-download me-1"></i> Visualizar
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-muted">Nenhum documento anexado para este cliente.</p>
-            {% endif %}
+        <div class="col-md-6">
+          <p><strong><i class="bi bi-123 me-1"></i> CNPJ:</strong> {{ cliente.cnpj }}</p>
+          <p><strong><i class="bi bi-phone me-1"></i> Telefone:</strong> {{ cliente.telefone }}</p>
+          <p>
+            <strong><i class="bi bi-toggle-on me-1"></i> Status:</strong>
+            <span class="badge {% if cliente.status == 'Ativo' %}bg-success{% else %}bg-danger{% endif %}">
+              {{ cliente.status }}
+            </span>
+          </p>
         </div>
+      </div>
+  
+      <div class="row">
+        <div class="col-md-6">
+          <h5><i class="bi bi-geo-alt-fill me-1"></i> Endereço:</h5>
+          <p>{{ cliente.endereco }}, {{ cliente.numero }}{% if cliente.complemento %}, {{ cliente.complemento }}{% endif %}</p>
+          <p>{{ cliente.bairro }}</p>
+        </div>
+        <div class="col-md-6">
+          <h5 class="invisible">Endereço (continuação)</h5>
+          <p>{{ cliente.cidade }} - {{ cliente.uf }}</p>
+          <p>CEP: {{ cliente.cep }}</p>
+        </div>
+      </div>
     </div>
-
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0 text-white"><i class="bi bi-truck-flatbed me-2"></i> Dados da Transportadora</h4>
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-building me-1"></i> Razão Social:</strong> {{ cliente.transportadora_razao_social }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-123 me-1"></i> CNPJ:</strong> {{ cliente.transportadora_cnpj }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-journal-text me-1"></i> I.E.:</strong> {{ cliente.transportadora_ie|default:"Não informado" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-phone me-1"></i> Telefone:</strong> {{ cliente.transportadora_telefone|default:"Não informado" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-envelope me-1"></i> Email:</strong> {{ cliente.transportadora_email|default:"Não informado" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-box-seam me-1"></i> Coleta:</strong> {% if cliente.coleta %}Sim{% else %}Não{% endif %}</p>
-                </div>
-            </div>
-
-            <h5 class="mt-4"><i class="bi bi-geo-alt-fill me-1"></i> Endereço da Transportadora:</h5>
-            <p>{{ cliente.transportadora_endereco }}, {{ cliente.transportadora_numero }}{% if cliente.transportadora_complemento %}, {{ cliente.transportadora_complemento }}{% endif %}</p>
-            <p>{{ cliente.transportadora_bairro }}, {{ cliente.transportadora_cidade }} - {{ cliente.transportadora_uf }}, CEP: {{ cliente.transportadora_cep }}</p>
-        </div>
+  </div>
+  <style>
+    @media print {
+      .row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        margin: 0 -0.5rem !important;
+      }
+    
+      .col-md-6 {
+        width: 50% !important;
+        padding: 0 0.5rem !important;
+        box-sizing: border-box;
+      }
+    
+      .invisible {
+        visibility: hidden !important;
+      }
+    
+      .card-header {
+        background-color: #000 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+    </style>
+      
+  <!-- Documentos Anexados -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-secondary text-white">
+      <h4 class="mb-0 text-white"><i class="bi bi-folder-fill me-2"></i> Documentos Anexados</h4>
     </div>
-
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-warning text-dark">
-            <h4 class="mb-0 text-dark"><i class="bi bi-gear-fill me-2"></i> Outras Informações</h4>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <p><strong><i class="bi bi-calculator me-1"></i> ICMS:</strong> {{ cliente.icms|default:"0.00"|stringformat:"%.2f" }}%</p>
-                </div>
-                <div class="col-md-4">
-                    <p><strong><i class="bi bi-calculator me-1"></i> IPI:</strong> {{ cliente.ipi|default:"0.00"|stringformat:"%.2f" }}%</p>
-                </div>
-                <div class="col-md-4">
-                    <p><strong><i class="bi bi-hash me-1"></i> CFOP:</strong> {{ cliente.cfop }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-credit-card-2-front me-1"></i> Condição de Pagamento:</strong> {{ cliente.cond_pagamento }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-qr-code me-1"></i> Código BM:</strong> {{ cliente.cod_bm }}</p>
-                </div>
-                <div class="col-12">
-                    <p><strong><i class="bi bi-chat-dots-fill me-1"></i> Observação:</strong> {{ cliente.observacao|default:"Nenhuma observação." }}</p>
-                </div>
-            </div>
-        </div>
+    <div class="card-body">
+      {% if cliente.documentos.all %}
+        <ul class="list-group list-group-flush">
+          {% for documento in cliente.documentos.all %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-file-earmark-text me-2"></i> {{ documento.tipo }}:</span>
+              <a href="{{ documento.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-download me-1"></i> Visualizar
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted">Nenhum documento anexado para este cliente.</p>
+      {% endif %}
     </div>
+  </div>
 
-    <div class="text-center mt-5">
-        <a href="{% url 'editar_cliente' cliente.pk %}" class="btn btn-warning me-2">
-            <i class="bi bi-pencil-square me-1"></i> Editar Cliente
-        </a>
-        <a href="{% url 'lista_clientes' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left-circle me-1"></i> Voltar para Lista
-        </a>
+  <!-- Dados de Contato -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <h4 class="mb-0 text-white"><i class="bi bi-person-lines-fill me-2"></i> Dados de Contato</h4>
     </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6"><p><strong><i class="bi bi-person me-1"></i> Nome do Contato:</strong> {{ cliente.contato_nome|default:"Não informado" }}</p></div>
+        <div class="col-md-6"><p><strong><i class="bi bi-envelope-at me-1"></i> Email do Contato:</strong> {{ cliente.contato_email|default:"Não informado" }}</p></div>
+      </div>
+    </div>
+  </div>
 
+  <!-- Dados da Transportadora -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-info text-white">
+      <h4 class="mb-0 text-white"><i class="bi bi-truck-flatbed me-2"></i> Dados da Transportadora</h4>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-6"><p><strong><i class="bi bi-building me-1"></i> Razão Social:</strong> {{ cliente.transportadora_razao_social }}</p></div>
+        <div class="col-md-6"><p><strong><i class="bi bi-123 me-1"></i> CNPJ:</strong> {{ cliente.transportadora_cnpj }}</p></div>
+        <div class="col-md-6"><p><strong><i class="bi bi-journal-text me-1"></i> I.E.:</strong> {{ cliente.transportadora_ie|default:"Não informado" }}</p></div>
+        <div class="col-md-6"><p><strong><i class="bi bi-phone me-1"></i> Telefone:</strong> {{ cliente.transportadora_telefone|default:"Não informado" }}</p></div>
+        <div class="col-md-6"><p><strong><i class="bi bi-envelope me-1"></i> Email:</strong> {{ cliente.transportadora_email|default:"Não informado" }}</p></div>
+        <div class="col-md-6"><p><strong><i class="bi bi-box-seam me-1"></i> Coleta:</strong> {% if cliente.coleta %}Sim{% else %}Não{% endif %}</p></div>
+      </div>
+      <h5 class="mt-4"><i class="bi bi-geo-alt-fill me-1"></i> Endereço da Transportadora:</h5>
+      <p>{{ cliente.transportadora_endereco }}, {{ cliente.transportadora_numero }}{% if cliente.transportadora_complemento %}, {{ cliente.transportadora_complemento }}{% endif %}</p>
+      <p>{{ cliente.transportadora_bairro }}, {{ cliente.transportadora_cidade }} - {{ cliente.transportadora_uf }}, CEP: {{ cliente.transportadora_cep }}</p>
+    </div>
+  </div>
+
+  <!-- Outras Informacoes -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-warning text-dark">
+      <h4 class="mb-0 text-dark"><i class="bi bi-gear-fill me-2"></i> Outras Informações</h4>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4"><p><strong><i class="bi bi-calculator me-1"></i> ICMS:</strong> {{ cliente.icms|default:"0.00"|stringformat:"%.2f" }}%</p></div>
+        <div class="col-md-4"><p><strong><i class="bi bi-calculator me-1"></i> IPI:</strong> {{ cliente.ipi|default:"0.00"|stringformat:"%.2f" }}%</p></div>
+        <div class="col-md-4"><p><strong><i class="bi bi-hash me-1"></i> CFOP:</strong> {{ cliente.cfop }}</p></div>
+        <div class="col-md-6"><p><strong><i class="bi bi-credit-card-2-front me-1"></i> Condição de Pagamento:</strong> {{ cliente.cond_pagamento }}</p></div>
+        <div class="col-md-6"><p><strong><i class="bi bi-qr-code me-1"></i> Código BM:</strong> {{ cliente.cod_bm }}</p></div>
+        <div class="col-12"><p><strong><i class="bi bi-chat-dots-fill me-1"></i> Observação:</strong> {{ cliente.observacao|default:"Nenhuma observação." }}</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mt-5">
+    <a href="{% url 'editar_cliente' cliente.pk %}" class="btn btn-warning me-2">
+      <i class="bi bi-pencil-square me-1"></i> Editar Cliente
+    </a>
+    <a href="{% url 'lista_clientes' %}" class="btn btn-secondary">
+      <i class="bi bi-arrow-left-circle me-1"></i> Voltar para Lista
+    </a>
+  </div>
 </div>
 
-{% include "partials/global/_formulario_rodape.html" with numero_formulario="CLI-VIEW Rev.01" %} {# Rodapé customizável #}
+<style>
+@media print {
+  .card-header {
+    background-color: #000 !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+</style>
+
+{% include "partials/global/_formulario_rodape.html" with numero_formulario="CLI-VIEW Rev.01" %}
 {% endblock %}

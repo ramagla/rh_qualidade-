@@ -13,19 +13,47 @@
 
     <form method="post" enctype="multipart/form-data" class="row g-3" id="clienteForm">
         {% csrf_token %}
-
-        {# Seção de Mensagens para o Usuário - Erros do Django Form #}
-        {# Exibe erros gerais do formulário (non-field errors) #}
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger" role="alert">
-                <strong class="font-bold">Erro(s) do Formulário:</strong>
-                <ul>
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
+      
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+          {% endfor %}
         {% endif %}
+      
+        {% if form.errors %}
+          <div class="alert alert-danger">
+            <strong>Erros no formulário:</strong>
+            <ul class="mt-2 mb-0">
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li><strong>Erro geral:</strong> {{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      
+        {% if formset.errors %}
+          <div class="alert alert-warning">
+            <strong>Erros nos documentos anexados:</strong>
+            <ul class="mt-2 mb-0">
+              {% for doc_form in formset %}
+                {% for field, errors in doc_form.errors.items %}
+                  {% for error in errors %}
+                    <li><strong>{{ field|capfirst }} (documento {{ forloop.parentloop.counter }}):</strong> {{ error }}</li>
+                  {% endfor %}
+                {% endfor %}
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      
+
+        
+
 
         {# Seção de Mensagens para o Usuário - Erros do JavaScript (inicialmente escondida) #}
         <div id="messageBox" class="hidden alert alert-warning" role="alert"> {# Alterado para alert-warning para distinção #}
@@ -185,6 +213,36 @@
                 </div>
             </div>
 
+
+            <!-- Contato -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingContato">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseContato" aria-expanded="false" aria-controls="collapseContato">
+        <i class="bi bi-person-lines-fill me-2"></i> Contato
+      </button>
+    </h2>
+    <div id="collapseContato" class="accordion-collapse collapse" aria-labelledby="headingContato" data-bs-parent="#accordionCliente">
+      <div class="accordion-body row g-3">
+        <div class="col-md-6">
+          <label for="{{ form.nome_contato.id_for_label }}" class="form-label">Nome do Contato:</label>
+          {{ form.nome_contato|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+          <label for="{{ form.cargo_contato.id_for_label }}" class="form-label">Cargo:</label>
+          {{ form.cargo_contato|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+          <label for="{{ form.email_contato.id_for_label }}" class="form-label">Email:</label>
+          {{ form.email_contato|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+          <label for="{{ form.telefone_contato.id_for_label }}" class="form-label">Telefone:</label>
+          {{ form.telefone_contato|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+  
             <!-- Transportadora -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingTransportadora">
@@ -294,6 +352,11 @@
                             <label for="{{ form.status.id_for_label }}" class="form-label">Status:</label>
                             {{ form.status|add_class:"form-select" }}
                         </div>
+                        <div class="col-md-3">
+                            <label for="{{ form.tipo_cliente.id_for_label }}" class="form-label">Tipo:</label>
+                            {{ form.tipo_cliente|add_class:"form-select" }}
+                          </div>
+                          
                         
 
                         <div class="col-md-3">

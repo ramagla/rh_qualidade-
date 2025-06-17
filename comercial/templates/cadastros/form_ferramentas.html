@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if ferramenta %}Editar{% else %}Cadastrar{% endif %} Ferramenta{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">
+        <i class="bi bi-tools me-2"></i>
+        {% if ferramenta %}Editar{% else %}Cadastrar{% endif %} Ferramenta
+    </h2>
+
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+
+        {% if form.errors or materiais_formset.errors or mo_formset.errors or servico_formset.errors %}
+          <div class="alert alert-danger">
+            <strong>Erros encontrados:</strong>
+            <ul class="mt-2 mb-0">
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li><strong>Erro geral:</strong> {{ error }}</li>
+              {% endfor %}
+
+              {% for formgroup in formsets_agrupados %}
+              {% for subform in formgroup %}
+                  {% for field, errors in subform.errors.items %}
+                    {% for error in errors %}
+                      <li><strong>{{ field|capfirst }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                  {% endfor %}
+                {% endfor %}
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <div class="accordion" id="accordionFerramenta">
+
+            <!-- Dados Gerais -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingGeral">
+        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral" aria-expanded="true">
+            <i class="bi bi-info-circle-fill me-2"></i> Dados da Ferramenta
+        </button>
+    </h2>
+    <div id="collapseGeral" class="accordion-collapse collapse show" data-bs-parent="#accordionFerramenta">
+        <div class="accordion-body row g-3">
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="bi bi-upc me-1"></i> Código:
+                </label>
+                {{ form.codigo|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-8">
+                <label class="form-label">
+                    <i class="bi bi-card-text me-1"></i> Descrição:
+                </label>
+                {{ form.descricao|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="bi bi-123 me-1"></i> Vida útil (peças):
+                </label>
+                {{ form.vida_util_em_pecas|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="bi bi-tag me-1"></i> Tipo:
+                </label>
+                {{ form.tipo|add_class:"form-select select2" }}
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="bi bi-person-badge me-1"></i> Cliente Proprietário:
+                </label>
+                {{ form.proprietario|add_class:"form-select select2" }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">
+                    <i class="bi bi-file-earmark-arrow-up me-1"></i> Anexar Desenho (PDF):
+                </label>
+                {{ form.desenho_pdf|add_class:"form-control" }}
+                {% if ferramenta and ferramenta.desenho_pdf %}
+                    <a href="{{ ferramenta.desenho_pdf.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="bi bi-file-earmark-pdf"></i> Visualizar Desenho
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">
+                    <i class="bi bi-journal-text me-1"></i> Observações:
+                </label>
+                {{ form.observacoes }}
+            </div>
+            
+
+        </div>
+    </div>
+</div>
+
+
+          <!-- Materiais -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingMateriais">
+        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMateriais">
+            <i class="bi bi-box-seam me-2"></i> Materiais
+        </button>
+    </h2>
+    <div id="collapseMateriais" class="accordion-collapse collapse" data-bs-parent="#accordionFerramenta">
+        <div class="accordion-body row g-3">
+            {{ materiais_formset.management_form }}
+            {% for material_form in materiais_formset %}
+            <div class="row g-2 border-bottom pb-2 mb-2 align-items-end material-form-row">
+                <div class="col-md-5">
+                    <label class="form-label">
+                        <i class="bi bi-box me-1"></i> Nome:
+                    </label>
+                    {{ material_form.nome_material|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-rulers me-1"></i> Unidade:
+                    </label>
+                    {{ material_form.unidade_medida|add_class:"form-select" }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-123 me-1"></i> Quantidade:
+                    </label>
+                    {{ material_form.quantidade|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-currency-dollar me-1"></i> Valor Unitário:
+                    </label>
+                    {{ material_form.valor_unitario|add_class:"form-control" }}
+                </div>
+
+                <div class="col-md-1 text-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirLinha(this)">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Botão Adicionar -->
+            <div class="col-12 text-end mt-2">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinha('material')">
+                    <i class="bi bi-plus-circle"></i> Adicionar Material
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <!-- Mão de Obra -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingMO">
+        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMO">
+            <i class="bi bi-person-workspace me-2"></i> Mão de Obra
+        </button>
+    </h2>
+    <div id="collapseMO" class="accordion-collapse collapse" data-bs-parent="#accordionFerramenta">
+        <div class="accordion-body row g-3">
+            {{ mo_formset.management_form }}
+            {% for mo_form in mo_formset %}
+            <div class="row g-2 border-bottom pb-2 mb-2">
+                <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-person-vcard me-1"></i> Tipo:</label>
+                    {{ mo_form.tipo|add_class:"form-select" }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label"><i class="bi bi-clock me-1"></i> Horas:</label>
+                    {{ mo_form.horas|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label"><i class="bi bi-cash-coin me-1"></i> Valor Hora:</label>
+                    {{ mo_form.valor_hora|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirLinha(this)">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Botão Adicionar fora do loop -->
+            <div class="col-12 d-flex justify-content-end mt-2">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinha('mo')">
+                    <i class="bi bi-plus-circle"></i> Adicionar Mão de Obra
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+            <!-- Serviços -->
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingServico">
+        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseServico">
+            <i class="bi bi-wrench-adjustable-circle me-2"></i> Serviços Terceiros
+        </button>
+    </h2>
+    <div id="collapseServico" class="accordion-collapse collapse" data-bs-parent="#accordionFerramenta">
+        <div class="accordion-body row g-3">
+            {{ servico_formset.management_form }}
+            {% for serv_form in servico_formset %}
+            <div class="row g-2 border-bottom pb-2 mb-2">
+                <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-gear-wide-connected me-1"></i> Tipo de Serviço:</label>
+                    {{ serv_form.tipo_servico|add_class:"form-select" }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label"><i class="bi bi-list-ol me-1"></i> Qtde:</label>
+                    {{ serv_form.quantidade|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label"><i class="bi bi-currency-dollar me-1"></i> Valor Unitário:</label>
+                    {{ serv_form.valor_unitario|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirLinha(this)">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Botão Adicionar -->
+            <div class="col-12 d-flex justify-content-end mt-2">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinha('servico')">
+                    <i class="bi bi-plus-circle"></i> Adicionar Serviço
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+
+        <!-- Botões -->
+        <div class="col-12 text-center mt-4">
+            {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=ferramenta url_voltar='lista_ferramentas' %}
+        </div>
+    </form>
+</div>
+<script>
+    function adicionarLinha(prefix) {
+        const totalForms = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+        const formCount = parseInt(totalForms.value);
+        const containerMap = {
+            material: "collapseMateriais",
+            mo: "collapseMO",
+            servico: "collapseServico",
+        };
+
+        const formContainer = document.querySelector(`#${containerMap[prefix]} .accordion-body`);
+        const allRows = formContainer.querySelectorAll(`.row`);
+        const lastRow = allRows[allRows.length - 1];
+
+        if (!lastRow) return;
+
+        const newForm = lastRow.cloneNode(true);
+
+        newForm.querySelectorAll("input, select, textarea").forEach(input => {
+            if (input.name) {
+                input.name = input.name.replace(/-\d+-/, `-${formCount}-`);
+            }
+            if (input.id) {
+                input.id = input.id.replace(/-\d+-/, `-${formCount}-`);
+            }
+
+            // Limpa valores
+            if (input.type === "checkbox" || input.type === "radio") {
+                input.checked = false;
+            } else {
+                input.value = "";
+            }
+        });
+
+        // Remove campos de exclusão antigos, se houver
+        const deleteField = newForm.querySelector('input[type="checkbox"][name*="DELETE"]');
+        if (deleteField) {
+            deleteField.checked = false;
+        }
+
+        // Adiciona nova linha
+        formContainer.appendChild(newForm);
+        totalForms.value = formCount + 1;
+    }
+
+    function excluirLinha(botao) {
+        const row = botao.closest(".row");
+        const section = botao.closest(".accordion-collapse");
+        const prefix = section.id.replace("collapse", "").toLowerCase();
+        const totalForms = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+
+        row.remove();
+
+        // Atualiza índice total
+        const rows = section.querySelectorAll(".accordion-body .row");
+        totalForms.value = rows.length;
+    }
+</script>
+
+
+    
+    
+{% endblock %}

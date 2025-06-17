@@ -11,65 +11,78 @@
 
   {% include "partials/global/_header_titulo.html" with titulo="Clientes Cadastrados" icone="bi bi-people-fill" emoji="🏢" %}
   {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
 
   <!-- Botões -->
-  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
-    {% if request.user|has_permission:"comercial.add_cliente" %}
-    <a href="{% url 'cadastrar_cliente' %}" class="btn btn-success d-inline-flex align-items-center">
-      <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Cadastrar
-    </a>
-    {% endif %}
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  {% if request.user|has_permission:"comercial.add_cliente" %}
+  <a href="{% url 'cadastrar_cliente' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+    <i class="bi bi-person-plus-fill me-2" aria-hidden="true"></i> Cadastrar
+  </a>
+  
+  {% endif %}
+</div>
+
+
+  <!-- Offcanvas Filtros Clientes -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Clientes
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
 
-  <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <i class="bi bi-funnel me-2" aria-hidden="true"></i> Filtros de Clientes
-    </div>
-    <div class="card-body">
-      <form method="get" class="row g-3">
+      <!-- Razão Social -->
+      <div class="col-12 filtro-wrapper">
+        <label for="razao_social" class="form-label">
+          <i class="bi bi-building me-1" aria-hidden="true"></i> Razão Social
+        </label>
+        <input type="text" name="razao_social" id="razao_social" class="form-control" placeholder="Razão Social" value="{{ request.GET.razao_social }}">
+      </div>
 
-        <!-- Razão Social -->
-        <div class="col-md-4">
-          <label for="razao_social" class="form-label">
-            <i class="bi bi-building me-1" aria-hidden="true"></i> Razão Social
-          </label>
-          <input type="text" name="razao_social" id="razao_social" class="form-control" placeholder="Razão Social" value="{{ request.GET.razao_social }}">
-        </div>
+      <!-- CNPJ -->
+      <div class="col-12 filtro-wrapper">
+        <label for="cnpj" class="form-label">
+          <i class="bi bi-123 me-1" aria-hidden="true"></i> CNPJ
+        </label>
+        <input type="text" name="cnpj" id="cnpj" class="form-control" placeholder="CNPJ" value="{{ request.GET.cnpj }}">
+      </div>
 
-        <!-- CNPJ -->
-        <div class="col-md-4">
-          <label for="cnpj" class="form-label">
-            <i class="bi bi-123 me-1" aria-hidden="true"></i> CNPJ
-          </label>
-          <input type="text" name="cnpj" id="cnpj" class="form-control" placeholder="CNPJ" value="{{ request.GET.cnpj }}">
-        </div>
+      <!-- Status -->
+      <div class="col-12 filtro-wrapper">
+        <label for="status" class="form-label">
+          <i class="bi bi-toggle-on me-1" aria-hidden="true"></i> Status
+        </label>
+        <select name="status" id="status" class="form-select select2">
+          <option value="">Todos</option>
+          <option value="Ativo" {% if request.GET.status == "Ativo" %}selected{% endif %}>Ativo</option>
+          <option value="Inativo" {% if request.GET.status == "Inativo" %}selected{% endif %}>Inativo</option>
+        </select>
+      </div>
 
-        <!-- Status -->
-        <div class="col-md-4">
-          <label for="status" class="form-label">
-            <i class="bi bi-toggle-on me-1" aria-hidden="true"></i> Status
-          </label>
-          <select name="status" id="status" class="form-select select2">
-            <option value="">Todos</option>
-            <option value="Ativo" {% if request.GET.status == "Ativo" %}selected{% endif %}>Ativo</option>
-            <option value="Inativo" {% if request.GET.status == "Inativo" %}selected{% endif %}>Inativo</option>
-          </select>
-        </div>
-
-        <!-- Botão Filtrar -->
+      <!-- Botão -->
+      <div class="col-12 mt-3">
         {% include "partials/global/_botao_filtrar.html" %}
+      </div>
 
-      </form>
-    </div>
+    </form>
   </div>
+</div>
 
-  <!-- Indicadores -->
-  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
-    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Clientes Ativos" valor=total_ativos subtitulo="Clientes com status 'Ativo'." %}
-    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Clientes Inativos" valor=total_inativos subtitulo="Clientes com status 'Inativo'." %}
-    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Clientes" valor=total_clientes subtitulo="Quantidade total de clientes." %}
-  </div>
+
+<!-- Indicadores -->
+<div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Clientes Ativos"    valor=total_ativos       subtitulo="Clientes com status 'Ativo'."            icone="bi-people-fill"      %}
+  {% include "partials/global/_card_indicador.html" with cor="danger"  titulo="Clientes Inativos"  valor=total_inativos     subtitulo="Clientes com status 'Inativo'."          icone="bi-person-x-fill"   %}
+  {% include "partials/global/_card_indicador.html" with cor="info"    titulo="Total de Clientes"   valor=total_clientes     subtitulo="Quantidade total de clientes."          icone="bi-card-list"       %}
+  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Atualizadas este Mês" valor=atualizadas_mes    subtitulo=subtitle_atualizadas                       icone="bi-calendar-event"  %}
+</div>
+
+
 
   <!-- Lista de Clientes -->
   <h5 class="mb-3">

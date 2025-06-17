@@ -1,5 +1,5 @@
 from django.urls import path
-from comercial.views import cliente_views
+from comercial.views import centro_custo_views, cliente_views, ferramenta_views
 from comercial.views import item_views
 from comercial.views import dashboard_views
 
@@ -20,4 +20,22 @@ urlpatterns = [
     path("itens/editar/<int:pk>/", item_views.editar_item, name="editar_item"),
     path("itens/visualizar/<int:pk>/", item_views.visualizar_item, name="visualizar_item"),
     path("itens/excluir/<int:pk>/", item_views.excluir_item, name="excluir_item"),
+
+    # Ferramentas
+    path("ferramentas/", ferramenta_views.lista_ferramentas, name="lista_ferramentas"),
+    path("ferramentas/cadastrar/", ferramenta_views.cadastrar_ferramenta, name="cadastrar_ferramenta"),
+    path("ferramentas/editar/<int:pk>/", ferramenta_views.editar_ferramenta, name="editar_ferramenta"),
+    path("ferramentas/excluir/<int:pk>/", ferramenta_views.excluir_ferramenta, name="excluir_ferramenta"),
+    path("ferramentas/cotacao/<uuid:token>/", ferramenta_views.formulario_cotacao, name="responder_cotacao"),
+    path("ferramentas/enviar-cotacao/<int:pk>/", ferramenta_views.enviar_cotacao_ferramenta, name="enviar_cotacao_ferramenta"),
+    path("ferramentas/visualizar/<int:pk>/", ferramenta_views.visualizar_ferramenta, name="visualizar_ferramenta"),
+
+
+    # Centro de Custo
+    path("centros-custo/", centro_custo_views.lista_centros_custo, name="lista_centros_custo"),
+    path("centros-custo/cadastrar/", centro_custo_views.cadastrar_centro_custo, name="cadastrar_centro_custo"),
+    path("centros-custo/editar/<int:pk>/", centro_custo_views.editar_centro_custo, name="editar_centro_custo"),
+    path("centros-custo/visualizar/<int:pk>/", centro_custo_views.visualizar_centro_custo, name="visualizar_centro_custo"),
+
+
 ]

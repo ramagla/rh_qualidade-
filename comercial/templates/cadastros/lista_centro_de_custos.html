@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Centros de Custo{% endblock %}
+
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+
+<div class="container-fluid mt-5">
+  {% include "partials/global/_header_titulo.html" with titulo="Centros de Custo" icone="bi bi-cash-coin" emoji="💰" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"Funcionario.add_centrodecusto" %}
+    <a href="{% url 'cadastrar_centro_custo' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle me-2"></i> Cadastrar
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Offcanvas Filtros -->
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Centros de Custo
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+
+        <div class="col-12 filtro-wrapper">
+          <label for="departamento" class="form-label">
+            <i class="bi bi-diagram-3 me-1"></i> Departamento
+          </label>
+          <input type="text" name="departamento" id="departamento" class="form-control" placeholder="Nome do departamento" value="{{ request.GET.departamento }}">
+        </div>
+
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Lista -->
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted"></i> 📄 Lista de Centros de Custo
+  </h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-diagram-3"></i> Departamento</th>
+          <th><i class="bi bi-currency-dollar"></i> Custo Atual (R$)</th>
+          <th><i class="bi bi-calendar-check"></i> Vigência</th>
+          <th><i class="bi bi-gear"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for centro in centros %}
+        <tr>
+          <td class="text-start">{{ centro.departamento.nome }}</td>
+          <td>R$ {{ centro.custo_atual|floatformat:2 }}</td>
+          <td>{{ centro.vigencia|date:"d/m/Y" }}</td>
+          <td>
+            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+              {% if request.user|has_permission:"Funcionario.view_centrodecusto" %}
+              {% include "partials/global/_botao_visualizar.html" with objeto=centro url_visualizar="visualizar_centro_custo" label="centro de custo" %}
+              {% endif %}
+              {% if request.user|has_permission:"Funcionario.change_centrodecusto" %}
+              {% include "partials/global/_botao_editar.html" with objeto=centro url_editar="editar_centro_custo" label="centro de custo" %}
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        {% include "partials/global/_sem_resultados.html" with colspan=4 mensagem="Nenhum centro de custo encontrado." %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

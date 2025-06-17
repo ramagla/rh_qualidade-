@@ -29,6 +29,24 @@ def menu_comercial(user):
             "perm": "comercial.view_item",
         })
 
+
+    if user.has_perm("comercial.view_ferramenta"):
+        cadastro_submenu.append({
+            "name": "Ferramentas",
+            "url": "lista_ferramentas",
+            "icon": "fas fa-tools",
+            "perm": "comercial.view_ferramenta",
+        })
+
+    if user.has_perm("Funcionario.view_centrodecusto"):
+        cadastro_submenu.append({
+            "name": "Centros de Custo",
+            "url": "lista_centros_custo",
+            "icon": "fas fa-cash-register",
+            "perm": "Funcionario.view_centrodecusto",
+        })
+
+
     if cadastro_submenu:
         menu.append({
             "name": "Cadastro",

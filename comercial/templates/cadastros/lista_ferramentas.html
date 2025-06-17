@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Ferramentas Cadastradas{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+
+{% include "partials/global/_styles_componentes.html" %}
+
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Ferramentas Cadastradas" icone="bi bi-tools" emoji="🛠️" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"comercial.add_ferramenta" %}
+    <a href="{% url 'cadastrar_ferramenta' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Filtros -->
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Ferramentas
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+
+        <div class="col-12 filtro-wrapper">
+          <label for="codigo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código</label>
+          <input type="text" name="codigo" id="codigo" class="form-control" placeholder="Código" value="{{ request.GET.codigo }}">
+        </div>
+
+        <div class="col-12 filtro-wrapper">
+          <label for="tipo" class="form-label"><i class="bi bi-tags me-1"></i> Tipo</label>
+          <select name="tipo" id="tipo" class="form-select select2">
+            <option value="">Todos</option>
+            <option value="Nova" {% if request.GET.tipo == "Nova" %}selected{% endif %}>Ferramenta Nova</option>
+            <option value="Adpt" {% if request.GET.tipo == "Adpt" %}selected{% endif %}>Adaptação</option>
+            <option value="Disp" {% if request.GET.tipo == "Disp" %}selected{% endif %}>Dispositivo</option>
+            <option value="Outro" {% if request.GET.tipo == "Outro" %}selected{% endif %}>Outros</option>
+          </select>
+        </div>
+
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="success"  titulo="Ferramentas Novas"       valor=total_novas        subtitulo="Tipo 'Nova'"            icone="bi-plus-circle" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Adaptações"              valor=total_adaptacoes   subtitulo="Tipo 'Adaptação'"       icone="bi-wrench-adjustable" %}
+    {% include "partials/global/_card_indicador.html" with cor="secondary" titulo="Outros Tipos"         valor=total_outros       subtitulo="Dispositivos e Outros"  icone="bi-puzzle" %}
+    {% include "partials/global/_card_indicador.html" with cor="info"     titulo="Total de Ferramentas"  valor=total_ferramentas  subtitulo="Quantidade total"       icone="bi-tools" %}
+  </div>
+  
+
+  <!-- Tabela -->
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
+    📄 Lista de Ferramentas
+  </h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visually-hidden">Tabela de ferramentas</caption>
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-upc me-1"></i> Código</th>
+          <th><i class="bi bi-card-text me-1"></i> Descrição</th>
+          <th><i class="bi bi-tools me-1"></i> Tipo</th>
+          <th><i class="bi bi-123 me-1"></i> Vida Útil (Pç)</th>
+          <th><i class="bi bi-file-earmark-pdf me-1"></i> Desenho</th>
+          <th><i class="bi bi-cash-coin me-1"></i> Valor Total</th>
+          <th><i class="bi bi-hourglass-split me-1"></i> Status</th>
+          <th><i class="bi bi-gear me-1"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ferramenta in page_obj %}
+        <tr>
+          <td>{{ ferramenta.codigo }}</td>
+          <td class="text-start">{{ ferramenta.descricao }}</td>
+          <td>{{ ferramenta.get_tipo_display }}</td>
+          <td>{{ ferramenta.vida_util_em_pecas }}</td>
+          <td>
+            {% if ferramenta.desenho_pdf %}
+              <a href="{{ ferramenta.desenho_pdf.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-file-earmark-arrow-down-fill"></i> PDF
+              </a>
+            {% else %}
+              <span class="text-muted">Não anexado</span>
+            {% endif %}
+          </td>
+          <td>R$ {{ ferramenta.valor_total|floatformat:2 }}</td>
+<td>
+  {% if ferramenta.status_cotacao == "OK" %}
+    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> OK</span>
+  {% else %}
+    <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i> Aguardando</span>
+  {% endif %}
+</td>
+
+<td>
+  <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+    {% if request.user|has_permission:"comercial.view_ferramenta" and ferramenta.status_cotacao != "OK" %}
+  <a href="{% url 'enviar_cotacao_ferramenta' ferramenta.pk %}" class="btn btn-sm btn-secondary mt-1">
+    <i class="bi bi-send"></i> Enviar
+  </a>
+{% endif %}
+
+
+
+    {% if request.user|has_permission:"comercial.view_ferramenta" %}
+      {% include "partials/global/_botao_visualizar.html" with objeto=ferramenta url_visualizar="visualizar_ferramenta" label="ferramenta" %}
+    {% endif %}
+
+    
+
+    {% if request.user|has_permission:"comercial.change_ferramenta" %}
+      {% include "partials/global/_botao_editar.html" with objeto=ferramenta url_editar="editar_ferramenta" label="ferramenta" %}
+    {% endif %}
+
+    {% if request.user|has_permission:"comercial.delete_ferramenta" %}
+      {% include "partials/global/_botao_excluir.html" with objeto=ferramenta url_excluir="excluir_ferramenta" label="ferramenta" %}
+      {% include "partials/global/_modal_exclusao.html" with objeto=ferramenta url_excluir="excluir_ferramenta" %}
+    {% endif %}
+
+  </div>
+</td>
+
+        </tr>
+        {% empty %}
+          {% include "partials/global/_sem_resultados.html" with colspan=6 mensagem="Nenhuma ferramenta cadastrada." %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% include 'partials/global/_paginacao.html' %}
+  </div>
+
+</div>
+{% endblock %}

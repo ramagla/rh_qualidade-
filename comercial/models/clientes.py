@@ -36,7 +36,12 @@ class Cliente(models.Model):
     transportadora_telefone = models.CharField(max_length=20, blank=True, null=True)
     coleta = models.BooleanField(default=False)    
     transportadora_email = models.EmailField(blank=True, null=True)
-
+    
+    # Novo Acordeon: Contato
+    nome_contato = models.CharField(max_length=100, blank=True, null=True)
+    email_contato = models.EmailField(blank=True, null=True)
+    telefone_contato = models.CharField(max_length=20, blank=True, null=True)
+    cargo_contato = models.CharField(max_length=100, blank=True, null=True)
 
     # Outros
     icms = models.DecimalField(max_digits=5, decimal_places=2)
@@ -45,7 +50,17 @@ class Cliente(models.Model):
     cond_pagamento = models.CharField(max_length=100)
     cod_bm = models.CharField(max_length=50)
     observacao = models.TextField(blank=True, null=True)
-
+    atualizado_em = models.DateTimeField(
+            auto_now=True,
+            verbose_name="Atualizado em"
+        )
+    
+    TIPO_CHOICES = [
+        ('Automotivo', 'Automotivo'),
+        ('Não Automotivo', 'Não Automotivo'),
+        ('Reposição', 'Reposição'),
+    ]
+    tipo_cliente = models.CharField(max_length=20, choices=TIPO_CHOICES, blank=True, null=True)
     def __str__(self):
         return self.razao_social
 
