@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Cadastrar{% endif %} Máquina{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-gear-wide-connected me-2"></i>
+    {% if form.instance.pk %}Editar{% else %}Cadastrar{% endif %} Máquina
+  </h2>
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <strong>Erros no formulário:</strong>
+        <ul class="mt-2 mb-0">
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li><strong>Erro geral:</strong> {{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="accordion" id="accordionMaquina">
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDadosMaquina">
+          <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapseDadosMaquina" aria-expanded="true" aria-controls="collapseDadosMaquina">
+            <i class="bi bi-gear-fill me-2"></i> Dados da Máquina
+          </button>
+        </h2>
+        <div id="collapseDadosMaquina" class="accordion-collapse collapse show"
+          aria-labelledby="headingDadosMaquina" data-bs-parent="#accordionMaquina">
+          <div class="accordion-body row g-3">
+
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-upc me-1"></i> Código <span class="text-danger">*</span></label>
+              {{ form.codigo|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-8">
+              <label class="form-label"><i class="bi bi-type me-1"></i> Nome <span class="text-danger">*</span></label>
+              {{ form.nome|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label"><i class="bi bi-hammer me-1"></i> Serviço Realizado <span class="text-danger">*</span></label>
+              {{ form.servico_realizado|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-speedometer2 me-1"></i> Velocidade (unid/h) <span class="text-danger">*</span></label>
+              {{ form.velocidade|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-currency-dollar me-1"></i> Valor Hora (R$) <span class="text-danger">*</span></label>
+              {{ form.valor_hora|add_class:"form-control" }}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-lightning-fill me-1"></i> Consumo (kWh) <span class="text-danger">*</span></label>
+              {{ form.consumo_kwh|add_class:"form-control" }}
+            </div>
+
+            <div class="col-12 text-end mt-2">
+              <small class="text-muted"><i class="bi bi-asterisk text-danger small"></i> Campos obrigatórios</small>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botões -->
+    <div class="col-12 text-center mt-4">
+      {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='tecnico:tecnico_maquinas' %}
+       </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Máquinas Cadastradas{% endblock %}
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+{% load custom_filters %}
+
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Máquinas Cadastradas" icone="bi bi-gear-wide-connected" emoji="🛠️" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"tecnico.add_maquina" %}
+  <a href="{% url 'tecnico:tecnico_cadastrar_maquina' %}"
+     class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+    <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+  </a>
+{% endif %}
+
+  </div>
+
+  <!-- Offcanvas Filtros Máquinas -->
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Máquinas
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12 filtro-wrapper">
+          <label class="form-label"><i class="bi bi-upc me-1"></i> Código</label>
+          <input type="text" name="codigo" class="form-control" value="{{ request.GET.codigo }}">
+        </div>
+        <div class="col-12 filtro-wrapper">
+          <label class="form-label"><i class="bi bi-type me-1"></i> Nome</label>
+          <input type="text" name="nome" class="form-control" value="{{ request.GET.nome }}">
+        </div>
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Total de Máquinas" valor=total_maquinas subtitulo="Quantidade total cadastrada." icone="bi-gear-wide-connected" %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Velocidade Média" valor=velocidade_media subtitulo="Unid/hora (média geral)." icone="bi-speedometer2" %}
+    {% include "partials/global/_card_indicador.html" with cor="secondary" titulo="Custo Médio por Hora" valor=valor_hora_medio subtitulo="Base geral (R$)." icone="bi-currency-dollar" %}
+  </div>
+
+  <!-- Tabela -->
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
+    🧾 Lista de Máquinas
+  </h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th>Código</th>
+          <th>Nome</th>
+          <th>Serviço</th>
+          <th>Velocidade (unid/h)</th>
+          <th>Valor Hora (R$)</th>
+          <th>Consumo (kWh)</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in page_obj %}
+        <tr>
+          <td>{{ m.codigo }}</td>
+          <td class="text-start">{{ m.nome }}</td>
+          <td>{{ m.servico_realizado }}</td>
+          <td>{{ m.velocidade }}</td>
+          <td>R$ {{ m.valor_hora }}</td>
+          <td>{{ m.consumo_kwh }}</td>
+          <td>
+            <div class="d-inline-flex gap-1 justify-content-center">
+              {% if request.user|has_permission:"tecnico.change_maquina" %}
+  {% include "partials/global/_botao_editar.html" with objeto=m url_editar="tecnico:tecnico_editar_maquina" label="máquina" %}
+{% endif %}
+{% if request.user|has_permission:"tecnico.delete_maquina" %}
+  {% include "partials/global/_botao_excluir.html" with objeto=m url_excluir="tecnico:tecnico_excluir_maquina" label="máquina" %}
+  {% include "partials/global/_modal_exclusao.html"    with objeto=m url_excluir="tecnico:tecnico_excluir_maquina" %}
+{% endif %}
+
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+          {% include "partials/global/_sem_resultados.html" with colspan=7 mensagem="Nenhuma máquina cadastrada." %}
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+
+</div>
+{% endblock %}

@@ -96,6 +96,7 @@ urlpatterns = [
     path('usuarios-ativos/', usuarios_ativos, name='usuarios_ativos'),
     path("comercial/", include("comercial.urls")),
     path("assinatura/validar/<str:hash_assinatura>/", validar_assinatura, name="validar_assinatura"),
+    path("tecnico/", include("tecnico.urls")),
 
 
 

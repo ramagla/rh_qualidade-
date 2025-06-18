@@ -1,0 +1,335 @@
+<!-- Modal de Insumos -->
+<div class="modal fade" id="modalInsumo" tabindex="-1" aria-labelledby="modalInsumoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalInsumoLabel">
+            <i class="bi bi-box me-2"></i> Adicionar Insumo à Etapa
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" onclick="$('.modal-backdrop').remove();"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label">Insumo (Matéria-prima):</label>
+              <select class="form-select select2" name="insumo" data-dropdown-parent="#modalInsumo">
+                {% for insumo in insumos %}
+                  <option value="{{ insumo.id }}">{{ insumo.descricao }}</option>
+                {% endfor %}
+              </select>
+              
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Quantidade p/ 1000 peças:</label>
+              <input type="number" step="0.000001" min="0" class="form-control" name="quantidade">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Tipo de Insumo:</label>
+              <select class="form-select" name="tipo_insumo">
+                <option value="matéria_prima">Matéria-Prima</option>
+                <option value="componente">Componente</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="obrigatorio" id="obrigatorioInsumo">
+                <label class="form-check-label" for="obrigatorioInsumo">Obrigatório</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btnSalvarInsumo">Salvar Insumo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de Propriedades -->
+  <div class="modal fade" id="modalPropriedades" tabindex="-1" aria-labelledby="modalPropriedadesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalPropriedadesLabel">
+            <i class="bi bi-gear-fill me-2"></i> Propriedades da Etapa
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" onclick="$('.modal-backdrop').remove();"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Nome da Ação:</label>
+              <input type="text" class="form-control" name="nome_acao">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Máquinas Permitidas:</label>
+              <select class="form-select select2" multiple name="maquinas" data-dropdown-parent="#modalPropriedades">
+                {% for maquina in maquinas %}
+                  <option value="{{ maquina.id }}">{{ maquina.codigo }} – {{ maquina.nome }}</option>
+                {% endfor %}
+              </select>
+              
+              
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Descrição Detalhada:</label>
+              <textarea class="form-control" rows="4" name="descricao_detalhada"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btnSalvarPropriedades">Salvar Propriedades</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Select2 nas modais -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function(){
+      // 1) Dados pré-carregados
+      const insumosData   = JSON.parse(document.getElementById("insumos-data").textContent);
+      const maquinasData  = JSON.parse(document.getElementById("maquinas-data").textContent);
+      const setoresData   = JSON.parse(document.getElementById("setores-data").textContent);
+      const roteiroDataEl = document.getElementById("roteiro-data");
+      const roteiroData   = roteiroDataEl ? JSON.parse(roteiroDataEl.textContent) : { etapas: [] };
+    
+      // 2) Elementos principais
+      const container  = document.getElementById("etapas-container");
+      const btnAdd     = document.getElementById("addEtapa");
+      let etapaIndex   = 0;
+    
+      // 3) Função que cria o HTML de uma etapa
+      function criarEtapa(index, data = null) {
+        const div = document.createElement("div");
+        div.className = "border rounded p-3 mb-3 etapa-form";
+        div.dataset.index = index;
+        div.innerHTML = `
+          <div class="row g-3">
+            <div class="col-md-2">
+              <label class="form-label">Etapa Nº</label>
+              <input type="number" class="form-control" name="etapas[${index}][etapa]" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Setor</label>
+              <select class="form-select select2" name="etapas[${index}][setor]" required>
+                <option value="">– Selecione –</option>
+                ${setoresData.map(s => `<option value="${s.id}">${s.nome}</option>`).join("")}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Peças/Hora</label>
+              <input type="number" step="0.0001" class="form-control" name="etapas[${index}][pph]">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Setup (min)</label>
+              <input type="number" class="form-control" name="etapas[${index}][setup_minutos]">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="button" class="btn btn-sm btn-danger remover-etapa">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+    
+          <div class="mt-3">
+            <label class="form-label">Insumos</label>
+            <ul class="list-group lista-insumos mb-2"></ul>
+            <button type="button" class="btn btn-sm btn-info btn-add-insumo">
+              <i class="bi bi-box-seam"></i> Insumo
+            </button>
+          </div>
+    
+          <div class="mt-3">
+            <label class="form-label">Propriedades</label>
+            <ul class="list-group lista-propriedades mb-2"></ul>
+            <button type="button" class="btn btn-sm btn-secondary btn-add-propriedades">
+              <i class="bi bi-gear"></i> Propriedades
+            </button>
+          </div>
+    
+          <input type="hidden"
+                 class="dados-etapa"
+                 name="etapas[${index}][data]"
+                 value='{"insumos":[],"propriedades":{}}'>
+        `;
+        $(div).find('select.select2').select2({ dropdownParent: div });
+    
+        if (data) {
+          div.querySelector(`[name="etapas[${index}][etapa]"]`).value         = data.etapa;
+          div.querySelector(`[name="etapas[${index}][setor]"]`).value         = data.setor;
+          div.querySelector(`[name="etapas[${index}][pph]"]`).value           = data.pph;
+          div.querySelector(`[name="etapas[${index}][setup_minutos]"]`).value = data.setup_minutos;
+    
+          const hidden = div.querySelector(".dados-etapa");
+          hidden.value = JSON.stringify({
+            insumos: data.insumos,
+            propriedades: data.propriedades
+          });
+    
+          const ulI = div.querySelector(".lista-insumos");
+          data.insumos.forEach(ins => {
+            const mat = insumosData.find(i => i.id == ins.materia_prima_id);
+            const txt = mat ? mat.descricao : ins.materia_prima_id;
+            ulI.insertAdjacentHTML("beforeend", `
+              <li class="list-group-item d-flex justify-content-between align-items-center small">
+                <span><strong>${txt}</strong> — ${ins.quantidade} / ${ins.tipo_insumo} / ${ins.obrigatorio ? "Obrigatório":"Opcional"}</span>
+                <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+                  <i class="bi bi-x-circle"></i>
+                </button>
+              </li>
+            `);
+          });
+    
+          const ulP = div.querySelector(".lista-propriedades");
+          if (data.propriedades && data.propriedades.nome_acao) {
+            ulP.innerHTML = `
+              <li class="list-group-item small"><strong>Ação:</strong> ${data.propriedades.nome_acao}</li>
+              <li class="list-group-item small"><strong>Máquinas:</strong> ${data.propriedades.maquinas.map(m=>m.nome).join(", ")}</li>
+              <li class="list-group-item small"><strong>Descrição:</strong> ${data.propriedades.descricao_detalhada}</li>
+            `;
+          }
+        }
+    
+        return div;
+      }
+    
+      // 4) Limpa e pré-carrega as etapas do banco
+      container.innerHTML = "";
+      roteiroData.etapas.forEach(et => {
+        container.appendChild(criarEtapa(etapaIndex, et));
+        etapaIndex++;
+      });
+    
+      // 5) “Adicionar Etapa”
+      btnAdd.addEventListener("click", () => {
+        container.appendChild(criarEtapa(etapaIndex));
+        etapaIndex++;
+      });
+    
+      // 6) Delegações gerais
+      container.addEventListener("click", e => {
+        const etapaDiv = e.target.closest(".etapa-form");
+        if (!etapaDiv) return;
+    
+        if (e.target.closest(".remover-etapa")) {
+          etapaDiv.remove();
+          return;
+        }
+    
+        if (e.target.closest(".btn-add-insumo")) {
+          window.etapaAtiva = etapaDiv;
+          new bootstrap.Modal(document.getElementById("modalInsumo")).show();
+          return;
+        }
+    
+        if (e.target.closest(".btn-add-propriedades")) {
+          window.etapaAtiva = etapaDiv;
+          new bootstrap.Modal(document.getElementById("modalPropriedades")).show();
+          return;
+        }
+    
+        if (e.target.closest(".remover-insumo")) {
+          const li   = e.target.closest("li");
+          const idx  = Array.from(li.parentNode.children).indexOf(li);
+          const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
+          data.insumos.splice(idx, 1);
+          etapaDiv.querySelector(".dados-etapa").value = JSON.stringify(data);
+          li.remove();
+          return;
+        }
+      });
+    
+      // 7) Pre-load do modal de Propriedades antes de exibir
+      const modalProps = document.getElementById("modalPropriedades");
+      modalProps.addEventListener("show.bs.modal", () => {
+        const etapaDiv = window.etapaAtiva;
+        const data     = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
+        const props    = data.propriedades || {};
+    
+        modalProps.querySelector('input[name="nome_acao"]').value              = props.nome_acao || "";
+        modalProps.querySelector('textarea[name="descricao_detalhada"]').value = props.descricao_detalhada || "";
+    
+        const selMq = modalProps.querySelector('select[name="maquinas"]');
+        $(selMq).val([]).trigger("change");
+        if (props.maquinas) {
+          const ids = props.maquinas.map(m => m.id);
+          $(selMq).val(ids).trigger("change");
+        }
+      });
+    
+      // 8) Salvar Insumo no modalInsumo
+      document.getElementById("btnSalvarInsumo").addEventListener("click", () => {
+        const modal = document.getElementById("modalInsumo");
+        const sel   = modal.querySelector('select[name="insumo"]');
+        const qtd   = modal.querySelector('input[name="quantidade"]').value;
+        const tipo  = modal.querySelector('select[name="tipo_insumo"]').value;
+        const obr   = modal.querySelector('input[name="obrigatorio"]').checked;
+        const txt   = sel.options[sel.selectedIndex].text;
+        const id    = sel.value;
+    
+        const etapaDiv = window.etapaAtiva;
+        const data     = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
+        data.insumos.push({ materia_prima_id: id, quantidade: +qtd, tipo_insumo: tipo, obrigatorio: obr });
+        etapaDiv.querySelector(".dados-etapa").value = JSON.stringify(data);
+    
+        etapaDiv.querySelector(".lista-insumos").insertAdjacentHTML("beforeend", `
+          <li class="list-group-item d-flex justify-content-between align-items-center small">
+            <span><strong>${txt}</strong> — ${qtd} / ${tipo} / ${obr ? "Obrigatório":"Opcional"}</span>
+            <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+              <i class="bi bi-x-circle"></i>
+            </button>
+          </li>
+        `);
+    
+        bootstrap.Modal.getInstance(modal).hide();
+      });
+    
+      // 9) Salvar Propriedades no modalPropriedades
+      document.getElementById("btnSalvarPropriedades").addEventListener("click", () => {
+        const etapaDiv = window.etapaAtiva;
+        const nome     = modalProps.querySelector('input[name="nome_acao"]').value;
+        const desc     = modalProps.querySelector('textarea[name="descricao_detalhada"]').value;
+        const selMq    = modalProps.querySelector('select[name="maquinas"]');
+        const maquinas = Array.from(selMq.selectedOptions).map(o => ({ id: o.value, nome: o.text }));
+    
+        const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
+        data.propriedades = { nome_acao: nome, descricao_detalhada: desc, maquinas };
+        etapaDiv.querySelector(".dados-etapa").value = JSON.stringify(data);
+    
+        const ulP = etapaDiv.querySelector(".lista-propriedades");
+        ulP.innerHTML = `
+          <li class="list-group-item small"><strong>Ação:</strong> ${nome}</li>
+          <li class="list-group-item small"><strong>Máquinas:</strong> ${maquinas.map(m=>m.nome).join(", ")}</li>
+          <li class="list-group-item small"><strong>Descrição:</strong> ${desc}</li>
+        `;
+    
+        bootstrap.Modal.getInstance(modalProps).hide();
+      });
+    
+      // 10) Ao enviar o form, monta o dados_json
+      document.getElementById("roteiroForm").addEventListener("submit", function(e){
+        e.preventDefault();
+        const payload = {
+          item: document.querySelector('[name="item"]').value,
+          etapas: []
+        };
+    
+        container.querySelectorAll(".etapa-form").forEach(div => {
+          const idx  = div.dataset.index;
+          const data = JSON.parse(div.querySelector(".dados-etapa").value);
+          data.etapa         = div.querySelector(`[name="etapas[${idx}][etapa]"]`).value;
+          data.setor         = div.querySelector(`[name="etapas[${idx}][setor]"]`).value;
+          data.pph           = div.querySelector(`[name="etapas[${idx}][pph]"]`).value;
+          data.setup_minutos = div.querySelector(`[name="etapas[${idx}][setup_minutos]"]`).value;
+          payload.etapas.push(data);
+        });
+    
+        document.getElementById("dados_json").value = JSON.stringify(payload);
+        this.submit();
+      });
+    });
+    </script>
+    

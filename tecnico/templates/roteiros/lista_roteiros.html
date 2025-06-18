@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Roteiros de Produção{% endblock %}
+
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Roteiros de Produção" icone="bi bi-diagram-3" emoji="🏭" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"tecnico.add_roteiroproducao" %}
+    <a href="{% url 'tecnico:tecnico_cadastrar_roteiro' %}
+" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-file-earmark-plus-fill me-2"></i> Cadastrar
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Offcanvas de Filtros -->
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title"><i class="bi bi-funnel-fill me-2"></i>Filtros de Roteiros</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12 filtro-wrapper">
+          <label for="codigo_item" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código do Item</label>
+          <input type="text" class="form-control" id="codigo_item" name="codigo_item" value="{{ request.GET.codigo_item }}">
+        </div>
+        <div class="col-12 filtro-wrapper">
+          <label for="descricao_item" class="form-label"><i class="bi bi-tag me-1"></i> Descrição do Item</label>
+          <input type="text" class="form-control" id="descricao_item" name="descricao_item" value="{{ request.GET.descricao_item }}">
+        </div>
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Roteiros" valor=total_roteiros subtitulo="Roteiros de produção cadastrados." icone="bi bi-diagram-3-fill" %}
+  </div>
+
+  <!-- Tabela de Roteiros -->
+  <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📄 Lista de Roteiros</h5>
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-upc me-1"></i> Código do Item</th>
+          <th><i class="bi bi-tag me-1"></i> Descrição</th>
+          <th><i class="bi bi-list-ol me-1"></i> Nº de Etapas</th>
+          <th><i class="bi bi-calendar-plus me-1"></i> Criado em</th>
+          <th><i class="bi bi-gear me-1"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for roteiro in page_obj %}
+        <tr>
+          <td>{{ roteiro.item.codigo }}</td>
+          <td class="text-start">{{ roteiro.item.descricao }}</td>
+          <td>{{ roteiro.etapas.count }}</td>
+          <td>{{ roteiro.criado_em|date:"d/m/Y H:i" }}</td>
+          <td>
+            <div class="d-inline-flex gap-1 justify-content-center flex-wrap">
+              {% if request.user|has_permission:"tecnico.view_roteiroproducao" %}
+              {% include "partials/global/_botao_visualizar.html" with objeto=roteiro url_visualizar="tecnico:tecnico_visualizar_roteiro" label="roteiro" %}
+              {% endif %}
+              {% if request.user|has_permission:"tecnico.change_roteiroproducao" %}
+              {% include "partials/global/_botao_editar.html" with objeto=roteiro url_editar="tecnico:tecnico_editar_roteiro" label="roteiro" %}
+              {% endif %}
+              {% if request.user|has_permission:"tecnico.delete_roteiroproducao" %}
+              {% include "partials/global/_botao_excluir.html" with objeto=roteiro url_excluir="tecnico:tecnico_excluir_roteiro" label="roteiro" %}
+              {% endif %}
+            </div>
+            
+          </td>
+        </tr>
+        {% empty %}
+        {% include "partials/global/_sem_resultados.html" with colspan=5 mensagem="Nenhum roteiro encontrado." %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+</div>
+
+{% endblock %}

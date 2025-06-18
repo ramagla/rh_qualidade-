@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Editar Roteiro de Produção{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-diagram-3 me-2"></i>Editar Roteiro de Produção
+  </h2>
+
+  <form method="post" class="row g-3" enctype="multipart/form-data" id="roteiroForm">
+    {% csrf_token %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <strong>Erros:</strong>
+        <ul class="mb-0 mt-2">
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="accordion" id="accordionRoteiro">
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#collapseItem">
+            <i class="bi bi-box-seam me-2"></i> Item Vinculado
+          </button>
+        </h2>
+        <div id="collapseItem" class="accordion-collapse collapse show"
+             data-bs-parent="#accordionRoteiro">
+          <div class="accordion-body">
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.item.id_for_label }}">
+                Item: <span class="text-danger">*</span>
+              </label>
+              {{ form.item|add_class:"form-select select2" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#collapseEtapas">
+            <i class="bi bi-list-ol me-2"></i> Etapas de Produção
+          </button>
+        </h2>
+        <div id="collapseEtapas" class="accordion-collapse collapse"
+             data-bs-parent="#accordionRoteiro">
+          <div class="accordion-body">
+            {{ etapa_formset.management_form }}
+
+            <div id="formset-etapas">
+              {% for etapa_form in etapa_formset %}
+                <div class="border rounded p-3 mb-3 etapa-form"
+                     data-etapa-index="{{ forloop.counter0 }}">
+                  <div class="row g-3">
+                    {% for field in etapa_form.visible_fields %}
+                      {% if not field.is_hidden and field.name != "DELETE" %}
+                        <div class="col-md-3">
+                          <label class="form-label" for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                          </label>
+                          {% if field.name == "setor" %}
+                            {{ field|add_class:"form-select select2" }}
+                          {% else %}
+                            {{ field|add_class:"form-control" }}
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                    {{ etapa_form.DELETE }}
+                  </div>
+
+                  <div class="mt-3">
+                    <label class="form-label">Insumos Vinculados:</label>
+                    <ul class="list-group lista-insumos mb-2"></ul>
+                    <input type="hidden"
+                           name="json_insumos_etapa-{{ forloop.counter0 }}"
+                           class="campo-json-insumos" value="[]">
+                  </div>
+
+                  <div class="mt-2 d-flex justify-content-end gap-2">
+                    <button type="button"
+                            class="btn btn-sm btn-info btn-insumo"
+                            data-etapa-index="{{ forloop.counter0 }}">
+                      <i class="bi bi-box-seam"></i> Insumos
+                    </button>
+                    <button type="button"
+                            class="btn btn-sm btn-secondary btn-propriedades"
+                            data-etapa-index="{{ forloop.counter0 }}">
+                      <i class="bi bi-gear"></i> Propriedades
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger remover-etapa">
+                      <i class="bi bi-trash"></i> Remover
+                    </button>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+            <button type="button" id="addEtapa"
+                    class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-plus-circle me-1"></i> Adicionar Etapa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+{# logo antes de fechar o body, por exemplo, após os modais #}
+<div id="template-etapa" class="d-none">
+  <div class="border rounded p-3 mb-3 etapa-form" data-etapa-index="__prefix__">
+    <div class="row g-3">
+      {% for field in etapa_formset.empty_form.visible_fields %}
+        {% if not field.is_hidden and field.name != "DELETE" %}
+          <div class="col-md-3">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% if field.name == "setor" %}
+              {{ field|add_class:"form-select select2" }}
+            {% else %}
+              {{ field|add_class:"form-control" }}
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+      {{ etapa_formset.empty_form.DELETE }}
+    </div>
+    <div class="mt-3">
+      <label class="form-label">Insumos Vinculados:</label>
+      <ul class="list-group lista-insumos mb-2"></ul>
+      <input type="hidden" name="json_insumos_etapa-__prefix__" class="campo-json-insumos" value="[]">
+    </div>
+    <div class="mt-2 d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-sm btn-info btn-insumo" data-etapa-index="__prefix__">
+        <i class="bi bi-box-seam"></i> Insumos
+      </button>
+      <button type="button" class="btn btn-sm btn-secondary btn-propriedades" data-etapa-index="__prefix__">
+        <i class="bi bi-gear"></i> Propriedades
+      </button>
+      <button type="button" class="btn btn-sm btn-danger remover-etapa">
+        <i class="bi bi-trash"></i> Remover
+      </button>
+    </div>
+  </div>
+</div>
+
+    <div class="col-12 text-center mt-4">
+      {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=edicao url_voltar='tecnico:tecnico_roteiros' %}
+    </div>
+  </form>
+</div>
+
+{# JSONs para o JS #}
+{{ insumos_data|json_script:"insumos-data" }}
+{{ maquinas_data|json_script:"maquinas-data" }}
+{{ setores_data|json_script:"setores-data" }}
+{{ roteiro_json|json_script:"roteiro-data" }}
+
+{# Reaproveita as mesmas modais #}
+{% include "roteiros/_modais_roteiro.html" with insumos=insumos_data maquinas=maquinas_data %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // 1) ativa select2 em todos os selects
+    $('.select2').select2();
+  
+    // referências ao formset
+    const $container  = $('#formset-etapas');
+    const $totalForms = $('#id_etapas-TOTAL_FORMS');
+    const template    = $('#template-etapa .etapa-form')[0];
+  
+    // carrega os JSONs que você colocou com json_script
+    const insumosData  = JSON.parse($('#insumos-data').text());
+    const maquinasData = JSON.parse($('#maquinas-data').text());
+    const setoresData  = JSON.parse($('#setores-data').text());
+    const roteiroData  = JSON.parse($('#roteiro-data').text());
+  
+    // 2) pré-carrega as etapas que já existem
+    roteiroData.etapas.forEach((et, idx) => {
+      const $clone = $(template).clone();
+      // troca o __prefix__ pelo índice real
+      $clone.html($clone.html().replace(/__prefix__/g, idx));
+      // esconde o checkbox de DELETE vindo do formset
+      $clone.find('input[type="checkbox"][name$="-DELETE"]').prop('checked', false).hide();
+  
+      // preenche campos visíveis
+      $clone.find(`[name="etapas[${idx}][etapa]"]`).val(et.etapa);
+      $clone.find(`[name="etapas[${idx}][setor]"]`).val(et.setor);
+      $clone.find(`[name="etapas[${idx}][pph]"]`).val(et.pph);
+      $clone.find(`[name="etapas[${idx}][setup_minutos]"]`).val(et.setup_minutos);
+  
+      // popula os insumos na lista e no campo oculto
+      const lista = $clone.find('.lista-insumos');
+      let arrInsumos = [];
+      et.insumos.forEach(insumo => {
+        arrInsumos.push(insumo);
+        lista.append(`
+          <li class="list-group-item d-flex justify-content-between align-items-center small">
+            <span>
+              <strong>${insumo.materia_prima_id}</strong> — 
+              ${insumo.quantidade} / ${insumo.tipo_insumo} / 
+              ${insumo.obrigatorio ? 'Obrigatório' : 'Opcional'}
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+              <i class="bi bi-x-circle"></i>
+            </button>
+          </li>
+        `);
+      });
+      $clone.find(`.campo-json-insumos`).val(JSON.stringify(arrInsumos));
+  
+      // re-inicializa select2 só dentro dessa etapa
+      $clone.find('select.select2').select2({ dropdownParent: $clone });
+  
+      // adiciona ao container
+      $container.append($clone);
+    });
+    // ajusta o TOTAL_FORMS pro número de etapas carregadas
+    $totalForms.val(roteiroData.etapas.length);
+  
+    // 3) botão “Adicionar Etapa”
+    $('#addEtapa').on('click', function() {
+      const idx = parseInt($totalForms.val());
+      const $clone = $(template).clone();
+      $clone.html($clone.html().replace(/__prefix__/g, idx));
+      // limpa DELETE checkbox
+      $clone.find('input[type="checkbox"][name$="-DELETE"]').prop('checked',false).hide();
+      $container.append($clone);
+      $totalForms.val(idx + 1);
+      // select2 na nova etapa
+      $clone.find('select.select2').select2({ dropdownParent: $clone });
+    });
+  
+    // 4) delegação de eventos dentro do container
+    $container.on('click', function(e) {
+      const btn = e.target;
+      const $etapa = $(btn).closest('.etapa-form');
+  
+      // remover etapa inteira
+      if ($(btn).closest('.remover-etapa').length) {
+        $etapa.remove();
+        $totalForms.val($container.find('.etapa-form').length);
+        return;
+      }
+  
+      // abrir modal de insumo
+      if ($(btn).closest('.btn-insumo').length) {
+        window.etapaAtiva = $etapa;
+        new bootstrap.Modal($('#modalInsumo')).show();
+        return;
+      }
+  
+      // abrir modal de propriedades
+      if ($(btn).closest('.btn-propriedades').length) {
+        window.etapaAtiva = $etapa;
+        new bootstrap.Modal($('#modalPropriedades')).show();
+        return;
+      }
+  
+      // remover insumo individual
+      if ($(btn).closest('.remover-insumo').length) {
+        const $li = $(btn).closest('li');
+        const listaJson = $etapa.find('.campo-json-insumos');
+        let arr = JSON.parse(listaJson.val() || '[]');
+        const nome = $li.find('strong').text();
+        arr = arr.filter(i => i.materia_prima_text !== nome);
+        listaJson.val(JSON.stringify(arr));
+        $li.remove();
+        return;
+      }
+    });
+  
+    // 5) salvar insumo na modal
+    $('#btnSalvarInsumo').on('click', function() {
+      const $m = $('#modalInsumo');
+      const sel = $m.find('select[name="insumo"]');
+      const txt = sel.find('option:selected').text();
+      const val = sel.val();
+      const qtd = $m.find('input[name="quantidade"]').val();
+      const tipo = $m.find('select[name="tipo_insumo"]').val();
+      const obr = $m.find('input[name="obrigatorio"]').is(':checked');
+      const $etapa = window.etapaAtiva;
+      const lista = $etapa.find('.lista-insumos');
+      const hiddenJson = $etapa.find('.campo-json-insumos');
+      let arr = JSON.parse(hiddenJson.val() || '[]');
+      arr.push({ insumoId: val, materia_prima_text: txt, quantidade: qtd, tipo_insumo: tipo, obrigatorio: obr });
+      hiddenJson.val(JSON.stringify(arr));
+  
+      lista.append(`
+        <li class="list-group-item d-flex justify-content-between align-items-center small">
+          <span><strong>${txt}</strong> — ${qtd} / ${tipo} / ${obr ? 'Obrigatório' : 'Opcional'}</span>
+          <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+            <i class="bi bi-x-circle"></i>
+          </button>
+        </li>
+      `);
+  
+      bootstrap.Modal.getInstance($m[0]).hide();
+    });
+  
+    // 6) salvar propriedades na modal
+    $('#btnSalvarPropriedades').on('click', function() {
+      const $m = $('#modalPropriedades');
+      const nome = $m.find('input[name="nome_acao"]').val();
+      const desc = $m.find('textarea[name="descricao_detalhada"]').val();
+      const sel  = $m.find('select[name="maquinas"]');
+      const maquinas = Array.from(sel[0].selectedOptions).map(o => ({id:o.value,nome:o.textContent.trim()}));
+      const $etapa = window.etapaAtiva;
+      // atualiza o campo JSON de propriedades (você precisa ter um hidden `.propriedades-json`)
+      const propHidden = $etapa.find('.propriedades-json');
+      const data = { nome_acao: nome, descricao_detalhada: desc, maquinas };
+      propHidden.val(JSON.stringify(data));
+  
+      // exibe na lista de propriedades (você pode adicionar um <ul class="lista-propriedades"> dentro do template)
+      let html = `
+        <li class="list-group-item small"><strong>Ação:</strong> ${nome}</li>
+        <li class="list-group-item small"><strong>Máquinas:</strong> ${maquinas.map(m=>m.nome).join(', ')}</li>
+        <li class="list-group-item small"><strong>Descrição:</strong> ${desc}</li>
+      `;
+      let $ul = $etapa.find('.lista-propriedades');
+      if (!$ul.length) {
+        // se ainda não existir, crie e insira antes dos botões
+        $ul = $(`<ul class="list-group lista-propriedades mb-2"></ul>`);
+        $etapa.find('.mt-3').first().append($ul);
+      }
+      $ul.html(html);
+  
+      bootstrap.Modal.getInstance($m[0]).hide();
+    });
+  });
+  </script>
+  
+{% endblock %}

@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     "comercial",
     "assinatura_eletronica",
     "django.contrib.humanize",
-
+    "tecnico",
 
 ]
 

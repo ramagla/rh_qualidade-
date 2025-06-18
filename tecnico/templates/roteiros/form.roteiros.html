@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+  {% if edicao %}Editar{% else %}Cadastrar{% endif %} Roteiro de Produção
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-diagram-3 me-2"></i>
+    {% if edicao %}Editar{% else %}Cadastrar{% endif %} Roteiro de Produção
+  </h2>
+
+  <form method="post" id="roteiroForm">
+    {% csrf_token %}
+    <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="{{ form.item.id_for_label }}" class="form-label">
+            Item Vinculado <span class="text-danger">*</span>
+          </label>
+          {{ form.item|add_class:"form-select select2" }}
+        </div>
+      </div>
+
+    <hr>
+
+    <div id="etapas-container"></div>
+  <button type="button" id="addEtapa" class="btn btn-outline-primary btn-sm mb-3">
+    <i class="bi bi-plus-circle me-1"></i> Adicionar Etapa
+  </button>
+  <input type="hidden" name="dados_json" id="dados_json">
+    <div class="text-center mt-4">
+        {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=edicao url_voltar='tecnico:tecnico_roteiros' %}
+    
+    </div>
+  </form>
+</div>
+
+{{ insumos_data|json_script:"insumos-data" }}
+{{ maquinas_data|json_script:"maquinas-data" }}
+{{ setores_data|json_script:"setores-data" }}
+{# só renderiza se estivermos em edição #}
+{% if roteiro_data %}
+  {{ roteiro_data|json_script:"roteiro-data" }}
+{% endif %}
+{# Inclui os dois modais apenas uma vez, fora do template JS #}
+{% include "roteiros/_modais_roteiro.html" with insumos=insumos_data maquinas=maquinas_data %}
+
+<script>
+  // Dados pré-carregados via json_script no template
+  const insumosData   = JSON.parse(document.getElementById("insumos-data").textContent);
+  const maquinasData  = JSON.parse(document.getElementById("maquinas-data").textContent);
+  const setoresData   = JSON.parse(document.getElementById("setores-data").textContent);
+  const roteiroDataEl = document.getElementById("roteiro-data");
+  const roteiroData   = roteiroDataEl ? JSON.parse(roteiroDataEl.textContent) : null;
+
+  let etapaIndex = 0;
+  const container = document.getElementById("etapas-container");
+
+  function criarEtapa(index, data = null) {
+    const div = document.createElement("div");
+    div.className = "border rounded p-3 mb-3 etapa-form";
+    div.dataset.index = index;
+    div.innerHTML = `
+      <div class="row g-3">
+        <div class="col-md-2">
+          <label class="form-label">Etapa Nº</label>
+          <input type="number" class="form-control" name="etapas[${index}][etapa]" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Setor</label>
+          <select class="form-select select2" name="etapas[${index}][setor]" required>
+            <option value="">– Selecione –</option>
+            ${setoresData.map(s => `<option value="${s.id}">${s.nome}</option>`).join("")}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Peças/Hora</label>
+          <input type="number" step="0.0001" class="form-control" name="etapas[${index}][pph]">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Setup (min)</label>
+          <input type="number" class="form-control" name="etapas[${index}][setup_minutos]">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="button" class="btn btn-sm btn-danger remover-etapa">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <label class="form-label">Insumos</label>
+        <ul class="list-group lista-insumos mb-2"></ul>
+        <button type="button"
+                class="btn btn-sm btn-info btn-add-insumo"
+                data-bs-toggle="modal"
+                data-bs-target="#modalInsumo">
+          <i class="bi bi-box-seam"></i> Insumo
+        </button>
+      </div>
+
+      <div class="mt-3">
+        <label class="form-label">Propriedades</label>
+        <ul class="list-group lista-propriedades mb-2"></ul>
+        <button type="button"
+                class="btn btn-sm btn-secondary btn-add-propriedades"
+                data-bs-toggle="modal"
+                data-bs-target="#modalPropriedades">
+          <i class="bi bi-gear"></i> Propriedades
+        </button>
+      </div>
+
+      <input type="hidden"
+             class="dados-etapa"
+             name="etapas[${index}][data]"
+             value='{"insumos":[],"propriedades":{}}'>
+    `;
+    // ativa select2 dentro da nova etapa
+    $(div).find('select.select2').select2({ dropdownParent: div });
+
+    // se vier data (edição), pré-preenchemos campos e listas
+    if (data) {
+      div.querySelector(`[name="etapas[${index}][etapa]"]`).value         = data.etapa;
+      div.querySelector(`[name="etapas[${index}][setor]"]`).value         = data.setor;
+      div.querySelector(`[name="etapas[${index}][pph]"]`).value           = data.pph;
+      div.querySelector(`[name="etapas[${index}][setup_minutos]"]`).value = data.setup_minutos;
+
+      const hidden = div.querySelector(".dados-etapa");
+      hidden.value  = JSON.stringify({ insumos: data.insumos, propriedades: data.propriedades });
+
+      // montar lista de insumos
+      const ulInsumos = div.querySelector(".lista-insumos");
+      data.insumos.forEach(ins => {
+        const mat = insumosData.find(i => i.id == ins.materia_prima_id);
+        const txt = mat ? mat.descricao : ins.materia_prima_id;
+        const li = document.createElement("li");
+        li.className = "list-group-item d-flex justify-content-between align-items-center small";
+        li.innerHTML = `
+          <span><strong>${txt}</strong> — ${ins.quantidade} / ${ins.tipo_insumo} / ${ins.obrigatorio ? "Obrigatório" : "Opcional"}</span>
+          <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+            <i class="bi bi-x-circle"></i>
+          </button>`;
+        ulInsumos.appendChild(li);
+      });
+
+      // montar lista de propriedades
+      const ulProps = div.querySelector(".lista-propriedades");
+      if (data.propriedades && data.propriedades.nome_acao) {
+        ulProps.innerHTML = `
+          <li class="list-group-item small"><strong>Ação:</strong> ${data.propriedades.nome_acao}</li>
+          <li class="list-group-item small"><strong>Máquinas:</strong> ${data.propriedades.maquinas.map(m => m.nome).join(", ")}</li>
+          <li class="list-group-item small"><strong>Descrição:</strong> ${data.propriedades.descricao_detalhada}</li>
+        `;
+      }
+    }
+
+    return div;
+  }
+
+  // Pré-carrega etapas se for edição
+  if (roteiroData && roteiroData.etapas.length) {
+    roteiroData.etapas.forEach(et => {
+      container.appendChild(criarEtapa(etapaIndex, et));
+      etapaIndex++;
+    });
+  }
+
+  // Novo passo: adiciona etapa em branco
+  document.getElementById("addEtapa").addEventListener("click", () => {
+    container.appendChild(criarEtapa(etapaIndex));
+    etapaIndex++;
+  });
+
+  // Delegação de eventos dentro das etapas
+  container.addEventListener("click", e => {
+    const etapaDiv = e.target.closest(".etapa-form");
+    if (!etapaDiv) return;
+
+    // Remover etapa
+    if (e.target.closest(".remover-etapa")) {
+      etapaDiv.remove();
+      return;
+    }
+
+    // Marcar etapa ativa para o modal
+    if (e.target.closest(".btn-add-insumo") || e.target.closest(".btn-add-propriedades")) {
+      window.etapaAtiva = etapaDiv;
+    }
+
+    // Remover insumo da lista e do hidden
+    if (e.target.closest(".remover-insumo")) {
+      const li     = e.target.closest("li");
+      const ul     = li.parentNode;
+      const idx    = Array.from(ul.children).indexOf(li);
+      const hidden = etapaDiv.querySelector(".dados-etapa");
+      const data   = JSON.parse(hidden.value);
+      data.insumos.splice(idx, 1);
+      hidden.value = JSON.stringify(data);
+      li.remove();
+    }
+  });
+
+  // Botão Salvar Insumo no modalInsumo
+  document.getElementById("btnSalvarInsumo").addEventListener("click", () => {
+    const modal = document.getElementById("modalInsumo");
+    const sel   = modal.querySelector('select[name="insumo"]');
+    const qtd   = modal.querySelector('input[name="quantidade"]').value;
+    const tipo  = modal.querySelector('select[name="tipo_insumo"]').value;
+    const obr   = modal.querySelector('input[name="obrigatorio"]').checked;
+    const txt   = sel.options[sel.selectedIndex].text;
+    const id    = sel.value;
+
+    const div    = window.etapaAtiva;
+    const hidden = div.querySelector(".dados-etapa");
+    const lista  = div.querySelector(".lista-insumos");
+    const data   = JSON.parse(hidden.value);
+
+    data.insumos.push({ materia_prima_id: id, quantidade: +qtd, tipo_insumo: tipo, obrigatorio: obr });
+    hidden.value = JSON.stringify(data);
+
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex justify-content-between align-items-center small";
+    li.innerHTML = `
+      <span><strong>${txt}</strong> — ${qtd} / ${tipo} / ${obr ? "Obrigatório" : "Opcional"}</span>
+      <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+        <i class="bi bi-x-circle"></i>
+      </button>`;
+    lista.appendChild(li);
+
+    bootstrap.Modal.getInstance(modal).hide();
+  });
+
+  // Botão Salvar Propriedades no modalPropriedades
+  document.getElementById("btnSalvarPropriedades").addEventListener("click", () => {
+    const modal = document.getElementById("modalPropriedades");
+    const nome  = modal.querySelector('input[name="nome_acao"]').value;
+    const desc  = modal.querySelector('textarea[name="descricao_detalhada"]').value;
+    const sel   = modal.querySelector('select[name="maquinas"]');
+    const maquinas = Array.from(sel.selectedOptions).map(o => ({
+      id: o.value,
+      nome: o.textContent.trim()
+    }));
+
+    const div    = window.etapaAtiva;
+    const hidden = div.querySelector(".dados-etapa");
+    const lista  = div.querySelector(".lista-propriedades");
+    const data   = JSON.parse(hidden.value);
+
+    data.propriedades = { nome_acao: nome, descricao_detalhada: desc, maquinas };
+    hidden.value      = JSON.stringify(data);
+
+    lista.innerHTML = `
+      <li class="list-group-item small"><strong>Ação:</strong> ${nome}</li>
+      <li class="list-group-item small"><strong>Máquinas:</strong> ${maquinas.map(m => m.nome).join(", ")}</li>
+      <li class="list-group-item small"><strong>Descrição:</strong> ${desc}</li>
+    `;
+
+    bootstrap.Modal.getInstance(modal).hide();
+  });
+
+  // Ao submeter, monta o JSON completo e envia
+  document.getElementById("roteiroForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const payload = {
+      item: document.querySelector('[name="item"]').value,
+      etapas: []
+    };
+
+    container.querySelectorAll(".etapa-form").forEach(div => {
+      const idx       = div.dataset.index;
+      const hidden    = div.querySelector(".dados-etapa");
+      const etapaData = JSON.parse(hidden.value);
+
+      etapaData.etapa         = div.querySelector(`[name="etapas[${idx}][etapa]"]`).value;
+      etapaData.setor         = div.querySelector(`[name="etapas[${idx}][setor]"]`).value;
+      etapaData.pph           = div.querySelector(`[name="etapas[${idx}][pph]"]`).value;
+      etapaData.setup_minutos = div.querySelector(`[name="etapas[${idx}][setup_minutos]"]`).value;
+
+      payload.etapas.push(etapaData);
+    });
+
+    document.getElementById("dados_json").value = JSON.stringify(payload);
+    this.submit();
+  });
+</script>
+
+{% endblock %}

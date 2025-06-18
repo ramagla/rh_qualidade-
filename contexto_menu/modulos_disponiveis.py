@@ -41,5 +41,15 @@ def listar_modulos(user):
             "permissao": "comercial.acesso_comercial",
         })
 
+    if user.has_perm("tecnico.acesso_tecnico"):
+        modulos.append({
+            "name": "Técnico",
+            "url": "tecnico:tecnico_home",
+            "icon": "bi bi-tools",
+            "permissao": "tecnico.acesso_tecnico",
+        })
+
+
+
 
     return modulos
