@@ -7,9 +7,10 @@ class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = [
-                "cliente", "codigo", "descricao", "ncm", "ipi",  # ⬅️ novo campo
+                "cliente", "codigo", "descricao", "ncm", "ipi",
                 "ferramenta", "lote_minimo",
                 "codigo_cliente", "descricao_cliente",
+                "codigo_desenho",  # ⬅️ adicionado aqui
                 "automotivo_oem", "requisito_especifico", "item_seguranca",
                 "desenho", "revisao", "data_revisao",
             ]
@@ -30,6 +31,8 @@ class ItemForm(forms.ModelForm):
             "revisao": TextInput(attrs={"class": "form-control", "placeholder": "Ex: A, B1"}),
             "data_revisao": DateInput(attrs={"class": "form-control", "type": "date"}),
             "ipi": TextInput(attrs={"class": "form-control", "placeholder": "Ex: 5.00"}),
+            "codigo_desenho": TextInput(attrs={"class": "form-control", "placeholder": "Código do desenho"}),
+
 
         }
         labels = {
@@ -47,4 +50,6 @@ class ItemForm(forms.ModelForm):
             "desenho": "Arquivo de Desenho",
             "revisao": "Revisão",
             "data_revisao": "Data da Revisão",
+            "codigo_desenho": "Código do Desenho",
+
         }

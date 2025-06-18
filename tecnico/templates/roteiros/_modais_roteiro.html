@@ -28,6 +28,7 @@
               <select class="form-select" name="tipo_insumo">
                 <option value="matéria_prima">Matéria-Prima</option>
                 <option value="componente">Componente</option>
+                <option value="outros">Insumos</option>
                 <option value="outros">Outros</option>
               </select>
             </div>
@@ -69,10 +70,19 @@
                 {% for maquina in maquinas %}
                   <option value="{{ maquina.id }}">{{ maquina.codigo }} – {{ maquina.nome }}</option>
                 {% endfor %}
-              </select>
-              
+              </select>             
               
             </div>
+            <div class="col-md-6">
+              <label class="form-label">Ferramenta:</label>
+              <select class="form-select select2" name="ferramenta" data-dropdown-parent="#modalPropriedades">
+                <option value="">– Selecione –</option>
+                {% for ferramenta in ferramentas %}
+                  <option value="{{ ferramenta.id }}">{{ ferramenta.codigo }} – {{ ferramenta.descricao }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
             <div class="col-md-12">
               <label class="form-label">Descrição Detalhada:</label>
               <textarea class="form-control" rows="4" name="descricao_detalhada"></textarea>
@@ -187,11 +197,14 @@
           if (data.propriedades && data.propriedades.nome_acao) {
             ulP.innerHTML = `
               <li class="list-group-item small"><strong>Ação:</strong> ${data.propriedades.nome_acao}</li>
-              <li class="list-group-item small"><strong>Máquinas:</strong> ${data.propriedades.maquinas.map(m=>m.nome).join(", ")}</li>
+              <li class="list-group-item small"><strong>Máquinas:</strong> ${data.propriedades.maquinas.map(m => m.nome).join(", ")}</li>
               <li class="list-group-item small"><strong>Descrição:</strong> ${data.propriedades.descricao_detalhada}</li>
+              ${data.propriedades.ferramenta && data.propriedades.ferramenta.texto ? `
+                <li class="list-group-item small"><strong>Ferramenta:</strong> ${data.propriedades.ferramenta.texto}</li>
+              ` : ""}
             `;
           }
-        }
+          
     
         return div;
       }
@@ -294,9 +307,19 @@
         const desc     = modalProps.querySelector('textarea[name="descricao_detalhada"]').value;
         const selMq    = modalProps.querySelector('select[name="maquinas"]');
         const maquinas = Array.from(selMq.selectedOptions).map(o => ({ id: o.value, nome: o.text }));
+        const ferramentaSel = modalProps.querySelector('select[name="ferramenta"]');
+        const ferramenta_id = ferramentaSel.value;
+        const ferramenta_text = ferramentaSel.options[ferramentaSel.selectedIndex]?.text || "";
+
     
         const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
-        data.propriedades = { nome_acao: nome, descricao_detalhada: desc, maquinas };
+        data.propriedades = {
+          nome_acao: nome,
+          descricao_detalhada: desc,
+          maquinas,
+          ferramenta: { id: ferramenta_id, texto: ferramenta_text }
+        };
+        
         etapaDiv.querySelector(".dados-etapa").value = JSON.stringify(data);
     
         const ulP = etapaDiv.querySelector(".lista-propriedades");

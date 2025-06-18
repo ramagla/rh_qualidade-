@@ -6,7 +6,7 @@ from comercial.models.centro_custo import CentroDeCusto
 from tecnico.models.roteiro import RoteiroProducao, EtapaRoteiro
 from tecnico.forms.roteiro_form import RoteiroProducaoForm
 from tecnico.forms.roteiro_formsets import EtapaFormSet, InsumoFormSet, PropriedadesFormSet
-
+from comercial.models.ferramenta import Ferramenta
 
 from tecnico.models.roteiro import RoteiroProducao
 from django.core.paginator import Paginator
@@ -112,6 +112,12 @@ def cadastrar_roteiro(request):
             .values("id", "nome")
     )
 
+    ferramentas_data = list(
+        Ferramenta.objects
+            .order_by("codigo")
+            .values("id", "codigo", "descricao")
+    )
+
     if request.method == "POST":
         dados_json = request.POST.get("dados_json")
         if form.is_valid() and dados_json:
@@ -160,6 +166,8 @@ def cadastrar_roteiro(request):
         "insumos_data": insumos_data,
         "maquinas_data": maquinas_data,
         "setores_data": setores_data,
+        "ferramentas": ferramentas_data,
+
     })
 
 
@@ -193,6 +201,13 @@ def editar_roteiro(request, pk):
         "item": roteiro.item_id,
         "etapas": []
     }
+
+    ferramentas_data = list(
+        Ferramenta.objects
+            .order_by("codigo")
+            .values("id", "codigo", "descricao")
+    )
+
     for etapa in roteiro.etapas.all().order_by("etapa"):
         insumos_list = [
             {
@@ -273,4 +288,6 @@ def editar_roteiro(request, pk):
         "maquinas_data": maquinas_data,
         "setores_data": setores_data,
         "roteiro_data": roteiro_data,
+        "ferramentas": ferramentas_data,
+
     })
