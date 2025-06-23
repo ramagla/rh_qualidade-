@@ -175,38 +175,30 @@ def cadastrar_roteiro(request):
 @permission_required("tecnico.change_roteiroproducao", raise_exception=True)
 def editar_roteiro(request, pk):
     roteiro = get_object_or_404(RoteiroProducao, pk=pk)
-    form     = RoteiroProducaoForm(request.POST or None, instance=roteiro)
+    form = RoteiroProducaoForm(request.POST or None, instance=roteiro)
 
-    # Dados para o JS
     insumos_data = list(
-        MateriaPrimaCatalogo.objects.order_by("descricao")
-        .values("id", "descricao")
+        MateriaPrimaCatalogo.objects.order_by("descricao").values("id", "descricao")
     )
     maquinas_data = list(
-    Maquina.objects
-        .all()
-        .order_by("nome")
-        .values("id", "codigo", "nome")
-)
+        Maquina.objects.order_by("nome").values("id", "codigo", "nome")
+    )
     setores_data = list(
         CentroDeCusto.objects
-            .select_related("departamento")
-            .order_by("departamento__nome")
-            .annotate(nome=F("departamento__nome"))
-            .values("id", "nome")
+        .select_related("departamento")
+        .annotate(nome=F("departamento__nome"))
+        .order_by("departamento__nome")
+        .values("id", "nome")
+    )
+    ferramentas_data = list(
+        Ferramenta.objects.order_by("codigo").values("id", "codigo", "descricao")
     )
 
-    # Monta o JSON inicial para pré-carregar o JS
+    # JSON inicial para carregar no template
     roteiro_data = {
         "item": roteiro.item_id,
         "etapas": []
     }
-
-    ferramentas_data = list(
-        Ferramenta.objects
-            .order_by("codigo")
-            .values("id", "codigo", "descricao")
-    )
 
     for etapa in roteiro.etapas.all().order_by("etapa"):
         insumos_list = [
@@ -215,18 +207,19 @@ def editar_roteiro(request, pk):
                 "quantidade": float(i.quantidade),
                 "tipo_insumo": i.tipo_insumo,
                 "obrigatorio": i.obrigatorio,
-            }
-            for i in etapa.insumos.all()
+            } for i in etapa.insumos.all()
         ]
+
         try:
             p = etapa.propriedades
             props = {
                 "nome_acao": p.nome_acao,
                 "descricao_detalhada": p.descricao_detalhada,
-                "maquinas": [
-                    {"id": m.id, "nome": m.nome}
-                    for m in p.maquinas.all()
-                ],
+                "maquinas": [{"id": m.id, "nome": m.nome} for m in p.maquinas.all()],
+                "ferramenta": {
+                    "id": p.ferramenta.id if p.ferramenta else "",
+                    "texto": f"{p.ferramenta.codigo} – {p.ferramenta.descricao}" if p.ferramenta else ""
+                }
             }
         except PropriedadesEtapa.DoesNotExist:
             props = {}
@@ -246,7 +239,6 @@ def editar_roteiro(request, pk):
             form.save()
             payload = json.loads(dados_json)
 
-            # limpa tudo e recria
             roteiro.etapas.all().delete()
 
             for et in payload.get("etapas", []):
@@ -257,6 +249,7 @@ def editar_roteiro(request, pk):
                     pph=et.get("pph") or None,
                     setup_minutos=et.get("setup_minutos") or None,
                 )
+
                 for ins in et.get("insumos", []):
                     InsumoEtapa.objects.create(
                         etapa=etapa,
@@ -265,14 +258,15 @@ def editar_roteiro(request, pk):
                         tipo_insumo=ins["tipo_insumo"],
                         obrigatorio=ins["obrigatorio"],
                     )
+
                 props = et.get("propriedades") or {}
                 if props.get("nome_acao"):
                     prop_obj = PropriedadesEtapa.objects.create(
                         etapa=etapa,
                         nome_acao=props.get("nome_acao", ""),
                         descricao_detalhada=props.get("descricao_detalhada", ""),
+                        ferramenta_id=props.get("ferramenta", {}).get("id") or None
                     )
-                    # CORREÇÃO: apenas IDs
                     ids = [m["id"] for m in props.get("maquinas", [])]
                     prop_obj.maquinas.set(ids)
 
@@ -289,5 +283,4 @@ def editar_roteiro(request, pk):
         "setores_data": setores_data,
         "roteiro_data": roteiro_data,
         "ferramentas": ferramentas_data,
-
     })

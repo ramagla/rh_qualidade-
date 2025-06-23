@@ -55,9 +55,8 @@
 {{ maquinas_data|json_script:"maquinas-data" }}
 {{ setores_data|json_script:"setores-data" }}
 {# só renderiza se estivermos em edição #}
-{% if roteiro_data %}
-  {{ roteiro_data|json_script:"roteiro-data" }}
-{% endif %}
+{{ roteiro_data|default_if_none:"{}"|json_script:"roteiro-data" }}
+
 {# Inclui os dois modais apenas uma vez, fora do template JS #}
 {% include "roteiros/_modais_roteiro.html" with insumos=insumos_data maquinas=maquinas_data %}
 
@@ -132,8 +131,12 @@
              value='{"insumos":[],"propriedades":{}}'>
     `;
     // ativa select2 dentro da nova etapa
-    $(div).find('select.select2').select2({ dropdownParent: div });
-
+    if ($.fn.select2) {
+      $(div).find('select.select2').select2({ dropdownParent: div });
+    } else {
+      console.error("Select2 não foi carregado corretamente.");
+    }
+    
     // se vier data (edição), pré-preenchemos campos e listas
     if (data) {
       div.querySelector(`[name="etapas[${index}][etapa]"]`).value         = data.etapa;
@@ -174,7 +177,7 @@
   }
 
   // Pré-carrega etapas se for edição
-  if (roteiroData && roteiroData.etapas.length) {
+  if (roteiroData && Array.isArray(roteiroData.etapas) && roteiroData.etapas.length > 0) {
     roteiroData.etapas.forEach(et => {
       container.appendChild(criarEtapa(etapaIndex, et));
       etapaIndex++;

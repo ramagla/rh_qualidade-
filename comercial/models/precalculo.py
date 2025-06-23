@@ -42,6 +42,7 @@ class PreCalculo(models.Model):
     numero = models.PositiveIntegerField("Número do Pré-Cálculo", unique=True, editable=False)
     criado_em = models.DateTimeField(auto_now_add=True)
     criado_por = models.ForeignKey(User, on_delete=models.PROTECT)
+    observacoes_materiais = CKEditor5Field("Observações Materiais", config_name="default", blank=True, null=True)
 
     class Meta:
         verbose_name = "Pré-Cálculo"
@@ -130,7 +131,7 @@ class AnaliseComercial(models.Model):
         verbose_name_plural = "Análises Comerciais"
 
     def __str__(self):
-        return f"Análise Comercial – Cotação #{self.cotacao.numero}"
+        return f"Análise Comercial – Cotação #{self.precalculo.cotacao.numero}"
 
 
 class PreCalculoMaterial(AuditModel):
@@ -142,11 +143,9 @@ class PreCalculoMaterial(AuditModel):
     
     """Itens de matéria-prima pré-cálculo, baseados no Roteiro de Produção."""
     precalculo = models.ForeignKey("PreCalculo", on_delete=models.CASCADE, related_name="materiais",null=True, blank=True)
+    icms = models.DecimalField("ICMS (%)", max_digits=5, decimal_places=2, null=True, blank=True)
 
-    roteiro = models.ForeignKey(
-        RoteiroProducao, on_delete=models.PROTECT,
-        verbose_name="Roteiro de Produção"
-    )
+    roteiro = models.ForeignKey(RoteiroProducao, on_delete=models.PROTECT, verbose_name="Roteiro de Produção",null=True, blank=True )
     codigo = models.CharField("Código", max_length=50)
     lote_minimo = models.PositiveIntegerField("Lote Mínimo", null=True, blank=True)
     entrega_dias = models.PositiveIntegerField("Entrega (dias)", null=True, blank=True)
@@ -156,14 +155,13 @@ class PreCalculoMaterial(AuditModel):
         "Desenvolvido (mm)", max_digits=8, decimal_places=2
     )
     peso_liquido = models.DecimalField(
-        "Peso Líquido (kg)", max_digits=10, decimal_places=3
+        "Peso Líquido (kg)", max_digits=20, decimal_places=7
     )
     peso_bruto = models.DecimalField(
-        "Peso Bruto (kg)", max_digits=10, decimal_places=3
+        "Peso Bruto (kg)", max_digits=20, decimal_places=7
     )
     preco_kg = models.DecimalField("Preço /kg", max_digits=12, decimal_places=4, null=True, blank=True)
 
-    observacoes = CKEditor5Field("Observações", config_name="default", blank=True, null=True)
 
     status = models.CharField("Status da Cotação", max_length=20, choices=STATUS_CHOICES, default='aguardando')
 

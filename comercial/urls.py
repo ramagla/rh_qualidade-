@@ -54,7 +54,6 @@ urlpatterns = [
     path("cotacoes/<int:pk>/precalculo/editar/", precalc_views.editar_precaculo, name="editar_precalculo"),
     path("cotacoes/<int:pk>/precalculo/criar/", precalc_views.criar_precaculo, name="criar_precalculo"),
     path("cotacoes/precalculo/<int:pk>/excluir/", precalc_views.excluir_precalculo, name="excluir_precalculo"),
-    path("precalculo/materia/<int:pk>/enviar/", precalc_views.enviar_cotacao_materia_prima, name="enviar_cotacao_materia_prima"),
     path("precalculo/materia/<int:pk>/responder/", precalc_views.responder_cotacao_materia_prima, name="responder_cotacao_materia_prima"),
 
 

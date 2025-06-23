@@ -12,6 +12,8 @@ from django.core.paginator import Paginator
 from comercial.models.precalculo import PreCalculo, RegrasCalculo
 
 from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExterno, RoteiroCotacao, CotacaoFerramenta
+from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
+from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 
 @login_required
 @permission_required("comercial.view_precalculo", raise_exception=True)
@@ -96,6 +98,7 @@ from comercial.forms.precalculos_form import (
     DesenvolvimentoForm,
 )
 from decimal import Decimal
+from comercial.forms.precalculos_form import PreCalculoForm
 
 @login_required
 @permission_required('comercial.change_precalculo', raise_exception=True)
@@ -103,10 +106,9 @@ def editar_precaculo(request, pk):
     precalc = get_object_or_404(PreCalculo, pk=pk)
     cot = precalc.cotacao
 
-    # Define aba submetida (se houver)
     aba = next((k.replace("form_", "").replace("_submitted", "") for k in request.POST if k.startswith("form_")), None)
 
-    # Garante criação da instância de RegrasCalculo com valores padrão
+    # Cria regras_calculo caso não exista
     if not hasattr(precalc, "regras_calculo_item"):
         RegrasCalculo.objects.create(
             precalculo=precalc,
@@ -120,25 +122,37 @@ def editar_precaculo(request, pk):
             usuario=request.user,
             assinatura_nome=request.user.get_full_name() or request.user.username,
             assinatura_cn=request.user.email,
-            data_assinatura=timezone.now()
+            data_assinatura=timezone.now(),
+        )
+
+    if not precalc.materiais.exists():
+        PreCalculoMaterial.objects.create(
+            precalculo=precalc,
+            codigo="",
+            desenvolvido_mm=0,
+            peso_liquido=0,
+            peso_bruto=0,
         )
 
     # Formsets
-    MatSet  = inlineformset_factory(PreCalculo, PreCalculoMaterial, form=PreCalculoMaterialForm, extra=1, can_delete=True)
-    SevSet  = inlineformset_factory(PreCalculo, PreCalculoServicoExterno, form=PreCalculoServicoExternoForm, extra=1, can_delete=True)
-    RotSet  = inlineformset_factory(PreCalculo, RoteiroCotacao, form=RoteiroCotacaoForm, extra=1, can_delete=True)
+    MatSet = inlineformset_factory(PreCalculo, PreCalculoMaterial, form=PreCalculoMaterialForm, extra=0, can_delete=True)
+    SevSet = inlineformset_factory(PreCalculo, PreCalculoServicoExterno, form=PreCalculoServicoExternoForm, extra=1, can_delete=True)
+    RotSet = inlineformset_factory(PreCalculo, RoteiroCotacao, form=RoteiroCotacaoForm, extra=1, can_delete=True)
     FerrSet = inlineformset_factory(PreCalculo, CotacaoFerramenta, form=CotacaoFerramentaForm, extra=1, can_delete=True)
 
-    # Formulários individuais por aba
-    form_analise = AnaliseComercialForm(request.POST if aba == "analise" else None, instance=getattr(precalc, 'analise_comercial_item', None))
-    form_regras  = RegrasCalculoForm(request.POST if aba == "regras" else None, instance=precalc.regras_calculo_item)
-    form_avali   = AvaliacaoTecnicaForm(request.POST if aba == "avali" else None, instance=getattr(precalc, 'avaliacao_tecnica_item', None))
-    form_desenv  = DesenvolvimentoForm(request.POST if aba == "desenv" else None, instance=getattr(precalc, 'desenvolvimento_item', None))
+    # Form principal para observacoes_materiais
+    form_precalculo = PreCalculoForm(request.POST if request.method == "POST" else None, instance=precalc)
 
-    # Formsets
-    fs_mat  = MatSet(request.POST if aba == "materiais" else None, instance=precalc, prefix='mat')
-    fs_sev  = SevSet(request.POST if aba == "servicos" else None, instance=precalc, prefix='sev')
-    fs_rot  = RotSet(request.POST if aba == "roteiro" else None, instance=precalc, prefix='rot')
+    # Formularios das abas
+    form_analise = AnaliseComercialForm(request.POST if aba == "analise" else None, instance=getattr(precalc, 'analise_comercial_item', None))
+    form_regras = RegrasCalculoForm(request.POST if aba == "regras" else None, instance=precalc.regras_calculo_item)
+    form_avali = AvaliacaoTecnicaForm(request.POST if aba == "avali" else None, instance=getattr(precalc, 'avaliacao_tecnica_item', None))
+    form_desenv = DesenvolvimentoForm(request.POST if aba == "desenv" else None, instance=getattr(precalc, 'desenvolvimento_item', None))
+
+    # Formsets das abas
+    fs_mat = MatSet(request.POST if aba == "materiais" else None, instance=precalc, prefix='mat')
+    fs_sev = SevSet(request.POST if aba == "servicos" else None, instance=precalc, prefix='sev')
+    fs_rot = RotSet(request.POST if aba == "roteiro" else None, instance=precalc, prefix='rot')
     fs_ferr = FerrSet(request.POST if aba == "ferramentas" else None, instance=precalc, prefix='ferr')
 
     campos_obs = [
@@ -172,6 +186,7 @@ def editar_precaculo(request, pk):
     if request.method == 'POST':
         salvo = False
 
+        # Salvar formulários das abas
         if 'form_analise_submitted' in request.POST and form_analise.is_valid():
             obj = form_analise.save(commit=False)
             obj.precalculo = precalc
@@ -212,16 +227,33 @@ def editar_precaculo(request, pk):
             obj.save()
             salvo = True
 
-        # Formsets (se alguma aba for enviada com eles)
-        for fs in [fs_mat, fs_sev, fs_rot, fs_ferr]:
+        # Aba Materiais: salvar form principal (observações) e formset materiais
+        if aba == "materiais":
+            print("📥 fs_mat.is_valid():", fs_mat.is_valid())
+            if not fs_mat.is_valid():
+                for i, form in enumerate(fs_mat.forms):
+                    print(f"❌ Form {i} ERROS:", form.errors)
+                print("⚠️ Non-form errors:", fs_mat.non_form_errors())
+
+            if form_precalculo.is_valid() and fs_mat.is_valid():
+                form_precalculo.save()
+                fs_mat.save()
+                salvo = True
+
+                # Disparar e-mails para cada material salvo
+                for mat_form in fs_mat:
+                    if mat_form.cleaned_data and not mat_form.cleaned_data.get('DELETE', False):
+                        mat = mat_form.save(commit=False)
+                        disparar_email_cotacao_material(request, mat)
+
+        # Salvar outros formsets
+        for fs in [fs_sev, fs_rot, fs_ferr]:
             if fs.is_valid():
-                # verifica se algum formulário tem mudanças ou se é novo e preenchido
                 for form in fs:
                     if form.has_changed() or form.cleaned_data.get("id") is None:
                         fs.save()
                         salvo = True
                         break
-
 
         if salvo:
             messages.success(request, "Pré-cálculo atualizado com sucesso.")
@@ -229,9 +261,14 @@ def editar_precaculo(request, pk):
         else:
             messages.error(request, "Nenhuma alteração válida foi identificada para salvar.")
 
+    item_id = None
+    if hasattr(precalc, "analise_comercial_item") and precalc.analise_comercial_item.item_id:
+        item_id = precalc.analise_comercial_item.item_id
+
     return render(request, "cotacoes/form_precalculo.html", {
         "cotacao": cot,
         "precalc": precalc,
+        "form_precalculo": form_precalculo,  # Para exibir e salvar observacoes_materiais
         "form_analise": form_analise,
         "form_regras": form_regras,
         "form_avali": form_avali,
@@ -242,6 +279,7 @@ def editar_precaculo(request, pk):
         "fs_ferr": fs_ferr,
         "campos_obs": campos_obs,
         "campos_obs_tecnica": campos_obs_tecnica,
+        "item_id": item_id,
         "edicao": True,
     })
 
@@ -378,31 +416,27 @@ def excluir_precalculo(request, pk):
 
 
 
-@login_required
-@permission_required("comercial.view_precalculomaterial", raise_exception=True)
-def enviar_cotacao_materia_prima(request, pk):
-    from django.core.mail import send_mail
-    from comercial.models import PreCalculoMaterial
-    from django.conf import settings
-    from django.urls import reverse
-
-    mat = get_object_or_404(PreCalculoMaterial, pk=pk)
-    mat.status = "aguardando"  # opcional
-    mat.save()
-
-    link = request.build_absolute_uri(reverse("responder_cotacao_materia_prima", args=[mat.pk]))
+def disparar_email_cotacao_material(request, material):
+    """
+    Dispara o e-mail de cotação de matéria-prima para o setor de compras.
+    """
+    link = request.build_absolute_uri(
+        reverse("responder_cotacao_materia_prima", args=[material.pk])
+    )
 
     corpo = f"""
 🧪 Solicitação de Cotação - Matéria-Prima
 
-📦 Código: {mat.codigo}
-📋 Roteiro: {mat.roteiro}
-📏 Desenvolvido (mm): {mat.desenvolvido_mm}
-📎 Peso Líquido: {mat.peso_liquido} kg
-📎 Peso Bruto: {mat.peso_bruto} kg
+📦 Código: {material.codigo}
+🏷️ Fornecedor: {material.fornecedor or '---'}
+📦 Lote Mínimo: {material.lote_minimo or '---'}
+📦 Entrega (dias): {material.entrega_dias or '---'}
+💰 ICMS (%): {material.icms or '0.00'}
+💲 Preço/kg: {material.preco_kg or '---'}
+⚖️ Peso Bruto: {material.peso_bruto or '---'} kg
 
 🔗 Responder: {link}
-"""
+    """
 
     send_mail(
         subject="📨 Cotação de Matéria-Prima",
@@ -412,22 +446,58 @@ def enviar_cotacao_materia_prima(request, pk):
         fail_silently=False,
     )
 
-    messages.success(request, "Cotação enviada com sucesso.")
-    return redirect("editar_precaculo", pk=mat.precalculo.pk)
 
 
+from django.contrib import messages
+from django.shortcuts import redirect
+
+from decimal import Decimal, InvalidOperation
 
 def responder_cotacao_materia_prima(request, pk):
-    from comercial.models import PreCalculoMaterial
     material = get_object_or_404(PreCalculoMaterial, pk=pk)
+    fornecedores = FornecedorQualificado.objects.all()
 
+    try:
+        materia_prima = MateriaPrimaCatalogo.objects.get(codigo=material.codigo)
+    except MateriaPrimaCatalogo.DoesNotExist:
+        materia_prima = None
+
+    cotacao_numero = material.precalculo.cotacao.numero if material.precalculo and material.precalculo.cotacao else None
+    precalculo_numero = material.precalculo.numero if material.precalculo else None
+    observacoes_gerais = material.precalculo.observacoes_materiais if material.precalculo else ""
+
+    # Bloqueio de edição se status for 'ok'
     if request.method == "POST":
-        material.lote_minimo = request.POST.get("lote_minimo")
-        material.entrega_dias = request.POST.get("entrega_dias")
-        material.preco_kg = request.POST.get("preco_kg")
-        material.status = "ok"
-        material.save()
-        messages.success(request, "Cotação registrada com sucesso.")
-        return redirect("responder_cotacao_materia_prima", pk=material.pk)
+    # Evita salvar caso esteja finalizado
+        if material.status == 'ok':
+            messages.error(request, "Cotação finalizada. Alterações não são permitidas.")
+            return redirect(request.path)
 
-    return render(request, "cadastros/responder_cotacao_mp.html", {"material": material})
+        material.fornecedor_id = request.POST.get("fornecedor") or None
+
+        # Tratar campos decimais para evitar erro vazio -> decimal
+        icms = request.POST.get("icms")
+        material.icms = icms if icms else None
+
+        lote_minimo = request.POST.get("lote_minimo")
+        material.lote_minimo = lote_minimo if lote_minimo else None
+
+        entrega_dias = request.POST.get("entrega_dias")
+        material.entrega_dias = entrega_dias if entrega_dias else None
+
+        preco_kg = request.POST.get("preco_kg")
+        material.preco_kg = preco_kg if preco_kg else None
+
+        material.save()
+        material.refresh_from_db()  # Atualiza os dados do objeto na memória
+        messages.success(request, "Cotação atualizada com sucesso.")
+
+
+    return render(request, "cotacoes/responder_cotacao_material.html", {
+        "material": material,
+        "fornecedores": fornecedores,
+        "cotacao_numero": cotacao_numero,
+        "precalculo_numero": precalculo_numero,
+        "materia_prima": materia_prima,
+        "observacoes_gerais": observacoes_gerais,
+    })

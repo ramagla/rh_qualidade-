@@ -10,25 +10,57 @@ from comercial.models.precalculo import (
 from django import forms
 from comercial.models.precalculo import PreCalculoMaterial
 from tecnico.models.roteiro import RoteiroProducao
+from django.forms import HiddenInput
+
 
 class PreCalculoMaterialForm(forms.ModelForm):
     class Meta:
         model = PreCalculoMaterial
-        exclude = ('cotacao','created_at','updated_at','created_by','updated_by')
+        exclude = ('cotacao', 'created_at', 'updated_at', 'created_by', 'updated_by')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        
+        # Oculta o campo roteiro (preenchido automaticamente na view)
         if 'roteiro' in self.fields:
-            self.fields['roteiro'].queryset = self.fields['roteiro'].queryset.select_related('item')
-            self.fields['roteiro'].widget.attrs.update({'class': 'form-select form-select-sm'})
+            self.fields['roteiro'].required = False  # ⚠️ ESSENCIAL para evitar erro!
+            self.fields['roteiro'].widget = HiddenInput()
 
-        # Tornar campos opcionais
-        self.fields['lote_minimo'].required = False
-        self.fields['entrega_dias'].required = False
-        self.fields['fornecedor'].required = False
-        self.fields['preco_kg'].required = False
+        # Campo código como somente leitura e usado no AJAX
+        if 'codigo' in self.fields:
+            self.fields['codigo'].required = False  # ⚠️ ESSENCIAL para evitar erro de validação
+            self.fields['codigo'].widget.attrs.update({
+                'class': 'form-control form-control-sm codigo-input',
+                'readonly': 'readonly',
+            })
 
+        # Campo status, agora opcional para resolver erro de validação
+        if 'status' in self.fields:
+            self.fields['status'].required = False
+            self.fields['status'].widget.attrs.update({
+                'class': 'form-control form-control-sm'
+            })
+
+        # Campo ICMS (%)
+        if 'icms' in self.fields:
+            self.fields['icms'].widget.attrs.update({
+                'class': 'form-control form-control-sm',
+                'placeholder': '0.00'
+            })
+            self.fields['icms'].required = False
+
+        # Campos opcionais com estilos consistentes
+        campos = [
+            'lote_minimo', 'entrega_dias', 'fornecedor', 'preco_kg',
+            'desenvolvido_mm', 'peso_liquido', 'peso_bruto'
+        ]
+        for campo in campos:
+            if campo in self.fields:
+                self.fields[campo].required = False
+                self.fields[campo].widget.attrs.update({
+                    'class': 'form-control form-control-sm'
+                })
 
 
     
@@ -79,3 +111,19 @@ class DesenvolvimentoForm(forms.ModelForm):
     class Meta:
         model = Desenvolvimento
         exclude = ('cotacao','created_at','updated_at','created_by','updated_by')
+
+
+from django import forms
+from comercial.models.precalculo import PreCalculo
+from django_ckeditor_5.widgets import CKEditor5Widget
+
+from django_ckeditor_5.widgets import CKEditor5Widget
+
+class PreCalculoForm(forms.ModelForm):
+    class Meta:
+        model = PreCalculo
+        fields = ['observacoes_materiais']
+        widgets = {
+            'observacoes_materiais': CKEditor5Widget(config_name='default'),
+        }
+

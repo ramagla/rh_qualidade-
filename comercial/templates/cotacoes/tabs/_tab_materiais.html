@@ -2,7 +2,6 @@
 
 <form method="post">
   {% csrf_token %}
-  <input type="hidden" name="form_materiais_submitted" value="1">
 
   <div class="row bg-materiais p-4 rounded shadow-sm">
     <div class="col-12">
@@ -24,34 +23,35 @@
         <table class="table table-bordered align-middle table-sm">
           <thead class="table-light">
             <tr>
-              <th>Roteiro</th>
               <th>Código</th>
               <th>Lote Mínimo</th>
               <th>Entrega (dias)</th>
               <th>Fornecedor</th>
+              <th>ICMS (%)</th>
+              <th>Preço/kg</th>
               <th>Desenv. (mm)</th>
               <th>Peso Líquido</th>
               <th>Peso Bruto</th>
-              <th>Preço/kg</th>
               <th>Status</th>
-              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
             {% for form in fs_mat.forms %}
               <tr>
-                {{ form.id }}
+                {{ form.id }}                
                 <td>
-                  {{ form.roteiro|add_class:"form-select form-select-sm roteiro-select" }}
+                  {{ form.codigo|add_class:"form-control form-control-sm codigo-input" }}
                 </td>
-                <td>{{ form.codigo|add_class:"form-control form-control-sm codigo-input" }}</td>
+                
                 <td>{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
                 <td>{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
                 <td>{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
+                <td>{{ form.icms|add_class:"form-control form-control-sm" }}</td>
+                <td>{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
+
                 <td>{{ form.desenvolvido_mm|add_class:"form-control form-control-sm" }}</td>
                 <td>{{ form.peso_liquido|add_class:"form-control form-control-sm" }}</td>
                 <td>{{ form.peso_bruto|add_class:"form-control form-control-sm" }}</td>
-                <td>{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
 
                 <!-- Coluna de status -->
                 <td class="text-center">
@@ -63,55 +63,110 @@
                 </td>
 
                 <!-- Ações -->
-                <td class="text-center">
-                  {% if form.instance.pk %}
-                    <a href="{% url 'enviar_cotacao_material' form.instance.pk %}" class="btn btn-outline-primary btn-sm" title="Enviar para Cotação">
-                      <i class="bi bi-envelope"></i>
-                    </a>
-                    {{ form.DELETE }}
-                    <button type="submit" name="{{ form.prefix }}-DELETE" class="btn btn-outline-danger btn-sm" title="Excluir">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  {% endif %}
-                </td>
+               
               </tr>
             {% endfor %}
           </tbody>
         </table>
 
         {{ fs_mat.management_form }}
+          <!-- Observações gerais vindo do formulário Django -->
+  <!-- Campo observações gerais do pré-cálculo -->
+  <div class="mb-3 mt-3">
+    <label for="id_observacoes_materiais" class="form-label">Observações Gerais</label>
+    {{ form_precalculo.observacoes_materiais }}
+  </div>
 
         <div class="text-end mt-3">
-          <button type="submit" class="btn btn-success">
-            <i class="bi bi-save me-1"></i> Salvar Matéria-Prima
+          <button type="submit" name="form_materiais_submitted"  value="1" class="btn btn-primary">
+            <i class="bi bi-send me-1"></i> Salvar e Enviar para Cotação
           </button>
+          
         </div>
       </div>
     </div>
   </div>
 </form>
-
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      document.querySelectorAll(".roteiro-select").forEach(select => {
-        select.addEventListener("change", function () {
-          const roteiroId = this.value;
-          const row = this.closest("tr");
-          const codigoInput = row.querySelector(".codigo-input");
-  
-          if (roteiroId && codigoInput) {
-            fetch(`/comercial/ajax/codigo-materia-prima/?roteiro_id=${roteiroId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (data.sucesso) {
-                  codigoInput.value = data.codigo;
-                } else {
-                  codigoInput.value = "";
-                }
-              });
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("🚀 DOM carregado");
+
+    const dataDiv = document.querySelector("#precalculo-data");
+    const itemId = dataDiv?.dataset.itemId;
+    const codigoInputs = document.querySelectorAll(".codigo-input");
+
+    console.log("📌 item_id do dataset:", itemId);
+    console.log("📌 Inputs de código encontrados:", codigoInputs.length);
+
+    if (itemId) {
+      fetch(`/comercial/ajax/codigo-materia-prima/?item_id=${itemId}`)
+        .then(response => {
+          console.log("📡 Requisição AJAX para:", response.url);
+          return response.json();
+        })
+        .then(data => {
+          console.log("📥 Resposta recebida:", data);
+          if (data.sucesso && data.codigo) {
+            codigoInputs.forEach(input => {
+              if (!input.value) {
+                input.value = data.codigo;
+                console.log("✅ Código preenchido:", data.codigo);
+              } else {
+                console.log("⛔ Campo já tinha valor:", input.value);
+              }
+            });
+          } else {
+            console.warn("⚠️ Código não recebido ou sucesso falso:", data);
           }
+        })
+        .catch(error => {
+          console.error("❌ Erro na requisição:", error);
         });
-      });
+    } else {
+      console.warn("⚠️ item_id ausente no dataset.");
+    }
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("🚀 Script de cálculo de peso bruto carregado");
+
+    const valorBruto = "{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".");
+    const qtdeEstimada = parseFloat(valorBruto) || 0;
+    console.log("📌 Qtde estimada:", qtdeEstimada);
+
+    const linhas = document.querySelectorAll("tbody tr");
+
+    linhas.forEach(row => {
+      const pesoLiquidoInput = row.querySelector("input[name^='mat-'][name$='-peso_liquido']");
+      const pesoBrutoInput = row.querySelector("input[name^='mat-'][name$='-peso_bruto']");
+      
+
+      if (pesoLiquidoInput && pesoBrutoInput) {
+        const atualizarPesoBruto = () => {
+          const pesoLiquido = parseFloat(pesoLiquidoInput.value.replace(",", ".")) || 0;
+          const resultado = pesoLiquido * qtdeEstimada;
+          pesoBrutoInput.value = resultado.toFixed(3);  // Usa ponto (.) como separador decimal
+          console.log(`🔄 Peso Bruto calculado: ${pesoLiquido} x ${qtdeEstimada} = ${resultado}`);
+        };
+
+        // Executa ao carregar
+        atualizarPesoBruto();
+
+        // Atualiza ao digitar
+        pesoLiquidoInput.addEventListener("input", atualizarPesoBruto);
+      }
     });
-  </script>
-  
+  });
+</script>
+<!-- Scripts para CKEditor5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.0/classic/ckeditor.js"></script>
+<script>
+  ClassicEditor
+    .create( document.querySelector( '#observacoes' ), {
+      // Aqui você pode adicionar configurações do CKEditor5 se quiser
+    })
+    .catch( error => {
+      console.error( error );
+    } );
+</script>
