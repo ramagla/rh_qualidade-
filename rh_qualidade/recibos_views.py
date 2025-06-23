@@ -37,7 +37,7 @@ def recibos_pagamento(request):
     mes_ano = request.GET.get("mes")  # Ex: "03/2025"
 
     # Base queryset
-    if user.username == 'rafael.almeida' or user.is_superuser:
+    if user.username in ['rafael.almeida', 'Isilva', 'Lfernandes'] or user.is_superuser:
         recibos = ReciboPagamento.objects.select_related('funcionario').all()
     else:
         try:
