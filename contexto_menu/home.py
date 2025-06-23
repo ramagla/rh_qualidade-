@@ -1,5 +1,3 @@
-# contexto_menu/home.py
-
 def menu_home(user):
     menu = []
 
@@ -10,6 +8,12 @@ def menu_home(user):
             "icon": "bi bi-file-earmark-text",
         })
 
-    # Adicione mais itens no futuro se a Home tiver outros recursos
+    if user.has_perm("Funcionario.view_recibopagamento"):
+        menu.append({
+            "name": "Recibos de Pagamento",
+            "url": "recibos_pagamento",
+            "icon": "bi bi-receipt",
+        })
+
 
     return menu

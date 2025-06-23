@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Recibos de Pagamento{% endblock %}
+
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<div class="container-fluid mt-5">
+  {% include "partials/global/_header_titulo.html" with titulo="Recibos de Pagamento" icone="bi bi-receipt" emoji="💵" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  </div>
+
+  {% if request.user|has_permission:"Funcionario.importar_recibo_pagamento" %}
+  <form method="POST" enctype="multipart/form-data" action="{% url 'importar_zip_recibos' %}" class="mb-4">
+    {% csrf_token %}
+    <div class="input-group">
+      <input type="file" name="arquivo_zip" accept=".zip" class="form-control" required>
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-upload me-1"></i> Importar ZIP
+      </button>
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- Cards de Indicadores -->
+  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Valor Líquido Total" valor=total_liquido|floatformat:2 icone="bi-wallet2" %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Vencimentos" valor=total_vencimentos|floatformat:2 icone="bi-cash-stack" %}
+    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Total de Descontos" valor=total_descontos|floatformat:2 icone="bi-dash-circle" %}
+  </div>
+
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Recibos
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <!-- Colaborador -->
+        <div class="col-12 filtro-wrapper">
+          <label for="nome"><i class="bi bi-person me-1"></i> Colaborador</label>
+          <select name="nome" id="nome" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            {% for funcionario in funcionarios %}
+              <option value="{{ funcionario.nome }}" {% if filtro_nome == funcionario.nome %}selected{% endif %}>
+                {{ funcionario.nome }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+      <!-- Mês Referência -->
+<!-- Mês Referência -->
+<div class="col-12 filtro-wrapper">
+  <label for="mes"><i class="bi bi-calendar me-1"></i> Mês Referência</label>
+  <select name="mes" id="mes" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+    <option value="">Todos</option>
+    {% for mes_ano in opcoes_mes_ano %}
+      <option value="{{ mes_ano }}" {% if filtro_mes == mes_ano %}selected{% endif %}>
+        {{ mes_ano }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+
+          
+
+          </select>
+        </div>
+
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visually-hidden">Tabela de recibos</caption>
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-calendar-date me-1"></i> Mês Referência</th>
+          <th><i class="bi bi-person me-1"></i> Colaborador</th>
+          <th><i class="bi bi-file-earmark-pdf me-1"></i> Recibo</th>
+          <th><i class="bi bi-clock me-1"></i> Importado em</th>
+          <th><i class="bi bi-cash-stack me-1"></i> Vencimentos</th>
+          <th><i class="bi bi-dash-circle me-1"></i> Descontos</th>
+          <th><i class="bi bi-wallet2 me-1"></i> Líquido</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for recibo in page_obj %}
+        <tr>
+          <td>{{ recibo.mes_referencia|date:"m/Y" }}</td>
+          <td class="text-start">{{ recibo.nome_colaborador }}</td>
+          <td>
+            {% if recibo.arquivo_pdf %}
+              <a href="{{ recibo.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Visualizar PDF
+              </a>
+            {% else %}
+              <span class="text-muted">Não disponível</span>
+            {% endif %}
+          </td>
+          <td>{{ recibo.data_importacao|date:"d/m/Y H:i" }}</td>
+
+          <!-- Vencimentos -->
+          <td>
+            <div class="input-group">
+              <input type="password" class="form-control text-end" readonly value="R$ {{ recibo.valor_total|default_if_none:'0.00'|floatformat:2 }}">
+              <button type="button" class="btn btn-outline-secondary toggle-valor"><i class="bi bi-eye"></i></button>
+            </div>
+          </td>
+
+          <!-- Descontos -->
+          <td>
+            <div class="input-group">
+              <input type="password" class="form-control text-end" readonly value="R$ {{ recibo.valor_descontos|default_if_none:'0.00'|floatformat:2 }}">
+              <button type="button" class="btn btn-outline-secondary toggle-valor"><i class="bi bi-eye"></i></button>
+            </div>
+          </td>
+
+          <!-- Líquido -->
+          <td>
+            <div class="input-group">
+              <input type="password" class="form-control text-end fw-bold text-success" readonly value="R$ {{ recibo.valor_liquido|default_if_none:'0.00'|floatformat:2 }}">
+              <button type="button" class="btn btn-outline-secondary toggle-valor"><i class="bi bi-eye"></i></button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+          {% include "partials/global/_sem_resultados.html" with colspan=7 mensagem="Nenhum recibo encontrado." %}
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.toggle-valor').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const input = this.closest('.input-group').querySelector('input');
+        const icone = this.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          icone.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+          input.type = 'password';
+          icone.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+      });
+    });
+
+    $('.select2').select2({
+      width: '100%',
+      placeholder: 'Selecione',
+      allowClear: true
+    });
+  });
+</script>
+
+{% endblock %}
+

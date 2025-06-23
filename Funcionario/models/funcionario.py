@@ -70,6 +70,13 @@ class Funcionario(models.Model):
         null=True,
     )
     numero_registro = models.CharField(max_length=20, unique=True)
+    numero_registro_recibo = models.CharField(
+    max_length=10,
+    blank=True,
+    null=True,
+    verbose_name="Número do Registro para Recibo"
+)
+
     local_trabalho = models.ForeignKey(
         Departamentos,
         verbose_name="Local de Trabalho",

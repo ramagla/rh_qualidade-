@@ -87,3 +87,52 @@ def obter_atividades_com_fixas(departamento):
     return atividades_outros + atividades_fixas
 
 
+import fitz  # PyMuPDF
+from decimal import Decimal
+import re
+
+def extrair_valores_recibo(conteudo_pdf: bytes):
+    try:
+        doc = fitz.open(stream=conteudo_pdf, filetype="pdf")
+        texto = "\n".join(page.get_text() for page in doc)
+        linhas = [l.strip() for l in texto.splitlines() if l.strip()]
+
+        def valor_decimal(linha):
+            try:
+                return Decimal(linha.replace('.', '').replace(',', '.'))
+            except Exception:
+                return None
+
+        # Busca a linha que contém a frase final
+        idx_base = -1
+        for i, linha in enumerate(linhas):
+            if "recebido a importância líquida" in linha.lower():
+                idx_base = i
+                break
+
+        valores = []
+        if idx_base != -1:
+            for l in linhas[idx_base + 1:]:
+                if re.fullmatch(r"\d{1,3}(?:\.\d{3})*,\d{2}", l):
+                    v = valor_decimal(l)
+                    if v is not None:
+                        valores.append(v)
+                    if len(valores) == 3:
+                        break
+
+        if len(valores) == 3:
+            valor_total, valor_descontos, valor_liquido = valores
+        else:
+            valor_total = valor_descontos = valor_liquido = None
+
+        print(f"[EXTRAÇÃO FINAL] Total={valor_total}, Descontos={valor_descontos}, Líquido={valor_liquido}")
+
+        return {
+            "valor_total": valor_total,
+            "valor_descontos": valor_descontos,
+            "valor_liquido": valor_liquido,
+        }
+
+    except Exception as e:
+        print(f"[ERRO] Falha na extração dos valores: {e}")
+        return {}

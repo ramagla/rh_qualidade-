@@ -39,6 +39,12 @@ class FuncionarioForm(forms.ModelForm):
             attrs={"class": "select2 form-select", "id": "id_cargo_inicial"}
         ),
     )
+    numero_registro_recibo = forms.CharField(
+        required=False,
+        label="Número do Registro para Recibo",
+        widget=forms.TextInput(attrs={"class": "form-control"})
+    )
+
     cargo_atual = forms.ModelChoiceField(
         queryset=Cargo.objects.all(),
         label="Cargo Atual",
