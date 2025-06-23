@@ -1,0 +1,117 @@
+{% load widget_tweaks %}
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="form_materiais_submitted" value="1">
+
+  <div class="row bg-materiais p-4 rounded shadow-sm">
+    <div class="col-12">
+      <div class="border p-4 rounded bg-white shadow-sm">
+        <h5 class="mb-4">
+          <i class="bi bi-box-seam text-success me-2"></i> Matéria-Prima Utilizada
+        </h5>
+
+        {% if fs_mat.non_form_errors %}
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              {% for error in fs_mat.non_form_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <table class="table table-bordered align-middle table-sm">
+          <thead class="table-light">
+            <tr>
+              <th>Roteiro</th>
+              <th>Código</th>
+              <th>Lote Mínimo</th>
+              <th>Entrega (dias)</th>
+              <th>Fornecedor</th>
+              <th>Desenv. (mm)</th>
+              <th>Peso Líquido</th>
+              <th>Peso Bruto</th>
+              <th>Preço/kg</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for form in fs_mat.forms %}
+              <tr>
+                {{ form.id }}
+                <td>
+                  {{ form.roteiro|add_class:"form-select form-select-sm roteiro-select" }}
+                </td>
+                <td>{{ form.codigo|add_class:"form-control form-control-sm codigo-input" }}</td>
+                <td>{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
+                <td>{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
+                <td>{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
+                <td>{{ form.desenvolvido_mm|add_class:"form-control form-control-sm" }}</td>
+                <td>{{ form.peso_liquido|add_class:"form-control form-control-sm" }}</td>
+                <td>{{ form.peso_bruto|add_class:"form-control form-control-sm" }}</td>
+                <td>{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
+
+                <!-- Coluna de status -->
+                <td class="text-center">
+                  {% if form.instance.pk and form.instance.preco_kg %}
+                    <span class="badge bg-success">OK</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Aguardando</span>
+                  {% endif %}
+                </td>
+
+                <!-- Ações -->
+                <td class="text-center">
+                  {% if form.instance.pk %}
+                    <a href="{% url 'enviar_cotacao_material' form.instance.pk %}" class="btn btn-outline-primary btn-sm" title="Enviar para Cotação">
+                      <i class="bi bi-envelope"></i>
+                    </a>
+                    {{ form.DELETE }}
+                    <button type="submit" name="{{ form.prefix }}-DELETE" class="btn btn-outline-danger btn-sm" title="Excluir">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {{ fs_mat.management_form }}
+
+        <div class="text-end mt-3">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-save me-1"></i> Salvar Matéria-Prima
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".roteiro-select").forEach(select => {
+        select.addEventListener("change", function () {
+          const roteiroId = this.value;
+          const row = this.closest("tr");
+          const codigoInput = row.querySelector(".codigo-input");
+  
+          if (roteiroId && codigoInput) {
+            fetch(`/comercial/ajax/codigo-materia-prima/?roteiro_id=${roteiroId}`)
+              .then(response => response.json())
+              .then(data => {
+                if (data.sucesso) {
+                  codigoInput.value = data.codigo;
+                } else {
+                  codigoInput.value = "";
+                }
+              });
+          }
+        });
+      });
+    });
+  </script>
+  

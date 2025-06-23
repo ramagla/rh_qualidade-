@@ -2,7 +2,8 @@ from django.urls import path
 from comercial.views import centro_custo_views, cliente_views, ferramenta_views
 from comercial.views import item_views
 from comercial.views import dashboard_views
-from comercial.views import cotacao_views
+from comercial.views import cotacao_views, precalc_views
+from comercial.views import ajax_views  # importe
 
 
 urlpatterns = [
@@ -48,6 +49,20 @@ urlpatterns = [
     path("cotacoes/editar/<int:pk>/", cotacao_views.editar_cotacao, name="editar_cotacao"),
     path("cotacoes/excluir/<int:pk>/", cotacao_views.excluir_cotacao, name="excluir_cotacao"),
     path("cotacoes/visualizar/<int:pk>/", cotacao_views.visualizar_cotacao, name="visualizar_cotacao"),
+    # Pré-Cálculo
+    path("cotacoes/<int:pk>/precalculo/", precalc_views.itens_precaculo, name="itens_precaculo"),
+    path("cotacoes/<int:pk>/precalculo/editar/", precalc_views.editar_precaculo, name="editar_precalculo"),
+    path("cotacoes/<int:pk>/precalculo/criar/", precalc_views.criar_precaculo, name="criar_precalculo"),
+    path("cotacoes/precalculo/<int:pk>/excluir/", precalc_views.excluir_precalculo, name="excluir_precalculo"),
+    path("precalculo/materia/<int:pk>/enviar/", precalc_views.enviar_cotacao_materia_prima, name="enviar_cotacao_materia_prima"),
+    path("precalculo/materia/<int:pk>/responder/", precalc_views.responder_cotacao_materia_prima, name="responder_cotacao_materia_prima"),
 
 
+    path("ajax/codigo-materia-prima/", ajax_views.ajax_codigo_materia_prima_por_roteiro, name="ajax_codigo_materia_prima"),
+
+    
 ]
+
+
+
+

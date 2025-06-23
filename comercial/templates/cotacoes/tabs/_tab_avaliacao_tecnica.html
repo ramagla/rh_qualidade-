@@ -1,0 +1,157 @@
+{% load widget_tweaks %}
+{% load comercial_formatos %}
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="form_avali_submitted" value="1">
+
+  <div class="row g-4 bg-avaliacao p-4 rounded shadow-sm">
+
+    <!-- Bloco principal com scroll -->
+    <div class="col-12">
+      <div class="border p-4 rounded shadow-sm bg-white" style="max-height: 600px; overflow-y: auto;">
+        <h5 class="mb-4">
+          <i class="bi bi-eyeglasses text-warning me-2"></i> Avaliação Técnica
+        </h5>
+
+        {% for campo, detalhe in campos_obs_tecnica %}
+          {% with field=form_avali|dict_get:campo obs=form_avali|dict_get:detalhe %}
+          <div class="row align-items-start mb-4">
+            <label class="col-sm-5 col-form-label small pe-4">
+              <i class="bi bi-question-circle me-1 text-muted"></i> {{ field.label }}
+            </label>
+            <div class="col-sm-7">
+              <div class="d-flex align-items-center flex-wrap gap-3">
+                <div class="form-check form-check-inline mb-0">
+                  <input type="radio" name="{{ campo }}" id="{{ campo }}_sim" value="True"
+                        class="form-check-input"
+                        {% if field.value|stringformat:"s" == "True" %}checked{% endif %}
+                        onchange="toggleObservacao('{{ campo }}')">
+                  <label class="form-check-label" for="{{ campo }}_sim">Sim</label>
+                </div>
+
+                <div class="form-check form-check-inline mb-0">
+                  <input type="radio" name="{{ campo }}" id="{{ campo }}_nao" value="False"
+                        class="form-check-input"
+                        {% if field.value|stringformat:"s" == "False" %}checked{% endif %}
+                        onchange="toggleObservacao('{{ campo }}')">
+                  <label class="form-check-label" for="{{ campo }}_nao">Não</label>
+                </div>
+
+                {% if campo == "seguranca" or campo == "requisito_especifico" %}
+                <div class="form-check form-check-inline mb-0">
+                  <input type="radio" name="{{ campo }}" id="{{ campo }}_na" value=""
+                        class="form-check-input"
+                        {% if field.value == None %}checked{% endif %}
+                        onchange="toggleObservacao('{{ campo }}')">
+                  <label class="form-check-label" for="{{ campo }}_na">Não aplicável</label>
+                </div>
+                {% endif %}
+              </div>
+
+              <div id="obs_{{ campo }}" class="mt-2" style="display:{% if not field.value %}none{% endif %};">
+                {{ obs|add_class:"form-control form-control-sm w-100" }}
+              </div>
+            </div>
+          </div>
+          {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Bloco de conclusão -->
+    <div class="col-12">
+      <div class="border p-4 rounded shadow-sm bg-white">
+        <h6 class="mb-3">
+          <i class="bi bi-check2-square text-success me-2"></i> Conclusão da análise técnica
+        </h6>
+        {{ form_avali.conclusao_tec|add_class:"form-select mb-3" }}
+
+        <label class="form-label">
+          <i class="bi bi-chat-left-text me-1 text-muted"></i> Considerações
+        </label>
+        {{ form_avali.consideracoes_tec|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <!-- Botão de Submit -->
+    <div class="col-12 text-end">
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-check-circle me-1"></i> Salvar Avaliação Técnica
+      </button>
+    </div>
+
+  </div>
+</form>
+
+
+<script>
+function toggleObservacao(campo) {
+  const sim = document.getElementById(`${campo}_sim`);
+  const obs = document.getElementById(`obs_${campo}`);
+  if (sim && obs) {
+    obs.style.display = sim.checked ? 'block' : 'none';
+  }
+}
+</script>
+
+<style>
+
+  .row.align-items-start.mb-4 {
+    border-bottom: 1px dashed #ddd;
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+  
+  label.col-form-label {
+    white-space: normal;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    padding-right: 1rem;
+  }
+  
+  
+  .form-label {
+    font-weight: 500;
+  }
+
+  .form-check-label {
+    font-weight: 400;
+    font-size: 0.875rem;
+    margin-left: 0.3rem;
+  }
+
+  .form-check-input {
+    margin-top: 0.2rem;
+  }
+
+  .form-control {
+    font-size: 0.875rem;
+  }
+
+  .form-control-sm {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+    max-width: 240px;
+  }
+
+  .gap-2 {
+    gap: 0.75rem !important;
+  }
+
+  .form-control.ckeditor {
+    height: 200px !important;
+    min-height: 200px !important;
+  }
+
+  .bg-avaliacao {
+    background-color: #fff3cd;
+  }
+
+  @media (max-width: 768px) {
+    .bg-avaliacao > .row > .col-12 > .border {
+      max-height: unset !important;
+      overflow: visible !important;
+    }
+  }
+</style>

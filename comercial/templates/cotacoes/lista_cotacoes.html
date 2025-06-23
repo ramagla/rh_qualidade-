@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block title %}Cotações Cadastradas{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+
+{% include "partials/global/_styles_componentes.html" %}
+
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Cotações Cadastradas" icone="bi bi-receipt-cutoff" emoji="📑" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"comercial.add_cotacao" %}
+      <a href="{% url 'cadastrar_cotacao' %}"
+         class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i>
+        Nova Cotação
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Offcanvas Filtros Cotações -->
+  <div class="offcanvas offcanvas-end offcanvas-modern"
+       tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Cotações
+      </h5>
+      <button type="button" class="btn-close text-reset"
+              data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+
+        <!-- Data de Abertura (De) -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="data_de" class="form-label">
+            <i class="bi bi-calendar-event me-1"></i> De
+          </label>
+          <input type="date" name="data_abertura_de" id="data_de"
+                 class="form-control"
+                 value="{{ request.GET.data_abertura_de }}">
+        </div>
+        <!-- Data de Abertura (Até) -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="data_ate" class="form-label">
+            <i class="bi bi-calendar-event me-1"></i> Até
+          </label>
+          <input type="date" name="data_abertura_ate" id="data_ate"
+                 class="form-control"
+                 value="{{ request.GET.data_abertura_ate }}">
+        </div>
+
+        <!-- Tipo de Cotação -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="tipo" class="form-label">
+            <i class="bi bi-list-ul me-1"></i> Tipo
+          </label>
+          <select name="tipo" id="tipo"
+                  class="form-select select2"
+                  data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            <option value="Atualização"
+              {% if request.GET.tipo == "Atualização" %}selected{% endif %}>
+              Atualização
+            </option>
+            <option value="Novo"
+              {% if request.GET.tipo == "Novo" %}selected{% endif %}>
+              Novo
+            </option>
+          </select>
+        </div>
+
+        <!-- Cliente -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="cliente" class="form-label">
+            <i class="bi bi-building me-1"></i> Cliente
+          </label>
+          <select name="cliente" id="cliente"
+                  class="form-select select2"
+                  data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            {% for c in clientes %}
+              <option value="{{ c.id }}"
+                {% if request.GET.cliente == c.id|stringformat:"s" %}selected{% endif %}>
+                {{ c.razao_social }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Responsável -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="responsavel" class="form-label">
+            <i class="bi bi-person-circle me-1"></i> Responsável
+          </label>
+          <select name="responsavel" id="responsavel"
+                  class="form-select select2"
+                  data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            {% for u in usuarios %}
+              <option value="{{ u.id }}"
+                {% if request.GET.responsavel == u.id|stringformat:"s" %}selected{% endif %}>
+                {{ u.get_full_name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Frete -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="frete" class="form-label">
+            <i class="bi bi-truck me-1"></i> Frete
+          </label>
+          <select name="frete" id="frete"
+                  class="form-select select2"
+                  data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            <option value="CIF" {% if request.GET.frete == "CIF" %}selected{% endif %}>CIF</option>
+            <option value="FOB" {% if request.GET.frete == "FOB" %}selected{% endif %}>FOB</option>
+            
+          </select>
+        </div>
+
+        <!-- Botão Filtrar -->
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Cotações Atualização" valor=total_atualizacao subtitulo="Tipo Atualização" icone="bi-arrow-counterclockwise" %}
+    {% include "partials/global/_card_indicador.html" with cor="danger"  titulo="Cotações Novo" valor=total_novos  subtitulo="Tipo Novo"  icone="bi-file-earmark-plus" %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Cotações" valor=total_cotacoes subtitulo="Quantidade total" icone="bi-card-list" %}
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Abertas este Mês" valor=abertas_mes subtitulo="Iniciadas no mês atual" icone="bi-calendar-event" %}
+  </div>
+
+  <!-- Lista de Cotações -->
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted"></i>📄 Lista de Cotações
+  </h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visually-hidden">Tabela de cotações</caption>
+      <thead class="table-light">
+        <tr>
+          <th class="align-middle">Nº Cotação</th>
+          <th class="align-middle">Data Abertura</th>
+          <th class="align-middle">Tipo</th>
+          <th class="align-middle">Responsável</th>
+          <th class="align-middle">Cliente</th>
+          <th class="align-middle">Frete</th>
+          <th class="align-middle">Condição Pagamento</th>
+          <th class="align-middle">ICMS (%)</th>
+          <th class="align-middle">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cot in page_obj %}
+          <tr>
+            <td>{{ cot.numero }}</td>
+            <td>{{ cot.data_abertura|date:"d/m/Y H:i" }}</td>
+            <td>{{ cot.tipo }}</td>
+            <td>{{ cot.responsavel.get_full_name }}</td>
+            <td class="text-start">{{ cot.cliente.razao_social }}</td>
+            <td>{{ cot.frete }}</td>
+            <td>{{ cot.cond_pagamento }}</td>
+            <td>{{ cot.icms|stringformat:"0.2f" }}</td>
+            <td>
+                <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+                    {% if request.user|has_permission:"comercial.view_cotacao" %}
+                    {% if request.user|has_permission:"comercial.view_precaculo" %}
+                        <a href="{% url 'itens_precaculo' cot.id %}"
+                          class="btn btn-outline-info btn-sm"
+                          title="Ver Pré-Cálculo">
+                          <i class="bi bi-box-seam"></i>
+                        </a>
+                      {% endif %}
+                      {% include "partials/global/_botao_visualizar.html" with objeto=cot url_visualizar="visualizar_cotacao" label="cotacao" %}
+                    {% endif %}
+                    {% if request.user|has_permission:"comercial.change_cotacao" %}
+                      {% include "partials/global/_botao_editar.html" with objeto=cot url_editar="editar_cotacao" label="cotacao" %}
+                    {% endif %}
+                    {% if request.user|has_permission:"comercial.delete_cotacao" %}
+                      {% include "partials/global/_botao_excluir.html" with objeto=cot url_excluir="excluir_cotacao" label="cotacao" %}
+                      {% include "partials/global/_modal_exclusao.html"   with objeto=cot url_excluir="excluir_cotacao" %}
+                    {% endif %}
+                  </div>
+                  
+            </td>
+          </tr>
+        {% empty %}
+          {% include "partials/global/_sem_resultados.html" with colspan=9 mensagem="Nenhuma cotação encontrada." %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+</div>
+{% endblock %}

@@ -14,3 +14,32 @@ def brl(value):
         return format_currency(value, "BRL", locale="pt_BR")
     except:
         return value
+
+
+@register.filter
+def field_value(bound_field):
+    try:
+        return bound_field.value()
+    except Exception:
+        return None
+
+
+@register.filter
+def attr(form, field_name):
+    """
+    Acessa dinamicamente um campo do formulário (ex: form|attr:"meu_campo").
+    """
+    try:
+        return form[field_name]
+    except Exception:
+        return None
+
+@register.filter
+def dict_get(form, key):
+    """
+    Acessa um campo de formulário dinamicamente, compatível com BoundField.
+    """
+    try:
+        return form[key]
+    except (KeyError, AttributeError, TypeError):
+        return None

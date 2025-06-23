@@ -1,0 +1,170 @@
+{% load widget_tweaks %}
+{% load comercial_formatos %}
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="form_analise_submitted" value="1">
+
+  <div class="row g-4 bg-analise p-4 rounded shadow-sm">
+
+    {% if form_analise.errors %}
+      <div class="alert alert-danger">
+        <strong>Erros no formulário:</strong>
+        <ul>
+          {% for field, errors in form_analise.errors.items %}
+            {% for error in errors %}
+              <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- Bloco principal -->
+    <div class="col-12">
+      <div class="border p-4 rounded shadow-sm bg-white">
+        <h5 class="mb-4">
+          <i class="bi bi-graph-up-arrow text-primary me-2"></i> Análise Comercial
+        </h5>
+
+        <!-- Qtde Estimada -->
+          <div class="row mb-3 align-items-start">
+            <label class="col-sm-5 col-form-label">
+              <i class="bi bi-calculator me-1 text-muted"></i> Quantidade Estimada
+            </label>
+            <div class="col-sm-7">
+              {{ form_analise.qtde_estimada|add_class:"form-control form-control-sm" }}
+            </div>
+          </div>
+
+            <!-- Periodicidade -->
+  <div class="row mb-3 align-items-start">
+    <label class="col-sm-5 col-form-label">
+      <i class="bi bi-repeat me-1 text-muted"></i> 3. Periodicidade de Fornecimento
+    </label>
+    <div class="col-sm-7">
+      {{ form_analise.periodo|add_class:"form-select form-select-sm" }}
+    </div>
+  </div>
+
+
+
+        <!-- Item -->
+        <div class="row mb-3 align-items-start">
+          <label class="col-sm-5 col-form-label">
+            <i class="bi bi-box me-1 text-muted"></i> 0. Selecione o item
+          </label>
+          <div class="col-sm-7">
+            {{ form_analise.item|add_class:"form-control form-control-sm select2" }}
+          </div>
+        </div>
+
+        <!-- Metodologia -->
+        <div class="row mb-3 align-items-start">
+          <label class="col-sm-5 col-form-label">
+            <i class="bi bi-puzzle me-1 text-muted"></i> 1. Metodologia de aprovação de produto
+          </label>
+          <div class="col-sm-7">
+            {{ form_analise.metodologia|add_class:"form-control form-control-sm" }}
+          </div>
+        </div>
+
+        <!-- Perguntas + Observações -->
+        {% for campo, observacao in campos_obs %}
+          {% with field=form_analise|attr:campo obs=form_analise|attr:observacao %}
+            <div class="row align-items-center mb-3">
+              <label class="col-sm-5 col-form-label small">
+                <i class="bi bi-question-circle me-1 text-muted"></i> {{ field.label }}
+              </label>
+              <div class="col-sm-7 d-flex align-items-center gap-2">
+                <div class="form-check form-check-inline mb-0">
+                  <input type="radio" name="{{ campo }}" id="{{ campo }}_sim" value="True"
+                         class="form-check-input"
+                         {% if field.value %}checked{% endif %}
+                         onchange="toggleObservacao('{{ campo }}')">
+                  <label class="form-check-label" for="{{ campo }}_sim">Sim</label>
+                </div>
+                <div class="form-check form-check-inline mb-0">
+                  <input type="radio" name="{{ campo }}" id="{{ campo }}_nao" value="False"
+                         class="form-check-input"
+                         {% if not field.value %}checked{% endif %}
+                         onchange="toggleObservacao('{{ campo }}')">
+                  <label class="form-check-label" for="{{ campo }}_nao">Não</label>
+                </div>
+                <div id="obs_{{ campo }}" style="display:{% if not field.value %}none{% endif %}; flex: 1;">
+                  {{ obs|add_class:"form-control form-control-sm w-100" }}
+                </div>
+              </div>
+            </div>
+          {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Conclusão e Considerações -->
+    <div class="col-12">
+      <div class="border p-4 rounded shadow-sm bg-white">
+        <h6 class="mb-3">
+          <i class="bi bi-check2-circle me-2 text-success"></i> Conclusão da análise crítica
+        </h6>
+        {{ form_analise.conclusao|add_class:"form-select mb-3" }}
+
+        <label class="form-label">
+          <i class="bi bi-chat-left-text me-1 text-muted"></i> Considerações
+        </label>
+        {{ form_analise.consideracoes|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <!-- Botão de envio -->
+    <div class="col-12 text-end mt-3">
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-save me-1"></i> Salvar Análise
+      </button>
+    </div>
+  </div>
+</form>
+
+<script>
+function toggleObservacao(campo) {
+  const sim = document.getElementById(`${campo}_sim`);
+  const obs = document.getElementById(`obs_${campo}`);
+  if (sim && obs) {
+    obs.style.display = sim.checked ? 'block' : 'none';
+  }
+}
+</script>
+
+<style>
+  .form-label { font-weight: 500; }
+  textarea.form-control { min-height: 140px; }
+  .form-check-label {
+    font-weight: 400;
+    font-size: 0.875rem;
+    margin-left: 0.3rem;
+  }
+  .form-check-input { margin-top: 0.2rem; }
+  .form-control { font-size: 0.875rem; }
+  .form-control-sm {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  .form-control.ckeditor {
+    height: 200px !important;
+    min-height: 200px !important;
+  }
+  .gap-3 { gap: 1rem !important; }
+  .bg-analise { background-color: #e8f4fd; }
+  .select2-container .select2-selection--single {
+    min-height: 32px !important;
+    padding: 3px 10px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+  }
+  @media (min-width: 768px) {
+    .form-check-inline { min-width: 60px; }
+    .form-control-sm { max-width: 240px; }
+    .col-form-label { font-size: 0.9rem; }
+  }
+</style>

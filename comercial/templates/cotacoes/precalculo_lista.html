@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Itens de Pré-Cálculo - Cotação #{{ cotacao.numero }}{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+
+{% include "partials/global/_styles_componentes.html" %}
+
+<div class="container-fluid mt-5">
+
+  <div class="text-center mb-4 border-bottom pb-2">
+    <h2 class="m-0">
+      <i class="bi bi-calculator text-primary me-2"></i>
+      Itens de Pré-Cálculo da Cotação <strong>#{{ cotacao.numero }}</strong>
+    </h2>
+  </div>
+    {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    <a href="{% url 'lista_cotacoes' %}"
+       class="btn btn-secondary d-inline-flex align-items-center">
+      <i class="bi bi-arrow-left-circle-fill me-2"></i>
+      Voltar às Cotações
+    </a>
+    {% if request.user|has_permission:"comercial.add_precalculo" %}
+      <a href="{% url 'criar_precalculo' cotacao.id %}"
+         class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2"></i>
+        Novo Item
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Materiais" valor=total_materiais subtitulo="Itens de Matéria-Prima" icone="bi-box-seam" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Serviços Ext." valor=total_servicos subtitulo="Itens de Serviço Externo" icone="bi-gear-fill" %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Itens" valor=total_itens subtitulo="Materiais + Serviços" icone="bi-list-ul" %}
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Itens na Página" valor=page_obj|length subtitulo="Registros desta página" icone="bi-card-list" %}
+  </div>
+
+  <!-- Lista de Itens de Pré-Cálculo -->
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted"></i>📊 Lista de Itens de Pré-Cálculo
+  </h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Código</th>
+          <th>Análise Comercial</th>
+          <th>Regras de Cálculo</th>
+          <th>Avaliação Técnica</th>
+          <th>Desenvolvimento</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in page_obj %}
+          <tr>
+            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+            <td>{{ item.analise_comercial_item.item.codigo }}</td>
+  
+            <td>
+              {% if item.analise_ok %}
+                <span class="badge bg-success">OK</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Aguardando</span>
+              {% endif %}
+            </td>
+  
+            <td>
+              {% if item.regras_ok %}
+                <span class="badge bg-success">OK</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Aguardando</span>
+              {% endif %}
+            </td>
+  
+            <td>
+              {% if item.avaliacao_ok %}
+                <span class="badge bg-success">OK</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Aguardando</span>
+              {% endif %}
+            </td>
+  
+            <td>
+              {% if item.desenvolvimento_ok %}
+                <span class="badge bg-success">OK</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Aguardando</span>
+              {% endif %}
+            </td>
+  
+            <td>
+              <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+                {% if request.user|has_permission:"comercial.change_precalculo" %}
+                  {% include "partials/global/_botao_editar.html" with objeto=item url_editar="editar_precalculo" label="precalculo" %}
+                {% endif %}
+                {% if request.user|has_permission:"comercial.delete_precalculo" %}
+                  {% include "partials/global/_botao_excluir.html" with objeto=item url_excluir="excluir_precalculo" label="precalculo" %}
+                  {% include "partials/global/_modal_exclusao.html" with objeto=item url_excluir="excluir_precalculo" %}
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include "partials/global/_paginacao.html" with page_obj=page_obj %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if cotacao %}Editar{% else %}Cadastrar{% endif %} Cotação{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-receipt-cutoff me-2"></i>
+    {% if cotacao %}Editar{% else %}Cadastrar{% endif %} Cotação
+  </h2>
+
+  <form method="post" class="row g-3" id="cotacaoForm">
+    {% csrf_token %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          {% for err in form.non_field_errors %}
+            <li>{{ err }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {# Data de abertura (view prepopula) #}
+    <div class="col-md-6">
+      <label class="form-label">Data de Abertura</label>
+      <input type="text" class="form-control" value="{{ form.instance.data_abertura|date:'d/m/Y H:i' }}" disabled>
+    </div>
+
+    {# Tipo de cotação #}
+    <div class="col-md-6">
+      <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo de Cotação <span class="text-danger">*</span></label>
+      {{ form.tipo|add_class:"form-select select2" }}
+    </div>
+
+    {# Responsável (view prepopula) #}
+    <div class="col-md-6">
+      <label class="form-label">Responsável</label>
+      <input type="text" class="form-control" value="{{ request.user.get_full_name }}" disabled>
+    </div>
+
+    {# Cliente #}
+    <div class="col-md-6">
+      <label for="{{ form.cliente.id_for_label }}" class="form-label">Cliente <span class="text-danger">*</span></label>
+      {{ form.cliente|add_class:"form-select select2" }}
+    </div>
+
+    {# Frete #}
+    <div class="col-md-4">
+      <label for="{{ form.frete.id_for_label }}" class="form-label">Frete <span class="text-danger">*</span></label>
+      {{ form.frete|add_class:"form-select select2" }}
+    </div>
+
+    {# Condição de pagamento #}
+    <div class="col-md-4">
+      <label for="{{ form.cond_pagamento.id_for_label }}" class="form-label">Condição de Pagamento <span class="text-danger">*</span></label>
+      {{ form.cond_pagamento|add_class:"form-control" }}
+    </div>
+
+    {# ICMS #}
+    <div class="col-md-4">
+      <label for="{{ form.icms.id_for_label }}" class="form-label">ICMS (%) <span class="text-danger">*</span></label>
+      {{ form.icms|add_class:"form-control" }}
+    </div>
+
+    {# Observações #}
+    <div class="col-12">
+      <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações</label>
+      {{ form.observacoes|add_class:"form-control" }}
+    </div>
+
+    {# Ações adicionais quando editando: acessar itens do pré-cálculo #}
+    {% if cotacao %}
+      <div class="col-12">
+        <a href="{% url 'itens_precaculo' cotacao.id %}" class="btn btn-outline-primary">
+          <i class="bi bi-list-check me-1"></i> Itens da Cotação
+        </a>
+      </div>
+    {% endif %}
+
+    {# Botões Salvar / Cancelar #}
+    <div class="col-12 text-center mt-4">
+      <button type="submit" class="btn btn-success me-2">
+        <i class="bi bi-save me-1"></i> Salvar
+      </button>
+      <a href="{% url 'lista_cotacoes' %}" class="btn btn-secondary">
+        <i class="bi bi-x-circle me-1"></i> Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}
