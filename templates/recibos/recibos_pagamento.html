@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load conversores %}
 
 {% block title %}Recibos de Pagamento{% endblock %}
 
@@ -29,9 +30,10 @@
 
   <!-- Cards de Indicadores -->
   <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
-    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Valor Líquido Total" valor=total_liquido|floatformat:2 icone="bi-wallet2" %}
-    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Vencimentos" valor=total_vencimentos|floatformat:2 icone="bi-cash-stack" %}
-    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Total de Descontos" valor=total_descontos|floatformat:2 icone="bi-dash-circle" %}
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Valor Líquido Total" valor=total_liquido|br_currency icone="bi-wallet2" %}
+{% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Vencimentos" valor=total_vencimentos|br_currency icone="bi-cash-stack" %}
+{% include "partials/global/_card_indicador.html" with cor="danger" titulo="Total de Descontos" valor=total_descontos|br_currency icone="bi-dash-circle" %}
+
   </div>
 
   <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
@@ -88,14 +90,15 @@
       <caption class="visually-hidden">Tabela de recibos</caption>
       <thead class="table-light">
         <tr>
-          <th><i class="bi bi-calendar-date me-1"></i> Mês Referência</th>
-          <th><i class="bi bi-person me-1"></i> Colaborador</th>
-          <th><i class="bi bi-file-earmark-pdf me-1"></i> Recibo</th>
-          <th><i class="bi bi-clock me-1"></i> Importado em</th>
-          <th><i class="bi bi-cash-stack me-1"></i> Vencimentos</th>
-          <th><i class="bi bi-dash-circle me-1"></i> Descontos</th>
-          <th><i class="bi bi-wallet2 me-1"></i> Líquido</th>
+          <th class="align-middle"><i class="bi bi-calendar-date me-1"></i> Mês Referência</th>
+          <th class="align-middle"><i class="bi bi-person me-1"></i> Colaborador</th>
+          <th class="align-middle"><i class="bi bi-file-earmark-pdf me-1"></i> Recibo</th>
+          <th class="align-middle"><i class="bi bi-clock me-1"></i> Importado em</th>
+          <th class="align-middle"><i class="bi bi-cash-stack me-1"></i> Vencimentos</th>
+          <th class="align-middle"><i class="bi bi-dash-circle me-1"></i> Descontos</th>
+          <th class="align-middle"><i class="bi bi-wallet2 me-1"></i> Líquido</th>
         </tr>
+        
       </thead>
       <tbody>
         {% for recibo in page_obj %}
@@ -116,7 +119,7 @@
           <!-- Vencimentos -->
           <td>
             <div class="input-group">
-              <input type="password" class="form-control text-end" readonly value="R$ {{ recibo.valor_total|default_if_none:'0.00'|floatformat:2 }}">
+              <input type="password" class="form-control text-end" readonly value="{{ recibo.valor_total|default_if_none:0|br_currency }}">
               <button type="button" class="btn btn-outline-secondary toggle-valor"><i class="bi bi-eye"></i></button>
             </div>
           </td>
@@ -124,7 +127,7 @@
           <!-- Descontos -->
           <td>
             <div class="input-group">
-              <input type="password" class="form-control text-end" readonly value="R$ {{ recibo.valor_descontos|default_if_none:'0.00'|floatformat:2 }}">
+              <input type="password" class="form-control text-end" readonly value="{{ recibo.valor_descontos|default_if_none:0|br_currency }}">
               <button type="button" class="btn btn-outline-secondary toggle-valor"><i class="bi bi-eye"></i></button>
             </div>
           </td>
@@ -132,7 +135,7 @@
           <!-- Líquido -->
           <td>
             <div class="input-group">
-              <input type="password" class="form-control text-end fw-bold text-success" readonly value="R$ {{ recibo.valor_liquido|default_if_none:'0.00'|floatformat:2 }}">
+              <input type="password" class="form-control text-end fw-bold text-success" readonly value="{{ recibo.valor_liquido|default_if_none:0|br_currency }}">
               <button type="button" class="btn btn-outline-secondary toggle-valor"><i class="bi bi-eye"></i></button>
             </div>
           </td>
