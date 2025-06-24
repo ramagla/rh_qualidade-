@@ -98,11 +98,6 @@ def excluir_inspecao10(request, id):
     
     return redirect("listar_inspecoes10")
 
-@login_required
-@permission_required("qualidade_fornecimento.view_inspecao10", raise_exception=True)
-def visualizar_inspecao10(request, id):
-    obj = get_object_or_404(Inspecao10, id=id)
-    return render(request, "qualidade/inspecao10/visualizar.html", {"obj": obj})
 
 
 

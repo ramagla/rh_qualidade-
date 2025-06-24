@@ -204,7 +204,6 @@ urlpatterns = [
     path("inspecao10/cadastrar/", inspecao10_views.cadastrar_inspecao10, name="cadastrar_inspecao10"),
     path("inspecao10/editar/<int:id>/", inspecao10_views.editar_inspecao10, name="editar_inspecao10"),
     path("inspecao10/excluir/<int:id>/", inspecao10_views.excluir_inspecao10, name="excluir_inspecao10"),
-    path("inspecao10/visualizar/<int:id>/", inspecao10_views.visualizar_inspecao10, name="visualizar_inspecao10"),
     path('inspecao10/importar-excel/', inspecao10_views.importar_inspecao10_excel, name='importar_inspecao10_excel'),
     path("relatorio-analitico-inspecao/", relatorio_inspecao_analitico, name="relatorio_inspecao_analitico"),
     path("relatorio-ppm/", relatorio_ppm_view, name="relatorio_ppm"),
