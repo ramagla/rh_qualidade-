@@ -12,18 +12,24 @@ from qualidade_fornecimento.forms.inspecao10_form import Inspecao10Form
 @permission_required("qualidade_fornecimento.view_inspecao10", raise_exception=True)
 def listar_inspecoes10(request):
     queryset = Inspecao10.objects.select_related("fornecedor", "responsavel").all()
-    
-    fornecedor = request.GET.get("fornecedor")
-    status = request.GET.get("status")
-    data = request.GET.get("data")
 
-    # 🔎 Filtros
+    # 🔎 Novos filtros
+    fornecedor = request.GET.get("fornecedor")
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+    numero_op = request.GET.get("numero_op")
+    codigo_brasmol = request.GET.get("codigo_brasmol")
+
     if fornecedor:
         queryset = queryset.filter(fornecedor__nome__icontains=fornecedor)
-    if status:
-        queryset = queryset.filter(status__icontains=status)
-    if data:
-        queryset = queryset.filter(data=data)
+    if data_inicio:
+        queryset = queryset.filter(data__gte=data_inicio)
+    if data_fim:
+        queryset = queryset.filter(data__lte=data_fim)
+    if numero_op:
+        queryset = queryset.filter(numero_op__icontains=numero_op)
+    if codigo_brasmol:
+        queryset = queryset.filter(codigo_brasmol__icontains=codigo_brasmol)
 
     # 📊 Indicadores
     total_inspecoes = queryset.count()
@@ -47,6 +53,7 @@ def listar_inspecoes10(request):
         "total_reprovadas": total_falhas,
         "total_horas": total_horas,
         "request": request,
+        "fornecedores": FornecedorQualificado.objects.order_by("nome")
     }
 
     return render(request, "f223/lista_f223.html", contexto)

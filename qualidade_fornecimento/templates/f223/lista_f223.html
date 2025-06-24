@@ -36,38 +36,54 @@
     {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Total de Horas Gastas" valor=total_horas icone="bi-hourglass-split" %}
   </div>
 
-  <!-- Filtros Offcanvas -->
-  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
-        <i class="bi bi-funnel-fill me-2"></i>Filtros de Inspeções
-      </h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-    </div>
-    <div class="offcanvas-body">
-      <form method="get" class="row g-3">
-        <div class="col-12 filtro-wrapper">
-          <label for="fornecedor"><i class="bi bi-truck me-1"></i> Fornecedor</label>
-          <input type="text" id="fornecedor" name="fornecedor" class="form-control" value="{{ request.GET.fornecedor }}">
-        </div>
-        <div class="col-12 filtro-wrapper">
-          <label for="aprovado"><i class="bi bi-check2-square me-1"></i> Status</label>
-          <select id="aprovado" name="aprovado" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
-            <option value="">Todos</option>
-            <option value="1" {% if request.GET.aprovado == '1' %}selected{% endif %}>Aprovado</option>
-            <option value="0" {% if request.GET.aprovado == '0' %}selected{% endif %}>Reprovado</option>
-          </select>
-        </div>
-        <div class="col-12 filtro-wrapper">
-          <label for="data"><i class="bi bi-calendar me-1"></i> Data</label>
-          <input type="date" id="data" name="data" class="form-control" value="{{ request.GET.data }}">
-        </div>
-        <div class="col-12 mt-3">
-          {% include "partials/global/_botao_filtrar.html" %}
-        </div>
-      </form>
-    </div>
+ <!-- Filtros Offcanvas -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Inspeções
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+      
+      <div class="col-12 filtro-wrapper">
+        <label for="fornecedor"><i class="bi bi-truck me-1"></i> Fornecedor</label>
+        <select id="fornecedor" name="fornecedor" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for f in fornecedores %}
+            <option value="{{ f.nome }}" {% if request.GET.fornecedor == f.nome %}selected{% endif %}>{{ f.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="data_inicio"><i class="bi bi-calendar-event me-1"></i> Data Início</label>
+        <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="data_fim"><i class="bi bi-calendar-check me-1"></i> Data Fim</label>
+        <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="numero_op"><i class="bi bi-hash me-1"></i> Nº OP</label>
+        <input type="text" id="numero_op" name="numero_op" class="form-control" value="{{ request.GET.numero_op }}">
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="codigo_brasmol"><i class="bi bi-upc-scan me-1"></i> Código do Item</label>
+        <input type="text" id="codigo_brasmol" name="codigo_brasmol" class="form-control" value="{{ request.GET.codigo_brasmol }}">
+      </div>
+
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+    </form>
+  </div>
+</div>
+
 
   <!-- Lista -->
   <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📋 Lista de Inspeções</h5>
@@ -79,6 +95,7 @@
               <th class="align-middle"><i class="bi bi-calendar3 me-1"></i> Data</th>
               <th class="align-middle"><i class="bi bi-truck me-1"></i> Fornecedor</th>
               <th class="align-middle"><i class="bi bi-hash me-1"></i> Nº OP</th>
+              <th class="align-middle"><i class="bi bi-upc-scan me-1"></i> Código</th>
               <th class="align-middle"><i class="bi bi-clock me-1"></i> Início</th>
               <th class="align-middle"><i class="bi bi-clock-history me-1"></i> Fim</th>
               <th class="align-middle"><i class="bi bi-hourglass-split me-1"></i> Duração</th>
@@ -98,6 +115,7 @@
                 <td>{{ obj.data|date:"d/m/Y" }}</td>
                 <td>{{ obj.fornecedor.nome }}</td>
                 <td>{{ obj.numero_op|formatar_op }}</td>
+                <td>{{ obj.codigo_brasmol }}</td>
                 <td>{{ obj.hora_inicio|default:"--" }}</td>
                 <td>{{ obj.hora_fim|default:"--" }}</td>
                 <td>
@@ -123,7 +141,7 @@
                     <span class="badge bg-success">OK</span>
                   {% endif %}
                 </td>
-                <td>{{ obj.responsavel.get_full_name|default:obj.responsavel.username|default:"-" }}</td>
+                <td>{{ obj.responsavel.get_full_name|primeiro_ultimo_nome_inline }}</td>
                 <td>
                   <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalObs{{ obj.id }}">
                     <i class="bi bi-eye"></i>
