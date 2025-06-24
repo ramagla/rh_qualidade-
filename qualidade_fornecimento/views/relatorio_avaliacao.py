@@ -139,84 +139,92 @@ from django.shortcuts import render
 from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
 from qualidade_fornecimento.utils import gerar_grafico_velocimetro  # se preferir estilo velocímetro
 
-@login_required
-@permission_required("qualidade_fornecimento.view_relatorioiqf", raise_exception=True)
 def relatorio_iqf_view(request):
-    ano = int(request.GET.get("ano", datetime.today().year))
+    ano_atual = datetime.now().year
+    ano = int(request.GET.get("ano", ano_atual))
 
-    # Dados agregados por mês
-    dados_por_mes = OrderedDict()
-    comentarios = []
-    comentarios_meses = []
+    queryset = RelacaoMateriaPrima.objects.filter(data_entrada__year=ano)
 
-    for mes in range(1, 13):
-        queryset = RelacaoMateriaPrima.objects.filter(
-            data_entrada__year=ano,
-            data_entrada__month=mes
-        )
+    if not queryset.exists():
+        return render(request, "relatorios/relatorio_iqf.html", {
+            "grafico_base64": None,
+            "media": 0,
+            "ano": ano,
+            "comentarios": [],
+            "dados_iqf": {},
+            "meses": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
+        })
 
-        total = queryset.count()
-        reprovados = queryset.filter(status__in=["Reprovado", "Aprovado Condicionalmente"]).count()
-        atrasos = [d.atraso_em_dias for d in queryset if d.atraso_em_dias is not None]
+    # Prepara DataFrame
+    df = pd.DataFrame.from_records(queryset.values("data_entrada", "status", "atraso_em_dias"))
+    df["data_entrada"] = pd.to_datetime(df["data_entrada"])
+    df["mes"] = df["data_entrada"].dt.month  # Inteiro de 1 a 12
 
-        if total == 0:
-            dados_por_mes[mes] = None
-            continue
+    # Monta dicionário de IQF por mês
+    dados_iqf = OrderedDict()
+    meses_labels = []
 
-        iqf = 1 - (reprovados / total)
-        ip = 1 - (sum(atrasos) / len(atrasos) / 100) if atrasos else 1
-        pontuacao = 0.9  # Score médio fixo = 90%
+    for i in range(1, 13):
+        mes_nome = format_date(pd.to_datetime(f"{ano}-{i}-01"), "MMM", locale="pt_BR").lower()
+        meses_labels.append(mes_nome)
 
-        iqf_pond = iqf * 0.5
-        ip_pond = ip * 0.3
-        iqs = pontuacao * 0.2
-        iqg = round((iqf_pond + ip_pond + iqs) * 100, 2)
+        grupo_mes = df[df["mes"] == i]
+        if grupo_mes.empty:
+            dados_iqf[mes_nome] = 0.00
+        else:
+            total = len(grupo_mes)
+            reprovados = grupo_mes[grupo_mes["status"].isin(["Reprovado", "Aprovado Condicionalmente"])].shape[0]
+            atrasos = grupo_mes["atraso_em_dias"].dropna()
 
-        nome_mes = datetime(ano, mes, 1).strftime("%b")
-        dados_por_mes[nome_mes] = iqg
-        comentarios.append(f"{str(mes).zfill(2)}_{ano} - Indicador {'dentro' if iqg >= 90 else 'fora'} da meta estabelecida.")
+            iqf = 1 - (reprovados / total)
+            ip = 1 - (atrasos.sum() / len(atrasos) / 100) if len(atrasos) > 0 else 1
+            iqs = 0.9  # Valor fixo de pontuação como índice de qualidade do fornecedor
 
-    # Média geral apenas dos meses com dados
-    valores_validos = [v for v in dados_por_mes.values() if v is not None]
-    media = round(sum(valores_validos) / len(valores_validos), 2) if valores_validos else 0
+            nota_final = round((iqf * 0.5 + ip * 0.3 + iqs * 0.2) * 100, 2)
+            dados_iqf[mes_nome] = nota_final
 
-    context = {
-        "titulo": f"8.1 - IQF - Índice de Qualidade de Fornecimento ({ano})",
-        "dados": dados_por_mes,
-        "media": media,
-        "comentarios": comentarios,
-        "grafico_base64": gerar_grafico_iqf(dados_por_mes),
-    }
-
-    return render(request, "relatorios/relatorio_iqf.html", context)
-
-
-def gerar_grafico_iqf(dados_por_mes):
-    meses = list(dados_por_mes.keys())
-    valores = [v if v is not None else 0 for v in dados_por_mes.values()]
-    meta = [90] * len(meses)
-
-    x_pos = list(range(len(meses)))  # posição numérica
-
-    plt.figure(figsize=(8, 4))
-    plt.bar(x_pos, valores, color="lightblue", edgecolor="green", label="IQF")
-    plt.plot(x_pos, meta, color="green", linestyle="--", marker="o", label="Meta")
-
-    plt.xticks(x_pos, meses)  # define os rótulos dos meses no eixo X
-    plt.ylim(0, 100)
-    plt.title("IQF por Mês", fontsize=13, color="green")
-    plt.ylabel("Percentual (%)", fontsize=11)
-    plt.legend(loc="lower center", bbox_to_anchor=(0.5, -0.3), ncol=2)
-
-    buffer = io.BytesIO()
+    # Gráfico IQF por mês
+    fig, ax = plt.subplots()
+    ax.bar([m.upper() for m in dados_iqf.keys()], list(dados_iqf.values()), color="skyblue")
+    ax.axhline(y=90, color='green', linestyle='--', label='Meta (90%)')
+    ax.set_title(f"IQF por Mês ({ano})")
+    ax.set_ylabel("IQF (%)")
+    ax.set_xlabel("Mês")
+    ax.legend()
     plt.tight_layout()
-    plt.savefig(buffer, format="png", bbox_inches="tight")
-    plt.close()
 
-    buffer.seek(0)
-    image_png = buffer.getvalue()
-    return base64.b64encode(image_png).decode("utf-8")
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png")
+    plt.close(fig)
+    grafico_base64 = base64.b64encode(buffer.getvalue()).decode()
 
+    # Comentários mensais
+    comentarios = []
+    for mes, valor in dados_iqf.items():
+        if valor < 90:
+            comentarios.append({
+                "data": f"{mes.upper()}/{ano}",
+                "texto": f"O IQF foi {valor:.2f}%, abaixo da meta estabelecida."
+            })
+
+    if not comentarios:
+        comentarios.append({
+            "data": "-",
+            "texto": "Todos os meses atingiram a meta. Nenhuma ação necessária."
+        })
+
+    # Cálculo da média geral
+    media = round(sum(dados_iqf.values()) / len(dados_iqf), 2)
+
+    # Renderiza template
+    return render(request, "relatorios/relatorio_iqf.html", {
+        "grafico_base64": grafico_base64,
+        "media": media,
+        "ano": ano,
+        "comentarios": comentarios,
+        "dados_iqf": dados_iqf,
+        "meses": list(dados_iqf.keys()),
+    })
 
 
 # qualidade_fornecimento/views/relatorio_inspecao.py

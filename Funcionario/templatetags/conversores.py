@@ -58,3 +58,15 @@ def extrair_mes_ano(valor):
         return f"{partes[1]}/{partes[0]}"
     except:
         return valor
+
+
+@register.filter
+def get_range(start, end):
+    """
+    Gera um range de valores para usar em dropdowns (ex: anos).
+    Exemplo: {{ 2023|get_range:2030 }} → [2023, ..., 2029]
+    """
+    try:
+        return range(int(start), int(end))
+    except:
+        return []
