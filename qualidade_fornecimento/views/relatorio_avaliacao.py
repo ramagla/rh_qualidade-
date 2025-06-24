@@ -124,3 +124,93 @@ def relatorio_avaliacao_view(request):
     return render(
         request, "relatorios/relatorio_avaliacao.html", {"form": form, "exibir": False}
     )
+
+
+from datetime import datetime
+from collections import OrderedDict
+import base64
+import io
+
+import matplotlib.pyplot as plt
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+
+from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
+from qualidade_fornecimento.utils import gerar_grafico_velocimetro  # se preferir estilo velocímetro
+
+@login_required
+@permission_required("qualidade_fornecimento.view_relatorioiqf", raise_exception=True)
+def relatorio_iqf_view(request):
+    ano = int(request.GET.get("ano", datetime.today().year))
+
+    # Dados agregados por mês
+    dados_por_mes = OrderedDict()
+    comentarios = []
+
+    for mes in range(1, 13):
+        queryset = RelacaoMateriaPrima.objects.filter(
+            data_entrada__year=ano,
+            data_entrada__month=mes
+        )
+
+        total = queryset.count()
+        reprovados = queryset.filter(status__in=["Reprovado", "Aprovado Condicionalmente"]).count()
+        atrasos = [d.atraso_em_dias for d in queryset if d.atraso_em_dias is not None]
+
+        if total == 0:
+            dados_por_mes[mes] = None
+            continue
+
+        iqf = 1 - (reprovados / total)
+        ip = 1 - (sum(atrasos) / len(atrasos) / 100) if atrasos else 1
+        pontuacao = 0.9  # Score médio fixo = 90%
+
+        iqf_pond = iqf * 0.5
+        ip_pond = ip * 0.3
+        iqs = pontuacao * 0.2
+        iqg = round((iqf_pond + ip_pond + iqs) * 100, 2)
+
+        nome_mes = datetime(ano, mes, 1).strftime("%b")
+        dados_por_mes[nome_mes] = iqg
+        comentarios.append(f"{str(mes).zfill(2)}_{ano} - Indicador {'dentro' if iqg >= 90 else 'fora'} da meta estabelecida.")
+
+    # Média geral apenas dos meses com dados
+    valores_validos = [v for v in dados_por_mes.values() if v is not None]
+    media = round(sum(valores_validos) / len(valores_validos), 2) if valores_validos else 0
+
+    context = {
+        "titulo": f"8.1 - IQF - Índice de Qualidade de Fornecimento ({ano})",
+        "dados": dados_por_mes,
+        "media": media,
+        "comentarios": comentarios,
+        "grafico_base64": gerar_grafico_iqf(dados_por_mes),
+    }
+
+    return render(request, "relatorios/relatorio_iqf.html", context)
+
+
+def gerar_grafico_iqf(dados_por_mes):
+    meses = list(dados_por_mes.keys())
+    valores = [v if v is not None else 0 for v in dados_por_mes.values()]
+    meta = [90] * len(meses)
+
+    x_pos = list(range(len(meses)))  # posição numérica
+
+    plt.figure(figsize=(8, 4))
+    plt.bar(x_pos, valores, color="lightblue", edgecolor="green", label="IQF")
+    plt.plot(x_pos, meta, color="green", linestyle="--", marker="o", label="Meta")
+
+    plt.xticks(x_pos, meses)  # define os rótulos dos meses no eixo X
+    plt.ylim(0, 100)
+    plt.title("IQF por Mês", fontsize=13, color="green")
+    plt.ylabel("Percentual (%)", fontsize=11)
+    plt.legend(loc="lower center", bbox_to_anchor=(0.5, -0.3), ncol=2)
+
+    buffer = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buffer, format="png", bbox_inches="tight")
+    plt.close()
+
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    return base64.b64encode(image_png).decode("utf-8")

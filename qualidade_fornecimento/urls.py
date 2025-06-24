@@ -34,7 +34,7 @@ from qualidade_fornecimento.views.materiaprima_views import (
     norma_aprovada,
     adicionar_rolo
 )
-from qualidade_fornecimento.views.relatorio_avaliacao import relatorio_avaliacao_view
+from qualidade_fornecimento.views.relatorio_avaliacao import relatorio_avaliacao_view, relatorio_iqf_view
 
 from .views.fornecedores_views import (
     cadastrar_fornecedor,
@@ -198,6 +198,7 @@ urlpatterns = [
         ),
 
     path("tb050/<int:id>/adicionar-rolo/", adicionar_rolo, name="tb050_adicionar_rolo"),
-    path("controle-servico-externo/inspecao/visualizar/<int:id>/", visualizar_inspecao_servico_externo, name="visualizar_inspecao_servico_externo")
+    path("controle-servico-externo/inspecao/visualizar/<int:id>/", visualizar_inspecao_servico_externo, name="visualizar_inspecao_servico_externo"),
+    path("relatorio-iqf/", relatorio_iqf_view, name="relatorio_iqf"),
 
 ]

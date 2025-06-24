@@ -62,4 +62,6 @@ qualidade_permissions = {
 
     # Avaliação Semestral de Fornecedores
     "relatorio_avaliacao_view": "qualidade_fornecimento.view_fornecedorqualificado",
+    "relatorio_iqf": "qualidade_fornecimento.view_relatorioiqf",
+
 }

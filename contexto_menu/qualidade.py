@@ -66,8 +66,15 @@ def menu_qualidade(user):
                     "url": "relatorio_avaliacao",
                     "icon": "fas fa-chart-line",
                 },
+                {
+                    "name": "8.1 - IQF - Índice de Qualidade de Fornecimento",
+                    "url": "relatorio_iqf",
+                    "icon": "fas fa-tachometer-alt",
+                },
             ],
         })
+
+
     
     # Tabela de Correlação (menu direto com modal)
     menu.append({
