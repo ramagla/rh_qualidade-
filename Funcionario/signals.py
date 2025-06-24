@@ -78,6 +78,10 @@ CUSTOM_PERMISSOES = [
     ("qualidade_fornecimento", "fornecedorqualificado", "importar_excel_fornecedores", "Pode importar fornecedores via Excel"),
     ("qualidade_fornecimento", "controleservicoexterno", "add_controleservicoexterno", "Pode adicionar Controle de Serviço Externo"),
     ("qualidade_fornecimento", "relatorioinspecaoservico", "add_relatorioinspecaoservico", "Pode adicionar Relatório de Inspeção de Serviço"),
+    ("qualidade_fornecimento", "relatorioiqf", "view_relatorioiqf", "Pode visualizar o relatório 8.1 - IQF"),
+    ("qualidade_fornecimento", "inspecao10", "importar_excel_inspecao10", "Pode importar inspeções 10 via Excel"),
+    ("qualidade_fornecimento", "relatorioinspecaoanalitico", "view_relatorioinspecaoanalitico", "Pode visualizar relatório analítico de inspeções"),
+    ("qualidade_fornecimento", "relatorioppm", "view_relatorio_ppm", "Pode visualizar o relatório 6.4 - PPM"),
 
 
 
@@ -121,6 +125,7 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "funcionario", "emitir_f033", "Pode emitir Solicitação de Bolsa-Treinamento (F033)"),
     ("Funcionario", "funcionario", "emitir_saida_antecipada", "Pode emitir formulário de Saída Antecipada"),
     ("Funcionario", "funcionario", "emitir_ficha_epi", "Pode emitir Ficha de EPIs"),
+    ("Funcionario", "recibopagamento", "importar_recibo_pagamento", "Pode importar recibo de pagamento"),
 
 
     ("portaria", "pessoaportaria", "acesso_portaria", "Pode acessar o módulo Portaria"),

@@ -34,8 +34,8 @@ from qualidade_fornecimento.views.materiaprima_views import (
     norma_aprovada,
     adicionar_rolo
 )
-from qualidade_fornecimento.views.relatorio_avaliacao import relatorio_avaliacao_view
-
+from qualidade_fornecimento.views.relatorio_avaliacao import relatorio_avaliacao_view, relatorio_iqf_view,relatorio_inspecao_analitico,relatorio_ppm_view
+from qualidade_fornecimento.views import inspecao10_views
 from .views.fornecedores_views import (
     cadastrar_fornecedor,
     editar_fornecedor,
@@ -198,6 +198,14 @@ urlpatterns = [
         ),
 
     path("tb050/<int:id>/adicionar-rolo/", adicionar_rolo, name="tb050_adicionar_rolo"),
-    path("controle-servico-externo/inspecao/visualizar/<int:id>/", visualizar_inspecao_servico_externo, name="visualizar_inspecao_servico_externo")
+    path("controle-servico-externo/inspecao/visualizar/<int:id>/", visualizar_inspecao_servico_externo, name="visualizar_inspecao_servico_externo"),
+    path("relatorio-iqf/", relatorio_iqf_view, name="relatorio_iqf"),
+    path("inspecao10/", inspecao10_views.listar_inspecoes10, name="listar_inspecoes10"),
+    path("inspecao10/cadastrar/", inspecao10_views.cadastrar_inspecao10, name="cadastrar_inspecao10"),
+    path("inspecao10/editar/<int:id>/", inspecao10_views.editar_inspecao10, name="editar_inspecao10"),
+    path("inspecao10/excluir/<int:id>/", inspecao10_views.excluir_inspecao10, name="excluir_inspecao10"),
+    path('inspecao10/importar-excel/', inspecao10_views.importar_inspecao10_excel, name='importar_inspecao10_excel'),
+    path("relatorio-analitico-inspecao/", relatorio_inspecao_analitico, name="relatorio_inspecao_analitico"),
+    path("relatorio-ppm/", relatorio_ppm_view, name="relatorio_ppm"),
 
 ]

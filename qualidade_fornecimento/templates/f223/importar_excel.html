@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h3><i class="bi bi-file-earmark-excel-fill me-2"></i>Importar Inspeções via Excel</h3>
+  <form method="post" enctype="multipart/form-data" class="mt-4">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="arquivo_excel" class="form-label">Selecione o arquivo Excel</label>
+      <input type="file" class="form-control" id="arquivo_excel" name="arquivo_excel" accept=".xlsx,.xls">
+    </div>
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-upload me-1"></i> Importar
+    </button>
+    <a href="{% url 'listar_inspecoes10' %}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

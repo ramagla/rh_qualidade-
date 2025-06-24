@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% block title %}Controle / Acompanhamento - Inspeção 100%{% endblock %}
+{% block content %}
+{% load custom_filters %}
+
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<div class="container-fluid mt-5">
+  {% include "partials/global/_header_titulo.html" with titulo="Controle / Acompanhamento - Inspeção 100%" icone="bi bi-clipboard-check-fill" emoji="🗞" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
+    {% if request.user|has_permission:"qualidade_fornecimento.add_inspecao10" %}
+      <a href="{% url 'cadastrar_inspecao10' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Nova Inspeção
+      </a>
+    {% endif %}
+
+    {% if request.user|has_permission:"qualidade_fornecimento.importar_excel_inspecao10" %}
+  <a href="{% url 'importar_inspecao10_excel' %}" class="btn btn-outline-primary d-inline-flex align-items-center">
+    <i class="bi bi-file-earmark-excel-fill me-2" aria-hidden="true"></i> Importar Excel
+  </a>
+{% endif %}
+
+  </div>
+
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Total de Inspeções" valor=total_inspecoes icone="bi-clipboard-check-fill" %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Aprovadas" valor=total_aprovadas icone="bi-check-circle" %}
+    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Reprovadas" valor=total_reprovadas icone="bi-x-circle" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Total de Horas Gastas" valor=total_horas icone="bi-hourglass-split" %}
+  </div>
+
+ <!-- Filtros Offcanvas -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Inspeções
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+      
+      <div class="col-12 filtro-wrapper">
+        <label for="fornecedor"><i class="bi bi-truck me-1"></i> Fornecedor</label>
+        <select id="fornecedor" name="fornecedor" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for f in fornecedores %}
+            <option value="{{ f.nome }}" {% if request.GET.fornecedor == f.nome %}selected{% endif %}>{{ f.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="data_inicio"><i class="bi bi-calendar-event me-1"></i> Data Início</label>
+        <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="data_fim"><i class="bi bi-calendar-check me-1"></i> Data Fim</label>
+        <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="numero_op"><i class="bi bi-hash me-1"></i> Nº OP</label>
+        <input type="text" id="numero_op" name="numero_op" class="form-control" value="{{ request.GET.numero_op }}">
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="codigo_brasmol"><i class="bi bi-upc-scan me-1"></i> Código do Item</label>
+        <input type="text" id="codigo_brasmol" name="codigo_brasmol" class="form-control" value="{{ request.GET.codigo_brasmol }}">
+      </div>
+
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+    </form>
+  </div>
+</div>
+<div class="mb-3 text-end">
+  <button id="copiarTabelaBtn" class="btn btn-outline-secondary">
+    <i class="bi bi-clipboard"></i> Copiar para e-mail
+  </button>
+</div>
+
+
+  <!-- Lista -->
+  <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📋 Lista de Inspeções</h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+        <thead class="table-light align-middle">
+            <tr>
+              <th class="align-middle"><i class="bi bi-calendar3 me-1"></i> Data</th>
+              <th class="align-middle"><i class="bi bi-truck me-1"></i> Fornecedor</th>
+              <th class="align-middle"><i class="bi bi-hash me-1"></i> Nº OP</th>
+              <th class="align-middle"><i class="bi bi-upc-scan me-1"></i> Código</th>
+              <th class="align-middle"><i class="bi bi-clock me-1"></i> Início</th>
+              <th class="align-middle"><i class="bi bi-clock-history me-1"></i> Fim</th>
+              <th class="align-middle"><i class="bi bi-hourglass-split me-1"></i> Duração</th>
+              <th class="align-middle"><i class="bi bi-box-seam me-1"></i> Qtd. Total</th>
+              <th class="align-middle"><i class="bi bi-x-circle me-1"></i> Qtd. Não OK</th>
+              <th class="align-middle"><i class="bi bi-flag me-1"></i> Status</th>
+              <th class="align-middle"><i class="bi bi-person-check me-1"></i> Responsável</th>
+              <th class="align-middle"><i class="bi bi-eye me-1"></i> Observações</th>
+              <th class="align-middle"><i class="bi bi-gear-fill me-1"></i> Ações</th>
+            </tr>
+          </thead>
+          
+          
+          <tbody>
+            {% for obj in page_obj %}
+              <tr>
+                <td>{{ obj.data|date:"d/m/Y" }}</td>
+                <td>{{ obj.fornecedor.nome }}</td>
+                <td>{{ obj.numero_op|formatar_op }}</td>
+                <td>{{ obj.codigo_brasmol }}</td>
+                <td>{{ obj.hora_inicio|default:"--" }}</td>
+                <td>{{ obj.hora_fim|default:"--" }}</td>
+                <td>
+                    {% if obj.tempo_gasto %}
+                      {% with total=obj.tempo_gasto.total_seconds %}
+                        {% widthratio total 3600 1 as horas %}
+                        {% widthratio total|floatformat:"0"|divisibleby:"60" 60 1 as minutos_raw %}
+                        {% with minutos=minutos_raw|floatformat:"0"|add:"-`horas`*60" %}
+                          {{ horas }}h {{ minutos|floatformat:"0" }}min
+                        {% endwith %}
+                      {% endwith %}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  
+                <td>{{ obj.quantidade_total }}</td>
+                <td>{{ obj.quantidade_nok }}</td>
+                <td>
+                  {% if obj.status == "FALHA DE BANHO" %}
+                    <span class="badge bg-danger">{{ obj.status }}</span>
+                  {% else %}
+                    <span class="badge bg-success">OK</span>
+                  {% endif %}
+                </td>
+                <td>{{ obj.responsavel.get_full_name|primeiro_ultimo_nome_inline }}</td>
+                <td>
+                  <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalObs{{ obj.id }}">
+                    <i class="bi bi-eye"></i>
+                  </button>
+          
+                  <!-- Modal de Observações -->
+                  <div class="modal fade" id="modalObs{{ obj.id }}" tabindex="-1" aria-labelledby="modalObsLabel{{ obj.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="modalObsLabel{{ obj.id }}">
+                            <i class="bi bi-chat-left-text me-2"></i>Observações da Inspeção
+                          </h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body text-start">
+                          {{ obj.observacoes|safe }}
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex justify-content-center flex-wrap gap-1">
+                    {% include "partials/global/_botao_editar.html" with objeto=obj url_editar="editar_inspecao10" label="inspeção" %}
+                    {% include "partials/global/_botao_excluir.html" with objeto=obj url_excluir="excluir_inspecao10" label="inspeção" %}
+                    {% include "partials/global/_modal_exclusao.html" with objeto=obj url_excluir="excluir_inspecao10" %}
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              {% include "partials/global/_sem_resultados.html" with colspan=12 mensagem="Nenhuma inspeção cadastrada." %}
+            {% endfor %}
+          </tbody>
+          
+      </table>
+      
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+</div>
+
+<script>
+  document.getElementById("copiarTabelaBtn").addEventListener("click", function () {
+    let html = `
+      <table style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; width: 100%;">
+        <thead>
+          <tr style="background-color: #004494; color: white; text-align: center;">
+            <th style="border: 1px solid #ccc; padding: 6px;">Data</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Fornecedor</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Nº OP</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Código</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Duração</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Qtd Total</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Qtd Não OK</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+  
+    const linhasTabela = document.querySelectorAll("table tbody tr");
+    linhasTabela.forEach((tr, index) => {
+      const colunas = tr.querySelectorAll("td");
+      if (colunas.length >= 9) {
+        const data = colunas[0].innerText.trim();
+        const fornecedor = colunas[1].innerText.trim();
+        const op = colunas[2].innerText.trim();
+        const codigo = colunas[3].innerText.trim();
+        const duracao = colunas[6].innerText.trim();
+        const total = colunas[7].innerText.trim();
+        const nok = colunas[8].innerText.trim();
+  
+        html += `
+          <tr style="background-color: ${index % 2 === 0 ? '#f9f9f9' : '#ffffff'}; text-align: center;">
+            <td style="border: 1px solid #ccc; padding: 4px;">${data}</td>
+            <td style="border: 1px solid #ccc; padding: 4px;">${fornecedor}</td>
+            <td style="border: 1px solid #ccc; padding: 4px;">${op}</td>
+            <td style="border: 1px solid #ccc; padding: 4px;">${codigo}</td>
+            <td style="border: 1px solid #ccc; padding: 4px;">${duracao}</td>
+            <td style="border: 1px solid #ccc; padding: 4px; font-weight: bold;">${total}</td>
+            <td style="border: 1px solid #ccc; padding: 4px; font-weight: bold; color: ${nok > 0 ? 'red' : 'green'};">${nok}</td>
+          </tr>
+        `;
+      }
+    });
+  
+    html += `</tbody></table>`;
+  
+    const blob = new Blob([html], { type: "text/html" });
+    const data = [new ClipboardItem({ "text/html": blob })];
+  
+    navigator.clipboard.write(data).then(() => {
+      alert("Tabela copiada com estilo! Agora cole no e-mail e envie com orgulho 😎");
+    }).catch(() => {
+      alert("Erro ao copiar. Verifique se seu navegador permite acesso à área de transferência.");
+    });
+  });
+  </script>
+  
+
+
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+
+<div class="container pdf-container">
+
+  <h3 class="text-center my-4 text-primary d-flex justify-content-center align-items-center gap-2">
+    <i class="bi bi-bar-chart-line fs-3"></i> Relatório Analítico de Inspeções 100%
+  </h3>
+
+  <!-- 1. Top 10 Fornecedores com Mais Falhas -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light d-flex align-items-center">
+      <i class="bi bi-arrow-down-up me-2 text-primary"></i>
+      <strong>Top 10 Fornecedores com Mais Falhas</strong>
+    </div>
+    <div class="card-body text-center">
+      {% if grafico_top10 %}
+        <img src="data:image/png;base64,{{ grafico_top10 }}" class="img-fluid rounded border">
+      {% else %}
+        <p class="text-muted">Sem dados para exibição.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 2. Taxa de Reprovação -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light d-flex align-items-center">
+      <i class="bi bi-percent me-2 text-warning"></i>
+      <strong>Taxa de Reprovação por Fornecedor (%)</strong>
+    </div>
+    <div class="card-body text-center">
+      {% if grafico_reprovacao %}
+        <img src="data:image/png;base64,{{ grafico_reprovacao }}" class="img-fluid rounded border">
+      {% else %}
+        <p class="text-muted">Sem dados para exibição.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 3. Tempo Médio por Inspeção -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light d-flex align-items-center">
+      <i class="bi bi-clock-history me-2 text-info"></i>
+      <strong>Tempo Médio por Inspeção (min)</strong>
+    </div>
+    <div class="card-body text-center">
+      {% if grafico_tempo %}
+        <img src="data:image/png;base64,{{ grafico_tempo }}" class="img-fluid rounded border">
+      {% else %}
+        <p class="text-muted">Sem dados para exibição.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 4. Evolução Temporal -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light d-flex align-items-center">
+      <i class="bi bi-graph-up-arrow me-2 text-success"></i>
+      <strong>Evolução de Falhas ao Longo do Tempo</strong>
+    </div>
+    <div class="card-body text-center">
+      {% if grafico_evolucao %}
+        <img src="data:image/png;base64,{{ grafico_evolucao }}" class="img-fluid rounded border">
+      {% else %}
+        <p class="text-muted">Sem dados para exibição.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 5. Inspeções Críticas -->
+  <div class="card mb-4 shadow-sm border-danger">
+    <div class="card-header bg-danger text-white d-flex align-items-center">
+      <i class="bi bi-exclamation-octagon-fill me-2"></i>
+      <strong>Inspeções Críticas (Alto Volume e Alto NOK)</strong>
+    </div>
+    <div class="card-body">
+      {% if comentarios %}
+        <ul class="list-group list-group-flush">
+          {% for item in comentarios %}
+            <li class="list-group-item d-flex align-items-center">
+              <i class="bi bi-bug-fill text-danger me-2"></i>{{ item }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted">Nenhuma inspeção crítica identificada.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% include 'partials/global/_formulario_rodape.html' %}
+</div>
+{% endblock %}

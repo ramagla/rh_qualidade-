@@ -4,6 +4,7 @@ from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 from assinatura_eletronica.views import  validar_assinatura
+from rh_qualidade.recibos_views import importar_zip_recibos, recibos_pagamento
 
 from .views import (
     acesso_negado,
@@ -98,7 +99,8 @@ urlpatterns = [
     path("assinatura/validar/<str:hash_assinatura>/", validar_assinatura, name="validar_assinatura"),
     path("tecnico/", include("tecnico.urls")),
 
-
+    path("recibos/", recibos_pagamento, name="recibos_pagamento"),
+    path("recibos/importar/", importar_zip_recibos, name="importar_zip_recibos"),
 
 ]
 

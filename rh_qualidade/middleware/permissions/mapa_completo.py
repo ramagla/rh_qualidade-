@@ -5,6 +5,7 @@ from .metrologia import metrologia_permissions
 from .qualidade_fornecimento import qualidade_permissions
 from .portaria import portaria_permissions
 from .comercial import comercial_permissions
+from .recibos import recibos_permissions  # ✅ novo import
 
 
 # Combina todos os dicionários de permissões em um só
@@ -15,5 +16,7 @@ permission_map = dict(ChainMap(
     portaria_permissions,  # ✅ novo
     comercial_permissions,  # ✅ novo
 
+    portaria_permissions, 
+    recibos_permissions,  
 
 ))
