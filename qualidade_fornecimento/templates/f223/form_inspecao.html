@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+  {% if modo == "Cadastro" %}
+    Cadastrar Inspeção
+  {% else %}
+    Editar Inspeção
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    {% if modo == "Cadastro" %}
+      <i class="bi bi-clipboard-plus me-2"></i> Cadastrar Inspeção
+    {% else %}
+      <i class="bi bi-pencil-square me-2"></i> Editar Inspeção
+    {% endif %}
+  </h2>
+
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+
+    <div class="col-md-4">
+      <label for="id_data" class="form-label fw-bold">
+        <i class="bi bi-calendar-event me-1"></i> Data
+      </label>
+      {{ form.data|add_class:"form-control" }}
+    </div>
+
+    <div class="col-md-4">
+        <label for="id_numero_op" class="form-label fw-bold">
+          <i class="bi bi-hash"></i> Nº OP
+        </label>
+        {{ form.numero_op|add_class:"form-control" }}
+      </div>
+      
+
+    <div class="col-md-4">
+      <label for="id_codigo_brasmol" class="form-label fw-bold">
+        <i class="bi bi-upc-scan me-1"></i> Código Bras-Mol
+      </label>
+      {{ form.codigo_brasmol|add_class:"form-control" }}
+    </div>
+
+    <div class="col-md-6">
+      <label for="id_fornecedor" class="form-label fw-bold">
+        <i class="bi bi-truck me-1"></i> Fornecedor
+      </label>
+      {{ form.fornecedor }}
+    </div>
+
+    <div class="col-md-3">
+      <label for="id_hora_inicio" class="form-label fw-bold">
+        <i class="bi bi-clock-history me-1"></i> Hora Início
+      </label>
+      {{ form.hora_inicio|add_class:"form-control" }}
+    </div>
+
+    <div class="col-md-3">
+      <label for="id_hora_fim" class="form-label fw-bold">
+        <i class="bi bi-clock me-1"></i> Hora Fim
+      </label>
+      {{ form.hora_fim|add_class:"form-control" }}
+    </div>
+
+    <div class="col-md-4">
+      <label for="id_quantidade_total" class="form-label fw-bold">
+        <i class="bi bi-123 me-1"></i> Quantidade Total
+      </label>
+      {{ form.quantidade_total|add_class:"form-control" }}
+    </div>
+
+    <div class="col-md-4">
+      <label for="id_quantidade_nok" class="form-label fw-bold">
+        <i class="bi bi-x-circle me-1 text-danger"></i> Quantidade Não OK
+      </label>
+      {{ form.quantidade_nok|add_class:"form-control" }}
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label fw-bold">
+        <i class="bi bi-info-circle me-1"></i> Status
+      </label>
+      <input type="text" id="status_preview" class="form-control text-white" style="background-color: #28a745;" value="OK" readonly>
+    </div>
+
+    <div class="col-md-12" id="observacoes-wrapper" style="display: none;">
+      <label for="{{ form.observacoes.id_for_label }}" class="form-label fw-bold">
+        <i class="bi bi-pencil-square me-1"></i> Observações
+      </label>
+      {{ form.observacoes }}
+    </div>
+
+    <div class="col-12 text-center mt-4">
+      <button type="submit" class="btn btn-primary me-2">
+        <i class="bi bi-save"></i> Salvar
+      </button>
+      <a href="{% url 'listar_inspecoes10' %}" class="btn btn-secondary ms-2">
+        <i class="bi bi-arrow-left"></i> Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+  function calcularStatusPreview() {
+    const nok = parseInt(document.getElementById("id_quantidade_nok").value) || 0;
+    const status = nok > 0 ? "FALHA DE BANHO" : "OK";
+    const preview = document.getElementById("status_preview");
+    const obsWrapper = document.getElementById("observacoes-wrapper");
+
+    if (preview) {
+      preview.value = status;
+      preview.style.backgroundColor = status === "FALHA DE BANHO" ? "#dc3545" : "#28a745";
+    }
+
+    if (obsWrapper) {
+      obsWrapper.style.display = status === "FALHA DE BANHO" ? "block" : "none";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const campoNok = document.getElementById("id_quantidade_nok");
+    if (campoNok) {
+      campoNok.addEventListener("input", calcularStatusPreview);
+      calcularStatusPreview();
+    }
+
+    const campoData = document.getElementById("id_data");
+    if (campoData && campoData.value === "") {
+      campoData.value = new Date().toISOString().slice(0, 10);
+    }
+
+    $('.select2').select2({
+      width: '100%',
+      dropdownParent: $('#id_fornecedor').parent()
+    });
+  });
+</script>
+{% endblock %}

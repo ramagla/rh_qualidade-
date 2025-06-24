@@ -411,3 +411,12 @@ def to(value, arg):
         return range(int(value), int(arg)+1)
     except:
         return []
+    
+
+@register.filter
+def formatar_op(numero_op):
+    """Formata o número da OP como 000.000"""
+    if not numero_op:
+        return ""
+    op = str(numero_op).zfill(6)  # Garante 6 dígitos com zeros à esquerda
+    return f"{op[:3]}.{op[3:]}"

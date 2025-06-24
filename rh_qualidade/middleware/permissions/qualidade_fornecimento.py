@@ -62,4 +62,15 @@ qualidade_permissions = {
 
     # Avaliação Semestral de Fornecedores
     "relatorio_avaliacao_view": "qualidade_fornecimento.view_fornecedorqualificado",
+    "relatorio_iqf": "qualidade_fornecimento.view_relatorioiqf",
+
+        # Inspeção 10
+    "listar_inspecoes10": "qualidade_fornecimento.view_inspecao10",
+    "cadastrar_inspecao10": "qualidade_fornecimento.add_inspecao10",
+    "editar_inspecao10": "qualidade_fornecimento.change_inspecao10",
+    "excluir_inspecao10": "qualidade_fornecimento.delete_inspecao10",
+    "visualizar_inspecao10": "qualidade_fornecimento.view_inspecao10",
+    "relatorio_inspecao_analitico": "qualidade_fornecimento.view_relatorioinspecaoanalitico",
+
+
 }
