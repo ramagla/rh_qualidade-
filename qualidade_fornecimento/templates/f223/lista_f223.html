@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block title %}Controle / Acompanhamento - Inspeção 100%{% endblock %}
+{% block content %}
+{% load custom_filters %}
+
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<div class="container-fluid mt-5">
+  {% include "partials/global/_header_titulo.html" with titulo="Controle / Acompanhamento - Inspeção 100%" icone="bi bi-clipboard-check-fill" emoji="🗞" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
+    {% if request.user|has_permission:"qualidade_fornecimento.add_inspecao10" %}
+      <a href="{% url 'cadastrar_inspecao10' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Nova Inspeção
+      </a>
+    {% endif %}
+
+    {% if request.user|has_permission:"qualidade_fornecimento.importar_excel_inspecao10" %}
+  <a href="{% url 'importar_inspecao10_excel' %}" class="btn btn-outline-primary d-inline-flex align-items-center">
+    <i class="bi bi-file-earmark-excel-fill me-2" aria-hidden="true"></i> Importar Excel
+  </a>
+{% endif %}
+
+  </div>
+
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Total de Inspeções" valor=total_inspecoes icone="bi-clipboard-check-fill" %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Aprovadas" valor=total_aprovadas icone="bi-check-circle" %}
+    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Reprovadas" valor=total_reprovadas icone="bi-x-circle" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Total de Horas Gastas" valor=total_horas icone="bi-hourglass-split" %}
+  </div>
+
+  <!-- Filtros Offcanvas -->
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Inspeções
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12 filtro-wrapper">
+          <label for="fornecedor"><i class="bi bi-truck me-1"></i> Fornecedor</label>
+          <input type="text" id="fornecedor" name="fornecedor" class="form-control" value="{{ request.GET.fornecedor }}">
+        </div>
+        <div class="col-12 filtro-wrapper">
+          <label for="aprovado"><i class="bi bi-check2-square me-1"></i> Status</label>
+          <select id="aprovado" name="aprovado" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            <option value="1" {% if request.GET.aprovado == '1' %}selected{% endif %}>Aprovado</option>
+            <option value="0" {% if request.GET.aprovado == '0' %}selected{% endif %}>Reprovado</option>
+          </select>
+        </div>
+        <div class="col-12 filtro-wrapper">
+          <label for="data"><i class="bi bi-calendar me-1"></i> Data</label>
+          <input type="date" id="data" name="data" class="form-control" value="{{ request.GET.data }}">
+        </div>
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lista -->
+  <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📋 Lista de Inspeções</h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+        <thead class="table-light align-middle">
+            <tr>
+              <th class="align-middle"><i class="bi bi-calendar3 me-1"></i> Data</th>
+              <th class="align-middle"><i class="bi bi-truck me-1"></i> Fornecedor</th>
+              <th class="align-middle"><i class="bi bi-hash me-1"></i> Nº OP</th>
+              <th class="align-middle"><i class="bi bi-clock me-1"></i> Início</th>
+              <th class="align-middle"><i class="bi bi-clock-history me-1"></i> Fim</th>
+              <th class="align-middle"><i class="bi bi-hourglass-split me-1"></i> Duração</th>
+              <th class="align-middle"><i class="bi bi-box-seam me-1"></i> Qtd. Total</th>
+              <th class="align-middle"><i class="bi bi-x-circle me-1"></i> Qtd. Não OK</th>
+              <th class="align-middle"><i class="bi bi-flag me-1"></i> Status</th>
+              <th class="align-middle"><i class="bi bi-person-check me-1"></i> Responsável</th>
+              <th class="align-middle"><i class="bi bi-eye me-1"></i> Observações</th>
+              <th class="align-middle"><i class="bi bi-gear-fill me-1"></i> Ações</th>
+            </tr>
+          </thead>
+          
+          
+          <tbody>
+            {% for obj in page_obj %}
+              <tr>
+                <td>{{ obj.data|date:"d/m/Y" }}</td>
+                <td>{{ obj.fornecedor.nome }}</td>
+                <td>{{ obj.numero_op|formatar_op }}</td>
+                <td>{{ obj.hora_inicio|default:"--" }}</td>
+                <td>{{ obj.hora_fim|default:"--" }}</td>
+                <td>
+                    {% if obj.tempo_gasto %}
+                      {% with total=obj.tempo_gasto.total_seconds %}
+                        {% widthratio total 3600 1 as horas %}
+                        {% widthratio total|floatformat:"0"|divisibleby:"60" 60 1 as minutos_raw %}
+                        {% with minutos=minutos_raw|floatformat:"0"|add:"-`horas`*60" %}
+                          {{ horas }}h {{ minutos|floatformat:"0" }}min
+                        {% endwith %}
+                      {% endwith %}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  
+                <td>{{ obj.quantidade_total }}</td>
+                <td>{{ obj.quantidade_nok }}</td>
+                <td>
+                  {% if obj.status == "FALHA DE BANHO" %}
+                    <span class="badge bg-danger">{{ obj.status }}</span>
+                  {% else %}
+                    <span class="badge bg-success">OK</span>
+                  {% endif %}
+                </td>
+                <td>{{ obj.responsavel.get_full_name|default:obj.responsavel.username|default:"-" }}</td>
+                <td>
+                  <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalObs{{ obj.id }}">
+                    <i class="bi bi-eye"></i>
+                  </button>
+          
+                  <!-- Modal de Observações -->
+                  <div class="modal fade" id="modalObs{{ obj.id }}" tabindex="-1" aria-labelledby="modalObsLabel{{ obj.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="modalObsLabel{{ obj.id }}">
+                            <i class="bi bi-chat-left-text me-2"></i>Observações da Inspeção
+                          </h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body text-start">
+                          {{ obj.observacoes|safe }}
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex justify-content-center flex-wrap gap-1">
+                    {% include "partials/global/_botao_visualizar.html" with objeto=obj url_visualizar="visualizar_inspecao10" label="inspeção" %}
+                    {% include "partials/global/_botao_editar.html" with objeto=obj url_editar="editar_inspecao10" label="inspeção" %}
+                    {% include "partials/global/_botao_excluir.html" with objeto=obj url_excluir="excluir_inspecao10" label="inspeção" %}
+                    {% include "partials/global/_modal_exclusao.html" with objeto=obj url_excluir="excluir_inspecao10" %}
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              {% include "partials/global/_sem_resultados.html" with colspan=12 mensagem="Nenhuma inspeção cadastrada." %}
+            {% endfor %}
+          </tbody>
+          
+      </table>
+      
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+</div>
+{% endblock %}

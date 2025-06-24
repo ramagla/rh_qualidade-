@@ -8,3 +8,4 @@ from .materiaPrima_catalogo import (  # Certifique-se de que essa importação e
 )
 from .norma import NormaComposicaoElemento, NormaTecnica, NormaTracao
 from .rolo import RelacaoMateriaPrima
+from .inspecao10 import Inspecao10

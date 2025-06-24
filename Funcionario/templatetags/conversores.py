@@ -33,3 +33,28 @@ def br_currency(value):
         return format_currency(value or 0, 'BRL', locale='pt_BR')
     except:
         return "R$ 0,00"
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+
+
+@register.filter
+def separador_milhar(valor):
+    try:
+        return f"{int(valor):,}".replace(",", ".")
+    except:
+        return valor
+    
+@register.filter
+def extrair_mes_ano(valor):
+    """
+    Extrai o valor no formato YYYY-MM e transforma em MM/YYYY.
+    Espera strings como '2025-01'.
+    """
+    try:
+        partes = valor.split("-")
+        return f"{partes[1]}/{partes[0]}"
+    except:
+        return valor

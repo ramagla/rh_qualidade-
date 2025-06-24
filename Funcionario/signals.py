@@ -79,6 +79,9 @@ CUSTOM_PERMISSOES = [
     ("qualidade_fornecimento", "controleservicoexterno", "add_controleservicoexterno", "Pode adicionar Controle de Serviço Externo"),
     ("qualidade_fornecimento", "relatorioinspecaoservico", "add_relatorioinspecaoservico", "Pode adicionar Relatório de Inspeção de Serviço"),
     ("qualidade_fornecimento", "relatorioiqf", "view_relatorioiqf", "Pode visualizar o relatório 8.1 - IQF"),
+    ("qualidade_fornecimento", "inspecao10", "importar_excel_inspecao10", "Pode importar inspeções 10 via Excel"),
+    ("qualidade_fornecimento", "relatorioinspecaoanalitico", "view_relatorioinspecaoanalitico", "Pode visualizar relatório analítico de inspeções"),
+    ("qualidade_fornecimento", "relatorioppm", "view_relatorio_ppm", "Pode visualizar o relatório 6.4 - PPM"),
 
 
 

@@ -56,6 +56,7 @@ def menu_qualidade(user):
             "icon": "fas fa-external-link-alt",
         })
 
+
     if user.has_perm("qualidade_fornecimento.view_fornecedorqualificado"):
         menu.append({
             "name": "Relatórios",
@@ -71,8 +72,21 @@ def menu_qualidade(user):
                     "url": "relatorio_iqf",
                     "icon": "fas fa-tachometer-alt",
                 },
+                {
+                    "name": "6.5 - ICTE",
+                    "url": "relatorio_ppm",
+                    "icon": "fas fa-chart-bar",
+                },
+                {
+                    "name": "Relatório Analítico de Inspeções",
+                    "url": "relatorio_inspecao_analitico",
+                    "icon": "fas fa-chart-pie",
+                },
+                
+
             ],
         })
+
 
 
     
@@ -83,6 +97,14 @@ def menu_qualidade(user):
         "icon": "fas fa-table",
         "modal": "modalTabelaCorrelacao",  # Este é o ID da modal
     })
+
+    if user.has_perm("qualidade_fornecimento.view_inspecao10"):
+        menu.append({
+            "name": "F223 -  Controle  Acompanhamento",
+            "url": "listar_inspecoes10",
+            "icon": "fas fa-clipboard-check",
+        })
+
 
 
 
