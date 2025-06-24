@@ -28,7 +28,8 @@ def lista_documentos(request):
 
         if request.user.username not in usuarios_liberados:
             departamento_usuario = request.user.funcionario.local_trabalho
-            documentos = documentos.filter(departamentos__sigla=departamento_usuario)
+            if departamento_usuario:
+                documentos = documentos.filter(departamentos=departamento_usuario)
 
     # Aplicar filtros adicionais (nome, status, codigo, departamento)
     if nome:
