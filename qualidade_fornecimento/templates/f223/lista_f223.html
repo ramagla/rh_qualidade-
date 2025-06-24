@@ -83,6 +83,11 @@
     </form>
   </div>
 </div>
+<div class="mb-3 text-end">
+  <button id="copiarTabelaBtn" class="btn btn-outline-secondary">
+    <i class="bi bi-clipboard"></i> Copiar para e-mail
+  </button>
+</div>
 
 
   <!-- Lista -->
@@ -185,4 +190,65 @@
     {% include "partials/global/_paginacao.html" %}
   </div>
 </div>
+
+<script>
+  document.getElementById("copiarTabelaBtn").addEventListener("click", function () {
+    let html = `
+      <table style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; width: 100%;">
+        <thead>
+          <tr style="background-color: #004494; color: white; text-align: center;">
+            <th style="border: 1px solid #ccc; padding: 6px;">Data</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Fornecedor</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Nº OP</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Código</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Duração</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Qtd Total</th>
+            <th style="border: 1px solid #ccc; padding: 6px;">Qtd Não OK</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+  
+    const linhasTabela = document.querySelectorAll("table tbody tr");
+    linhasTabela.forEach((tr, index) => {
+      const colunas = tr.querySelectorAll("td");
+      if (colunas.length >= 9) {
+        const data = colunas[0].innerText.trim();
+        const fornecedor = colunas[1].innerText.trim();
+        const op = colunas[2].innerText.trim();
+        const codigo = colunas[3].innerText.trim();
+        const duracao = colunas[6].innerText.trim();
+        const total = colunas[7].innerText.trim();
+        const nok = colunas[8].innerText.trim();
+  
+        html += `
+          <tr style="background-color: ${index % 2 === 0 ? '#f9f9f9' : '#ffffff'}; text-align: center;">
+            <td style="border: 1px solid #ccc; padding: 4px;">${data}</td>
+            <td style="border: 1px solid #ccc; padding: 4px;">${fornecedor}</td>
+            <td style="border: 1px solid #ccc; padding: 4px;">${op}</td>
+            <td style="border: 1px solid #ccc; padding: 4px;">${codigo}</td>
+            <td style="border: 1px solid #ccc; padding: 4px;">${duracao}</td>
+            <td style="border: 1px solid #ccc; padding: 4px; font-weight: bold;">${total}</td>
+            <td style="border: 1px solid #ccc; padding: 4px; font-weight: bold; color: ${nok > 0 ? 'red' : 'green'};">${nok}</td>
+          </tr>
+        `;
+      }
+    });
+  
+    html += `</tbody></table>`;
+  
+    const blob = new Blob([html], { type: "text/html" });
+    const data = [new ClipboardItem({ "text/html": blob })];
+  
+    navigator.clipboard.write(data).then(() => {
+      alert("Tabela copiada com estilo! Agora cole no e-mail e envie com orgulho 😎");
+    }).catch(() => {
+      alert("Erro ao copiar. Verifique se seu navegador permite acesso à área de transferência.");
+    });
+  });
+  </script>
+  
+
+
+
 {% endblock %}
