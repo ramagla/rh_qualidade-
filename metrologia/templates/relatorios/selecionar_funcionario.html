@@ -48,12 +48,6 @@
       <!-- Form para gerar F198 com equipamentos selecionados -->
       <form method="post" action="{% url 'listar_equipamentos_funcionario' funcionario.id %}" target="_blank">
         {% csrf_token %}
-        <div class="form-check form-switch mb-3 text-center">
-          <input class="form-check-input" type="checkbox" id="eh_devolucao" name="eh_devolucao">
-          <label class="form-check-label fw-bold" for="eh_devolucao">
-            É Devolução de Equipamento?
-          </label>
-        </div>
         <div class="table-responsive mb-4">
           <table class="table table-striped">
             <thead class="table-light">
@@ -84,13 +78,14 @@
             </tbody>
           </table>
         </div>
-
+      
         <div class="text-center">
           <button type="submit" class="btn btn-success d-inline-flex align-items-center gap-2">
             <i class="bi bi-printer"></i> Gerar F198
           </button>
         </div>
       </form>
+      
     {% endif %}
   </main>
 </div>

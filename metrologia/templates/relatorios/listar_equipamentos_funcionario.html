@@ -8,7 +8,7 @@
 {% include 'header.html' %}
 
 <div class="container mt-5 print-container">
-  {% include 'partials/global/_header_titulo.html' with titulo=eh_devolucao|yesno:"Termo de Devolução de Equipamentos,Termo de Responsabilidade pelo Uso de Equipamentos" icone="bi bi-clipboard-check" emoji="📋" %}
+  {% include 'partials/global/_header_titulo.html' with titulo="Termo de Responsabilidade e Devolução de Equipamentos" icone="bi bi-clipboard-check" emoji="📋" %}
 
   <section class="info-section mt-4" aria-labelledby="titulo-funcionario">
     <div class="card shadow-sm border rounded">
@@ -35,7 +35,6 @@
     </div>
   </section>
   
-  {% if not eh_devolucao %}
   <section class="declaracao-section mt-4">
     <div class="card shadow-sm border rounded">
       <div class="card-header bg-light d-flex align-items-center gap-2">
@@ -55,7 +54,7 @@
       </div>
     </div>
   </section>
-  {% endif %}
+  
 
 
   <section class="mt-4">
@@ -98,47 +97,74 @@
   </section>
   
 
-  {% if not eh_devolucao %}
-  {% include 'partials/global/_assinaturas_padrao.html' %}
-{% endif %}
+<!-- Assinaturas -->
+<section class="mt-5">
+  <table class="table table-bordered text-center assinatura-section">
+    <tr>
+      <td style="width: 50%;">
+        <p><strong>Assinatura do Colaborador</strong></p>
+        <div class="border-top mt-4 pt-2">{{ funcionario.nome }}</div>
+        <small><em>Data:</em> ___/___/____</small>
+      </td>
+      <td style="width: 50%;">
+        <p><strong>Assinatura do Responsável pela Entrega do equipamento</strong></p>
+        <div class="border-top mt-4 pt-2">Gestão da Qualidade/Controle</div>
+        <small><em>Data:</em> ___/___/____</small>
+      </td>
+    </tr>
+  </table>
+</section>
   
   
-{% if eh_devolucao %}
-  <section class="devolucao mt-5">
-    <div class="card shadow-sm border rounded">
-      <div class="card-header bg-light d-flex align-items-center gap-2">
-        <i class="bi bi-box-arrow-in-left text-secondary"></i>
-        <strong>Condições de Devolução</strong>
-      </div>
-      <div class="card-body">
-        <p>Atesto que o equipamento foi devolvido nas seguintes condições:</p>
-        <div class="form-check mb-2">
-          <input class="form-check-input" type="checkbox" id="estado1">
-          <label class="form-check-label" for="estado1">Em perfeito estado</label>
-        </div>
-        <div class="form-check mb-2">
-          <input class="form-check-input" type="checkbox" id="estado2">
-          <label class="form-check-label" for="estado2">Apresentando defeito</label>
-        </div>
-        <div class="form-check mb-2">
-          <input class="form-check-input" type="checkbox" id="estado3">
-          <label class="form-check-label" for="estado3">Faltando peças ou acessórios</label>
-        </div>
-        <div class="form-check mb-2">
-          <input class="form-check-input" type="checkbox" id="estado4">
-          <label class="form-check-label" for="estado4">Outros:</label>
-        </div>
-        <div class="mt-3" style="border-bottom: 1px solid black; height: 30px;"></div>
-        <div style="border-bottom: 1px solid black; height: 30px;"></div>
-      </div>
+<section class="devolucao mt-5" aria-labelledby="titulo-condicoes-devolucao">
+  <div class="card shadow-sm border rounded">
+    <div class="card-header bg-light d-flex align-items-center gap-2">
+      <i class="bi bi-box-arrow-in-left text-secondary"></i>
+      <strong id="titulo-condicoes-devolucao">Termo de Conferência de Devolução dos Equipamentos</strong>
     </div>
-  </section>
-  {% endif %}
+    <div class="card-body">
+      <p class="mb-3">Atesto que o(s) equipamento(s) listado(s) foram devolvidos nas seguintes condições:</p>
+      
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="estado1">
+        <label class="form-check-label" for="estado1">Em perfeito estado</label>
+      </div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="estado2">
+        <label class="form-check-label" for="estado2">Apresentando defeito</label>
+      </div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="estado3">
+        <label class="form-check-label" for="estado3">Faltando peças ou acessórios</label>
+      </div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="estado4">
+        <label class="form-check-label" for="estado4">Outros:</label>
+      </div>
 
-  {% if eh_devolucao %}
+      <div class="mt-3" style="border-bottom: 1px solid black; height: 30px;"></div>
+      <div style="border-bottom: 1px solid black; height: 30px;"></div>
+    </div>
+  </div>
+</section>
 
-  {% include 'partials/global/_assinaturas_padrao.html' %}
-  {% endif %}
+
+
+
+<!-- Assinatura -->
+<section class="mt-5">
+  <table class="table table-bordered text-center assinatura-section">
+    <tr>
+      <td style="width: 100%;">
+        <p><strong>Assinatura do Responsável pela Coleta do Equipamento</strong></p>
+        <div class="border-top mt-4 pt-2">Gestão da Qualidade/Controle</div>
+        <small><em>Data:</em> ___/___/____</small>
+      </td>
+    </tr>
+  </table>
+</section>
+
+
 
   
 

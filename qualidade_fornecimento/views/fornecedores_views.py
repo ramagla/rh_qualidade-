@@ -13,14 +13,18 @@ from qualidade_fornecimento.models import FornecedorQualificado
 
 
 def lista_fornecedores(request):
-    fornecedores_qs = FornecedorQualificado.objects.all().order_by("nome")
+    # Query base sem filtro de ativo (para montar corretamente os selects)
+    fornecedores_base_qs = FornecedorQualificado.objects.all()
 
-    # Captura os filtros enviados via GET
+    # Queryset para exibição já ordenado por nome
+    fornecedores_qs = fornecedores_base_qs.order_by("nome")
+
+    # Filtros capturados via GET
     data_inicial = request.GET.get("data_inicial")
     data_final = request.GET.get("data_final")
     produto = request.GET.get("produto")
     certificacao = request.GET.get("certificacao")
-    status_filter = request.GET.get("status")
+    ativo_filter = request.GET.get("status")  # "Ativo", "Inativo", ou None
 
     if data_inicial:
         fornecedores_qs = fornecedores_qs.filter(data_homologacao__gte=data_inicial)
@@ -30,43 +34,43 @@ def lista_fornecedores(request):
         fornecedores_qs = fornecedores_qs.filter(produto_servico=produto)
     if certificacao:
         fornecedores_qs = fornecedores_qs.filter(tipo_certificacao=certificacao)
-    if status_filter:
-        fornecedores_qs = fornecedores_qs.filter(status=status_filter)
 
-    # Extração dos valores distintos para os filtros
-    filter_produtos = sorted(
-        set(fornecedores_qs.values_list("produto_servico", flat=True))
-    )
-    filter_certificacoes = sorted(
-        set(fornecedores_qs.values_list("tipo_certificacao", flat=True))
-    )
-    filter_status = sorted(set(fornecedores_qs.values_list("status", flat=True)))
+    # ✅ Filtro padrão: mostra apenas "Ativo" se nenhum filtro de status foi aplicado
+    if ativo_filter:
+        fornecedores_qs = fornecedores_qs.filter(ativo=ativo_filter)
+    else:
+        fornecedores_qs = fornecedores_qs.filter(ativo="Ativo")
 
-    # Paginação: 10 itens por página
+    # Selects de filtro (baseados no queryset completo)
+    filter_produtos = sorted(set(fornecedores_base_qs.values_list("produto_servico", flat=True)))
+    filter_certificacoes = sorted(set(fornecedores_base_qs.values_list("tipo_certificacao", flat=True)))
+    filter_status = ["Ativo", "Inativo"]
+
+    # Paginação
     paginator = Paginator(fornecedores_qs, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # Dados para os cards
-    total_fornecedores = fornecedores_qs.count()
-    total_vencidas = fornecedores_qs.filter(
-        vencimento_certificacao__lt=timezone.now().date()
-    ).count()
-    total_alto_risco = fornecedores_qs.filter(risco="Alto").count()
-
+    # Datas de referência
     current_date = timezone.now().date()
     current_date_plus_30 = current_date + timedelta(days=30)
+
+    # Indicadores
+    total_fornecedores = fornecedores_qs.count()
+    total_vencidas = fornecedores_qs.filter(vencimento_certificacao__lt=current_date).count()
     total_proximas = fornecedores_qs.filter(
         vencimento_certificacao__gte=current_date,
         vencimento_certificacao__lte=current_date_plus_30,
     ).count()
+    total_alto_risco = fornecedores_qs.filter(risco="Alto").count()
 
+    # Contexto para template
     context = {
         "fornecedores_paginados": page_obj,
         "total_fornecedores": total_fornecedores,
         "total_vencidas": total_vencidas,
-        "total_alto_risco": total_alto_risco,
         "total_proximas": total_proximas,
+        "total_alto_risco": total_alto_risco,
         "current_date": current_date,
         "current_date_plus_30": current_date_plus_30,
         "filter_produtos": filter_produtos,

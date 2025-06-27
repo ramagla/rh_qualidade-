@@ -4,6 +4,7 @@ from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django.utils.timezone import now
 from datetime import date
+from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 
 
 class Inspecao10Form(forms.ModelForm):
@@ -11,8 +12,9 @@ class Inspecao10Form(forms.ModelForm):
         model = Inspecao10
         fields = [
             "numero_op", "codigo_brasmol", "data", "fornecedor", "hora_inicio",
-            "hora_fim", "quantidade_total", "quantidade_nok", "observacoes",
+            "hora_fim", "quantidade_total", "quantidade_nok", "disposicao", "observacoes",
         ]
+
 
 
         widgets = {
@@ -22,6 +24,9 @@ class Inspecao10Form(forms.ModelForm):
             "fornecedor": forms.Select(attrs={
                     "class": "form-select select2"
                 }),
+            "codigo_brasmol": forms.Select(attrs={"class": "form-select select2"}),
+            "disposicao": forms.Select(attrs={"class": "form-select"}),
+
 
             "observacoes": CKEditor5Widget(
                 config_name="default",
@@ -36,6 +41,8 @@ class Inspecao10Form(forms.ModelForm):
         self.fields["fornecedor"].queryset = FornecedorQualificado.objects.filter(
             produto_servico="Trat. Superficial"
         ).order_by("nome")
+        self.fields["codigo_brasmol"].queryset = MateriaPrimaCatalogo.objects.filter(tipo="Tratamento").order_by("codigo")
+
         if not self.instance.pk:
             self.fields["data"].initial = now().date()
 

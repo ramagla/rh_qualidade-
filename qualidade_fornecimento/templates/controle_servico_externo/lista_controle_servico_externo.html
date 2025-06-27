@@ -242,7 +242,9 @@
               </td>
               
               <td>
-                {% if servico.inspecao %}
+                {% if servico.status2 == "Aguardando Envio" %}
+                  <span class="badge bg-secondary">Aguardando Envio</span>
+                {% elif servico.inspecao %}
                   {% if servico.inspecao.status_geral == "Aprovado" %}
                     <span class="badge bg-success">Aprovado</span>
                   {% elif servico.inspecao.status_geral == "Reprovado" %}
@@ -250,12 +252,13 @@
                   {% elif servico.inspecao.status_geral == "Aprovado Condicionalmente" %}
                     <span class="badge badge-condicional">Aprovado Condicionalmente</span>
                   {% else %}
-                    <span class="badge bg-secondary">-</span>
+                    <span class="badge bg-secondary">—</span>
                   {% endif %}
                 {% else %}
                   <span class="badge bg-secondary">Aguardando Inspeção</span>
                 {% endif %}
               </td>
+              
               <td>{{ servico.atraso_em_dias|default:"0" }}</td>
               <td>{{ servico.ip|default:"0" }}</td>
               <td>{{ servico.data_envio|date:"d/m/Y" }}</td>

@@ -207,5 +207,6 @@ urlpatterns = [
     path('inspecao10/importar-excel/', inspecao10_views.importar_inspecao10_excel, name='importar_inspecao10_excel'),
     path("relatorio-analitico-inspecao/", relatorio_inspecao_analitico, name="relatorio_inspecao_analitico"),
     path("relatorio-ppm/", relatorio_ppm_view, name="relatorio_ppm"),
+    path("inspecao10/estoque-devolucao/",inspecao10_views.verificar_estoque_devolucao,name="verificar_estoque_devolucao"),
 
 ]

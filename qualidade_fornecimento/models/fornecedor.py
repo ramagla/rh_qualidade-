@@ -36,12 +36,23 @@ SIM_NAO = [
     ("Não", "Não"),
 ]
 
+STATUS_ATIVO = [
+    ("Ativo", "Ativo"),
+    ("Inativo", "Inativo"),
+]
+
 
 class FornecedorQualificado(models.Model):
     # Informações Gerais
     nome = models.CharField(max_length=255)
     produto_servico = models.CharField(max_length=50, choices=TIPO_PRODUTO)
     data_homologacao = models.DateField()
+    ativo = models.CharField(
+        max_length=10,
+        choices=STATUS_ATIVO,
+        default="Ativo",
+        verbose_name="Status do Fornecedor"
+    )
 
     # Certificação do Sistema
     tipo_certificacao = models.CharField(max_length=30, choices=TIPO_CERTIFICACAO)

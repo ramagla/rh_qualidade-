@@ -6,27 +6,27 @@
 {% include "partials/global/_styles_componentes.html" %}
 {% include "partials/global/_estilos_botoes_acoes.html" %}
 
-<div class="container-fluid mt-5">
-  {% include "partials/global/_header_titulo.html" with titulo="Controle / Acompanhamento - Inspeção 100%" icone="bi bi-clipboard-check-fill" emoji="🗞" %}
-  {% include "partials/global/_toast_mensagens.html" %}
+<!-- Botões -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
 
-  <!-- Botões -->
-  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
-    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  {% if request.user|has_permission:"qualidade_fornecimento.add_inspecao10" %}
+    <a href="{% url 'cadastrar_inspecao10' %}" class="btn btn-success btn-acao-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Nova Inspeção
+    </a>
+  {% endif %}
 
-    {% if request.user|has_permission:"qualidade_fornecimento.add_inspecao10" %}
-      <a href="{% url 'cadastrar_inspecao10' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
-        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Nova Inspeção
-      </a>
-    {% endif %}
-
-    {% if request.user|has_permission:"qualidade_fornecimento.importar_excel_inspecao10" %}
-  <a href="{% url 'importar_inspecao10_excel' %}" class="btn btn-outline-primary d-inline-flex align-items-center">
-    <i class="bi bi-file-earmark-excel-fill me-2" aria-hidden="true"></i> Importar Excel
+  <a href="{% url 'verificar_estoque_devolucao' %}" class="btn btn-secondary btn-acao-personalizado d-inline-flex align-items-center">
+    <i class="bi bi-boxes me-2"></i> Verificar Estoque
   </a>
-{% endif %}
 
-  </div>
+  {% if request.user|has_permission:"qualidade_fornecimento.importar_excel_inspecao10" %}
+    <a href="{% url 'importar_inspecao10_excel' %}" class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-file-earmark-excel-fill me-2" aria-hidden="true"></i> Importar Excel
+    </a>
+  {% endif %}
+</div>
+
 
   <!-- Indicadores -->
   <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">

@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Sum  # ✅ CORRETO
 from django.core.paginator import Paginator
 
-from qualidade_fornecimento.models.inspecao10 import Inspecao10
+from qualidade_fornecimento.models.inspecao10 import DevolucaoServicoExterno, Inspecao10
 from qualidade_fornecimento.forms.inspecao10_form import Inspecao10Form
 
 
@@ -211,3 +211,28 @@ def importar_inspecao10_excel(request):
             messages.error(request, f"Erro ao processar o arquivo: {str(e)}")
 
     return render(request, "f223/importar_excel.html")
+
+
+
+from django.db.models import Sum
+
+from django.db.models import Sum, F
+from qualidade_fornecimento.models.inspecao10 import DevolucaoServicoExterno
+
+@login_required
+@permission_required("qualidade_fornecimento.view_inspecao10", raise_exception=True)
+def verificar_estoque_devolucao(request):
+    # Apenas serviços SEM data_envio definida (não enviados ainda)
+    estoque = (
+        DevolucaoServicoExterno.objects
+        .filter(servico__data_envio__isnull=True)
+        .values(
+            "inspecao__numero_op",
+            "inspecao__codigo_brasmol__codigo",
+            "inspecao__fornecedor__nome"
+        )
+        .annotate(total=Sum("quantidade"))
+        .order_by("inspecao__numero_op", "inspecao__codigo_brasmol__codigo")
+    )
+
+    return render(request, "f223/verificar_estoque_devolucao.html", {"estoque": estoque})

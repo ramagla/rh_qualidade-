@@ -52,13 +52,13 @@
       </div>
       
 
-    <div class="col-md-4">
-      <label for="id_codigo_brasmol" class="form-label fw-bold">
-        <i class="bi bi-upc-scan me-1"></i> Código Bras-Mol
-      </label>
-      {{ form.codigo_brasmol|add_class:"form-control" }}
-    </div>
-
+      <div class="col-md-4">
+        <label for="id_codigo_brasmol" class="form-label fw-bold">
+          <i class="bi bi-upc-scan me-1"></i> Código Bras-Mol
+        </label>
+        {{ form.codigo_brasmol }}
+      </div>
+      
     <div class="col-md-6">
       <label for="id_fornecedor" class="form-label fw-bold">
         <i class="bi bi-truck me-1"></i> Fornecedor
@@ -93,6 +93,14 @@
       </label>
       {{ form.quantidade_nok|add_class:"form-control" }}
     </div>
+    <div class="col-md-4" id="disposicao-wrapper" style="display: none;">
+      <label for="id_disposicao" class="form-label fw-bold">
+        <i class="bi bi-gear-wide-connected me-1"></i> Disposição
+      </label>
+      {{ form.disposicao }}
+    </div>
+    
+    
 
     <div class="col-md-4">
       <label class="form-label fw-bold">
@@ -134,6 +142,12 @@
     if (obsWrapper) {
       obsWrapper.style.display = status === "FALHA DE BANHO" ? "block" : "none";
     }
+    
+    const dispoWrapper = document.getElementById("disposicao-wrapper");
+    if (dispoWrapper) {
+      dispoWrapper.style.display = status === "FALHA DE BANHO" ? "block" : "none";
+    }
+    
   }
 
   document.addEventListener("DOMContentLoaded", function () {

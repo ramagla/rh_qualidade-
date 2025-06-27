@@ -206,6 +206,14 @@
         </label>
         {{ form.lead_time|add_class:"form-control" }}
       </div>
+<!-- Status do Fornecedor -->
+<div class="col-md-4">
+  <label for="id_ativo" class="form-label fw-bold">
+    <i class="bi bi-toggle-on me-1"></i> Status do Fornecedor
+  </label>
+  {{ form.ativo|add_class:"form-select select2" }}
+</div>
+
 
     </div>
   </div>
