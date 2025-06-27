@@ -7,8 +7,7 @@ from ..models import (
     AvaliacaoAnual,
     AvaliacaoExperiencia,
     AvaliacaoTreinamento,
-    Funcionario,
-    ListaPresenca,
+    Funcionario, 
     Treinamento,
 )
 

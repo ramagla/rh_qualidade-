@@ -3,7 +3,6 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from django_select2.forms import Select2Widget
 
 from Funcionario.models import Documento, RevisaoDoc
-from rh_qualidade.utils import title_case
 
 
 from Funcionario.models.departamentos import Departamentos

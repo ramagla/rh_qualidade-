@@ -1,16 +1,16 @@
 import base64
 import io
-import os
+import json
+import math
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 
 import matplotlib.pyplot as plt
-from django.contrib.auth.decorators import login_required
-from django.db import models
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import  render
 from django.utils.decorators import method_decorator
-from django.utils.text import slugify
+from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
-from django_ckeditor_5.fields import CKEditor5Field
 
 from Funcionario.models import (
     AvaliacaoAnual,
@@ -18,6 +18,8 @@ from Funcionario.models import (
     Funcionario,
     Treinamento,
 )
+from Funcionario.models.banco_horas import BancoHoras
+from Funcionario.models.departamentos import Departamentos
 
 
 def generate_training_hours_chart_styled(total_horas_por_trimestre, ano):
@@ -187,8 +189,6 @@ class RelatorioPlanilhaTreinamentosView(TemplateView):
 
         return context
 
-
-
 class RelatorioIndicadorAnualView(TemplateView):
     template_name = "relatorios/indicador_anual.html"
 
@@ -307,19 +307,6 @@ class RelatorioIndicadorAnualView(TemplateView):
 
         return base64.b64encode(image_png).decode("utf-8")
 
-from Funcionario.models.departamentos import Departamentos  # Import necessário
-
-
-from Funcionario.models.departamentos import Departamentos
-
-from django.shortcuts import get_object_or_404
-
-from datetime import datetime
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from Funcionario.models import Treinamento
-from Funcionario.models.departamentos import Departamentos
-
 @login_required
 def cronograma_treinamentos(request):
     ano = request.GET.get("ano")
@@ -355,11 +342,6 @@ def cronograma_treinamentos(request):
     }
 
     return render(request, "relatorios/cronograma_treinamentos.html", context)
-
-
-
-
-
 
 @login_required
 def cronograma_avaliacao_eficacia(request):
@@ -445,47 +427,6 @@ def relatorio_aniversariantes(request):
         'meses': meses,
         'mes_selecionado': mes,
     })
-
-from datetime import datetime
-from collections import defaultdict
-import json
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render
-from django.utils.safestring import mark_safe
-
-from datetime import date
-from collections import defaultdict
-import json
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render
-from django.utils.safestring import mark_safe
-
-from Funcionario.models.banco_horas import BancoHoras
-from Funcionario.models import Funcionario
-
-
-from collections import defaultdict
-import json
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render
-from django.utils.safestring import mark_safe
-from Funcionario.models.banco_horas import BancoHoras
-from Funcionario.models import Funcionario
-
-
-from collections import defaultdict
-from datetime import timedelta
-import json
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render
-from django.utils.safestring import mark_safe
-
-from Funcionario.models.banco_horas import BancoHoras
-from Funcionario.models import Funcionario
-import math
 
 
 @login_required

@@ -1,15 +1,18 @@
-# Configurar o backend antes de importar pyplot
+# Terceiros
 import matplotlib
-import matplotlib.pyplot as plt
+import pandas as pd
+from django.contrib.auth.decorators import permission_required
+
+# Django - Funcionalidades principais
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
-from Funcionario.models.departamentos import Departamentos
+from django.utils import timezone
 
+# App Interno - Formulários, modelos e funções específicas
 from ..forms.matriz_polivalencia_forms import (
     AtividadeForm,
     MatrizPolivalenciaForm,
@@ -17,13 +20,11 @@ from ..forms.matriz_polivalencia_forms import (
 )
 from ..models.funcionario import Funcionario
 from ..models.matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
+from Funcionario.models.departamentos import Departamentos
 
+# Configurar o backend antes de importar pyplot
 matplotlib.use("Agg")  # Backend para renderização sem GUI
-from django.utils import timezone
-from django.db.models import Avg, Count
 
-from django.utils import timezone
-from django.db.models import Count
 
 @login_required
 def lista_matriz_polivalencia(request):
@@ -191,8 +192,6 @@ def imprimir_matriz(request, id):
             "atividades_fixas_nomes": atividades_fixas_nomes,
         },
     )
-
-
 
 
 def salvar_notas_funcionarios(request, matriz, funcionarios, atividades, usar_perfil=False, usar_suplente=False, excluir_ids=None):
@@ -410,10 +409,6 @@ def editar_matriz_polivalencia(request, id):
     )
 
 
-
-
-
-
 # Excluir uma matriz de polivalência
 @login_required
 def excluir_matriz_polivalencia(request, id):
@@ -500,9 +495,6 @@ def cadastrar_atividade(request):
             "departamentos": departamentos,  # Passa os departamentos únicos para o template
         },
     )
-
-
-# Gerenciar notas (adicionar/editar/excluir)
 
 
 @login_required
@@ -617,13 +609,6 @@ def get_atividades_e_funcionarios_por_departamento(request):
 
     return JsonResponse({"error": "Departamento não encontrado"}, status=400)
 
-
-
-import pandas as pd
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
-from Funcionario.models.matriz_polivalencia import Atividade
 
 @login_required
 @permission_required('Funcionario.add_atividade', raise_exception=True)

@@ -1,5 +1,5 @@
 import csv
-from datetime import datetime
+from datetime import date, datetime
 from io import BytesIO
 
 from django.contrib.auth.decorators import login_required
@@ -12,7 +12,14 @@ from django.utils import timezone
 from xhtml2pdf import pisa
 
 from Funcionario.forms import TreinamentoForm
-from Funcionario.models import Funcionario, IntegracaoFuncionario, Treinamento
+from Funcionario.models import (
+    AvaliacaoTreinamento,
+    Documento,
+    Funcionario,
+    IntegracaoFuncionario,
+    Treinamento,
+)
+
 
 
 @login_required
@@ -70,13 +77,6 @@ def lista_treinamentos(request):
     }
 
     return render(request, "treinamentos/lista_treinamentos.html", context)
-
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
-from Funcionario.forms import TreinamentoForm
-from Funcionario.models import Funcionario, AvaliacaoTreinamento, Treinamento
-from datetime import date
 
 
 @login_required
@@ -175,7 +175,6 @@ def editar_treinamento(request, id):
     )
 
 
-
 @login_required
 def excluir_treinamento(request, id):
     treinamento = get_object_or_404(Treinamento, id=id)
@@ -199,8 +198,6 @@ def visualizar_treinamento(request, treinamento_id):
         },
     )
 
-
-from Funcionario.models import Documento, RevisaoDoc
 
 @login_required
 def imprimir_f003(request, funcionario_id):
@@ -229,7 +226,6 @@ def imprimir_f003(request, funcionario_id):
             "numero_formulario": numero_formulario,  # ⬅️ usado no rodapé
         },
     )
-
 
 
 @login_required
@@ -319,7 +315,6 @@ def exportar_treinamentos_csv(request):
         )
 
     return response
-
 
 
 @login_required

@@ -1,10 +1,19 @@
+# Bibliotecas padrão
+import locale
+from calendar import monthrange
+from datetime import date
+
+# Django - Funcionalidades principais
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.timezone import now
 from django.views.generic import TemplateView
 
+# App Interno - Modelos
 from Funcionario.models import Funcionario, Settings
+
 
 
 @login_required
@@ -61,9 +70,6 @@ class FormularioCartaCompetenciaView(TemplateView):
         context["funcionario"] = get_object_or_404(Funcionario, id=funcionario_id)
         return context
 
-
-
-
 @login_required
 def filtro_funcionario_generico(request):
     next_view = request.GET.get("next_view") or request.POST.get("next_view")
@@ -91,15 +97,6 @@ def filtro_funcionario_generico(request):
         "emoji": emoji,
     })
 
-
-
-
-
-
-
-
-
-
 @login_required
 def formulario_saida_antecipada(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
@@ -116,10 +113,6 @@ def imprimir_ficha_epi(request, funcionario_id):
         "now": now(),  # ✅ aqui você passa o now para o template
     }
     return render(request, "formularios/relatorio_ficha_epi.html", context)
-
-from calendar import monthrange, month_name
-import locale
-from datetime import date
 
 @login_required
 def formulario_folha_ponto(request, funcionario_id):

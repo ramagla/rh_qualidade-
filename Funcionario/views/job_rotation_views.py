@@ -1,16 +1,23 @@
-from datetime import timedelta, timezone
+# Bibliotecas padrão
+from datetime import timedelta
 
+# Django - Funcionalidades principais
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.http import Http404, HttpResponse
+from django.http import  HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
+from django.utils.timezone import now
+
+# Terceiros
 from weasyprint import HTML
 
+# App Interno - Formulários e modelos
 from Funcionario.forms import JobRotationEvaluationForm
 from Funcionario.models import Cargo, Funcionario, JobRotationEvaluation
+
 
 
 @login_required

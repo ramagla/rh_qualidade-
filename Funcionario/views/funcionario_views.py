@@ -1,13 +1,19 @@
-from datetime import timedelta
+# Bibliotecas padrão
+from collections import defaultdict
+from copy import deepcopy
+from datetime import date, timedelta
 
+# Django - Funcionalidades principais
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.generic import View
+from django.views import View
+from django.views.generic import View as GenericView  # para distinção se necessário
 
+# App Interno - Modelos e Formulários
 from Funcionario.forms import FuncionarioForm
 from Funcionario.models import (
     AvaliacaoAnual,
@@ -22,7 +28,10 @@ from Funcionario.models.job_rotation_evaluation import JobRotationEvaluation
 from Funcionario.models.lista_presenca import ListaPresenca
 from Funcionario.models.departamentos import Departamentos
 
+# App Interno - Outros modelos
+from metrologia.models import TabelaTecnica
 from ..models.cargo import Cargo
+
 
 
 def is_authenticated(user):
@@ -226,15 +235,6 @@ def excluir_funcionario(request, funcionario_id):
     return redirect("lista_funcionarios")
 
 
-from django.views import View
-from django.shortcuts import get_object_or_404, render
-from django.utils import timezone
-from datetime import timedelta
-
-
-from metrologia.models import TabelaTecnica
-
-
 class ImprimirFichaView(View):
     def get(self, request, funcionario_id):
         funcionario = get_object_or_404(Funcionario, id=funcionario_id)
@@ -398,12 +398,6 @@ def excluir_historico_cargo(request, historico_id):
 
     return redirect("listar_historico_cargo", funcionario_id=historico.funcionario.id)
 
-from collections import defaultdict
-from datetime import date
-
-from collections import defaultdict
-from django.db.models import Prefetch
-
 
 def montar_organograma(lista):
     mapa = {}
@@ -471,10 +465,6 @@ def imprimir_organograma(request):
     }
     return render(request, 'funcionarios/organograma/organograma_imprimir.html', contexto)
 
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
-from Funcionario.models import Funcionario
 
 @login_required
 def gerar_mensagem_acesso(request, funcionario_id):

@@ -2,8 +2,6 @@ from django import forms
 
 from ..models.matriz_polivalencia import Atividade, MatrizPolivalencia, Nota
 from django_select2.forms import Select2Widget  # se estiver usando Select2
-from django.forms import TypedChoiceField
-from Funcionario.models.departamentos import Departamentos
 from rh_qualidade.utils import formatar_nome_atividade_com_siglas
 
 

@@ -1,22 +1,21 @@
-from datetime import date
-
+# Terceiros
 import openpyxl
+
+# Django - Funcionalidades principais
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.forms import modelform_factory
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.timezone import now
 
+# App Interno - Formulários, modelos e filtros personalizados
 from Funcionario.forms import ListaPresencaForm
-from Funcionario.models import (
-    AvaliacaoTreinamento,
+from Funcionario.models import (    
     Funcionario,
     ListaPresenca,
     Treinamento,
 )
-from Funcionario.templatetags.conversores import horas_formatadas
-
 
 # Função lista_presenca
 @login_required
@@ -76,7 +75,6 @@ def lista_presenca(request):
             "listas_indefinidas": listas_indefinidas,
         },
     )
-
 
 
 def processar_lista_presenca(lista_presenca):
@@ -161,8 +159,6 @@ def processar_lista_presenca(lista_presenca):
                     avaliacao.save()
 
 
-
-
 @login_required
 def cadastrar_lista_presenca(request):
     treinamentos = Treinamento.objects.filter(categoria="treinamento")
@@ -237,8 +233,6 @@ def visualizar_lista_presenca(request, lista_id):
         }
     )
 
-
-
 # Função para imprimir lista de presença
 @login_required
 def imprimir_lista_presenca(request, lista_id):
@@ -258,9 +252,6 @@ def imprimir_lista_presenca(request, lista_id):
 
         },
     )
-
-
-# Função para exportar listas de presença
 
 
 @login_required

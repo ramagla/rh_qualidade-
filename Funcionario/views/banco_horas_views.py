@@ -1,38 +1,23 @@
-from django.shortcuts import render, redirect, get_object_or_404
+# Django - Autenticação e permissões
 from django.contrib.auth.decorators import login_required, permission_required
+
+# Django - Mensagens, redirecionamento, renderização, paginação, utilitários
 from django.contrib import messages
-
-from Funcionario.models.banco_horas import BancoHoras
-from Funcionario.forms.banco_horas_form import BancoHorasForm
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
-from django.db.models import Q
-from datetime import datetime
-
-from Funcionario.models.banco_horas import BancoHoras
-from Funcionario.models import Funcionario
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render
-from django.core.paginator import Paginator
-from django.db.models import Q
-from datetime import datetime
-
-from Funcionario.models.banco_horas import BancoHoras
-from Funcionario.models import Funcionario
-from Funcionario.forms.banco_horas_form import BancoHorasForm
-
-from datetime import timedelta
-from django.contrib.auth.decorators import login_required, permission_required
-from django.core.paginator import Paginator
-from django.shortcuts import render
+from django.http import JsonResponse
 from django.db.models import Q
 
-from Funcionario.models.banco_horas import BancoHoras
-from Funcionario.models import Funcionario
+# Utilitários
+from datetime import datetime, timedelta
+from django.utils.dateparse import parse_duration
+
+# App Interno - Formulários e modelos
 from Funcionario.forms.banco_horas_form import BancoHorasForm
+from Funcionario.models import Funcionario
+from Funcionario.models.banco_horas import BancoHoras
+from portaria.models import AtrasoSaida
+
 
 
 def parse_horas_trabalhadas(horas_str):
@@ -99,16 +84,7 @@ def listar_banco_horas(request):
     return render(request, "banco_horas/lista_banco_de_horas.html", context)
 
 
-from datetime import datetime, timedelta
-from django.utils.dateparse import parse_duration
 
-from datetime import datetime
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required, permission_required
-from portaria.models import AtrasoSaida
-from Funcionario.forms.banco_horas_form import BancoHorasForm
-from Funcionario.models.banco_horas import BancoHoras
 
 @login_required
 @permission_required("Funcionario.add_bancohoras", raise_exception=True)
@@ -272,10 +248,6 @@ def visualizar_banco_horas(request, pk):
     registro = get_object_or_404(BancoHoras, pk=pk)
     return render(request, "Funcionario/banco_horas/visualizar.html", {"registro": registro})
 
-
-from portaria.models import AtrasoSaida
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 
 @login_required
 def buscar_ocorrencias_portaria(request, funcionario_id):

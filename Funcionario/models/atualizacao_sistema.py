@@ -1,8 +1,7 @@
 from django.db import models
 from django.utils.timezone import now
 from django_ckeditor_5.fields import CKEditor5Field
-from django.core.validators import MinValueValidator
-from decimal import Decimal
+from django.contrib.auth.models import User
 
 
 class AtualizacaoSistema(models.Model):
@@ -40,7 +39,6 @@ class AtualizacaoSistema(models.Model):
     def __str__(self):
         return f"{self.versao} - {self.titulo}"
 
-from django.contrib.auth.models import User
 
 class AtualizacaoLida(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)

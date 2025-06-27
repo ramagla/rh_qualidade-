@@ -1,17 +1,26 @@
+# Bibliotecas padrão
 import json
+from collections import Counter
+from copy import deepcopy
 from datetime import datetime
 
+# Terceiros
 import pytz
 import requests
-from django.contrib.auth.decorators import login_required
-from django.core import serializers
-from django.core.serializers import serialize
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
-from django.utils.dateparse import parse_date
-from django.views.decorators.csrf import csrf_exempt
 from icalendar import Calendar, Event
+from packaging import version
 
+# Django - Funcionalidades principais
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+from django.db.models.functions import ExtractYear
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.dateparse import parse_date
+from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt
+
+# App Interno - Formulários e modelos
 from Funcionario.forms import EventoForm
 from Funcionario.models import (
     AtualizacaoSistema,
@@ -20,52 +29,9 @@ from Funcionario.models import (
     Evento,
     Funcionario,
     Settings,
+    Treinamento,
 )
 
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from datetime import datetime
-import requests
-
-from Funcionario.models import (
-    AtualizacaoSistema,
-    AvaliacaoAnual,
-    Comunicado,
-    Settings,
-)
-
-from django.utils.timezone import now
-from Funcionario.models import Funcionario, AvaliacaoAnual, Treinamento
-from django.db.models.functions import ExtractYear
-
-from collections import Counter
-from datetime import datetime
-
-import requests
-from django.contrib.auth.decorators import login_required
-from django.db.models.functions import ExtractYear
-from django.shortcuts import render
-from django.utils.timezone import now
-
-from Funcionario.models import Funcionario, AvaliacaoAnual
-
-
-from collections import Counter
-from datetime import datetime
-import requests
-
-from django.contrib.auth.decorators import login_required
-from django.db.models.functions import ExtractYear
-from django.shortcuts import render
-from django.utils.timezone import now
-
-from alerts.models import AlertaConfigurado
-
-
-
-
-from packaging import version  # IMPORTANTE - adicione no topo
 
 @login_required
 def home(request):
@@ -354,11 +320,6 @@ def home(request):
     return render(request, "dashboard/home.html", context)
 
 
-
-
-
-
-
 @login_required
 def sucesso_view(request):
     return render(request, "sucesso.html")
@@ -632,13 +593,6 @@ def marcar_alertas_como_lidos(request):
     alertas.update(lido=True)
     return JsonResponse({"status": "ok"})
 
-# views/cipa_views.py
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from datetime import datetime
-
-from Funcionario.models import Funcionario
 
 @login_required
 def imprimir_cipa_view(request):

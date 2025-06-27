@@ -1,14 +1,19 @@
+# Bibliotecas padrão
+from collections import defaultdict
+
+# Django - Funcionalidades principais
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from collections import defaultdict
 
+# Apps internos
 from ..forms import CargoForm, RevisaoForm
 from ..models import Cargo, Funcionario, Revisao
 from Funcionario.models.departamentos import Departamentos
+
 
 @login_required
 def organograma_cargos(request):
@@ -29,6 +34,7 @@ def organograma_cargos(request):
     return render(request, "cargos/organograma_cargos.html", {
         "niveis_ordenados": niveis_ordenados
     })
+
 @login_required
 def lista_cargos(request):
     # Recupera todos os cargos ordenados por número da DC

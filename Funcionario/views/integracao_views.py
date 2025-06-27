@@ -1,16 +1,17 @@
+# Django - Funcionalidades principais
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.timezone import now
 
-from Funcionario.forms import IntegracaoFuncionarioForm  # Formulário para Integração
-from Funcionario.models import (  # Modelo IntegracaoFuncionario e Funcionario
-    Funcionario,
-    IntegracaoFuncionario,
-)
+# App Interno - Formulários e modelos
+from Funcionario.forms import IntegracaoFuncionarioForm
+from Funcionario.models import Funcionario, IntegracaoFuncionario
+
 
 
 # View para listar integrações com filtros
@@ -86,10 +87,6 @@ def lista_integracoes(request):
         },
     )
 
-
-# View para visualizar uma integração específica
-from django.utils.timezone import now  # Adicione no topo, se ainda não tiver
-
 @login_required
 def visualizar_integracao(request, integracao_id):
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
@@ -101,9 +98,6 @@ def visualizar_integracao(request, integracao_id):
             "now": now(),  # Passa a data e hora atual
         },
     )
-
-
-# View para cadastrar uma nova integração
 
 
 @login_required
@@ -123,8 +117,6 @@ def cadastrar_integracao(request):
     )
 
 
-
-# View para excluir uma integração
 @login_required
 def excluir_integracao(request, integracao_id):
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
@@ -152,7 +144,6 @@ def editar_integracao(request, integracao_id):
         "integracao/form_integracao.html",
         {"form": form, "integracao": integracao},
     )
-
 
 
 @login_required

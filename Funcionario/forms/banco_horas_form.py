@@ -1,7 +1,5 @@
 from django import forms
-from django_ckeditor_5.widgets import CKEditor5Widget
 from Funcionario.models.banco_horas import BancoHoras
-from datetime import timedelta
 
 class BancoHorasForm(forms.ModelForm):
     he_50 = forms.BooleanField(required=False)
