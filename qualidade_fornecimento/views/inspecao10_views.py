@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 
 from qualidade_fornecimento.models.inspecao10 import DevolucaoServicoExterno, Inspecao10
 from qualidade_fornecimento.forms.inspecao10_form import Inspecao10Form
+from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 
 
 @login_required
@@ -135,115 +136,104 @@ import pandas as pd
 from datetime import datetime
 from qualidade_fornecimento.models.inspecao10 import Inspecao10
 from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
+import re
 
 @login_required
 @permission_required('qualidade_fornecimento.importar_excel_inspecao10', raise_exception=True)
 def importar_inspecao10_excel(request):
     """
-    Importa inspeções do Excel para o modelo Inspecao10.
-    Espera colunas: 
+    Importa inspeções do Excel para Inspecao10.
+    Colunas esperadas:
       Data, Hora - Início, Hora - Fim, Fornecedor, Nº OP,
       Código Bras-Mol, Quantidade Total, Quantidade Não OK,
       Disposição, Observações, Responsável.
     """
     if request.method == "POST" and request.FILES.get("arquivo_excel"):
-        excel_file = request.FILES["arquivo_excel"]
-        try:
-            # lê o arquivo e limpa espaços no nome das colunas
-            df = pd.read_excel(excel_file)
-            df.columns = df.columns.str.strip()
+        df = pd.read_excel(request.FILES["arquivo_excel"])
+        df.columns = df.columns.str.strip()
 
-            erros = []
-            importados = 0
+        erros = []
+        importados = 0
 
-            for index, row in df.iterrows():
-                try:
-                    # validações obrigatórias
-                    if pd.isna(row["Data"]):
-                        raise ValueError("Data está vazia.")
-                    if pd.isna(row["Hora - Início"]) or pd.isna(row["Hora - Fim"]):
-                        raise ValueError("Hora de início ou fim está vazia.")
-                    if pd.isna(row["Fornecedor"]):
-                        raise ValueError("Fornecedor está vazio.")
-                    if pd.isna(row["Nº OP"]):
-                        raise ValueError("Nº OP está vazio.")
+        for idx, row in df.iterrows():
+            linha = idx + 2  # para mensagens
+            try:
+                # validações mínimas
+                if pd.isna(row["Data"]): raise ValueError("Data vazia.")
+                if pd.isna(row["Hora - Início"]) or pd.isna(row["Hora - Fim"]):
+                    raise ValueError("Hora início/fim vazia.")
+                if pd.isna(row["Fornecedor"]): raise ValueError("Fornecedor vazio.")
+                if pd.isna(row["Nº OP"]): raise ValueError("Nº OP vazio.")
 
-                    # conversões de data e hora
-                    data = pd.to_datetime(row["Data"], dayfirst=True).date()
-                    hora_inicio = pd.to_datetime(str(row["Hora - Início"])).time()
-                    hora_fim = pd.to_datetime(str(row["Hora - Fim"])).time()
+                # conversões
+                data = pd.to_datetime(row["Data"], dayfirst=True).date()
+                hora_inicio = pd.to_datetime(str(row["Hora - Início"])).time()
+                hora_fim    = pd.to_datetime(str(row["Hora - Fim"])).time()
 
-                    # busca de fornecedor
-                    fornecedor_nome = str(row["Fornecedor"]).strip()
-                    fornecedor = FornecedorQualificado.objects.filter(
-                        nome__iexact=fornecedor_nome
+                # NORMALIZAÇÃO E BUSCA DE FORNECEDOR
+                raw_for = str(row["Fornecedor"]).strip()
+                base_for = re.sub(r'\s*\(.*\)', '', raw_for).strip().upper()
+                fornecedor = FornecedorQualificado.objects.filter(
+                    nome__icontains=base_for
+                ).first()
+                if not fornecedor:
+                    raise ValueError(f"Fornecedor '{raw_for}' não encontrado.")
+
+                # NORMALIZAÇÃO E BUSCA DE CÓDIGO BRAS-MOL (fallback suave)
+                cod_raw = str(row.get("Código Bras-Mol", "")).strip().upper()
+                materia = None
+                if cod_raw:
+                    materia = MateriaPrimaCatalogo.objects.filter(
+                        codigo__iexact=cod_raw
                     ).first()
-                    if not fornecedor:
-                        raise ValueError(f"Fornecedor '{fornecedor_nome}' não encontrado.")
+                    if not materia:
+                        erros.append(f"Linha {linha}: Código Bras-Mol '{cod_raw}' não encontrado; importando sem código.")
+                        materia = None
 
-                    # busca de usuário responsável (fallback para request.user)
-                    responsavel_username = str(
-                        row.get("Responsável", "")
-                    ).strip().lower()
-                    responsavel = (
-                        User.objects.filter(username__iexact=responsavel_username).first()
-                        or request.user
-                    )
+                # Quantidades
+                qt_tot = int(row["Quantidade Total"]) if not pd.isna(row["Quantidade Total"]) else 0
+                qt_nok = int(row["Quantidade Não OK"]) if not pd.isna(row["Quantidade Não OK"]) else 0
 
-                    # novo campo 'Disposição' (default 'Sucatear' se ausente ou inválido)
-                    disposicao_raw = str(row.get("Disposição", "Sucatear")).strip()
-                    opcoes = dict(Inspecao10.DISPOSICAO_CHOICES)
-                    disposicao = disposicao_raw if disposicao_raw in opcoes else "Sucatear"
+                # Responsável
+                usr_raw = str(row.get("Responsável", "")).strip().lower()
+                responsavel = User.objects.filter(username__iexact=usr_raw).first() or request.user
 
-                    # criação do registro
-                    Inspecao10.objects.create(
-                        numero_op=str(row["Nº OP"]),
-                        codigo_brasmol=str(row.get("Código Bras-Mol", "SEM_CODIGO")),
-                        data=data,
-                        fornecedor=fornecedor,
-                        hora_inicio=hora_inicio,
-                        hora_fim=hora_fim,
-                        quantidade_total=int(row["Quantidade Total"]),
-                        quantidade_nok=int(row["Quantidade Não OK"]),
-                        disposicao=disposicao,
-                        observacoes=str(row.get("Observações", "")).strip(),
-                        responsavel=responsavel,
-                    )
-                    importados += 1
+                # Disposição
+                disp_raw = str(row.get("Disposição", "Sucatear")).strip()
+                opcoes = dict(Inspecao10.DISPOSICAO_CHOICES)
+                disposicao = disp_raw if disp_raw in opcoes else "Sucatear"
 
-                except Exception as e:
-                    erros.append(f"Linha {index + 2}: {e}")
-
-            # gravação de arquivo de erros, se existirem
-            if erros:
-                caminho = os.path.join(
-                    "C:/Projetos/RH-Qualidade/rh_qualidade/qualidade_fornecimento/views",
-                    "erros_importacao_inspecao10.txt"
+                # criação
+                Inspecao10.objects.create(
+                    numero_op=str(row["Nº OP"]).strip(),
+                    codigo_brasmol=materia,
+                    data=data,
+                    fornecedor=fornecedor,
+                    hora_inicio=hora_inicio,
+                    hora_fim=hora_fim,
+                    quantidade_total=qt_tot,
+                    quantidade_nok=qt_nok,
+                    disposicao=disposicao,
+                    observacoes=str(row.get("Observações", "")).strip(),
+                    responsavel=responsavel,
                 )
-                with open(caminho, "w", encoding="utf-8") as f:
-                    f.write("\n".join(erros))
+                importados += 1
 
-                messages.warning(
-                    request,
-                    f"{len(erros)} erros encontrados. Verifique o arquivo 'erros_importacao_inspecao10.txt'."
-                )
-                messages.info(
-                    request,
-                    f"{importados} inspeções importadas com sucesso."
-                )
-            else:
-                messages.success(
-                    request,
-                    f"{importados} inspeções importadas com sucesso!"
-                )
+            except Exception as e:
+                erros.append(f"Linha {linha}: {e}")
 
-            return redirect("listar_inspecoes10")
-
-        except Exception as e:
-            messages.error(
-                request,
-                f"Erro ao processar o arquivo: {str(e)}"
+        # salvar log de erros, se houver
+        if erros:
+            caminho = os.path.join(
+                "C:/Projetos/RH-Qualidade/rh_qualidade/qualidade_fornecimento/views",
+                "erros_importacao_inspecao10.txt"
             )
+            with open(caminho, "w", encoding="utf-8") as f:
+                f.write("\n".join(erros))
+            messages.warning(request, f"{len(erros)} alertas/erros gerados. Veja 'erros_importacao_inspecao10.txt'.")
+
+        messages.success(request, f"{importados} inspeções importadas com sucesso.")
+        return redirect("listar_inspecoes10")
 
     return render(request, "f223/importar_excel.html")
 
