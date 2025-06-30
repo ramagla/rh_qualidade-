@@ -348,7 +348,7 @@
   <div>
         <div class="logo-container" onclick="toggleSidebar()">
             {% if settings and settings.logo_claro %}
-                <img src="{{ settings.logo_claro.url }}" alt="Logo Claro">
+                <img src="{{ core_settings.logo_claro.url }}" alt="Logo Claro">
             {% else %}
                 <img src="{% static 'logo_branco.png' %}" alt="Logo Padrão">
             {% endif %}

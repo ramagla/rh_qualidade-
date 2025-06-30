@@ -73,7 +73,7 @@
                aria-labelledby="form-login-title">
 
         {% if settings.logo_escuro %}
-          <img src="{{ settings.logo_escuro.url }}" alt="Logo da empresa" class="login-logo" loading="lazy">
+          <img src="{{ core_settings.logo_escuro.url }}" alt="Logo da empresa" class="login-logo" loading="lazy">
         {% else %}
           <img src="{% static 'logo.png' %}" alt="Logo Padrão" class="login-logo" loading="lazy">
         {% endif %}
@@ -149,7 +149,7 @@
   </main>
 
   <footer role="contentinfo">
-    <span class="text-light small">&copy; {{ ano_atual }} <strong>BM</strong> <span class="text-warning">v{{ versao }}</span></span>
+    <span class="text-light small">&copy; {{ core_ano_atual }} <strong>BM</strong> <span class="text-warning">v{{ core_versao_sistema }}</span></span>
   </footer>
   
   <script defer>

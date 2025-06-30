@@ -4,8 +4,11 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 
 from ..models import ListaPresenca
 
-
 class ListaPresencaForm(forms.ModelForm):
+    """
+    Formulário para cadastro e edição de lista de presença.
+    Usa CKEditor para a descrição, widgets customizados e valida que a data de fim não é anterior à de início.
+    """
     descricao = forms.CharField(widget=CKEditor5Widget(config_name="default"))
 
     class Meta:
@@ -40,11 +43,9 @@ class ListaPresencaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         # Oculta os campos de hora (mesmo carregando valor se existir)
         self.fields["horario_inicio"].widget = forms.HiddenInput()
         self.fields["horario_fim"].widget = forms.HiddenInput()
-
         # Garante o formato correto das datas
         for field in ["data_inicio", "data_fim"]:
             if self.instance and getattr(self.instance, field):
@@ -54,13 +55,6 @@ class ListaPresencaForm(forms.ModelForm):
         cleaned_data = super().clean()
         data_inicio = cleaned_data.get("data_inicio")
         data_fim = cleaned_data.get("data_fim")
-
-        if not data_inicio:
-            raise ValidationError(
-                {"data_inicio": 'O campo "Data de Início" é obrigatório.'}
-            )
-
         if data_inicio and data_fim and data_fim < data_inicio:
             raise ValidationError("A data de fim não pode ser anterior à data de início.")
-
         return cleaned_data

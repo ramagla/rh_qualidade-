@@ -1,18 +1,24 @@
 {% extends 'base.html' %}
 
+{% load filters_gerais %}
+{% load permissoes_utils %}
+
+
 {% block title %}Avaliações Anuais{% endblock %}
 
 {% block content %}
-{% load custom_filters %}
 {% include 'partials/global/_styles_componentes.html' %}
 
 <div class="container mt-5">
+    {# 🧾 Cabeçalho da página com ícone e título #}
     {% include 'partials/global/_header_titulo.html' with titulo="Avaliações Anuais" icone="bi bi-journal-check" %}
 
     {% include 'partials/global/_toast_mensagens.html' %}
 
+    {# 🔄 Estilos personalizados dos botões de ação #}
     {% include "partials/global/_estilos_botoes_acoes.html" %}
 
+{# 🎛️ Botões de ação: filtros e cadastro #}
 <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
   {% include "partials/global/_botao_filtros_offcanvas.html" %}
 
@@ -25,7 +31,7 @@
 
     
 
-  <!-- 🔎 Filtros de Avaliações -->
+{# 🔎 Filtros de Avaliações no offcanvas lateral direito #}
 <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
@@ -86,7 +92,7 @@
 
 
 
-
+  {# 📊 Indicadores com totais por classificação #}
   <div class="row mb-4">
     {% include 'partials/global/_card_indicador.html' with cor='info' titulo='Total de Avaliações' valor=total_avaliacoes subtitulo='Avaliações cadastradas' icone='bi-clipboard-check-fill' %}
     {% include 'partials/global/_card_indicador.html' with cor='success' titulo='Ótimo' valor=classificacao_otimo subtitulo='Classificação Ótimo' icone='bi-star-fill' %}
@@ -94,8 +100,8 @@
     {% include 'partials/global/_card_indicador.html' with cor='warning' titulo='Regular' valor=classificacao_regular subtitulo='Classificação Regular' icone='bi-hand-index-thumb' %}
   </div>
   
-
-    <table class="table table-bordered table-striped text-center mt-4">
+  {# 📋 Tabela de listagem de avaliações #}
+  <table class="table table-bordered table-striped text-center mt-4">
   <thead class="table-light align-middle">
     <tr>
       <th scope="col">
@@ -181,7 +187,8 @@
             {% endfor %}
         </tbody>
     </table>
-
+      
+  {# 📑 Paginação da listagem de avaliações #}
     {% include 'partials/global/_paginacao.html' %}
 </div>
 

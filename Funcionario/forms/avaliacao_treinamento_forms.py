@@ -5,6 +5,12 @@ from Funcionario.models import Funcionario, Treinamento, AvaliacaoTreinamento
 
 
 class AvaliacaoTreinamentoForm(forms.ModelForm):
+    """
+    Formulário para avaliação de treinamentos/cursos.
+    Usa widgets customizados, radios para respostas e CKEditor para texto.
+    Filtra responsáveis apenas para funcionários ativos.
+    Garante que pelo menos um responsável seja informado.
+    """
     treinamento = forms.ModelChoiceField(
         queryset=Treinamento.objects.all(),
         widget=forms.Select(attrs={"class": "form-select"}),
@@ -55,6 +61,7 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Filtrar treinamentos e responsáveis apenas ativos
         self.fields["treinamento"].queryset = Treinamento.objects.all()
         self.fields["treinamento"].label = "Treinamento/Curso"
 
@@ -71,3 +78,18 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
         self.fields["responsavel_3"].queryset = ativos
         self.fields["responsavel_3"].required = False
         self.fields["responsavel_3"].label = "Terceiro Responsável (opcional)"
+
+    def clean(self):
+        """
+        Validação para garantir que pelo menos um responsável seja informado.
+        """
+        cleaned_data = super().clean()
+        r1 = cleaned_data.get("responsavel_1")
+        r2 = cleaned_data.get("responsavel_2")
+        r3 = cleaned_data.get("responsavel_3")
+
+        if not (r1 or r2 or r3):
+            raise forms.ValidationError(
+                "Pelo menos um responsável deve ser informado."
+            )
+        return cleaned_data

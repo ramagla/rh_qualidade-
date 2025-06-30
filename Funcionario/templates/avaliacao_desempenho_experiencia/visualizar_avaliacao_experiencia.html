@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load custom_filters %}
+{% load filters_gerais %}
+{% load permissoes_utils %}
 {% load tz %}
+
 
 {% block title %}Visualização da Avaliação de Experiência{% endblock %}
 
@@ -68,7 +70,7 @@
             </tr>
             <tr>
               <th>Observações</th>
-              <td><div style="white-space: pre-line;">{{ avaliacao.observacoes|safe }}</div></td>
+              <td><div style="white-space: pre-line;">{{ avaliacao.observacoes|striptags|linebreaksbr }}</div></td>
             </tr>
           </table>
         </div>

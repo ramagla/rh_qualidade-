@@ -3,10 +3,11 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 
 from ..models import Funcionario, IntegracaoFuncionario
 
-
 class IntegracaoFuncionarioForm(forms.ModelForm):
-    treinamentos_requeridos = forms.CharField(widget=CKEditor5Widget(), required=False)
-
+    """
+    Formulário para integração de funcionário.
+    Usa CKEditor para treinamentos requeridos e valida que a descrição é obrigatória caso 'Requer Treinamento' seja sim.
+    """
     GRUPO_WHATSAPP_CHOICES = [
         (True, "Sim"),
         (False, "Não"),
@@ -28,8 +29,11 @@ class IntegracaoFuncionarioForm(forms.ModelForm):
         initial=False,
         label="Requer Treinamento",
     )
-
-    treinamentos_requeridos = forms.CharField(widget=CKEditor5Widget(), required=False)
+    treinamentos_requeridos = forms.CharField(
+        widget=CKEditor5Widget(),
+        required=False,
+        label="Treinamentos Requeridos"
+    )
 
     class Meta:
         model = IntegracaoFuncionario
@@ -53,3 +57,13 @@ class IntegracaoFuncionarioForm(forms.ModelForm):
         self.fields["funcionario"].queryset = Funcionario.objects.filter(
             status="Ativo"
         ).order_by("nome")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        requer_treinamento = cleaned_data.get("requer_treinamento")
+        treinamentos_requeridos = cleaned_data.get("treinamentos_requeridos", "").strip()
+
+        # Lógica: se requer_treinamento for "True", campo treinamentos_requeridos é obrigatório
+        if str(requer_treinamento) == "True" and not treinamentos_requeridos:
+            self.add_error("treinamentos_requeridos", "Descreva os treinamentos requeridos para este funcionário.")
+        return cleaned_data

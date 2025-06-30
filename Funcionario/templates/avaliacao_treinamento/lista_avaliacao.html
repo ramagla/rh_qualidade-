@@ -2,8 +2,12 @@
 
 {% block title %}Avaliações de Treinamentos{% endblock %}
 
+
+{% load filters_gerais %}
+{% load permissoes_utils %}
+{% load static %}
+
 {% block content %}
-{% load custom_filters %}
 
 {% include 'partials/global/_toast_mensagens.html' %}
 {% include 'partials/global/_header_titulo.html' with titulo="Avaliações de Treinamentos" icone="bi bi-clipboard2-check-fill" emoji="📋" %}

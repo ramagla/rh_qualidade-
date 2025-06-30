@@ -6,11 +6,13 @@ from Funcionario.models.avaliacao_anual import AvaliacaoAnual
 from Funcionario.models.avaliacao_experiencia import AvaliacaoExperiencia
 from Funcionario.models import Funcionario
 
-
 from rh_qualidade.utils import title_case
 
 
 class AvaliacaoForm(forms.ModelForm):
+    """
+    Formulário de Avaliação de Treinamento.
+    """
     descricao_melhorias = forms.CharField(
         widget=CKEditor5Widget(),
         required=True,
@@ -22,10 +24,13 @@ class AvaliacaoForm(forms.ModelForm):
         fields = "__all__"
 
 
-
 class AvaliacaoExperienciaForm(forms.ModelForm):
+    """
+    Formulário para avaliação de experiência do colaborador.
+    Campos com widgets customizados e filtragem de funcionários ativos.
+    """
     observacoes = forms.CharField(
-        widget=CKEditor5Widget(config_name="default"),  # Usando o CKEditor5Widget
+        widget=CKEditor5Widget(config_name="default", attrs={"class": "form-control"}),
         required=False,
         label="Observações",
     )
@@ -39,7 +44,6 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
                 attrs={"type": "date", "class": "form-control"}
             ),
             "anexo": forms.FileInput(attrs={"class": "form-control", "accept": ".pdf,.doc,.docx"}),
-
             "adaptacao_trabalho": forms.Select(
                 choices=[
                     (
@@ -127,6 +131,10 @@ class AvaliacaoExperienciaForm(forms.ModelForm):
 
 
 class AvaliacaoAnualForm(forms.ModelForm):
+    """
+    Formulário para Avaliação Anual do colaborador.
+    Campos com widgets CKEditor e validação customizada do centro de custo.
+    """
     avaliacao_global_avaliador = forms.CharField(
         widget=CKEditor5Widget(config_name="default"),
         required=False,
@@ -140,19 +148,19 @@ class AvaliacaoAnualForm(forms.ModelForm):
         model = AvaliacaoAnual
         fields = "__all__"
         widgets = {
-        "data_avaliacao": forms.DateInput(attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"),
-        "anexo": forms.ClearableFileInput(attrs={"class": "form-control"}),  # Adicionado
-    }
+            "data_avaliacao": forms.DateInput(attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"),
+            "anexo": forms.ClearableFileInput(attrs={"class": "form-control"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # 🔄 Filtrar funcionários ativos
+        # Filtrar funcionários ativos
         self.fields["funcionario"].queryset = Funcionario.objects.filter(
             status__iexact="Ativo"
         ).order_by("nome")
 
-        # ✅ Campos do questionário como ChoiceField (1 a 4)
+        # Campos do questionário como ChoiceField (1 a 4)
         escolhas = [
             (1, "Ruim"),
             (2, "Regular"),
@@ -175,11 +183,15 @@ class AvaliacaoAnualForm(forms.ModelForm):
             self.fields[campo] = forms.ChoiceField(
                 choices=[("", "---------")] + escolhas,
                 widget=forms.Select(attrs={"class": "form-select item-avaliado"}),
-                required=False,
+                required=True,
                 label=self.fields[campo].label if campo in self.fields else campo.replace("_", " ").capitalize(),
+                error_messages={"required": "Este campo é obrigatório."}
             )
 
     def clean_centro_custo(self):
+        """
+        Normaliza o campo centro_custo para Title Case.
+        """
         centro_custo = self.cleaned_data.get("centro_custo")
         if centro_custo:
             return title_case(centro_custo)

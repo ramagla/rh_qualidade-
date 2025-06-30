@@ -6,8 +6,11 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 
 from ..models import AvaliacaoAnual, JobRotationEvaluation
 
-
 class JobRotationEvaluationForm(forms.ModelForm):
+    """
+    Formulário para avaliação de job rotation.
+    Valida datas, converte área atual para Title Case e preenche diversos campos automaticamente no save.
+    """
     treinamentos_requeridos = forms.CharField(widget=CKEditor5Widget(), required=False)
     treinamentos_propostos = forms.CharField(widget=CKEditor5Widget(), required=False)
     avaliacao_gestor = forms.CharField(widget=CKEditor5Widget(), required=False)
@@ -19,9 +22,7 @@ class JobRotationEvaluationForm(forms.ModelForm):
 
     def clean_data_inicio(self):
         data_inicio = self.cleaned_data.get("data_inicio")
-        limite_retroativo = timezone.now().date() - timedelta(
-            days=365
-        )  # Permite até 1 ano no passado
+        limite_retroativo = timezone.now().date() - timedelta(days=365)
         if data_inicio and data_inicio < limite_retroativo:
             raise forms.ValidationError(
                 "A data de início não pode ser retroativa além de 1 ano."
@@ -32,7 +33,7 @@ class JobRotationEvaluationForm(forms.ModelForm):
         """Garante que o campo 'Área Atual' esteja em Title Case."""
         area_atual = self.cleaned_data.get("area_atual")
         if area_atual:
-            return area_atual.title()  # Converte para Title Case
+            return area_atual.title()
         return area_atual
 
     def save(self, commit=True):
@@ -42,11 +43,8 @@ class JobRotationEvaluationForm(forms.ModelForm):
         if instance.funcionario:
             # Atribui o cargo atual e a área atual do funcionário
             instance.cargo_atual = instance.funcionario.cargo_atual
-            # A área atual é o 'local_trabalho' de Funcionario
             instance.area_atual = instance.funcionario.local_trabalho
-            instance.escolaridade = (
-                instance.funcionario.escolaridade
-            )  # Atribui escolaridade
+            instance.escolaridade = instance.funcionario.escolaridade
 
             # Calcular o término previsto (adiciona 60 dias à data de início)
             if instance.data_inicio:
@@ -61,29 +59,17 @@ class JobRotationEvaluationForm(forms.ModelForm):
                 classificacao = ultima_avaliacao.calcular_classificacao()
                 instance.status_ultima_avaliacao = classificacao["status"]
             except AvaliacaoAnual.DoesNotExist:
-                instance.data_ultima_avaliacao = (
-                    None  # Se não houver avaliação, deixe como None
-                )
-                instance.status_ultima_avaliacao = (
-                    "Indeterminado"  # Ou outro status default
-                )
+                instance.data_ultima_avaliacao = None
+                instance.status_ultima_avaliacao = "Indeterminado"
 
             # Preenche a descrição do cargo, se disponível
             if instance.funcionario.cargo_atual:
-                # Atribui descrição do cargo
-                instance.descricao_cargo = (
-                    instance.funcionario.cargo_atual.descricao_arquivo
-                )
+                instance.descricao_cargo = instance.funcionario.cargo_atual.descricao_arquivo
 
             # Preenche a lista de cursos realizados, caso haja
-            cursos = instance.funcionario.treinamentos.filter(
-                status="concluido"
-            )  # Apenas cursos concluídos
-            # Cria uma lista com os nomes dos cursos
+            cursos = instance.funcionario.treinamentos.filter(status="concluido")
             cursos_realizados = [curso.nome_curso for curso in cursos]
-            instance.cursos_realizados = (
-                cursos_realizados  # Atribui à lista de cursos realizados
-            )
+            instance.cursos_realizados = cursos_realizados
 
         if commit:
             instance.save()

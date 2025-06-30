@@ -10,6 +10,10 @@ def tem_permissao(usuario, perm_codename):
     return False
 
 @register.filter
+def has_permission(user, perm):
+    return user.has_perm(perm)
+
+@register.filter
 def traduz_perm(nome):
     """Traduz o nome de permissões padrão do Django para português."""
     if nome.startswith("Can add "):

@@ -2,14 +2,16 @@ from django import forms
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 from rh_qualidade.utils import title_case
-
 from ..models import Treinamento
 
-
 class TreinamentoForm(forms.ModelForm):
+    """
+    Formulário para cadastro e edição de treinamentos.
+    Usa CKEditor para descrição, widgets customizados e valida situação e campos textuais.
+    """
     descricao = forms.CharField(
         widget=CKEditor5Widget(config_name="default"),
-        required=False,  # Torna o campo opcional
+        required=False,
     )
 
     class Meta:
@@ -40,8 +42,7 @@ class TreinamentoForm(forms.ModelForm):
             "situacao": forms.Select(
                 choices=Treinamento.SITUACAO_CHOICES, attrs={"class": "form-select"}
             ),
-            "necessita_avaliacao": forms.CheckboxInput(attrs={"class": "form-check-input"}),  # ✅ Adicionado
-
+            "necessita_avaliacao": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def clean(self):
@@ -51,27 +52,23 @@ class TreinamentoForm(forms.ModelForm):
 
         # Validar que situação está preenchida apenas se o status for 'requerido'
         if status == "requerido" and not situacao:
-            raise forms.ValidationError(
-                {"situacao": 'A situação é obrigatória quando o status é "Requerido".'}
-            )
+            self.add_error("situacao", 'A situação é obrigatória quando o status é "Requerido".')
         return cleaned_data
 
     def clean_nome_curso(self):
         nome_curso = self.cleaned_data.get("nome_curso")
         if nome_curso:
-            return title_case(nome_curso)  # Aplica a função title_case personalizada
+            return title_case(nome_curso)
         return nome_curso
 
     def clean_instituicao_ensino(self):
         instituicao_ensino = self.cleaned_data.get("instituicao_ensino")
         if instituicao_ensino:
-            # Aplica a função title_case personalizada
             return title_case(instituicao_ensino)
         return instituicao_ensino
-    
+
     def clean_necessita_avaliacao(self):
         valor = self.cleaned_data.get("necessita_avaliacao")
         if isinstance(valor, str):
             return valor == "True"
         return bool(valor)
-

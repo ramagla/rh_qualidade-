@@ -3,7 +3,7 @@
     <!-- Logo da empresa -->
     <div class="left-section me-2">
          {% if settings and settings.logo_escuro %}
-            <img src="{{ settings.logo_escuro.url }}" alt="Logotipo" style="width: 60px; height: auto;">
+            <img src="{{ core_settings.logo_escuro.url }}" alt="Logotipo" style="width: 60px; height: auto;">
         {% else %}
             <img src="{% static 'logo.png' %}" alt="Logotipo" style="width: 60px; height: auto;">
         {% endif %}   
@@ -14,11 +14,11 @@
     
     <!-- Informações da empresa com fonte reduzida -->
     <div class="center-section text-start" style="font-size: 10px; color: #4a4a4a;">
-        <strong style="font-size: 10px; color: #333;">{{ settings.nome_empresa }}</strong><br>
-        <span><strong>CEP:</strong>{{ settings.cep }}</span><br>
-        <span>{{ settings.endereco }}</span><br>
-        <span><strong>Fone:</strong> {{ settings.telefone }} - <strong>E-mail:</strong> {{ settings.email }}</span><br>
-        <span><strong>CNPJ:</strong> {{ settings.cnpj }}</span>
+        <strong style="font-size: 10px; color: #333;">{{ core_settings.nome_empresa }}</strong><br>
+        <span><strong>CEP:</strong>{{ core_settings.cep }}</span><br>
+        <span>{{ core_settings.endereco }}</span><br>
+        <span><strong>Fone:</strong> {{ core_settings.telefone }} - <strong>E-mail:</strong> {{ core_settings.email }}</span><br>
+        <span><strong>CNPJ:</strong> {{ core_settings.cnpj }}</span>
     </div>
 
     
