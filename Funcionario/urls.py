@@ -180,8 +180,8 @@ urlpatterns = [
     path("formularios/avaliacao-capacitacao-pratica/carta/<int:funcionario_id>/", formularios_views.avaliacao_capacitacao, name="carta_avaliacao_capacitacao"),
     path("formularios/folha-ponto/<int:funcionario_id>/", formularios_views.formulario_folha_ponto, name="formulario_folha_ponto"),
     path("formularios/pesquisa-consciencia/", formularios_views.FormularioPesquisaConscienciaView.as_view(), name="formulario_pesquisa_consciencia"),
-    path("formularios/carta-competencia/<int:funcionario_id>/", formularios_views.FormularioCartaCompetenciaView.as_view(), name="formulario_carta_competencia"),
-
+    path("formularios/carta-competencia/<int:funcionario_id>/",formularios_views.FormularioCartaCompetenciaView.as_view(), name="formulario_carta_competencia"),
+    path("formularios/saida-antecipada/<int:funcionario_id>/", formularios_views.formulario_saida_antecipada, name="formulario_saida_antecipada"),
     path("funcionarios/filtro-generico/", formularios_views.filtro_funcionario_generico, name="filtro_funcionario_generico"),
 
 

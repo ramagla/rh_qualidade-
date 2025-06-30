@@ -139,17 +139,26 @@ from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 @login_required
 @permission_required('qualidade_fornecimento.importar_excel_inspecao10', raise_exception=True)
 def importar_inspecao10_excel(request):
+    """
+    Importa inspeções do Excel para o modelo Inspecao10.
+    Espera colunas: 
+      Data, Hora - Início, Hora - Fim, Fornecedor, Nº OP,
+      Código Bras-Mol, Quantidade Total, Quantidade Não OK,
+      Disposição, Observações, Responsável.
+    """
     if request.method == "POST" and request.FILES.get("arquivo_excel"):
         excel_file = request.FILES["arquivo_excel"]
         try:
+            # lê o arquivo e limpa espaços no nome das colunas
             df = pd.read_excel(excel_file)
-            df.columns = df.columns.str.strip()  # limpa espaços nos nomes das colunas
+            df.columns = df.columns.str.strip()
 
             erros = []
             importados = 0
 
             for index, row in df.iterrows():
                 try:
+                    # validações obrigatórias
                     if pd.isna(row["Data"]):
                         raise ValueError("Data está vazia.")
                     if pd.isna(row["Hora - Início"]) or pd.isna(row["Hora - Fim"]):
@@ -159,19 +168,34 @@ def importar_inspecao10_excel(request):
                     if pd.isna(row["Nº OP"]):
                         raise ValueError("Nº OP está vazio.")
 
+                    # conversões de data e hora
                     data = pd.to_datetime(row["Data"], dayfirst=True).date()
                     hora_inicio = pd.to_datetime(str(row["Hora - Início"])).time()
                     hora_fim = pd.to_datetime(str(row["Hora - Fim"])).time()
 
+                    # busca de fornecedor
                     fornecedor_nome = str(row["Fornecedor"]).strip()
-                    fornecedor = FornecedorQualificado.objects.filter(nome__iexact=fornecedor_nome).first()
+                    fornecedor = FornecedorQualificado.objects.filter(
+                        nome__iexact=fornecedor_nome
+                    ).first()
                     if not fornecedor:
                         raise ValueError(f"Fornecedor '{fornecedor_nome}' não encontrado.")
 
-                    responsavel_raw = row.get("Responsável", "")
-                    responsavel_username = str(responsavel_raw).strip().lower()
-                    responsavel = User.objects.filter(username__iexact=responsavel_username).first() or request.user
+                    # busca de usuário responsável (fallback para request.user)
+                    responsavel_username = str(
+                        row.get("Responsável", "")
+                    ).strip().lower()
+                    responsavel = (
+                        User.objects.filter(username__iexact=responsavel_username).first()
+                        or request.user
+                    )
 
+                    # novo campo 'Disposição' (default 'Sucatear' se ausente ou inválido)
+                    disposicao_raw = str(row.get("Disposição", "Sucatear")).strip()
+                    opcoes = dict(Inspecao10.DISPOSICAO_CHOICES)
+                    disposicao = disposicao_raw if disposicao_raw in opcoes else "Sucatear"
+
+                    # criação do registro
                     Inspecao10.objects.create(
                         numero_op=str(row["Nº OP"]),
                         codigo_brasmol=str(row.get("Código Bras-Mol", "SEM_CODIGO")),
@@ -181,37 +205,47 @@ def importar_inspecao10_excel(request):
                         hora_fim=hora_fim,
                         quantidade_total=int(row["Quantidade Total"]),
                         quantidade_nok=int(row["Quantidade Não OK"]),
+                        disposicao=disposicao,
                         observacoes=str(row.get("Observações", "")).strip(),
                         responsavel=responsavel,
                     )
                     importados += 1
 
                 except Exception as e:
-                    erro_msg = f"Linha {index + 2}: {e}"  # +2 por causa do cabeçalho e índice base 0
-                    erros.append(erro_msg)
+                    erros.append(f"Linha {index + 2}: {e}")
 
-            # Salva os erros em um arquivo
+            # gravação de arquivo de erros, se existirem
             if erros:
-                caminho_arquivo = os.path.join(
+                caminho = os.path.join(
                     "C:/Projetos/RH-Qualidade/rh_qualidade/qualidade_fornecimento/views",
                     "erros_importacao_inspecao10.txt"
                 )
-                with open(caminho_arquivo, "w", encoding="utf-8") as f:
-                    for erro in erros:
-                        f.write(erro + "\n")
+                with open(caminho, "w", encoding="utf-8") as f:
+                    f.write("\n".join(erros))
 
-                messages.warning(request, f"{len(erros)} erros encontrados. Verifique o arquivo 'erros_importacao_inspecao10.txt'")
-                messages.info(request, f"{importados} inspeções importadas com sucesso.")
+                messages.warning(
+                    request,
+                    f"{len(erros)} erros encontrados. Verifique o arquivo 'erros_importacao_inspecao10.txt'."
+                )
+                messages.info(
+                    request,
+                    f"{importados} inspeções importadas com sucesso."
+                )
             else:
-                messages.success(request, f"{importados} inspeções importadas com sucesso!")
+                messages.success(
+                    request,
+                    f"{importados} inspeções importadas com sucesso!"
+                )
 
             return redirect("listar_inspecoes10")
 
         except Exception as e:
-            messages.error(request, f"Erro ao processar o arquivo: {str(e)}")
+            messages.error(
+                request,
+                f"Erro ao processar o arquivo: {str(e)}"
+            )
 
     return render(request, "f223/importar_excel.html")
-
 
 
 from django.db.models import Sum
