@@ -23,24 +23,32 @@ class AvaliacaoAnual(models.Model):
     avaliacao_global_avaliado = models.TextField(blank=True, null=True)
     anexo = models.FileField(upload_to='avaliacoes/anual/', blank=True, null=True)
 
+    # Lista centralizada dos campos avaliativos
+    CAMPOS_AVALIADOS = [
+        "postura_seg_trabalho",
+        "qualidade_produtividade",
+        "trabalho_em_equipe",
+        "comprometimento",
+        "disponibilidade_para_mudancas",
+        "disciplina",
+        "rendimento_sob_pressao",
+        "proatividade",
+        "comunicacao",
+        "assiduidade",
+    ]
+
     def calcular_classificacao(self):
-        total_pontos = (
-            (self.postura_seg_trabalho or 0)
-            + (self.qualidade_produtividade or 0)
-            + (self.trabalho_em_equipe or 0)
-            + (self.comprometimento or 0)
-            + (self.disponibilidade_para_mudancas or 0)
-            + (self.disciplina or 0)
-            + (self.rendimento_sob_pressao or 0)
-            + (self.proatividade or 0)
-            + (self.comunicacao or 0)
-            + (self.assiduidade or 0)
+        """
+        Calcula o percentual de desempenho com base nos campos avaliativos e
+        retorna a classificação correspondente.
+        """
+        total_pontos = sum(
+            getattr(self, campo) or 0 for campo in self.CAMPOS_AVALIADOS
         )
 
         if total_pontos == 0:
             return {"percentual": 0, "status": "Indeterminado"}
 
-        # Assume que o total máximo de pontos é 40
         percentual = (total_pontos / 40) * 100
         status = ""
 
@@ -57,5 +65,8 @@ class AvaliacaoAnual(models.Model):
 
     @staticmethod
     def get_status_text(value):
+        """
+        Retorna o texto correspondente ao valor numérico da nota.
+        """
         status_map = {1: "Ruim", 2: "Regular", 3: "Bom", 4: "Ótimo"}
         return status_map.get(value, "Indeterminado")

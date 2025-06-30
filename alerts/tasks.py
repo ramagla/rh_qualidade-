@@ -1,12 +1,19 @@
+# Standard library
 from datetime import timedelta
+
+# Terceiros
 from celery import shared_task
+
+# Django
 from django.core.mail import send_mail
 from django.db.models import DateField, ExpressionWrapper, F, Value
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 
+# Apps locais
 from alerts.models import Alerta, AlertaUsuario, AlertaConfigurado
 from metrologia.models import Dispositivo, TabelaTecnica
+from qualidade_fornecimento.models import FornecedorQualificado
 
 
 @shared_task
@@ -116,15 +123,6 @@ def enviar_alertas_calibracao():
                     mensagem = f"O equipamento {nome} {dados['mensagem']}."
 
                 )
-from datetime import timedelta
-from django.utils.timezone import now
-from django.core.mail import send_mail
-from celery import shared_task
-
-from alerts.models import AlertaUsuario, AlertaConfigurado
-from qualidade_fornecimento.models import FornecedorQualificado
-
-
 @shared_task
 def enviar_alertas_fornecedores_proximos():
     today = now().date()

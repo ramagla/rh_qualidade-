@@ -1,15 +1,13 @@
 from django import forms
 from django_ckeditor_5.widgets import CKEditor5Widget
 
-from rh_qualidade.utils import title_case
+from Funcionario.models.avaliacao_treinamento import AvaliacaoTreinamento
+from Funcionario.models.avaliacao_anual import AvaliacaoAnual
+from Funcionario.models.avaliacao_experiencia import AvaliacaoExperiencia
+from Funcionario.models import Funcionario
 
-from ..models import (
-    AvaliacaoAnual,
-    AvaliacaoExperiencia,
-    AvaliacaoTreinamento,
-    Funcionario, 
-    Treinamento,
-)
+
+from rh_qualidade.utils import title_case
 
 
 class AvaliacaoForm(forms.ModelForm):
@@ -22,80 +20,6 @@ class AvaliacaoForm(forms.ModelForm):
     class Meta:
         model = AvaliacaoTreinamento
         fields = "__all__"
-
-
-class AvaliacaoTreinamentoForm(forms.ModelForm):
-    treinamento = (
-        forms.ModelChoiceField(
-            queryset=Treinamento.objects.all(),
-            widget=forms.Select(attrs={"class": "form-select"}),
-            label="Treinamento/Curso",
-            required=True,
-        ),
-    )
-
-    pergunta_1 = forms.ChoiceField(
-        choices=AvaliacaoTreinamento.OPCOES_CONHECIMENTO,
-        widget=forms.RadioSelect,
-        required=False,
-        label="Grau de conhecimento atual dos participantes da metodologia",
-    )
-    pergunta_2 = forms.ChoiceField(
-        choices=AvaliacaoTreinamento.OPCOES_APLICACAO,
-        widget=forms.RadioSelect,
-        required=False,
-        label="Aplicação dos conceitos da metodologia",
-    )
-    pergunta_3 = forms.ChoiceField(
-        choices=AvaliacaoTreinamento.OPCOES_RESULTADOS,
-        widget=forms.RadioSelect,
-        required=False,
-        label="Resultados obtidos com a aplicação da metodologia",
-    )
-    descricao_melhorias = forms.CharField(
-        widget=CKEditor5Widget(),
-        required=True,
-        label="Descreva as melhorias obtidas/resultados",
-    )
-    avaliacao_geral = forms.IntegerField(
-        widget=forms.HiddenInput(),  # Mude para IntegerField
-        required=False,  # Ajuste se este campo não for obrigatório no formulário
-    )
-
-    class Meta:
-        model = AvaliacaoTreinamento
-        fields = "__all__"
-        widgets = {
-            "responsavel_1": forms.Select(attrs={"class": "form-select"}),
-            "responsavel_2": forms.Select(attrs={"class": "form-select"}),
-            "responsavel_3": forms.Select(attrs={"class": "form-select"}),
-            "funcionario": forms.Select(attrs={"class": "form-select"}),
-            "treinamento": forms.Select(attrs={"class": "form-select"}),
-            "anexo": forms.FileInput(attrs={"class": "form-control", "accept": ".pdf,.doc,.docx"}),
-
-        }
-
-    def __init__(self, *args, **kwargs):
-        super(AvaliacaoTreinamentoForm, self).__init__(*args, **kwargs)
-
-        # ✅ Corrigido: usa o modelo correto (Treinamento)
-        self.fields["treinamento"].queryset = Treinamento.objects.all()
-        self.fields["treinamento"].label = "Treinamento/Curso"
-
-        # ✅ Responsáveis (somente funcionários ativos)
-        ativos = Funcionario.objects.filter(status="Ativo").order_by("nome")
-
-        self.fields["responsavel_1"].queryset = ativos
-        self.fields["responsavel_1"].required = False
-        self.fields["responsavel_1"].label = "Primeiro Responsável (opcional)"
-
-        self.fields["responsavel_2"].queryset = ativos
-        self.fields["responsavel_2"].required = False
-        self.fields["responsavel_2"].label = "Segundo Responsável (opcional)"
-
-        self.fields["responsavel_3"].queryset = ativos
-        self.fields["responsavel_3"].required = False
-        self.fields["responsavel_3"].label = "Terceiro Responsável (opcional)"
 
 
 

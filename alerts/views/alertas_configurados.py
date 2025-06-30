@@ -3,7 +3,6 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.models import User, Group
 from alerts.models import AlertaConfigurado
-from django.views.decorators.http import require_POST
 from alerts.models import AlertaUsuario
 from django.views.decorators.csrf import csrf_exempt
 

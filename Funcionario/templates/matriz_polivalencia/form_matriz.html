@@ -153,8 +153,9 @@
       const departamentoId = $(this).val();
       if (departamentoId) {
         $.ajax({
-          url: '/rh/get-atividades-e-funcionarios-por-departamento/',
-          data: { 'departamento': departamentoId },
+          url: '/rh/atividades/get-atividades-e-funcionarios/',
+data: { 'departamento_id': departamentoId },
+
           success: function (data) {
             atividades = data.atividades;
             const tabelaNotas = $('#tabela-notas');

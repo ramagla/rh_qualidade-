@@ -79,10 +79,12 @@
 
 <div class="row mb-4 mt-4">
   {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Matrizes" valor=total_matrizes subtitulo="Matrizes cadastradas" icone="bi-diagram-3-fill" %}
-  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Atualizadas este Mês" valor=matrizes_mes subtitulo="Atualizadas em {{ mes_ano }}" icone="bi-calendar-event" %}  
+  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Atualizadas este Mês" valor=matrizes_mes subtitulo=subtitulo_matriz icone="bi-calendar-event" %}
   {% include "partials/global/_card_indicador.html" with cor="success" titulo="Departamentos" valor=total_departamentos subtitulo="Com matrizes ativas" icone="bi-building" %}
   {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Média de Atividades" valor=media_atividades subtitulo="Atividades por matriz" icone="bi-list-check" %}
-</div>
+  </div>
+
+
 
 
   

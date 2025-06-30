@@ -1,537 +1,148 @@
-# Bibliotecas padrão
-from collections import defaultdict
-from copy import deepcopy
-from datetime import date, timedelta
-
 # Django - Funcionalidades principais
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
-from django.views.generic import View as GenericView  # para distinção se necessário
 
-# App Interno - Modelos e Formulários
+# App Interno
 from Funcionario.forms import FuncionarioForm
-from Funcionario.models import (
-    AvaliacaoAnual,
-    AvaliacaoExperiencia,
-    Funcionario,
-    HistoricoCargo,
+from Funcionario.models import Funcionario, HistoricoCargo
+from Funcionario.models.cargo import Cargo
+from Funcionario.utils.funcionario_utils import (
+    filtrar_funcionarios,
+    obter_contexto_funcionario,
+    gerar_mensagem_acesso_texto,
+    montar_estrutura_organograma,
+)
+from Funcionario.models import (    
     Treinamento,
 )
-from Funcionario.models.avaliacao_treinamento import AvaliacaoTreinamento
-from Funcionario.models.integracao_funcionario import IntegracaoFuncionario
-from Funcionario.models.job_rotation_evaluation import JobRotationEvaluation
-from Funcionario.models.lista_presenca import ListaPresenca
-from Funcionario.models.departamentos import Departamentos
-
-# App Interno - Outros modelos
-from metrologia.models import TabelaTecnica
-from ..models.cargo import Cargo
-
-
-
-def is_authenticated(user):
-    return user.is_authenticated
 
 
 @login_required
 def lista_funcionarios(request):
-    # Aplica o filtro padrão de status "Ativo"
-    status = request.GET.get("status", "Ativo")  # Valor padrão é "Ativo"
-    funcionarios = Funcionario.objects.filter(status=status).order_by("nome")
-
-    # Dados para os cards
-    total_ativos = Funcionario.objects.filter(status="Ativo").count()
-    total_inativos = Funcionario.objects.filter(status="Inativo").count()
-    local_mais_comum = (
-        Funcionario.objects.values("local_trabalho")
-        .annotate(count=Count("id"))
-        .order_by("-count")
-        .first()
-    )
-    total_pendentes = Funcionario.objects.filter(
-        Q(curriculo__isnull=True) | Q(curriculo="")
-    ).count()
-
-    # Lista de responsáveis disponíveis
-    responsaveis = Funcionario.objects.filter(
-        responsavel__isnull=False, status="Ativo"
-    ).distinct()
-
-    # Filtros do formulário
-    nome = request.GET.get("nome")
-    if nome:
-        funcionarios = funcionarios.filter(nome__icontains=nome)
-
-    local_trabalho = request.GET.get("local_trabalho")
-    if local_trabalho:
-        try:
-            local_obj = Departamentos.objects.get(id=local_trabalho)
-            funcionarios = funcionarios.filter(local_trabalho=local_obj)
-        except Departamentos.DoesNotExist:
-            messages.warning(request, "Local de trabalho não encontrado.")
-
-    responsavel = request.GET.get("responsavel")
-    if responsavel:
-        if responsavel == "None":
-            funcionarios = funcionarios.filter(responsavel__isnull=True)
-        else:
-            funcionarios = funcionarios.filter(responsavel_id=responsavel)
-
-    escolaridade = request.GET.get("escolaridade")
-    if escolaridade:
-        funcionarios = funcionarios.filter(escolaridade=escolaridade)
-
-    # Paginação
+    funcionarios = filtrar_funcionarios(request)
     paginator = Paginator(funcionarios, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # Departamentos para o filtro (lista de objetos, não values_list)
-    departamentos = Departamentos.objects.filter(ativo=True).order_by("nome")
-
-    context = {
-        "page_obj": page_obj,
-        "departamentos": departamentos,
-        "responsaveis": responsaveis,
-        "niveis_escolaridade": Funcionario.objects.filter(status="Ativo")
-            .values_list("escolaridade", flat=True)
-            .distinct(),
-        "status_opcoes": Funcionario.objects.values_list("status", flat=True).distinct(),
-        "filtro_status": status,
-        "total_ativos": total_ativos,
-        "total_pendentes": total_pendentes,
-        "local_mais_comum": (
-            local_mais_comum["local_trabalho"] if local_mais_comum else "N/A"
-        ),
-        "total_inativos": total_inativos,
-        "funcionarios": funcionarios,
-        "funcionarios_paginados": page_obj,
-    }
-
+    status = request.GET.get("status", "Ativo")
+    context = obter_contexto_funcionario(funcionarios, status, page_obj)
     return render(request, "funcionarios/lista_funcionarios.html", context)
 
 
 @login_required
 def visualizar_funcionario(request, funcionario_id):
-    # Busca o colaborador ou retorna 404
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+    context = {"funcionario": funcionario, "now": timezone.now()}
 
-    # Obter o cargo do responsável, caso exista
-    cargo_responsavel = None
     if funcionario.responsavel:
-        responsaveis = Funcionario.objects.filter(nome=funcionario.responsavel)
-        if responsaveis.exists():
-            cargo_responsavel = responsaveis.first().cargo_responsavel
-        else:
-            cargo_responsavel = "Cargo não encontrado"
+        responsavel = Funcionario.objects.filter(nome=funcionario.responsavel).first()
+        context["cargo_responsavel"] = (
+            responsavel.cargo_responsavel if responsavel else "Cargo não encontrado"
+        )
+    return render(request, "funcionarios/visualizar_funcionario.html", context)
 
-    # Monta o contexto, incluindo a data/hora atual
-    context = {
-        "funcionario": funcionario,
-        "cargo_responsavel": cargo_responsavel,
-        "now": timezone.now(),
-    }
-
-    # Renderiza o template de visualização
-    return render(
-        request,
-        "funcionarios/visualizar_funcionario.html",
-        context
-    )
 
 @login_required
 def cadastrar_funcionario(request):
-    if request.method == "POST":
-        form = FuncionarioForm(request.POST, request.FILES)
-        if form.is_valid():
-            funcionario = form.save(commit=False)
-            print(
-                f"Responsável: {funcionario.responsavel}, Cargo do Responsável: {funcionario.cargo_responsavel}"
-            )
-            funcionario.save()
-            messages.success(request, "Funcionário cadastrado com sucesso!")
-            return redirect("lista_funcionarios")
-        else:
-            messages.error(
-                request,
-                "Erro ao cadastrar o funcionário. Verifique os dados e tente novamente.",
-            )
-    else:
-        form = FuncionarioForm()
+    form = FuncionarioForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Funcionário cadastrado com sucesso!")
+        return redirect("lista_funcionarios")
     return render(request, "funcionarios/form_funcionario.html", {"form": form})
 
 
 @login_required
 def editar_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+    form = FuncionarioForm(request.POST or None, request.FILES or None, instance=funcionario)
 
-    # Inicialize as variáveis
-    cargo_responsavel = None
-    responsavel_nome = funcionario.responsavel  # Nome do responsável
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Funcionário editado com sucesso!")
+        return redirect("lista_funcionarios")
 
-    # Verifique se o responsável foi fornecido
-    if responsavel_nome:
-        try:
-            # Busque o funcionário responsável pelo nome
-            responsavel_funcionario = Funcionario.objects.get(nome=responsavel_nome)
-            cargo_responsavel = (
-                responsavel_funcionario.cargo_responsavel
-            )  # Acesse o cargo do responsável
-        except Funcionario.DoesNotExist:
-            cargo_responsavel = "Cargo não encontrado"  # Ou lidar de outra forma
-
-    # Criação do formulário para edição
-    form = FuncionarioForm(
-        request.POST or None, request.FILES or None, instance=funcionario
-    )
-
-    if request.method == "POST":
-        print("Formulário submetido")
-        if form.is_valid():
-            print("Formulário válido")
-            form.save()
-            messages.success(request, "Funcionário editado com sucesso!")
-            return redirect("lista_funcionarios")
-        else:
-            print("Erros no formulário:", form.errors)
-
-    # Certifique-se de que 'responsaveis' está sendo passado no contexto
-    # Excluir o próprio funcionário da lista
     responsaveis = Funcionario.objects.exclude(id=funcionario_id)
-
-    context = {
-        "form": form,
-        "funcionario": funcionario,
-        "cargo_responsavel": cargo_responsavel,
-        "responsaveis": responsaveis,  # Adicione isso ao contexto
-    }
-
-    return render(request, "funcionarios/form_funcionario.html", context)
+    return render(
+        request,
+        "funcionarios/form_funcionario.html",
+        {"form": form, "funcionario": funcionario, "responsaveis": responsaveis},
+    )
 
 
 @login_required
 def excluir_funcionario(request, funcionario_id):
-    # Busca o colaborador ou retorna 404
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-
-    # Se houver treinamentos vinculados, inativa em vez de excluir
     if Treinamento.objects.filter(funcionarios=funcionario).exists():
         funcionario.status = "Inativo"
         funcionario.save(update_fields=["status"])
-        messages.success(
-            request,
-            "Funcionário possui registros associados e foi marcado como Inativo."
-        )
+        messages.success(request, "Funcionário foi marcado como Inativo.")
     else:
-        # Caso contrário, exclui de fato
         funcionario.delete()
         messages.success(request, "Funcionário excluído com sucesso.")
-
     return redirect("lista_funcionarios")
 
 
 class ImprimirFichaView(View):
     def get(self, request, funcionario_id):
         funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-
-        # Dados relacionados
-        treinamentos = Treinamento.objects.filter(funcionarios=funcionario)
-        listas_presenca = ListaPresenca.objects.filter(participantes=funcionario)
-        avaliacoes_treinamento = AvaliacaoTreinamento.objects.filter(funcionario=funcionario)
-        avaliacoes_experiencia = AvaliacaoExperiencia.objects.filter(funcionario=funcionario)
-        avaliacoes_anual = AvaliacaoAnual.objects.filter(funcionario=funcionario)
-        job_rotations = JobRotationEvaluation.objects.filter(funcionario=funcionario)
-        equipamentos = TabelaTecnica.objects.filter(responsavel=funcionario)
-        integracao = IntegracaoFuncionario.objects.filter(funcionario=funcionario).last()
-
-        # Status de prazo para avaliações
-        today = timezone.now().date()
-        for avaliacao in avaliacoes_experiencia:
-            data_limite = avaliacao.data_avaliacao + timedelta(days=30)
-            avaliacao.get_status_prazo = "Dentro do Prazo" if data_limite >= today else "Em Atraso"
-
-        for avaliacao in avaliacoes_anual:
-            data_limite = avaliacao.data_avaliacao + timedelta(days=365)
-            avaliacao.get_status_prazo = "Dentro do Prazo" if data_limite >= today else "Em Atraso"
-
-        context = {
-            "funcionario": funcionario,
-            "treinamentos": treinamentos,
-            "listas_presenca": listas_presenca,
-            "avaliacoes_treinamento": avaliacoes_treinamento,
-            "avaliacoes_experiencia": avaliacoes_experiencia,
-            "avaliacoes_anual": avaliacoes_anual,
-            "job_rotations": job_rotations,
-            "equipamentos": equipamentos,
-            "integracao": integracao,
-        }
-
+        context = montar_estrutura_organograma(funcionario)
         return render(request, "funcionarios/template_de_impressao.html", context)
 
     def post(self, request, funcionario_id):
         return self.get(request, funcionario_id)
 
 
-def gerar_organograma(funcionario):
-    """
-    Função recursiva para construir a hierarquia completa.
-    Inclui a contagem de subordinados.
-    """
-    subordinados = Funcionario.objects.filter(
-        responsavel_id=funcionario.id, status="Ativo"
-    )
-    estrutura = []
-    for subordinado in subordinados:
-        estrutura.append(
-            {
-                "nome": subordinado.nome,
-                "cargo": subordinado.cargo_atual,
-                "foto": subordinado.foto.url if subordinado.foto else None,
-                "subordinados": gerar_organograma(subordinado),
-                "quantidade_subordinados": subordinados.count(),
-            }
-        )
-    return estrutura
-
-
-@login_required
-def organograma_view(request):
-    print(f"Usuário autenticado: {request.user}")  # Verifica o usuário autenticado
-    # Confirmação do tipo do objeto
-    print(f"Tipo de request.user: {type(request.user)}")
-
-    # Se o usuário for um superuser, ele pode ver todos os funcionários
-    if request.user.is_superuser:
-        top_funcionarios = Funcionario.objects.filter(
-            responsavel__isnull=True, status="Ativo"
-        )
-    else:
-        # Tenta encontrar um funcionário correspondente ao usuário autenticado
-        funcionario = Funcionario.objects.filter(
-            nome=request.user.get_full_name()
-        ).first()
-
-        if funcionario:
-            top_funcionarios = Funcionario.objects.filter(
-                responsavel=funcionario, status="Ativo"
-            )
-        else:
-            # Se não encontrar, mostra todos os funcionários no topo da hierarquia
-            top_funcionarios = Funcionario.objects.filter(
-                responsavel__isnull=True, status="Ativo"
-            )
-
-    organograma = []
-    for funcionario in top_funcionarios:
-        organograma.append(
-            {
-                "nome": funcionario.nome,
-                "cargo": funcionario.cargo_atual,
-                "foto": funcionario.foto.url if funcionario.foto else None,
-                "subordinados": gerar_organograma(funcionario),
-            }
-        )
-
-    return render(
-        request, "funcionarios/organograma/organograma.html", {"organograma": organograma}
-    )
-
-
-# Listar histórico de cargos
 @login_required
 def listar_historico_cargo(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-    historicos = HistoricoCargo.objects.filter(funcionario=funcionario).order_by(
-        "-data_atualizacao"
-    )
-    return render(
-        request,
-        "funcionarios/historico_cargo.html",
-        {"funcionario": funcionario, "historicos": historicos},
-    )
+    historicos = HistoricoCargo.objects.filter(funcionario=funcionario).order_by("-data_atualizacao")
+    return render(request, "funcionarios/historico_cargo.html", {"funcionario": funcionario, "historicos": historicos})
 
 
 @login_required
 def adicionar_historico_cargo(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-
     if request.method == "POST":
-        cargo_id = request.POST.get("cargo")
-        data_atualizacao = request.POST.get(
-            "data_atualizacao"
-        )  # Captura a data do formulário
-        cargo = get_object_or_404(Cargo, id=cargo_id)
-
+        cargo = get_object_or_404(Cargo, id=request.POST.get("cargo"))
         HistoricoCargo.objects.create(
             funcionario=funcionario,
             cargo=cargo,
-            data_atualizacao=data_atualizacao,  # Usa a data fornecida pelo usuário
+            data_atualizacao=request.POST.get("data_atualizacao"),
         )
         messages.success(request, "Histórico de cargo adicionado com sucesso.")
         return redirect("listar_historico_cargo", funcionario_id=funcionario.id)
-
     cargos = Cargo.objects.all()
-    return render(
-        request,
-        "funcionarios/adicionar_historico_cargo.html",
-        {"funcionario": funcionario, "cargos": cargos},
-    )
+    return render(request, "funcionarios/adicionar_historico_cargo.html", {"funcionario": funcionario, "cargos": cargos})
 
 
 @login_required
 def excluir_historico_cargo(request, historico_id):
-    # Obtém o objeto HistoricoCargo
     historico = get_object_or_404(HistoricoCargo, id=historico_id)
-
-    if request.method == "POST":
-        # Exclui o histórico
-        historico.delete()
-        # Redireciona após a exclusão
-        return redirect(
-            "listar_historico_cargo", funcionario_id=historico.funcionario.id
-        )
-
+    historico.delete()
     return redirect("listar_historico_cargo", funcionario_id=historico.funcionario.id)
-
-
-def montar_organograma(lista):
-    mapa = {}
-    raiz = []
-
-    for item in lista:
-        item['subordinados'] = []
-        mapa[item['id']] = item
-
-    for item in lista:
-        pai_id = item.get('responsavel_id')
-        if pai_id and pai_id in mapa:
-            mapa[pai_id]['subordinados'].append(item)
-        else:
-            raiz.append(item)
-
-    return raiz
-
-from collections import defaultdict
-from copy import deepcopy
-
-@login_required
-def imprimir_organograma(request):
-    funcionarios = Funcionario.objects.select_related("cargo_atual", "responsavel__cargo_atual")
-
-    cargos_dict = {}
-    subordinados_por_cargo = defaultdict(set)
-
-    for f in funcionarios:
-        if f.cargo_atual:
-            cargo_nome = f.cargo_atual.nome
-            cargos_dict[cargo_nome] = f.cargo_atual.id
-
-            if f.responsavel and f.responsavel.cargo_atual:
-                responsavel_nome = f.responsavel.cargo_atual.nome
-                subordinados_por_cargo[responsavel_nome].add(cargo_nome)
-
-    # Cria os nós únicos (sem vínculo ainda)
-    cargos_nos = {
-        nome: {
-            'id': id,
-            'cargo': nome,
-            'subordinados': []
-        }
-        for nome, id in cargos_dict.items()
-    }
-
-    # Relaciona subordinados (usando cópia para evitar ciclos)
-    for responsavel_nome, lista in subordinados_por_cargo.items():
-        if responsavel_nome in cargos_nos:
-            cargos_nos[responsavel_nome]['subordinados'] = [
-                deepcopy(cargos_nos[nome]) for nome in lista if nome in cargos_nos
-            ]
-
-    # Detecta cargos sem responsáveis (topo)
-    todos_subordinados = {nome for lista in subordinados_por_cargo.values() for nome in lista}
-    topo = [deepcopy(n) for nome, n in cargos_nos.items() if nome not in todos_subordinados]
-
-    contexto = {
-        'organograma': topo,
-        'revisao': '06',
-        'data': '04/03/2025',
-        'elaborador': 'Anderson Goveia',
-        'aprovador': 'Lilian Fernandes'
-    }
-    return render(request, 'funcionarios/organograma/organograma_imprimir.html', contexto)
 
 
 @login_required
 def gerar_mensagem_acesso(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
-
-    # Formatar o usuário (primeira letra maiúscula)
-    username = funcionario.user.username if funcionario.user else "NÃO CADASTRADO"
-
-    # Dados fixos
-    link_sistema = "https://qualidade.brasmol.com.br/"
-    senha_padrao = "Bras@2025"
-    video_redefinir = "https://www.canva.com/design/DAGpUXuwVGg/0jFy_0s06DOnZdXJDWQPDQ/watch?utm_content=DAGpUXuwVGg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h18dd4d813d"
-    video_modulos_colaborador = "https://www.canva.com/design/DAGpUpGtN0s/KypajNUS2msIsvqPpNP26w/watch?utm_content=DAGpUpGtN0s&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h8a4e2a5472"
-    video_modulos_gestor = "https://www.canva.com/design/DAGpUYf4ndI/cZFuSgjjpiXGvJkCqrQkKg/watch?utm_content=DAGpUYf4ndI&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h8546e559f0"
-
-    # Verificar se o funcionário é gestor (possui subordinados)
-    subordinados = Funcionario.objects.filter(responsavel_id=funcionario.id, status="Ativo").exists()
-    video_modulo = video_modulos_gestor if subordinados else video_modulos_colaborador
-
-    # Verificar se possui usuário vinculado
-    email_destino = funcionario.user.email if funcionario.user else "Não cadastrado"
-
-    # Montar a mensagem
-    mensagem = f"""
-📢 Acesso ao Sistema – SIB Bras-Mol
-
-Olá, {funcionario.nome} 👋
-
-Segue abaixo os seus dados de acesso ao sistema da Qualidade Bras-Mol:
-
-🌐 Link de Acesso: {link_sistema}
-👤 Usuário (Login): {username} (Primeira Letra em maiúsculo)
-🔑 Senha Padrão: {senha_padrao}
-
-⚠️ Atenção:
-✅ Ao acessar pela primeira vez, é obrigatório alterar sua senha.
-➡️ Na tela de login, clique em “Esqueci minha senha / Alterar Senha”.
-Um e-mail para redefinição de senha será enviado para: {email_destino} ✉️
-
-🎥 Vídeos de Apoio:
-
-1️⃣ Como Redefinir sua Senha:
-👉 {video_redefinir}
-
-2️⃣ Conheça os Módulos Disponíveis no Sistema:
-👉 {video_modulo}
-"""
-
-    # Retornar no template para copiar
-    return render(request, "funcionarios/mensagem_acesso.html", {
-        "mensagem": mensagem,
-        "funcionario": funcionario
-    })
+    mensagem = gerar_mensagem_acesso_texto(funcionario)
+    return render(request, "funcionarios/mensagem_acesso.html", {"mensagem": mensagem, "funcionario": funcionario})
 
 
 @login_required
 def selecionar_funcionario_mensagem_acesso(request):
     funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
-    return render(request, "funcionarios/selecionar_mensagem_acesso.html", {
-        "funcionarios": funcionarios
-    })
+    return render(request, "funcionarios/selecionar_mensagem_acesso.html", {"funcionarios": funcionarios})
+
 
 @login_required
 def gerar_mensagem_acesso_redirect(request):
     funcionario_id = request.GET.get("funcionario_id")
     if funcionario_id:
         return redirect("gerar_mensagem_acesso", funcionario_id=funcionario_id)
-    else:
-        # Se não selecionou, volta para seleção
-        return redirect("selecionar_funcionario_mensagem_acesso")
+    return redirect("selecionar_funcionario_mensagem_acesso")

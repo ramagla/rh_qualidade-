@@ -1,8 +1,11 @@
 from .avaliacao_forms import (
-    AvaliacaoAnualForm,
+    AvaliacaoForm,
     AvaliacaoExperienciaForm,
-    AvaliacaoTreinamentoForm,
+    AvaliacaoAnualForm,
 )
+
+from .avaliacao_treinamento_forms import AvaliacaoTreinamentoForm
+
 from .cargo_forms import CargoForm, RevisaoForm
 from .comunicado_forms import ComunicadoForm
 from .documentos_forms import DocumentoForm, RevisaoDocForm

@@ -148,8 +148,9 @@
       const funcionarioId = $(this).val();
       if (funcionarioId && funcionarioId !== ultimoId) {
         ultimoId = funcionarioId;
-        fetch(`/rh/get-cargo/${funcionarioId}/`)
-        .then(res => res.json())
+        const urlBase = "{% url 'get_cargo' 0 %}".replace("0", funcionarioId);
+        fetch(urlBase)
+          .then(res => res.json())
           .then(data => {
             cargoInput.value = data.cargo || 'Cargo não encontrado';
             departamentoInput.value = data.departamento || 'Departamento não encontrado';

@@ -3,8 +3,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import get_object_or_404, render
 
-from Funcionario.views import funcionario_views
-from Funcionario.views import banco_horas_views
+from Funcionario.views import banco_horas_views, funcionario_views
+from Funcionario.views import organograma_views 
 from Funcionario.views import avaliacao_anual_views
 from Funcionario.views import avaliacao_experiencia_views
 from Funcionario.views import avaliacao_treinamentos_views
@@ -15,7 +15,8 @@ from Funcionario.views import home_views
 from Funcionario.views import integracao_views
 from Funcionario.views import job_rotation_views
 from Funcionario.views import lista_presenca_views
-from Funcionario.views import matriz_polivalencia_views
+from Funcionario.views import matriz_views
+from Funcionario.views import atividade_views
 from Funcionario.views import relatorios_views
 from Funcionario.views import treinamento_views
 from Funcionario.views import api_views
@@ -40,8 +41,8 @@ urlpatterns = [
     path("funcionarios/editar/<int:funcionario_id>/", funcionario_views.editar_funcionario, name="editar_funcionario"),
     path("funcionarios/<int:funcionario_id>/", funcionario_views.visualizar_funcionario, name="visualizar_funcionario"),
     path("funcionarios/excluir/<int:funcionario_id>/", funcionario_views.excluir_funcionario, name="excluir_funcionario"),
-    path("funcionarios/imprimir-organograma/", funcionario_views.imprimir_organograma, name="imprimir_organograma"),
-    path("organograma/", funcionario_views.organograma_view, name="organograma"),
+    path("funcionarios/imprimir-organograma/", organograma_views.imprimir_organograma, name="imprimir_organograma"),
+    path("organograma/", organograma_views.organograma_view, name="organograma"),
     path("historico-cargo/<int:funcionario_id>/", funcionario_views.listar_historico_cargo, name="listar_historico_cargo"),
     path("historico-cargo/<int:funcionario_id>/adicionar/", funcionario_views.adicionar_historico_cargo, name="adicionar_historico_cargo"),
     path("historico-cargo/<int:historico_id>/excluir/", funcionario_views.excluir_historico_cargo, name="excluir_historico_cargo"),
@@ -146,19 +147,24 @@ urlpatterns = [
     path("jobrotation/imprimir/<int:id>/", job_rotation_views.imprimir_jobrotation_evaluation, name="imprimir_jobrotation_evaluation"),
 
 
-    path("matriz/", matriz_polivalencia_views.lista_matriz_polivalencia, name="lista_matriz_polivalencia"),
-    path("matriz/cadastrar/", matriz_polivalencia_views.cadastrar_matriz_polivalencia, name="cadastrar_matriz_polivalencia"),
-    path("matriz/editar/<int:id>/", matriz_polivalencia_views.editar_matriz_polivalencia, name="editar_matriz_polivalencia"),
-    path("matriz/excluir/<int:id>/", matriz_polivalencia_views.excluir_matriz_polivalencia, name="excluir_matriz_polivalencia"),
-    path("matriz/<int:id>/imprimir/", matriz_polivalencia_views.imprimir_matriz, name="imprimir_matriz"),
+    # Matriz de Polivalência
+    path("matriz/", matriz_views.lista_matriz_polivalencia, name="lista_matriz_polivalencia"),
+    path("matriz/cadastrar/", matriz_views.cadastrar_matriz_polivalencia, name="cadastrar_matriz_polivalencia"),
+    path("matriz/editar/<int:id>/", matriz_views.editar_matriz_polivalencia, name="editar_matriz_polivalencia"),
+    path("matriz/excluir/<int:id>/", matriz_views.excluir_matriz_polivalencia, name="excluir_matriz_polivalencia"),
+    path("matriz/<int:id>/imprimir/", matriz_views.imprimir_matriz, name="imprimir_matriz"),
 
 
-
-
-    path("atividades/", matriz_polivalencia_views.lista_atividades, name="lista_atividades"),
-    path("atividades/cadastrar/", matriz_polivalencia_views.cadastrar_atividade, name="cadastrar_atividade"),
-    path("atividades/editar/<int:id>/", matriz_polivalencia_views.editar_atividade, name="editar_atividade"),
-    path("atividades/excluir/<int:id>/", matriz_polivalencia_views.excluir_atividade, name="excluir_atividade"),
+    # ATIVIDADES DA MATRIZ
+    path("atividades/", atividade_views.lista_atividades, name="lista_atividades"),
+    path("atividades/cadastrar/", atividade_views.cadastrar_atividade, name="cadastrar_atividade"),
+    path("atividades/editar/<int:id>/", atividade_views.editar_atividade, name="editar_atividade"),
+    path("atividades/excluir/<int:id>/", atividade_views.excluir_atividade, name="excluir_atividade"),
+    path("atividades/<int:id>/", atividade_views.visualizar_atividade, name="visualizar_atividade"),
+    path("atividades/<int:id>/notas/", atividade_views.gerenciar_notas, name="gerenciar_notas"),
+    path("atividades/importar/", atividade_views.importar_atividades, name="importar_atividades"),
+    path("atividades/get-por-departamento/", atividade_views.get_atividades_por_departamento, name="get_atividades_por_departamento"),
+    path("atividades/get-atividades-e-funcionarios/", atividade_views.get_atividades_e_funcionarios_por_departamento, name="get_atividades_e_funcionarios_por_departamento"),
 
     path("relatorios/indicador_anual/", relatorios_views.RelatorioIndicadorAnualView.as_view(), name="relatorio_indicador_anual"),
     path("relatorios/planilha-treinamentos/", relatorios_views.RelatorioPlanilhaTreinamentosView.as_view(), name="relatorio_planilha_treinamentos"),
@@ -176,7 +182,6 @@ urlpatterns = [
     path("formularios/pesquisa-consciencia/", formularios_views.FormularioPesquisaConscienciaView.as_view(), name="formulario_pesquisa_consciencia"),
     path("formularios/carta-competencia/<int:funcionario_id>/", formularios_views.FormularioCartaCompetenciaView.as_view(), name="formulario_carta_competencia"),
 
-    path("atividades/importar/", matriz_polivalencia_views.importar_atividades, name="importar_atividades"),
     path("funcionarios/filtro-generico/", formularios_views.filtro_funcionario_generico, name="filtro_funcionario_generico"),
 
 

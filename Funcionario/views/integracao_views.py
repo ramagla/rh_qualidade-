@@ -1,124 +1,71 @@
 # Django - Funcionalidades principais
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.db.models import Q
-from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.timezone import now
 
 # App Interno - Formulários e modelos
 from Funcionario.forms import IntegracaoFuncionarioForm
-from Funcionario.models import Funcionario, IntegracaoFuncionario
+from Funcionario.models import IntegracaoFuncionario
 
+# Utilitários locais
+from Funcionario.utils.integracao_utils import (
+    filtrar_integracoes,
+    obter_contexto_lista_integracoes
+)
 
-
-# View para listar integrações com filtros
 @login_required
 def lista_integracoes(request):
-    # Obter os filtros do GET
-    funcionario_id = request.GET.get("funcionario")
-    # O filtro do departamento vem como 'departamento'
-    departamento_id = request.GET.get("departamento")
-    requer_treinamento = request.GET.get("requer_treinamento")
-    grupo_whatsapp = request.GET.get("grupo_whatsapp")
+    """Renderiza a listagem de integrações com filtros e cards."""
+    integracoes = filtrar_integracoes(request)
+    contexto = obter_contexto_lista_integracoes(request, integracoes)
+    return render(request, "integracao/lista_integracoes.html", contexto)
 
-    # Filtrar as integrações com base nos parâmetros
-    integracoes = IntegracaoFuncionario.objects.all()
-    if funcionario_id:
-        integracoes = integracoes.filter(funcionario_id=funcionario_id)
-    if departamento_id and departamento_id != "None":
-        integracoes = integracoes.filter(funcionario__local_trabalho__nome=departamento_id)
-
-    if requer_treinamento:
-        integracoes = integracoes.filter(
-            requer_treinamento=(requer_treinamento == "True")
-        )
-    if grupo_whatsapp:
-        integracoes = integracoes.filter(grupo_whatsapp=(grupo_whatsapp == "True"))
-
-    # Ordenar as integrações pelo nome do funcionário relacionado
-    integracoes = integracoes.order_by("funcionario__nome")
-
-    # Paginação (10 registros por página)
-    paginator = Paginator(integracoes, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    # Filtrar apenas funcionários com integração cadastrada e ordenar por nome
-    funcionarios_com_integracao = (
-        Funcionario.objects.filter(integracaofuncionario__isnull=False)
-        .distinct()
-        .order_by("nome")
-    )
-
-    # Obter os valores únicos do campo `local_trabalho` para o filtro de departamento e ordená-los
-    departamentos = (
-    Funcionario.objects.filter(
-                integracaofuncionario__isnull=False
-            )
-            .values_list("local_trabalho__nome", flat=True)
-            .distinct()
-            .order_by("local_trabalho__nome")
-        )
-
-    # Dados para os cards
-    total_integracoes = integracoes.count()
-    total_requer_treinamento = integracoes.filter(requer_treinamento=True).count()
-    total_grupo_whatsapp = integracoes.filter(grupo_whatsapp=True).count()
-    total_sem_pdf = integracoes.filter(
-        Q(pdf_integracao__isnull=True) | Q(pdf_integracao="")
-    ).count()
-
-    # Não é necessário nenhum ajuste adicional aqui para o PDF, pois será renderizado diretamente no template.
-    return render(
-        request,
-        "integracao/lista_integracoes.html",
-        {
-            "integracoes": page_obj,
-            "page_obj": page_obj,  # Ordenado pelo nome do funcionário
-            "funcionarios": funcionarios_com_integracao,  # Somente funcionários com integração
-            "departamentos": departamentos,  # Passar os departamentos ordenados para o template
-            "total_integracoes": total_integracoes,
-            "total_requer_treinamento": total_requer_treinamento,
-            "total_grupo_whatsapp": total_grupo_whatsapp,
-            "total_sem_pdf": total_sem_pdf,
-        },
-    )
 
 @login_required
 def visualizar_integracao(request, integracao_id):
+    """Exibe os detalhes de uma integração específica."""
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
     return render(
         request,
         "integracao/visualizar_integracao.html",
-        {
-            "integracao": integracao,
-            "now": now(),  # Passa a data e hora atual
-        },
+        {"integracao": integracao, "now": now()},
     )
 
 
 @login_required
 def cadastrar_integracao(request):
+    """Realiza o cadastro de uma nova integração de funcionário."""
     if request.method == "POST":
         form = IntegracaoFuncionarioForm(request.POST, request.FILES)
         if form.is_valid():
-            integracao = form.save()
+            form.save()
             messages.success(request, "Integração cadastrada com sucesso.")
             return redirect(reverse("lista_integracoes"))
     else:
         form = IntegracaoFuncionarioForm()
-    return render(
-        request,
-        "integracao/form_integracao.html",
-        {"form": form, "integracao": None},
-    )
+    return render(request, "integracao/form_integracao.html", {"form": form})
+
+
+@login_required
+def editar_integracao(request, integracao_id):
+    """Edita os dados de uma integração existente."""
+    integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
+    if request.method == "POST":
+        form = IntegracaoFuncionarioForm(request.POST, request.FILES, instance=integracao)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Integração atualizada com sucesso.")
+            return redirect(reverse("lista_integracoes"))
+    else:
+        form = IntegracaoFuncionarioForm(instance=integracao)
+    return render(request, "integracao/form_integracao.html", {"form": form, "integracao": integracao})
 
 
 @login_required
 def excluir_integracao(request, integracao_id):
+    """Exclui uma integração específica."""
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
     if request.method == "POST":
         integracao.delete()
@@ -127,34 +74,7 @@ def excluir_integracao(request, integracao_id):
 
 
 @login_required
-def editar_integracao(request, integracao_id):
-    integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
-    if request.method == "POST":
-        form = IntegracaoFuncionarioForm(
-            request.POST, request.FILES, instance=integracao
-        )
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Integração atualizada com sucesso.")
-            return redirect(reverse("lista_integracoes"))
-    else:
-        form = IntegracaoFuncionarioForm(instance=integracao)
-    return render(
-        request,
-        "integracao/form_integracao.html",
-        {"form": form, "integracao": integracao},
-    )
-
-
-@login_required
 def imprimir_integracao(request, integracao_id):
-    try:
-        integracao = IntegracaoFuncionario.objects.get(id=integracao_id)
-    except IntegracaoFuncionario.DoesNotExist:
-        raise Http404("Integração de Funcionário não encontrada.")
-
-    return render(
-        request,
-        "integracao/imprimir_integracao.html",
-        {"integracao": integracao},
-    )
+    """Gera a visualização para impressão da integração."""
+    integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
+    return render(request, "integracao/imprimir_integracao.html", {"integracao": integracao})

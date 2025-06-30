@@ -246,7 +246,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function carregarDadosFuncionario(funcionarioId) {
         if (!funcionarioId) return;
 
-        fetch(`/rh/get_funcionario_info/${funcionarioId}/`)
+        fetch(`/rh/api/get-info/${funcionarioId}/`)
         .then(response => response.json())
             .then(data => {
                 document.getElementById('local-trabalho').value = data.local_trabalho || '';
@@ -293,35 +293,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Função para carregar treinamentos do funcionário
     function carregarTreinamentos(funcionarioId) {
-        fetch(`/rh/get-treinamentos/${funcionarioId}/`)
-        .then(response => response.json())
-            .then(treinamentos => {
-                const tbody = document.querySelector('table tbody');
-                tbody.innerHTML = '';
-
-                if (treinamentos.length > 0) {
-                    treinamentos.forEach(treinamento => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${formatarTitulo(treinamento.tipo)}</td>
-                            <td>${treinamento.nome_curso || 'Não especificado'}</td>
-                            <td>${formatarTitulo(treinamento.categoria)}</td>
-                            <td>${formatarTitulo(treinamento.status)}</td>
-                            <td>${formatarData(treinamento.data_fim)}</td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                } else {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td colspan="5">Nenhum treinamento encontrado para este colaborador.</td>`;
-                    tbody.appendChild(row);
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao buscar treinamentos do colaborador:', error);
-                alert('Erro ao carregar treinamentos. Por favor, tente novamente.');
-            });
-    }
+      fetch(`/rh/api/get-treinamentos/${funcionarioId}/`)  // <--- Corrigido URL também
+          .then(response => response.json())
+          .then(treinamentos => {
+              const tbody = document.querySelector('table tbody');
+              tbody.innerHTML = '';
+  
+              if (treinamentos.length > 0) {
+                  treinamentos.forEach(treinamento => {
+                      const row = document.createElement('tr');
+                      row.innerHTML = `
+                          <td>${formatarTitulo(treinamento.tipo)}</td>
+                          <td>${treinamento.nome_curso || 'Não especificado'}</td>
+                          <td>${formatarTitulo(treinamento.categoria)}</td>
+                          <td>${formatarTitulo(treinamento.status)}</td>
+                          <td>${treinamento.data_fim || 'Não informada'}</td>  <!-- sem formatarData -->
+                      `;
+                      tbody.appendChild(row);
+                  });
+              } else {
+                  const row = document.createElement('tr');
+                  row.innerHTML = `<td colspan="5">Nenhum treinamento encontrado para este colaborador.</td>`;
+                  tbody.appendChild(row);
+              }
+          })
+          .catch(error => {
+              console.error('Erro ao buscar treinamentos do colaborador:', error);
+              alert('Erro ao carregar treinamentos. Por favor, tente novamente.');
+          });
+  }
+  
 
     // Abre primeiro accordion por padrão
     const firstAccordion = document.querySelector('.accordion-button');

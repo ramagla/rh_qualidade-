@@ -84,14 +84,15 @@ class CargoForm(forms.ModelForm):
             "departamento": forms.Select(attrs={"class": "form-select"}),
             "nivel": forms.Select(attrs={"class": "form-select"}),  # 👈 Aqui
 
-            "elaborador": Select2Widget(attrs={"class": "form-select"}),
-            "elaborador_data": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
-            "aprovador": Select2Widget(attrs={"class": "form-select"}),
-            "aprovador_data": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
+            "elaborador": Select2Widget(attrs={
+                "class": "form-select select2",
+                "data-dropdown-parent": "#collapseAprovacao"
+            }),
+            "aprovador": Select2Widget(attrs={
+                "class": "form-select select2",
+                "data-dropdown-parent": "#collapseAprovacao"
+            }),
+
         }
 
     def __init__(self, *args, **kwargs):
