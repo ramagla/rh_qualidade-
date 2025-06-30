@@ -1,0 +1,2 @@
+# Usa LF como padrão para todos os arquivos de texto
+* text=auto eol=lf

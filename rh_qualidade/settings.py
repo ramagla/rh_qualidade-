@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "qualidade_fornecimento",
     "portaria",
     "assinatura_eletronica",
+    'core',
 
 ]
 
@@ -119,7 +120,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "rh_qualidade.middleware.permission_middleware.PermissionMiddleware",
+    "core.middleware.permission_middleware.PermissionMiddleware",
 ]
 
 # Configuração de URLs e WSGI
