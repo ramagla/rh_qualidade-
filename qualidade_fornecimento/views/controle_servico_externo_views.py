@@ -291,8 +291,16 @@ def importar_excel_servico_externo(request):
         for idx, row in df.iterrows():
             linha = idx + 2
             try:
-                if pd.isna(row["Pedido"]):
-                    raise ValueError("Pedido vazio.")
+                # Pedido pode estar vazio e não deve ter .0
+                pedido_raw = row.get("Pedido")
+                if pd.notna(pedido_raw):
+                    try:
+                        pedido = str(int(pedido_raw))
+                    except Exception:
+                        pedido = str(pedido_raw).strip()
+                else:
+                    pedido = None
+
                 if pd.isna(row["Fornecedor"]):
                     raise ValueError("Fornecedor vazio.")
                 if pd.isna(row["Código BM"]):
@@ -300,7 +308,6 @@ def importar_excel_servico_externo(request):
                 if pd.isna(row["Quantidade Enviada"]):
                     raise ValueError("Quantidade Enviada vazia.")
 
-                pedido = str(row["Pedido"]).strip()
                 op = int(row["OP"]) if not pd.isna(row.get("OP")) else None
                 nota_fiscal = str(row.get("Nota Fiscal", "")).strip()
                 qtd_enviada = float(row["Quantidade Enviada"])
@@ -321,10 +328,10 @@ def importar_excel_servico_externo(request):
                 if not codigo_bm:
                     raise ValueError(f"Código BM '{codigo_bm_str}' não encontrado.")
 
-                # Lead time do fornecedor
+                # Lead time
                 lead_time = fornecedor.lead_time if fornecedor.lead_time is not None else None
 
-                # Pega a última data dos retornos
+                # Última data de retorno
                 datas_retorno = []
                 for col_data in df.columns:
                     if "Retorno" in col_data and "Data" in col_data:
@@ -333,7 +340,7 @@ def importar_excel_servico_externo(request):
                             datas_retorno.append(pd.to_datetime(data_val, dayfirst=True).date())
                 data_retorno = max(datas_retorno) if datas_retorno else None
 
-                # Cria o serviço
+                # Cria o serviço com status fixo OK
                 servico = ControleServicoExterno.objects.create(
                     pedido=pedido,
                     op=op,
@@ -346,10 +353,10 @@ def importar_excel_servico_externo(request):
                     data_negociada=data_negociada,
                     lead_time=lead_time,
                     observacao=observacao,
-                    status2="OK",  # ✅ Força como aprovado para histórico
+                    status2="OK"
                 )
 
-                # Importa os retornos (quantos existirem)
+                # Importa retornos
                 for col_data in df.columns:
                     if "Retorno" in col_data and "Data" in col_data:
                         numero = col_data.split(" ")[1]

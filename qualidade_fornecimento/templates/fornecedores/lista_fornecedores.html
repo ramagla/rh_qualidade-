@@ -39,17 +39,32 @@
     </div>
     <div class="offcanvas-body">
       <form method="get" class="row g-3">
-  
+        <!-- 🆕 Filtro por nome do fornecedor -->
+        <div class="col-12">
+          <label for="nome" class="form-label">Fornecedor</label>
+          <select
+            class="form-select select2"
+            id="nome"
+            name="nome"
+            data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            {% for nome in filter_nomes %}
+              <option value="{{ nome }}" {% if request.GET.nome == nome %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+      
         <div class="col-12">
           <label for="data_inicial" class="form-label">Data Inicial</label>
           <input type="date" class="form-control" id="data_inicial" name="data_inicial" value="{{ request.GET.data_inicial }}">
         </div>
-  
+      
         <div class="col-12">
           <label for="data_final" class="form-label">Data Final</label>
           <input type="date" class="form-control" id="data_final" name="data_final" value="{{ request.GET.data_final }}">
         </div>
-  
+      
         <div class="col-12">
           <label for="produto" class="form-label">Produto/Serviço</label>
           <select class="form-select" id="produto" name="produto">
@@ -59,7 +74,7 @@
             {% endfor %}
           </select>
         </div>
-  
+      
         <div class="col-12">
           <label for="certificacao" class="form-label">Certificação</label>
           <select class="form-select" id="certificacao" name="certificacao">
@@ -69,7 +84,7 @@
             {% endfor %}
           </select>
         </div>
-  
+      
         <div class="col-12">
           <label for="status" class="form-label">Fornecedor Ativo/Inativo</label>
           <select class="form-select" id="status" name="status">
@@ -79,13 +94,12 @@
             {% endfor %}
           </select>
         </div>
-        
-  
+      
         <div class="col-12 mt-3">
           {% include "partials/global/_botao_filtrar.html" %}
         </div>
-  
       </form>
+      
     </div>
   </div>
   
