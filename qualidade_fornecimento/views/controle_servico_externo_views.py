@@ -11,7 +11,8 @@ from qualidade_fornecimento.forms.controle_servico_externo_form import (
 from qualidade_fornecimento.models.controle_servico_externo import (
     ControleServicoExterno,
 )
-
+import os
+from django.conf import settings
 
 @login_required
 def cadastrar_controle_servico_externo(request):
@@ -380,10 +381,10 @@ def importar_excel_servico_externo(request):
                 erros.append(f"Linha {linha}: {e}")
 
         if erros:
-            caminho = os.path.join(
-                "C:/Projetos/RH-Qualidade/rh_qualidade/qualidade_fornecimento/views",
-                "erros_importacao_servico_externo.txt"
-            )
+            caminho = os.path.join(settings.MEDIA_ROOT, "erros_importacao_servico_externo.txt")
+            with open(caminho, "w", encoding="utf-8") as f:
+                for erro in erros:
+                    f.write(f"{erro}\n")
             with open(caminho, "w", encoding="utf-8") as f:
                 f.write("\n".join(erros))
             messages.warning(request, f"{len(erros)} erros encontrados. Veja 'erros_importacao_servico_externo.txt'.")
