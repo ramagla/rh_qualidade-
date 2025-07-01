@@ -32,11 +32,71 @@
 
   <!-- Cards de Indicadores -->
   <div class="row row-cols-1 row-cols-md-3 g-4 mb-4 cards-indicadores">
-    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Valor Líquido Total" valor=total_liquido|br_currency icone="bi-wallet2" %}
-    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Vencimentos" valor=total_vencimentos|br_currency icone="bi-cash-stack" %}
-    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Total de Descontos" valor=total_descontos|br_currency icone="bi-dash-circle" %}
+
+    <!-- Valor Líquido Total -->
+    <div class="col">
+      <div class="card indicador-card border-0 shadow-sm h-100 text-center p-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="mb-2 text-success">
+            <i class="bi bi-wallet2 fs-1"></i>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm toggle-card-valor">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        <h2 class="fw-bold text-success mb-0 valor-card">******</h2>
+        <input type="hidden" class="valor-real" value="{{ total_liquido|br_currency }}">
+        <p class="text-uppercase fw-semibold small text-muted mt-1">Valor Líquido Total</p>
+      </div>
+    </div>
+  
+    <!-- Total de Vencimentos -->
+    <div class="col">
+      <div class="card indicador-card border-0 shadow-sm h-100 text-center p-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="mb-2 text-info">
+            <i class="bi bi-cash-stack fs-1"></i>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm toggle-card-valor">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        <h2 class="fw-bold text-info mb-0 valor-card">******</h2>
+        <input type="hidden" class="valor-real" value="{{ total_vencimentos|br_currency }}">
+        <p class="text-uppercase fw-semibold small text-muted mt-1">Total de Vencimentos</p>
+      </div>
+    </div>
+  
+    <!-- Total de Descontos -->
+    <div class="col">
+      <div class="card indicador-card border-0 shadow-sm h-100 text-center p-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="mb-2 text-danger">
+            <i class="bi bi-dash-circle fs-1"></i>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm toggle-card-valor">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        <h2 class="fw-bold text-danger mb-0 valor-card">******</h2>
+        <input type="hidden" class="valor-real" value="{{ total_descontos|br_currency }}">
+        <p class="text-uppercase fw-semibold small text-muted mt-1">Total de Descontos</p>
+      </div>
+    </div>
   </div>
   
+  <style>
+    .indicador-card {
+      border-radius: 1rem;
+      background: linear-gradient(to bottom right, #ffffff, #f1f5f9);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .indicador-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+    </style>
+    
 
   <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
     <div class="offcanvas-header">
@@ -170,6 +230,26 @@
       width: '100%',
       placeholder: 'Selecione',
       allowClear: true
+    });
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.toggle-card-valor').forEach(button => {
+      button.addEventListener('click', function () {
+        const card = this.closest('.card');
+        const valorDisplay = card.querySelector('.valor-card');
+        const valorReal = card.querySelector('.valor-real').value;
+        const icone = this.querySelector('i');
+
+        if (valorDisplay.innerText === '******') {
+          valorDisplay.innerText = valorReal;
+          icone.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+          valorDisplay.innerText = '******';
+          icone.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+      });
     });
   });
 </script>
