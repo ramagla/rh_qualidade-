@@ -1,4 +1,5 @@
 from datetime import timedelta
+from venv import logger
 from django.utils import timezone 
 
 from django.db import models
@@ -83,31 +84,40 @@ class ControleServicoExterno(models.Model):
     
     def save(self, *args, **kwargs):
         from qualidade_fornecimento.models.inspecao10 import DevolucaoServicoExterno
-    # Detecta se está sendo preenchido agora (só dispara se era nulo antes)
-        envio_confirmado = (
-            self.pk and
-            self.data_envio and
-            not ControleServicoExterno.objects.filter(pk=self.pk, data_envio__isnull=False).exists()
-        )
 
-        # Calcula os campos auxiliares
+        is_update = self.pk is not None
+
+        # Carrega o estado anterior da data_envio
+        data_envio_antes = None
+        if is_update:
+            try:
+                anterior = ControleServicoExterno.objects.get(pk=self.pk)
+                data_envio_antes = anterior.data_envio
+            except ControleServicoExterno.DoesNotExist:
+                pass
+
+        # Atualiza os campos derivados
         self.previsao_entrega = self.calcular_prev_entrega()
         self.atraso_em_dias = self.calcular_atraso_em_dias()
         self.ip = self.calcular_ip()
 
-        # Salva normalmente
+        # Salva o objeto
         super().save(*args, **kwargs)
 
-        # ⚠️ Executa a baixa no estoque apenas uma vez quando data_envio for preenchida
+        # Detecta se a data_envio foi preenchida agora
+        envio_confirmado = (
+            self.data_envio and (not data_envio_antes)
+        )
+
+        # ⚠️ Baixa estoque só uma vez, quando data_envio for preenchida pela 1ª vez
         if envio_confirmado:
             devolucoes = DevolucaoServicoExterno.objects.filter(servico=self)
 
             for devolucao in devolucoes:
-                # Aqui é onde ocorre a "baixa" — você pode adicionar mais lógica se quiser
                 devolucao.baixado_em = timezone.now()
                 devolucao.save(update_fields=["baixado_em"])
 
-            print(f"✅ Baixa realizada: {devolucoes.count()} devoluções da OP {self.op}")
+            logger.info(f"✅ Baixa realizada: {devolucoes.count()} devoluções da OP {self.op}")
 
 
         def __str__(self):

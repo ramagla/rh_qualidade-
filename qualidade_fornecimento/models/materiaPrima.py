@@ -70,25 +70,24 @@ class RelacaoMateriaPrima(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        creating = self.pk is None  # Verifica se é uma nova instância
-        super().save(*args, **kwargs)
+        creating = self.pk is None
 
-        # Atribui o número de relatório somente após o ID existir
+        # Caso o objeto ainda não exista, salva para gerar o ID
+        if creating and not self.pk:
+            super().save(*args, **kwargs)
+
+        # Gera o número de relatório se ainda não foi atribuído
         if creating and not self.nro_relatorio:
             self.nro_relatorio = 40000 + self.pk
-            super().save(update_fields=["nro_relatorio"])
 
-
+        # Calcula atraso
         atraso = None
         if self.data_prevista_entrega:
-            if self.data_renegociada_entrega:
-                atraso = (self.data_entrada - self.data_renegociada_entrega).days
-            else:
-                atraso = (self.data_entrada - self.data_prevista_entrega).days
+            data_ref = self.data_renegociada_entrega or self.data_prevista_entrega
+            atraso = (self.data_entrada - data_ref).days
         self.atraso_em_dias = max(atraso, 0) if atraso is not None else None
 
-
-
+        # Define demérito conforme atraso
         if self.atraso_em_dias is not None:
             if self.atraso_em_dias >= 21:
                 self.demerito_ip = 30
@@ -107,8 +106,9 @@ class RelacaoMateriaPrima(models.Model):
         else:
             self.demerito_ip = None
 
-        # Salva novamente apenas se houver alterações no atraso/demerito
-        super().save(update_fields=["atraso_em_dias", "demerito_ip"])
+        # Salva tudo de uma vez só
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"Relatório #{self.nro_relatorio}"
