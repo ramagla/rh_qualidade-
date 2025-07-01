@@ -213,8 +213,9 @@ def relatorio_iqf_view(request):
             "texto": "Todos os meses atingiram a meta. Nenhuma ação necessária."
         })
 
-    # Cálculo da média geral
-    media = round(sum(dados_iqf.values()) / len(dados_iqf), 2)
+    # Calcula a média apenas dos meses com dados (valor > 0)
+    valores_validos = [v for v in dados_iqf.values() if v > 0]
+    media = round(sum(valores_validos) / len(valores_validos), 2) if valores_validos else 0.00
 
     # Renderiza template
     return render(request, "relatorios/relatorio_iqf.html", {

@@ -8,6 +8,7 @@ TIPO_PRODUTO = [
     ("Arame de inox", "Arame de inox"),
     ("Calibração", "Calibração"),
     ("Trat. Superficial", "Trat. Superficial"),
+    ("Material do Cliente", "Material do Cliente"),
 ]
 
 TIPO_CERTIFICACAO = [
