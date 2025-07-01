@@ -1,119 +1,14 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Importar Matérias-Primas (TB050){% endblock %}
-
+{% extends "base.html" %}
+{% block title %}Importar TB050{% endblock %}
 {% block content %}
-<main role="main" class="flex-shrink-0">
-  <div class="container mt-5">
-    <h2 class="text-center mb-4">
-      <i class="bi bi-file-earmark-spreadsheet me-2" aria-hidden="true"></i>
-      Importar Dados da TB050 via Excel
-    </h2>
-
-    <form method="post" enctype="multipart/form-data" novalidate>
-      {% csrf_token %}
-      <div class="mb-3">
-        <label for="excel_file" class="form-label">Selecione o arquivo Excel</label>
-        <input type="file" class="form-control" id="excel_file" name="excel_file"
-               accept=".xlsx,.xls" aria-describedby="fileHelp" required>
-        <small id="fileHelp" class="form-text text-muted">
-          Apenas arquivos Excel (.xlsx ou .xls) são aceitos para importação.
-        </small>
-      </div>
-
-      <div class="text-center">
-        <button type="submit" id="btn-importar" class="btn btn-primary" aria-label="Importar arquivo Excel">
-          <i class="bi bi-upload me-1" aria-hidden="true"></i>
-          <span id="btn-importar-texto">Importar</span>
-          <span id="btn-importar-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-        </button>
-
-        <a href="{% url 'tb050_list' %}" class="btn btn-secondary" aria-label="Cancelar e voltar à lista TB050">
-          <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
-          Cancelar e Voltar à Lista
-        </a>
-      </div>
-    </form>
-
-    <!-- Card modelo -->
-    <div class="card mt-5">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h3 class="h5 mb-0">
-      <i class="bi bi-table me-2" aria-hidden="true"></i>
-      Modelo Visual para Importação
-    </h3>
-    <a href="{% static 'arquivos/modelo_importacao_tb050.xlsx' %}" download
-       class="btn btn-sm btn-outline-primary"
-       aria-label="Baixar modelo de importação">
-      <i class="bi bi-download me-1" aria-hidden="true"></i> Baixar Modelo
-    </a>
-  </div>
-
-  <div class="card-body">
-    <p>O arquivo Excel deve conter as colunas abaixo, com preenchimento obrigatório onde indicado:</p>
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover text-center align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Data de Entrada <span class="text-danger">*</span></th>
-            <th>Fornecedor <span class="text-danger">*</span></th>
-            <th>N. Fiscal <span class="text-danger">*</span></th>
-            <th>Nº do Certificado</th>
-            <th>Matéria-Prima</th>
-            <th>Data Prevista de Entrega</th>
-            <th>Data Renegociada de Entrega</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>01/04/2025</td>
-            <td>Santa Rita</td>
-            <td>123456</td>
-            <td>CERT-2025-001</td>
-            <td>AACSØ1,20-02</td>
-            <td>05/04/2025</td>
-            <td>08/04/2025</td>
-          </tr>
-        </tbody>
-      </table>
+  {% include 'partials/global/_header_titulo.html' with titulo="Importar TB050 via Excel" %}
+  {% include 'partials/global/_toast_mensagens.html' %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="excel_file" class="form-label">Selecione o arquivo Excel:</label>
+      <input type="file" name="excel_file" class="form-control" required>
     </div>
-    <footer class="mt-2">
-      <small><strong>Observação:</strong> Utilize o formato de data DD/MM/AAAA e certifique-se de que o nome do fornecedor e da matéria-prima correspondam exatamente aos registros do sistema.</small>
-    </footer>
-  </div>
-</div>
-
-  </div>
-</main>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const form = document.querySelector('form');
-    const btnImportar = document.getElementById('btn-importar');
-    const textoImportar = document.getElementById('btn-importar-texto');
-    const spinnerImportar = document.getElementById('btn-importar-spinner');
-    const inputArquivo = document.getElementById('excel_file');
-
-    form.addEventListener('submit', function(event) {
-      const arquivo = inputArquivo.files[0];
-      if (!arquivo) {
-        event.preventDefault();
-        alert('Por favor, selecione um arquivo para importar.');
-        return;
-      }
-      const nomeArquivo = arquivo.name.toLowerCase();
-      if (!(nomeArquivo.endsWith('.xls') || nomeArquivo.endsWith('.xlsx'))) {
-        event.preventDefault();
-        alert('Selecione um arquivo Excel válido (.xls ou .xlsx).');
-        return;
-      }
-
-      btnImportar.disabled = true;
-      textoImportar.textContent = 'Importando...';
-      spinnerImportar.classList.remove('d-none');
-    });
-  });
-</script>
-
+    <button type="submit" class="btn btn-success"><i class="bi bi-upload me-1"></i> Importar</button>
+  </form>
 {% endblock %}

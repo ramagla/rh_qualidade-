@@ -78,6 +78,7 @@ class RelacaoMateriaPrima(models.Model):
             self.nro_relatorio = 40000 + self.pk
             super().save(update_fields=["nro_relatorio"])
 
+
         atraso = None
         if self.data_prevista_entrega:
             if self.data_renegociada_entrega:

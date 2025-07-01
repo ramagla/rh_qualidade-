@@ -263,3 +263,125 @@ def registrar_entrega_servico_externo(request, servico_id):
             return JsonResponse({"success": False, "error": str(e)})
 
     return JsonResponse({"success": False, "error": "Método não permitido."})
+
+
+
+import os
+import pandas as pd
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import redirect, render
+from qualidade_fornecimento.models import (
+    ControleServicoExterno,
+    FornecedorQualificado,
+    MateriaPrimaCatalogo,
+    RetornoDiario,
+)
+
+@login_required
+@permission_required('qualidade_fornecimento.importar_excel_servico_externo', raise_exception=True)
+def importar_excel_servico_externo(request):
+    if request.method == "POST" and request.FILES.get("arquivo_excel"):
+        df = pd.read_excel(request.FILES["arquivo_excel"])
+        df.columns = df.columns.str.strip()
+
+        erros = []
+        importados = 0
+
+        for idx, row in df.iterrows():
+            linha = idx + 2
+            try:
+                if pd.isna(row["Pedido"]):
+                    raise ValueError("Pedido vazio.")
+                if pd.isna(row["Fornecedor"]):
+                    raise ValueError("Fornecedor vazio.")
+                if pd.isna(row["Código BM"]):
+                    raise ValueError("Código BM vazio.")
+                if pd.isna(row["Quantidade Enviada"]):
+                    raise ValueError("Quantidade Enviada vazia.")
+
+                pedido = str(row["Pedido"]).strip()
+                op = int(row["OP"]) if not pd.isna(row.get("OP")) else None
+                nota_fiscal = str(row.get("Nota Fiscal", "")).strip()
+                qtd_enviada = float(row["Quantidade Enviada"])
+                observacao = str(row.get("Observação", "")).strip()
+
+                data_envio = pd.to_datetime(row.get("Data Envio"), dayfirst=True).date() if not pd.isna(row.get("Data Envio")) else None
+                data_negociada = pd.to_datetime(row.get("Data Negociada"), dayfirst=True).date() if not pd.isna(row.get("Data Negociada")) else None
+
+                # Fornecedor
+                fornecedor_nome = str(row["Fornecedor"]).strip()
+                fornecedor = FornecedorQualificado.objects.filter(nome__icontains=fornecedor_nome).first()
+                if not fornecedor:
+                    raise ValueError(f"Fornecedor '{fornecedor_nome}' não encontrado.")
+
+                # Código BM
+                codigo_bm_str = str(row["Código BM"]).strip()
+                codigo_bm = MateriaPrimaCatalogo.objects.filter(codigo__iexact=codigo_bm_str).first()
+                if not codigo_bm:
+                    raise ValueError(f"Código BM '{codigo_bm_str}' não encontrado.")
+
+                # Lead time do fornecedor
+                lead_time = fornecedor.lead_time if fornecedor.lead_time is not None else None
+
+                # Pega a última data dos retornos
+                datas_retorno = []
+                for col_data in df.columns:
+                    if "Retorno" in col_data and "Data" in col_data:
+                        data_val = row.get(col_data)
+                        if not pd.isna(data_val):
+                            datas_retorno.append(pd.to_datetime(data_val, dayfirst=True).date())
+                data_retorno = max(datas_retorno) if datas_retorno else None
+
+                # Cria o serviço
+                servico = ControleServicoExterno.objects.create(
+                    pedido=pedido,
+                    op=op,
+                    nota_fiscal=nota_fiscal,
+                    fornecedor=fornecedor,
+                    codigo_bm=codigo_bm,
+                    quantidade_enviada=qtd_enviada,
+                    data_envio=data_envio,
+                    data_retorno=data_retorno,
+                    data_negociada=data_negociada,
+                    lead_time=lead_time,
+                    observacao=observacao,
+                    status2="OK",  # ✅ Força como aprovado para histórico
+                )
+
+                # Importa os retornos (quantos existirem)
+                for col_data in df.columns:
+                    if "Retorno" in col_data and "Data" in col_data:
+                        numero = col_data.split(" ")[1]
+                        col_qtd = f"Retorno {numero} - Qtd"
+                        data_val = row.get(col_data)
+                        qtd_val = row.get(col_qtd)
+
+                        if not pd.isna(data_val) and not pd.isna(qtd_val):
+                            data_entrega = pd.to_datetime(data_val, dayfirst=True).date()
+                            quantidade = float(qtd_val)
+
+                            RetornoDiario.objects.create(
+                                servico=servico,
+                                data=data_entrega,
+                                quantidade=quantidade
+                            )
+
+                importados += 1
+
+            except Exception as e:
+                erros.append(f"Linha {linha}: {e}")
+
+        if erros:
+            caminho = os.path.join(
+                "C:/Projetos/RH-Qualidade/rh_qualidade/qualidade_fornecimento/views",
+                "erros_importacao_servico_externo.txt"
+            )
+            with open(caminho, "w", encoding="utf-8") as f:
+                f.write("\n".join(erros))
+            messages.warning(request, f"{len(erros)} erros encontrados. Veja 'erros_importacao_servico_externo.txt'.")
+
+        messages.success(request, f"{importados} registros importados com sucesso.")
+        return redirect("listar_controle_servico_externo")
+
+    return render(request, "controle_servico_externo/importar_excel_servico.html")

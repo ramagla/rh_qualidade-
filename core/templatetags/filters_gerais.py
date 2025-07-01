@@ -347,3 +347,18 @@ def formatar_timedelta(td):
 
     resultado = f"{horas:02d}:{minutos:02d}"
     return f"-{resultado}" if negativo else resultado
+
+@register.filter
+def menor_que(data1, data2_str):
+    """
+    Compara se data1 < data2.
+    data2_str deve estar no formato 'YYYY-MM-DD'
+    """
+    if not data1 or not data2_str:
+        return False
+
+    try:
+        data2 = datetime.strptime(data2_str, "%Y-%m-%d").date()
+        return data1 < data2
+    except Exception:
+        return False

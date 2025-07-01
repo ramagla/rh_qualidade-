@@ -201,15 +201,18 @@
       <td colspan="2" style="text-align:center; vertical-align:middle; padding:0; margin:0;">
         <span class="campo">Status:</span><br>
         <div style="display:flex; align-items:center; justify-content:center; height:3em;">
-        {% if registro.status == "Aprovado" %}
-  <span class="aprovado">Aprovado</span>
-{% elif registro.status == "Aprovado Condicionalmente" %}
-  <span class="aprovado" style="background-color: #fff3cd; color: #856404;">Aprovado Condicionalmente</span>
-{% elif registro.status == "Aguardando F045" %}
-  <span class="reprovado" style="background-color: #e2e3e5; color: #383d41;">Aguardando F045</span>
-{% else %}
-  <span class="reprovado">Reprovado</span>
-{% endif %}
+          {% if registro.status == "Aprovado" or registro.status == "Aprovado (Histórico)" %}
+          <span class="aprovado">{{ registro.status }}</span>
+        {% elif registro.status == "Reprovado" or registro.status == "Reprovado (Histórico)" %}
+          <span class="reprovado">{{ registro.status }}</span>
+        {% elif registro.status == "Aprovado Condicionalmente" %}
+          <span class="aprovado" style="background-color: #fff3cd; color: #856404;">Aprovado Condicionalmente</span>
+        {% elif registro.status == "Aguardando F045" %}
+          <span class="reprovado" style="background-color: #e2e3e5; color: #383d41;">Aguardando F045</span>
+        {% else %}
+          <span class="reprovado">—</span>
+        {% endif %}
+        
 
 
 

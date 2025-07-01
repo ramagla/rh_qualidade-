@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 {% load custom_filters %}
+{% load filters_gerais %}
 
 {% block title %}Controle de Serviço Externo{% endblock %}
 
 {% block content %}
+{% with corte_historico="2025-05-29" %}
+
+
 <div class="container-fluid mt-4">
 
   {% include "partials/global/_styles_componentes.html" %}
@@ -99,6 +103,13 @@
       <i class="bi bi-clipboard-check me-2"></i> Nova Inspeção
     </button>
   {% endif %}
+
+  {% if request.user|has_permission:'qualidade_fornecimento.importar_excel_servico_externo' %}
+  <a href="{% url 'importar_excel_servico' %}" class="btn btn-outline-secondary d-flex align-items-center">
+    <i class="bi bi-file-earmark-excel me-2"></i> Importar Excel
+  </a>
+{% endif %}
+
 </div>
 
 
@@ -243,20 +254,26 @@
               
               <td>
                 {% if servico.status2 == "Aguardando Envio" %}
-                  <span class="badge bg-secondary">Aguardando Envio</span>
-                {% elif servico.inspecao %}
-                  {% if servico.inspecao.status_geral == "Aprovado" %}
-                    <span class="badge bg-success">Aprovado</span>
-                  {% elif servico.inspecao.status_geral == "Reprovado" %}
-                    <span class="badge bg-danger">Reprovado</span>
-                  {% elif servico.inspecao.status_geral == "Aprovado Condicionalmente" %}
-                    <span class="badge badge-condicional">Aprovado Condicionalmente</span>
-                  {% else %}
-                    <span class="badge bg-secondary">—</span>
-                  {% endif %}
-                {% else %}
-                  <span class="badge bg-secondary">Aguardando Inspeção</span>
-                {% endif %}
+  <span class="badge bg-secondary">Aguardando Envio</span>
+{% elif servico.inspecao %}
+  {% if servico.inspecao.status_geral == "Aprovado" %}
+    <span class="badge bg-success">Aprovado</span>
+  {% elif servico.inspecao.status_geral == "Reprovado" %}
+    <span class="badge bg-danger">Reprovado</span>
+  {% elif servico.inspecao.status_geral == "Aprovado Condicionalmente" %}
+    <span class="badge badge-condicional">Aprovado Condicionalmente</span>
+  {% else %}
+    <span class="badge bg-secondary">—</span>
+  {% endif %}
+  {% elif servico.status2 == "OK" and servico.data_envio and servico.data_envio|menor_que:corte_historico %}
+  <span class="badge bg-success">Aprovado (Histórico)</span>
+
+{% else %}
+  <span class="badge bg-secondary">Aguardando Inspeção</span>
+{% endif %}
+
+
+                
               </td>
               
               <td>{{ servico.atraso_em_dias|default:"0" }}</td>
@@ -496,5 +513,6 @@ target="_blank">
   }
   </script>
   
+  {% endwith %}
 
 {% endblock %}

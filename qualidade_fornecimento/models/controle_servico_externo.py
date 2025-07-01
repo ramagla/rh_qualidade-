@@ -8,12 +8,10 @@ from django.db import models
 
 class ControleServicoExterno(models.Model):
     pedido = models.CharField(max_length=100)
-    op = models.PositiveIntegerField(
-        verbose_name="Ordem de Produção"
-    )  # <-- ADICIONADO AQUI
-    nota_fiscal = models.CharField(
-        max_length=100, verbose_name="Nota Fiscal"
-    )  # <-- NOVO
+    op = models.PositiveIntegerField(verbose_name="Ordem de Produção", null=True, blank=True)
+
+    nota_fiscal = models.CharField(max_length=100, verbose_name="Nota Fiscal", null=True, blank=True)
+
     fornecedor = models.ForeignKey(
     "qualidade_fornecimento.FornecedorQualificado",
     on_delete=models.PROTECT,
