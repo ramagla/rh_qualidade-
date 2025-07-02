@@ -95,8 +95,9 @@ class FornecedorQualificadoForm(forms.ModelForm):
         certificacao = data.get("tipo_certificacao") or (
             self.instance.tipo_certificacao if self.instance else None
         )
-        if produto == "Calibração" and certificacao == "NBR-ISO 17025 RBC":
+        if (produto == "Calibração" and certificacao == "NBR-ISO 17025 RBC") or produto == "Material do Cliente":
             for field in [
+                "data_homologacao", 
                 "vencimento_certificacao",
                 "risco",
                 "data_avaliacao_risco",
