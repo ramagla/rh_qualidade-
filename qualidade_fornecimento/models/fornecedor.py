@@ -47,7 +47,7 @@ class FornecedorQualificado(models.Model):
     # Informações Gerais
     nome = models.CharField(max_length=255)
     produto_servico = models.CharField(max_length=50, choices=TIPO_PRODUTO)
-    data_homologacao = models.DateField()
+    data_homologacao = models.DateField(blank=True, null=True)
     ativo = models.CharField(
         max_length=10,
         choices=STATUS_ATIVO,
