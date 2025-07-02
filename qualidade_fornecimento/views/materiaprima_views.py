@@ -6,6 +6,7 @@ from datetime import date
 from django.templatetags.static import static
 from django.conf import settings
 import os
+from django.db.models import Q
 
 import openpyxl  # se desejar usar a importação via Excel
 from django.contrib import messages
@@ -75,8 +76,8 @@ def lista_tb050(request):
 
     # ------------------ 4. Indicadores --------------------
     total_registros = qs.count()
-    total_aprovados = qs.filter(status="Aprovado").count()
-    total_reprovados = qs.filter(status="Reprovado").count()
+    total_aprovados = qs.filter(Q(status="Aprovado") | Q(status="Aprovado (Histórico)")).count()
+    total_reprovados = qs.filter(Q(status="Reprovado") | Q(status="Reprovado (Histórico)")).count()
     total_atrasados = qs.filter(atraso_em_dias__gt=0).count()
 
     # ------------------ 5. Listas dinâmicas ---------------

@@ -21,6 +21,7 @@ from Funcionario.models import (
     Treinamento,
 )
 from Funcionario.utils.treinamento_utils import criar_ou_atualizar_avaliacao, obter_dados_relatorio_f003, obter_treinamentos_requeridos
+from Funcionario.models import Departamentos
 
 
 @login_required
@@ -208,7 +209,7 @@ def levantamento_treinamento(request):
     )
 
     context = {
-        "departamentos": Funcionario.objects.values_list("local_trabalho", flat=True).distinct(),
+        "departamentos": Departamentos.objects.filter(ativo=True).order_by("nome"),
         "filtro_departamento": filtro_departamento,
         "filtro_data_inicio": filtro_data_inicio,
         "filtro_data_fim": filtro_data_fim,
