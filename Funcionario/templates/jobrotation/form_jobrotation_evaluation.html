@@ -20,8 +20,11 @@
     {% endif %}
 </h2>
 <form method="POST"
+      enctype="multipart/form-data"
       action="{% if edicao %}{% url 'editar_jobrotation_evaluation' evaluation.id %}{% else %}{% url 'cadastrar_jobrotation_evaluation' %}{% endif %}"
-      class="row g-3" id="jobRotationForm">
+      class="row g-3"
+      id="jobRotationForm">
+
         {% csrf_token %}
 
         <div class="accordion" id="accordionJobRotation">
@@ -206,8 +209,21 @@
               </div>
             </div>
           </div>
-        </div>
-
+        
+<!-- Anexo -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingAnexo">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnexo">
+      <i class="bi bi-paperclip me-2"></i> Anexo (Obrigatorio após a coleta de assinaturas)
+    </button>
+  </h2>
+  <div id="collapseAnexo" class="accordion-collapse collapse" data-bs-parent="#accordionJobRotation">
+    <div class="accordion-body">
+      {% include "partials/global/_campo_anexo.html" %}
+    </div>
+  </div>
+</div>
+</div>
         <!-- Botões -->
         <div class="col-12 text-center mt-4">
           <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar</button>

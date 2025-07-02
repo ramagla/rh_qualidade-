@@ -54,7 +54,7 @@ def lista_jobrotation_evaluation(request):
 def cadastrar_jobrotation_evaluation(request):
     """Cadastra uma nova avaliação de Job Rotation."""
     if request.method == "POST":
-        form = JobRotationEvaluationForm(request.POST)
+        form = JobRotationEvaluationForm(request.POST, request.FILES)
         if form.is_valid():
             job_rotation = form.save()
             if form.cleaned_data["avaliacao_rh"] == "Prorrogar":
@@ -90,8 +90,15 @@ def cadastrar_jobrotation_evaluation(request):
 def editar_jobrotation_evaluation(request, id):
     """Edita uma avaliação de Job Rotation existente."""
     evaluation = get_object_or_404(JobRotationEvaluation, id=id)
+
     if request.method == "POST":
-        form = JobRotationEvaluationForm(request.POST, instance=evaluation)
+        form = JobRotationEvaluationForm(request.POST, request.FILES, instance=evaluation)
+
+        # 🔴 Lógica de remoção de anexo
+        if request.POST.get("remover_anexo") == "1" and evaluation.anexo:
+            evaluation.anexo.delete(save=False)
+            evaluation.anexo = None
+
         if form.is_valid():
             form.save()
             messages.success(request, "Avaliação de Job Rotation atualizada com sucesso!")

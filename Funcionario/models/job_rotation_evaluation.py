@@ -121,6 +121,12 @@ class JobRotationEvaluation(models.Model):
         default=False,
         verbose_name="Disponibilidade de Vaga"
     )
+    anexo = models.FileField(
+        upload_to="job_rotation/evaluations/%Y/%m/%d/",
+        null=True,
+        blank=True,
+        verbose_name="Anexo (arquivo)"
+    )
 
     def __str__(self):
         return f"Avaliação de Job Rotation - {self.funcionario.nome}"

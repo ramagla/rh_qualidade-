@@ -106,15 +106,18 @@
                 <td>{{ evaluation.data_inicio|date:"d/m/Y" }}</td>
                 <td>{{ evaluation.termino_previsto|date:"d/m/Y" }}</td>
                 <td>
-                    {% if evaluation.avaliacao_rh == 'Apto' %}
-                        <span class="badge bg-success">Apto</span>
-                    {% elif evaluation.avaliacao_rh == 'Inapto' %}
-                        <span class="badge bg-danger">Inapto</span>
-                    {% elif evaluation.avaliacao_rh == 'Prorrogar TN' %}
-                        <span class="badge bg-warning text-dark">Prorrogar TN</span>
-                    {% else %}
-                        <span class="badge bg-secondary">Indefinido</span>
-                    {% endif %}
+                  {% if evaluation.avaliacao_rh == 'Apto' %}
+                  <span class="badge bg-success">Apto</span>
+              {% elif evaluation.avaliacao_rh == 'Inapto' %}
+                  <span class="badge bg-danger">Inapto</span>
+              {% elif evaluation.avaliacao_rh == 'Prorrogar TN' %}
+                  <span class="badge bg-warning text-dark">Prorrogar TN</span>
+              {% elif evaluation.avaliacao_rh == 'EmProgresso' %}
+                  <span class="badge bg-info text-dark">Em Progresso</span>
+              {% else %}
+                  <span class="badge bg-secondary">Indefinido</span>
+              {% endif %}
+              
                 </td>
                 <td>
                     <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#treinamentoModal{{ evaluation.id }}" aria-label="Ver treinamentos requeridos"><i class="bi bi-eye"></i></button>
@@ -129,7 +132,7 @@
                   {% endif %}
                 
                   {% if request.user|has_permission:"Funcionario.imprimir_jobrotation_evaluation" %}
-                  <a href="{% url 'imprimir_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-primary mt-1" target="_blank" title="Imprimir" aria-label="Imprimir avaliação">
+                    <a href="{% url 'imprimir_jobrotation_evaluation' evaluation.id %}" class="btn btn-sm btn-primary mt-1" target="_blank" title="Imprimir" aria-label="Imprimir avaliação">
                       <i class="bi bi-printer"></i>
                     </a>
                   {% endif %}
@@ -137,7 +140,14 @@
                   {% if request.user|has_permission:"Funcionario.delete_jobrotationevaluation" %}
                     {% include "partials/global/_botao_excluir.html" with objeto=evaluation url_excluir='excluir_jobrotation' label='avaliação' %}
                   {% endif %}
+                
+                  {% if evaluation.anexo %}
+                    <a href="{{ evaluation.anexo.url }}" target="_blank" class="btn btn-sm btn-outline-dark mt-1" title="Visualizar Anexo" aria-label="Visualizar Anexo">
+                      <i class="bi bi-paperclip"></i>
+                    </a>
+                  {% endif %}
                 </td>
+                
                 
             </tr>
 
