@@ -161,3 +161,12 @@ def imprimir_cargo(request, cargo_id):
     cargo = get_object_or_404(Cargo, pk=cargo_id)
     revisoes = cargo.revisoes.all().order_by("-data_revisao")
     return render(request, "cargos/imprimir_cargo.html", {"cargo": cargo, "revisoes": revisoes})
+
+@login_required
+def obter_treinamentos_por_cargo(request, cargo_id):
+    """Retorna os treinamentos internos e externos de um cargo."""
+    cargo = get_object_or_404(Cargo, id=cargo_id)
+    return JsonResponse({
+        "treinamento_interno": cargo.treinamento_interno_minimo or "",
+        "treinamento_externo": cargo.treinamento_externo or "",
+    })

@@ -1,6 +1,6 @@
 # Standard
 from datetime import timedelta
-
+import html
 # Django
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils.timezone import now
+from django.utils.html import strip_tags
 
 # Terceiros
 from weasyprint import HTML
@@ -142,10 +143,42 @@ def imprimir_jobrotation_evaluation(request, id):
     evaluation = get_object_or_404(JobRotationEvaluation, id=id)
     descricao_cargo, ultima_revisao = gerar_descricao_cargo(evaluation)
 
+    # Processa os treinamentos propostos
+    texto_bruto = evaluation.treinamentos_propostos or ""
+    texto_limpo = strip_tags(texto_bruto.replace("&nbsp;", " ").replace("\xa0", " "))
+
+    # Processa os treinamentos requeridos
+    requeridos_bruto = evaluation.treinamentos_requeridos or ""
+    requeridos_limpo = strip_tags(requeridos_bruto.replace("&nbsp;", " ").replace("\xa0", " "))
+
+    # Divide por palavras-chave ou espaços longos
+    for sep in ["x", "•", "-", ";", "  "]:
+        texto_limpo = texto_limpo.replace(sep, "\n")
+
+    # Divide por ponto e vírgula ou quebra de linha
+    treinamentos_requeridos_linhas = [
+        linha.strip()
+        for linha in requeridos_limpo.replace(".", "").replace(";", "\n").splitlines()
+        if linha.strip()
+    ]
+
+    # Remove cabeçalhos e limpa entradas
+    linhas_formatadas = [
+        linha.strip()
+            .replace("Descrição / Titulo:", "")
+            .replace("Requerido:", "")
+            .replace("Desejável:", "")
+            for linha in texto_limpo.splitlines()
+            if linha.strip()
+    ]
+
     context = {
         "evaluation": evaluation,
         "ultima_revisao": ultima_revisao,
         "descricao_cargo": descricao_cargo,
+        "treinamentos_propostos_linhas": linhas_formatadas,
+        "treinamentos_requeridos_linhas": treinamentos_requeridos_linhas,
+
     }
 
     if request.GET.get("download") == "pdf":

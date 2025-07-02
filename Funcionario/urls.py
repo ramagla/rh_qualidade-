@@ -28,6 +28,7 @@ urlpatterns = [
     path("", home_views.home, name="funcionarios_home"),
     path("home/", home_views.home, name="home"),
     path("marcar_lidos/", home_views.marcar_alertas_como_lidos, name="marcar_alertas_como_lidos"),
+    path("api/treinamentos-cargo/<int:cargo_id>/", cargos_views.obter_treinamentos_por_cargo, name="obter_treinamentos_por_cargo"),
 
     path("banco-horas/", banco_horas_views.listar_banco_horas, name="listar_banco_horas"),
     path("banco-horas/cadastrar/", banco_horas_views.cadastrar_banco_horas, name="cadastrar_banco_horas"),

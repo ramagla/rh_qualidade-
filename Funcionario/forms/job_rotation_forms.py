@@ -11,8 +11,9 @@ class JobRotationEvaluationForm(forms.ModelForm):
     Formulário para avaliação de job rotation.
     Valida datas, converte área atual para Title Case e preenche diversos campos automaticamente no save.
     """
-    treinamentos_requeridos = forms.CharField(widget=CKEditor5Widget(), required=False)
-    treinamentos_propostos = forms.CharField(widget=CKEditor5Widget(), required=False)
+    treinamentos_requeridos = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'readonly': 'readonly'}), required=False)
+    treinamentos_propostos = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'readonly': 'readonly'}), required=False)
+
     avaliacao_gestor = forms.CharField(widget=CKEditor5Widget(), required=False)
     avaliacao_funcionario = forms.CharField(widget=CKEditor5Widget(), required=False)
 
@@ -71,6 +72,14 @@ class JobRotationEvaluationForm(forms.ModelForm):
             cursos_realizados = [curso.nome_curso for curso in cursos]
             instance.cursos_realizados = cursos_realizados
 
-        if commit:
-            instance.save()
-        return instance
+            # Preenche treinamentos da nova função (cargo alvo)
+            if instance.nova_funcao:
+                if not instance.treinamentos_requeridos:
+                    instance.treinamentos_requeridos = instance.nova_funcao.treinamento_interno_minimo or ""
+                if not instance.treinamentos_propostos:
+                    instance.treinamentos_propostos = instance.nova_funcao.treinamento_externo or ""
+
+
+                    if commit:
+                        instance.save()
+                    return instance
