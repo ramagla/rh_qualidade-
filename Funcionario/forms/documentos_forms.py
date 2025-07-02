@@ -3,12 +3,15 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from django_select2.forms import Select2Widget
 
 from Funcionario.models import Documento, RevisaoDoc
-from rh_qualidade.utils import title_case
-
-
 from Funcionario.models.departamentos import Departamentos
 
+
 class DocumentoForm(forms.ModelForm):
+    """
+    Formulário para cadastro e edição de Documentos.
+    Usa Select2 para seleção de responsável e departamentos.
+    Aplica ordenação alfabética nos departamentos.
+    """
     class Meta:
         model = Documento
         fields = [
@@ -33,11 +36,15 @@ class DocumentoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Ordena departamentos alfabeticamente
         self.fields["departamentos"].queryset = Departamentos.objects.all().order_by("nome")
 
 
-
 class RevisaoDocForm(forms.ModelForm):
+    """
+    Formulário para cadastro e edição de revisões de documentos.
+    Usa CKEditor para descrição da mudança.
+    """
     descricao_mudanca = forms.CharField(widget=CKEditor5Widget(), required=False)
 
     class Meta:

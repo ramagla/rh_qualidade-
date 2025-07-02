@@ -3,7 +3,9 @@
 {% block title %}Avaliações de Experiência{% endblock %}
 
 {% block content %}
-{% load custom_filters %}
+{% load filters_gerais %}
+{% load permissoes_utils %}
+
 
 {% include "partials/global/_styles_componentes.html" %}
 {% include "partials/global/_header_titulo.html" with titulo="Avaliações de Experiência" icone="bi bi-person-badge" emoji="📝" %}
@@ -40,7 +42,7 @@
       <!-- Colaborador -->
       <div class="col-12">
         <label for="funcionario" class="form-label"><i class="bi bi-person me-1"></i> Colaborador</label>
-        <select name="funcionario" id="funcionario" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+        <select name="funcionario" id="funcionario" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas" data-placeholder="Selecione um colaborador">
           <option value="">Todos</option>
           {% for funcionario in funcionarios %}
             <option value="{{ funcionario.id }}" {% if request.GET.funcionario == funcionario.id|stringformat:"s" %}selected{% endif %}>
@@ -116,8 +118,8 @@
               {% endif %}
             </td>
             <td class="text-center">
-  {% if request.user|has_permission:'Funcionario.view_avaliacaoexperiencia' %}
-    {% include "partials/global/_botao_visualizar.html" with objeto=avaliacao url_visualizar='visualizar_avaliacao_experiencia' %}
+              {% if request.user|tem_permissao:'Funcionario.view_avaliacaoexperiencia' %}
+              {% include "partials/global/_botao_visualizar.html" with objeto=avaliacao url_visualizar='visualizar_avaliacao_experiencia' %}
   {% endif %}
 
   {% if request.user|has_permission:'Funcionario.change_avaliacaoexperiencia' %}

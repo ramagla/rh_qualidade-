@@ -1,18 +1,27 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load custom_filters %}
+{% load filters_gerais %}
+{% load permissoes_utils %}
 {% load tz %}
+
 
 {% block title %}Visualização da Avaliação Anual{% endblock %}
 
 {% block content %}
-  {% include "partials/global/_estilos_impressao.html" %}
-  {% include "partials/global/_botao_impressao.html" %}
-  {% include "header.html" %}
+ {# 🎨 Estilos para impressão PDF #}
+{% include "partials/global/_estilos_impressao.html" %}
 
+{# 🖨️ Botão de impressão no topo da página #}
+{% include "partials/global/_botao_impressao.html" %}
+
+{# 🧾 Cabeçalho institucional #}
+{% include "header.html" %}
+
+
+ {# 📄 Início da área do relatório #}
   <div id="relatorio-area">
     <div class="pdf-container">
-      <!-- Cabeçalho -->
+      {# 🧾 Cabeçalho do relatório #}
       <div class="pdf-header text-center">
         <h1>📋 Avaliação Anual de Desempenho</h1>
         <p>Visualização detalhada da avaliação realizada</p>

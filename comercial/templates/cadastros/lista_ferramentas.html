@@ -15,14 +15,22 @@
   {% include "partials/global/_estilos_botoes_acoes.html" %}
 
   <!-- Botões -->
-  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
-    {% include "partials/global/_botao_filtros_offcanvas.html" %}
-    {% if request.user|has_permission:"comercial.add_ferramenta" %}
-    <a href="{% url 'cadastrar_ferramenta' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
-      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
-    </a>
-    {% endif %}
-  </div>
+ <!-- Botões -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  
+  {% if request.user|has_permission:"comercial.view_blocoferramenta" %}
+  <a href="{% url 'lista_blocos' %}" class="btn btn-outline-secondary d-inline-flex align-items-center">
+    <i class="bi bi-boxes me-2" aria-hidden="true"></i> Blocos
+  </a>
+  {% endif %}
+
+  {% if request.user|has_permission:"comercial.add_ferramenta" %}
+  <a href="{% url 'cadastrar_ferramenta' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+    <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+  </a>
+  {% endif %}
+</div>
 
   <!-- Filtros -->
   <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">

@@ -1,0 +1,147 @@
+{% load permissoes_tags %}
+
+<!-- 🔲 Menu Mobile Personalizado em Cards -->
+<div class="menu-mobile-offcanvas offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="menuMobileSidebar">
+  <div class="offcanvas-header d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-list fs-4 me-2 text-white"></i>
+    </div>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+
+  <div class="offcanvas-body p-3 d-flex flex-column justify-content-between h-100">
+    <!-- Menu principal -->
+    <div>
+      <div class="row g-3">
+        {% for item in menu %}
+          {% if not item.perm or request.user|tem_permissao:item.perm %}
+            <div class="col-6">
+              {% if item.submenu %}
+                <div class="card bg-secondary text-white h-100">
+                  <div class="card-body p-2">
+                    <h6 class="card-title d-flex align-items-center mb-2">
+                      <i class="{{ item.icon }} me-2"></i> {{ item.name }}
+                    </h6>
+                    <ul class="list-unstyled ms-2">
+                      {% for subitem in item.submenu %}
+                        {% if not subitem.perm or request.user|tem_permissao:subitem.perm %}
+                          <li class="mb-1">
+                            <a href="{% if subitem.url %}{% url subitem.url %}{% else %}#{% endif %}"
+                               class="text-white text-decoration-none small d-block">
+                              <i class="{{ subitem.icon }} me-1"></i> {{ subitem.name }}
+                            </a>
+                          </li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+              {% else %}
+                <a href="{% if item.modal %}#{% elif item.url %}{% url item.url %}{% else %}#{% endif %}"
+                   {% if item.modal %}data-bs-toggle="modal" data-bs-target="#modalTabelaCorrelacao"{% endif %}
+                   class="card bg-primary text-white text-center text-decoration-none h-100 d-flex align-items-center justify-content-center p-3">
+                  <div>
+                    <i class="{{ item.icon }} fs-2 d-block mb-1"></i>
+                    <span class="fw-bold small">{{ item.name }}</span>
+                  </div>
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Botão Voltar -->
+      <div class="mt-4 text-center">
+        <button class="btn btn-light text-dark fw-bold w-100" data-bs-dismiss="offcanvas">
+          <i class="bi bi-arrow-left me-1"></i> Voltar
+        </button>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🧩 Menu de Troca de Módulos -->
+<div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="moduloMobile">
+  <div class="offcanvas-header d-flex justify-content-between align-items-center">
+    <h5 class="offcanvas-title text-white">
+      <i class="bi bi-grid-fill me-2"></i> Módulos
+    </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column justify-content-between h-100">
+    <div>
+      <div class="row g-3">
+        {% for modulo in modulos_disponiveis %}
+          {% if request.user|tem_permissao:modulo.permissao %}
+            <div class="col-6">
+              <a href="{% url modulo.url %}" class="card bg-primary text-white text-decoration-none text-center h-100 p-3 d-flex flex-column justify-content-center align-items-center">
+                <i class="{{ modulo.icon }} fs-2 mb-2"></i>
+                <span class="fw-bold small">{{ modulo.name }}</span>
+              </a>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Botão Voltar -->
+      <div class="mt-4 text-center">
+        <button class="btn btn-light text-dark fw-bold w-100" data-bs-dismiss="offcanvas">
+          <i class="bi bi-arrow-left me-1"></i> Voltar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔘 Botões de Abertura do Menu (coloque no header) -->
+<button class="btn btn-outline-light d-md-none me-2" data-bs-toggle="offcanvas" data-bs-target="#menuMobileSidebar">
+  <i class="bi bi-list"></i>
+</button>
+<button class="btn btn-outline-light d-md-none" data-bs-toggle="offcanvas" data-bs-target="#moduloMobile">
+  <i class="bi bi-grid-fill"></i>
+</button>
+
+<!-- 🎨 Estilo exclusivo -->
+<style>
+  @media (max-width: 768px) {
+    .menu-mobile-offcanvas,
+    #moduloMobile {
+      z-index: 1065 !important;
+    }
+
+    .menu-mobile-offcanvas .card,
+    #moduloMobile .card {
+      border-radius: 0.75rem;
+      transition: transform 0.2s ease;
+      min-height: 100px;
+    }
+
+    .menu-mobile-offcanvas .card:hover,
+    #moduloMobile .card:hover {
+      transform: scale(1.03);
+    }
+
+    .menu-mobile-offcanvas .card-title,
+    #moduloMobile .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .menu-mobile-offcanvas .fw-bold,
+    #moduloMobile .fw-bold {
+      font-size: 0.85rem;
+    }
+
+    .menu-mobile-offcanvas .card i,
+    #moduloMobile .card i {
+      font-size: 1.8rem;
+    }
+
+    .menu-mobile-offcanvas .offcanvas-body,
+    #moduloMobile .offcanvas-body {
+      overflow-y: auto;
+    }
+  }
+</style>

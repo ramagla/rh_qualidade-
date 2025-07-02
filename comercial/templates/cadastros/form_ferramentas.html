@@ -117,63 +117,103 @@
 </div>
 
 
-          <!-- Materiais -->
+          
+<!-- Materiais Calculados -->
 <div class="accordion-item">
-    <h2 class="accordion-header" id="headingMateriais">
-        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMateriais">
-            <i class="bi bi-box-seam me-2"></i> Materiais
-        </button>
+    <h2 class="accordion-header" id="headingMateriaisCalc">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMateriaisCalc">
+        <i class="bi bi-cube me-2"></i> Materiais Calculados
+      </button>
     </h2>
-    <div id="collapseMateriais" class="accordion-collapse collapse" data-bs-parent="#accordionFerramenta">
-        <div class="accordion-body row g-3">
-            {{ materiais_formset.management_form }}
-            {% for material_form in materiais_formset %}
-            <div class="row g-2 border-bottom pb-2 mb-2 align-items-end material-form-row">
-                {{ material_form.id }}
-                <div class="col-md-5">
-                    <label class="form-label">
-                        <i class="bi bi-box me-1"></i> Nome:
-                    </label>
-                    {{ material_form.nome_material|add_class:"form-control" }}
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">
-                        <i class="bi bi-rulers me-1"></i> Unidade:
-                    </label>
-                    {{ material_form.unidade_medida|add_class:"form-select" }}
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">
-                        <i class="bi bi-123 me-1"></i> Quantidade:
-                    </label>
-                    {{ material_form.quantidade|add_class:"form-control" }}
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">
-                        <i class="bi bi-currency-dollar me-1"></i> Valor Unitário:
-                    </label>
-                    {{ material_form.valor_unitario|add_class:"form-control" }}
-                </div>
-
-                <div class="col-md-1 text-end">
-                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirLinha(this)">
-                        <i class="bi bi-x-circle"></i>
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-
-            <!-- Botão Adicionar -->
-            <div class="col-12 text-end mt-2">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinha('material')">
-                    <i class="bi bi-plus-circle"></i> Adicionar Material
-                </button>
-            </div>
+    <div id="collapseMateriaisCalc" class="accordion-collapse collapse" data-bs-parent="#accordionFerramenta">
+      <div class="accordion-body row g-3">
+  
+        <div class="col-md-4">
+          <label class="form-label"><i class="bi bi-boxes me-1"></i> Bloco Base:</label>
+          {{ form.bloco|add_class:"form-select select2" }}
         </div>
+  
+        <div class="col-md-2">
+          <label class="form-label"><i class="bi bi-signpost-2 me-1"></i> Passo:</label>
+          {{ form.passo|add_class:"form-control" }}
+        </div>
+        <div class="col-md-2">
+          <label class="form-label"><i class="bi bi-arrows-expand me-1"></i> Largura Tira:</label>
+          {{ form.largura_tira|add_class:"form-control" }}
+        </div>
+        <div class="col-md-2">
+          <label class="form-label"><i class="bi bi-collection me-1"></i> Matrizes:</label>
+          {{ form.num_matrizes|add_class:"form-control" }}
+        </div>
+        <div class="col-md-2">
+          <label class="form-label"><i class="bi bi-record-circle me-1"></i> Punções:</label>
+          {{ form.num_puncoes|add_class:"form-control" }}
+        </div>
+  
+        <div class="col-md-2">
+          <label class="form-label"><i class="bi bi-truck me-1"></i> Carros:</label>
+          {{ form.num_carros|add_class:"form-control" }}
+        </div>
+        <div class="col-md-2">
+          <label class="form-label"><i class="bi bi-gear-wide-connected me-1"></i> Formadores:</label>
+          {{ form.num_formadores|add_class:"form-control" }}
+        </div>
+  
+        <div class="col-12"><hr></div>
+  
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Matriz (SAE D2):</label>
+          <div class="input-group">
+            <input id="kg_matriz" class="form-control" readonly>
+            <span class="input-group-text">Kg</span>
+            {{ form.valor_unitario_matriz|add_class:"form-control" }}
+          </div>
+        </div>
+  
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Punção (SAE D2):</label>
+          <div class="input-group">
+            <input id="kg_puncao" class="form-control" readonly>
+            <span class="input-group-text">Kg</span>
+            {{ form.valor_unitario_puncao|add_class:"form-control" }}
+          </div>
+        </div>
+  
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Flange (SAE P20):</label>
+          <div class="input-group">
+            <input id="kg_flange" class="form-control" readonly>
+            <span class="input-group-text">Kg</span>
+            {{ form.valor_unitario_flange|add_class:"form-control" }}
+          </div>
+        </div>
+  
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Carros (SAE 1020):</label>
+          <div class="input-group">
+            <input id="kg_carros" class="form-control" readonly>
+            <span class="input-group-text">Kg</span>
+            {{ form.valor_unitario_carros|add_class:"form-control" }}
+          </div>
+        </div>
+  
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Formadores (SAE D2):</label>
+          <div class="input-group">
+            <input id="kg_formadores" class="form-control" readonly>
+            <span class="input-group-text">Kg</span>
+            {{ form.valor_unitario_formadores|add_class:"form-control" }}
+          </div>
+        </div>
+  
+      </div>
     </div>
-</div>
+  </div>
+  
+  
 
-            <!-- Mão de Obra -->
+
+<!-- Mão de Obra -->
 <div class="accordion-item">
     <h2 class="accordion-header" id="headingMO">
         <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMO">
@@ -358,6 +398,35 @@
     });
     </script>
     
-    
+    <script>
+        function calcularMateriais() {
+          const passo = parseFloat(document.querySelector('#id_passo')?.value || 0);
+          const largura = parseFloat(document.querySelector('#id_largura_tira')?.value || 0);
+          const matrizes = parseFloat(document.querySelector('#id_num_matrizes')?.value || 0);
+          const puncoes = parseFloat(document.querySelector('#id_num_puncoes')?.value || 0);
+          const carros = parseFloat(document.querySelector('#id_num_carros')?.value || 0);
+          const formadores = parseFloat(document.querySelector('#id_num_formadores')?.value || 0);
+        
+          const kg_matriz = ((largura + 20) * (passo + 20) * 19 * 7.86 * matrizes) / 1_000_000;
+          const kg_puncao = ((largura + 5) * (passo + 5) * 50 * 7.86 * puncoes) / 1_000_000;
+          const kg_flange = (200 * 200 * (33 + largura) * 7.86) / 1_000_000;
+          const kg_carros = 2.5 * carros;
+          const kg_formadores = (largura * formadores * 25 * 150) / 1_000_000;
+        
+          document.getElementById("kg_matriz").value = kg_matriz.toFixed(3);
+          document.getElementById("kg_puncao").value = kg_puncao.toFixed(3);
+          document.getElementById("kg_flange").value = kg_flange.toFixed(3);
+          document.getElementById("kg_carros").value = kg_carros.toFixed(3);
+          document.getElementById("kg_formadores").value = kg_formadores.toFixed(3);
+        }
+        
+        document.addEventListener("DOMContentLoaded", function () {
+          document.querySelectorAll("#id_passo, #id_largura_tira, #id_num_matrizes, #id_num_puncoes, #id_num_carros, #id_num_formadores")
+            .forEach(el => el.addEventListener("input", calcularMateriais));
+        
+          calcularMateriais(); // inicial
+        });
+        </script>
+        
     
 {% endblock %}

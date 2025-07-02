@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Blocos Cadastrados{% endblock %}
+{% load custom_filters %}
+{% load comercial_formatos %}
+
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Blocos Cadastrados" icone="bi bi-boxes" emoji="🧱" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"comercial.add_blocoferramenta" %}
+    <a href="{% url 'cadastrar_bloco' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2"></i> Cadastrar Bloco
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Offcanvas Filtros -->
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Blocos
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+
+        <div class="col-12 filtro-wrapper">
+          <label for="numero" class="form-label"><i class="bi bi-123 me-1"></i> Número do Bloco</label>
+          <input type="text" name="numero" id="numero" class="form-control" placeholder="Ex: Bloco 1" value="{{ request.GET.numero }}">
+        </div>
+
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Cards Indicadores -->
+  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Blocos Cadastrados" valor=total_blocos subtitulo="Total Geral" icone="bi-boxes" %}
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Peso Total" valor=peso_total_geral|floatformat:2 subtitulo="em Kg" icone="bi-weight" %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Itens Cadastrados" valor=total_itens subtitulo="Total de Itens" icone="bi-list-check" %}
+  </div>
+
+  <!-- Tabela -->
+  <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i> 📄 Lista de Blocos</h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visually-hidden">Tabela de blocos</caption>
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-hash me-1"></i> Nº do Bloco</th>
+          <th><i class="bi bi-list-ol me-1"></i> Qtde de Itens</th>
+          <th><i class="bi bi-weight me-1"></i> Peso Total (kg)</th>
+          <th><i class="bi bi-gear me-1"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bloco in page_obj %}
+        <tr>
+          <td>{{ bloco.numero }}</td>
+          <td>{{ bloco.itens.count }}</td>
+          <td>{{ bloco.itens.all|peso_total_blocos|floatformat:2 }}</td>
+          <td>
+            <div class="d-inline-flex gap-1 justify-content-center">
+              {% include "partials/global/_botao_visualizar.html" with objeto=bloco url_visualizar="visualizar_bloco" label="bloco" %}
+              {% include "partials/global/_botao_editar.html" with objeto=bloco url_editar="editar_bloco" label="bloco" %}
+              {% include "partials/global/_botao_excluir.html" with objeto=bloco url_excluir="excluir_bloco" label="bloco" %}
+              {% include "partials/global/_modal_exclusao.html" with objeto=bloco url_excluir="excluir_bloco" %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        {% include "partials/global/_sem_resultados.html" with colspan=4 mensagem="Nenhum bloco cadastrado." %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% include 'partials/global/_paginacao.html' %}
+  </div>
+</div>
+{% endblock %}

@@ -116,10 +116,11 @@
           <div class="card-body">
             <ul class="list-group">
               {% for departamento in atividades_por_departamento %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  {{ departamento.departamento|title }}
-                  <span class="badge bg-info text-white">{{ departamento.total }}</span>
-                </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ departamento.departamentos__nome|title }}
+                <span class="badge bg-info text-white">{{ departamento.total }}</span>
+              </li>
+              
               {% empty %}
                 {% include "partials/global/_sem_resultados.html" with item_nome="departamento" %}
               {% endfor %}

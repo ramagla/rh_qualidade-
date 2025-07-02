@@ -1,7 +1,11 @@
 {% extends 'base.html' %}
 
+{% load filters_gerais %}
+{% load permissoes_utils %}
+{% load static %}
+
 {% block title %}Avaliação de Treinamento - {{ avaliacao.funcionario.nome }}{% endblock %}
-{% load custom_filters %}
+
 
 {% block content %}
 {% include 'partials/global/_estilos_impressao.html' %}

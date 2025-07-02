@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load custom_filters %}
+{% load filters_gerais %}
+{% load permissoes_utils %}
+
 
 {% block title %}Avaliação Anual - {{ avaliacao.funcionario.nome }}{% endblock %}
 

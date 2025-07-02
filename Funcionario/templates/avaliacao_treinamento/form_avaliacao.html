@@ -2,9 +2,13 @@
 
 {% block title %}Cadastro de Avaliação de Treinamentos{% endblock %}
 
-{% block content %}
-{% load custom_filters %}
+{% load filters_gerais %}
+{% load permissoes_utils %}
+{% load widget_tweaks %}
 {% load static %}
+
+{% block content %}
+
 
 {% block extrahead %}
   {{ form.media }}

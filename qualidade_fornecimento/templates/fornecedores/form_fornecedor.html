@@ -61,12 +61,12 @@
     {% csrf_token %}
 
  <!-- Campos Automáticos -->
+ <div id="campos-extras-fornecedor"> 
 <div class="accordion-item">
   <h2 class="accordion-header" id="headingCamposAuto">
     <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCamposAuto" aria-expanded="false" aria-controls="collapseCamposAuto" aria-label="Expandir Campos Automáticos">
   <i class="bi bi-gear-fill me-2" aria-hidden="true"></i> Campos Automáticos
 </button>
-
   </h2>
   <div id="collapseCamposAuto" class="accordion-collapse collapse" aria-labelledby="headingCamposAuto" data-bs-parent="#accordionFornecedor">
     <div class="accordion-body row g-3">
@@ -154,6 +154,7 @@
     </div>
   </div>
 </div>
+</div>
 
 
 <!-- Dados Gerais -->
@@ -165,14 +166,13 @@
   </h2>
   <div id="collapseDadosGerais" class="accordion-collapse collapse" aria-labelledby="headingDadosGerais" data-bs-parent="#accordionFornecedor">
     <div class="accordion-body row g-3">
-      
+
       <!-- Nome do Fornecedor -->
       <div class="col-md-6">
         <label for="id_nome" class="form-label fw-bold">
           <i class="bi bi-person-fill me-1"></i> Nome do Fornecedor
         </label>
         {{ form.nome|add_class:"form-control" }}
-
       </div>
 
       <!-- Produto ou Serviço -->
@@ -191,33 +191,50 @@
         {{ form.tipo_certificacao|add_class:"form-select select2" }}
       </div>
 
-      <!-- Data de Homologação -->
-      <div class="col-md-6">
-        <label for="id_data_homologacao" class="form-label fw-bold">
-          <i class="bi bi-calendar-check-fill me-1"></i> Data de Homologação
+      <!-- Status do Fornecedor -->
+      <div class="col-md-4">
+        <label for="id_ativo" class="form-label fw-bold">
+          <i class="bi bi-toggle-on me-1"></i> Status do Fornecedor
         </label>
-        {{ form.data_homologacao|add_class:"form-control" }}
+        {{ form.ativo|add_class:"form-select select2" }}
       </div>
 
-      <!-- Lead Time -->
-      <div class="col-md-4">
-        <label for="id_lead_time" class="form-label fw-bold">
-          <i class="bi bi-clock-history me-1"></i> Lead Time (dias)
-        </label>
-        {{ form.lead_time|add_class:"form-control" }}
+      <!-- Campos ocultáveis quando "Material do Cliente" -->
+      <div id="campos-condicionais-material" class="row g-3">
+
+        <!-- Data de Homologação -->
+        <div class="col-md-6">
+          <label for="id_data_homologacao" class="form-label fw-bold">
+            <i class="bi bi-calendar-check-fill me-1"></i> Data de Homologação
+          </label>
+          {{ form.data_homologacao|add_class:"form-control" }}
+        </div>
+
+        <!-- Lead Time -->
+        <div class="col-md-4">
+          <label for="id_lead_time" class="form-label fw-bold">
+            <i class="bi bi-clock-history me-1"></i> Lead Time (dias)
+          </label>
+          {{ form.lead_time|add_class:"form-control" }}
+        </div>
+
       </div>
 
     </div>
   </div>
 </div>
 
+<!-- Alerta Condicional -->
 <div id="alert-calibracao-nbr" class="alert alert-info small d-none">
   <i class="bi bi-info-circle me-1"></i>
-  Alguns campos e seções foram ocultados devido à seleção de <strong>Calibração + NBR-ISO 17025 RBC</strong>.
+  Alguns campos e seções foram ocultados devido à seleção de <strong>Calibração + NBR-ISO 17025 RBC</strong> ou <strong>Material do Cliente</strong>.
 </div>
 
 
+
 <!-- Auditoria -->
+<div id="acordeon-condicional-material">
+
 <div class="accordion-item">
   <h2 class="accordion-header" id="headingAuditoria">
     <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuditoria" aria-expanded="false" aria-controls="collapseAuditoria">
@@ -278,7 +295,9 @@
     </div>
   </div>
 </div>
+
 <!-- Especialista -->
+
 <div class="accordion-item">
   <h2 class="accordion-header" id="headingEspecialista">
     <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEspecialista" aria-expanded="false" aria-controls="collapseEspecialista">
@@ -315,9 +334,11 @@
     </div>
   </div>
 </div>
+</div>
 
 <!-- Anexos -->
 <!-- Anexos -->
+
 <div class="accordion-item">
   <h2 class="accordion-header" id="headingAnexos">
     <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnexos" aria-expanded="false" aria-controls="collapseAnexos">
@@ -340,6 +361,8 @@
 
           <input type="text" class="form-control text-muted" placeholder="Nenhum arquivo selecionado" id="certificado_filename" readonly>
         </div>
+      </div>
+
 
         <!-- Campo real oculto manualmente -->
         <input type="file" name="certificado_anexo" id="id_certificado_anexo" class="d-none">
@@ -364,6 +387,7 @@
 
     </div>
   </div>
+</div>
 </div>
 
 
@@ -391,140 +415,162 @@
 
 <!-- Scripts -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  $('#id_produto_servico, #id_tipo_certificacao, #id_risco, #id_tipo_formulario').select2({
-    placeholder: "Selecione uma opção",
-    allowClear: true,
-    width: '100%'
-  });
-
-  $('#id_certificado_anexo').on('change', function () {
-  const file = this.files[0];
-  const display = $('#certificado_filename');
-
-  if (file) {
-    let icon = '📎'; // você pode mudar para outro ícone se quiser
-    display.val(`${icon} ${file.name}`);
-  } else {
-    display.val('Nenhum arquivo selecionado');
-  }
-});
-
-
-  $('#id_tipo_certificacao').on('change', function () {
-    let tipo = $(this).val();
-    let score = 80;
-    if (tipo === "ISO 9001") { score = 90; }
-    else if (tipo === "IATF16949") { score = 100; }
-    $('#score').val(score);
-    toggleCalibracaoNBR();
-  });
-
-  $('#id_nota_auditoria').on('input', recalcAuditoria);
-  $('#id_data_auditoria').on('change', recalcAuditoria);
-  $('#id_tipo_formulario').on('change', recalcAuditoria);
-  $('#id_produto_servico, #id_tipo_certificacao').on('change', toggleCalibracaoNBR);
-
-  $('#id_tipo_certificacao').trigger('change');
-  recalcAuditoria();
-  toggleCalibracaoNBR();
-
-  function recalcAuditoria() {
-    let nota = parseFloat($('#id_nota_auditoria').val());
-    let dataAuditoria = $('#id_data_auditoria').val();
-    let tipoFormulario = $('#id_tipo_formulario').val();
-    let classe = "", status = "", deltaDays = 0;
-
-    if (["CQI-11", "CQI-12", "CQI-9"].includes(tipoFormulario)) {
-      classe = "C"; status = "Qualificado"; deltaDays = 365;
-    } else if (!isNaN(nota)) {
-      if (nota >= 90) { classe = "A"; status = "Qualificado"; deltaDays = 1095; }
-      else if (nota >= 50) { classe = "B"; status = "Qualificado Condicional"; deltaDays = 730; }
-      else { classe = "C"; status = "Reprovado"; deltaDays = 365; }
-    }
-
-    $('#classe_frequencia').val(classe);
-    $('#status').val(status);
-
-    if (dataAuditoria) {
-      let audDate = new Date(dataAuditoria);
-      audDate.setDate(audDate.getDate() + deltaDays);
-      let nextDate = `${('0'+audDate.getDate()).slice(-2)}/${('0'+(audDate.getMonth()+1)).slice(-2)}/${audDate.getFullYear()}`;
-      $('#id_proxima_auditoria').val(nextDate);
-      $('#id_proxima_avaliacao_risco').val(nextDate);
-    }
-  }
-
-  function toggleCalibracaoNBR() {
-  let produto = $('#id_produto_servico').val();
-  let certificacao = $('#id_tipo_certificacao').val();
-  let isCalibracaoNBR = (produto === "Calibração" && certificacao === "NBR-ISO 17025 RBC");
-
-  const accordionsToHide = ['#headingAuditoria', '#headingEspecialista', '#headingAnexos'];
-
-  if (isCalibracaoNBR) {
-    // Oculta os campos com classe e os acordeões inteiros
-    $('.hide-when-calibracao-nbr').each(function () {
-      $(this).hide().find('input, select').prop('disabled', true);
+  document.addEventListener("DOMContentLoaded", function () {
+    $('#id_produto_servico, #id_tipo_certificacao, #id_risco, #id_tipo_formulario').select2({
+      placeholder: "Selecione uma opção",
+      allowClear: true,
+      width: '100%'
     });
-    accordionsToHide.forEach(id => $(id).closest('.accordion-item').hide());
+  
+    $('#id_certificado_anexo').on('change', function () {
+      const file = this.files[0];
+      const display = $('#certificado_filename');
+  
+      if (file) {
+        let icon = '📎';
+        display.val(`${icon} ${file.name}`);
+      } else {
+        display.val('Nenhum arquivo selecionado');
+      }
+    });
+  
+    $('#id_tipo_certificacao').on('change', function () {
+      let tipo = $(this).val();
+      let score = 80;
+      if (tipo === "ISO 9001") { score = 90; }
+      else if (tipo === "IATF16949") { score = 100; }
+      $('#score').val(score);
+      toggleCalibracaoNBR();
+    });
+  
+    $('#id_nota_auditoria').on('input', recalcAuditoria);
+    $('#id_data_auditoria').on('change', recalcAuditoria);
+    $('#id_tipo_formulario').on('change', recalcAuditoria);
+    $('#id_produto_servico, #id_tipo_certificacao').on('change', function () {
+      toggleCalibracaoNBR();
+      verificarProdutoServico();
+    });
+  
+    $('#id_tipo_certificacao').trigger('change');
+    recalcAuditoria();
+    toggleCalibracaoNBR();
+    verificarProdutoServico();
+  
+    function recalcAuditoria() {
+      let nota = parseFloat($('#id_nota_auditoria').val());
+      let dataAuditoria = $('#id_data_auditoria').val();
+      let tipoFormulario = $('#id_tipo_formulario').val();
+      let classe = "", status = "", deltaDays = 0;
+  
+      if (["CQI-11", "CQI-12", "CQI-9"].includes(tipoFormulario)) {
+        classe = "C"; status = "Qualificado"; deltaDays = 365;
+      } else if (!isNaN(nota)) {
+        if (nota >= 90) { classe = "A"; status = "Qualificado"; deltaDays = 1095; }
+        else if (nota >= 50) { classe = "B"; status = "Qualificado Condicional"; deltaDays = 730; }
+        else { classe = "C"; status = "Reprovado"; deltaDays = 365; }
+      }
+  
+      $('#classe_frequencia').val(classe);
+      $('#status').val(status);
+  
+      if (dataAuditoria) {
+        let audDate = new Date(dataAuditoria);
+        audDate.setDate(audDate.getDate() + deltaDays);
+        let nextDate = `${('0'+audDate.getDate()).slice(-2)}/${('0'+(audDate.getMonth()+1)).slice(-2)}/${audDate.getFullYear()}`;
+        $('#id_proxima_auditoria').val(nextDate);
+        $('#id_proxima_avaliacao_risco').val(nextDate);
+      }
+    }
+  
+    function toggleCalibracaoNBR() {
+      let produto = $('#id_produto_servico').val();
+      let certificacao = $('#id_tipo_certificacao').val();
+      let isCalibracaoNBR = (produto === "Calibração" && certificacao === "NBR-ISO 17025 RBC");
+  
+      const accordionsToHide = ['#headingAuditoria', '#headingEspecialista', '#headingAnexos'];
+  
+      if (isCalibracaoNBR) {
+        $('.hide-when-calibracao-nbr').each(function () {
+          $(this).hide().find('input, select').prop('disabled', true);
+        });
+        accordionsToHide.forEach(id => $(id).closest('.accordion-item').hide());
+        $('#alert-calibracao-nbr').removeClass('d-none');
+      } else {
+        $('.hide-when-calibracao-nbr').each(function () {
+          $(this).show().find('input, select').prop('disabled', false);
+        });
+        accordionsToHide.forEach(id => $(id).closest('.accordion-item').show());
+        $('#alert-calibracao-nbr').addClass('d-none');
+      }
+    }
+  
+    function verificarProdutoServico() {
+  let valor = $('#id_produto_servico').val();
+  let isMaterialCliente = valor === "Material do Cliente";
+  let isCalibracao = valor === "Calibração";
+
+  const camposCondicionais = $('#campos-condicionais-material');
+  const acordeonCondicional = $('#acordeon-condicional-material');
+
+  if (isMaterialCliente || isCalibracao) {
+    camposCondicionais.hide().find('input, select, textarea').prop('disabled', true);
+    acordeonCondicional.hide().find('input, select, textarea').prop('disabled', true);
     $('#alert-calibracao-nbr').removeClass('d-none');
   } else {
-    // Exibe tudo normalmente
-    $('.hide-when-calibracao-nbr').each(function () {
-      $(this).show().find('input, select').prop('disabled', false);
-    });
-    accordionsToHide.forEach(id => $(id).closest('.accordion-item').show());
+    camposCondicionais.show().find('input, select, textarea').prop('disabled', false);
+    acordeonCondicional.show().find('input, select, textarea').prop('disabled', false);
     $('#alert-calibracao-nbr').addClass('d-none');
   }
 }
- // =========================
-  // Validação dinâmica visual
-  // =========================
-  const form = document.querySelector("form");
 
-  form.querySelectorAll("input, select, textarea").forEach(function (field) {
-    field.addEventListener("blur", function () {
-      validarCampo(field);
-    });
-  });
-
-  form.addEventListener("submit", function (event) {
-    let valido = true;
+  
+    // =========================
+    // Validação dinâmica visual
+    // =========================
+    const form = document.querySelector("form");
+  
     form.querySelectorAll("input, select, textarea").forEach(function (field) {
-      if (!validarCampo(field)) {
-        valido = false;
+      field.addEventListener("blur", function () {
+        validarCampo(field);
+      });
+    });
+  
+    form.addEventListener("submit", function (event) {
+      let valido = true;
+      form.querySelectorAll("input, select, textarea").forEach(function (field) {
+        if (!validarCampo(field)) {
+          valido = false;
+        }
+      });
+  
+      if (!valido) {
+        event.preventDefault();
+        event.stopPropagation();
       }
     });
-
-    if (!valido) {
-      event.preventDefault();
-      event.stopPropagation();
+  
+    function validarCampo(field) {
+      const required = field.hasAttribute("required");
+      const value = field.value.trim();
+  
+      if (required && !value) {
+        field.classList.add("is-invalid");
+        if (!field.nextElementSibling || !field.nextElementSibling.classList.contains("invalid-feedback")) {
+          const feedback = document.createElement("div");
+          feedback.className = "invalid-feedback";
+          feedback.textContent = "Este campo é obrigatório.";
+          field.parentNode.appendChild(feedback);
+        }
+        return false;
+      } else {
+        field.classList.remove("is-invalid");
+        if (field.nextElementSibling && field.nextElementSibling.classList.contains("invalid-feedback")) {
+          field.nextElementSibling.remove();
+        }
+        return true;
+      }
     }
   });
-
-  function validarCampo(field) {
-    const required = field.hasAttribute("required");
-    const value = field.value.trim();
-
-    if (required && !value) {
-      field.classList.add("is-invalid");
-
-      if (!field.nextElementSibling || !field.nextElementSibling.classList.contains("invalid-feedback")) {
-        const feedback = document.createElement("div");
-        feedback.className = "invalid-feedback";
-        feedback.textContent = "Este campo é obrigatório.";
-        field.parentNode.appendChild(feedback);
-      }
-      return false;
-    } else {
-      field.classList.remove("is-invalid");
-      if (field.nextElementSibling && field.nextElementSibling.classList.contains("invalid-feedback")) {
-        field.nextElementSibling.remove();
-      }
-      return true;
-    }
-  }
-});
-</script>
+  </script>
+  
 {% endblock %}

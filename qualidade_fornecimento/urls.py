@@ -9,7 +9,8 @@ from qualidade_fornecimento.views.controle_servico_externo_views import (
     editar_controle_servico_externo,
     excluir_controle_servico_externo,
     listar_controle_servico_externo,
-    visualizar_controle_servico_externo
+    visualizar_controle_servico_externo,
+    importar_excel_servico_externo
 )
 from qualidade_fornecimento.views.f045_pdf import gerar_pdf_f045
 from qualidade_fornecimento.views.f045_views import f045_status, gerar_f045,visualizar_f045_pdf
@@ -207,5 +208,11 @@ urlpatterns = [
     path('inspecao10/importar-excel/', inspecao10_views.importar_inspecao10_excel, name='importar_inspecao10_excel'),
     path("relatorio-analitico-inspecao/", relatorio_inspecao_analitico, name="relatorio_inspecao_analitico"),
     path("relatorio-ppm/", relatorio_ppm_view, name="relatorio_ppm"),
+    path("inspecao10/estoque-devolucao/",inspecao10_views.verificar_estoque_devolucao,name="verificar_estoque_devolucao"),
+    path(
+        "controle-servico-externo/importar/",
+        importar_excel_servico_externo,
+        name="importar_excel_servico"
+    ),
 
 ]

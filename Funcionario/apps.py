@@ -5,4 +5,7 @@ class FuncionarioConfig(AppConfig):
     name = "Funcionario"
 
     def ready(self):
-        import Funcionario.signals
+        try:
+            import Funcionario.signals
+        except ImportError:
+            pass 

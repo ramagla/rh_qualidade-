@@ -24,6 +24,7 @@ class FornecedorQualificadoForm(forms.ModelForm):
             "especialista_cargo",
             "certificado_anexo",
             "lead_time",
+            "ativo",
         ]
         widgets = {
             "produto_servico": forms.Select(attrs={"class": "form-select"}),
@@ -60,6 +61,8 @@ class FornecedorQualificadoForm(forms.ModelForm):
             "especialista_cargo": forms.TextInput(attrs={"class": "form-control"}),
             "especialista_contato": forms.TextInput(attrs={"class": "form-control"}),
             "lead_time": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
+            "ativo": forms.Select(attrs={"class": "form-select select2"}),
+
         }
 
     def __init__(self, *args, **kwargs):
@@ -92,8 +95,9 @@ class FornecedorQualificadoForm(forms.ModelForm):
         certificacao = data.get("tipo_certificacao") or (
             self.instance.tipo_certificacao if self.instance else None
         )
-        if produto == "Calibração" and certificacao == "NBR-ISO 17025 RBC":
+        if (produto == "Calibração" and certificacao == "NBR-ISO 17025 RBC") or produto == "Material do Cliente":
             for field in [
+                "data_homologacao", 
                 "vencimento_certificacao",
                 "risco",
                 "data_avaliacao_risco",

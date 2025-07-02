@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load filters_gerais %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-boxes me-2"></i>
+    {{ titulo }}
+  </h2>
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if form.errors or formset.errors %}
+      <div class="alert alert-danger">
+        <strong>Erros encontrados:</strong>
+        <ul class="mt-2 mb-0">
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li><strong>Erro geral:</strong> {{ error }}</li>
+          {% endfor %}
+
+          {% for subform in formset %}
+            {% for field, errors in subform.errors.items %}
+              {% for error in errors %}
+                <li><strong>{{ field|capfirst }}:</strong> {{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="accordion" id="accordionBloco">
+      <!-- Dados do Bloco -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingBloco">
+          <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBloco" aria-expanded="true">
+            <i class="bi bi-box-fill me-2"></i> Dados do Bloco
+          </button>
+        </h2>
+        <div id="collapseBloco" class="accordion-collapse collapse show" data-bs-parent="#accordionBloco">
+          <div class="accordion-body row g-3">
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-hash me-1"></i> Número do Bloco:</label>
+              {{ form.numero|add_class:"form-control" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Itens do Bloco -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingItens">
+          <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseItens">
+            <i class="bi bi-list-ul me-2"></i> Itens do Bloco
+          </button>
+        </h2>
+        <div id="collapseItens" class="accordion-collapse collapse" data-bs-parent="#accordionBloco">
+          <div class="accordion-body row g-3">
+            {{ formset.management_form }}
+            {% for subform in formset %}
+              <div class="row g-2 border-bottom pb-2 mb-2">
+                {{ subform.id }}
+                <div class="col-md-3">
+                  <label class="form-label">Nº Item</label>
+                  {{ subform.numero_item|add_class:"form-control" }}
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Medidas</label>
+                  {{ subform.medidas|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Material</label>
+                  {{ subform.material|add_class:"form-select select2" }}
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Peso Aço</label>
+                  {{ subform.peso_aco|add_class:"form-control" }}
+                </div>
+                <div class="col-md-1">
+                  <label class="form-label d-block">Excluir</label>
+                  {{ subform.DELETE }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 text-center mt-4">
+      {% include 'partials/global/_botoes_salvar_cancelar.html' with url_voltar='lista_blocos' %}
+    </div>
+  </form>
+</div>
+{% endblock %}

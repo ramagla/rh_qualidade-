@@ -5,6 +5,11 @@ from .funcionario import Funcionario
 
 
 class ListaPresenca(models.Model):
+    """
+    Representa uma lista de presença para treinamentos, cursos ou eventos internos,
+    com descrição, horários e participantes vinculados.
+    """
+
     TIPO_CHOICES = [
         ("Treinamento", "Treinamento"),
         ("Curso", "Curso"),
@@ -17,24 +22,72 @@ class ListaPresenca(models.Model):
         ("em_andamento", "Em Andamento"),
     ]
 
-    treinamento = models.CharField(max_length=255, choices=TIPO_CHOICES)
-    data_inicio = models.DateField(null=True, blank=True)
-    data_fim = models.DateField(null=True, blank=True)
-    horario_inicio = models.TimeField(null=True, blank=True)
-    horario_fim = models.TimeField(null=True, blank=True)
-    instrutor = models.CharField(max_length=255)
-    duracao = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    necessita_avaliacao = models.BooleanField(default=False)
-    lista_presenca = models.FileField(
-        upload_to="listas_presenca/", null=True, blank=True
+    treinamento = models.CharField(
+        max_length=255,
+        choices=TIPO_CHOICES,
+        verbose_name="Tipo de Evento"
     )
-    participantes = models.ManyToManyField(Funcionario, related_name="participantes")
+    data_inicio = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Data de Início"
+    )
+    data_fim = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Data de Término"
+    )
+    horario_inicio = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="Horário de Início"
+    )
+    horario_fim = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="Horário de Término"
+    )
+    instrutor = models.CharField(
+        max_length=255,
+        verbose_name="Instrutor"
+    )
+    duracao = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Duração (horas)"
+    )
+    necessita_avaliacao = models.BooleanField(
+        default=False,
+        verbose_name="Necessita Avaliação?"
+    )
+    lista_presenca = models.FileField(
+        upload_to="listas_presenca/",
+        null=True,
+        blank=True,
+        verbose_name="Arquivo da Lista de Presença"
+    )
+    participantes = models.ManyToManyField(
+        Funcionario,
+        related_name="participantes",
+        verbose_name="Participantes"
+    )
     assunto = models.CharField(
-        max_length=255, null=True, blank=True
-    )  # Permite valores nulos
-    descricao = CKEditor5Field(config_name="default")
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Assunto"
+    )
+    descricao = CKEditor5Field(
+        config_name="default",
+        verbose_name="Descrição"
+    )
     situacao = models.CharField(
-        max_length=20, choices=SITUACAO_CHOICES, default="em_andamento"
+        max_length=20,
+        choices=SITUACAO_CHOICES,
+        default="em_andamento",
+        verbose_name="Situação"
     )
     planejado = models.CharField(
         max_length=3,
@@ -43,14 +96,20 @@ class ListaPresenca(models.Model):
         verbose_name="Planejado?"
     )
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-    def duracao_formatada(self):
-        total_minutes = int(self.duracao * 60)  # Converte horas para minutos
-        hours = total_minutes // 60  # Divide por 60 para obter as horas inteiras
-        minutes = total_minutes % 60  # Resto da divisão para obter os minutos
-        return f"{hours}h {minutes}m"
-
     def __str__(self):
         return f"Lista de Presença - {self.treinamento} ({self.data_inicio} - {self.data_fim})"
+
+    def duracao_formatada(self):
+        """
+        Retorna a duração no formato "Xh Ym".
+        """
+        if self.duracao:
+            total_minutes = int(self.duracao * 60)
+            hours = total_minutes // 60
+            minutes = total_minutes % 60
+            return f"{hours}h {minutes}m"
+        return ""
+
+    class Meta:
+        ordering = ["-data_inicio"]
+        verbose_name_plural = "Listas de Presença"

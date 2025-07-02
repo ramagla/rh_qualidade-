@@ -1,4 +1,5 @@
 {# partials/global/_form_avaliacao_questionario.html #}
+{% load widget_tweaks %}
 
 <!-- 🔍 Questionário de Avaliação -->
 <div class="accordion-item">
@@ -7,62 +8,43 @@
       📝 Questionário da Avaliação
     </button>
   </h2>
-  <div id="collapseQuestionario" class="accordion-collapse collapse" aria-labelledby="headingQuestionario" data-bs-parent="#formAccordion">
+  <div id="collapseQuestionario" class="accordion-collapse collapse" aria-labelledby="headingQuestionario" data-bs-parent="#accordionForm">
     <div class="accordion-body">
       <div class="row g-3">
         
         <!-- Adaptação no Trabalho -->
         <div class="col-md-6">
-          <label for="adaptacao_trabalho" class="form-label">🔄 Adaptação no Trabalho</label>
-          <select class="form-select" id="adaptacao_trabalho" name="adaptacao_trabalho" required>
-            <option value="">Selecione...</option>
-            <option value="1">Ruim (D) – Mantém comportamento oposto ao solicitado para o cargo.</option>
-            <option value="2">Regular (C) – Esforça-se para se integrar ao ambiente.</option>
-            <option value="3">Bom (B) – Integra-se com facilidade ao ambiente da empresa.</option>
-            <option value="4">Ótimo (A) – Identifica-se plenamente com o cargo e empresa.</option>
-          </select>
+          <label for="{{ form.adaptacao_trabalho.id_for_label }}" class="form-label">🔄 Adaptação no Trabalho</label>
+          {% render_field form.adaptacao_trabalho class="form-select" %}
+          {{ form.adaptacao_trabalho.errors }}
         </div>
 
         <!-- Interesse -->
         <div class="col-md-6">
-          <label for="interesse" class="form-label">✨ Interesse</label>
-          <select class="form-select" id="interesse" name="interesse" required>
-            <option value="">Selecione...</option>
-            <option value="1">Ruim (D) – Demonstra desinteresse.</option>
-            <option value="2">Regular (C) – Precisa de estímulo constante.</option>
-            <option value="3">Bom (B) – Demonstra entusiasmo compatível.</option>
-            <option value="4">Ótimo (A) – Muito interessado no trabalho.</option>
-          </select>
+          <label for="{{ form.interesse.id_for_label }}" class="form-label">✨ Interesse</label>
+          {% render_field form.interesse class="form-select" %}
+          {{ form.interesse.errors }}
         </div>
 
         <!-- Relacionamento Social -->
         <div class="col-md-6">
-          <label for="relacionamento_social" class="form-label">👥 Relacionamento Social</label>
-          <select class="form-select" id="relacionamento_social" name="relacionamento_social" required>
-            <option value="">Selecione...</option>
-            <option value="1">Ruim (D) – Pouca aceitação no grupo.</option>
-            <option value="2">Regular (C) – Esforça-se para se enturmar.</option>
-            <option value="3">Bom (B) – Bem aceito entre colegas.</option>
-            <option value="4">Ótimo (A) – Muito apreciado socialmente.</option>
-          </select>
+          <label for="{{ form.relacionamento_social.id_for_label }}" class="form-label">👥 Relacionamento Social</label>
+          {% render_field form.relacionamento_social class="form-select" %}
+          {{ form.relacionamento_social.errors }}
         </div>
 
         <!-- Capacidade de Aprendizagem -->
         <div class="col-md-6">
-          <label for="capacidade_aprendizagem" class="form-label">📘 Capacidade de Aprendizagem</label>
-          <select class="form-select" id="capacidade_aprendizagem" name="capacidade_aprendizagem" required>
-            <option value="">Selecione...</option>
-            <option value="1">Ruim (D) – Muita dificuldade de aprendizado.</option>
-            <option value="2">Regular (C) – Requer repetição constante.</option>
-            <option value="3">Bom (B) – Aprende com facilidade.</option>
-            <option value="4">Ótimo (A) – Executa com precisão e rapidez.</option>
-          </select>
+          <label for="{{ form.capacidade_aprendizagem.id_for_label }}" class="form-label">📘 Capacidade de Aprendizagem</label>
+          {% render_field form.capacidade_aprendizagem class="form-select" %}
+          {{ form.capacidade_aprendizagem.errors }}
         </div>
 
         <!-- Observações -->
         <div class="col-12">
-          <label for="observacoes" class="form-label">🗒️ Observações</label>
-          {{ form.observacoes }}
+          <label for="{{ form.observacoes.id_for_label }}" class="form-label">🗒️ Observações</label>
+          {% render_field form.observacoes class="form-control" %}
+          {{ form.observacoes.errors }}
         </div>
 
       </div>

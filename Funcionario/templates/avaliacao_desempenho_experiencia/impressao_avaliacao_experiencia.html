@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load custom_filters %}
+{% load filters_gerais %}
+{% load permissoes_utils %}
+
 
 {% block title %}Avaliação de Experiência - {{ avaliacao.funcionario.nome }}{% endblock %}
 
@@ -72,8 +74,10 @@
         <th><i class="bi bi-chat-left-text me-1"></i> Observações</th>
       </tr>
       <tr>
-        <td>{{ avaliacao.observacoes|default:"Sem observações registradas." | safe }}</td>
-      </tr>
+        <td>
+          {{ avaliacao.observacoes|default:"Sem observações registradas."|striptags|linebreaksbr }}
+        </td>
+              </tr>
     </table>
   </div>
 

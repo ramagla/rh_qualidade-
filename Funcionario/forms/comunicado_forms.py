@@ -6,6 +6,12 @@ from ..models import Comunicado
 
 
 class ComunicadoForm(forms.ModelForm):
+    """
+    Formulário para cadastro e edição de Comunicados.
+    Usa CKEditor para o conteúdo do comunicado e widgets Bootstrap para os demais campos.
+    Aplica title_case em assunto e departamento responsável.
+    """
+
     descricao = forms.CharField(
         widget=CKEditor5Widget(
             config_name="default",
@@ -29,7 +35,6 @@ class ComunicadoForm(forms.ModelForm):
             "departamento_responsavel",
             "lista_assinaturas",
         ]
-
         widgets = {
             "data": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}, format="%Y-%m-%d"
@@ -40,9 +45,15 @@ class ComunicadoForm(forms.ModelForm):
         }
 
     def clean_assunto(self):
+        """
+        Aplica title_case ao assunto do comunicado.
+        """
         assunto = self.cleaned_data.get("assunto", "")
         return title_case(assunto) if assunto else assunto
 
     def clean_departamento_responsavel(self):
+        """
+        Aplica title_case ao campo departamento_responsavel.
+        """
         departamento = self.cleaned_data.get("departamento_responsavel", "")
         return title_case(departamento) if departamento else departamento

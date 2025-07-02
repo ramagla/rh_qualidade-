@@ -35,20 +35,26 @@ ALLOWED_HOSTS = ["*", "192.168.0.139", "127.0.0.1", "localhost"]
 
 # Definição de aplicativos instalados
 INSTALLED_APPS = [
+    # Django apps (sempre primeiro)
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "Funcionario.apps.FuncionarioConfig",
-    "metrologia",
+
+    # Apps de terceiros
     "crispy_forms",
     "xhtml2pdf",
     "django_ckeditor_5",
     "widget_tweaks",
     "django_select2",
     "django_celery_beat",
+
+    # Apps locais
+    "Funcionario.apps.FuncionarioConfig",
+    "core",
+    "metrologia",
     "alerts",
     "qualidade_fornecimento",
     "portaria",
@@ -58,6 +64,7 @@ INSTALLED_APPS = [
     "tecnico",
 
 ]
+
 
 DATE_FORMAT = "d 'de' F 'de' Y"
 
@@ -122,7 +129,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "rh_qualidade.middleware.permission_middleware.PermissionMiddleware",
+    "core.middleware.permission_middleware.PermissionMiddleware",
 ]
 
 # Configuração de URLs e WSGI
@@ -149,7 +156,7 @@ USE_TZ = True
 # Configurações de arquivos estáticos e mídia
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_DIRS = [BASE_DIR / "Funcionario" / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
@@ -208,7 +215,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "Funcionario.context_processors.global_settings",
+                "core.context_processors.core_global_settings",
                 "global_context_processors.global_menu",
                 "rh_qualidade.context_processors.default_form", 
                 'alerts.context_processors.alertas_do_usuario',

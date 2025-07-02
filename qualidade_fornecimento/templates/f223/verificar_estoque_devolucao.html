@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Estoque de Devoluções{% endblock %}
+{% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container mt-4">
+  {% include "partials/global/_header_titulo.html" with titulo="Estoque de Itens para Devolução" icone="bi bi-box-seam" emoji="📦" %}
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Nº OP</th>
+          <th>Código BM</th>
+          <th>Fornecedor</th>
+          <th>Quantidade Total para Devolução</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in estoque %}
+        <tr>
+          <td>{{ item.inspecao__numero_op }}</td>
+          <td>{{ item.inspecao__codigo_brasmol__codigo }}</td>
+          <td>{{ item.inspecao__fornecedor__nome }}</td>
+          <td>{{ item.total }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-muted">Nenhum item aguardando devolução.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

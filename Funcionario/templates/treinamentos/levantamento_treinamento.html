@@ -16,8 +16,10 @@
         <select name="departamento" id="departamento" class="form-select">
           <option value="">Todos</option>
           {% for dep in departamentos %}
-            <option value="{{ dep }}" {% if filtro_departamento == dep %}selected{% endif %}>{{ dep }}</option>
-          {% endfor %}
+          <option value="{{ dep.id }}" {% if filtro_departamento|add:""|stringformat:"s" == dep.id|stringformat:"s" %}selected{% endif %}>
+            {{ dep.nome }}
+          </option>
+                    {% endfor %}
         </select>
       </div>
 

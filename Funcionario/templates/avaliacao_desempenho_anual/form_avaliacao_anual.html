@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
-{% load widget_tweaks %}
-{% load custom_filters %}
 {% load static %}
+{% load widget_tweaks %}
+{% load filters_gerais %}
+{% load permissoes_utils %}
+
 
 {% block title %}Cadastro de Avaliação Anual{% endblock %}
 
@@ -36,11 +38,12 @@
 <div class="container">
   <form method="post" enctype="multipart/form-data" action="{% if form.instance.pk %}{% url 'editar_avaliacao_anual' form.instance.pk %}{% else %}{% url 'cadastrar_avaliacao_anual' %}{% endif %}" class="row g-3">
     {% csrf_token %}
+    {# Inclusão de erros globais do formulário #}
     {% include 'partials/global/_form_errors.html' %}
 
     <div class="accordion" id="accordionPrincipal">
 
-      <!-- Sessão Dados Iniciais -->
+{# Accordion: Dados da Avaliação #} 
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingDados">
           <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDados" aria-expanded="true" aria-controls="collapseDados">
@@ -51,11 +54,12 @@
           <div class="accordion-body row g-3">
             <div class="col-md-6">
               <label for="data_avaliacao" class="form-label"><i class="bi bi-calendar-event"></i> Data da Avaliação:</label>
+              {{ form.data_avaliacao.errors }}
               {{ form.data_avaliacao|add_class:'form-control' }}
-            </div>
+                  </div>
             <div class="col-md-6">
               <label for="funcionario" class="form-label"><i class="bi bi-person"></i> Colaborador:</label>
-              <select class="form-select select2" id="funcionario" name="funcionario">
+              <select class="form-select select2" id="funcionario" name="funcionario" data-dropdown-parent="body">
                 <option value="" disabled selected>Selecione o colaborador</option>
                 {% for funcionario in funcionarios %}
                   <option value="{{ funcionario.id }}" {% if form.instance.funcionario.id == funcionario.id %}selected{% endif %}>{{ funcionario.nome }}</option>
@@ -72,14 +76,15 @@
             </div>
             <div class="col-md-6">
               <label for="centro_custo" class="form-label"><i class="bi bi-cash-stack"></i> Centro de Custo:</label>
+              {{ form.centro_custo.errors }}
               {{ form.centro_custo|add_class:'form-control' }}
-            </div>
+              </div>
           </div>
         </div>
       </div>
 
-      <!-- Sessão Questionário -->
-      <div class="accordion-item">
+{# Accordion: Questionário da Avaliação #}
+<div class="accordion-item">
         <h2 class="accordion-header" id="headingQuest">
           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuest" aria-expanded="false" aria-controls="collapseQuest">
             💡 Questionário da Avaliação
@@ -90,18 +95,18 @@
             {% for campo in campos_avaliados %}
               <div class="col-md-6">
                 {% with field=form|lookup:campo %}
-                  <label for="{{ field.id_for_label }}" class="form-label">
-                    <i class="bi bi-ui-checks"></i> {{ field.label }}
-                  </label>
+                  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  {{ field.errors }}
                   {{ field|add_class:'form-select item-avaliado' }}
                 {% endwith %}
+
               </div>
             {% endfor %}
           </div>
         </div>
       </div>
 
-      <!-- Sessão Avaliações Globais -->
+{# Accordion: Avaliações Globais #}
 <div class="accordion-item">
   <h2 class="accordion-header" id="headingGlob">
     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGlob" aria-expanded="false" aria-controls="collapseGlob">
@@ -115,27 +120,35 @@
         <label for="avaliacao_global_avaliador" class="form-label">
           <i class="bi bi-chat-dots"></i> Avaliação Global (Visão do Avaliador)
         </label>
+        {{ form.avaliacao_global_avaliador.errors }}
         {{ form.avaliacao_global_avaliador|safe }}
-      </div>
+              </div>
 
       <div class="col-12">
         <label for="avaliacao_global_avaliado" class="form-label">
           <i class="bi bi-chat-square-dots"></i> Avaliação Global (Visão do Avaliado)
         </label>
+        {{ form.avaliacao_global_avaliado.errors }}
         {{ form.avaliacao_global_avaliado|safe }}
-      </div>
+              </div>
 
       {% include 'partials/global/_campo_anexo.html' %}
 
     </div>
   </div>
-</div>
-
+</div>   
     
-    
-    {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='lista_avaliacao_anual' %}
+  {# Botões de ação: salvar ou cancelar #}
+  {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='lista_avaliacao_anual' %}
   </form>
 </div>
+<style>
+  .text-danger {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+  }
+</style>
 
 <script>
   function preencherInfoFuncionario() {
@@ -148,8 +161,9 @@
       const funcionarioId = $(this).val();
       if (funcionarioId && funcionarioId !== ultimoId) {
         ultimoId = funcionarioId;
-        fetch(`/rh/get-cargo/${funcionarioId}/`)
-        .then(res => res.json())
+        const urlBase = "{% url 'get_cargo' 0 %}".replace("0", funcionarioId);
+        fetch(urlBase)
+          .then(res => res.json())
           .then(data => {
             cargoInput.value = data.cargo || 'Cargo não encontrado';
             departamentoInput.value = data.departamento || 'Departamento não encontrado';

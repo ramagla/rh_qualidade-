@@ -33,6 +33,10 @@ urlpatterns = [
     path("ferramentas/cotacao/<uuid:token>/", ferramenta_views.formulario_cotacao, name="responder_cotacao"),
     path("ferramentas/enviar-cotacao/<int:pk>/", ferramenta_views.enviar_cotacao_ferramenta, name="enviar_cotacao_ferramenta"),
     path("ferramentas/visualizar/<int:pk>/", ferramenta_views.visualizar_ferramenta, name="visualizar_ferramenta"),
+    path('ferramentas/blocos/', ferramenta_views.lista_blocos, name='lista_blocos'),
+    path("ferramentas/blocos/novo/", ferramenta_views.cadastrar_bloco, name="cadastrar_bloco"),
+    path("ferramentas/blocos/<int:pk>/editar/", ferramenta_views.editar_bloco, name="editar_bloco"),
+    path("ferramentas/blocos/<int:pk>/excluir/", ferramenta_views.excluir_bloco, name="excluir_bloco"),
     path("ajax/valor_hora_centro_custo/", ferramenta_views.ajax_valor_hora_centro_custo, name="ajax_valor_hora_centro_custo"),
 
 

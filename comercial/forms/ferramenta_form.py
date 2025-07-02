@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from comercial.models import Ferramenta, MaterialFerramenta, MaoDeObraFerramenta, ServicoFerramenta
+from comercial.models import Ferramenta, MaoDeObraFerramenta, ServicoFerramenta
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 # 🛠️ Formulário principal de ferramenta
@@ -20,31 +20,17 @@ class FerramentaForm(forms.ModelForm):
             "proprietario": forms.Select(attrs={"class": "form-select select2"}),
             "desenho_pdf": forms.ClearableFileInput(attrs={"class": "form-control"}),
             "observacoes": CKEditor5Widget(config_name="default"),
+
+            # Novos campos técnicos
+            "passo": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "largura_tira": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "num_matrizes": forms.NumberInput(attrs={"class": "form-control"}),
+            "num_puncoes": forms.NumberInput(attrs={"class": "form-control"}),
+            "num_carros": forms.NumberInput(attrs={"class": "form-control"}),
+            "num_formadores": forms.NumberInput(attrs={"class": "form-control"}),
+            "bloco": forms.Select(attrs={"class": "form-select select2"}),
+
         }
-
-# 🧱 Formulário de materiais da ferramenta
-class MaterialFerramentaForm(forms.ModelForm):
-    class Meta:
-        model = MaterialFerramenta
-        exclude = ('ferramenta',)
-        widgets = {
-            "nome_material": forms.TextInput(attrs={"class": "form-control"}),
-            "unidade_medida": forms.Select(attrs={"class": "form-select"}),
-            "quantidade": forms.NumberInput(attrs={"class": "form-control"}),
-            "valor_unitario": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['valor_unitario'].required = False
-
-MaterialFerramentaFormSet = inlineformset_factory(
-    Ferramenta,
-    MaterialFerramenta,
-    form=MaterialFerramentaForm,
-    extra=1,
-    can_delete=True
-)
 
 
 # 👷 Formulário de mão de obra
@@ -94,3 +80,34 @@ ServicoFormSet = inlineformset_factory(
     can_delete=True
 )
 
+
+from django import forms
+from django.forms import inlineformset_factory
+from comercial.models.ferramenta import BlocoFerramenta, ItemBloco
+
+class BlocoForm(forms.ModelForm):
+    class Meta:
+        model = BlocoFerramenta
+        fields = ["numero"]
+        widgets = {
+            "numero": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Bloco 1"})
+        }
+
+class ItemBlocoForm(forms.ModelForm):
+    class Meta:
+        model = ItemBloco
+        exclude = ("bloco",)
+        widgets = {
+            "numero_item": forms.TextInput(attrs={"class": "form-control"}),
+            "medidas": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: 25,4x94x165"}),
+            "material": forms.Select(attrs={"class": "form-select"}),
+            "peso_aco": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+        }
+
+ItemBlocoFormSet = inlineformset_factory(
+    BlocoFerramenta,
+    ItemBloco,
+    form=ItemBlocoForm,
+    extra=1,
+    can_delete=True
+)

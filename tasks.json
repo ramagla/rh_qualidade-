@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Pylint (Django)",
+      "type": "shell",
+      "command": "${config:python.pythonPath}",
+      "args": [
+        "-m",
+        "pylint",
+        "--load-plugins=pylint_django",
+        "--rcfile=.pylintrc",
+        "--django-settings-module=rh_qualidade.settings",
+        "Funcionario",
+        "qualidade_fornecimento",
+        "portaria",
+        "alerts"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -12,16 +12,36 @@ from qualidade_fornecimento.forms import FornecedorForm
 from qualidade_fornecimento.models import FornecedorQualificado
 
 
+from datetime import timedelta
+
+from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required, permission_required
+
+from qualidade_fornecimento.models import FornecedorQualificado
+
+@login_required
+@permission_required('qualidade_fornecimento.view_fornecedorqualificado', raise_exception=True)
 def lista_fornecedores(request):
-    fornecedores_qs = FornecedorQualificado.objects.all().order_by("nome")
+    # Base para montar os selects
+    fornecedores_base_qs = FornecedorQualificado.objects.all()
 
-    # Captura os filtros enviados via GET
+    # Queryset principal, ordenado por nome
+    fornecedores_qs = fornecedores_base_qs.order_by("nome")
+    filter_nomes = sorted(set(fornecedores_base_qs.values_list("nome", flat=True)))
+
+    # Captura dos filtros via GET
+    nome = request.GET.get("nome", "").strip()                # ← novo filtro
     data_inicial = request.GET.get("data_inicial")
-    data_final = request.GET.get("data_final")
-    produto = request.GET.get("produto")
+    data_final   = request.GET.get("data_final")
+    produto      = request.GET.get("produto")
     certificacao = request.GET.get("certificacao")
-    status_filter = request.GET.get("status")
+    ativo_filter = request.GET.get("status")  # "Ativo", "Inativo" ou None
 
+    # Aplicação dos filtros em cascata
+    if nome:
+        fornecedores_qs = fornecedores_qs.filter(nome__icontains=nome)
     if data_inicial:
         fornecedores_qs = fornecedores_qs.filter(data_homologacao__gte=data_inicial)
     if data_final:
@@ -30,51 +50,50 @@ def lista_fornecedores(request):
         fornecedores_qs = fornecedores_qs.filter(produto_servico=produto)
     if certificacao:
         fornecedores_qs = fornecedores_qs.filter(tipo_certificacao=certificacao)
-    if status_filter:
-        fornecedores_qs = fornecedores_qs.filter(status=status_filter)
 
-    # Extração dos valores distintos para os filtros
-    filter_produtos = sorted(
-        set(fornecedores_qs.values_list("produto_servico", flat=True))
-    )
-    filter_certificacoes = sorted(
-        set(fornecedores_qs.values_list("tipo_certificacao", flat=True))
-    )
-    filter_status = sorted(set(fornecedores_qs.values_list("status", flat=True)))
+    # Filtro padrão de status: se não veio nenhum, mostra apenas "Ativo"
+    if ativo_filter:
+        fornecedores_qs = fornecedores_qs.filter(ativo=ativo_filter)
+    else:
+        fornecedores_qs = fornecedores_qs.filter(ativo="Ativo")
 
-    # Paginação: 10 itens por página
-    paginator = Paginator(fornecedores_qs, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    # Dados para popular os selects (exceto nome, que agora é input text)
+    filter_produtos      = sorted(set(fornecedores_base_qs.values_list("produto_servico", flat=True)))
+    filter_certificacoes = sorted(set(fornecedores_base_qs.values_list("tipo_certificacao", flat=True)))
+    filter_status        = ["Ativo", "Inativo"]
 
-    # Dados para os cards
-    total_fornecedores = fornecedores_qs.count()
-    total_vencidas = fornecedores_qs.filter(
-        vencimento_certificacao__lt=timezone.now().date()
+    # Paginação
+    paginator  = Paginator(fornecedores_qs, 10)
+    page_obj   = paginator.get_page(request.GET.get("page"))
+
+    # Cálculo de indicadores
+    hoje           = timezone.now().date()
+    ate_30_dias    = hoje + timedelta(days=30)
+    total_forn     = fornecedores_qs.count()
+    total_vencidas = fornecedores_qs.filter(vencimento_certificacao__lt=hoje).count()
+    total_prox     = fornecedores_qs.filter(
+        vencimento_certificacao__gte=hoje,
+        vencimento_certificacao__lte=ate_30_dias,
     ).count()
-    total_alto_risco = fornecedores_qs.filter(risco="Alto").count()
+    total_risco_alto = fornecedores_qs.filter(risco="Alto").count()
 
-    current_date = timezone.now().date()
-    current_date_plus_30 = current_date + timedelta(days=30)
-    total_proximas = fornecedores_qs.filter(
-        vencimento_certificacao__gte=current_date,
-        vencimento_certificacao__lte=current_date_plus_30,
-    ).count()
-
+    # Monta contexto e renderiza template
     context = {
         "fornecedores_paginados": page_obj,
-        "total_fornecedores": total_fornecedores,
-        "total_vencidas": total_vencidas,
-        "total_alto_risco": total_alto_risco,
-        "total_proximas": total_proximas,
-        "current_date": current_date,
-        "current_date_plus_30": current_date_plus_30,
-        "filter_produtos": filter_produtos,
-        "filter_certificacoes": filter_certificacoes,
-        "filter_status": filter_status,
-    }
+        "total_fornecedores":     total_forn,
+        "total_vencidas":         total_vencidas,
+        "total_proximas":         total_prox,
+        "total_alto_risco":       total_risco_alto,
+        "current_date":           hoje,
+        "current_date_plus_30":   ate_30_dias,
+        "filter_produtos":        filter_produtos,
+        "filter_certificacoes":   filter_certificacoes,
+        "filter_status":          filter_status,
+        "filter_nomes": filter_nomes,
 
+    }
     return render(request, "fornecedores/lista_fornecedores.html", context)
+
 
 
 import logging

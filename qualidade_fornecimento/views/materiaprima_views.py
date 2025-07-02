@@ -6,6 +6,7 @@ from datetime import date
 from django.templatetags.static import static
 from django.conf import settings
 import os
+from django.db.models import Q
 
 import openpyxl  # se desejar usar a importação via Excel
 from django.contrib import messages
@@ -75,8 +76,8 @@ def lista_tb050(request):
 
     # ------------------ 4. Indicadores --------------------
     total_registros = qs.count()
-    total_aprovados = qs.filter(status="Aprovado").count()
-    total_reprovados = qs.filter(status="Reprovado").count()
+    total_aprovados = qs.filter(Q(status="Aprovado") | Q(status="Aprovado (Histórico)")).count()
+    total_reprovados = qs.filter(Q(status="Reprovado") | Q(status="Reprovado (Histórico)")).count()
     total_atrasados = qs.filter(atraso_em_dias__gt=0).count()
 
     # ------------------ 5. Listas dinâmicas ---------------
@@ -262,7 +263,46 @@ def visualizar_tb050(request, id):
     return render(request, "tb050/visualizar_tb050.html", context)
 
 
+from django.contrib.auth.decorators import login_required, permission_required
+
+
+def parse_data(celula):
+    """
+    Converte a célula da planilha para um objeto date.
+    Aceita datetime, 'YYYY-MM-DD' ou 'DD/MM/YYYY'.
+    """
+    if isinstance(celula, datetime):
+        return celula.date()
+    elif isinstance(celula, str):
+        for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(celula.strip(), fmt).date()
+            except ValueError:
+                continue
+    return None
+
+import pathlib
+
+
+from django.contrib.auth.decorators import login_required, permission_required
+
+
+
+
+def parse_data(celula):
+    if isinstance(celula, datetime):
+        return celula.date()
+    elif isinstance(celula, str):
+        for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(celula.strip(), fmt).date()
+            except ValueError:
+                continue
+    return None
+
+
 @login_required
+@permission_required("qualidade_fornecimento.importar_excel_tb050", raise_exception=True)
 def importar_excel_tb050(request):
     if request.method == "POST":
         excel_file = request.FILES.get("excel_file")
@@ -270,56 +310,114 @@ def importar_excel_tb050(request):
             messages.error(request, "Selecione um arquivo Excel para importar.")
             return redirect("tb050_importar_excel")
 
+        erros = []
+        relatorios_criados = {}
+
         try:
             workbook = openpyxl.load_workbook(excel_file)
             sheet = workbook.active
-            row_count = sheet.max_row
-            logger.info("Total de linhas no Excel: %s", row_count)
 
             for index, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
                 if not any(row):
                     continue
 
-                data_entrada = row[0]
-                fornecedor_nome = row[1]
-                nota_fiscal = row[2]
-                numero_certificado = row[3]
-                materia_prima_codigo = row[4]
-                data_prevista_entrega = row[5]
-                data_renegociada_entrega = row[6]
+                data_entrada = parse_data(row[0])
+                nro_relatorio = row[1]
+                fornecedor_nome = row[2]
+                nota_fiscal = row[3]
+                numero_certificado = row[4]
+                materia_prima_codigo = row[5]
+                data_prevista_entrega = parse_data(row[6])
+                data_renegociada_entrega = parse_data(row[7])
+                nro_rolo = str(row[8]) if row[8] else None
+                peso = row[9]
+                status_planilha = row[10] if len(row) > 10 else "Aguardando F045"
+
+                if not all([data_entrada, nro_relatorio, fornecedor_nome, materia_prima_codigo]):
+                    erros.append(f"Linha {index}: Dados obrigatórios ausentes ou inválidos.")
+                    continue
 
                 fornecedor = FornecedorQualificado.objects.filter(
                     nome__iexact=fornecedor_nome.strip()
                 ).first()
                 if not fornecedor:
-                    messages.warning(request, f"Linha {index}: Fornecedor '{fornecedor_nome}' não encontrado.")
+                    erros.append(f"Linha {index}: Fornecedor '{fornecedor_nome}' não encontrado.")
                     continue
 
                 materia_prima = MateriaPrimaCatalogo.objects.filter(
                     codigo__iexact=materia_prima_codigo.strip()
                 ).first()
                 if not materia_prima:
-                    messages.warning(request, f"Linha {index}: Matéria-prima com código '{materia_prima_codigo}' não encontrada.")
+                    erros.append(f"Linha {index}: Matéria-prima '{materia_prima_codigo}' não encontrada.")
                     continue
 
-                RelacaoMateriaPrima.objects.create(
-                    data_entrada=data_entrada,
-                    fornecedor=fornecedor,
-                    nota_fiscal=nota_fiscal,
-                    numero_certificado=numero_certificado,
-                    materia_prima=materia_prima,
-                    data_prevista_entrega=data_prevista_entrega,
-                    data_renegociada_entrega=data_renegociada_entrega,
-                )
+                chave_rel = f"{nro_relatorio}-{materia_prima_codigo.strip()}"
+                if chave_rel in relatorios_criados:
+                    relacao = relatorios_criados[chave_rel]
+                else:
+                    relacao, created = RelacaoMateriaPrima.objects.get_or_create(
+                        nro_relatorio=nro_relatorio,
+                        defaults={
+                            "data_entrada": data_entrada,
+                            "fornecedor": fornecedor,
+                            "nota_fiscal": nota_fiscal,
+                            "numero_certificado": numero_certificado,
+                            "materia_prima": materia_prima,
+                            "data_prevista_entrega": data_prevista_entrega,
+                            "data_renegociada_entrega": data_renegociada_entrega,
+                            "status": status_planilha,
+                        },
+                    )
+                    if not created:
+                        relacao.data_entrada = data_entrada
+                        relacao.fornecedor = fornecedor
+                        relacao.nota_fiscal = nota_fiscal
+                        relacao.numero_certificado = numero_certificado
+                        relacao.materia_prima = materia_prima
+                        relacao.data_prevista_entrega = data_prevista_entrega
+                        relacao.data_renegociada_entrega = data_renegociada_entrega
+                        relacao.status = status_planilha
+                        relacao.save()
+                    relatorios_criados[chave_rel] = relacao
 
-            messages.success(request, "Importação concluída com sucesso.")
+                if not nro_rolo or peso is None:
+                    erros.append(f"Linha {index}: Nº Rolo ou Peso ausentes.")
+                    continue
+
+                base_rolo = nro_rolo
+                contador = 1
+                while RoloMateriaPrima.objects.filter(nro_rolo=nro_rolo).exists():
+                    nro_rolo = f"{base_rolo}.{contador}"
+                    contador += 1
+
+                rolo = RoloMateriaPrima(tb050=relacao, nro_rolo=nro_rolo, peso=peso)
+                rolo.save()
+
+            if erros:
+                caminho_arquivo = os.path.join(
+                    pathlib.Path(__file__).resolve().parent,
+                    "erros_importacao_tb050.txt"
+                )
+                with open(caminho_arquivo, "w", encoding="utf-8") as f:
+                    f.write("\n".join(erros))
+                messages.warning(
+                    request,
+                    f"Importação concluída com {len(erros)} erro(s). Erros salvos em: {caminho_arquivo}"
+                )
+            else:
+                messages.success(request, "Importação concluída com sucesso!")
+
             return redirect("tb050_list")
 
         except Exception as e:
-            logger.error("Erro ao importar TB050: %s", e, exc_info=True)
-            messages.error(request, f"Erro ao importar: {e}")
+            logger.exception("Erro ao importar TB050:")
+            messages.error(request, f"Erro durante a importação: {e}")
+            return redirect("tb050_importar_excel")
 
     return render(request, "tb050/importar_excel_tb050.html")
+
+
+
 
 
 import io

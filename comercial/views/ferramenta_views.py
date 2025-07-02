@@ -6,8 +6,10 @@ from django.core.paginator import Paginator
 from django.urls import reverse
 from comercial.forms.ferramenta_form import FerramentaForm
 from comercial.models import Ferramenta
-from comercial.models.ferramenta import MaoDeObraFerramenta, MaterialFerramenta, ServicoFerramenta
+from comercial.models.ferramenta import BlocoFerramenta, ItemBloco, MaoDeObraFerramenta,  ServicoFerramenta
 from decimal import Decimal, InvalidOperation
+from comercial.forms.ferramenta_form import BlocoForm, ItemBlocoFormSet
+
 
 @login_required
 @permission_required("comercial.view_ferramenta", raise_exception=True)
@@ -54,7 +56,6 @@ from django.db import transaction
 from comercial.models import Ferramenta
 from comercial.forms.ferramenta_form import (
     FerramentaForm,
-    MaterialFerramentaFormSet,
     MaoDeObraFormSet,
     ServicoFormSet
 )
@@ -67,21 +68,12 @@ from django.db.models.query import QuerySet  # no topo se necessário
 def cadastrar_ferramenta(request):
     if request.method == "POST":
         form = FerramentaForm(request.POST, request.FILES)
-
-        # Inicializa os formsets *sem* instance
-        materiais_formset = MaterialFerramentaFormSet(request.POST, prefix="material")
         mo_formset = MaoDeObraFormSet(request.POST, prefix="mo")
         servico_formset = ServicoFormSet(request.POST, prefix="servico")
 
-        if form.is_valid() and materiais_formset.is_valid() and mo_formset.is_valid() and servico_formset.is_valid():
+        if form.is_valid() and mo_formset.is_valid() and servico_formset.is_valid():
             with transaction.atomic():
                 ferramenta = form.save()
-
-                for mform in materiais_formset.save(commit=False):
-                    mform.ferramenta = ferramenta
-                    mform.save()
-                for d in materiais_formset.deleted_objects:
-                    d.delete()
 
                 for moform in mo_formset.save(commit=False):
                     moform.ferramenta = ferramenta
@@ -98,22 +90,21 @@ def cadastrar_ferramenta(request):
                 messages.success(request, "Ferramenta cadastrada com sucesso!")
                 return redirect("lista_ferramentas")
         else:
-            ferramenta = None  # caso form seja inválido
+            ferramenta = None
     else:
         form = FerramentaForm()
-        materiais_formset = MaterialFerramentaFormSet(queryset=MaterialFerramenta.objects.none(), prefix="material")
         mo_formset = MaoDeObraFormSet(queryset=MaoDeObraFerramenta.objects.none(), prefix="mo")
         servico_formset = ServicoFormSet(queryset=ServicoFerramenta.objects.none(), prefix="servico")
         ferramenta = None
 
     return render(request, "cadastros/form_ferramentas.html", {
         "form": form,
-        "materiais_formset": materiais_formset,
         "mo_formset": mo_formset,
         "servico_formset": servico_formset,
-        "formsets_agrupados": [materiais_formset, mo_formset, servico_formset],
+        "formsets_agrupados": [mo_formset, servico_formset],
         "ferramenta": ferramenta
     })
+
 
 
 from django.contrib.auth.decorators import login_required, permission_required
@@ -124,11 +115,10 @@ from django.db import transaction
 from comercial.models import Ferramenta
 from comercial.forms.ferramenta_form import (
     FerramentaForm,
-    MaterialFerramentaFormSet,
     MaoDeObraFormSet,
     ServicoFormSet
 )
-from comercial.models.ferramenta import MaterialFerramenta, MaoDeObraFerramenta, ServicoFerramenta
+from comercial.models.ferramenta import  MaoDeObraFerramenta, ServicoFerramenta
 
 
 @login_required
@@ -138,20 +128,12 @@ def editar_ferramenta(request, pk):
 
     if request.method == "POST":
         form = FerramentaForm(request.POST, request.FILES, instance=ferramenta)
-        materiais_formset = MaterialFerramentaFormSet(request.POST, request.FILES, instance=ferramenta, prefix="material")
         mo_formset = MaoDeObraFormSet(request.POST, instance=ferramenta, prefix="mo")
         servico_formset = ServicoFormSet(request.POST, instance=ferramenta, prefix="servico")
 
-
-        if form.is_valid() and materiais_formset.is_valid() and mo_formset.is_valid() and servico_formset.is_valid():
+        if form.is_valid() and mo_formset.is_valid() and servico_formset.is_valid():
             with transaction.atomic():
                 ferramenta = form.save()
-
-                for mform in materiais_formset.save(commit=False):
-                    mform.ferramenta = ferramenta
-                    mform.save()
-                for d in materiais_formset.deleted_objects:
-                    d.delete()
 
                 for moform in mo_formset.save(commit=False):
                     moform.ferramenta = ferramenta
@@ -169,22 +151,19 @@ def editar_ferramenta(request, pk):
                 return redirect("lista_ferramentas")
         else:
             messages.error(request, "Corrija os erros abaixo para continuar.")
-
     else:
         form = FerramentaForm(instance=ferramenta)
-        materiais_formset = MaterialFerramentaFormSet(instance=ferramenta, prefix="material")
         mo_formset = MaoDeObraFormSet(instance=ferramenta, prefix="mo")
         servico_formset = ServicoFormSet(instance=ferramenta, prefix="servico")
 
-
     return render(request, "cadastros/form_ferramentas.html", {
         "form": form,
-        "materiais_formset": materiais_formset,
         "mo_formset": mo_formset,
         "servico_formset": servico_formset,
-        "formsets_agrupados": [materiais_formset, mo_formset, servico_formset],
+        "formsets_agrupados": [mo_formset, servico_formset],
         "ferramenta": ferramenta
     })
+
 
 
 
@@ -216,7 +195,6 @@ def enviar_cotacao_ferramenta(request, pk):
         reverse("responder_cotacao", args=[ferramenta.token_cotacao])
     )
 
-    materiais = ferramenta.materiais.all()
     servicos = ferramenta.servicos.all()
 
     corpo = f"""
@@ -231,10 +209,18 @@ def enviar_cotacao_ferramenta(request, pk):
 📄 Desenho: {'Sim' if ferramenta.desenho_pdf else 'Não'}
 🔗 Link: {link}
 
-📦 Materiais:
+📦 Materiais calculados:
 """
-    for m in materiais:
-        corpo += f"- {m.nome_material} ({m.unidade_medida}) - Qtde: {m.quantidade}\n"
+    if ferramenta.kg_matriz:
+        corpo += f"- SAE D2 (Matriz): {ferramenta.kg_matriz:.2f} Kg\n"
+    if ferramenta.kg_puncao:
+        corpo += f"- SAE D2 (Punção): {ferramenta.kg_puncao:.2f} Kg\n"
+    if ferramenta.kg_flange:
+        corpo += f"- SAE P20 (Flange): {ferramenta.kg_flange:.2f} Kg\n"
+    if ferramenta.kg_carros:
+        corpo += f"- SAE 1020 (Carros): {ferramenta.kg_carros:.2f} Kg\n"
+    if ferramenta.kg_formadores:
+        corpo += f"- SAE D2 (Formadores): {ferramenta.kg_formadores:.2f} Kg\n"
 
     corpo += "\n🔧 Serviços:\n"
     for s in servicos:
@@ -244,7 +230,7 @@ def enviar_cotacao_ferramenta(request, pk):
         subject="📨 Cotação de Ferramenta - Comercial",
         message=corpo,
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["rafael.almeida@brasmol.com.br"],  # ajuste
+        recipient_list=["rafael.almeida@brasmol.com.br"],
         fail_silently=False
     )
 
@@ -252,32 +238,18 @@ def enviar_cotacao_ferramenta(request, pk):
     return redirect("lista_ferramentas")
 
 
+
 def formulario_cotacao(request, token):
     ferramenta = get_object_or_404(Ferramenta, token_cotacao=token)
-    materiais = ferramenta.materiais.filter(valor_unitario__isnull=True)
     servicos = ferramenta.servicos.filter(valor_unitario__isnull=True)
 
-
-    # Verifica se todos os valores já foram preenchidos
-    cotacao_finalizada = all(m.valor_unitario is not None for m in materiais) and \
-                         all(s.valor_unitario is not None for s in servicos)
+    cotacao_finalizada = all(s.valor_unitario is not None for s in servicos)
 
     if cotacao_finalizada:
         return render(request, "cadastros/cotacao_finalizada.html", {"ferramenta": ferramenta})
 
     if request.method == "POST":
         sucesso = True
-
-        for idx, m in enumerate(materiais):
-            valor = request.POST.get(f"material_{idx}_valor", "").replace(",", ".")
-            try:
-                if valor:
-                    m.valor_unitario = Decimal(valor)
-                    m.save()
-            except (ValueError, InvalidOperation):
-                sucesso = False
-                messages.error(request, f"Erro no material {m.nome_material}: valor inválido.")
-
         for idx, s in enumerate(servicos):
             valor = request.POST.get(f"servico_{idx}_valor", "").replace(",", ".")
             try:
@@ -294,7 +266,6 @@ def formulario_cotacao(request, token):
 
     return render(request, "cadastros/responder_cotacao.html", {
         "ferramenta": ferramenta,
-        "materiais": materiais,
         "servicos": servicos
     })
 
@@ -349,3 +320,92 @@ def ajax_valor_hora_centro_custo(request):
         return JsonResponse({"sucesso": True, "valor": float(centro.custo_atual)})
     else:
         return JsonResponse({"sucesso": False, "erro": "Nenhum custo vigente encontrado"})
+
+
+@login_required
+@permission_required("comercial.view_blocoferramenta", raise_exception=True)
+def lista_blocos(request):
+    numero = request.GET.get("numero")
+
+    blocos = BlocoFerramenta.objects.prefetch_related("itens").all()
+
+    if numero:
+        blocos = blocos.filter(numero__icontains=numero)
+
+    # Paginação
+    paginator = Paginator(blocos, 10)  # 10 blocos por página
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # Cálculo dos totais
+    total_blocos = blocos.count()
+    total_itens = ItemBloco.objects.filter(bloco__in=blocos).count()
+    peso_total_geral = sum(item.peso_total for item in ItemBloco.objects.filter(bloco__in=blocos))
+
+    context = {
+        "page_obj": page_obj,
+        "total_blocos": total_blocos,
+        "total_itens": total_itens,
+        "peso_total_geral": peso_total_geral,
+    }
+
+    return render(request, "cadastros/lista_blocos.html", context)
+
+
+
+@login_required
+@permission_required("comercial.add_blocoferramenta", raise_exception=True)
+def cadastrar_bloco(request):
+    if request.method == "POST":
+        form = BlocoForm(request.POST)
+        formset = ItemBlocoFormSet(request.POST)
+        if form.is_valid() and formset.is_valid():
+            with transaction.atomic():
+                bloco = form.save()
+                for item in formset.save(commit=False):
+                    item.bloco = bloco
+                    item.save()
+                messages.success(request, "Bloco cadastrado com sucesso.")
+                return redirect("lista_blocos")
+    else:
+        form = BlocoForm()
+        formset = ItemBlocoFormSet()
+
+    return render(request, "cadastros/form_blocos.html", {
+        "form": form,
+        "formset": formset,
+        "titulo": "Cadastrar Bloco"
+    })
+
+@login_required
+@permission_required("comercial.change_blocoferramenta", raise_exception=True)
+def editar_bloco(request, pk):
+    bloco = get_object_or_404(BlocoFerramenta, pk=pk)
+    if request.method == "POST":
+        form = BlocoForm(request.POST, instance=bloco)
+        formset = ItemBlocoFormSet(request.POST, instance=bloco)
+        if form.is_valid() and formset.is_valid():
+            with transaction.atomic():
+                form.save()
+                formset.save()
+                messages.success(request, "Bloco atualizado com sucesso.")
+                return redirect("lista_blocos")
+    else:
+        form = BlocoForm(instance=bloco)
+        formset = ItemBlocoFormSet(instance=bloco)
+
+    return render(request, "cadastros/form_blocos.html", {
+        "form": form,
+        "formset": formset,
+        "titulo": f"Editar Bloco {bloco.numero}"
+    })
+
+@login_required
+@permission_required("comercial.delete_blocoferramenta", raise_exception=True)
+def excluir_bloco(request, pk):
+    bloco = get_object_or_404(BlocoFerramenta, pk=pk)
+    if request.method == "POST":
+        bloco.delete()
+        messages.success(request, "Bloco excluído com sucesso.")
+        return redirect("lista_blocos")
+    return redirect("lista_blocos")  # A exclusão será confirmada via modal, então redireciona

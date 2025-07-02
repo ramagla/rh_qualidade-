@@ -1,135 +1,93 @@
+# Django
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.utils.timezone import now
 
+# Locais
 from Funcionario.forms import AvaliacaoExperienciaForm
 from Funcionario.models import AvaliacaoExperiencia, Funcionario
+from Funcionario.utils.avaliacao_experiencia_utils import calcular_orientacao
 
 
 @login_required
 def lista_avaliacao_experiencia(request):
-    # Recupera todas as avaliações de experiência
+    """
+    Exibe a lista de avaliações de experiência com filtros opcionais.
+    """
     avaliacoes = AvaliacaoExperiencia.objects.all()
 
-    # Filtros opcionais
     funcionario_id = request.GET.get("funcionario")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
 
-    # Aplica o filtro por funcionário, se fornecido
     if funcionario_id:
         avaliacoes = avaliacoes.filter(funcionario_id=funcionario_id)
 
-    # Aplica o filtro por período de data, se fornecido
     if data_inicio and data_fim:
         avaliacoes = avaliacoes.filter(data_avaliacao__range=[data_inicio, data_fim])
 
-    # Filtra os funcionários que possuem avaliações na lista
     funcionarios = Funcionario.objects.filter(
         id__in=avaliacoes.values_list("funcionario_id", flat=True)
     )
 
-    # Cálculo dos dados para os cards
-    total_avaliacoes = avaliacoes.count()
-    efetivar = avaliacoes.filter(orientacao__icontains="Efetivar").count()
-    treinamento = avaliacoes.filter(orientacao__icontains="Treinamento").count()
-    desligar = avaliacoes.filter(orientacao__icontains="Desligar").count()
+    paginator = Paginator(avaliacoes, 10)
+    page_obj = paginator.get_page(request.GET.get("page"))
 
-    # Paginação
-    paginator = Paginator(avaliacoes, 10)  # Mostra 10 itens por página
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    # Renderiza o template
-    return render(
-        request,
-        "avaliacao_desempenho_experiencia/lista_avaliacao_experiencia.html",
-        {
-            "avaliacoes": page_obj,
-            "funcionarios": funcionarios,  # Apenas funcionários com avaliações
-            "total_avaliacoes": total_avaliacoes,
-            "efetivar": efetivar,
-            "treinamento": treinamento,
-            "desligar": desligar,
-            "page_obj": page_obj,
-        },
-    )
+    context = {
+        "avaliacoes": page_obj,
+        "funcionarios": funcionarios,
+        "total_avaliacoes": avaliacoes.count(),
+        "efetivar": avaliacoes.filter(orientacao__icontains="Efetivar").count(),
+        "treinamento": avaliacoes.filter(orientacao__icontains="Treinamento").count(),
+        "desligar": avaliacoes.filter(orientacao__icontains="Desligar").count(),
+        "page_obj": page_obj,
+    }
+    return render(request, "avaliacao_desempenho_experiencia/lista_avaliacao_experiencia.html", context)
 
 
 @login_required
 def cadastrar_avaliacao_experiencia(request):
+    """
+    Cadastra uma nova avaliação de experiência.
+    """
     if request.method == "POST":
         form = AvaliacaoExperienciaForm(request.POST, request.FILES)
-
         if form.is_valid():
-            # Salva o formulário sem enviar para o banco ainda
             avaliacao = form.save(commit=False)
-            # Captura o valor do campo `status` do POST e atribui ao campo `orientacao`
-            avaliacao.orientacao = request.POST.get(
-                "status"
-            )  # Usa o valor calculado pelo JS
-            avaliacao.save()  # Salva no banco de dados
+            avaliacao.orientacao = request.POST.get("status")
+            avaliacao.save()
             return redirect("lista_avaliacao_experiencia")
     else:
         form = AvaliacaoExperienciaForm()
 
-    return render(
-        request,
-        "avaliacao_desempenho_experiencia/form_avaliacao_experiencia.html",
-        {
-            "form": form,
-            "funcionarios": Funcionario.objects.filter(status="Ativo").order_by("nome"),
-            "edicao": False,
-            "url_voltar": "lista_avaliacao_experiencia",
-            "param_id": None,
-        },
-    )
-
+    context = {
+        "form": form,
+        "funcionarios": Funcionario.objects.filter(status="Ativo").order_by("nome"),
+        "edicao": False,
+        "url_voltar": "lista_avaliacao_experiencia",
+        "param_id": None,
+    }
+    return render(request, "avaliacao_desempenho_experiencia/form_avaliacao_experiencia.html", context)
 
 
 @login_required
 def editar_avaliacao_experiencia(request, id):
+    """
+    Edita uma avaliação de experiência existente.
+    """
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=id)
 
     if request.method == "POST":
         form = AvaliacaoExperienciaForm(request.POST, request.FILES, instance=avaliacao)
 
-        # 🗑️ Exclusão do anexo se solicitado
         if request.POST.get("remover_anexo") == "1" and avaliacao.anexo:
             avaliacao.anexo.delete(save=False)
             avaliacao.anexo = None
 
         if form.is_valid():
-            # 🔢 Cálculo de pontos e definição de status
-            adaptacao_trabalho = int(request.POST.get("adaptacao_trabalho", 0))
-            interesse = int(request.POST.get("interesse", 0))
-            relacionamento_social = int(request.POST.get("relacionamento_social", 0))
-            capacidade_aprendizagem = int(request.POST.get("capacidade_aprendizagem", 0))
-
-            total_pontos = (
-                adaptacao_trabalho
-                + interesse
-                + relacionamento_social
-                + capacidade_aprendizagem
-            )
-            porcentagem = (total_pontos / 16) * 100
-
-            if porcentagem >= 85:
-                avaliacao.status = "Ótimo - Efetivar"
-                avaliacao.orientacao = "Efetivar"
-            elif porcentagem >= 66:
-                avaliacao.status = "Bom - Efetivar"
-                avaliacao.orientacao = "Efetivar"
-            elif porcentagem >= 46:
-                avaliacao.status = "Regular - Treinamento"
-                avaliacao.orientacao = "Encaminhar p/ Treinamento"
-            else:
-                avaliacao.status = "Ruim - Desligar"
-                avaliacao.orientacao = "Desligar"
-
-            # Salva a instância com possíveis alterações no anexo
+            avaliacao.orientacao, avaliacao.status = calcular_orientacao(request.POST)
             form.save()
             messages.success(request, "Avaliação atualizada com sucesso!")
             return redirect("lista_avaliacao_experiencia")
@@ -138,53 +96,47 @@ def editar_avaliacao_experiencia(request, id):
     else:
         form = AvaliacaoExperienciaForm(instance=avaliacao)
 
-    funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
-
-    return render(
-        request,
-        "avaliacao_desempenho_experiencia/form_avaliacao_experiencia.html",
-        {
-            "form": form,
-            "avaliacao": avaliacao,
-            "funcionarios": funcionarios,
-            "edicao": True,
-            "url_voltar": "lista_avaliacao_experiencia",
-            "param_id": None,
-        },
-    )
-
+    context = {
+        "form": form,
+        "avaliacao": avaliacao,
+        "funcionarios": Funcionario.objects.filter(status="Ativo").order_by("nome"),
+        "edicao": True,
+        "url_voltar": "lista_avaliacao_experiencia",
+        "param_id": None,
+    }
+    return render(request, "avaliacao_desempenho_experiencia/form_avaliacao_experiencia.html", context)
 
 
 @login_required
 def excluir_avaliacao_experiencia(request, id):
-    # Exclui uma avaliação de experiência
+    """
+    Exclui uma avaliação de experiência.
+    """
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=id)
     if request.method == "POST":
         avaliacao.delete()
-        return redirect("lista_avaliacao_experiencia")
     return redirect("lista_avaliacao_experiencia")
 
-from django.utils.timezone import now
 
 @login_required
 def visualizar_avaliacao_experiencia(request, id):
+    """
+    Visualiza os dados de uma avaliação de experiência.
+    """
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=id)
-
     return render(
         request,
         "avaliacao_desempenho_experiencia/visualizar_avaliacao_experiencia.html",
-        {
-            "avaliacao": avaliacao,
-            "now": now(),
-        },
+        {"avaliacao": avaliacao, "now": now()},
     )
 
 @login_required
 def imprimir_avaliacao_experiencia(request, avaliacao_id):
-    # Busca a avaliação pelo ID ou retorna 404 se não for encontrada
+    """
+    Gera a visualização de impressão da avaliação de experiência.
+    """
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=avaliacao_id)
 
-    # Dados que serão passados para o template de impressão, ajustados conforme o conteúdo da imagem
     context = {
         "avaliacao": avaliacao,
         "opcoes_adaptacao_trabalho": {
@@ -213,7 +165,6 @@ def imprimir_avaliacao_experiencia(request, avaliacao_id):
         },
     }
 
-    # Renderiza o template com os dados
     return render(
         request,
         "avaliacao_desempenho_experiencia/impressao_avaliacao_experiencia.html",
