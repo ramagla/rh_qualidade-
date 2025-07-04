@@ -145,4 +145,21 @@ def visualizar_cotacao(request, pk):
     return render(request, "comercial/cotacoes/visualizar.html", {"cotacao": cotacao})
 
 
+from django.http import JsonResponse
+from comercial.models import Cliente
+
+@login_required
+def dados_cliente_ajax(request):
+    cliente_id = request.GET.get("cliente_id")
+    try:
+        cliente = Cliente.objects.get(id=cliente_id)
+        return JsonResponse({
+            "cond_pagamento": cliente.cond_pagamento or "",
+            "icms": float(cliente.icms or 0),
+        })
+    except Cliente.DoesNotExist:
+        return JsonResponse({"cond_pagamento": "", "icms": 0})
+
+
+
 

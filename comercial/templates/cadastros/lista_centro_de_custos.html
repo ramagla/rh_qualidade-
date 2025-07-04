@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load filters_gerais %}
+
+{% hoje as hoje %}
 
 {% block title %}Centros de Custo{% endblock %}
 
@@ -36,10 +39,16 @@
 
         <div class="col-12 filtro-wrapper">
           <label for="departamento" class="form-label">
-            <i class="bi bi-diagram-3 me-1"></i> Departamento
+            <i class="bi bi-diagram-3 me-1"></i> Centros de Custos
           </label>
-          <input type="text" name="departamento" id="departamento" class="form-control" placeholder="Nome do departamento" value="{{ request.GET.departamento }}">
+          <select name="departamento" id="departamento" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            {% for nome in nomes_departamentos %}
+              <option value="{{ nome }}" {% if request.GET.departamento == nome %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+          </select>
         </div>
+        
 
         <div class="col-12 mt-3">
           {% include "partials/global/_botao_filtrar.html" %}
@@ -65,7 +74,7 @@
     <table class="table table-bordered table-striped align-middle text-center">
       <thead class="table-light">
         <tr>
-          <th><i class="bi bi-diagram-3"></i> Departamento</th>
+          <th><i class="bi bi-diagram-3"></i> Centro de Custo</th>
           <th><i class="bi bi-currency-dollar"></i> Custo Atual (R$)</th>
           <th><i class="bi bi-calendar-check"></i> Valido Até</th>
           <th><i class="bi bi-clock-history"></i> Histórico de Custos</th>
@@ -76,7 +85,7 @@
       <tbody>
         {% for centro in page_obj %}
           <tr>
-            <td class="text-start">{{ centro.departamento.nome }}</td>
+            <td class="text-start">{{ centro.nome }}</td>
             <td>
               {% if centro.custo_vigente %}
                 R$ {{ centro.custo_vigente|floatformat:2 }}
@@ -91,52 +100,62 @@
                 <i class="bi bi-eye"></i>
               </button>
       
-              <!-- Modal -->
-              <div class="modal fade" id="modalHistorico{{ centro.id }}" tabindex="-1" aria-labelledby="modalLabel{{ centro.id }}" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="modalLabel{{ centro.id }}">
-                        Histórico de Custos - {{ centro.departamento.nome }}
-                      </h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body">
-                      {% if centro.historico_custos.exists %}
-                        <table class="table table-sm table-bordered">
-                          <thead>
-                            <tr>
-                              <th>💲 Custo Anterior</th>
-                              <th>📅 Vigência</th>
-                              <th>🕒 Data da Alteração</th>
-                              <th>💰 Novo Custo</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for h in centro.historico_custos.all %}
-                              <tr>
-                                <td>R$ {{ h.custo_anterior|floatformat:2 }}</td>
-                                <td>{{ h.centro.vigencia|date:"d/m/Y" }}</td>
-                                <td>{{ h.alterado_em|date:"d/m/Y H:i" }}</td>
-                                <td>R$ {{ h.novo_custo|floatformat:2 }}</td>
-                              </tr>
-                            {% empty %}
-                              <tr>
-                                <td colspan="4" class="text-center text-muted">Nenhum histórico registrado.</td>
-                              </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                      {% else %}
-                        <p class="text-muted">Nenhuma alteração registrada.</p>
-                      {% endif %}
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+           <!-- Modal -->
+<div class="modal fade" id="modalHistorico{{ centro.id }}" tabindex="-1" aria-labelledby="modalLabel{{ centro.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel{{ centro.id }}">
+          Histórico de Custos – {{ centro.nome }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- AVISO FIXO -->
+        <div class="alert alert-warning d-flex align-items-center small mb-3" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Custos com vigência futura ainda não estão em vigor. Eles entrarão em vigor apenas na data informada.
+        </div>
+
+        {% if centro.historico_custos.exists %}
+          <table class="table table-sm table-bordered align-middle text-center">
+            <thead class="table-light">
+              <tr>
+                <th><i class="bi bi-cash-stack me-1"></i> Custo Anterior</th>
+                <th><i class="bi bi-calendar-event me-1"></i> Vigência</th>
+                <th><i class="bi bi-clock-history me-1"></i> Data da Alteração</th>
+                <th><i class="bi bi-currency-dollar me-1"></i> Novo Custo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for h in centro.historico_custos.all %}
+                <tr>
+                  <td>R$ {{ h.custo_anterior|floatformat:2 }}</td>
+                  <td>{{ h.centro.vigencia|date:"d/m/Y" }}</td>
+                  <td>{{ h.alterado_em|date:"d/m/Y H:i" }}</td>
+                  <td>R$ {{ h.novo_custo|floatformat:2 }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-muted text-center">Nenhum histórico registrado.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="text-muted">Nenhuma alteração registrada.</p>
+        {% endif %}
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
             </td>
             <td>
               <div class="d-inline-flex flex-wrap gap-1 justify-content-center">

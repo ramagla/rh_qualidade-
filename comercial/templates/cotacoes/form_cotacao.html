@@ -97,4 +97,23 @@
     </div>
   </form>
 </div>
+<script>
+  $(document).ready(function() {
+    $('#id_cliente').on('change', function() {
+      const clienteId = $(this).val();
+      if (clienteId) {
+        $.ajax({
+          url: "{% url 'dados_cliente_ajax' %}",
+          data: { cliente_id: clienteId },
+          dataType: 'json',
+          success: function(data) {
+            $('#id_cond_pagamento').val(data.cond_pagamento);
+            $('#id_icms').val(data.icms);
+          }
+        });
+      }
+    });
+  });
+</script>
+
 {% endblock %}

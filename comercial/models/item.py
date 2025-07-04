@@ -2,6 +2,18 @@
 from django.db import models
 
 class Item(models.Model):
+    STATUS_CHOICES = [
+    ("Ativo", "Ativo"),
+    ("Inativo", "Inativo"),
+]
+    
+
+    TIPO_ITEM_CHOICES = [
+    ("Cotacao", "Cotação"),
+    ("Corrente", "Corrente"),
+]
+
+    tipo_item = models.CharField("Tipo de Item", max_length=20, choices=TIPO_ITEM_CHOICES, default="Cotacao")
     cliente = models.ForeignKey("comercial.Cliente", on_delete=models.CASCADE, related_name="itens")
     codigo = models.CharField("Código Interno", max_length=50, unique=True)  # ⬅️ unique=True
     descricao = models.CharField("Descrição", max_length=255)  # obrigatório
@@ -11,7 +23,8 @@ class Item(models.Model):
     codigo_cliente = models.CharField("Código no Cliente", max_length=50, blank=True, null=True)
     descricao_cliente = models.CharField("Descrição no Cliente", max_length=255, blank=True, null=True)
     ipi = models.DecimalField("IPI (%)", max_digits=5, decimal_places=2, blank=True, null=True)
-
+    status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES, default="Ativo")
+    simbolo_seguranca = models.ImageField("Simbol. Segurança", upload_to="itens/simbolos/", blank=True, null=True)
     automotivo_oem = models.BooleanField("Automotivo OEM", default=False)
     requisito_especifico = models.BooleanField("Requisito Específico Cliente?", default=False)
     item_seguranca = models.BooleanField("É Item de Segurança?", default=False)

@@ -334,166 +334,168 @@
     </form>
 </div>
 <script>
-    function adicionarLinha(prefix) {
-        const totalForms = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
-        const formCount = parseInt(totalForms.value);
-        const containerMap = {
-            material: "collapseMateriais",
-            mo: "collapseMO",
-            servico: "collapseServico",
-        };
+  // 🔁 Adicionar nova linha
+  function adicionarLinha(prefix) {
+    const totalForms = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+    const formCount = parseInt(totalForms.value);
+    const containerMap = {
+      material: "collapseMateriais",
+      mo: "collapseMO",
+      servico: "collapseServico",
+    };
 
-        const formContainer = document.querySelector(`#${containerMap[prefix]} .accordion-body`);
-        const allRows = formContainer.querySelectorAll(`.row`);
-        const lastRow = allRows[allRows.length - 1];
+    const formContainer = document.querySelector(`#${containerMap[prefix]} .accordion-body`);
+    const allRows = formContainer.querySelectorAll(`.row`);
+    const lastRow = allRows[allRows.length - 1];
+    if (!lastRow) return;
 
-        if (!lastRow) return;
+    const newForm = lastRow.cloneNode(true);
+    newForm.querySelectorAll("input, select, textarea").forEach(input => {
+      if (input.name) input.name = input.name.replace(/-\d+-/, `-${formCount}-`);
+      if (input.id) input.id = input.id.replace(/-\d+-/, `-${formCount}-`);
+      if (input.type === "checkbox" || input.type === "radio") input.checked = false;
+      else input.value = "";
+    });
 
-        const newForm = lastRow.cloneNode(true);
+    const deleteField = newForm.querySelector('input[type="checkbox"][name*="DELETE"]');
+    if (deleteField) deleteField.checked = false;
 
-        newForm.querySelectorAll("input, select, textarea").forEach(input => {
-            if (input.name) {
-                input.name = input.name.replace(/-\d+-/, `-${formCount}-`);
-            }
-            if (input.id) {
-                input.id = input.id.replace(/-\d+-/, `-${formCount}-`);
-            }
+    formContainer.appendChild(newForm);
+    totalForms.value = formCount + 1;
 
-            // Limpa valores
-            if (input.type === "checkbox" || input.type === "radio") {
-                input.checked = false;
+    if (prefix === "mo") {
+      const novoTipo = newForm.querySelector('[name$="-tipo"]');
+      bindTipoListener(novoTipo);
+    }
+  }
+
+  // ❌ Remover linha
+  function excluirLinha(botao) {
+    const row = botao.closest(".row");
+    const section = botao.closest(".accordion-collapse");
+    const prefix = section.id.replace("collapse", "").toLowerCase();
+    const totalForms = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+    row.remove();
+    const rows = section.querySelectorAll(".accordion-body .row");
+    totalForms.value = rows.length;
+  }
+
+  // 🛠️ Bind tipo de MO com Ajax
+  function bindTipoListener(selectElement) {
+    selectElement.addEventListener("change", function () {
+      const selectedValue = selectElement.value;
+      const valorHoraInput = selectElement.closest(".row").querySelector('[name$="-valor_hora"]');
+
+      if (selectedValue === "Ferramentaria" || selectedValue === "Projeto") {
+        fetch(`{% url 'ajax_valor_hora_centro_custo' %}?tipo=${selectedValue}`)
+          .then(response => {
+            if (!response.ok) throw new Error("Erro na resposta");
+            return response.json();
+          })
+          .then(data => {
+            if (data.sucesso) {
+              valorHoraInput.value = data.valor;
             } else {
-                input.value = "";
+              valorHoraInput.value = "";
+              console.warn("Valor da hora não encontrado para", selectedValue);
             }
-        });
+          })
+          .catch(err => {
+            console.error("Erro na requisição:", err);
+          });
+      } else {
+        valorHoraInput.value = "";
+      }
+    });
+  }
 
-        // Remove campos de exclusão antigos, se houver
-        const deleteField = newForm.querySelector('input[type="checkbox"][name*="DELETE"]');
-        if (deleteField) {
-            deleteField.checked = false;
-        }
-
-        // Adiciona nova linha
-        formContainer.appendChild(newForm);
-        totalForms.value = formCount + 1;
-    }
-
-    function excluirLinha(botao) {
-        const row = botao.closest(".row");
-        const section = botao.closest(".accordion-collapse");
-        const prefix = section.id.replace("collapse", "").toLowerCase();
-        const totalForms = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
-
-        row.remove();
-
-        // Atualiza índice total
-        const rows = section.querySelectorAll(".accordion-body .row");
-        totalForms.value = rows.length;
-    }
+  // 🧠 Inicializa MO existente
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('[name$="-tipo"]').forEach(select => bindTipoListener(select));
+  });
 </script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const tipoFieldSelector = '[name$="-tipo"]';
-        const valorHoraFieldSelector = '[name$="-valor_hora"]';
-    
-        document.querySelectorAll(tipoFieldSelector).forEach(function (select, index) {
-            select.addEventListener("change", function () {
-                const selectedValue = select.value;
-                const valorHoraInput = document.querySelectorAll(valorHoraFieldSelector)[index];
-    
-                if (selectedValue === "Ferramentaria" || selectedValue === "Projeto") {
-                    fetch(`/comercial/ajax/valor_hora_centro_custo/?tipo=${selectedValue}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.sucesso) {
-                                valorHoraInput.value = data.valor;
-                            } else {
-                                valorHoraInput.value = "";
-                                alert("Valor da hora não encontrado.");
-                            }
-                        });
-                } else {
-                    valorHoraInput.value = "";
-                }
-            });
-        });
-    });
-    </script>
-    
-    <script>
-        function calcularMateriais() {
-          const passo = parseFloat(document.querySelector('#id_passo')?.value || 0);
-          const largura = parseFloat(document.querySelector('#id_largura_tira')?.value || 0);
-          const matrizes = parseFloat(document.querySelector('#id_num_matrizes')?.value || 0);
-          const puncoes = parseFloat(document.querySelector('#id_num_puncoes')?.value || 0);
-          const carros = parseFloat(document.querySelector('#id_num_carros')?.value || 0);
-          const formadores = parseFloat(document.querySelector('#id_num_formadores')?.value || 0);
-        
-          const kg_matriz = ((largura + 20) * (passo + 20) * 19 * 7.86 * matrizes) / 1_000_000;
-          const kg_puncao = ((largura + 5) * (passo + 5) * 50 * 7.86 * puncoes) / 1_000_000;
-          const kg_flange = (200 * 200 * (33 + largura) * 7.86) / 1_000_000;
-          const kg_carros = 2.5 * carros;
-          const kg_formadores = (largura * formadores * 25 * 150) / 1_000_000;
-        
-          document.getElementById("kg_matriz").value = kg_matriz.toFixed(3);
-          document.getElementById("kg_puncao").value = kg_puncao.toFixed(3);
-          document.getElementById("kg_flange").value = kg_flange.toFixed(3);
-          document.getElementById("kg_carros").value = kg_carros.toFixed(3);
-          document.getElementById("kg_formadores").value = kg_formadores.toFixed(3);
+  // 📦 Atualiza materiais do bloco via Ajax
+  document.addEventListener("DOMContentLoaded", function () {
+    const blocoSelect = document.querySelector('select[name="bloco"]');
+    const pesoSAEInput = document.getElementById("peso_sae");
+    const pesoVNDInput = document.getElementById("peso_vnd");
+    const resumoDiv = document.getElementById("resumoMateriais");
+
+    async function atualizarMateriaisDoBloco(blocoId) {
+      if (!blocoId) {
+        resumoDiv.style.display = "none";
+        return;
+      }
+
+      try {
+        const response = await fetch(`/comercial/ajax/materiais-do-bloco/${blocoId}/`);
+        const data = await response.json();
+
+        if (data.sucesso) {
+          pesoSAEInput.value = data.sae_kg.toFixed(3);
+          pesoVNDInput.value = data.vnd_kg.toFixed(3);
+          resumoDiv.style.display = "block";
+        } else {
+          alert("Não foi possível carregar os materiais.");
+          resumoDiv.style.display = "none";
         }
+      } catch (error) {
+        console.error("Erro ao buscar materiais do bloco:", error);
+        resumoDiv.style.display = "none";
+      }
+    }
+
+    // Para select2
+    $(blocoSelect).on("select2:select", function (e) {
+      const blocoId = e.params.data.id;
+      atualizarMateriaisDoBloco(blocoId);
+    });
+
+    // Carregamento inicial
+    if (blocoSelect.value) {
+      atualizarMateriaisDoBloco(blocoSelect.value);
+    }
+  });
+</script>
+
+<script>
+  // 🔢 Cálculo de materiais
+  function calcularMateriais() {
+    const passo = parseFloat(document.querySelector('#id_passo')?.value || 0);
+    const largura = parseFloat(document.querySelector('#id_largura_tira')?.value || 0);
+    const matrizes = parseFloat(document.querySelector('#id_num_matrizes')?.value || 0);
+    const puncoes = parseFloat(document.querySelector('#id_num_puncoes')?.value || 0);
+    const carros = parseFloat(document.querySelector('#id_num_carros')?.value || 0);
+    const formadores = parseFloat(document.querySelector('#id_num_formadores')?.value || 0);
+
+    const kg_matriz = ((largura + 20) * (passo + 20) * 19 * 7.86 * matrizes) / 1_000_000;
+    const kg_puncao = ((largura + 5) * (passo + 5) * 50 * 7.86 * puncoes) / 1_000_000;
+    const kg_flange = (200 * 200 * (33 + largura) * 7.86) / 1_000_000;
+    const kg_carros = 2.5 * carros;
+    const kg_formadores = (largura * formadores * 25 * 150) / 1_000_000;
+
+    document.getElementById("kg_matriz").value = kg_matriz.toFixed(3);
+    document.getElementById("kg_puncao").value = kg_puncao.toFixed(3);
+    document.getElementById("kg_flange").value = kg_flange.toFixed(3);
+    document.getElementById("kg_carros").value = kg_carros.toFixed(3);
+    document.getElementById("kg_formadores").value = kg_formadores.toFixed(3);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const campos = [
+      "#id_passo", "#id_largura_tira", "#id_num_matrizes", "#id_num_puncoes", "#id_num_carros", "#id_num_formadores"
+    ];
+    campos.forEach(selector => {
+      const el = document.querySelector(selector);
+      if (el) el.addEventListener("input", calcularMateriais);
+    });
+
+    calcularMateriais(); // inicial
+  });
+</script>
+
         
-        document.addEventListener("DOMContentLoaded", function () {
-          document.querySelectorAll("#id_passo, #id_largura_tira, #id_num_matrizes, #id_num_puncoes, #id_num_carros, #id_num_formadores")
-            .forEach(el => el.addEventListener("input", calcularMateriais));
-        
-          calcularMateriais(); // inicial
-        });
-        </script>
-        <script>
-          document.addEventListener("DOMContentLoaded", function () {
-            const blocoSelect = document.querySelector('select[name="bloco"]');
-            const pesoSAEInput = document.getElementById("peso_sae");
-            const pesoVNDInput = document.getElementById("peso_vnd");
-            const resumoDiv = document.getElementById("resumoMateriais");
-        
-            async function atualizarMateriaisDoBloco(blocoId) {
-              if (!blocoId) {
-                resumoDiv.style.display = "none";
-                return;
-              }
-        
-              try {
-                const response = await fetch(`/comercial/ajax/materiais-do-bloco/${blocoId}/`);
-                const data = await response.json();
-        
-                if (data.sucesso) {
-                  pesoSAEInput.value = data.sae_kg.toFixed(3);
-                  pesoVNDInput.value = data.vnd_kg.toFixed(3);
-                  resumoDiv.style.display = "block";
-                } else {
-                  alert("Não foi possível carregar os materiais.");
-                  resumoDiv.style.display = "none";
-                }
-              } catch (error) {
-                console.error("Erro ao buscar materiais do bloco:", error);
-                resumoDiv.style.display = "none";
-              }
-            }
-        
-            // 🔁 Compatível com select2
-            $(blocoSelect).on("select2:select", function (e) {
-              const blocoId = e.params.data.id;
-              atualizarMateriaisDoBloco(blocoId);
-            });
-        
-            // Para carregamento inicial (ex: edição)
-            if (blocoSelect.value) {
-              atualizarMateriaisDoBloco(blocoSelect.value);
-            }
-          });
-        </script>
-        
-          
     
 {% endblock %}

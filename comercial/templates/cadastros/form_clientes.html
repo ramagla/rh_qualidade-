@@ -282,20 +282,7 @@
           </div>
         </div>
         
-        <div class="col-md-6">
-          <label for="{{ form.telefone.id_for_label }}" class="form-label">
-            <i class="bi bi-telephone-fill me-1"></i> Telefone:
-          </label>
-          {{ form.telefone|add_class:"form-control" }}
-        </div>
-  
-        <div class="col-md-6">
-          <label for="{{ form.email.id_for_label }}" class="form-label">
-            <i class="bi bi-envelope-at-fill me-1"></i> Email:
-          </label>
-          {{ form.email|add_class:"form-control" }}
-        </div>
-  
+       
       </div>
     </div>
   </div>
@@ -415,33 +402,34 @@
           {{ form.tipo_cliente|add_class:"form-select" }}
         </div>
   
-        <div class="col-md-3">
+        <div class="col-md-3 grupo-comercial">
           <label for="{{ form.icms.id_for_label }}" class="form-label">
             <i class="bi bi-percent me-1"></i> ICMS:
           </label>
           {{ form.icms|add_class:"form-control" }}
         </div>
-  
-        <div class="col-md-3">
+        
+        <div class="col-md-3 grupo-comercial">
           <label for="{{ form.cfop.id_for_label }}" class="form-label">
             <i class="bi bi-file-earmark-text-fill me-1"></i> CFOP:
           </label>
           {{ form.cfop|add_class:"form-control" }}
         </div>
-  
-        <div class="col-md-3">
+        
+        <div class="col-md-3 grupo-comercial">
           <label for="{{ form.cond_pagamento.id_for_label }}" class="form-label">
             <i class="bi bi-cash-coin me-1"></i> Condição de Pagamento:
           </label>
           {{ form.cond_pagamento|add_class:"form-control" }}
         </div>
-  
-        <div class="col-md-6">
+        
+        <div class="col-md-6 grupo-comercial">
           <label for="{{ form.cod_bm.id_for_label }}" class="form-label">
             <i class="bi bi-upc-scan me-1"></i> Código BM:
           </label>
           {{ form.cod_bm|add_class:"form-control" }}
         </div>
+        
   
         <div class="col-md-12">
           <label for="{{ form.observacao.id_for_label }}" class="form-label">
@@ -468,149 +456,123 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
 <script>
-  $(document).ready(function () {
-    // Máscaras
+  document.addEventListener("DOMContentLoaded", function () {
+    // === MÁSCARAS ===
     $('#id_cnpj').mask('00.000.000/0000-00');
     $('#id_cep').mask('00000-000');
     $('#id_ie').mask('000.000.000.000');
+    $('#id_telefone, #id_telefone_contato').mask('(00) 0000-00009');
 
-    $('#id_telefone').mask('(00) 0000-00009');
-    $('#id_telefone').blur(function () {
-      var phone = $(this).val().replace(/\D/g, '');
-      $(this).unmask();
-      if (phone.length > 10) {
-        $(this).mask('(00) 00000-0000');
-      } else {
-        $(this).mask('(00) 0000-00009');
-      }
+    $('#id_telefone, #id_telefone_contato').on('blur', function () {
+      const phone = $(this).val().replace(/\D/g, '');
+      $(this).unmask().mask(phone.length > 10 ? '(00) 00000-0000' : '(00) 0000-00009');
     });
 
-    // Mostra/oculta acordeon da transportadora
-    function toggleTransportadora() {
-      const tipo = $('#id_tipo_cadastro').val();
-      if (tipo === 'Cliente') {
-        $('#headingTransportadora').closest('.accordion-item').show();
-      } else {
+    // === MOSTRAR/OCULTAR CAMPOS COM BASE NO TIPO DE CADASTRO ===
+    function toggleCamposPorTipoCadastro() {
+      const tipoCadastro = $('#id_tipo_cadastro').val();
+
+      // Exibir/esconder campo de coleta e transportadora
+      if (tipoCadastro === 'Transportadora') {
         $('#headingTransportadora').closest('.accordion-item').hide();
+        $('#campo_coleta').show();
+      } else {
+        $('#headingTransportadora').closest('.accordion-item').show();
+        $('#campo_coleta').hide();
+        $('#id_coleta').prop('checked', false);
       }
+
+      // Mostrar ou ocultar campos comerciais
+      if (tipoCadastro === 'Transportadora') {
+        document.querySelectorAll(".grupo-comercial").forEach(el => el.style.display = "none");
+      } else {
+        document.querySelectorAll(".grupo-comercial").forEach(el => el.style.display = "block");
+      }
+
+      // Título
+      const titulo = document.getElementById("dadosClienteTitulo");
+      titulo.innerText = tipoCadastro === "Transportadora"
+        ? "Dados da Transportadora"
+        : "Dados do Cliente";
     }
 
-    toggleTransportadora();
-    $('#id_tipo_cadastro').on('change', toggleTransportadora);
-  });
+    toggleCamposPorTipoCadastro();
+    $('#id_tipo_cadastro').on('change', toggleCamposPorTipoCadastro);
 
-  // Atualiza título dinamicamente
-  document.addEventListener("DOMContentLoaded", function () {
-    const tipoCadastro = document.getElementById("id_tipo_cadastro");
-    const titulo = document.getElementById("dadosClienteTitulo");
-
-    function atualizarTitulo() {
-      const valor = tipoCadastro.value;
-      titulo.innerText = (valor === "Transportadora") ? "Dados da Transportadora" : "Dados do Cliente";
-    }
-
-    atualizarTitulo();
-    tipoCadastro.addEventListener("change", atualizarTitulo);
-  });
-
-  // Mensagem de alerta
-  function showMessage(message) {
-    const box = document.getElementById("messageBox");
-    const text = document.getElementById("messageText");
-    text.textContent = message;
-    box.classList.remove("hidden");
-    setTimeout(() => box.classList.add("hidden"), 5000);
-  }
-
-  function clearMainForm() {
-    const ids = [
-      "id_razao_social", "id_endereco", "id_numero", "id_complemento", "id_bairro",
-      "id_cidade", "id_cep", "id_uf", "id_ie"
-    ];
-    ids.forEach(id => document.getElementById(id).value = "");
-  }
-
-  function buscarCNPJ() {
-    const input = document.getElementById("id_cnpj");
-    const cnpj = input.value.replace(/\D/g, "");
-    const alerta = document.getElementById("cnpjExistenteAlerta");
-    const box = document.getElementById("messageBox");
-    const text = document.getElementById("messageText");
-
-    alerta.style.display = "none";
-    box.classList.add("hidden");
-    text.textContent = "";
-
-    if (cnpj.length !== 14) {
-      text.textContent = "CNPJ inválido! Por favor, insira 14 dígitos.";
+    // === ALERTA E MENSAGEM ===
+    function showMessage(message) {
+      const box = document.getElementById("messageBox");
+      const text = document.getElementById("messageText");
+      text.textContent = message;
       box.classList.remove("hidden");
-      return;
+      setTimeout(() => box.classList.add("hidden"), 5000);
     }
 
-    // Verifica se já existe
-    fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}`)
-      .then(resp => resp.json())
-      .then(data => {
-        if (data.existe) {
-          alerta.style.display = "block";
-          input.dataset.cadastrado = "true";
-        } else {
-          alerta.style.display = "none";
-          input.dataset.cadastrado = "false";
-        }
-      });
+    // === BUSCAR DADOS CNPJ ===
+    window.buscarCNPJ = function () {
+      const input = document.getElementById("id_cnpj");
+      const cnpj = input.value.replace(/\D/g, "");
+      const alerta = document.getElementById("cnpjExistenteAlerta");
+      const text = document.getElementById("messageText");
 
-    // BrasilAPI
-    fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
-      .then(response => {
-        if (!response.ok) {
-          return response.json().then(errorData => {
-            throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
-          });
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.razao_social) {
-          document.getElementById("id_razao_social").value = data.razao_social || "";
-          document.getElementById("id_endereco").value =
-            (data.descricao_tipo_de_logradouro ? data.descricao_tipo_de_logradouro + " " : "") +
-            (data.logradouro || "");
-          document.getElementById("id_numero").value = data.numero || "";
-          document.getElementById("id_complemento").value = data.complemento || "";
-          document.getElementById("id_bairro").value = data.bairro || "";
-          document.getElementById("id_cidade").value = data.municipio || "";
-          document.getElementById("id_cep").value = data.cep || "";
-          document.getElementById("id_uf").value = data.uf || "";
-          document.getElementById("id_ie").value = data.inscricoes_estaduais?.[0]?.numero || "";
-        } else {
-          text.textContent = "CNPJ não encontrado ou inválido.";
-          box.classList.remove("hidden");
-        }
-      })
-      .catch(error => {
-        console.error("Erro ao buscar CNPJ:", error);
-        text.textContent = `Erro ao buscar CNPJ: ${error.message}`;
-        box.classList.remove("hidden");
-      });
-  }
+      alerta.style.display = "none";
+      showMessage(""); // limpa mensagem
 
-  function toggleTransportadora() {
-    const tipo = $('#id_tipo_cadastro').val();
-    if (tipo === 'Transportadora') {
-      $('#headingTransportadora').closest('.accordion-item').hide();  // transportadora não atende outra
-      $('#campo_coleta').show();  // exibe o campo de coleta
-    } else {
-      $('#headingTransportadora').closest('.accordion-item').show();
-      $('#campo_coleta').hide();
-      $('#id_coleta').prop('checked', false);  // limpa se não for transportadora
-    }
-  }
-  
+      if (cnpj.length !== 14) {
+        showMessage("CNPJ inválido! Por favor, insira 14 dígitos.");
+        return;
+      }
 
-  // Verificação automática ao sair do campo CNPJ
-  document.addEventListener("DOMContentLoaded", function () {
+      // Verifica duplicidade
+      fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}`)
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.existe) {
+            alerta.style.display = "block";
+            input.dataset.cadastrado = "true";
+          } else {
+            alerta.style.display = "none";
+            input.dataset.cadastrado = "false";
+          }
+        });
+
+      // BrasilAPI
+      fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(errorData => {
+              throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.razao_social) {
+            document.getElementById("id_razao_social").value = data.razao_social || "";
+            document.getElementById("id_endereco").value =
+              (data.descricao_tipo_de_logradouro || "") + " " + (data.logradouro || "");
+            document.getElementById("id_numero").value = data.numero || "";
+            document.getElementById("id_complemento").value = data.complemento || "";
+            document.getElementById("id_bairro").value = data.bairro || "";
+            document.getElementById("id_cidade").value = data.municipio || "";
+            document.getElementById("id_cep").value = data.cep || "";
+            document.getElementById("id_uf").value = data.uf || "";
+            document.getElementById("id_ie").value = data.inscricoes_estaduais?.[0]?.numero || "";
+          } else {
+            showMessage("CNPJ não encontrado ou inválido.");
+          }
+        })
+        .catch(error => {
+          console.error("Erro ao buscar CNPJ:", error);
+          showMessage(`Erro ao buscar CNPJ: ${error.message}`);
+        });
+    };
+
+    // === VERIFICAR CNPJ AO SAIR DO CAMPO ===
     const inputCNPJ = document.getElementById("id_cnpj");
     const alerta = document.getElementById("cnpjExistenteAlerta");
     const form = document.getElementById("clienteForm");
@@ -638,45 +600,56 @@
         alerta.scrollIntoView({ behavior: "smooth" });
       }
     });
-  });
 
-
-  document.addEventListener("DOMContentLoaded", function () {
+    // === ADIÇÃO DINÂMICA DE DOCUMENTOS ===
     const container = document.getElementById("formset-documentos");
     const btnAdd = document.getElementById("adicionarDocumento");
     const template = document.getElementById("template-documento").innerHTML;
-  
+
     btnAdd.addEventListener("click", function () {
       const totalForms = document.getElementById("id_form-TOTAL_FORMS");
       const currentCount = parseInt(totalForms.value);
-  
       const newHtml = template.replace(/__prefix__/g, currentCount);
       const wrapper = document.createElement("div");
       wrapper.innerHTML = newHtml;
-  
-      // Ajusta os names corretamente
-      wrapper.querySelectorAll("[name]").forEach(function (el) {
+
+      wrapper.querySelectorAll("[name]").forEach(el => {
         const name = el.getAttribute("name");
         el.setAttribute("name", `form-${currentCount}-${name}`);
         el.setAttribute("id", `id_form-${currentCount}-${name}`);
       });
-  
+
       container.appendChild(wrapper);
       totalForms.value = currentCount + 1;
     });
-  
+
     container.addEventListener("click", function (e) {
       if (e.target.closest(".remover-documento")) {
         e.target.closest(".documento-form").remove();
       }
     });
   });
+</script>
+
+<script>
+  $(document).ready(function () {
+    function toggleCamposComerciais() {
+      const tipoCadastro = $('#id_tipo_cadastro').val();
+  
+      if (tipoCadastro === "Transportadora") {
+        $('.grupo-comercial').hide(); // Oculta ICMS, CFOP, etc.
+      } else {
+        $('.grupo-comercial').show();
+      }
+    }
+  
+    toggleCamposComerciais();
+    $('#id_tipo_cadastro').on('change', toggleCamposComerciais);
+  });
+  
   
 </script>
 
-
-  
-  
   
     
 {% endblock %}

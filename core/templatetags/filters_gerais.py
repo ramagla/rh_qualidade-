@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 from dateutil.relativedelta import relativedelta
 import os
 import re
+from django.utils.timezone import now
 
 from rh_qualidade.utils import title_case, formatar_nome_atividade_com_siglas
 
@@ -363,5 +364,7 @@ def menor_que(data1, data2_str):
     except Exception:
         return False
     
-
+@register.simple_tag
+def hoje():
+    return now().date()
 

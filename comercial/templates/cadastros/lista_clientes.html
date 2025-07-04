@@ -43,11 +43,12 @@
       <select name="razao_social" id="id_razao_social" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
         <option value="">---</option>
         {% for cliente in clientes_all %}
-          <option value="{{ cliente.razao_social }}" {% if request.GET.razao_social == cliente.razao_social %}selected{% endif %}>
+          <option value="{{ cliente.id }}" {% if request.GET.razao_social == cliente.id|stringformat:"s" %}selected{% endif %}>
             {{ cliente.razao_social }}
           </option>
         {% endfor %}
       </select>
+      
     </div>
   
         <!-- CNPJ -->
@@ -57,6 +58,36 @@
           </label>
           <input type="text" name="cnpj" id="cnpj" class="form-control" placeholder="CNPJ" value="{{ request.GET.cnpj }}">
         </div>
+
+      <!-- Cidade -->
+<div class="col-12 filtro-wrapper">
+  <label for="cidade" class="form-label">
+    <i class="bi bi-geo-alt-fill me-1"></i> Cidade
+  </label>
+  <select name="cidade" id="cidade" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+    <option value="">Todas</option>
+    {% for cidade in cidades_distintas %}
+  {% if cidade %}
+    <option value="{{ cidade }}" {% if request.GET.cidade == cidade %}selected{% endif %}>{{ cidade }}</option>
+  {% endif %}
+{% endfor %}
+
+  </select>
+</div>
+<!-- Tipo de Cliente -->
+<div class="col-12 filtro-wrapper">
+  <label for="tipo_cliente" class="form-label">
+    <i class="bi bi-tags me-1"></i> Tipo
+  </label>
+  <select name="tipo_cliente" id="tipo_cliente" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+    <option value="">Todos</option>
+    <option value="Automotivo" {% if request.GET.tipo_cliente == "Automotivo" %}selected{% endif %}>Automotivo</option>
+    <option value="Não Automotivo" {% if request.GET.tipo_cliente == "Não Automotivo" %}selected{% endif %}>Não Automotivo</option>
+    <option value="Reposição" {% if request.GET.tipo_cliente == "Reposição" %}selected{% endif %}>Reposição</option>
+  </select>
+</div>
+
+
   
         <!-- Tipo de Cadastro -->
         <div class="col-12 filtro-wrapper">
@@ -93,12 +124,16 @@
 
 
 <!-- Indicadores -->
-<div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
-  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Clientes Ativos"    valor=total_ativos       subtitulo="Clientes com status 'Ativo'."            icone="bi-people-fill"      %}
-  {% include "partials/global/_card_indicador.html" with cor="danger"  titulo="Clientes Inativos"  valor=total_inativos     subtitulo="Clientes com status 'Inativo'."          icone="bi-person-x-fill"   %}
-  {% include "partials/global/_card_indicador.html" with cor="info"    titulo="Total de Clientes"   valor=total_clientes     subtitulo="Quantidade total de clientes."          icone="bi-card-list"       %}
-  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Atualizadas este Mês" valor=atualizadas_mes    subtitulo=subtitle_atualizadas                       icone="bi-calendar-event"  %}
+<div class="row row-cols-1 row-cols-md-5 g-3 mb-4">
+  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Clientes" valor=total_clientes subtitulo="Apenas ativos" icone="bi-people-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Automotivo" valor=total_automotivo subtitulo="Clientes do tipo Automotivo" icone="bi-truck" %}
+  {% include "partials/global/_card_indicador.html" with cor="secondary" titulo="Não Automotivo" valor=total_nao_automotivo subtitulo="Clientes do tipo Não Automotivo" icone="bi-tools" %}
+  {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Reposição" valor=total_reposicao subtitulo="Clientes do tipo Reposição" icone="bi-arrow-repeat" %}
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Atualizadas este Mês" valor=atualizadas_mes subtitulo=subtitle_atualizadas icone="bi-calendar-event" %}
+
 </div>
+  
+ 
 
 
 
@@ -119,6 +154,8 @@
           <th class="align-middle"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Cidade</th>
           <th class="align-middle"><i class="bi bi-telephone me-1" aria-hidden="true"></i> Telefone</th>
           <th class="align-middle"><i class="bi bi-envelope me-1" aria-hidden="true"></i> E-mail</th>
+          <th class="align-middle"><i class="bi bi-person-lines-fill me-1"></i> Contato</th>
+
           <th class="align-middle"><i class="bi bi-folder2-open me-1" aria-hidden="true"></i> Anexos</th>
 
           <th class="align-middle"><i class="bi bi-gear me-1" aria-hidden="true"></i> Ações</th>
@@ -138,8 +175,10 @@
           <td class="text-start">{{ cliente.razao_social }}</td>
           <td>{{ cliente.cnpj }}</td>
           <td>{{ cliente.cidade }} - {{ cliente.uf }}</td>
-          <td>{{ cliente.telefone }}</td>
-          <td>{{ cliente.email }}</td>
+          <td>{{ cliente.telefone_contato|default:"-" }}</td>
+          <td>{{ cliente.email_contato|default:"-" }}</td>
+          <td>{{ cliente.nome_contato|default:"-" }}</td>
+          
           <td>
             {% if cliente.documentos.exists %}
               <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAnexos{{ cliente.id }}">
@@ -199,7 +238,7 @@
           </td>
         </tr>
         {% empty %}
-        {% include "partials/global/_sem_resultados.html" with colspan=7 mensagem="Nenhum cliente cadastrado." %}
+        {% include "partials/global/_sem_resultados.html" with colspan=8 mensagem="Nenhum cliente cadastrado." %}
         {% endfor %}
       </tbody>
     </table>

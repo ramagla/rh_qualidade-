@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load comercial_formatos %}
+{% load humanize %}
+
+{% block title %}Visualização - Centro de Custo{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container pdf-container mt-4">
+
+  <!-- Cabeçalho -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-2 text-center">
+      <img src="{% static 'logo.png' %}" alt="Logo" class="img-fluid" style="max-height: 60px;">
+    </div>
+    <div class="col-8 text-center">
+      <h4 class="mb-0">CENTRO DE CUSTO</h4>
+      <small>
+        Nome: <strong>{{ centro.nome }}</strong><br>
+        Vigência: <strong>{{ centro.vigencia|date:"d/m/Y" }}</strong><br>
+        Custo Vigente: <strong>
+          {% if centro.custo_vigente %}
+            R$ {{ centro.custo_vigente|floatformat:2 }}
+          {% else %}
+            <span class="text-muted">Sem custo vigente</span>
+          {% endif %}
+        </strong>
+      </small>
+    </div>
+  </div>
+
+  <!-- Histórico de Custos -->
+  <h5 class="text-primary mt-4"><i class="bi bi-clock-history me-1"></i> Histórico de Custos</h5>
+  {% if historico %}
+  <table class="table table-bordered table-sm text-center">
+    <thead class="table-light">
+      <tr>
+        <th><i class="bi bi-cash-stack me-1"></i> Custo Anterior</th>
+        <th><i class="bi bi-calendar-event me-1"></i> Vigência</th>
+        <th><i class="bi bi-clock-history me-1"></i> Data da Alteração</th>
+        <th><i class="bi bi-currency-dollar me-1"></i> Novo Custo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in historico %}
+      <tr>
+        <td>R$ {{ h.custo_anterior|floatformat:2 }}</td>
+        <td>{{ h.centro.vigencia|date:"d/m/Y" }}</td>
+        <td>{{ h.alterado_em|date:"d/m/Y H:i" }}</td>
+        <td>R$ {{ h.novo_custo|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="text-muted">Nenhum histórico registrado.</p>
+  {% endif %}
+
+  <!-- Observações -->
+  <h5 class="text-primary mt-4"><i class="bi bi-journal-text me-1"></i> Observações</h5>
+  <div class="border rounded bg-light p-3"
+       style="white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; font-size: 0.95rem; max-height: 250px; overflow-y: auto; text-align: left;">
+    {% if centro.observacao %}
+      {{ centro.observacao|linebreaksbr }}
+    {% else %}
+      <span class="text-muted">Nenhuma observação informada.</span>
+    {% endif %}
+  </div>
+
+  {% include "partials/global/_formulario_rodape.html" %}
+</div>
+{% endblock %}

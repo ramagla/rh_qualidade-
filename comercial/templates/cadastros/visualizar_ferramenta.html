@@ -39,6 +39,7 @@
     <thead class="table-light">
       <tr>
         <th>Material</th>
+        <th>Qtde</th>
         <th>Peso (Kg)</th>
         <th>Val. Unitário</th>
         <th>Total</th>
@@ -48,6 +49,8 @@
       {% for mat in materiais %}
         <tr>
           <td>{{ mat.nome }}</td>
+          <td>{{ mat.qtde|default:"–" }}</td>
+
           <td>{{ mat.peso|floatformat:3 }}</td>
           <td>{{ mat.valor_unitario|brl }}</td>
           <td>{{ mat.total|brl }}</td>
@@ -135,13 +138,16 @@
 <h5 class="text-primary mt-4">
   <i class="bi bi-journal-text me-1"></i> Observações
 </h5>
-<div class="border rounded p-3 bg-light">
+
+<div class="border rounded bg-light p-3"
+     style="white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; font-size: 0.95rem; max-height: 250px; overflow-y: auto; text-align: left;">
   {% if ferramenta.observacoes %}
     {{ ferramenta.observacoes|safe }}
   {% else %}
     <span class="text-muted">Nenhuma observação informada.</span>
   {% endif %}
 </div>
+
 
 
 

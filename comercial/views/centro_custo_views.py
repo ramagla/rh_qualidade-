@@ -14,9 +14,9 @@ def lista_centros_custo(request):
     centros = CentroDeCusto.objects.all()
 
     # 🔍 Filtros
-    nome = request.GET.get("nome")
+    nome = request.GET.get("departamento")  # O campo do filtro se chama "departamento"
     if nome:
-        centros = centros.filter(nome__icontains=nome)
+        centros = centros.filter(nome=nome)
 
     # 📊 Indicadores
     total_centros = centros.count()
@@ -28,12 +28,16 @@ def lista_centros_custo(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+    # Lista de departamentos únicos
+    nomes_departamentos = CentroDeCusto.objects.values_list("nome", flat=True).distinct()
+
     context = {
         "page_obj": page_obj,
         "total_centros": total_centros,
         "vigentes": vigentes,
         "futuros": futuros,
         "mes_ano": now().strftime("%m/%Y"),
+        "nomes_departamentos": nomes_departamentos,  # para o filtro
     }
 
     return render(request, "cadastros/lista_centro_de_custos.html", context)
@@ -72,8 +76,10 @@ def editar_centro_custo(request, pk):
 @permission_required("comercial.view_centrodecusto", raise_exception=True)
 def visualizar_centro_custo(request, pk):
     centro = get_object_or_404(CentroDeCusto, pk=pk)
-    historico = centro.historico_custos.all()
-    return render(request, "centro_custo/visualizar.html", {
+    historico = centro.historico_custos.all().order_by("-alterado_em")
+
+    context = {
         "centro": centro,
-        "historico": historico
-    })
+        "historico": historico,
+    }
+    return render(request, "cadastros/visualizar_centro_de_custos.html", context)

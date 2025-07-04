@@ -10,19 +10,30 @@ from django.core.paginator import Paginator
 from django.shortcuts import render
 from comercial.models import Item
 
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from comercial.models import Item
+
+
 @login_required
 @permission_required('comercial.view_item', raise_exception=True)
 def lista_itens(request):
-    # 🔍 Filtros (simples)
+    # 🔍 Filtros
     itens_qs = Item.objects.all().order_by('descricao')
-    descricao = request.GET.get('descricao')
-    codigo = request.GET.get('codigo')
 
-    if descricao:
-        itens_qs = itens_qs.filter(descricao__icontains=descricao)
+    codigo = request.GET.get('codigo')
+    status = request.GET.get('status')
+    tipo_item = request.GET.get('tipo_item')
 
     if codigo:
-        itens_qs = itens_qs.filter(codigo__icontains=codigo)
+        itens_qs = itens_qs.filter(codigo=codigo)
+
+    if status:
+        itens_qs = itens_qs.filter(status=status)
+
+    if tipo_item:
+        itens_qs = itens_qs.filter(tipo_item=tipo_item)
 
     # 📊 Indicadores
     total_itens = itens_qs.count()
@@ -30,8 +41,18 @@ def lista_itens(request):
     total_item_seguranca = itens_qs.filter(item_seguranca=True).count()
     total_com_desenho = itens_qs.exclude(desenho='').exclude(desenho__isnull=True).count()
 
+    # 📄 Lista de códigos únicos para o filtro
+    codigos_disponiveis = (
+        Item.objects
+        .exclude(codigo__isnull=True)
+        .exclude(codigo="")
+        .order_by("codigo")
+        .values_list("codigo", flat=True)
+        .distinct()
+    )
+
     # 📄 Paginação
-    paginator = Paginator(itens_qs, 10)  # 10 itens por página
+    paginator = Paginator(itens_qs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -41,6 +62,7 @@ def lista_itens(request):
         'total_automotivo': total_automotivo,
         'total_item_seguranca': total_item_seguranca,
         'total_com_desenho': total_com_desenho,
+        'codigos_disponiveis': codigos_disponiveis,  # ✅ para o select
     }
 
     return render(request, 'cadastros/itens_lista.html', context)
@@ -104,7 +126,7 @@ def editar_item(request, pk):
 @permission_required('comercial.view_item', raise_exception=True)
 def visualizar_item(request, pk):
     item = get_object_or_404(Item, pk=pk)
-    return render(request, 'comercial/itens_visualizar.html', {'item': item})
+    return render(request, 'cadastros/itens_visualizar.html', {'item': item})
 
 
 @login_required

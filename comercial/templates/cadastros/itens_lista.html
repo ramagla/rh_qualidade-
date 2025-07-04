@@ -21,28 +21,63 @@
     {% endif %}
   </div>
 
-  <!-- Filtros Offcanvas (Opcional para Itens) -->
-  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title"><i class="bi bi-funnel-fill me-2"></i>Filtros de Itens</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-    </div>
-    <div class="offcanvas-body">
-      <form method="get" class="row g-3">
-        <div class="col-12 filtro-wrapper">
-          <label for="descricao" class="form-label"><i class="bi bi-fonts me-1"></i> Descrição</label>
-          <input type="text" name="descricao" id="descricao" class="form-control" value="{{ request.GET.descricao }}">
-        </div>
-        <div class="col-12 filtro-wrapper">
-          <label for="codigo" class="form-label"><i class="bi bi-upc me-1"></i> Código</label>
-          <input type="text" name="codigo" id="codigo" class="form-control" value="{{ request.GET.codigo }}">
-        </div>
-        <div class="col-12 mt-3">
-          {% include "partials/global/_botao_filtrar.html" %}
-        </div>
-      </form>
-    </div>
+  <!-- Filtros Offcanvas (Itens) -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Itens
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
+
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+      
+      <!-- Código -->
+      <div class="col-12 filtro-wrapper">
+        <label for="codigo" class="form-label">
+          <i class="bi bi-upc me-1"></i> Código
+        </label>
+        <select name="codigo" id="codigo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for c in codigos_disponiveis %}
+            <option value="{{ c }}" {% if request.GET.codigo == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Status -->
+      <div class="col-12 filtro-wrapper">
+        <label for="status" class="form-label">
+          <i class="bi bi-check2-circle me-1"></i> Status
+        </label>
+        <select name="status" id="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          <option value="Ativo" {% if request.GET.status == "Ativo" %}selected{% endif %}>Ativo</option>
+          <option value="Inativo" {% if request.GET.status == "Inativo" %}selected{% endif %}>Inativo</option>
+        </select>
+      </div>
+
+      <!-- Tipo de Item -->
+      <div class="col-12 filtro-wrapper">
+        <label for="tipo_item" class="form-label">
+          <i class="bi bi-tag me-1"></i> Tipo de Item
+        </label>
+        <select name="tipo_item" id="tipo_item" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          <option value="corrente" {% if request.GET.tipo_item == "corrente" %}selected{% endif %}>Corrente</option>
+          <option value="cotacao" {% if request.GET.tipo_item == "cotacao" %}selected{% endif %}>Cotação</option>
+        </select>
+      </div>
+
+      <!-- Botão de Filtrar -->
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+
+    </form>
+  </div>
+</div>
 
   <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
     {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Itens" valor=total_itens subtitulo="Itens cadastrados." icone="bi-box-seam" %}
@@ -61,7 +96,7 @@
       <thead class="table-light">
         <tr>
           <th><i class="bi bi-upc me-1"></i> Código</th>
-          <th><i class="bi bi-fonts me-1"></i> Descrição</th>
+          <th><i class="bi bi-tag me-1"></i> Tipo</th>
           <th><i class="bi bi-person-badge me-1"></i> Cliente</th>
           <th><i class="bi bi-tools me-1"></i> Ferramenta</th>
           <th><i class="bi bi-stack me-1"></i> Lote Mínimo</th>
@@ -73,8 +108,20 @@
         {% for item in page_obj %}
         <tr>
           <td>{{ item.codigo }}</td>
-          <td class="text-start">{{ item.descricao }}</td>
-          <td>{{ item.cliente.razao_social }}</td>
+         
+          <td>
+            {% if item.tipo_item %}
+              <span class="badge {% if item.tipo_item == 'Cotacao' %}bg-warning text-dark{% else %}bg-primary{% endif %}">
+                {{ item.get_tipo_item_display }}
+              </span>
+            {% else %}
+              <span class="text-muted">–</span>
+            {% endif %}
+          </td>
+          
+          
+          
+                    <td>{{ item.cliente.razao_social }}</td>
           <td>
             {% if item.ferramenta %}
               {{ item.ferramenta.codigo }}

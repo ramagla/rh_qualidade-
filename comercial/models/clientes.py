@@ -7,10 +7,12 @@ class Cliente(models.Model):
     ]
 
     TIPO_CHOICES = [
-        ('Automotivo', 'Automotivo'),
-        ('Não Automotivo', 'Não Automotivo'),
-        ('Reposição', 'Reposição'),
+    ('Automotivo', 'Automotivo'),
+    ('Não Automotivo', 'Não Automotivo'),
+    ('Reposição', 'Reposição'),
+    ('Transportadora', 'Transportadora'),    
     ]
+
 
     TIPO_CADASTRO_CHOICES = [
         ('Cliente', 'Cliente'),

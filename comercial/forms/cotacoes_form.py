@@ -54,7 +54,7 @@ class CotacaoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # garante que o campo cliente tenha queryset atualizado, se precisar filtrar:
-        self.fields["cliente"].queryset = Cliente.objects.all().order_by("razao_social")
+        self.fields["cliente"].queryset = Cliente.objects.filter(tipo_cadastro="Cliente").order_by("razao_social")
 
         if user:
             # instancia já com o responsável definido

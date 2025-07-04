@@ -44,18 +44,37 @@
                 </h2>
                 <div id="collapseItem" class="accordion-collapse collapse show" aria-labelledby="headingItem" data-bs-parent="#accordionItem">
                     <div class="accordion-body row g-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.tipo_item.id_for_label }}" class="form-label">
+                              <i class="bi bi-tag me-1"></i> Tipo de Item:
+                            </label>
+                            {{ form.tipo_item|add_class:"form-select" }}
+                          </div>
+
+                          <div class="col-md-4">
+                            <label for="{{ form.codigo_desenho.id_for_label }}" class="form-label">
+                                <i class="bi bi-diagram-2-fill me-1"></i> Código do Desenho:
+                            </label>
+                            {{ form.codigo_desenho|add_class:"form-control" }}
+                        </div>
+                        
 
                         <div class="col-md-4">
-                            <label for="{{ form.codigo.id_for_label }}" class="form-label"><i class="bi bi-upc me-1"></i> Código:</label>
+                            <label for="{{ form.revisao.id_for_label }}" class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Revisão:</label>
+                            {{ form.revisao|add_class:"form-control" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.data_revisao.id_for_label }}" class="form-label"><i class="bi bi-calendar-date me-1"></i> Data da Revisão:</label>
+                            {{ form.data_revisao|add_class:"form-control" }}
+                        </div>
+                        <div class="col-md-4" id="campoCodigo">
+                            <label for="{{ form.codigo.id_for_label }}" class="form-label">
+                              <i class="bi bi-upc me-1"></i> Código:
+                            </label>
                             {{ form.codigo|add_class:"form-control" }}
-                        </div>
-
-                        <div class="col-md-8">
-                            <label for="{{ form.descricao.id_for_label }}" class="form-label"><i class="bi bi-text-paragraph me-1"></i> Descrição:</label>
-                            {{ form.descricao|add_class:"form-control" }}
-                        </div>
-
-                        <div class="col-md-4">
+                          </div>
+                          <div class="col-md-4">
                             <label for="{{ form.ncm.id_for_label }}" class="form-label"><i class="bi bi-hash me-1"></i> NCM:</label>
                             {{ form.ncm|add_class:"form-control" }}
                         </div>
@@ -63,6 +82,14 @@
                             <label for="{{ form.ipi.id_for_label }}" class="form-label"><i class="bi bi-percent me-1"></i> IPI (%):</label>
                             {{ form.ipi|add_class:"form-control" }}
                           </div>
+                          <div class="col-md-8" id="campoDescricao">
+                            <label for="{{ form.descricao.id_for_label }}" class="form-label">
+                              <i class="bi bi-text-paragraph me-1"></i> Descrição:
+                            </label>
+                            {{ form.descricao|add_class:"form-control" }}
+                          </div>
+
+                        
                           
 
                         <div class="col-md-4">
@@ -80,32 +107,20 @@
                             {{ form.cliente|add_class:"form-select select2" }}
                         </div>
 
-                        <div class="col-md-4">
-                            <label for="{{ form.codigo_cliente.id_for_label }}" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código no Cliente:</label>
-                            {{ form.codigo_cliente|add_class:"form-control" }}
-                        </div>
-
-                        <div class="col-md-4">
-                            <label for="{{ form.descricao_cliente.id_for_label }}" class="form-label"><i class="bi bi-card-text me-1"></i> Descrição no Cliente:</label>
-                            {{ form.descricao_cliente|add_class:"form-control" }}
-                        </div>
-                        <div class="col-md-4">
-                            <label for="{{ form.codigo_desenho.id_for_label }}" class="form-label">
-                                <i class="bi bi-diagram-2-fill me-1"></i> Código do Desenho:
+                        <div class="col-md-4" id="campoCodigoCliente">
+                            <label for="{{ form.codigo_cliente.id_for_label }}" class="form-label">
+                              <i class="bi bi-upc-scan me-1"></i> Código no Cliente:
                             </label>
-                            {{ form.codigo_desenho|add_class:"form-control" }}
-                        </div>
-                        
-
-                        <div class="col-md-4">
-                            <label for="{{ form.revisao.id_for_label }}" class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Revisão:</label>
-                            {{ form.revisao|add_class:"form-control" }}
-                        </div>
-
-                        <div class="col-md-4">
-                            <label for="{{ form.data_revisao.id_for_label }}" class="form-label"><i class="bi bi-calendar-date me-1"></i> Data da Revisão:</label>
-                            {{ form.data_revisao|add_class:"form-control" }}
-                        </div>
+                            {{ form.codigo_cliente|add_class:"form-control" }}
+                          </div>
+                          
+                          <div class="col-md-4" id="campoDescricaoCliente">
+                            <label for="{{ form.descricao_cliente.id_for_label }}" class="form-label">
+                              <i class="bi bi-card-text me-1"></i> Descrição no Cliente:
+                            </label>
+                            {{ form.descricao_cliente|add_class:"form-control" }}
+                          </div>
+                       
 
                         {% include "partials/global/_campo_anexo.html" with form=form %}
 
@@ -137,7 +152,28 @@
                                 </label>
                             </div>
                         </div>
-
+                        <div class="col-md-4">
+                            <label for="{{ form.status.id_for_label }}" class="form-label"><i class="bi bi-check2-circle me-1"></i> Status:</label>
+                            {{ form.status|add_class:"form-select" }}
+                        </div>
+                       
+                          
+                        <div class="col-md-6" id="campoSimboloSeguranca" style="display: none;">
+                            <label for="{{ form.simbolo_seguranca.id_for_label }}" class="form-label">
+                              <i class="bi bi-exclamation-diamond-fill me-1"></i> Imagem de Simbologia de Segurança:
+                            </label>
+                            {{ form.simbolo_seguranca|add_class:"form-control" }}
+                          
+                            {% if item and item.simbolo_seguranca %}
+                              <div class="mt-2">
+                                <strong>Imagem atual:</strong><br>
+                                <img src="{{ item.simbolo_seguranca.url }}" alt="Simbologia de Segurança" class="img-thumbnail border" style="max-height: 120px;">
+                              </div>
+                            {% endif %}
+                          </div>
+                          
+                          
+                        
                     </div>
                 </div>
             </div>
@@ -149,4 +185,48 @@
         </div>
     </form>
 </div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const tipoItem = document.getElementById("id_tipo_item");
+      const codigoDesenho = document.getElementById("id_codigo_desenho");
+      const inputCodigo = document.getElementById("id_codigo");
+    
+      const campoCodigo = document.getElementById("campoCodigo");
+      const campoDescricao = document.getElementById("campoDescricao");
+      const campoCodigoCliente = document.getElementById("campoCodigoCliente");
+      const campoDescricaoCliente = document.getElementById("campoDescricaoCliente");
+    
+      const switchSeguranca = document.getElementById("id_item_seguranca");
+      const campoSimbolo = document.getElementById("campoSimboloSeguranca");
+    
+      function atualizarVisibilidadeCampos() {
+        const isCotacao = tipoItem.value.toLowerCase() === "cotacao";
+    
+        campoCodigo.style.display = isCotacao ? "none" : "block";
+        campoDescricao.style.display = isCotacao ? "none" : "block";
+        campoCodigoCliente.style.display = isCotacao ? "none" : "block";
+        campoDescricaoCliente.style.display = isCotacao ? "none" : "block";
+    
+        if (isCotacao) {
+          inputCodigo.value = codigoDesenho.value;
+        }
+      }
+    
+      function toggleCampoSimbolo() {
+        campoSimbolo.style.display = switchSeguranca.checked ? "block" : "none";
+      }
+    
+      tipoItem.addEventListener("change", atualizarVisibilidadeCampos);
+      codigoDesenho.addEventListener("input", atualizarVisibilidadeCampos);
+      switchSeguranca.addEventListener("change", toggleCampoSimbolo);
+    
+      // Executa ao carregar a página
+      atualizarVisibilidadeCampos();
+      toggleCampoSimbolo();
+    });
+    </script>
+    
+  
 {% endblock %}

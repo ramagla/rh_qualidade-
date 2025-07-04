@@ -366,18 +366,20 @@ def visualizar_ferramenta(request, pk):
     servicos = ferramenta.servicos.all()
     materiais = []
 
-    def add_material(nome, peso, valor_unitario):
+    def add_material(nome, peso, valor_unitario, qtde=None):
         try:
             peso = Decimal(peso or 0)
             valor_unitario = Decimal(valor_unitario or 0)
             materiais.append({
                 "nome": nome,
+                "qtde": qtde,
                 "peso": peso,
                 "valor_unitario": valor_unitario,
                 "total": peso * valor_unitario
             })
         except Exception as e:
             print(f"Erro em add_material({nome}): {e}")
+
 
     # 🧱 Bloco
     if ferramenta.bloco:
@@ -389,11 +391,12 @@ def visualizar_ferramenta(request, pk):
         add_material("VND", ferramenta.peso_vnd_kg, ferramenta.valor_unitario_vnd)
 
     # 🧮 Fórmulas com material na frente
-    add_material("SAE D2 (Matriz)", ferramenta.kg_matriz, ferramenta.valor_unitario_matriz)
-    add_material("SAE D2 (Punção)", ferramenta.kg_puncao, ferramenta.valor_unitario_puncao)
-    add_material("SAE P20 (Flange)", ferramenta.kg_flange, ferramenta.valor_unitario_flange)
-    add_material("SAE 1020 (Carros)", ferramenta.kg_carros, ferramenta.valor_unitario_carros)
-    add_material("SAE D2 (Formadores)", ferramenta.kg_formadores, ferramenta.valor_unitario_formadores)
+    add_material("SAE D2 (Matriz)", ferramenta.kg_matriz, ferramenta.valor_unitario_matriz, ferramenta.num_matrizes)
+    add_material("SAE D2 (Punção)", ferramenta.kg_puncao, ferramenta.valor_unitario_puncao, ferramenta.num_puncoes)
+    add_material("SAE P20 (Flange)", ferramenta.kg_flange, ferramenta.valor_unitario_flange, 1)
+    add_material("SAE 1020 (Carros)", ferramenta.kg_carros, ferramenta.valor_unitario_carros, ferramenta.num_carros)
+    add_material("SAE D2 (Formadores)", ferramenta.kg_formadores, ferramenta.valor_unitario_formadores, ferramenta.num_formadores)
+
 
     # Totais
     total_materiais = sum((m["total"] for m in materiais), Decimal("0.00"))
@@ -422,26 +425,32 @@ from django.http import JsonResponse
 from django.utils.timezone import now
 from comercial.models import CentroDeCusto
 
-@login_required
+from django.http import JsonResponse
+from django.utils.timezone import now
+from comercial.models import CentroDeCusto
+
 def ajax_valor_hora_centro_custo(request):
     tipo = request.GET.get("tipo")
-    nome_departamento = "Ferramentaria" if tipo == "Ferramentaria" else "Projeto" if tipo == "Projeto" else None
 
-    if not nome_departamento:
+    if tipo not in ["Ferramentaria", "Projeto"]:
         return JsonResponse({"sucesso": False, "erro": "Tipo inválido"})
 
-    centro = (
-        CentroDeCusto.objects
-        .select_related("departamento")
-        .filter(departamento__nome__icontains=nome_departamento, vigencia__lte=now().date())
-        .order_by("-vigencia")
-        .first()
-    )
+    try:
+        nome_departamento = tipo  # pois o nome do centro de custo é usado diretamente
+        centro = (
+            CentroDeCusto.objects
+            .filter(nome__icontains=nome_departamento, vigencia__lte=now().date())
+            .order_by("-vigencia")
+            .first()
+        )
 
-    if centro:
-        return JsonResponse({"sucesso": True, "valor": float(centro.custo_atual)})
-    else:
-        return JsonResponse({"sucesso": False, "erro": "Nenhum custo vigente encontrado"})
+        if centro:
+            return JsonResponse({"sucesso": True, "valor": str(centro.custo_atual)})
+        else:
+            return JsonResponse({"sucesso": False, "erro": "Nenhum centro de custo encontrado."})
+    except Exception as e:
+        return JsonResponse({"sucesso": False, "erro": str(e)})
+
 
 
 @login_required

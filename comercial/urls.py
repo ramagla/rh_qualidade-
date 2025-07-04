@@ -54,6 +54,8 @@ urlpatterns = [
     path("cotacoes/editar/<int:pk>/", cotacao_views.editar_cotacao, name="editar_cotacao"),
     path("cotacoes/excluir/<int:pk>/", cotacao_views.excluir_cotacao, name="excluir_cotacao"),
     path("cotacoes/visualizar/<int:pk>/", cotacao_views.visualizar_cotacao, name="visualizar_cotacao"),
+    path("cotacoes/ajax/dados-cliente/", cotacao_views.dados_cliente_ajax, name="dados_cliente_ajax"),
+
     # Pré-Cálculo
     path("cotacoes/<int:pk>/precalculo/", precalc_views.itens_precaculo, name="itens_precaculo"),
     path("cotacoes/<int:pk>/precalculo/editar/", precalc_views.editar_precaculo, name="editar_precalculo"),
