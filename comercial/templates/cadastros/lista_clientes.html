@@ -37,13 +37,18 @@
     <div class="offcanvas-body">
       <form method="get" class="row g-3">
   
-        <!-- Razão Social -->
-        <div class="col-12 filtro-wrapper">
-          <label for="razao_social" class="form-label">
-            <i class="bi bi-building me-1" aria-hidden="true"></i> Razão Social
-          </label>
-          <input type="text" name="razao_social" id="razao_social" class="form-control" placeholder="Razão Social" value="{{ request.GET.razao_social }}">
-        </div>
+         <!-- Razão Social com select2 -->
+    <div class="mb-3">
+      <label for="id_razao_social" class="form-label"><i class="bi bi-building"></i> Razão Social</label>
+      <select name="razao_social" id="id_razao_social" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+        <option value="">---</option>
+        {% for cliente in clientes_all %}
+          <option value="{{ cliente.razao_social }}" {% if request.GET.razao_social == cliente.razao_social %}selected{% endif %}>
+            {{ cliente.razao_social }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
   
         <!-- CNPJ -->
         <div class="col-12 filtro-wrapper">

@@ -11,12 +11,12 @@ from comercial.forms.centro_custo_form import CentroDeCustoForm
 @login_required
 @permission_required("comercial.view_centrodecusto", raise_exception=True)
 def lista_centros_custo(request):
-    centros = CentroDeCusto.objects.select_related("departamento").all()
+    centros = CentroDeCusto.objects.all()
 
     # 🔍 Filtros
     nome = request.GET.get("nome")
     if nome:
-        centros = centros.filter(departamento__nome__icontains=nome)
+        centros = centros.filter(nome__icontains=nome)
 
     # 📊 Indicadores
     total_centros = centros.count()
@@ -24,7 +24,7 @@ def lista_centros_custo(request):
     futuros = centros.filter(vigencia__gt=now().date()).count()
 
     # 📄 Paginação
-    paginator = Paginator(centros.order_by("departamento__nome"), 10)
+    paginator = Paginator(centros.order_by("nome"), 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 

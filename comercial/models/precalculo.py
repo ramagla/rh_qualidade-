@@ -150,7 +150,8 @@ class PreCalculoMaterial(AuditModel):
     lote_minimo = models.PositiveIntegerField("Lote Mínimo", null=True, blank=True)
     entrega_dias = models.PositiveIntegerField("Entrega (dias)", null=True, blank=True)
     fornecedor = models.ForeignKey(FornecedorQualificado, on_delete=models.PROTECT, null=True, blank=True)
-
+    selecionado = models.BooleanField(default=False) 
+    
     desenvolvido_mm = models.DecimalField(
         "Desenvolvido (mm)", max_digits=8, decimal_places=2
     )

@@ -45,6 +45,7 @@ class Cliente(models.Model):
     telefone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     logotipo = models.ImageField(upload_to='logos_clientes/', blank=True, null=True)
+    coleta = models.BooleanField(default=False, verbose_name="Coleta")
 
     # Contato
     nome_contato = models.CharField(max_length=100, blank=True, null=True)

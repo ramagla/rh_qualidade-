@@ -3,7 +3,7 @@ from Funcionario.models.departamentos import Departamentos
 from django.utils import timezone
 
 class CentroDeCusto(models.Model):
-    departamento = models.OneToOneField(Departamentos, on_delete=models.CASCADE, related_name="centro_custo")
+    nome = models.CharField("Centro de Custo", max_length=100)
     custo_atual = models.DecimalField("Custo do Setor", max_digits=12, decimal_places=2)
     vigencia = models.DateField("Início da Vigência")
     observacao = models.TextField("Observação", blank=True, null=True)  # ← CAMPO ADICIONADO
@@ -12,11 +12,11 @@ class CentroDeCusto(models.Model):
     class Meta:
         verbose_name = "Centro de Custo"
         verbose_name_plural = "Centros de Custo"
-        ordering = ["departamento"]
-
+        ordering = ["nome"] 
+        
     def __str__(self):
-        return f"{self.departamento.nome} – R$ {self.custo_atual}"
-    
+        return f"{self.nome} – R$ {self.custo_atual}"
+
     @property
     def custo_vigente(self):
         hoje = timezone.now().date()

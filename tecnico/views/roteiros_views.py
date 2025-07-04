@@ -105,12 +105,9 @@ def cadastrar_roteiro(request):
         .values("id", "codigo", "nome")
 )
     setores_data = list(
-        CentroDeCusto.objects
-            .select_related("departamento")
-            .order_by("departamento__nome")
-            .annotate(nome=F("departamento__nome"))
-            .values("id", "nome")
+        CentroDeCusto.objects.order_by("nome").values("id", "nome")
     )
+
 
     ferramentas_data = list(
         Ferramenta.objects
@@ -185,11 +182,10 @@ def editar_roteiro(request, pk):
     )
     setores_data = list(
         CentroDeCusto.objects
-        .select_related("departamento")
-        .annotate(nome=F("departamento__nome"))
-        .order_by("departamento__nome")
-        .values("id", "nome")
+            .order_by("nome")
+            .values("id", "nome")
     )
+
     ferramentas_data = list(
         Ferramenta.objects.order_by("codigo").values("id", "codigo", "descricao")
     )
