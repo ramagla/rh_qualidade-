@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
-{% load filters_gerais %}
+{% load bloco_filters %}
 
 {% block title %}{{ titulo }}{% endblock %}
 
@@ -13,7 +13,6 @@
 
   <form method="post" class="row g-3">
     {% csrf_token %}
-
     {% if messages %}
       {% for message in messages %}
         <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
@@ -32,7 +31,6 @@
           {% for error in form.non_field_errors %}
             <li><strong>Erro geral:</strong> {{ error }}</li>
           {% endfor %}
-
           {% for subform in formset %}
             {% for field, errors in subform.errors.items %}
               {% for error in errors %}
@@ -49,8 +47,9 @@
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingBloco">
           <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBloco" aria-expanded="true">
-            <i class="bi bi-box-fill me-2"></i> Dados do Bloco
+            <i class="bi bi-card-list me-2"></i> Dados do Bloco
           </button>
+          
         </h2>
         <div id="collapseBloco" class="accordion-collapse collapse show" data-bs-parent="#accordionBloco">
           <div class="accordion-body row g-3">
@@ -63,48 +62,113 @@
       </div>
 
       <!-- Itens do Bloco -->
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="headingItens">
-          <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseItens">
-            <i class="bi bi-list-ul me-2"></i> Itens do Bloco
-          </button>
-        </h2>
-        <div id="collapseItens" class="accordion-collapse collapse" data-bs-parent="#accordionBloco">
-          <div class="accordion-body row g-3">
-            {{ formset.management_form }}
-            {% for subform in formset %}
-              <div class="row g-2 border-bottom pb-2 mb-2">
-                {{ subform.id }}
-                <div class="col-md-3">
-                  <label class="form-label">Nº Item</label>
-                  {{ subform.numero_item|add_class:"form-control" }}
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label">Medidas</label>
-                  {{ subform.medidas|add_class:"form-control" }}
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Material</label>
-                  {{ subform.material|add_class:"form-select select2" }}
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Peso Aço</label>
-                  {{ subform.peso_aco|add_class:"form-control" }}
-                </div>
-                <div class="col-md-1">
-                  <label class="form-label d-block">Excluir</label>
-                  {{ subform.DELETE }}
-                </div>
-              </div>
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingItens">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseItens">
+      <i class="bi bi-list-ul me-2"></i> Itens do Bloco
+    </button>
+  </h2>
+  <div id="collapseItens" class="accordion-collapse collapse" data-bs-parent="#accordionBloco">
+    <div class="accordion-body row g-3">
+      {{ formset.management_form }}
+      {% if formset.non_form_errors %}
+        <div class="alert alert-danger">
+          <ul>
+            {% for error in formset.non_form_errors %}
+              <li>{{ error }}</li>
             {% endfor %}
-          </div>
+          </ul>
         </div>
-      </div>
-    </div>
+      {% endif %}
+            {% for subform in formset %}
+        <div class="row g-2 border-bottom pb-2 mb-2 bloco-item-row">
+          {{ subform.id }}
+          <div class="col-md-2">
+            <label class="form-label"><i class="bi bi-hash me-1"></i> Nº Item</label>
+            {{ subform.numero_item|add_class:"form-control" }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label"><i class="bi bi-fullscreen me-1"></i> Medidas</label>
+            {{ subform.medidas|add_class:"form-control" }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label"><i class="bi bi-diagram-3 me-1"></i> Material</label>
+            {{ subform.material|add_class:"form-select select2" }}
+          </div>
+          <div class="col-md-1">
+            <label class="form-label"><i class="bi bi-calculator me-1"></i> Peso Aço</label>
+            {{ subform.peso_aco|add_class:"form-control" }}
+          </div>
+          
+          <div class="col-md-2">
+            <label class="form-label"><i class="bi bi-box me-1"></i> Volume</label>
+            {{ subform.volume|add_class:"form-control js-volume"|attr:"readonly:readonly" }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label"><i class="bi bi-graph-up-arrow me-1"></i> Peso Total</label>
+            {{ subform.peso_total|add_class:"form-control js-peso-total"|attr:"readonly:readonly" }}
+          </div>
+          
+             
+         
+        </div>
+      {% endfor %}
+    </div> <!-- fecha accordion-body -->
+  </div> <!-- fecha collapseItens -->
+</div> <!-- fecha accordion-item -->
 
-    <div class="col-12 text-center mt-4">
-      {% include 'partials/global/_botoes_salvar_cancelar.html' with url_voltar='lista_blocos' %}
-    </div>
-  </form>
+<div class="col-12 text-center mt-4">
+  {% include 'partials/global/_botoes_salvar_cancelar.html' with url_voltar='lista_blocos' %}
 </div>
+
+
+
+
+
+
+<script>
+  function calcularCampos(row) {
+    const pesoAco = parseFloat(row.find('input[name$="peso_aco"]').val()?.replace(',', '.') || 0);
+    const medidas = row.find('input[name$="medidas"]').val();
+    let volume = 0;
+
+    if (medidas) {
+      const partes = medidas.split('x').map(p => parseFloat(p.replace(',', '.')));
+      if (partes.length === 3 && partes.every(n => !isNaN(n))) {
+        volume = partes[0] * partes[1] * partes[2] / 1000000;
+      }
+    }
+
+    const pesoTotal = volume * pesoAco;
+    row.find('.js-volume').val(volume.toFixed(3).replace('.', ','));
+    row.find('.js-peso-total').val(pesoTotal.toFixed(3).replace('.', ','));
+
+  }
+
+  (function($) {
+    // Recalcular ao digitar nos campos relevantes
+    $(document).on('input', 'input[name$="medidas"], input[name$="peso_aco"]', function() {
+      const row = $(this).closest('.bloco-item-row');
+      calcularCampos(row);
+    });
+
+    // Marcar item como removido
+    $(document).on('click', '.btn-remover-item', function() {
+      const row = $(this).closest('.bloco-item-row');
+      row.find('input[type=hidden][name$="-DELETE"]').val('on');
+      row.hide();
+    });
+
+    // Recalcular todos os itens ao carregar
+    $(document).ready(function() {
+      $('.bloco-item-row').each(function() {
+        calcularCampos($(this));
+      });
+    });
+  })(jQuery);
+</script>
+
+
 {% endblock %}
+
+

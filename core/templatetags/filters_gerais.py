@@ -364,13 +364,4 @@ def menor_que(data1, data2_str):
         return False
     
 
-@register.filter(name='peso_total_blocos')
-def peso_total_blocos(itens):
-    """
-    Soma o peso_total de todos os itens passados (QuerySet ou lista).
-    """
-    try:
-        return sum(getattr(i, "peso_total", 0) or 0 for i in itens)
-    except Exception:
-        return 0
 

@@ -2,6 +2,7 @@
 {% block title %}Blocos Cadastrados{% endblock %}
 {% load custom_filters %}
 {% load comercial_formatos %}
+{% load bloco_filters %}
 
 {% block content %}
 {% include "partials/global/_styles_componentes.html" %}
@@ -34,8 +35,26 @@
 
         <div class="col-12 filtro-wrapper">
           <label for="numero" class="form-label"><i class="bi bi-123 me-1"></i> Número do Bloco</label>
-          <input type="text" name="numero" id="numero" class="form-control" placeholder="Ex: Bloco 1" value="{{ request.GET.numero }}">
+          <select name="numero" id="numero" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            {% for bloco in blocos_distintos %}
+              <option value="{{ bloco.numero }}" {% if request.GET.numero == bloco.numero %}selected{% endif %}>
+                {{ bloco.numero }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
+        
+
+        <div class="col-12 filtro-wrapper">
+          <label for="material" class="form-label"><i class="bi bi-box"></i> Material</label>
+          <select name="material" id="material" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            <option value="SAE 1020" {% if request.GET.material == "SAE 1020" %}selected{% endif %}>SAE 1020</option>
+            <option value="VND" {% if request.GET.material == "VND" %}selected{% endif %}>VND</option>
+          </select>
+        </div>
+        
 
         <div class="col-12 mt-3">
           {% include "partials/global/_botao_filtrar.html" %}
@@ -46,11 +65,14 @@
   </div>
 
   <!-- Cards Indicadores -->
-  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
-    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Blocos Cadastrados" valor=total_blocos subtitulo="Total Geral" icone="bi-boxes" %}
-    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Peso Total" valor=peso_total_geral|floatformat:2 subtitulo="em Kg" icone="bi-weight" %}
-    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Itens Cadastrados" valor=total_itens subtitulo="Total de Itens" icone="bi-list-check" %}
+  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">   
+  
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Peso SAE 1020" valor=total_sae subtitulo="em Kg" icone="bi-box" %}
+    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Peso VND" valor=total_vnd subtitulo="em Kg" icone="bi-box" %}
+    {% include "partials/global/_card_indicador.html" with cor="dark" titulo="Peso Médio" valor=peso_medio|floatformat:2 subtitulo="por bloco (Kg)" icone="bi-speedometer2" %}
+    
   </div>
+  
 
   <!-- Tabela -->
   <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i> 📄 Lista de Blocos</h5>
@@ -61,7 +83,8 @@
       <thead class="table-light">
         <tr>
           <th><i class="bi bi-hash me-1"></i> Nº do Bloco</th>
-          <th><i class="bi bi-list-ol me-1"></i> Qtde de Itens</th>
+          <th><i class="bi bi-box me-1"></i> Peso VND (kg)</th>
+          <th><i class="bi bi-box me-1"></i> Peso SAE 1020 (kg)</th>
           <th><i class="bi bi-weight me-1"></i> Peso Total (kg)</th>
           <th><i class="bi bi-gear me-1"></i> Ações</th>
         </tr>
@@ -70,11 +93,17 @@
         {% for bloco in page_obj %}
         <tr>
           <td>{{ bloco.numero }}</td>
-          <td>{{ bloco.itens.count }}</td>
-          <td>{{ bloco.itens.all|peso_total_blocos|floatformat:2 }}</td>
+          <td>
+            {{ bloco.itens.all|peso_material:"VND"|formato_brasileiro }}
+          </td>
+          <td>
+            {{ bloco.itens.all|peso_material:"SAE 1020"|formato_brasileiro }}
+          </td>
+          
+          <td>{{ bloco.itens.all|peso_total_blocos|formato_brasileiro }}</td>
           <td>
             <div class="d-inline-flex gap-1 justify-content-center">
-              {% include "partials/global/_botao_visualizar.html" with objeto=bloco url_visualizar="visualizar_bloco" label="bloco" %}
+              {% comment %} {% include "partials/global/_botao_visualizar.html" with objeto=bloco url_visualizar="visualizar_bloco" label="bloco" %} {% endcomment %}
               {% include "partials/global/_botao_editar.html" with objeto=bloco url_editar="editar_bloco" label="bloco" %}
               {% include "partials/global/_botao_excluir.html" with objeto=bloco url_excluir="excluir_bloco" label="bloco" %}
               {% include "partials/global/_modal_exclusao.html" with objeto=bloco url_excluir="excluir_bloco" %}

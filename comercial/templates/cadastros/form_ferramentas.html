@@ -120,95 +120,118 @@
           
 <!-- Materiais Calculados -->
 <div class="accordion-item">
-    <h2 class="accordion-header" id="headingMateriaisCalc">
-      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMateriaisCalc">
-        <i class="bi bi-cube me-2"></i> Materiais Calculados
-      </button>
-    </h2>
-    <div id="collapseMateriaisCalc" class="accordion-collapse collapse" data-bs-parent="#accordionFerramenta">
-      <div class="accordion-body row g-3">
-  
-        <div class="col-md-4">
-          <label class="form-label"><i class="bi bi-boxes me-1"></i> Bloco Base:</label>
-          {{ form.bloco|add_class:"form-select select2" }}
-        </div>
-  
-        <div class="col-md-2">
-          <label class="form-label"><i class="bi bi-signpost-2 me-1"></i> Passo:</label>
-          {{ form.passo|add_class:"form-control" }}
-        </div>
-        <div class="col-md-2">
-          <label class="form-label"><i class="bi bi-arrows-expand me-1"></i> Largura Tira:</label>
-          {{ form.largura_tira|add_class:"form-control" }}
-        </div>
-        <div class="col-md-2">
-          <label class="form-label"><i class="bi bi-collection me-1"></i> Matrizes:</label>
-          {{ form.num_matrizes|add_class:"form-control" }}
-        </div>
-        <div class="col-md-2">
-          <label class="form-label"><i class="bi bi-record-circle me-1"></i> Punções:</label>
-          {{ form.num_puncoes|add_class:"form-control" }}
-        </div>
-  
-        <div class="col-md-2">
-          <label class="form-label"><i class="bi bi-truck me-1"></i> Carros:</label>
-          {{ form.num_carros|add_class:"form-control" }}
-        </div>
-        <div class="col-md-2">
-          <label class="form-label"><i class="bi bi-gear-wide-connected me-1"></i> Formadores:</label>
-          {{ form.num_formadores|add_class:"form-control" }}
-        </div>
-  
-        <div class="col-12"><hr></div>
-  
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Matriz (SAE D2):</label>
-          <div class="input-group">
-            <input id="kg_matriz" class="form-control" readonly>
-            <span class="input-group-text">Kg</span>
-            {{ form.valor_unitario_matriz|add_class:"form-control" }}
-          </div>
-        </div>
-  
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Punção (SAE D2):</label>
-          <div class="input-group">
-            <input id="kg_puncao" class="form-control" readonly>
-            <span class="input-group-text">Kg</span>
-            {{ form.valor_unitario_puncao|add_class:"form-control" }}
-          </div>
-        </div>
-  
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Flange (SAE P20):</label>
-          <div class="input-group">
-            <input id="kg_flange" class="form-control" readonly>
-            <span class="input-group-text">Kg</span>
-            {{ form.valor_unitario_flange|add_class:"form-control" }}
-          </div>
-        </div>
-  
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Carros (SAE 1020):</label>
-          <div class="input-group">
-            <input id="kg_carros" class="form-control" readonly>
-            <span class="input-group-text">Kg</span>
-            {{ form.valor_unitario_carros|add_class:"form-control" }}
-          </div>
-        </div>
-  
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Formadores (SAE D2):</label>
-          <div class="input-group">
-            <input id="kg_formadores" class="form-control" readonly>
-            <span class="input-group-text">Kg</span>
-            {{ form.valor_unitario_formadores|add_class:"form-control" }}
-          </div>
-        </div>
-  
+  <h2 class="accordion-header" id="headingMateriaisCalc">
+    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMateriaisCalc">
+      <i class="bi bi-calculator me-2"></i> Materiais Calculados
+    </button>
+    
+  </h2>
+  <div id="collapseMateriaisCalc" class="accordion-collapse collapse" data-bs-parent="#accordionFerramenta">
+    <div class="accordion-body row g-3">
+
+      <div class="col-md-4">
+        <label class="form-label"><i class="bi bi-boxes me-1"></i> Bloco Base:</label>
+        {{ form.bloco|add_class:"form-select select2" }}
       </div>
+
+      <div class="col-md-2">
+        <label class="form-label"><i class="bi bi-signpost-2 me-1"></i> Passo:</label>
+        {{ form.passo|add_class:"form-control" }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label"><i class="bi bi-arrows-expand me-1"></i> Largura Tira:</label>
+        {{ form.largura_tira|add_class:"form-control" }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label"><i class="bi bi-collection me-1"></i> Matrizes:</label>
+        {{ form.num_matrizes|add_class:"form-control" }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label"><i class="bi bi-record-circle me-1"></i> Punções:</label>
+        {{ form.num_puncoes|add_class:"form-control" }}
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label"><i class="bi bi-truck me-1"></i> Carros:</label>
+        {{ form.num_carros|add_class:"form-control" }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label"><i class="bi bi-gear-wide-connected me-1"></i> Formadores:</label>
+        {{ form.num_formadores|add_class:"form-control" }}
+      </div>
+
+      <div class="col-12"><hr></div>
+
+      <div class="col-md-4">
+        <label class="form-label fw-bold"><i class="bi bi-rulers me-1"></i> Matriz (SAE D2):</label>
+        <div class="input-group">
+          <input id="kg_matriz" class="form-control" readonly>
+          <span class="input-group-text">Kg</span>
+          {{ form.valor_unitario_matriz|add_class:"form-control" }}
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label fw-bold"><i class="bi bi-nut me-1"></i> Punção (SAE D2):</label>
+        <div class="input-group">
+          <input id="kg_puncao" class="form-control" readonly>
+          <span class="input-group-text">Kg</span>
+          {{ form.valor_unitario_puncao|add_class:"form-control" }}
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label fw-bold"><i class="bi bi-gear-wide me-1"></i> Flange (SAE P20):</label>
+        <div class="input-group">
+          <input id="kg_flange" class="form-control" readonly>
+          <span class="input-group-text">Kg</span>
+          {{ form.valor_unitario_flange|add_class:"form-control" }}
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label fw-bold"><i class="bi bi-truck me-1"></i> Carros (SAE 1020):</label>
+        <div class="input-group">
+          <input id="kg_carros" class="form-control" readonly>
+          <span class="input-group-text">Kg</span>
+          {{ form.valor_unitario_carros|add_class:"form-control" }}
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label fw-bold"><i class="bi bi-tools me-1"></i> Formadores (SAE D2):</label>
+        <div class="input-group">
+          <input id="kg_formadores" class="form-control" readonly>
+          <span class="input-group-text">Kg</span>
+          {{ form.valor_unitario_formadores|add_class:"form-control" }}
+        </div>
+      </div>
+
+      <!-- Novo: Materiais do Bloco Selecionado -->
+      <div class="col-md-12 mt-4" id="resumoMateriais" style="display: none;">
+        <div class="alert alert-info">
+          <strong>Resumo dos Materiais do Bloco:</strong>
+          <div class="row mt-2">
+            <div class="col-md-6">
+              <label><i class="bi bi-box"></i> SAE 1020 (Kg):</label>
+              <input type="text" id="peso_sae" class="form-control" readonly>
+              <label class="mt-2">Valor Unitário (R$/Kg):</label>
+              {{ form.valor_unitario_carros|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6">
+              <label><i class="bi bi-box"></i> VND (Kg):</label>
+              <input type="text" id="peso_vnd" class="form-control" readonly>
+              <label class="mt-2">Valor Unitário (R$/Kg):</label>
+              {{ form.valor_unitario_formadores|add_class:"form-control" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
+</div>
+
   
   
 
@@ -228,8 +251,8 @@
                 {{ mo_form.id }}
 
                 <div class="col-md-4">
-                    <label class="form-label"><i class="bi bi-person-vcard me-1"></i> Tipo:</label>
-                    {{ mo_form.tipo|add_class:"form-select" }}
+                  <label class="form-label"><i class="bi bi-person-workspace me-1"></i> Tipo:</label>
+                  {{ mo_form.tipo|add_class:"form-select" }}
                 </div>
                 <div class="col-md-2">
                     <label class="form-label"><i class="bi bi-clock me-1"></i> Horas:</label>
@@ -427,6 +450,50 @@
           calcularMateriais(); // inicial
         });
         </script>
+        <script>
+          document.addEventListener("DOMContentLoaded", function () {
+            const blocoSelect = document.querySelector('select[name="bloco"]');
+            const pesoSAEInput = document.getElementById("peso_sae");
+            const pesoVNDInput = document.getElementById("peso_vnd");
+            const resumoDiv = document.getElementById("resumoMateriais");
         
+            async function atualizarMateriaisDoBloco(blocoId) {
+              if (!blocoId) {
+                resumoDiv.style.display = "none";
+                return;
+              }
+        
+              try {
+                const response = await fetch(`/comercial/ajax/materiais-do-bloco/${blocoId}/`);
+                const data = await response.json();
+        
+                if (data.sucesso) {
+                  pesoSAEInput.value = data.sae_kg.toFixed(3);
+                  pesoVNDInput.value = data.vnd_kg.toFixed(3);
+                  resumoDiv.style.display = "block";
+                } else {
+                  alert("Não foi possível carregar os materiais.");
+                  resumoDiv.style.display = "none";
+                }
+              } catch (error) {
+                console.error("Erro ao buscar materiais do bloco:", error);
+                resumoDiv.style.display = "none";
+              }
+            }
+        
+            // 🔁 Compatível com select2
+            $(blocoSelect).on("select2:select", function (e) {
+              const blocoId = e.params.data.id;
+              atualizarMateriaisDoBloco(blocoId);
+            });
+        
+            // Para carregamento inicial (ex: edição)
+            if (blocoSelect.value) {
+              atualizarMateriaisDoBloco(blocoSelect.value);
+            }
+          });
+        </script>
+        
+          
     
 {% endblock %}

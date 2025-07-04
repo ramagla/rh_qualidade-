@@ -1,5 +1,6 @@
 from django import template
 from babel.numbers import format_currency
+from decimal import Decimal, InvalidOperation
 
 register = template.Library()
 
@@ -43,3 +44,10 @@ def dict_get(form, key):
         return form[key]
     except (KeyError, AttributeError, TypeError):
         return None
+    
+@register.filter(name='mul')
+def multiply(value, arg):
+    try:
+        return Decimal(value or 0) * Decimal(arg or 0)
+    except (ValueError, InvalidOperation):
+        return 0

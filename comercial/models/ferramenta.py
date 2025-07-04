@@ -1,12 +1,21 @@
 from django.db import models
 from comercial.models import Cliente
 import uuid
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 
 class BlocoFerramenta(models.Model):
     numero = models.CharField("Bloco", max_length=50)
 
+    @property
+    def peso_total(self) -> Decimal:
+        # soma peso_total de cada item; use Decimal para evitar float impreciso
+        return sum(Decimal(str(item.peso_total or 0)) for item in self.itens.all())
+
+
     def __str__(self):
-        return f"Bloco {self.numero}"
+        return self.numero
+
     
 class Ferramenta(models.Model):
     TIPO_CHOICES = [
@@ -48,58 +57,154 @@ class Ferramenta(models.Model):
     valor_unitario_carros = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     valor_unitario_formadores = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
+    # campos a adicionar em Ferramenta
+    peso_sae_kg = models.DecimalField("Peso SAE 1020 (Kg)", max_digits=10, decimal_places=3, null=True, blank=True)
+    valor_unitario_sae = models.DecimalField("Valor Unitário SAE 1020 (R$/Kg)", max_digits=10, decimal_places=2, null=True, blank=True)
+
+    peso_vnd_kg = models.DecimalField("Peso VND (Kg)", max_digits=10, decimal_places=3, null=True, blank=True)
+    valor_unitario_vnd = models.DecimalField("Valor Unitário VND (R$/Kg)", max_digits=10, decimal_places=2, null=True, blank=True)
+
+
 
     def __str__(self):
-        return f"{self.codigo} - {self.descricao}"
+        return f"{self.codigo} - {self.descricao}" if self.codigo else "Ferramenta sem código"
 
     # Cálculo automático de materiais (em Kg)
     @property
     def kg_matriz(self):
         if self.largura_tira and self.passo and self.num_matrizes:
-            return ((self.largura_tira + 20) * (self.passo + 20) * 19 * 7.86 * self.num_matrizes) / 1_000_000
+            return (
+                (self.largura_tira + Decimal("20")) *
+                (self.passo + Decimal("20")) *
+                Decimal("19") *
+                Decimal("7.86") *
+                self.num_matrizes
+            ) / Decimal("1000000")
         return None
 
     @property
     def kg_puncao(self):
         if self.largura_tira and self.passo and self.num_puncoes:
-            return ((self.largura_tira + 5) * (self.passo + 5) * 50 * 7.86 * self.num_puncoes) / 1_000_000
+            return (
+                (self.largura_tira + Decimal("5")) *
+                (self.passo + Decimal("5")) *
+                Decimal("50") *
+                Decimal("7.86") *
+                self.num_puncoes
+            ) / Decimal("1000000")
         return None
+
 
     @property
     def kg_flange(self):
         if self.largura_tira:
-            return (200 * 200 * (33 + self.largura_tira) * 7.86) / 1_000_000
+            return (
+                Decimal("200") *
+                Decimal("200") *
+                (Decimal("33") + self.largura_tira) *
+                Decimal("7.86")
+            ) / Decimal("1000000")
         return None
+
 
     @property
     def kg_carros(self):
         if self.num_carros:
-            return 2.5 * self.num_carros
+            return Decimal("2.5") * self.num_carros
         return None
+
+
+
 
     @property
     def kg_formadores(self):
         if self.largura_tira and self.num_formadores:
-            return (self.largura_tira * self.num_formadores * 25 * 150) / 1_000_000
+            return (
+                self.largura_tira *
+                self.num_formadores *
+                Decimal("25") *
+                Decimal("150")
+            ) / Decimal("1000000")
         return None
+
+
+    from decimal import Decimal
 
     @property
     def valor_total(self):
-        total = 0
+        total = Decimal(0)
+
+        # Materiais
+        if self.valor_unitario_sae and (self.peso_sae_kg or self.kg_carros):
+            total += self.valor_unitario_sae * ((self.peso_sae_kg or 0) + (self.kg_carros or 0))
+
+        if self.valor_unitario_vnd and self.peso_vnd_kg:
+            total += self.valor_unitario_vnd * self.peso_vnd_kg
+
+        if self.valor_unitario_matriz and self.kg_matriz:
+            total += self.valor_unitario_matriz * self.kg_matriz
+
+        if self.valor_unitario_puncao and self.kg_puncao:
+            total += self.valor_unitario_puncao * self.kg_puncao
+
+        if self.valor_unitario_formadores and self.kg_formadores:
+            total += self.valor_unitario_formadores * self.kg_formadores
+
+        if self.valor_unitario_flange and self.kg_flange:
+            total += self.valor_unitario_flange * self.kg_flange
+
+        # Serviços
         for s in self.servicos.all():
-            if s.valor_unitario:
+            if s.valor_unitario is not None:
                 total += s.quantidade * s.valor_unitario
+
+        # Mão de obra
         for mo in self.mao_obra.all():
             if mo.valor_hora:
                 total += mo.horas * mo.valor_hora
+
         return total
+
+
 
     @property
     def status_cotacao(self):
         servicos_ok = all(s.valor_unitario is not None for s in self.servicos.all())
-        if not self.servicos.exists():
+        materiais_ok = (self.valor_unitario_carros or 0) > 0 or (self.valor_unitario_formadores or 0) > 0
+
+        if not self.servicos.exists() and not materiais_ok:
             return "Aguardando Cotação"
-        return "OK" if servicos_ok else "Aguardando Cotação"
+
+        if not servicos_ok or not materiais_ok:
+            return "Aguardando Cotação"
+
+        return "OK"
+    
+    @property
+    def pode_enviar_cotacao(self):
+        materiais = [
+            self.valor_unitario_matriz,
+            self.valor_unitario_puncao,
+            self.valor_unitario_flange,
+            self.valor_unitario_carros,
+            self.valor_unitario_formadores,
+            self.valor_unitario_sae,
+            self.valor_unitario_vnd,
+        ]
+
+        if any(v is None for v in materiais):
+            return True
+
+        if self.servicos.filter(valor_unitario__isnull=True).exists():
+            return True
+
+        return False
+
+
+
+
+
+
 
 
 
@@ -112,20 +217,28 @@ class ItemBloco(models.Model):
     material = models.CharField("Material", max_length=50, choices=[("SAE 1020", "SAE 1020"), ("VND", "VND")])
     peso_aco = models.DecimalField("Peso Aço", max_digits=5, decimal_places=2, default=7.86)
 
-    @property
-    def volume(self):
+    volume = models.DecimalField("Volume", max_digits=10, decimal_places=2, null=True, blank=True)
+    peso_total = models.DecimalField("Peso Total", max_digits=10, decimal_places=2, null=True, blank=True)
+
+    def calcular_volume_e_peso(self):
         try:
             comp, larg, alt = [float(m.replace(",", ".")) for m in self.medidas.lower().split("x")]
-            return comp * larg * alt
-        except Exception:
-            return 0
+            volume = (comp * larg * alt) / 1000000  # mm³ → cm³ → Kg (1.000.000 mm³ = 1 L)
+            peso = volume * float(self.peso_aco)  # Peso = volume * densidade (7.86)
 
-    @property
-    def peso_total(self):
-        return (self.volume * self.peso_aco) / 1_000_000
+            self.volume = round(volume, 2)
+            self.peso_total = round(peso, 2)
+        except Exception:
+            self.volume = None
+            self.peso_total = None
+
+    def save(self, *args, **kwargs):
+        self.calcular_volume_e_peso()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.numero_item} - {self.material}"
+
 
 
 class MaoDeObraFerramenta(models.Model):

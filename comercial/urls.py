@@ -38,6 +38,7 @@ urlpatterns = [
     path("ferramentas/blocos/<int:pk>/editar/", ferramenta_views.editar_bloco, name="editar_bloco"),
     path("ferramentas/blocos/<int:pk>/excluir/", ferramenta_views.excluir_bloco, name="excluir_bloco"),
     path("ajax/valor_hora_centro_custo/", ferramenta_views.ajax_valor_hora_centro_custo, name="ajax_valor_hora_centro_custo"),
+    path("ajax/materiais-do-bloco/<int:bloco_id>/", ferramenta_views.ajax_materiais_do_bloco, name="ajax_materiais_do_bloco"),
 
 
     # Centro de Custo

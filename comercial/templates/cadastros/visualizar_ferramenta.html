@@ -20,7 +20,7 @@
     <div class="col-8 text-center">
       <h4 class="mb-0">ANÁLISE DE FERRAMENTAL</h4>
       <small>
-        Código da Peça: <strong>{{ ferramenta.codigo }}</strong><br>
+        Código: <strong>{{ ferramenta.codigo }}</strong><br>
         Tipo: <strong>{{ ferramenta.get_tipo_display }}</strong><br>
         Vida útil: <strong>{{ ferramenta.vida_util_em_pecas|intcomma }}</strong> peças
       </small>
@@ -33,23 +33,27 @@
     <tr><th>Cliente</th><td>{{ ferramenta.proprietario }}</td></tr>
   </table>
 
-  <!-- Materiais -->
-  <h5 class="text-primary mt-4"><i class="bi bi-box me-1"></i> Materiais</h5>
+  <!-- Materiais Calculados -->
+  <h5 class="text-primary mt-4"><i class="bi bi-boxes me-1"></i> Materiais Calculados</h5>
   <table class="table table-bordered table-sm text-center">
     <thead class="table-light">
-      <tr><th>Material</th><th>Unid.</th><th>Qtd</th><th>Val. Unitário</th><th>Total</th></tr>
+      <tr>
+        <th>Material</th>
+        <th>Peso (Kg)</th>
+        <th>Val. Unitário</th>
+        <th>Total</th>
+      </tr>
     </thead>
     <tbody>
-      {% for m in materiais %}
+      {% for mat in materiais %}
         <tr>
-          <td>{{ m.nome_material }}</td>
-          <td>{{ m.unidade_medida }}</td>
-          <td>{{ m.quantidade }}</td>
-          <td>{{ m.valor_unitario|brl }}</td>
-          <td>{{ m.valor_total|brl }}</td>
+          <td>{{ mat.nome }}</td>
+          <td>{{ mat.peso|floatformat:3 }}</td>
+          <td>{{ mat.valor_unitario|brl }}</td>
+          <td>{{ mat.total|brl }}</td>
         </tr>
       {% empty %}
-        <tr><td colspan="5" class="text-muted">Nenhum material informado.</td></tr>
+        <tr><td colspan="4" class="text-muted">Nenhum material calculado.</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -94,68 +98,57 @@
     </tbody>
   </table>
 
+
+  <!-- Serviços Terceiros -->
   <!-- Totais -->
-  <div class="mt-4 totais-impressao-forcada">
-    <h5 class="text-success d-flex align-items-center">
-      <i class="bi bi-cash-stack me-2"></i> Totais
-    </h5>
-    <table class="table table-bordered table-sm text-end align-middle">
-      <tbody>
-        <tr>
-          <th class="bg-light text-start">Materiais:</th>
-          <td>{{ total_materiais|brl }}</td>
-        </tr>
-        <tr>
-          <th class="bg-light text-start">Mão de Obra:</th>
-          <td>{{ total_mo|brl }}</td>
-        </tr>
-        <tr>
-          <th class="bg-light text-start">Serviços Terceiros:</th>
-          <td>{{ total_servicos|brl }}</td>
-        </tr>
-        <tr class="table-success fw-bold">
-          <th class="text-start">Total Geral:</th>
-          <td>{{ total_geral|brl }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<h5 class="text-primary mt-4">
+  <i class="bi bi-cash-stack me-1"></i> Totais
+</h5>
+<table class="table table-bordered table-sm text-center">
+  <thead class="table-light">
+    <tr>
+      <th class="text-start">Categoria</th>
+      <th>Valor (R$)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="text-start">Materiais</td>
+      <td>{{ total_materiais|brl }}</td>
+    </tr>
+    <tr>
+      <td class="text-start">Mão de Obra</td>
+      <td>{{ total_mo|brl }}</td>
+    </tr>
+    <tr>
+      <td class="text-start">Serviços</td>
+      <td>{{ total_servicos|brl }}</td>
+    </tr>
+    <tr class="table-success fw-bold">
+      <td class="text-start">Total Geral</td>
+      <td>{{ total_geral|brl }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Observações -->
+<h5 class="text-primary mt-4">
+  <i class="bi bi-journal-text me-1"></i> Observações
+</h5>
+<div class="border rounded p-3 bg-light">
+  {% if ferramenta.observacoes %}
+    {{ ferramenta.observacoes|safe }}
+  {% else %}
+    <span class="text-muted">Nenhuma observação informada.</span>
+  {% endif %}
+</div>
+
+
+
+  
 
   {% include "partials/global/_formulario_rodape.html" with numero_formulario="" %}
 </div>
 
-<!-- Estilo exclusivo para impressão -->
-<style>
-  @media print {
-    .totais-impressao-forcada {
-      display: block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-      position: static !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
 
-    .totais-impressao-forcada table {
-      font-size: 0.9rem !important;
-      color: #000 !important;
-      border: 1px solid #000 !important;
-    }
-
-    .totais-impressao-forcada th,
-    .totais-impressao-forcada td {
-      padding: 4px 8px !important;
-      border: 1px solid #000 !important;
-      color: #000 !important;
-    }
-
-    .totais-impressao-forcada .table-success {
-      background-color: #d1e7dd !important;
-    }
-
-    .totais-impressao-forcada .bg-light {
-      background-color: #f8f9fa !important;
-    }
-  }
-</style>
 {% endblock %}

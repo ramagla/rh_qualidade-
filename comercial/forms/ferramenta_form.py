@@ -1,7 +1,8 @@
 from django import forms
-from django.forms import inlineformset_factory
+from django.forms import BaseInlineFormSet, inlineformset_factory
 from comercial.models import Ferramenta, MaoDeObraFerramenta, ServicoFerramenta
 from django_ckeditor_5.widgets import CKEditor5Widget
+from decimal import Decimal, InvalidOperation
 
 # 🛠️ Formulário principal de ferramenta
 class FerramentaForm(forms.ModelForm):
@@ -29,6 +30,8 @@ class FerramentaForm(forms.ModelForm):
             "num_carros": forms.NumberInput(attrs={"class": "form-control"}),
             "num_formadores": forms.NumberInput(attrs={"class": "form-control"}),
             "bloco": forms.Select(attrs={"class": "form-select select2"}),
+            "valor_unitario_sae": forms.NumberInput(attrs={"class": "form-control"}),
+            "valor_unitario_vnd": forms.NumberInput(attrs={"class": "form-control"}),
 
         }
 
@@ -46,7 +49,10 @@ class MaoDeObraFerramentaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['valor_hora'].required = False
+        # Remova ou corrija essa linha. Se estiver tentando adicionar um formulário a mais, use extra no formset.
+        # Exemplo correto de incremento no momento da definição do formset:
+        # ItemBlocoFormSet = modelformset_factory(ItemBloco, form=ItemBlocoForm, extra=1, can_delete=True)
+
 
 MaoDeObraFormSet = inlineformset_factory(
     Ferramenta,
@@ -85,6 +91,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from comercial.models.ferramenta import BlocoFerramenta, ItemBloco
 
+# 🧱 Formulário do Bloco
 class BlocoForm(forms.ModelForm):
     class Meta:
         model = BlocoFerramenta
@@ -93,10 +100,29 @@ class BlocoForm(forms.ModelForm):
             "numero": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Bloco 1"})
         }
 
+
+# 🧩 Formulário dos Itens do Bloco
+# 🧩 Formulário dos Itens do Bloco
 class ItemBlocoForm(forms.ModelForm):
+    volume = forms.DecimalField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control js-volume',
+            'readonly': 'readonly'
+        })
+    )
+
+    peso_total = forms.DecimalField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control js-peso-total',
+            'readonly': 'readonly'
+        })
+    )
+
     class Meta:
         model = ItemBloco
-        exclude = ("bloco",)
+        exclude = ("bloco", "volume", "peso_total")
         widgets = {
             "numero_item": forms.TextInput(attrs={"class": "form-control"}),
             "medidas": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: 25,4x94x165"}),
@@ -104,10 +130,44 @@ class ItemBlocoForm(forms.ModelForm):
             "peso_aco": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # ✅ Corrige vírgulas para ponto ANTES da validação
+        if self.data:
+            self.data = self.data.copy()
+            for name in self.fields:
+                if "volume" in name or "peso_total" in name:
+                    key = self.add_prefix(name)
+                    if key in self.data:
+                        self.data[key] = self.data[key].replace(",", ".")
+
+
+
+
+# 🧠 Formset base personalizado: injeta 7 linhas somente no cadastro
+class ItemBlocoBaseFormSet(BaseInlineFormSet):
+    def __init__(self, *args, **kwargs):
+        # Informa que vamos tratar o número total de formulários manualmente
+        super().__init__(*args, **kwargs)
+
+        # Só adiciona formulários extras se for cadastro (sem itens ainda)
+        if not self.instance.pk and self.total_form_count() < 7:
+            extras_necessarios = 7 - self.total_form_count()
+            for i in range(extras_necessarios):
+                 self.forms.append(self._construct_form(self.total_form_count() + i))
+
+
+
+
+
+# 🧾 Inline Formset
 ItemBlocoFormSet = inlineformset_factory(
     BlocoFerramenta,
     ItemBloco,
     form=ItemBlocoForm,
-    extra=1,
+    formset=ItemBlocoBaseFormSet,  # Usa a classe customizada
+    extra=0,
     can_delete=True
 )
+

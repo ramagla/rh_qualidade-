@@ -420,3 +420,10 @@ def formatar_op(numero_op):
         return ""
     op = str(numero_op).zfill(6)  # Garante 6 dígitos com zeros à esquerda
     return f"{op[:3]}.{op[3:]}"
+
+
+
+
+@register.filter
+def get_attribute(obj, attr_name):
+    return getattr(obj, attr_name, "")

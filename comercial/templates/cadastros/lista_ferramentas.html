@@ -20,9 +20,10 @@
   {% include "partials/global/_botao_filtros_offcanvas.html" %}
   
   {% if request.user|has_permission:"comercial.view_blocoferramenta" %}
-  <a href="{% url 'lista_blocos' %}" class="btn btn-outline-secondary d-inline-flex align-items-center">
+  <a href="{% url 'lista_blocos' %}" class="btn btn-acao-personalizado d-inline-flex align-items-center">
     <i class="bi bi-boxes me-2" aria-hidden="true"></i> Blocos
   </a>
+  
   {% endif %}
 
   {% if request.user|has_permission:"comercial.add_ferramenta" %}
@@ -114,48 +115,47 @@
             {% endif %}
           </td>
           <td>{{ ferramenta.valor_total|brl }}</td>
-
-<td>
-  {% if ferramenta.status_cotacao == "OK" %}
-    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> OK</span>
-  {% else %}
-    <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i> Aguardando</span>
-  {% endif %}
-</td>
-
-<td>
-  <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
-    {% if request.user|has_permission:"comercial.view_ferramenta" and ferramenta.status_cotacao != "OK" %}
+          <td>
+            {% if ferramenta.status_cotacao == "OK" %}
+              <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> OK</span>
+            {% else %}
+              <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i> Aguardando</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+      
+              {% if ferramenta.status_cotacao == "Aguardando Cotação" %}
   <a href="{% url 'enviar_cotacao_ferramenta' ferramenta.pk %}" class="btn btn-sm btn-secondary mt-1">
     <i class="bi bi-send"></i> Enviar
   </a>
 {% endif %}
 
+              
+            
 
-
-    {% if request.user|has_permission:"comercial.view_ferramenta" %}
-      {% include "partials/global/_botao_visualizar.html" with objeto=ferramenta url_visualizar="visualizar_ferramenta" label="ferramenta" %}
-    {% endif %}
-
-    
-
-    {% if request.user|has_permission:"comercial.change_ferramenta" %}
-      {% include "partials/global/_botao_editar.html" with objeto=ferramenta url_editar="editar_ferramenta" label="ferramenta" %}
-    {% endif %}
-
-    {% if request.user|has_permission:"comercial.delete_ferramenta" %}
-      {% include "partials/global/_botao_excluir.html" with objeto=ferramenta url_excluir="excluir_ferramenta" label="ferramenta" %}
-      {% include "partials/global/_modal_exclusao.html" with objeto=ferramenta url_excluir="excluir_ferramenta" %}
-    {% endif %}
-
-  </div>
-</td>
-
+      
+              {% if request.user|has_permission:"comercial.view_ferramenta" %}
+                {% include "partials/global/_botao_visualizar.html" with objeto=ferramenta url_visualizar="visualizar_ferramenta" label="ferramenta" %}
+              {% endif %}
+      
+              {% if request.user|has_permission:"comercial.change_ferramenta" %}
+                {% include "partials/global/_botao_editar.html" with objeto=ferramenta url_editar="editar_ferramenta" label="ferramenta" %}
+              {% endif %}
+      
+              {% if request.user|has_permission:"comercial.delete_ferramenta" %}
+                {% include "partials/global/_botao_excluir.html" with objeto=ferramenta url_excluir="excluir_ferramenta" label="ferramenta" %}
+                {% include "partials/global/_modal_exclusao.html" with objeto=ferramenta url_excluir="excluir_ferramenta" %}
+              {% endif %}
+      
+            </div>
+          </td>
         </tr>
         {% empty %}
-          {% include "partials/global/_sem_resultados.html" with colspan=6 mensagem="Nenhuma ferramenta cadastrada." %}
+          {% include "partials/global/_sem_resultados.html" with colspan=8 mensagem="Nenhuma ferramenta cadastrada." %}
         {% endfor %}
       </tbody>
+      
     </table>
 
     {% include 'partials/global/_paginacao.html' %}
