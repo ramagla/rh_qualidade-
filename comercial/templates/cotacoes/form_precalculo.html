@@ -13,164 +13,131 @@
   {% include "partials/global/_toast_mensagens.html" %}
   {% include "partials/global/_estilos_botoes_acoes.html" %}
 
-
-
-
-
-
-
-
-    {% if request.method == "POST" %}
+  {% if request.method == "POST" %}
     <pre>{{ request.POST }}</pre>
   {% endif %}
+
   <div id="precalculo-data" data-item-id="{{ item_id }}"></div>
+  <input type="hidden" id="abaSubmetidaInput" name="" value="">
 
-    <!-- Nav Tabs -->
-<ul class="nav nav-tabs mb-3" id="precalculoTabs" role="tablist">
-  <li class="nav-item" role="presentation">
-    <a class="nav-link active text-primary" id="tab-analise" data-bs-toggle="tab" href="#pane-analise" role="tab">
-      <i class="bi bi-graph-up-arrow me-1"></i> Análise Comercial
-    </a>
-  </li>
-  <li class="nav-item" role="presentation">
-    <a class="nav-link text-warning" id="tab-avaliacao" data-bs-toggle="tab" href="#pane-avaliacao" role="tab">
-      <i class="bi bi-eyeglasses me-1"></i> Avaliação Técnica
-    </a>
-  </li>
-  <li class="nav-item" role="presentation">
-    <a class="nav-link text-info" id="tab-regras" data-bs-toggle="tab" href="#pane-regras" role="tab">
-      <i class="bi bi-calculator-fill me-1"></i> Regras de Cálculo
-    </a>
-  </li>
-  <li class="nav-item" role="presentation">
-    <a class="nav-link text-success" id="tab-materiais" data-bs-toggle="tab" href="#pane-materiais" role="tab">
-      <i class="bi bi-box-seam me-1"></i> Matéria-Prima
-    </a>
-  </li>
-  <li class="nav-item" role="presentation">
-    <a class="nav-link text-danger" id="tab-servicos" data-bs-toggle="tab" href="#pane-servicos" role="tab">
-      <i class="bi bi-tools me-1"></i> Serviços Externos
-    </a>
-  </li>
-  <li class="nav-item" role="presentation">
-    <a class="nav-link text-secondary" id="tab-roteiro" data-bs-toggle="tab" href="#pane-roteiro" role="tab">
-      <i class="bi bi-diagram-3-fill me-1"></i> Roteiro
-    </a>
-  </li>
-  <li class="nav-item" role="presentation">
-    <a class="nav-link text-dark" id="tab-ferramentas" data-bs-toggle="tab" href="#pane-ferramentas" role="tab">
-      <i class="bi bi-hammer me-1"></i> Ferramentas
-    </a>
-  </li>
-  <li class="nav-item" role="presentation">
-    <a class="nav-link text-purple" id="tab-desenvolvimento" data-bs-toggle="tab" href="#pane-desenvolvimento" role="tab">
-      <i class="bi bi-lightbulb-fill me-1"></i> Desenvolvimento
-    </a>
-  </li>
-</ul>
+  <!-- Nav Tabs -->
+  <ul class="nav nav-tabs mb-3" id="precalculoTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active text-primary" id="tab-analise" data-bs-toggle="tab" href="#pane-analise" role="tab">
+        <i class="bi bi-graph-up-arrow me-1"></i> Análise Comercial
+      </a>
+    </li>
 
-<!-- Tab Contents -->
-<div class="tab-content border p-4 rounded-bottom" id="tabContentPreCalculo">
-  <div class="tab-pane fade show active bg-analise" id="pane-analise" role="tabpanel">
-    {% include "cotacoes/tabs/_tab_analise_comercial.html" %}
-  </div>
-  <div class="tab-pane fade bg-avaliacao" id="pane-avaliacao" role="tabpanel">
-    {% include "cotacoes/tabs/_tab_avaliacao_tecnica.html" %}
-  </div>
-  <div class="tab-pane fade bg-regras" id="pane-regras" role="tabpanel">
-    {% include "cotacoes/tabs/_tab_regras_calculo.html" %}
-  </div>
-  <div class="tab-pane fade bg-materiais" id="pane-materiais" role="tabpanel">
-    {% include "cotacoes/tabs/_tab_materiais.html" %}
-  </div>
-  <div class="tab-pane fade bg-servicos" id="pane-servicos" role="tabpanel">
-    {% include "cotacoes/tabs/_tab_servicos_externos.html" %}
-  </div>
-  <div class="tab-pane fade bg-roteiro" id="pane-roteiro" role="tabpanel">
-    {% include "cotacoes/tabs/_tab_roteiro.html" %}
-  </div>
-  <div class="tab-pane fade bg-ferramentas" id="pane-ferramentas" role="tabpanel">
-    {% include "cotacoes/tabs/_tab_ferramentas.html" %}
-  </div>
-  <div class="tab-pane fade bg-desenvolvimento" id="pane-desenvolvimento" role="tabpanel">
-    {% include "cotacoes/tabs/_tab_desenvolvimento.html" %}
+    {% if edicao %}
+      <li class="nav-item" role="presentation">
+        <a class="nav-link text-warning" id="tab-avaliacao" data-bs-toggle="tab" href="#pane-avaliacao" role="tab">
+          <i class="bi bi-eyeglasses me-1"></i> Avaliação Técnica
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link text-info" id="tab-regras" data-bs-toggle="tab" href="#pane-regras" role="tab">
+          <i class="bi bi-calculator-fill me-1"></i> Regras de Cálculo
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link text-success" id="tab-materiais" data-bs-toggle="tab" href="#pane-materiais" role="tab">
+          <i class="bi bi-box-seam me-1"></i> Matéria-Prima
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link text-danger" id="tab-servicos" data-bs-toggle="tab" href="#pane-servicos" role="tab">
+          <i class="bi bi-tools me-1"></i> Serviços Externos
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link text-dark" id="tab-ferramentas" data-bs-toggle="tab" href="#pane-ferramentas" role="tab">
+          <i class="bi bi-hammer me-1"></i> Ferramentas
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link text-secondary" id="tab-roteiro" data-bs-toggle="tab" href="#pane-roteiro" role="tab">
+          <i class="bi bi-diagram-3-fill me-1"></i> Roteiro
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link {% if aba_ativa == 'precofinal' %}active{% endif %}" id="precofinal-tab"
+           data-bs-toggle="tab" href="#pane-precofinal" role="tab" aria-controls="pane-precofinal">
+          <i class="bi bi-currency-dollar me-1"></i> Preço Final
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link text-purple" id="tab-desenvolvimento" data-bs-toggle="tab" href="#pane-desenvolvimento" role="tab">
+          <i class="bi bi-lightbulb-fill me-1"></i> Desenvolvimento
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+
+  <!-- Tab Contents -->
+  <div class="tab-content border p-4 rounded-bottom" id="tabContentPreCalculo">
+    <div class="tab-pane fade show active bg-analise" id="pane-analise" role="tabpanel">
+      {% include "cotacoes/tabs/_tab_analise_comercial.html" %}
+    </div>
+
+    {% if edicao %}
+      <div class="tab-pane fade bg-avaliacao" id="pane-avaliacao" role="tabpanel">
+        {% include "cotacoes/tabs/_tab_avaliacao_tecnica.html" %}
+      </div>
+      <div class="tab-pane fade bg-regras" id="pane-regras" role="tabpanel">
+        {% include "cotacoes/tabs/_tab_regras_calculo.html" %}
+      </div>
+      <div class="tab-pane fade bg-materiais" id="pane-materiais" role="tabpanel">
+        {% include "cotacoes/tabs/_tab_materiais.html" %}
+      </div>
+      <div class="tab-pane fade bg-servicos" id="pane-servicos" role="tabpanel">
+        {% include "cotacoes/tabs/_tab_servicos_externos.html" %}
+      </div>
+      <div class="tab-pane fade bg-ferramentas" id="pane-ferramentas" role="tabpanel">
+        {% include "cotacoes/tabs/_tab_ferramentas.html" %}
+      </div>
+      <div class="tab-pane fade bg-roteiro" id="pane-roteiro" role="tabpanel">
+        {% include "cotacoes/tabs/_tab_roteiro.html" %}
+      </div>
+      <div class="tab-pane fade bg-precofinal" id="pane-precofinal" role="tabpanel">
+        {% include "cotacoes/tabs/_tab_precofinal.html" %}
+      </div>
+      <div class="tab-pane fade bg-desenvolvimento" id="pane-desenvolvimento" role="tabpanel">
+        {% include "cotacoes/tabs/_tab_desenvolvimento.html" %}
+      </div>
+    {% endif %}
   </div>
 </div>
 
-
-
-
-   
-
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const steps = Array.from(document.querySelectorAll(".typeform-step"));
-    let currentStep = 0;
-
-    function showStep(index) {
-      steps.forEach((step, i) => {
-        step.style.display = i === index ? "block" : "none";
-      });
-    }
-
-    document.getElementById("btnNext")?.addEventListener("click", () => {
-      if (currentStep < steps.length - 1) {
-        currentStep++;
-        showStep(currentStep);
-      }
-    });
-
-    document.getElementById("btnPrev")?.addEventListener("click", () => {
-      if (currentStep > 0) {
-        currentStep--;
-        showStep(currentStep);
-      }
-    });
-
-    showStep(currentStep); // inicia no primeiro passo
-  });
-</script>
-
-
-  
-<style>
-  .bg-analise        { background-color: #e8f4fd; }   /* azul claro */
-  .bg-avaliacao      { background-color: #fff3cd; }   /* amarelo claro */
-  .bg-regras         { background-color: #d1ecf1; }   /* ciano claro */
-  .bg-materiais      { background-color: #d4edda; }   /* verde claro */
-  .bg-servicos       { background-color: #f8d7da; }   /* vermelho claro */
-  .bg-roteiro        { background-color: #e2e3e5; }   /* cinza claro */
-  .bg-ferramentas    { background-color: #fefefe; }   /* branco neutro */
-  .bg-desenvolvimento{ background-color: #f3e5f5; }   /* roxo claro */
-
-  .nav-tabs .nav-link.text-purple {
-    color: #6f42c1 !important;  /* cor roxa personalizada */
-  }
-</style>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const abaSubmetidaInput = document.getElementById("abaSubmetidaInput");
     const salvarBtn = document.querySelector("button[type='submit']");
-  
+
     if (salvarBtn && abaSubmetidaInput) {
       salvarBtn.addEventListener("click", function () {
         const abaAtiva = document.querySelector(".tab-pane.active");
         if (abaAtiva && abaAtiva.id.startsWith("pane-")) {
           const nome = abaAtiva.id.replace("pane-", "");
           abaSubmetidaInput.name = `form_${nome}_submitted`;
-          console.log("Setando aba ativa como:", abaSubmetidaInput.name);  // agora o nome é visível
+          console.log("Setando aba ativa como:", abaSubmetidaInput.name);
         }
       });
     }
   });
-  
 </script>
 
+<style>
+  .bg-analise        { background-color: #e8f4fd; }
+  .bg-avaliacao      { background-color: #fff3cd; }
+  .bg-regras         { background-color: #d1ecf1; }
+  .bg-materiais      { background-color: #d4edda; }
+  .bg-servicos       { background-color: #f8d7da; }
+  .bg-roteiro        { background-color: #e2e3e5; }
+  .bg-ferramentas    { background-color: #fefefe; }
+  .bg-desenvolvimento{ background-color: #f3e5f5; }
 
+  .nav-tabs .nav-link.text-purple {
+    color: #6f42c1 !important;
+  }
+</style>
 {% endblock %}
-
-
-
-
-

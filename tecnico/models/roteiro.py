@@ -85,4 +85,4 @@ class InsumoEtapa(models.Model):
 
 
     def __str__(self):
-        return f"{self.insumo.codigo} ({'obrigatório' if self.obrigatorio else 'opcional'})"
+        return f"{self.materia_prima.codigo} ({'obrigatório' if self.obrigatorio else 'opcional'})"

@@ -40,3 +40,15 @@ def ajax_codigo_materia_prima_por_roteiro(request):
             pass
 
     return JsonResponse({"sucesso": False, "codigo": "", "roteiros": []})
+
+
+from django.http import JsonResponse
+from comercial.models import Ferramenta
+
+def ajax_valor_ferramenta(request):
+    ferramenta_id = request.GET.get("id")
+    try:
+        ferramenta = Ferramenta.objects.get(id=ferramenta_id)
+        return JsonResponse({"valor_total": float(ferramenta.valor_total)})
+    except Ferramenta.DoesNotExist:
+        return JsonResponse({"valor_total": None})

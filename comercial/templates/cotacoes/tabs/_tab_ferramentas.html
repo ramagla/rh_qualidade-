@@ -1,0 +1,62 @@
+{% load widget_tweaks %}
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="form_ferramentas_submitted" value="1">
+  {{ fs_ferr.management_form }}
+
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 30%">Ferramenta</th>
+          <th style="width: 20%">Valor Total (R$)</th>
+          <th>Observações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in fs_ferr.forms %}
+        <tr>
+          <td>
+            {{ form.ferramenta|add_class:"form-select select2" }}
+          </td>
+          <td class="text-end align-middle">
+            {% if form.instance.ferramenta %}
+              R$ {{ form.instance.ferramenta.valor_total|floatformat:2 }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>
+            {{ form.observacoes|add_class:"form-control form-control-sm" }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="text-end mt-3">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save me-1"></i> Salvar Ferramentas
+    </button>
+  </div>
+</form>
+<script>
+    $(document).ready(function () {
+      $(".select2").on("change", function () {
+        const select = $(this);
+        const row = select.closest("tr");
+        const id = select.val();
+  
+        $.get("{% url 'ajax_valor_ferramenta' %}", { id: id }, function (data) {
+          if (data.valor_total !== null) {
+            row.find("td:eq(1)").text("R$ " + data.valor_total.toFixed(2).replace(".", ","));
+          } else {
+            row.find("td:eq(1)").text("—");
+          }
+        });
+      });
+    });
+  </script>
+  

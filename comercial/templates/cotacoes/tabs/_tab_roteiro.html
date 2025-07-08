@@ -1,0 +1,45 @@
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="form_roteiro_submitted" value="1">
+    {{ fs_rot.management_form }}
+  
+    <div class="table-responsive mt-3">
+      <table class="table table-bordered align-middle text-center">
+        <thead class="table-light">
+          <tr>
+            <th>Nº</th>
+            <th>Setor</th>
+            <th>Peças/hora</th>
+            <th>Setup (min)</th>
+            <th>Custo Hora</th>
+            <th>Valor Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for form in fs_rot.forms %}
+            <tr>
+              <td>{{ form.etapa }}</td>
+              <td>{{ form.setor }}</td>
+              <td>{{ form.pph }}</td>
+              <td>{{ form.setup_minutos }}</td>
+              <td>{{ form.custo_hora }}</td>
+              <td>
+                {% if form.instance.custo_total %}
+                  {{ form.instance.custo_total|floatformat:2 }}
+                {% else %}
+                  0,00
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  
+    <div class="text-end mt-3">
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-save me-1"></i> Salvar Alterações
+      </button>
+    </div>
+  </form>
+  

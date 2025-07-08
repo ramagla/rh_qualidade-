@@ -16,8 +16,8 @@ class Item(models.Model):
     tipo_item = models.CharField("Tipo de Item", max_length=20, choices=TIPO_ITEM_CHOICES, default="Cotacao")
     cliente = models.ForeignKey("comercial.Cliente", on_delete=models.CASCADE, related_name="itens")
     codigo = models.CharField("Código Interno", max_length=50, unique=True)  # ⬅️ unique=True
-    descricao = models.CharField("Descrição", max_length=255)  # obrigatório
-    ncm = models.CharField("NCM", max_length=10)               # obrigatório
+    descricao = models.CharField("Descrição", max_length=255, blank=True, null=True)  # obrigatório
+    ncm = models.CharField("NCM", max_length=10, blank=True, null=True)               # obrigatório
     lote_minimo = models.PositiveIntegerField("Lote Mínimo")   # obrigatório
     ferramenta = models.ForeignKey("comercial.Ferramenta", on_delete=models.SET_NULL, null=True, blank=True, related_name="itens")
     codigo_cliente = models.CharField("Código no Cliente", max_length=50, blank=True, null=True)

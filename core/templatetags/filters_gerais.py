@@ -368,3 +368,9 @@ def menor_que(data1, data2_str):
 def hoje():
     return now().date()
 
+@register.filter
+def div(value, arg):
+    try:
+        return Decimal(value) / Decimal(arg)
+    except (ZeroDivisionError, InvalidOperation, TypeError):
+        return 0

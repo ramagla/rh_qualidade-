@@ -4,6 +4,7 @@ import uuid
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
+from comercial.forms.precalculos_form import PrecoFinalForm
 
 from comercial.models import Cotacao
 
@@ -14,6 +15,7 @@ from comercial.models.precalculo import PreCalculo, RegrasCalculo
 from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExterno, RoteiroCotacao, CotacaoFerramenta
 from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
+from tecnico.models.roteiro import InsumoEtapa
 
 @login_required
 @permission_required("comercial.view_precalculo", raise_exception=True)
@@ -104,6 +106,8 @@ from comercial.forms.precalculos_form import PreCalculoForm
 @permission_required('comercial.change_precalculo', raise_exception=True)
 def editar_precaculo(request, pk):
     precalc = get_object_or_404(PreCalculo, pk=pk)
+    materiais_respondidos = precalc.materiais.filter(preco_kg__isnull=False).exists()
+
     cot = precalc.cotacao
 
     aba = next((k.replace("form_", "").replace("_submitted", "") for k in request.POST if k.startswith("form_")), None)
@@ -126,19 +130,107 @@ def editar_precaculo(request, pk):
         )
 
     if not precalc.materiais.exists():
-        PreCalculoMaterial.objects.create(
-            precalculo=precalc,
-            codigo="",
-            desenvolvido_mm=0,
-            peso_liquido=0,
-            peso_bruto=0,
-        )
+        for _ in range(3):
+            PreCalculoMaterial.objects.create(
+                precalculo=precalc,
+                codigo="",
+                desenvolvido_mm=0,
+                peso_liquido=0,
+                peso_bruto=0,
+            )
+
+    # Criar serviços externos com base em roteiro ou adicionar 3 linhas vazias
+    # Criar serviços externos com base em roteiro ou adicionar 3 linhas no total
+    if precalc.servicos.count() < 3:
+        servicos_criados = precalc.servicos.count()
+
+        if hasattr(precalc, "analise_comercial_item"):
+            item = precalc.analise_comercial_item.item
+            try:
+                roteiro = item.roteiro
+                tratamentos = InsumoEtapa.objects.filter(
+                    etapa__roteiro=roteiro,
+                    etapa__setor__nome__icontains="Tratamento Externo"
+                )
+                for insumo in tratamentos:
+                    # Evita criar insumo duplicado
+                    if not precalc.servicos.filter(insumo=insumo).exists():
+                        PreCalculoServicoExterno.objects.create(
+                            precalculo=precalc,
+                            insumo=insumo,
+                            desenvolvido_mm=0,
+                            peso_liquido=0,
+                            peso_bruto=0,
+                        )
+                        servicos_criados += 1
+            except Exception as e:
+                print(f"⚠️ Erro ao carregar serviços externos: {e}")
+
+        # Garante ao menos 3 linhas
+        while servicos_criados < 3:
+        # Só cria se houver insumo disponível para preencher
+            try:
+                insumo_vazio = InsumoEtapa.objects.filter(etapa__setor__nome__icontains="Tratamento Externo").first()
+                if insumo_vazio:
+                    PreCalculoServicoExterno.objects.create(
+                        precalculo=precalc,
+                        insumo=insumo_vazio,
+                        desenvolvido_mm=0,
+                        peso_liquido=0,
+                        peso_bruto=0,
+                    )
+                    servicos_criados += 1
+                else:
+                    break  # não cria linhas inválidas
+            except Exception as e:
+                print("Erro ao criar linha de serviço:", e)
+                break
+
+
+  
+
+    if not precalc.roteiro_item.exists() and hasattr(precalc, "analise_comercial_item"):
+        item = precalc.analise_comercial_item.item
+
+        if hasattr(item, "roteiro"):
+            roteiro = item.roteiro
+            qtde = precalc.analise_comercial_item.qtde_estimada or 1
+
+            for etapa in roteiro.etapas.select_related("setor"):
+                pph = etapa.pph or 1
+                setup = etapa.setup_minutos or 0
+                custo_hora = etapa.setor.custo_atual or 0
+
+                try:
+                    tempo_pecas_horas = Decimal(qtde) / Decimal(pph)
+                except ZeroDivisionError:
+                    tempo_pecas_horas = Decimal(0)
+
+                tempo_setup_horas = Decimal(setup) / Decimal(60)
+                valor_total = (tempo_pecas_horas + tempo_setup_horas) * Decimal(custo_hora)
+
+                nome_acao = getattr(getattr(etapa, "propriedades", None), "nome_acao", "Sem Nome")
+
+                RoteiroCotacao.objects.create(
+                    precalculo=precalc,
+                    etapa=etapa.etapa,
+                    setor=etapa.setor,
+                    nome_acao=nome_acao,
+                    pph=pph,
+                    setup_minutos=setup,
+                    custo_hora=custo_hora,
+                    custo_total=round(valor_total, 2),
+                    usuario=request.user,
+                    assinatura_nome=request.user.get_full_name() or request.user.username,
+                    assinatura_cn=request.user.email,
+                    data_assinatura=timezone.now(),
+                )
 
     # Formsets
     MatSet = inlineformset_factory(PreCalculo, PreCalculoMaterial, form=PreCalculoMaterialForm, extra=0, can_delete=True)
-    SevSet = inlineformset_factory(PreCalculo, PreCalculoServicoExterno, form=PreCalculoServicoExternoForm, extra=1, can_delete=True)
-    RotSet = inlineformset_factory(PreCalculo, RoteiroCotacao, form=RoteiroCotacaoForm, extra=1, can_delete=True)
-    FerrSet = inlineformset_factory(PreCalculo, CotacaoFerramenta, form=CotacaoFerramentaForm, extra=1, can_delete=True)
+    SevSet = inlineformset_factory(PreCalculo, PreCalculoServicoExterno, form=PreCalculoServicoExternoForm, extra=0, can_delete=True)
+    RotSet = inlineformset_factory(PreCalculo, RoteiroCotacao, form=RoteiroCotacaoForm, extra=0, can_delete=False)
+    FerrSet = inlineformset_factory(PreCalculo, CotacaoFerramenta, form=CotacaoFerramentaForm, extra=0, can_delete=True)
 
     # Form principal para observacoes_materiais
     form_precalculo = PreCalculoForm(request.POST if request.method == "POST" else None, instance=precalc)
@@ -148,6 +240,17 @@ def editar_precaculo(request, pk):
     form_regras = RegrasCalculoForm(request.POST if aba == "regras" else None, instance=precalc.regras_calculo_item)
     form_avali = AvaliacaoTecnicaForm(request.POST if aba == "avali" else None, instance=getattr(precalc, 'avaliacao_tecnica_item', None))
     form_desenv = DesenvolvimentoForm(request.POST if aba == "desenv" else None, instance=getattr(precalc, 'desenvolvimento_item', None))
+# 🛠️ Corrige vírgula no preco_selecionado antes de criar o form
+    if request.method == "POST" and "preco_selecionado" in request.POST:
+        preco_raw = request.POST.get("preco_selecionado")
+        if preco_raw:
+            preco_corrigido = preco_raw.replace(",", ".")
+            request.POST._mutable = True
+            request.POST["preco_selecionado"] = preco_corrigido
+            request.POST._mutable = False
+
+    # Criar o form após corrigir preco_selecionado
+    form_precofinal = PrecoFinalForm(request.POST if aba == "precofinal" else None, instance=precalc)
 
     # Formsets das abas
     fs_mat = MatSet(request.POST if aba == "materiais" else None, instance=precalc, prefix='mat')
@@ -186,74 +289,163 @@ def editar_precaculo(request, pk):
     if request.method == 'POST':
         salvo = False
 
-        # Salvar formulários das abas
-        if 'form_analise_submitted' in request.POST and form_analise.is_valid():
-            obj = form_analise.save(commit=False)
-            obj.precalculo = precalc
-            obj.usuario = request.user
-            obj.assinatura_nome = request.user.get_full_name() or request.user.username
-            obj.assinatura_cn = request.user.email
-            obj.data_assinatura = timezone.now()
-            obj.save()
-            salvo = True
+    # 🛠️ Salvar formulário de Preço Final (aba específica)
+    if 'form_precofinal_submitted' in request.POST and form_precofinal.is_valid():
+        preco_raw = request.POST.get("preco_selecionado")
+        if preco_raw:
+            try:
+                preco_limpo = preco_raw.replace(",", ".")
+                form_precofinal.instance.preco_selecionado = Decimal(preco_limpo)
+            except Exception as e:
+                messages.error(request, f"Erro ao processar o preço selecionado: {e}")
+        form_precofinal.save()
+        salvo = True
 
-        if 'form_regras_submitted' in request.POST and form_regras.is_valid():
-            obj = form_regras.save(commit=False)
-            obj.precalculo = precalc
-            obj.usuario = request.user
-            obj.assinatura_nome = request.user.get_full_name() or request.user.username
-            obj.assinatura_cn = request.user.email
-            obj.data_assinatura = timezone.now()
-            obj.save()
-            salvo = True
+    # 🛠️ Salvar outras abas independentemente
+    if 'form_analise_submitted' in request.POST and form_analise.is_valid():
+        obj = form_analise.save(commit=False)
+        obj.precalculo = precalc
+        obj.usuario = request.user
+        obj.assinatura_nome = request.user.get_full_name() or request.user.username
+        obj.assinatura_cn = request.user.email
+        obj.data_assinatura = timezone.now()
+        obj.save()
+        salvo = True
 
-        if 'form_avali_submitted' in request.POST and form_avali.is_valid():
-            obj = form_avali.save(commit=False)
-            obj.precalculo = precalc
-            obj.usuario = request.user
-            obj.assinatura_nome = request.user.get_full_name() or request.user.username
-            obj.assinatura_cn = request.user.email
-            obj.data_assinatura = timezone.now()
-            obj.save()
-            salvo = True
+    if 'form_regras_submitted' in request.POST and form_regras.is_valid():
+        obj = form_regras.save(commit=False)
+        obj.precalculo = precalc
+        obj.usuario = request.user
+        obj.assinatura_nome = request.user.get_full_name() or request.user.username
+        obj.assinatura_cn = request.user.email
+        obj.data_assinatura = timezone.now()
+        obj.save()
+        salvo = True
 
-        if 'form_desenv_submitted' in request.POST and form_desenv.is_valid():
-            obj = form_desenv.save(commit=False)
-            obj.precalculo = precalc
-            obj.usuario = request.user
-            obj.assinatura_nome = request.user.get_full_name() or request.user.username
-            obj.assinatura_cn = request.user.email
-            obj.data_assinatura = timezone.now()
-            obj.save()
-            salvo = True
+    if 'form_avali_submitted' in request.POST and form_avali.is_valid():
+        obj = form_avali.save(commit=False)
+        obj.precalculo = precalc
+        obj.usuario = request.user
+        obj.assinatura_nome = request.user.get_full_name() or request.user.username
+        obj.assinatura_cn = request.user.email
+        obj.data_assinatura = timezone.now()
+        obj.save()
+        salvo = True
+
+    if 'form_desenv_submitted' in request.POST and form_desenv.is_valid():
+        obj = form_desenv.save(commit=False)
+        obj.precalculo = precalc
+        obj.usuario = request.user
+        obj.assinatura_nome = request.user.get_full_name() or request.user.username
+        obj.assinatura_cn = request.user.email
+        obj.data_assinatura = timezone.now()
+        obj.save()
+        salvo = True
+
 
         # Aba Materiais: salvar form principal (observações) e formset materiais
-        if aba == "materiais":
-            print("📥 fs_mat.is_valid():", fs_mat.is_valid())
-            if not fs_mat.is_valid():
-                for i, form in enumerate(fs_mat.forms):
-                    print(f"❌ Form {i} ERROS:", form.errors)
-                print("⚠️ Non-form errors:", fs_mat.non_form_errors())
+    if aba == "materiais":
+        print("📥 fs_mat.is_valid():", fs_mat.is_valid())
 
-            if form_precalculo.is_valid() and fs_mat.is_valid():
-                form_precalculo.save()
-                fs_mat.save()
-                salvo = True
+        if form_precalculo.is_valid() and fs_mat.is_valid():
+            form_precalculo.save()
+            algo_salvo = False
 
-                # Disparar e-mails para cada material salvo
-                for mat_form in fs_mat:
-                    if mat_form.cleaned_data and not mat_form.cleaned_data.get('DELETE', False):
-                        mat = mat_form.save(commit=False)
+            # 📌 NOVO: identificar o selecionado (prefix ex: mat-1)
+            selecionado = request.POST.get("material_selecionado")
+            codigos_disparados = set()
+            algo_salvo = False
+
+            for mat_form in fs_mat:
+                if mat_form.cleaned_data and not mat_form.cleaned_data.get("DELETE", False):
+                    mat = mat_form.save(commit=False)
+
+                    # ✅ Marcar apenas o selecionado
+                    mat.selecionado = (mat_form.prefix == selecionado)
+                    mat.save()
+
+                    # ✅ Disparar e-mail apenas uma vez por código (e se ainda não respondeu)
+                    if (
+                        not materiais_respondidos
+                        and mat.codigo
+                        and not mat.preco_kg
+                        and mat.codigo not in codigos_disparados
+                    ):
                         disparar_email_cotacao_material(request, mat)
+                        codigos_disparados.add(mat.codigo)
 
-        # Salvar outros formsets
+                    algo_salvo = True
+
+            # Aplica deletes do formset
+            fs_mat.save(commit=False)
+
+            # Marca como salvo se algo mudou
+            salvo = algo_salvo
+
+
+
+        else:
+            for i, form in enumerate(fs_mat.forms):
+                print(f"❌ Form {i} ERROS:", form.errors)
+            print("⚠️ Non-form errors:", fs_mat.non_form_errors())
+
+        # Aba Serviços Externos: salvar observações e formset
+    if aba == "servicos":
+        print("📥 fs_sev.is_valid():", fs_sev.is_valid())
+
+        if form_precalculo.is_valid() and fs_sev.is_valid():
+            form_precalculo.save()
+            selecionado = request.POST.get("servico_selecionado")
+            codigos_disparados = set()
+            servicos_respondidos = precalc.servicos.filter(preco_kg__isnull=False).exists()
+            algo_salvo = False
+
+            for sev_form in fs_sev:
+                if sev_form.cleaned_data and not sev_form.cleaned_data.get("DELETE", False):
+                    sev = sev_form.save(commit=False)
+                    sev.selecionado = (sev_form.prefix == selecionado)
+                    sev.save()
+
+                    if (
+                        not servicos_respondidos
+                        and sev.insumo.materia_prima.codigo
+                        and not sev.preco_kg
+                        and sev.insumo.materia_prima.codigo not in codigos_disparados
+                    ):
+                        disparar_email_cotacao_servico(request, sev)
+                        codigos_disparados.add(sev.insumo.materia_prima.codigo)
+
+                    algo_salvo = True
+
+            fs_sev.save(commit=False)
+            salvo = algo_salvo
+        else:
+            for i, form in enumerate(fs_sev.forms):
+                print(f"❌ Form {i} ERROS:", form.errors)
+            print("⚠️ Non-form errors:", fs_sev.non_form_errors())
+
+
+        # Salvar outros formsets com cálculo de custo_total para fs_rot
+        qtde = getattr(precalc.analise_comercial_item, 'qtde_estimada', 1) or 1
+
         for fs in [fs_sev, fs_rot, fs_ferr]:
             if fs.is_valid():
                 for form in fs:
-                    if form.has_changed() or form.cleaned_data.get("id") is None:
-                        fs.save()
-                        salvo = True
-                        break
+                    if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
+                        if fs.prefix == "rot":
+                            # Roteiro: recalcular custo_total
+                            pph = Decimal(form.cleaned_data.get("pph") or 1)
+                            setup = Decimal(form.cleaned_data.get("setup_minutos") or 0)
+                            custo_hora = Decimal(form.cleaned_data.get("custo_hora") or 0)
+
+                            tempo_pecas = Decimal(qtde) / pph if pph else 0
+                            tempo_setup = setup / Decimal(60)
+                            total = (tempo_pecas + tempo_setup) * custo_hora
+
+                            form.instance.custo_total = round(total, 2)
+
+                fs.save()
+                salvo = True
 
         if salvo:
             messages.success(request, "Pré-cálculo atualizado com sucesso.")
@@ -264,6 +456,9 @@ def editar_precaculo(request, pk):
     item_id = None
     if hasattr(precalc, "analise_comercial_item") and precalc.analise_comercial_item.item_id:
         item_id = precalc.analise_comercial_item.item_id
+
+    precos_sem_impostos = precalc.calcular_precos_sem_impostos()
+    precos_com_impostos = precalc.calcular_precos_com_impostos()
 
     return render(request, "cotacoes/form_precalculo.html", {
         "cotacao": cot,
@@ -281,6 +476,13 @@ def editar_precaculo(request, pk):
         "campos_obs_tecnica": campos_obs_tecnica,
         "item_id": item_id,
         "edicao": True,
+        "aba_ativa": aba,
+        "form_precofinal": form_precofinal,
+        "precos_sem_impostos": precos_sem_impostos,
+        "precos_com_impostos": precos_com_impostos,
+        "materiais_respondidos": materiais_respondidos,
+
+
     })
 
 
@@ -418,26 +620,31 @@ def excluir_precalculo(request, pk):
 
 def disparar_email_cotacao_material(request, material):
     """
-    Dispara o e-mail de cotação de matéria-prima para o setor de compras.
+    Dispara o e-mail de cotação de matéria-prima para o setor de compras,
+    incluindo apenas código e descrição, sem os dados preenchidos pelo usuário.
     """
     link = request.build_absolute_uri(
         reverse("responder_cotacao_materia_prima", args=[material.pk])
     )
 
+    # Busca a descrição com base no código
+    try:
+        mp = MateriaPrimaCatalogo.objects.get(codigo=material.codigo)
+        descricao = mp.descricao
+    except MateriaPrimaCatalogo.DoesNotExist:
+        descricao = "---"
+
+    # Corpo do e-mail simplificado
     corpo = f"""
 🧪 Solicitação de Cotação - Matéria-Prima
 
 📦 Código: {material.codigo}
-🏷️ Fornecedor: {material.fornecedor or '---'}
-📦 Lote Mínimo: {material.lote_minimo or '---'}
-📦 Entrega (dias): {material.entrega_dias or '---'}
-💰 ICMS (%): {material.icms or '0.00'}
-💲 Preço/kg: {material.preco_kg or '---'}
-⚖️ Peso Bruto: {material.peso_bruto or '---'} kg
+📝 Descrição: {descricao}
 
 🔗 Responder: {link}
     """
 
+    # Disparo do e-mail
     send_mail(
         subject="📨 Cotação de Matéria-Prima",
         message=corpo,
@@ -455,10 +662,20 @@ from decimal import Decimal, InvalidOperation
 
 def responder_cotacao_materia_prima(request, pk):
     material = get_object_or_404(PreCalculoMaterial, pk=pk)
-    fornecedores = FornecedorQualificado.objects.all()
+    codigo = material.codigo
+
+    # Busca todas as cotações com o mesmo código
+    materiais = PreCalculoMaterial.objects.filter(codigo=codigo).order_by("pk")
+    fornecedores = FornecedorQualificado.objects.filter(
+        produto_servico__in=[
+            "Fita de Aço/Inox", "Arame de Aço", "Arame de inox"
+        ],
+        ativo="Ativo"
+    ).order_by("nome")
+
 
     try:
-        materia_prima = MateriaPrimaCatalogo.objects.get(codigo=material.codigo)
+        materia_prima = MateriaPrimaCatalogo.objects.get(codigo=codigo)
     except MateriaPrimaCatalogo.DoesNotExist:
         materia_prima = None
 
@@ -466,38 +683,109 @@ def responder_cotacao_materia_prima(request, pk):
     precalculo_numero = material.precalculo.numero if material.precalculo else None
     observacoes_gerais = material.precalculo.observacoes_materiais if material.precalculo else ""
 
-    # Bloqueio de edição se status for 'ok'
     if request.method == "POST":
-    # Evita salvar caso esteja finalizado
-        if material.status == 'ok':
-            messages.error(request, "Cotação finalizada. Alterações não são permitidas.")
-            return redirect(request.path)
+        for i, mat in enumerate(materiais):
+            # Evita alterações em materiais com status finalizado
+            if mat.status == "ok":
+                continue
 
-        material.fornecedor_id = request.POST.get("fornecedor") or None
+            mat.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
+            mat.icms = request.POST.get(f"icms_{i}") or None
+            mat.lote_minimo = request.POST.get(f"lote_minimo_{i}") or None
+            mat.entrega_dias = request.POST.get(f"entrega_dias_{i}") or None
+            mat.preco_kg = request.POST.get(f"preco_kg_{i}") or None
+            mat.save()
 
-        # Tratar campos decimais para evitar erro vazio -> decimal
-        icms = request.POST.get("icms")
-        material.icms = icms if icms else None
-
-        lote_minimo = request.POST.get("lote_minimo")
-        material.lote_minimo = lote_minimo if lote_minimo else None
-
-        entrega_dias = request.POST.get("entrega_dias")
-        material.entrega_dias = entrega_dias if entrega_dias else None
-
-        preco_kg = request.POST.get("preco_kg")
-        material.preco_kg = preco_kg if preco_kg else None
-
-        material.save()
-        material.refresh_from_db()  # Atualiza os dados do objeto na memória
-        messages.success(request, "Cotação atualizada com sucesso.")
-
+        messages.success(request, "Cotações salvas com sucesso.")
+        return redirect(request.path)  # Ou redirecione para a lista
 
     return render(request, "cotacoes/responder_cotacao_material.html", {
-        "material": material,
+        "materiais": materiais,
         "fornecedores": fornecedores,
         "cotacao_numero": cotacao_numero,
         "precalculo_numero": precalculo_numero,
         "materia_prima": materia_prima,
         "observacoes_gerais": observacoes_gerais,
+        "codigo": codigo,
+    })
+
+
+def disparar_email_cotacao_servico(request, servico):
+    """
+    Dispara o e-mail de cotação de serviço externo para o setor de compras.
+    """
+    from django.urls import reverse
+    from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
+
+    link = request.build_absolute_uri(
+        reverse("responder_cotacao_servico_lote", args=[servico.pk])
+    )
+
+    try:
+        mp = servico.insumo.materia_prima
+        descricao = mp.descricao
+        codigo = mp.codigo
+    except:
+        descricao = "---"
+        codigo = "sem código"
+
+    corpo = f"""
+🔧 Cotação de Serviço Externo – Tratamento
+
+📦 Código: {codigo}
+📝 Descrição: {descricao}
+
+🔗 Link para resposta: {link}
+    """
+
+    send_mail(
+        subject="📨 Cotação de Serviço Externo",
+        message=corpo,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=["rafael.almeida@brasmol.com.br"],
+        fail_silently=False,
+    )
+
+
+def responder_cotacao_servico_lote(request, pk):
+    servico = get_object_or_404(PreCalculoServicoExterno, pk=pk)
+    codigo = servico.insumo.materia_prima.codigo
+    servicos = PreCalculoServicoExterno.objects.filter(insumo__materia_prima__codigo=codigo).order_by("pk")
+
+    fornecedores = FornecedorQualificado.objects.filter(
+        produto_servico__icontains="Trat",  # Padrão usado para tratamento
+        status__in=["Qualificado", "Qualificado Condicional"]
+    ).order_by("nome")
+
+    try:
+        materia_prima = servico.insumo.materia_prima
+    except:
+        materia_prima = None
+
+    cotacao_numero = servico.precalculo.cotacao.numero if servico.precalculo and servico.precalculo.cotacao else None
+    precalculo_numero = servico.precalculo.numero if servico.precalculo else None
+    observacoes_gerais = servico.precalculo.observacoes_materiais if servico.precalculo else ""
+
+    if request.method == "POST":
+        for i, sev in enumerate(servicos):
+            sev.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
+            sev.lote_minimo = request.POST.get(f"lote_minimo_{i}") or None
+            sev.entrega_dias = request.POST.get(f"entrega_dias_{i}") or None
+            preco_raw = request.POST.get(f"preco_kg_{i}") or None
+            if preco_raw:
+                preco_raw = preco_raw.replace(",", ".")
+            sev.preco_kg = preco_raw
+            sev.save()
+
+        messages.success(request, "Cotações salvas com sucesso.")
+        return redirect(request.path)
+
+    return render(request, "cotacoes/responder_cotacao_servico_lote.html", {
+        "servicos": servicos,
+        "fornecedores": fornecedores,
+        "cotacao_numero": cotacao_numero,
+        "precalculo_numero": precalculo_numero,
+        "materia_prima": materia_prima,
+        "observacoes_gerais": observacoes_gerais,
+        "codigo": codigo,
     })

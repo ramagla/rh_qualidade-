@@ -81,9 +81,12 @@ class ItemForm(forms.ModelForm):
         codigo_desenho = cleaned_data.get("codigo_desenho")
 
         if tipo_item == "cotacao":
-            cleaned_data["codigo"] = codigo_desenho  # força a cópia
-            self.data = self.data.copy()
-            self.data["codigo"] = codigo_desenho  # atualiza o valor no POST para refletir no template
+            if not codigo_desenho:
+                self.add_error("codigo_desenho", "Obrigatório para itens de cotação.")
+            else:
+                cleaned_data["codigo"] = codigo_desenho
+                self.data = self.data.copy()
+                self.data["codigo"] = codigo_desenho
 
         return cleaned_data
 

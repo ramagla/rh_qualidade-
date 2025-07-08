@@ -69,11 +69,17 @@
                             {{ form.data_revisao|add_class:"form-control" }}
                         </div>
                         <div class="col-md-4" id="campoCodigo">
-                            <label for="{{ form.codigo.id_for_label }}" class="form-label">
-                              <i class="bi bi-upc me-1"></i> Código:
-                            </label>
-                            {{ form.codigo|add_class:"form-control" }}
-                          </div>
+                          <label for="{{ form.codigo.id_for_label }}" class="form-label">
+                            <i class="bi bi-upc me-1"></i> Código:
+                          </label>
+                          {{ form.codigo|add_class:"form-control" }}
+                          {% if form.codigo.errors %}
+                            <div class="text-danger small mt-1">
+                              {{ form.codigo.errors.as_text|safe }}
+                            </div>
+                          {% endif %}
+                      </div>
+                      
                           <div class="col-md-4">
                             <label for="{{ form.ncm.id_for_label }}" class="form-label"><i class="bi bi-hash me-1"></i> NCM:</label>
                             {{ form.ncm|add_class:"form-control" }}

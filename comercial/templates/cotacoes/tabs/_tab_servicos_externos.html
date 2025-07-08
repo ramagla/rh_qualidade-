@@ -1,63 +1,189 @@
-<div class="tab-pane fade {% if aba_ativa == 'servicos' %}show active{% endif %}" id="servicos" role="tabpanel">
-    <h5 class="text-primary d-flex align-items-center mt-3">
-      <i class="bi bi-truck me-2"></i> Serviços Externos
-    </h5>
-  
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <input type="hidden" name="form_servicos_submitted" value="1">
-  
-      <div class="table-responsive mt-3">
-        <table class="table table-bordered align-middle text-center">
-          <thead class="table-light">
+{% load widget_tweaks %}
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="row bg-servicos p-4 rounded shadow-sm">
+    <div class="col-12">
+      <div class="border p-4 rounded bg-white shadow-sm">
+        <h5 class="mb-4">
+          <i class="bi bi-tools text-danger me-2"></i> Serviços Externos (Tratamento)
+        </h5>
+
+        <div class="alert alert-info d-flex flex-column gap-2 small">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle-fill"></i>
+            O campo <strong>Peso Bruto</strong> é calculado automaticamente como: 
+            <code>Peso Líquido × Qtde Estimada</code>.
+          </div>
+          <div>
+            <strong class="text-primary">Compras:</strong> Preenchem os campos <code>Lote Mínimo</code>, <code>Entrega (dias)</code>, <code>Fornecedor</code> e <code>Preço/kg</code>.
+          </div>
+          <div>
+            <strong class="text-warning">Técnico:</strong> Preenche os campos <code>Desenv. (mm)</code>, <code>Peso Líquido</code> e <code>Peso Bruto</code>.
+          </div>
+        </div>
+
+        {% if fs_sev.non_form_errors %}
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              {% for error in fs_sev.non_form_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <table class="table table-bordered align-middle table-sm">
+          <thead class="table-light text-center align-middle">
             <tr>
-              <th>Selecionar</th>
-              <th>Código</th>
-              <th>Descrição</th>
-              <th>Fornecedor</th>
-              <th>Quantidade</th>
-              <th>Prazo de Entrega</th>
-              <th>Preço Unitário (R$)</th>
-              <th>Status</th>
-              <th>Observações</th>
+              <th><i class="bi bi-check2-square"></i> Selecionar</th>
+              <th><i class="bi bi-box"></i> Insumo</th>
+              <th><i class="bi bi-boxes"></i> Lote Mínimo</th>
+              <th><i class="bi bi-truck"></i> Entrega (dias)</th>
+              <th><i class="bi bi-building"></i> Fornecedor</th>
+              <th><i class="bi bi-currency-dollar"></i> Preço/kg</th>
+              <th><i class="bi bi-rulers"></i> Desenv. (mm)</th>
+              <th><i class="bi bi-scale"></i> Peso Líquido</th>
+              <th><i class="bi bi-scale"></i> Peso Bruto</th>
+              <th><i class="bi bi-clipboard-check"></i> Status</th>
             </tr>
           </thead>
+          
+          
           <tbody>
-            {% for item in servico_formset %}
-            <tr>
-              <td>{{ item.selecionado }}</td>
-              <td>{{ item.codigo }}</td>
-              <td>{{ item.descricao }}</td>
-              <td>{{ item.fornecedor }}</td>
-              <td>{{ item.quantidade }}</td>
-              <td>{{ item.prazo_entrega }}</td>
-              <td>{{ item.preco_unitario }}</td>
-              <td>
-                {% if item.instance.status == "OK" %}
-                  <span class="badge bg-success">OK</span>
-                {% else %}
-                  <span class="badge bg-warning text-dark">Aguardando</span>
-                {% endif %}
-              </td>
-              <td>{{ item.observacoes }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="9" class="text-muted">Nenhum serviço externo adicionado.</td>
-            </tr>
+            {% for form in fs_sev.forms %}
+              <tr>
+                {{ form.id }}
+                <td class="text-center align-middle">
+                  <input type="radio"
+                         name="servico_selecionado"
+                         value="{{ form.prefix }}"
+                         class="form-check-input mt-1"
+                         {% if form.instance.selecionado %}checked{% endif %}>
+                </td>
+                <td>
+                  {{ form.instance.insumo.materia_prima.codigo }}
+                  {{ form.insumo }}
+                </td>
+                <td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
+                <td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
+                <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
+                <td class="bg-lightblue">{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
+                <td class="bg-lightyellow">
+                  <input type="text"
+                         name="sev-{{ forloop.counter0 }}-desenvolvido_mm"
+                         value="{{ form.desenvolvido_mm.value|default:'' }}"
+                         class="form-control form-control-sm" />
+                </td>
+                <td class="bg-lightyellow">
+                  <input type="text"
+                         name="sev-{{ forloop.counter0 }}-peso_liquido"
+                         value="{{ form.peso_liquido.value|default:'' }}"
+                         class="form-control form-control-sm" />
+                </td>
+                <td class="bg-lightyellow">
+                  <input type="text"
+                         name="sev-{{ forloop.counter0 }}-peso_bruto"
+                         value="{{ form.peso_bruto.value|default:'' }}"
+                         class="form-control form-control-sm" />
+                </td>
+                
+                
+                
+                
+                <td class="text-center">
+                  {% if form.instance.pk and form.instance.preco_kg %}
+                    <span class="badge bg-success">OK</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Aguardando</span>
+                  {% endif %}
+                </td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>
+
+        {{ fs_sev.management_form }}
+
+        <div class="mb-3 mt-3">
+          <label for="id_observacoes_materiais" class="form-label">
+            <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
+          </label>
+          {{ form_precalculo.observacoes_servicos |add_class:"form-control ckeditor" }}
+        </div>
+
+        <div class="text-end mt-3">
+          {% if servicos_respondidos %}
+            <button type="submit" name="form_servicos_submitted" value="1" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i> Salvar
+            </button>
+          {% else %}
+            <button type="submit" name="form_servicos_submitted" value="1" class="btn btn-success">
+              <i class="bi bi-send-check me-1"></i> Salvar e Enviar Cotações
+            </button>
+          {% endif %}
+        </div>
       </div>
-  
-      <div class="mt-3 d-flex justify-content-between">
-        <a href="{% url 'editar_precaculo' precalculo.id %}?aba=etapas" class="btn btn-outline-secondary">
-          <i class="bi bi-arrow-left-circle me-1"></i> Voltar
-        </a>
-        <button type="submit" class="btn btn-success">
-          <i class="bi bi-send-check me-1"></i> Salvar e Enviar Cotações
-        </button>
-      </div>
-    </form>
+    </div>
   </div>
-  
+</form>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const qtdeEstimada = parseFloat("{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".")) || 0;
+    const linhas = document.querySelectorAll("tbody tr");
+
+    // Atualiza peso bruto linha a linha baseado no peso líquido
+    linhas.forEach(row => {
+      const liquido = row.querySelector("input[name$='-peso_liquido']");
+      const bruto = row.querySelector("input[name$='-peso_bruto']");
+
+      const atualizar = () => {
+        const val = parseFloat(liquido?.value?.replace(",", ".")) || 0;
+        if (bruto) bruto.value = (val * qtdeEstimada).toFixed(3);
+      };
+
+      if (liquido && bruto) {
+        liquido.addEventListener("input", atualizar);
+        atualizar(); // valor inicial
+      }
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const qtdeEstimada = parseFloat("{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".")) || 0;
+    const linhas = document.querySelectorAll("tbody tr");
+
+    if (linhas.length < 2) return;
+
+    const primeira = linhas[0];
+    const campoDesenv = primeira.querySelector("input[name$='-desenvolvido_mm']");
+    const campoPesoLiq = primeira.querySelector("input[name$='-peso_liquido']");
+
+    function copiarValores() {
+      const valDesenv = campoDesenv?.value || "";
+      const valPesoLiq = campoPesoLiq?.value || "";
+
+      if (!valDesenv && !valPesoLiq) return;
+
+      for (let i = 1; i < linhas.length; i++) {
+        const linha = linhas[i];
+        const d = linha.querySelector("input[name$='-desenvolvido_mm']");
+        const l = linha.querySelector("input[name$='-peso_liquido']");
+        const b = linha.querySelector("input[name$='-peso_bruto']");
+
+        if (d) d.value = valDesenv;
+        if (l) l.value = valPesoLiq;
+
+        const pesoLiqFloat = parseFloat(valPesoLiq.replace(",", ".")) || 0;
+        if (b) b.value = (pesoLiqFloat * qtdeEstimada).toFixed(3);
+      }
+    }
+
+    campoDesenv?.addEventListener("input", copiarValores);
+    campoPesoLiq?.addEventListener("input", copiarValores);
+  });
+</script>

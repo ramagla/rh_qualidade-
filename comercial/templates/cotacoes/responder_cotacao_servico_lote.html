@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Responder Cotação - {{ codigo }}</title>
+  <title>Responder Cotação - Serviço Externo - {{ codigo }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -10,11 +10,10 @@
 <body class="bg-light">
   <div class="container mt-5 p-4 bg-white shadow rounded">
     <h2 class="mb-3">
-      <i class="bi bi-receipt-cutoff me-2 text-primary"></i>
-      Responder Cotação – Código: <strong>{{ codigo }}</strong>
+      <i class="bi bi-tools me-2 text-danger"></i>
+      Responder Cotação – Serviço Externo – <strong>{{ codigo }}</strong>
     </h2>
 
-    <!-- Alerta com orientação -->
     <div class="alert alert-info d-flex align-items-center gap-2 small">
       <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
       Cotar no mínimo <strong>2 fornecedores diferentes</strong>. Caso não haja fonte homologada, consulte o setor responsável.
@@ -24,9 +23,9 @@
       <strong>
         <i class="bi bi-box me-1 text-muted"></i> Peso Bruto:
       </strong>
-      {{ materiais.0.peso_bruto|floatformat:2 }}
+      {{ servicos.0.peso_bruto|floatformat:2 }}
     </p>
-    
+
     <div class="mb-3">
       <label>
         <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
@@ -35,7 +34,6 @@
         {{ observacoes_gerais|default:"Sem observações"|safe }}
       </div>
     </div>
-    
 
     {% if messages %}
       <div class="mb-3">
@@ -50,45 +48,39 @@
       <table class="table table-bordered align-middle text-center">
         <thead class="table-light">
           <tr>
-            <th style="width: 30%;">
+            <th>
               <i class="bi bi-building me-1"></i> Fornecedor
             </th>
-            <th style="width: 15%;">
-              <i class="bi bi-percent me-1"></i> ICMS (%)
-            </th>
-            <th style="width: 15%;">
+            <th>
               <i class="bi bi-boxes me-1"></i> Lote Mínimo
             </th>
-            <th style="width: 15%;">
+            <th>
               <i class="bi bi-truck me-1"></i> Entrega (dias corridos)
             </th>
-            <th style="width: 15%;">
+            <th>
               <i class="bi bi-currency-dollar me-1"></i> Preço/kg
             </th>
           </tr>
         </thead>
         <tbody>
-          {% for mat in materiais %}
+          {% for sev in servicos %}
           <tr>
             <td>
               <select name="fornecedor_{{ forloop.counter0 }}" class="form-select select2">
                 <option value="">Selecione o fornecedor</option>
                 {% for f in fornecedores %}
-                  <option value="{{ f.id }}" {% if mat.fornecedor and f.id == mat.fornecedor.id %}selected{% endif %}>{{ f.nome }}</option>
+                  <option value="{{ f.id }}" {% if sev.fornecedor and f.id == sev.fornecedor.id %}selected{% endif %}>{{ f.nome }}</option>
                 {% endfor %}
               </select>
             </td>
             <td>
-              <input type="number" step="0.01" name="icms_{{ forloop.counter0 }}" value="{{ mat.icms|default:'0.00' }}" class="form-control" placeholder="Ex: 18.00" />
+              <input type="number" name="lote_minimo_{{ forloop.counter0 }}" value="{{ sev.lote_minimo }}" class="form-control" placeholder="Ex: 250" />
             </td>
             <td>
-              <input type="number" name="lote_minimo_{{ forloop.counter0 }}" value="{{ mat.lote_minimo }}" class="form-control" placeholder="Ex: 250" />
+              <input type="number" name="entrega_dias_{{ forloop.counter0 }}" value="{{ sev.entrega_dias }}" class="form-control" placeholder="Ex: 30" />
             </td>
             <td>
-              <input type="number" name="entrega_dias_{{ forloop.counter0 }}" value="{{ mat.entrega_dias }}" class="form-control" placeholder="Ex: 30" />
-            </td>
-            <td>
-              <input type="number" step="0.01" name="preco_kg_{{ forloop.counter0 }}" value="{{ mat.preco_kg }}" class="form-control" placeholder="Ex: 14.90" />
+              <input type="number" step="0.01" name="preco_kg_{{ forloop.counter0 }}" value="{{ sev.preco_kg }}" class="form-control" placeholder="Ex: 14.90" />
             </td>
           </tr>
           {% endfor %}

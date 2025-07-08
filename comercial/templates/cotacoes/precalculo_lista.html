@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Itens de Pré-Cálculo - Cotação #{{ cotacao.numero }}{% endblock %}
+{% load humanize %}
 
 {% block content %}
 {% load custom_filters %}
@@ -21,10 +22,11 @@
   <!-- Botões -->
   <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
     <a href="{% url 'lista_cotacoes' %}"
-       class="btn btn-secondary d-inline-flex align-items-center">
-      <i class="bi bi-arrow-left-circle-fill me-2"></i>
-      Voltar às Cotações
-    </a>
+    class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+   <i class="bi bi-arrow-left-circle-fill me-2"></i>
+   Voltar às Cotações
+ </a>
+ 
     {% if request.user|has_permission:"comercial.add_precalculo" %}
       <a href="{% url 'criar_precalculo' cotacao.id %}"
          class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
@@ -53,51 +55,78 @@
         <tr>
           <th>#</th>
           <th>Código</th>
-          <th>Análise Comercial</th>
-          <th>Regras de Cálculo</th>
-          <th>Avaliação Técnica</th>
-          <th>Desenvolvimento</th>
+          <th>Qtde Estimada</th>
+          <th>Status da Análise</th>
+          <th>Periodicidade</th>
+          <th>Valor Total (R$)</th>
+          <th>Preço Escolhido (R$)</th>
           <th>Ações</th>
         </tr>
       </thead>
+      
       <tbody>
         {% for item in page_obj %}
           <tr>
             <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
             <td>{{ item.analise_comercial_item.item.codigo }}</td>
-  
+      
+            <!-- Quantidade Estimada -->
             <td>
-              {% if item.analise_ok %}
-                <span class="badge bg-success">OK</span>
+              {{ item.analise_comercial_item.qtde_estimada|intcomma|default:"—" }}
+            </td>
+      
+            <!-- Status da Análise -->
+            <td>
+              {% if item.analise_comercial_item.status == "aprovado" %}
+                <span class="badge bg-success">Aprovado</span>
+              {% elif item.analise_comercial_item.status == "reprovado" %}
+                <span class="badge bg-danger">Reprovado</span>
+              {% elif item.analise_comercial_item.status == "amostras" %}
+                <span class="badge bg-warning text-dark">Solicitação de Amostras</span>
               {% else %}
-                <span class="badge bg-warning text-dark">Aguardando</span>
+                <span class="badge bg-secondary">Em Andamento</span>
               {% endif %}
             </td>
-  
+            
+      
+            <!-- Periodicidade -->
             <td>
-              {% if item.regras_ok %}
-                <span class="badge bg-success">OK</span>
-              {% else %}
-                <span class="badge bg-warning text-dark">Aguardando</span>
-              {% endif %}
+              {% with periodo=item.analise_comercial_item.periodo %}
+                {% if periodo == "Mensal" %}
+                  <span class="badge bg-info"><i class="bi bi-calendar2-date me-1"></i> Mensal</span>
+                {% elif periodo == "Trimestral" %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-calendar2-range me-1"></i> Trimestral</span>
+                {% elif periodo == "Semestral" %}
+                  <span class="badge bg-primary"><i class="bi bi-calendar2-event me-1"></i> Semestral</span>
+                {% elif periodo == "Anual" %}
+                  <span class="badge bg-success"><i class="bi bi-calendar2-check me-1"></i> Anual</span>
+                {% else %}
+                  <span class="badge bg-secondary"><i class="bi bi-calendar2-week me-1"></i> Esporádico</span>
+                {% endif %}
+              {% endwith %}
             </td>
-  
+            
+      
+            <!-- Valor Total -->
             <td>
-              {% if item.avaliacao_ok %}
-                <span class="badge bg-success">OK</span>
-              {% else %}
-                <span class="badge bg-warning text-dark">Aguardando</span>
-              {% endif %}
+              {% with precos=item.calcular_precos_sem_impostos %}
+                {% if precos %}
+                  {% with total=precos|last %}
+                    {{ total.total|floatformat:2 }}
+                  {% endwith %}
+                {% else %}
+                  —
+                {% endif %}
+              {% endwith %}
             </td>
-  
+            
+            
+            <!-- Preço Escolhido -->
             <td>
-              {% if item.desenvolvimento_ok %}
-                <span class="badge bg-success">OK</span>
-              {% else %}
-                <span class="badge bg-warning text-dark">Aguardando</span>
-              {% endif %}
+              {{ item.preco_selecionado|floatformat:2|default:"—" }}
             </td>
-  
+      
+            <!-- Ações -->
             <td>
               <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
                 {% if request.user|has_permission:"comercial.change_precalculo" %}
@@ -112,6 +141,7 @@
           </tr>
         {% endfor %}
       </tbody>
+      
     </table>
     {% include "partials/global/_paginacao.html" with page_obj=page_obj %}
   </div>

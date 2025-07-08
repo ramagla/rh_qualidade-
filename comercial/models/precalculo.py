@@ -9,10 +9,11 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django_ckeditor_5.fields import CKEditor5Field
+from decimal import Decimal
 
 from .clientes import Cliente
 from .centro_custo import CentroDeCusto
-from tecnico.models.roteiro import RoteiroProducao, EtapaRoteiro
+from tecnico.models.roteiro import InsumoEtapa, RoteiroProducao, EtapaRoteiro
 from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 from comercial.models.ferramenta import Ferramenta
@@ -37,12 +38,105 @@ class AuditModel(models.Model):
         abstract = True
 
 
+from decimal import Decimal
+
 class PreCalculo(models.Model):
     cotacao = models.ForeignKey(Cotacao, on_delete=models.CASCADE, related_name="precalculos")
-    numero = models.PositiveIntegerField("Número do Pré-Cálculo", unique=True, editable=False)
+    numero = models.PositiveIntegerField("Número do Pré-Cálculo", editable=False)
     criado_em = models.DateTimeField(auto_now_add=True)
     criado_por = models.ForeignKey(User, on_delete=models.PROTECT)
     observacoes_materiais = CKEditor5Field("Observações Materiais", config_name="default", blank=True, null=True)
+    observacoes_servicos = CKEditor5Field("Observações Serviços Externos", blank=True, null=True)
+    preco_selecionado = models.DecimalField("Preço Final Selecionado (R$)", max_digits=12, decimal_places=4, null=True, blank=True)
+    preco_manual = models.DecimalField("Preço Final Manual (R$)", max_digits=12, decimal_places=4, null=True, blank=True)
+
+    def calcular_precos_sem_impostos(self):
+        regras = getattr(self, "regras_calculo_item", None)
+        if not regras:
+            return []
+
+        custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
+
+        # ✅ Somente a matéria-prima selecionada
+        mat = self.materiais.filter(selecionado=True).first()
+        materiais = (mat.peso_bruto or 0) * (mat.preco_kg or 0) if mat else 0
+
+        servicos = sum((s.peso_bruto or 0) * (s.preco_kg or 0) for s in self.servicos.all())
+        base = custos_diretos + materiais + servicos
+
+        impostos_basicos = base * (Decimal(regras.ir + regras.csll + regras.df + regras.dv) / 100)
+
+        valores = []
+        for margem in range(10, 61, 5):
+            bruto = base + impostos_basicos
+            total = bruto * (1 + Decimal(margem) / 100)
+            qtde = getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1
+            unitario = total / Decimal(qtde)
+            valores.append({
+                "percentual": margem,
+                "total": round(total, 2),
+                "unitario": round(unitario, 4),
+            })
+        return valores
+    
+    class Meta:
+            verbose_name = "Pré-Cálculo"
+            verbose_name_plural = "Pré-Cálculos"
+            unique_together = ("cotacao", "numero")
+
+
+
+    def calcular_precos_com_impostos(self):
+        regras = getattr(self, "regras_calculo_item", None)
+        if not regras:
+            return []
+
+        custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
+
+        # ✅ Somente a matéria-prima selecionada
+        mat = self.materiais.filter(selecionado=True).first()
+        materiais = (mat.peso_bruto or 0) * (mat.preco_kg or 0) if mat else 0
+
+        servicos = sum((s.peso_bruto or 0) * (s.preco_kg or 0) for s in self.servicos.all())
+        base = custos_diretos + materiais + servicos
+
+        despesas = base * (Decimal(regras.df + regras.dv) / 100)
+        impostos = base * (Decimal(
+            regras.icms + regras.pis + regras.confins + regras.ir + regras.csll + regras.df + regras.dv
+        ) / 100)
+
+        valores = []
+        for margem in range(10, 61, 5):
+            bruto = base + despesas + impostos
+            total = bruto * (1 + Decimal(margem) / 100)
+            qtde = getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1
+            unitario = total / Decimal(qtde)
+            valores.append({
+                "percentual": margem,
+                "total": round(total, 2),
+                "unitario": round(unitario, 4),
+            })
+        return valores
+
+
+
+    def opcoes_precos(self):
+        """Combina todos os valores calculados para alimentar o <select>."""
+        opcoes = []
+
+        for item in self.calcular_precos_finais():
+            opcoes.append({
+                "descricao": item["tipo"],
+                "valor": item["valor"]
+            })
+
+        for item in self.calcular_precos_com_impostos():
+            opcoes.append({
+                "descricao": f"{item['percentual']}% com impostos",
+                "valor": item["total"]
+            })
+
+        return opcoes
 
     class Meta:
         verbose_name = "Pré-Cálculo"
@@ -59,8 +153,15 @@ class PreCalculo(models.Model):
 
 
 
+
 class AnaliseComercial(models.Model):
-    """Perguntas de análise comercial vinculadas à cotação."""
+    """Perguntas de análise comercial vinculadas à cotação."""    
+    STATUS_CHOICES = [
+        ("andamento", "Em Andamento"),
+        ("aprovado", "Aprovado"),
+        ("reprovado", "Reprovado"),
+        ("amostras", "Solicitação de Amostras"),
+    ]
 
     METODOLOGIA = [
         ("Não aplicável", "Não aplicável"),
@@ -125,7 +226,9 @@ class AnaliseComercial(models.Model):
     assinatura_nome = models.CharField("Nome da assinatura", max_length=150, null=True, blank=True)
     assinatura_cn = models.CharField("CN da assinatura (email)", max_length=150, null=True, blank=True)
     periodo = models.CharField("Periodicidade de Fornecimento", max_length=20, choices=PERIODICIDADE, blank=True, null=True)
-
+    status = models.CharField("Status da Análise", max_length=20, choices=STATUS_CHOICES, default="andamento")
+    motivo_reprovacao = models.TextField("Motivo da Reprovação", blank=True, null=True)
+    
     class Meta:
         verbose_name = "Análise Comercial"
         verbose_name_plural = "Análises Comerciais"
@@ -153,7 +256,7 @@ class PreCalculoMaterial(AuditModel):
     selecionado = models.BooleanField(default=False) 
     
     desenvolvido_mm = models.DecimalField(
-        "Desenvolvido (mm)", max_digits=8, decimal_places=2
+        "Desenvolvido (mm)", max_digits=8, decimal_places=4
     )
     peso_liquido = models.DecimalField(
         "Peso Líquido (kg)", max_digits=20, decimal_places=7
@@ -179,32 +282,40 @@ class PreCalculoMaterial(AuditModel):
 
 
 class PreCalculoServicoExterno(AuditModel):
-    """Serviços externos do pré-cálculo, filtrando etapa 'Tratamento Externo'."""
-    precalculo = models.ForeignKey("PreCalculo", on_delete=models.CASCADE, related_name="servicos",null=True, blank=True)
+    """Serviços externos do pré-cálculo, baseados em insumos de etapas com setor 'Tratamento Externo'."""
 
-    etapa = models.ForeignKey(
-        EtapaRoteiro, on_delete=models.PROTECT,
-        limit_choices_to={'setor__nome__icontains': 'Tratamento Externo'},
-        verbose_name="Etapa (Tratamento Externo)"
+    STATUS_CHOICES = [
+        ('aguardando', 'Aguardando Cotação'),
+        ('ok', 'OK'),
+    ]
+
+    precalculo = models.ForeignKey(
+        "PreCalculo",
+        on_delete=models.CASCADE,
+        related_name="servicos",
+        null=True, blank=True
     )
-    codigo = models.CharField("Código", max_length=50)
-    lote_minimo = models.PositiveIntegerField("Lote Mínimo")
-    entrega_dias = models.PositiveIntegerField("Entrega (dias)")
+
+    insumo = models.ForeignKey(
+        InsumoEtapa,
+        on_delete=models.PROTECT,
+        limit_choices_to={'etapa__setor__nome__icontains': 'Tratamento Externo'},
+        verbose_name="Insumo (Tratamento Externo)"
+    )
+
+    lote_minimo = models.PositiveIntegerField("Lote Mínimo", null=True, blank=True)
+    entrega_dias = models.PositiveIntegerField("Entrega (dias)", null=True, blank=True)
     fornecedor = models.ForeignKey(
-        FornecedorQualificado, on_delete=models.PROTECT
+        FornecedorQualificado, on_delete=models.PROTECT,
+        null=True, blank=True
     )
-    desenvolvido_mm = models.DecimalField(
-        "Desenvolvido (mm)", max_digits=8, decimal_places=2
-    )
-    peso_liquido = models.DecimalField(
-        "Peso Líquido (kg)", max_digits=10, decimal_places=3
-    )
-    peso_bruto = models.DecimalField(
-        "Peso Bruto (kg)", max_digits=10, decimal_places=3
-    )
-    preco_kg = models.DecimalField(
-        "Preço /kg", max_digits=12, decimal_places=4
-    )
+    desenvolvido_mm = models.DecimalField("Desenvolvido (mm)", max_digits=8, decimal_places=2)
+    peso_liquido = models.DecimalField("Peso Líquido (kg)", max_digits=20, decimal_places=7)
+    peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=20, decimal_places=7)
+    preco_kg = models.DecimalField("Preço /kg", max_digits=12, decimal_places=4, null=True, blank=True)
+    selecionado = models.BooleanField(default=False)
+
+    status = models.CharField("Status da Cotação", max_length=20, choices=STATUS_CHOICES, default='aguardando')
 
     # 🔐 Metadados de Assinatura
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
@@ -216,6 +327,14 @@ class PreCalculoServicoExterno(AuditModel):
     class Meta:
         verbose_name = "Pré-Cálculo Serviço Externo"
         verbose_name_plural = "Serviços Externos Pré-Cálculo"
+
+    def save(self, *args, **kwargs):
+        if self.insumo and self.insumo.materia_prima:
+            self.codigo = self.insumo.materia_prima.codigo
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Serviço Externo - {self.codigo or 'sem código'}"
 
 
 class AvaliacaoTecnica(AuditModel):

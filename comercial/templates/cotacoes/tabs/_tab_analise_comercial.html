@@ -37,6 +37,27 @@
             </div>
           </div>
 
+          <!-- Status -->
+<div class="row mb-3 align-items-start">
+  <label class="col-sm-5 col-form-label">
+    <i class="bi bi-flag me-1 text-muted"></i> Status da Análise
+  </label>
+  <div class="col-sm-7">
+    {{ form_analise.status|add_class:"form-select form-select-sm" }}
+  </div>
+</div>
+
+<!-- Motivo da Reprovação (condicional) -->
+<div class="row mb-3 align-items-start" id="motivoReprovacaoBlock" style="display: none;">
+  <label class="col-sm-5 col-form-label">
+    <i class="bi bi-exclamation-circle me-1 text-danger"></i> Motivo da Reprovação
+  </label>
+  <div class="col-sm-7">
+    {{ form_analise.motivo_reprovacao }}
+  </div>
+</div>
+
+
             <!-- Periodicidade -->
   <div class="row mb-3 align-items-start">
     <label class="col-sm-5 col-form-label">
@@ -168,3 +189,19 @@ function toggleObservacao(campo) {
     .col-form-label { font-size: 0.9rem; }
   }
 </style>
+<script>
+  function toggleMotivoReprovacao() {
+    const status = document.querySelector('select[name="status"]').value;
+    const motivoDiv = document.getElementById("motivoReprovacaoBlock");
+    motivoDiv.style.display = status === "reprovado" ? "block" : "none";
+  }
+  
+  document.addEventListener("DOMContentLoaded", function () {
+    const statusField = document.querySelector('select[name="status"]');
+    if (statusField) {
+      statusField.addEventListener("change", toggleMotivoReprovacao);
+      toggleMotivoReprovacao();  // aplica na carga inicial
+    }
+  });
+  </script>
+  

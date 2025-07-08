@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load filters_gerais %}
 
 {% block title %}{% if cotacao %}Editar{% else %}Cadastrar{% endif %} Cotação{% endblock %}
 
@@ -44,8 +45,10 @@
     {# Responsável (view prepopula) #}
     <div class="col-md-6">
       <label class="form-label">Responsável</label>
-      <input type="text" class="form-control" value="{{ request.user.get_full_name }}" disabled>
+      <input type="text" class="form-control" value="{{ request.user.first_name }} {{ request.user.last_name }}" disabled>
     </div>
+    
+    
 
     {# Cliente #}
     <div class="col-md-6">

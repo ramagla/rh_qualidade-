@@ -84,27 +84,26 @@ def lista_cotacoes(request):
 @login_required
 @permission_required('comercial.add_cotacao', raise_exception=True)
 def cadastrar_cotacao(request):
-    """
-    Cria uma nova cotação básica (sem itens de pré-cálculo).
-    """
     if request.method == 'POST':
         form = CotacaoForm(request.POST, user=request.user)
         if form.is_valid():
             cot = form.save(commit=False)
+            cot.created_by = request.user
+            cot.updated_by = request.user
             cot.data_abertura = timezone.now()
-            cot.responsavel  = request.user
-            cot.created_by   = request.user
-            cot.updated_by   = request.user
             cot.save()
+
+
             messages.success(request, 'Cotação criada com sucesso.')
             return redirect('lista_cotacoes')
     else:
-        form = CotacaoForm(user=request.user)
-
+            form = CotacaoForm(user=request.user)
     return render(request, 'cotacoes/form_cotacao.html', {
         'form': form,
-        'cotacao': None,   # template usa this to know que é create
+        'cotacao': None,
     })
+
+
 
 
 @login_required
@@ -119,7 +118,8 @@ def editar_cotacao(request, pk):
         form = CotacaoForm(request.POST, instance=cot, user=request.user)
         if form.is_valid():
             cot = form.save(commit=False)
-            cot.updated_by = request.user
+            cot.updated_by = request.user  # mantém histórico
+            # ❌ não reatribui `responsavel` nem `created_by`
             cot.save()
             messages.success(request, 'Cotação atualizada com sucesso.')
             return redirect('lista_cotacoes')
@@ -128,8 +128,9 @@ def editar_cotacao(request, pk):
 
     return render(request, 'cotacoes/form_cotacao.html', {
         'form': form,
-        'cotacao': cot,   # template exibe botão "Itens da Cotação"
+        'cotacao': cot,  # usado no template para exibir botão "Itens"
     })
+
 
 @login_required
 @permission_required("comercial.delete_cotacao", raise_exception=True)
