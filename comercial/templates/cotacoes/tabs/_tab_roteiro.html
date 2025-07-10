@@ -1,45 +1,188 @@
+{% load widget_tweaks %}
+{% load filters_gerais %}
+{% with qtde=analise.qtde_estimada|default_if_none:"1" %}
+
 <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="hidden" name="form_roteiro_submitted" value="1">
-    {{ fs_rot.management_form }}
+  <input type="hidden" name="aba" value="roteiro">
+  <input type="hidden" name="form_roteiro_submitted" value="1">
+
+  {% csrf_token %}
+  {{ fs_rot.management_form }}
+  <h5 class="mb-4">
+    <i class="bi bi-diagram-3 text-primary me-2"></i> Roteiro de Produção
+  </h5>
   
-    <div class="table-responsive mt-3">
-      <table class="table table-bordered align-middle text-center">
-        <thead class="table-light">
-          <tr>
-            <th>Nº</th>
-            <th>Setor</th>
-            <th>Peças/hora</th>
-            <th>Setup (min)</th>
-            <th>Custo Hora</th>
-            <th>Valor Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for form in fs_rot.forms %}
-            <tr>
-              <td>{{ form.etapa }}</td>
-              <td>{{ form.setor }}</td>
-              <td>{{ form.pph }}</td>
-              <td>{{ form.setup_minutos }}</td>
-              <td>{{ form.custo_hora }}</td>
-              <td>
-                {% if form.instance.custo_total %}
-                  {{ form.instance.custo_total|floatformat:2 }}
-                {% else %}
-                  0,00
-                {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+ <!-- Bloco informativo -->
+<div class="alert alert-info small">
+  <div class="d-flex align-items-center mb-2">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+    <strong>Informações sobre os cálculos:</strong>
+  </div>
+  <ul class="mb-2 ps-3">
+    <li>
+      Os campos <strong>Valor Total</strong> são calculados automaticamente com base nas fórmulas:
+      <ul class="mt-1">
+        <li><code>Setup (min) ÷ 60 × Custo Hora</code></li>
+        <li><code>Qtde Estimada ÷ Peças/hora × Custo Hora</code></li>
+      </ul>
+    </li>
+    <li>
+      O valor final é a soma dos dois totais quando aplicável.
+    </li>
+    <li>
+      A <strong>Média de Custo Hora</strong> no rodapé considera apenas os setores com valor de custo maior que zero.
+    </li>
+    <li>
+      Os valores são recalculados automaticamente ao alterar qualquer campo da tabela.
+    </li>
+  </ul>
+</div>
+
+
+  <!-- ... tabela vem aqui ... -->
   
-    <div class="text-end mt-3">
-      <button type="submit" class="btn btn-success">
-        <i class="bi bi-save me-1"></i> Salvar Alterações
-      </button>
-    </div>
-  </form>
+  <div class="table-responsive mt-3">
+    <table class="table table-bordered align-middle text-center table-sm">
+      <thead class="table-light">
+        <tr>
+          <th><i class="bi bi-diagram-3-fill me-1 text-muted"></i> Setor</th>
+          <th><i class="bi bi-speedometer2 me-1 text-muted"></i> Peças/hora</th>
+          <th><i class="bi bi-stopwatch me-1 text-muted"></i> Setup (min)</th>
+          <th><i class="bi bi-currency-dollar me-1 text-muted"></i> Custo Hora</th>
+          <th><i class="bi bi-calculator-fill me-1 text-muted"></i> Valor Total (R$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in fs_rot.forms %}
+  <tr>
+    {{ form.id }}
+    <td>
+      <input type="text" class="form-control form-control-sm text-center bg-light"
+             value="{{ form.instance.setor.nome|default_if_none:'-' }}" readonly>
+      {{ form.setor.as_hidden }}
+      {{ form.etapa.as_hidden }}
+    </td>
+    <td>
+      {{ form.pph|add_class:"form-control form-control-sm text-center campo-pph"|attr:"autocomplete:off" }}
+    </td>
+    
+    <td>
+      {{ form.setup_minutos|add_class:"form-control form-control-sm text-center campo-setup"|attr:"autocomplete:off" }}
+    </td>
+    
+    <td>
+      {{ form.custo_hora|add_class:"form-control form-control-sm text-center campo-custo"|attr:"autocomplete:off" }}
+    </td>
+    <td>
+      {{ form.custo_total|add_class:"form-control form-control-sm text-center campo-total"|attr:"autocomplete:off" }}
+    </td>
+    
+  </tr>
+{% endfor %}
+
+      </tbody>
+      <tfoot>
+        <tr class="table-light fw-bold">
+          <td colspan="2" class="text-end">Totais:</td>
+          <td>
+            <input type="text" readonly class="form-control form-control-sm text-center" id="total-setup">
+          </td>
+          <td>
+            <input type="text" readonly class="form-control form-control-sm text-center" id="media-custo-hora" placeholder="(Média)">
+          </td>
+          <td>
+            <input type="text" readonly class="form-control form-control-sm text-center" id="total-custo">
+          </td>
+        </tr>
+      </tfoot>
+      
+      
+    </table>
+  </div>
+
+  <div class="text-end mt-3">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save me-1"></i> Salvar Alterações
+    </button>
+  </div>
+</form>
+{% endwith %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const qtdeEstimada = parseFloat("{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".")) || 1;
+
+    function recalcularLinha(row) {
+      const pphInput = row.querySelector("input[name^='rot-'][name$='-pph']");
+      const setupInput = row.querySelector("input[name^='rot-'][name$='-setup_minutos']");
+      const custoHoraInput = row.querySelector("input[name^='rot-'][name$='-custo_hora']");
+      const custoTotalInput = row.querySelector("input[name^='rot-'][name$='-custo_total']");
+
+      if (!pphInput || !setupInput || !custoHoraInput || !custoTotalInput) return;
+
+      const pph = parseFloat(pphInput.value.replace(",", ".")) || 0;
+      const setup = parseFloat(setupInput.value.replace(",", ".")) || 0;
+      const custo = parseFloat(custoHoraInput.value.replace(",", ".")) || 0;
+
+      const total = custo * (setup / 60 + qtdeEstimada / (pph || 1));
+      custoTotalInput.value = total.toFixed(2);
+    }
+
+    const linhas = document.querySelectorAll("tbody tr");
+    linhas.forEach((linha) => {
+      recalcularLinha(linha);
+
+      linha.querySelectorAll("input").forEach(input => {
+        input.addEventListener("input", () => {
+          recalcularLinha(linha);
+        });
+      });
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    function calcularTotaisRoteiro() {
+      const linhas = document.querySelectorAll("tbody tr");
+      let totalSetup = 0;
+      let totalCusto = 0;
+      let somaCustoHora = 0;
+      let contadorCustoHora = 0;
+
+      linhas.forEach(row => {
+        const setupInput = row.querySelector("input[name^='rot-'][name$='-setup_minutos']");
+        const custoHoraInput = row.querySelector("input[name^='rot-'][name$='-custo_hora']");
+        const custoTotalInput = row.querySelector("input[name^='rot-'][name$='-custo_total']");
+
+        const setup = parseFloat(setupInput?.value.replace(",", ".")) || 0;
+        const custoHora = parseFloat(custoHoraInput?.value.replace(",", ".")) || 0;
+        const custoTotal = parseFloat(custoTotalInput?.value.replace(",", ".")) || 0;
+
+        totalSetup += setup;
+        totalCusto += custoTotal;
+
+        if (custoHora > 0) {
+          somaCustoHora += custoHora;
+          contadorCustoHora += 1;
+        }
+      });
+
+      const mediaCustoHora = contadorCustoHora > 0 ? (somaCustoHora / contadorCustoHora) : 0;
+
+      document.getElementById("total-setup").value = totalSetup.toFixed(2);
+      document.getElementById("total-custo").value = totalCusto.toFixed(2);
+      document.getElementById("media-custo-hora").value = `${mediaCustoHora.toFixed(2)} (Média)`;
+    }
+
+    calcularTotaisRoteiro();
+
+    document.querySelectorAll("tbody input").forEach(input => {
+      input.addEventListener("input", calcularTotaisRoteiro);
+    });
+  });
+</script>
+
+
+
   

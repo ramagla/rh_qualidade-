@@ -2,8 +2,10 @@
 {% load comercial_formatos %}
 
 <form method="post">
-  {% csrf_token %}
+  <input type="hidden" name="aba" value="analise">
   <input type="hidden" name="form_analise_submitted" value="1">
+
+  {% csrf_token %}
 
   <div class="row g-4 bg-analise p-4 rounded shadow-sm">
 

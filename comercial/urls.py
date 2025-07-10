@@ -3,8 +3,11 @@ from comercial.views import centro_custo_views, cliente_views, ferramenta_views
 from comercial.views import item_views
 from comercial.views import dashboard_views
 from comercial.views import cotacao_views, precalc_views
-from comercial.views import ajax_views  # importe
-
+from comercial.views import ajax_views
+from comercial.utils.email_cotacao_utils import (
+    responder_cotacao_materia_prima,
+    responder_cotacao_servico_lote,
+)
 
 urlpatterns = [
     # Dashboard
@@ -33,20 +36,18 @@ urlpatterns = [
     path("ferramentas/cotacao/<uuid:token>/", ferramenta_views.formulario_cotacao, name="responder_cotacao"),
     path("ferramentas/enviar-cotacao/<int:pk>/", ferramenta_views.enviar_cotacao_ferramenta, name="enviar_cotacao_ferramenta"),
     path("ferramentas/visualizar/<int:pk>/", ferramenta_views.visualizar_ferramenta, name="visualizar_ferramenta"),
-    path('ferramentas/blocos/', ferramenta_views.lista_blocos, name='lista_blocos'),
+    path("ferramentas/blocos/", ferramenta_views.lista_blocos, name="lista_blocos"),
     path("ferramentas/blocos/novo/", ferramenta_views.cadastrar_bloco, name="cadastrar_bloco"),
     path("ferramentas/blocos/<int:pk>/editar/", ferramenta_views.editar_bloco, name="editar_bloco"),
     path("ferramentas/blocos/<int:pk>/excluir/", ferramenta_views.excluir_bloco, name="excluir_bloco"),
     path("ajax/valor_hora_centro_custo/", ferramenta_views.ajax_valor_hora_centro_custo, name="ajax_valor_hora_centro_custo"),
     path("ajax/materiais-do-bloco/<int:bloco_id>/", ferramenta_views.ajax_materiais_do_bloco, name="ajax_materiais_do_bloco"),
 
-
     # Centro de Custo
     path("centros-custo/", centro_custo_views.lista_centros_custo, name="lista_centros_custo"),
     path("centros-custo/cadastrar/", centro_custo_views.cadastrar_centro_custo, name="cadastrar_centro_custo"),
     path("centros-custo/editar/<int:pk>/", centro_custo_views.editar_centro_custo, name="editar_centro_custo"),
     path("centros-custo/visualizar/<int:pk>/", centro_custo_views.visualizar_centro_custo, name="visualizar_centro_custo"),
-
 
     # Cotações
     path("cotacoes/", cotacao_views.lista_cotacoes, name="lista_cotacoes"),
@@ -55,22 +56,23 @@ urlpatterns = [
     path("cotacoes/excluir/<int:pk>/", cotacao_views.excluir_cotacao, name="excluir_cotacao"),
     path("cotacoes/visualizar/<int:pk>/", cotacao_views.visualizar_cotacao, name="visualizar_cotacao"),
     path("cotacoes/ajax/dados-cliente/", cotacao_views.dados_cliente_ajax, name="dados_cliente_ajax"),
-    path("precalculo/servico/<int:pk>/responder/", precalc_views.responder_cotacao_servico_lote, name="responder_cotacao_servico_lote"),
 
     # Pré-Cálculo
     path("cotacoes/<int:pk>/precalculo/", precalc_views.itens_precaculo, name="itens_precaculo"),
     path("cotacoes/<int:pk>/precalculo/editar/", precalc_views.editar_precaculo, name="editar_precalculo"),
     path("cotacoes/<int:pk>/precalculo/criar/", precalc_views.criar_precaculo, name="criar_precalculo"),
     path("cotacoes/precalculo/<int:pk>/excluir/", precalc_views.excluir_precalculo, name="excluir_precalculo"),
-    path("precalculo/materia/<int:pk>/responder/", precalc_views.responder_cotacao_materia_prima, name="responder_cotacao_materia_prima"),
 
+    # Resposta das Cotações
+    path("precalculo/servico/<int:pk>/responder/", responder_cotacao_servico_lote, name="responder_cotacao_servico_lote"),
+    path("precalculo/materia/<int:pk>/responder/", responder_cotacao_materia_prima, name="responder_cotacao_materia_prima"),
 
+    # Ajax
     path("ajax/codigo-materia-prima/", ajax_views.ajax_codigo_materia_prima_por_roteiro, name="ajax_codigo_materia_prima"),
     path("ajax/valor_ferramenta/", ajax_views.ajax_valor_ferramenta, name="ajax_valor_ferramenta"),
 
-    
+
+    # Relatorios 
+    path("cotacoes/precalculo/<int:pk>/visualizar/", precalc_views.visualizar_precalculo, name="visualizar_precalculo"),
+
 ]
-
-
-
-

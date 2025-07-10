@@ -1,8 +1,9 @@
 {% load widget_tweaks %}
 
 <form method="post">
-  {% csrf_token %}
+  <input type="hidden" name="aba" value="regras">
   <input type="hidden" name="form_regras_submitted" value="1">
+  {% csrf_token %}
 
   <div class="row bg-regras p-4 rounded shadow-sm">
     <div class="col-12 col-lg-10 offset-lg-1">

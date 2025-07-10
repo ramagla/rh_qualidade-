@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}F011 - Formulário de Pré-Cálculo Nº {{ precalc.numero|default:"---" }}{% endblock %}
+{% load humanize %}
+{% load filters_gerais %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_header_titulo.html' with titulo="F011 - Pré-Cálculo de Orçamento" icone="bi bi-file-earmark-text" emoji="📄" %}
+
+<div class="container pdf-container">
+    {% load static %}
+
+  <!-- Cabeçalho do Item (Layout conforme PDF) -->
+<div class="table-responsive mb-4">
+    <table class="table table-bordered align-middle text-center mb-0" style="table-layout: fixed;">
+      <tr>
+        <!-- Coluna Logo -->
+        <td style="width: 20%;">
+          <img src="{% static 'img/logo.png' %}" alt="Logo" class="img-fluid" style="max-height: 70px;">
+        </td>
+  
+        <!-- Título Central -->
+        <td style="width: 60%;">
+          <div>
+            <strong>PRÉ-CÁLCULO DE ORÇAMENTO</strong><br>
+            <span class="text-uppercase">CARACTERIZAÇÃO DE MERCADO / PRODUTO</span>
+          </div>
+        </td>
+  
+        <!-- Coluna Nº Cotação e Nº Pré-Cálculo -->
+        <td style="width: 20%; padding: 0;">
+          <table class="table table-bordered text-center mb-0">
+            <tr>
+              <th class="p-1">Nº Cotação</th>
+            </tr>
+            <tr>
+              <td class="text-danger fw-bold p-1">{{ precalc.cotacao.numero|stringformat:"04d" }}</td>
+            </tr>
+            <tr>
+              <th class="p-1">Nº Pré-Cálculo</th>
+            </tr>
+            <tr>
+              <td class="text-danger fw-bold p-1">{{ precalc.numero|stringformat:"05d" }}</td>
+            </tr>
+            <tr>
+              <td class="p-1">Página <span class="pageNumber"></span> de <span class="totalPages"></span></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+  
+  
+  <!-- Tabela com dados do cliente e item com ícones -->
+<div class="table-responsive">
+    <table class="table table-bordered align-middle small">
+      <tr>
+        <th><i class="bi bi-person-badge"></i> Cliente:</th>
+        <td colspan="3">{{ precalc.analise_comercial_item.item.cliente }}</td>
+        <th><i class="bi bi-check2-square"></i> Requisito específico?</th>
+        <td class="text-center">
+          {% if precalc.analise_comercial_item.item.requisito_especifico == False %} ☒ Não ☐ Sim
+          {% elif precalc.analise_comercial_item.item.requisito_especifico == True %} ☐ Não ☒ Sim
+          {% else %} ☐ Não ☐ Sim
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-car-front"></i> Automotivo OEM?</th>
+        <td class="text-center">
+          {% with oem=precalc.analise_comercial_item.automotivo_oem|default_if_none:False %}
+            {% if oem %} ☐ Não ☒ Sim
+            {% else %} ☒ Não ☐ Sim
+            {% endif %}
+          {% endwith %}
+        </td>
+        <th><i class="bi bi-shield-check"></i> Item de segurança?</th>
+        <td class="text-center">
+          {% if precalc.analise_comercial_item.item.item_seguranca == False %} ☒ Não ☐ Sim
+          {% elif precalc.analise_comercial_item.item.item_seguranca == True %} ☐ Não ☒ Sim
+          {% else %} ☐ Não ☐ Sim
+          {% endif %}
+        </td>
+        <th><i class="bi bi-file-earmark"></i> Desenho:</th>
+        <td>{{ precalc.analise_comercial_item.item.codigo_desenho|default:"---" }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-list-ol"></i> Revisão:</th>
+        <td>{{ precalc.analise_comercial_item.item.revisao|default:"---" }}</td>
+        <th><i class="bi bi-calendar-date"></i> Data:</th>
+        <td colspan="3">{{ precalc.analise_comercial_item.item.data_revisao|date:"d/m/Y"|default:"---" }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-hash"></i> Nº da peça:</th>
+        <td colspan="2">{{ precalc.analise_comercial_item.item.descricao|default:"---" }}</td>
+        <th><i class="bi bi-tag"></i> Código Bras-Mol:</th>
+        <td colspan="2">{{ precalc.analise_comercial_item.item.codigo|default:"---" }}</td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-bar-chart"></i> Consumo estimado:</th>
+        <td>{{ precalc.analise_comercial_item.consumo_estimado|default:"---" }}</td>
+        <th><i class="bi bi-clock-history"></i> Período:</th>
+        <td>{{ precalc.analise_comercial_item.periodo|default:"---" }}</td>
+        <th><i class="bi bi-gear"></i> Capacidade produtiva?</th>
+        <td class="text-center">
+          {% if precalc.analise_comercial_item.capacidade_produtiva == False %} ☒ Não ☐ Sim
+          {% elif precalc.analise_comercial_item.capacidade_produtiva == True %} ☐ Não ☒ Sim
+          {% else %} ☐ Não ☐ Sim
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th><i class="bi bi-person-circle"></i> Responsável:</th>
+        <td colspan="5">
+          {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
+            {{ precalc.analise_comercial_item.usuario.get_full_name }} /
+            {{ precalc.analise_comercial_item.usuario.funcionario.cargo_atual|default:"---" }}<br>
+            <i class="bi bi-calendar-event"></i> {{ precalc.analise_comercial_item.assinado_em|date:"d/m/Y H:i" }}
+          {% else %}
+            {{ precalc.analise_comercial_item.assinatura_nome|default:"---" }}
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+  </div>
+  
+  
+
+  <!-- Caracterização Produto -->
+  <h5 class="mt-4">1. Caracterização de Produto</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      <tr>
+        <th>Tipo de Embalagem</th>
+        <td>{{ precalc.analise_comercial_item.tipo_embalagem_obs|default:"---" }}</td>
+        <th>Periodicidade</th>
+        <td>{{ precalc.analise_comercial_item.periodo|default:"---" }}</td>
+      </tr>
+      <tr>
+        <th>Requisitos Específicos</th>
+        <td>{{ precalc.analise_comercial_item.requisito_especifico|yesno:"Sim,Não,Não Aplicável" }}</td>
+        <th>Item de Segurança?</th>
+        <td>{{ precalc.avaliacao_tecnica_item.seguranca|yesno:"Sim,Não,Não Aplicável" }}</td>
+      </tr>
+      <tr>
+        <th>Peso Líquido</th>
+        <td>{{ precalc.materiais.first.peso_liquido|default:"---" }} kg</td>
+        <th>Material</th>
+        <td>{{ precalc.materiais.first.nome_materia_prima|default:"---" }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Análise Comercial -->
+  <h5 class="mt-5">2. Análise Comercial</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      {% for campo, obs in campos_obs %}
+        <tr>
+            <th>{{ titulos_analise|dict_get:campo }}</th>
+            <td>{{ precalc.analise_comercial_item|attr:campo|yesno:"Sim,Não" }}</td>
+          <th>Observações</th>
+          <td>{{ precalc.analise_comercial_item|attr:obs|default:"---" }}</td>
+        </tr>
+      {% endfor %}
+      <tr>
+        <th>Conclusão</th>
+        <td colspan="3">{{ precalc.analise_comercial_item.conclusao }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Avaliação Técnica -->
+  <h5 class="mt-5">3. Avaliação Técnica</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      {% for campo, obs in campos_obs_tecnica %}
+        <tr>
+            <th>{{ titulos_avaliacao|dict_get:campo }}</th>
+            <td>{{ precalc.avaliacao_tecnica_item|attr:campo|yesno:"Sim,Não" }}</td>
+          <th>Observações</th>
+          <td>{{ precalc.avaliacao_tecnica_item|attr:obs|default:"---" }}</td>
+        </tr>
+      {% endfor %}
+      <tr>
+        <th>Conclusão</th>
+        <td colspan="3">{{ precalc.avaliacao_tecnica_item.conclusao_tec }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Serviços Externos -->
+  <h5 class="mt-5">4. Serviços Externos</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descrição</th>
+          <th>Fornecedor</th>
+          <th>Preço/kg</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in precalc.servicos.all %}
+          <tr>
+            <td>{{ s.codigo_materia_prima }}</td>
+            <td>{{ s.descricao_materia_prima }}</td>
+            <td>{{ s.fornecedor }}</td>
+            <td>{{ s.preco_kg|floatformat:4 }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">Nenhum serviço externo registrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Ferramentas -->
+  <h5 class="mt-5">5. Ferramentas</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Ferramenta</th>
+          <th>Tipo</th>
+          <th>Valor Unitário</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in precalc.ferramentas_item.all %}
+          <tr>
+            <td>{{ f.ferramenta }}</td>
+            <td>{{ f.ferramenta.tipo }}</td>
+            <td>{{ f.ferramenta.valor_total|formatar_reais }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">Nenhuma ferramenta vinculada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Preço Final -->
+  <h5 class="mt-5">6. Preço Final</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      <tr>
+        <th>Preço Manual</th>
+        <td>{{ precalc.preco_manual|formatar_reais|default:"---" }}</td>
+        <th>Preço Selecionado</th>
+        <td>{{ precalc.preco_selecionado|formatar_reais|default:"---" }}</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+{% include "partials/global/_formulario_rodape.html" with numero_formulario=numero_formulario %}
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const totalPages = document.querySelectorAll(".totalPages");
+      const pageNumbers = document.querySelectorAll(".pageNumber");
+  
+      // Se estiver usando múltiplas páginas, use PDF.js ou HTML2PDF
+      // Aqui estamos apenas simulando Página 1 de 1
+      totalPages.forEach(el => el.textContent = "1");
+      pageNumbers.forEach(el => el.textContent = "1");
+    });
+  </script>
+  
+{% endblock %}

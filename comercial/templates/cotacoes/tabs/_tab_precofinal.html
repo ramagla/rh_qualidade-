@@ -1,20 +1,51 @@
 {% load widget_tweaks %}
 {% load filters_gerais %}
 
-<div class="tab-pane fade {% if aba_ativa == 'precofinal' %}show active{% endif %}" id="pane-precofinal" role="tabpanel">
+{% if not precos_sem_impostos and not precos_com_impostos %}
+  <div class="alert alert-warning">
+    <strong>Atenção:</strong> Os preços ainda não foram calculados. Verifique se as abas
+    <em>Regras de Cálculo</em>, <em>Análise Comercial</em>, <em>Materiais</em> e <em>Serviços</em>
+    estão preenchidas corretamente.
+  </div>
+{% endif %}
+
+
+<div class="tab-pane fade show active" id="pane-precofinal" role="tabpanel">
   <form method="post">
+    <input type="hidden" name="aba" value="precofinal">
+
     {% csrf_token %}
     <div class="alert alert-info d-flex align-items-start mb-3" style="font-size: 0.95rem;">
       <i class="bi bi-info-circle-fill text-primary me-2 mt-1"></i>
       <div>
-        <strong>Cálculos:</strong><br>
-        <ul class="mb-0 ps-3">
-          <li><strong>Sem Impostos:</strong> inclui IR, CSLL, DF e DV, aplicados sobre a base de custos diretos.</li>
-          <li><strong>Com Impostos:</strong> considera todos os tributos da aba <em>Regras de Cálculo</em> (ICMS, PIS, COFINS, IR, CSLL, DF e DV).</li>
-          <li>Ambas as tabelas simulam margens de lucro entre <strong>10% e 60%</strong> para facilitar a comparação.</li>
+        <strong>Critérios de Cálculo do Preço Final:</strong><br>
+        <ul class="mb-2 ps-3">
+          <li>
+            <strong>Sem Impostos:</strong> considera:
+            <ul class="mb-1">
+              <li>Custos diretos (matéria-prima e serviços externos; ferramentas não são incluídas)</li>
+              <li>Custo de mão de obra baseado nas etapas do roteiro</li>
+              <li>Despesas fixas (DF) e variáveis (DV) aplicadas sobre o custo total</li>
+              <li>Tributação sobre lucro: <strong>IR</strong> e <strong>CSLL</strong></li>
+            </ul>
+          </li>
+          <li>
+            <strong>Com Impostos:</strong> inclui todos os itens acima, além de:
+            <ul class="mb-1">
+              <li>Tributos indiretos: <strong>ICMS</strong>, <strong>PIS</strong>, <strong>COFINS</strong></li>
+              <li>Margem de lucro aplicada sobre a base de custo + tributos</li>
+            </ul>
+          </li>
+          <li>
+            As tabelas simulam margens de lucro entre <strong>10% e 60%</strong>, em incrementos de 5%, para facilitar a escolha do melhor preço final.
+          </li>
         </ul>
+        <div class="mt-2 text-muted small">
+          Todos os percentuais utilizados são provenientes da aba <em>Regras de Cálculo</em>. O valor final pode ser ajustado manualmente no campo abaixo.
+        </div>
       </div>
     </div>
+    
     
     <div class="row">
       <!-- Sem Impostos -->
@@ -37,12 +68,20 @@
                 {% for opcao in precos_sem_impostos %}
                   <tr>
                     <td>
-                      <input type="radio" name="preco_selecionado" value="{{ opcao.total }}"
-                        {% if form_precofinal.instance.preco_selecionado == opcao.total %}checked{% endif %}>
+                      <input type="radio" name="preco_selecionado"
+                      value="{{ opcao.unitario|stringformat:'0.4f'|cut:',' }}"
+                      {% if form_precofinal.instance.preco_selecionado == opcao.unitario %}checked{% endif %}>
+               
+
                     </td>
+                    
+                    
+                    
+                    
                     <td>{{ opcao.percentual }}%</td>
-                    <td>R$ {{ opcao.unitario|floatformat:4 }}</td>
-                    <td>R$ {{ opcao.total|floatformat:2 }}</td>
+                    <td>{{ opcao.unitario|formatar_reais }}</td>
+                    <td>{{ opcao.total|formatar_reais }}</td>
+
                   </tr>
                 {% empty %}
                   <tr>
@@ -75,13 +114,19 @@
               {% with qtde=precalc.analise_comercial_item.qtde_estimada %}
               {% for opcao in precos_com_impostos %}
               <tr>
-                    <td>
-                      <input type="radio" name="preco_selecionado" value="{{ opcao.total }}"
-                        {% if form_precofinal.instance.preco_selecionado == opcao.total %}checked{% endif %}>
-                    </td>
+                <td>
+                  <input type="radio" name="preco_selecionado"
+                  value="{{ opcao.unitario|stringformat:'0.4f'|cut:',' }}"
+                  {% if form_precofinal.instance.preco_selecionado == opcao.unitario %}checked{% endif %}>
+           
+
+                </td>
+                
+                
+                
                     <td>{{ opcao.percentual }}%</td>
-                    <td>R$ {{ opcao.unitario|floatformat:4 }}</td>
-                    <td>R$ {{ opcao.total|floatformat:2 }}</td>
+                    <td>R$ {{ opcao.unitario|formatar_reais}}</td>
+                    <td>R$ {{ opcao.total|formatar_reais}}</td>
                   </tr>
                 {% empty %}
                   <tr>
@@ -109,3 +154,35 @@
     </div>
   </form>
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("#pane-precofinal form");
+    const radios = form.querySelectorAll("input[type='radio'][name='preco_selecionado']");
+    const manualInput = form.querySelector("input[name='preco_manual']");
+
+    // Exibir valor quando um radio for clicado
+    radios.forEach(radio => {
+      radio.addEventListener("change", () => {
+        console.log("🔘 Preço selecionado via radio:", radio.value);
+      });
+    });
+
+    // Exibir valor digitado no campo manual
+    if (manualInput) {
+      manualInput.addEventListener("input", () => {
+        console.log("✍️ Preço manual digitado:", manualInput.value);
+      });
+    }
+
+    // Exibir tudo no envio do form
+    form.addEventListener("submit", (e) => {
+      const selectedRadio = form.querySelector("input[name='preco_selecionado']:checked");
+      const precoRadio = selectedRadio ? selectedRadio.value : "Nenhum selecionado";
+      const precoManual = manualInput ? manualInput.value : "Campo não encontrado";
+
+      console.log("📤 Enviando formulário:");
+      console.log("🔘 preco_selecionado:", precoRadio);
+      console.log("✍️ preco_manual:", precoManual);
+    });
+  });
+</script>

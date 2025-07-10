@@ -2,6 +2,7 @@
 
 {% block title %}Itens de Pré-Cálculo - Cotação #{{ cotacao.numero }}{% endblock %}
 {% load humanize %}
+{% load filters_gerais %}
 
 {% block content %}
 {% load custom_filters %}
@@ -59,10 +60,13 @@
           <th>Status da Análise</th>
           <th>Periodicidade</th>
           <th>Valor Total (R$)</th>
+          <th>Ferramental (R$)</th>
+          <th>Total Geral (R$)</th>
           <th>Preço Escolhido (R$)</th>
           <th>Ações</th>
         </tr>
       </thead>
+      
       
       <tbody>
         {% for item in page_obj %}
@@ -87,7 +91,6 @@
                 <span class="badge bg-secondary">Em Andamento</span>
               {% endif %}
             </td>
-            
       
             <!-- Periodicidade -->
             <td>
@@ -105,26 +108,33 @@
                 {% endif %}
               {% endwith %}
             </td>
+      
+            <!-- Valor Total (R$) da margem escolhida -->
+<td>
+  {% with preco=item.preco_selecionado %}
+    {% with precos=item.calcular_precos_com_impostos %}
+      {% for p in precos %}
+        {% if p.unitario|floatformat:"4" == preco|floatformat:"4" %}
+          {{ p.total|formatar_reais }}
+        {% endif %}
+      {% endfor %}
+    {% endwith %}
+  {% endwith %}
+</td>
+
             
       
-            <!-- Valor Total -->
-            <td>
-              {% with precos=item.calcular_precos_sem_impostos %}
-                {% if precos %}
-                  {% with total=precos|last %}
-                    {{ total.total|floatformat:2 }}
-                  {% endwith %}
-                {% else %}
-                  —
-                {% endif %}
-              {% endwith %}
-            </td>
-            
-            
-            <!-- Preço Escolhido -->
-            <td>
-              {{ item.preco_selecionado|floatformat:2|default:"—" }}
-            </td>
+            <!-- 🛠 Valor Ferramental -->
+            <td>{{ item.valor_ferramental|formatar_reais|default:"—" }}</td>
+
+      
+            <!-- 💰 Total Geral (produto + ferramental) -->
+            <td>{{ item.total_geral|formatar_reais|default:"—" }}</td>
+
+      
+            <!-- 📈 Preço Escolhido (R$ + % margem) -->
+            <td>{{ item.preco_margem_formatado|default:"—" }}</td>
+
       
             <!-- Ações -->
             <td>
@@ -132,15 +142,24 @@
                 {% if request.user|has_permission:"comercial.change_precalculo" %}
                   {% include "partials/global/_botao_editar.html" with objeto=item url_editar="editar_precalculo" label="precalculo" %}
                 {% endif %}
+                {% if request.user|has_permission:"comercial.view_precalculo" %}
+                  <a href="{% url 'visualizar_precalculo' item.pk %}"
+                     class="btn btn-outline-secondary btn-sm"
+                     title="Visualizar F011">
+                    <i class="bi bi-eye-fill"></i>
+                  </a>
+                {% endif %}
                 {% if request.user|has_permission:"comercial.delete_precalculo" %}
                   {% include "partials/global/_botao_excluir.html" with objeto=item url_excluir="excluir_precalculo" label="precalculo" %}
                   {% include "partials/global/_modal_exclusao.html" with objeto=item url_excluir="excluir_precalculo" %}
                 {% endif %}
               </div>
             </td>
+            
           </tr>
         {% endfor %}
       </tbody>
+      
       
     </table>
     {% include "partials/global/_paginacao.html" with page_obj=page_obj %}

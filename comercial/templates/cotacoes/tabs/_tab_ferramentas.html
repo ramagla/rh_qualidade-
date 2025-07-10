@@ -1,62 +1,105 @@
 {% load widget_tweaks %}
+{% load filters_gerais %}
 
 <form method="post">
+  <input type="hidden" name="aba" value="ferramentas">
+  <input type="hidden" name="form_regras_submitted" value="1">
+
   {% csrf_token %}
-  <input type="hidden" name="form_ferramentas_submitted" value="1">
   {{ fs_ferr.management_form }}
 
-  <div class="table-responsive">
-    <table class="table table-bordered align-middle text-center">
-      <thead class="table-light">
-        <tr>
-          <th style="width: 30%">Ferramenta</th>
-          <th style="width: 20%">Valor Total (R$)</th>
-          <th>Observações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for form in fs_ferr.forms %}
-        <tr>
-          <td>
-            {{ form.ferramenta|add_class:"form-select select2" }}
-          </td>
-          <td class="text-end align-middle">
-            {% if form.instance.ferramenta %}
-              R$ {{ form.instance.ferramenta.valor_total|floatformat:2 }}
-            {% else %}
-              —
-            {% endif %}
-          </td>
-          <td>
-            {{ form.observacoes|add_class:"form-control form-control-sm" }}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
 
-  <div class="text-end mt-3">
-    <button type="submit" class="btn btn-success">
-      <i class="bi bi-save me-1"></i> Salvar Ferramentas
-    </button>
+  <div class="border p-4 rounded shadow-sm bg-white">
+    <h5 class="mb-4">
+      <i class="bi bi-tools text-danger me-2"></i> Ferramentas Utilizadas
+    </h5>
+
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle text-center">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 30%">
+              <i class="bi bi-hammer me-1 text-muted"></i> Ferramenta
+            </th>
+            <th style="width: 20%">
+              <i class="bi bi-currency-dollar me-1 text-muted"></i> Valor Total (R$)
+            </th>
+            <th>
+              <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for form in fs_ferr.forms %}
+          <tr>
+            {{ form.id }}  {# ← CAMPO OBRIGATÓRIO PARA FUNCIONAMENTO DO FORMSET #}
+            <td>
+              {{ form.ferramenta|add_class:"form-select select2 form-select-sm" }}
+            </td>
+            <td class="text-center align-middle valor-ferramenta">
+              {% if form.instance.ferramenta %}
+                {{ form.instance.ferramenta.valor_total|formatar_reais }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              {{ form.observacoes }}
+            </td>
+          </tr>
+          
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="text-end mt-3">
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-save me-1"></i> Salvar Ferramentas
+      </button>
+    </div>
   </div>
 </form>
+
+<!-- Script Select2 + Atualização de valores -->
 <script>
-    $(document).ready(function () {
-      $(".select2").on("change", function () {
-        const select = $(this);
-        const row = select.closest("tr");
-        const id = select.val();
-  
-        $.get("{% url 'ajax_valor_ferramenta' %}", { id: id }, function (data) {
-          if (data.valor_total !== null) {
-            row.find("td:eq(1)").text("R$ " + data.valor_total.toFixed(2).replace(".", ","));
-          } else {
-            row.find("td:eq(1)").text("—");
-          }
-        });
+  $(document).ready(function () {
+    $(".select2").select2({
+      width: 'resolve'
+    });
+
+    $(".select2").on("change", function () {
+      const select = $(this);
+      const row = select.closest("tr");
+      const id = select.val();
+
+      $.get("{% url 'ajax_valor_ferramenta' %}", { id: id }, function (data) {
+        const valorText = data.valor_total !== null
+          ? "R$ " + parseFloat(data.valor_total).toFixed(2).replace(".", ",")
+          : "—";
+        row.find(".valor-ferramenta").text(valorText);
       });
     });
-  </script>
-  
+  });
+</script>
+
+<!-- Script para setar nome da aba ativa -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const abaSubmetidaInput = document.getElementById("abaSubmetidaInput");
+    const salvarBtn = document.querySelector("button[type='submit']");
+
+    if (salvarBtn && abaSubmetidaInput) {
+      salvarBtn.addEventListener("click", function () {
+        abaSubmetidaInput.name = "form_ferramentas_submitted";
+      });
+    }
+  });
+</script>
+
+<!-- Estilo CKEditor -->
+<style>
+  .ck-editor__editable {
+    min-height: 120px !important;
+  }
+</style>

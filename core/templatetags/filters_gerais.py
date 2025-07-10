@@ -281,11 +281,6 @@ def get_opcao_experiencia(obj, campo):
     return respostas.get(campo, {}).get(valor, "Não avaliado")
 
 
-from datetime import datetime, timedelta
-from django import template
-
-register = template.Library()
-
 
 @register.filter
 def minutos_para_horas(minutos):
@@ -374,3 +369,27 @@ def div(value, arg):
         return Decimal(value) / Decimal(arg)
     except (ZeroDivisionError, InvalidOperation, TypeError):
         return 0
+
+@register.filter(name="formatar_reais")
+def formatar_reais(valor, prefixo="R$"):
+    """
+    Formata um número decimal no padrão brasileiro: R$ 12.051,58
+    """
+    try:
+        if valor is None or valor == "":
+            return "-"
+        valor = float(valor)
+        partes = f"{valor:,.2f}".split(".")
+        inteiro = partes[0].replace(",", ".")  # separador milhar vira ponto
+        decimal = partes[1]
+        return f"{prefixo} {inteiro},{decimal}"
+    except Exception:
+        return "-"
+
+
+@register.filter
+def mul(value, arg):
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return ''

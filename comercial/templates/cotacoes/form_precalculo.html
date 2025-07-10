@@ -29,16 +29,17 @@
     </li>
 
     {% if edicao %}
+    <li class="nav-item" role="presentation">
+      <a class="nav-link text-info" id="tab-regras" data-bs-toggle="tab" href="#pane-regras" role="tab">
+        <i class="bi bi-calculator-fill me-1"></i> Regras de Cálculo
+      </a>
+    </li>
       <li class="nav-item" role="presentation">
         <a class="nav-link text-warning" id="tab-avaliacao" data-bs-toggle="tab" href="#pane-avaliacao" role="tab">
           <i class="bi bi-eyeglasses me-1"></i> Avaliação Técnica
         </a>
       </li>
-      <li class="nav-item" role="presentation">
-        <a class="nav-link text-info" id="tab-regras" data-bs-toggle="tab" href="#pane-regras" role="tab">
-          <i class="bi bi-calculator-fill me-1"></i> Regras de Cálculo
-        </a>
-      </li>
+     
       <li class="nav-item" role="presentation">
         <a class="nav-link text-success" id="tab-materiais" data-bs-toggle="tab" href="#pane-materiais" role="tab">
           <i class="bi bi-box-seam me-1"></i> Matéria-Prima
@@ -111,20 +112,27 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const abaSubmetidaInput = document.getElementById("abaSubmetidaInput");
-    const salvarBtn = document.querySelector("button[type='submit']");
 
-    if (salvarBtn && abaSubmetidaInput) {
-      salvarBtn.addEventListener("click", function () {
+    if (!abaSubmetidaInput) return;
+
+    const salvarBotoes = document.querySelectorAll("button[type='submit']");
+
+    salvarBotoes.forEach(function (btn) {
+      btn.addEventListener("click", function () {
         const abaAtiva = document.querySelector(".tab-pane.active");
         if (abaAtiva && abaAtiva.id.startsWith("pane-")) {
           const nome = abaAtiva.id.replace("pane-", "");
           abaSubmetidaInput.name = `form_${nome}_submitted`;
-          console.log("Setando aba ativa como:", abaSubmetidaInput.name);
+          abaSubmetidaInput.value = "true";
+          console.log("✅ Aba ativa detectada:", nome);
+          console.log("📤 Campo oculto 'name' definido como:", abaSubmetidaInput.name);
         }
       });
-    }
+    });
   });
 </script>
+
+
 
 <style>
   .bg-analise        { background-color: #e8f4fd; }
