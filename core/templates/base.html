@@ -673,8 +673,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/i18n/pt-BR.min.js"></script>
 
-    <!-- CKEditor -->
-    <script src="https://cdn.jsdelivr.net/npm/@ckeditor/ckeditor5-build-classic/build/ckeditor.js"></script>
+    
 
     <!-- jQuery Treeview -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-treeview/1.5/jquery.treeview.min.js"></script>
@@ -718,15 +717,7 @@
                 console.error('jQuery não está definido. Verifique o carregamento do script.');
             }
 
-            // Inicializa CKEditor, se necessário
-            const editors = document.querySelectorAll('.ckeditor');
-            editors.forEach((editorElement) => {
-                ClassicEditor
-                    .create(editorElement)
-                    .catch(error => {
-                        console.error('Erro ao inicializar CKEditor:', error);
-                    });
-            });
+           
         });
     </script>
     <!-- Botão flutuante de alertas -->

@@ -19,11 +19,10 @@
       Cotar no mínimo <strong>2 fornecedores diferentes</strong>. Caso não haja fonte homologada, consulte o setor responsável.
     </div>
 
-    <p class="mb-1">
-      <strong><i class="bi bi-box me-1 text-muted"></i> Peso Bruto:</strong>
-      {{ servicos.0.peso_bruto|floatformat:2 }}
+    <p class="mb-3">
+      <strong><i class="bi bi-basket-fill me-1 text-muted"></i> Peso Bruto Total:</strong>
+      {{ servicos.0.peso_bruto_total|floatformat:3 }}
     </p>
-
     <div class="mb-3">
       <label>
         <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais

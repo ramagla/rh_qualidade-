@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.forms import inlineformset_factory
 from comercial.forms.precalculos_form import CotacaoFerramentaForm
 from comercial.models.precalculo import PreCalculo, CotacaoFerramenta
@@ -20,11 +21,18 @@ def processar_aba_ferramentas(request, precalc):
 
     if request.method == "POST" and request.POST.get("form_ferramentas_submitted"):
         if fs_ferr.is_valid():
-            # 🟢 Salva diretamente, sem checar se houve alteração
-            fs_ferr.save()
-            print("✅ Ferramentas salvas com sucesso (sem validação de alterações)")
+            instancias = fs_ferr.save(commit=False)
+            for inst in instancias:
+                inst.usuario = request.user
+                inst.assinatura_nome = request.user.get_full_name()
+                inst.assinatura_cn = request.user.email
+                inst.data_assinatura = timezone.now()
+                inst.assinado_em = timezone.now()  # <- este campo estava sendo ignorado
+                inst.save()
+            fs_ferr.save_m2m()
+            print("✅ Ferramentas salvas com sucesso e metadados preenchidos")
             return True, fs_ferr
         else:
-            print("❌ Formset de ferramentas inválido:", fs_ferr.errors)
+            print("❌ Formulário de ferramentas inválido:", fs_ferr.errors)
 
-    return False, fs_ferr
+    return False, fs_ferr  # ✅ ESSA LINHA FALTAVA

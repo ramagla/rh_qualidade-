@@ -1,8 +1,18 @@
 {% load widget_tweaks %}
+{% if form_precalculo %}{{ form_precalculo.media }}{% endif %}
+
+<style>
+  .bg-lightblue {
+    background-color: #d6f0ff !important;
+  }
+
+  .bg-lightyellow {
+    background-color: #fff9d6 !important;
+  }
+</style>
 
 <form method="post">
   <input type="hidden" name="aba" value="materiais">
-
   {% csrf_token %}
 
   <div class="row bg-materiais p-4 rounded shadow-sm">
@@ -11,29 +21,32 @@
         <h5 class="mb-4">
           <i class="bi bi-box-seam text-success me-2"></i> Matéria-Prima Utilizada
         </h5>
+
         <div class="alert alert-info d-flex flex-column gap-2 small">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-info-circle-fill"></i>
-            O campo <strong>Peso Bruto</strong> é calculado automaticamente como: 
-            <code>Peso Líquido × Qtde Estimada</code>.
+            O campo <strong>Peso Bruto Total</strong> é calculado automaticamente como:
+            <code>Peso Bruto × Qtde Estimada</code>.
+            Os campos <strong>Peso Líquido</strong> e <strong>Peso Bruto</strong> devem ser preenchidos manualmente.
           </div>
           <div>
-            <strong class="text-primary">Compras:</strong> Preenchem os campos <code>Lote Mínimo</code>, <code>Entrega (dias)</code>, <code>Fornecedor</code>, <code>ICMS (%)</code> e <code>Preço/kg</code>.
+            <strong class="text-primary">Compras:</strong> Preenchem os campos <code>Lote Mínimo</code>,
+            <code>Entrega (dias)</code>, <code>Fornecedor</code>, <code>ICMS (%)</code> e <code>Preço/kg</code>.
           </div>
           <div>
-            <strong class="text-warning">Técnico:</strong> Preenche os campos <code>Desenv. (mm)</code>, <code>Peso Líquido</code> e <code>Peso Bruto</code>.
+            <strong class="text-warning">Técnico:</strong> Preenche os campos <code>Desenv. (mm)</code>,
+            <code>Peso Líquido</code> e <code>Peso Bruto</code>.
           </div>
         </div>
-        
-        
+
         {% if fs_mat.non_form_errors %}
-          <div class="alert alert-danger">
-            <ul class="mb-0">
-              {% for error in fs_mat.non_form_errors %}
-                <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-          </div>
+        <div class="alert alert-danger">
+          <ul class="mb-0">
+            {% for error in fs_mat.non_form_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
         {% endif %}
 
         <table class="table table-bordered align-middle table-sm">
@@ -49,198 +62,211 @@
               <th><i class="bi bi-rulers me-1"></i> Desenv. (mm)</th>
               <th><i class="bi bi-weight me-1"></i> Peso Líquido</th>
               <th><i class="bi bi-box me-1"></i> Peso Bruto</th>
+              <th><i class="bi bi-basket-fill me-1"></i> Peso Bruto Total</th>
               <th><i class="bi bi-flag me-1"></i> Status</th>
             </tr>
           </thead>
-          
+
           <tbody>
             {% for form in fs_mat.forms %}
-              <tr>
-                {{ form.id }}
-                <td class="text-center align-middle">
-                  <input type="radio"
-                         name="material_selecionado"
-                         value="{{ form.prefix }}"
-                         class="form-check-input mt-1"
-                         {% if form.instance.selecionado %}checked{% endif %}>
-                </td>
-                              
-                <td>
-                  {{ form.codigo|add_class:"form-control form-control-sm codigo-input" }}
-                </td>
-                
-                <td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
-                <td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
-                <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
-                <td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
-                <td class="bg-lightblue">{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
+            <tr>
+              {{ form.id }}
+              <td class="text-center align-middle">
+                <input type="radio" name="material_selecionado"
+                       value="{{ form.prefix }}"
+                       class="form-check-input mt-1"
+                       {% if form.instance.selecionado %}checked{% endif %}>
+              </td>
 
-                <td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm" }}</td>
-<td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm" }}</td>
-<td class="bg-lightyellow">{{ form.peso_bruto|add_class:"form-control form-control-sm" }}</td>
+              <td>{{ form.codigo|add_class:"form-control form-control-sm codigo-input" }}</td>
+              <td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
+              <td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
+              <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
+              <td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
+              <td class="bg-lightblue">{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
 
-                <!-- Coluna de status -->
-                <td class="text-center">
-                  {% if form.instance.pk and form.instance.preco_kg %}
-                    <span class="badge bg-success">OK</span>
-                  {% else %}
-                    <span class="badge bg-warning text-dark">Aguardando</span>
-                  {% endif %}
-                </td>
+              <td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm" }}</td>
+              <td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm" }}</td>
+              <td class="bg-lightyellow">{{ form.peso_bruto|add_class:"form-control form-control-sm" }}</td>
+              <td class="bg-lightyellow">
+                {{ form.peso_bruto_total|add_class:"form-control form-control-sm text-end" }}
+              </td>
+              
+              
 
-                <!-- Ações -->
-               
-              </tr>
+              <td class="text-center">
+                {% if form.instance.pk and form.instance.preco_kg %}
+                  <span class="badge bg-success">OK</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">Aguardando</span>
+                {% endif %}
+              </td>
+            </tr>
             {% endfor %}
           </tbody>
         </table>
 
         {{ fs_mat.management_form }}
-          <!-- Observações gerais vindo do formulário Django -->
-  <!-- Campo observações gerais do pré-cálculo -->
-  <div class="mb-3 mt-3">
-    <label for="id_observacoes_materiais" class="form-label">
-      <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
-    </label>
-    {{ form_precalculo.observacoes_materiais|add_class:"form-control ckeditor" }}
-  </div>
-  
 
-  <div>
-    {% if materiais_respondidos %}
-      <button type="submit" name="form_materiais_submitted" class="btn btn-primary">
-        <i class="bi bi-save me-1"></i> Salvar
-      </button>
-    {% else %}
-      <button type="submit" name="form_materiais_submitted" class="btn btn-success">
-        <i class="bi bi-send-check me-1"></i> Salvar e Enviar para Cotação
-      </button>
-    {% endif %}
-  </div>
+        <div class="mb-3 mt-3">
+          <label for="id_observacoes_materiais" class="form-label">
+            <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
+          </label>
+          {{ form_precalculo.observacoes_materiais }}
+        </div>
+
+        <div>
+          {% if materiais_respondidos %}
+            <button type="submit" name="form_materiais_submitted" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i> Salvar
+            </button>
+          {% else %}
+            <button type="submit" name="form_materiais_submitted" class="btn btn-success">
+              <i class="bi bi-send-check me-1"></i> Salvar e Enviar para Cotação
+            </button>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
 </form>
+
+
+<!-- Preenchimento automático de código -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    console.log("🚀 DOM carregado");
-
     const dataDiv = document.querySelector("#precalculo-data");
     const itemId = dataDiv?.dataset.itemId;
     const codigoInputs = document.querySelectorAll(".codigo-input");
 
-    console.log("📌 item_id do dataset:", itemId);
-    console.log("📌 Inputs de código encontrados:", codigoInputs.length);
-
     if (itemId) {
       fetch(`/comercial/ajax/codigo-materia-prima/?item_id=${itemId}`)
-        .then(response => {
-          console.log("📡 Requisição AJAX para:", response.url);
-          return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-          console.log("📥 Resposta recebida:", data);
           if (data.sucesso && data.codigo) {
             codigoInputs.forEach(input => {
-              if (!input.value) {
-                input.value = data.codigo;
-                console.log("✅ Código preenchido:", data.codigo);
-              } else {
-                console.log("⛔ Campo já tinha valor:", input.value);
-              }
+              if (!input.value) input.value = data.codigo;
             });
-          } else {
-            console.warn("⚠️ Código não recebido ou sucesso falso:", data);
           }
-        })
-        .catch(error => {
-          console.error("❌ Erro na requisição:", error);
         });
-    } else {
-      console.warn("⚠️ item_id ausente no dataset.");
     }
   });
 </script>
+
+<!-- Cálculo automático do Peso Bruto Total -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    console.log("🚀 Script de cálculo de peso bruto carregado");
-
-    const valorBruto = "{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".");
-    const qtdeEstimada = parseFloat(valorBruto) || 0;
-    console.log("📌 Qtde estimada:", qtdeEstimada);
-
+    const valorQtde = "{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".");
+    const qtdeEstimada = parseFloat(valorQtde) || 0;
     const linhas = document.querySelectorAll("tbody tr");
 
     linhas.forEach(row => {
-      const pesoLiquidoInput = row.querySelector("input[name^='mat-'][name$='-peso_liquido']");
-      const pesoBrutoInput = row.querySelector("input[name^='mat-'][name$='-peso_bruto']");
-      
+      const pesoBrutoInput = row.querySelector("input[name$='-peso_bruto']");
+      const pesoBrutoTotalInput = row.querySelector("input[name$='-peso_bruto_total']");
 
-      if (pesoLiquidoInput && pesoBrutoInput) {
-        const atualizarPesoBruto = () => {
-          const pesoLiquido = parseFloat(pesoLiquidoInput.value.replace(",", ".")) || 0;
-          const resultado = pesoLiquido * qtdeEstimada;
-          pesoBrutoInput.value = resultado.toFixed(3);  // Usa ponto (.) como separador decimal
-          console.log(`🔄 Peso Bruto calculado: ${pesoLiquido} x ${qtdeEstimada} = ${resultado}`);
+      if (pesoBrutoInput && pesoBrutoTotalInput) {
+        const atualizarPesoBrutoTotal = () => {
+          const pesoBruto = parseFloat(pesoBrutoInput.value.replace(",", ".")) || 0;
+
+          // Somente calcula se qtdeEstimada for maior que zero
+          if (qtdeEstimada > 0 && pesoBruto > 0) {
+            const resultado = pesoBruto * qtdeEstimada;
+            pesoBrutoTotalInput.value = resultado.toFixed(3).replace(".", ",");
+          } else {
+            // Se já houver valor preenchido vindo do backend, mantém
+            const valorOriginal = pesoBrutoTotalInput.defaultValue || pesoBrutoTotalInput.value;
+            if (valorOriginal) {
+              pesoBrutoTotalInput.value = valorOriginal;
+            }
+          }
         };
 
-        // Executa ao carregar
-        atualizarPesoBruto();
+        // Executa no carregamento
+        atualizarPesoBrutoTotal();
 
         // Atualiza ao digitar
-        pesoLiquidoInput.addEventListener("input", atualizarPesoBruto);
+        pesoBrutoInput.addEventListener("input", atualizarPesoBrutoTotal);
       }
     });
   });
 </script>
-<!-- Scripts para CKEditor5 -->
-<script src="https://cdn.ckeditor.com/ckeditor5/39.0.0/classic/ckeditor.js"></script>
-<script>
-  ClassicEditor
-    .create( document.querySelector( '#observacoes' ), {
-      // Aqui você pode adicionar configurações do CKEditor5 se quiser
-    })
-    .catch( error => {
-      console.error( error );
-    } );
-</script>
-<style>
-  .bg-lightblue input, .bg-lightblue select {
-    background-color: #e8f4fd !important;
-  }
 
-  .bg-lightyellow input {
-    background-color: #fff8e1 !important;
-  }
-</style>
+<!-- Cópia de campos técnicos para todas as linhas -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    const qtdeEstimada = parseFloat("{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".")) || 0;
     const linhas = document.querySelectorAll("tbody tr");
+
     if (linhas.length < 2) return;
-  
-    // Captura os campos da primeira linha
+
     const primeira = linhas[0];
     const campoDesenv = primeira.querySelector("input[name$='-desenvolvido_mm']");
     const campoPesoLiq = primeira.querySelector("input[name$='-peso_liquido']");
     const campoPesoBruto = primeira.querySelector("input[name$='-peso_bruto']");
-  
+    const campoPesoBrutoTotal = primeira.querySelector("input[name$='-peso_bruto_total']");
+
     function copiarCamposParaOutrasLinhas() {
-      const valorDesenv = campoDesenv.value;
-      const valorPesoLiq = campoPesoLiq.value;
-      const valorPesoBruto = campoPesoBruto.value;
-  
+      const valorDesenv = campoDesenv?.value;
+      const valorPesoLiq = campoPesoLiq?.value;
+      const valorPesoBruto = campoPesoBruto?.value;
+      const bruto = parseFloat(valorPesoBruto?.replace(",", ".")) || 0;
+      const totalCalculado = (bruto * qtdeEstimada).toFixed(3).replace(".", ",");
+
       for (let i = 1; i < linhas.length; i++) {
         const linha = linhas[i];
-        linha.querySelector("input[name$='-desenvolvido_mm']").value = valorDesenv;
-        linha.querySelector("input[name$='-peso_liquido']").value = valorPesoLiq;
-        linha.querySelector("input[name$='-peso_bruto']").value = valorPesoBruto;
+
+        const inputDesenv = linha.querySelector("input[name$='-desenvolvido_mm']");
+        const inputPesoLiq = linha.querySelector("input[name$='-peso_liquido']");
+        const inputPesoBruto = linha.querySelector("input[name$='-peso_bruto']");
+        const inputPesoBrutoTotal = linha.querySelector("input[name$='-peso_bruto_total']");
+
+        if (inputDesenv && valorDesenv !== undefined) inputDesenv.value = valorDesenv;
+        if (inputPesoLiq && valorPesoLiq !== undefined) inputPesoLiq.value = valorPesoLiq;
+
+        if (inputPesoBruto && valorPesoBruto !== undefined) inputPesoBruto.value = valorPesoBruto;
+        if (inputPesoBrutoTotal) {
+          inputPesoBrutoTotal.removeAttribute("readonly");
+          inputPesoBrutoTotal.value = totalCalculado;
+          inputPesoBrutoTotal.setAttribute("readonly", "readonly");
+        }
       }
     }
-  
-    // Dispara quando você digitar na primeira linha
-    campoDesenv.addEventListener("input", copiarCamposParaOutrasLinhas);
-    campoPesoLiq.addEventListener("input", copiarCamposParaOutrasLinhas);
-    campoPesoBruto.addEventListener("input", copiarCamposParaOutrasLinhas);
+
+    if (campoDesenv) campoDesenv.addEventListener("input", copiarCamposParaOutrasLinhas);
+    if (campoPesoLiq) campoPesoLiq.addEventListener("input", copiarCamposParaOutrasLinhas);
+    if (campoPesoBruto) campoPesoBruto.addEventListener("input", copiarCamposParaOutrasLinhas);
   });
-  </script>
-  
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const qtdeEstimada = parseFloat("{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".")) || 0;
+
+    document.querySelectorAll("tbody tr").forEach(row => {
+      const brutoInput = row.querySelector("input[name$='-peso_bruto']");
+      const totalInput = row.querySelector("input[name$='-peso_bruto_total']");
+
+      if (brutoInput && totalInput) {
+        const atualizar = () => {
+          const bruto = parseFloat(brutoInput.value.replace(",", ".")) || 0;
+          const resultadoCalculado = (bruto * qtdeEstimada).toFixed(3).replace(".", ",");
+
+          totalInput.removeAttribute("readonly");
+
+          // 🔒 Só atualiza se estiver vazio ou 0,000
+          if (!totalInput.value || totalInput.value === "0,000") {
+            totalInput.value = resultadoCalculado;
+          }
+
+          totalInput.setAttribute("readonly", "readonly");
+        };
+
+        brutoInput.addEventListener("input", atualizar);
+        atualizar();  // inicial
+      }
+    });
+  });
+</script>
+
+
+

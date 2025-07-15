@@ -98,7 +98,7 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
         default_status = status_field.get_default() or status_field.choices[0][0]
 
         for i in range(total):
-            for fld in ("desenvolvido_mm", "peso_liquido", "peso_bruto", "preco_kg", "icms"):
+            for fld in ("desenvolvido_mm", "peso_liquido", "peso_bruto", "preco_kg", "icms", "peso_bruto_total"):
                 key = f"sev-{i}-{fld}"
                 val = data.get(key)
                 if val:
@@ -135,6 +135,7 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
         print(fs_sev.non_form_errors())
 
     salvo = False
+    # Salva apenas se for POST
     if submitted and form_precalculo.is_valid() and fs_sev.is_valid():
         print("✅ Salvando dados de serviços...")
         form_precalculo.save()
@@ -144,8 +145,10 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
         for sev_form in fs_sev:
             if sev_form.cleaned_data and not sev_form.cleaned_data.get("DELETE", False):
                 sev = sev_form.save(commit=False)
+                # só atualiza se o POST trouxer valor
                 sev.selecionado = (sev_form.prefix == selecionado)
                 sev.save()
+
                 print(f"💾 Serviço salvo: {sev}")
 
         fs_sev.save()

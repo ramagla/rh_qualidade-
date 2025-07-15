@@ -115,9 +115,12 @@ def editar_precaculo(request, pk):
     )
 
     # inicializa variáveis de retorno
-    form_analise   = form_regras   = form_avali   = form_desenv \
-                   = form_precofinal = None
+    form_analise = form_regras = form_avali = form_desenv = form_precofinal = form_roteiro = None
+
     fs_mat = fs_sev = fs_rot = fs_ferr = None
+    servicos_respondidos = False  # ✅ sempre inicializar
+
+
 
     # POST: processa a aba correta via handler
     if request.method == "POST":
@@ -136,13 +139,20 @@ def editar_precaculo(request, pk):
         elif aba == "precofinal" and "form_precofinal_submitted" in request.POST:
             salvo, form_precofinal, precos_sem_impostos, precos_com_impostos, mensagem_precofinal = processar_aba_precofinal(request, precalc)
 
-        elif aba == "materiais" and "form_materiais_submitted" in request.POST:
+        elif aba == "materiais" and (
+            "form_materiais_submitted" in request.POST or
+            any(k.startswith("mat-") for k in request.POST)
+        ):
             materiais_respondidos = precalc.materiais.filter(preco_kg__isnull=False).exists()
             salvo, form_precalculo, fs_mat = processar_aba_materiais(
                 request, precalc, materiais_respondidos
             )
 
-        elif aba == "servicos" and "form_servicos_submitted" in request.POST:
+
+        elif aba == "servicos" and (
+            "form_servicos_submitted" in request.POST or
+            any(k.startswith("sev-") for k in request.POST)
+        ):
             faltam = precalc.servicos.filter(
                 Q(preco_kg__isnull=True) | Q(preco_kg=0)
             ).exists()
@@ -151,8 +161,14 @@ def editar_precaculo(request, pk):
                 request, precalc, servicos_respondidos
             )
 
+
         elif aba == "roteiro" and "form_roteiro_submitted" in request.POST:
-            salvo, fs_rot = processar_aba_roteiro(request, precalc)
+            form_precalculo = PreCalculoForm(request.POST, instance=precalc)  # garante os dados do POST
+            salvo, fs_rot, form_precalculo = processar_aba_roteiro(request, precalc, form_precalculo=form_precalculo)
+            form_roteiro = form_precalculo
+
+
+
 
         elif aba == "ferramentas" and "form_ferramentas_submitted" in request.POST:
             salvo, fs_ferr = processar_aba_ferramentas(request, precalc)
@@ -205,17 +221,30 @@ def editar_precaculo(request, pk):
 
 
 
-    if not fs_mat:
+    if not fs_mat and (
+        request.method == "GET" or
+        any(k.startswith("mat-") for k in request.POST)
+    ):
         materiais_respondidos = precalc.materiais.filter(preco_kg__isnull=False).exists()
         _, _, fs_mat = processar_aba_materiais(request, precalc, materiais_respondidos)
-    if not fs_sev:
+
+    if not fs_sev and (
+        request.method == "GET" or
+        any(k.startswith("sev-") for k in request.POST)
+    ):
         faltam = precalc.servicos.filter(
             Q(preco_kg__isnull=True) | Q(preco_kg=0)
         ).exists()
         servicos_respondidos = not faltam
         _, _, fs_sev = processar_aba_servicos(request, precalc, servicos_respondidos)
+
+
     if not fs_rot:
-        _, fs_rot = processar_aba_roteiro(request, precalc)
+        _, fs_rot, form_roteiro = processar_aba_roteiro(request, precalc)
+
+
+
+
     if not fs_ferr:
         _, fs_ferr = processar_aba_ferramentas(request, precalc)
 
@@ -257,6 +286,7 @@ def editar_precaculo(request, pk):
         "form_avali": form_avali,
         "form_desenv": form_desenv,
         "form_precofinal": form_precofinal,
+        "form_roteiro": form_roteiro,
         "fs_mat": fs_mat,
         "fs_sev": fs_sev,
         "fs_rot": fs_rot,
@@ -268,7 +298,7 @@ def editar_precaculo(request, pk):
         "aba_ativa": aba,
        "precos_sem_impostos": precos_sem_impostos,
         "precos_com_impostos": precos_com_impostos,
-
+        "analise": precalc.analise_comercial_item,
         "materiais_respondidos": precalc.materiais.filter(preco_kg__isnull=False).exists(),
         "servicos_respondidos": servicos_respondidos,
         "aba_ativa": aba,
@@ -490,6 +520,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import get_object_or_404, render
 from comercial.models.precalculo import PreCalculo
 
+from django.db.models import Sum
+
 @login_required
 @permission_required("comercial.view_precalculo", raise_exception=True)
 def visualizar_precalculo(request, pk):
@@ -525,7 +557,7 @@ def visualizar_precalculo(request, pk):
         ("requisito_especifico", "requisito_especifico_obs"),
     ]
 
-    # Títulos amigáveis para campos da análise comercial
+    # Títulos amigáveis
     TITULOS_ANALISE = {
         "material_fornecido": "Material fornecido pelo cliente?",
         "requisitos_entrega": "Requisitos de entrega?",
@@ -536,8 +568,6 @@ def visualizar_precalculo(request, pk):
         "especificacao_identificacao": "Especificação de identificação?",
         "tipo_embalagem": "Tipo de embalagem?",
     }
-
-    # Títulos amigáveis para campos da avaliação técnica
     TITULOS_AVALIACAO = {
         "possui_projeto": "Possui projeto próprio?",
         "precisa_dispositivo": "Precisa de dispositivo?",
@@ -555,6 +585,32 @@ def visualizar_precalculo(request, pk):
         "requisito_especifico": "Requisito específico?",
     }
 
+    # ▶️ Enriquecimento: adiciona horas agrupadas por tipo na ferramenta
+    ferramentas_info = []
+
+    for cot_ferr in precalc.ferramentas_item.all():
+        ferramenta = cot_ferr.ferramenta
+
+        horas_projeto = ferramenta.mao_obra.filter(tipo="Projeto").aggregate(
+            total=Sum("horas")
+        ).get("total") or 0
+
+        horas_ferramentaria = ferramenta.mao_obra.filter(tipo="Ferramentaria").aggregate(
+            total=Sum("horas")
+        ).get("total") or 0
+
+        ferramentas_info.append({
+            "obj": cot_ferr,
+            "tipo": ferramenta.tipo,
+            "horas_projeto": horas_projeto,
+            "horas_ferramentaria": horas_ferramentaria,
+            "observacoes": cot_ferr.observacoes,
+            "assinatura_nome": cot_ferr.assinatura_nome,
+            "assinatura_cn": cot_ferr.assinatura_cn,
+        })
+
+
+
     return render(request, "cotacoes/visualizar_f011.html", {
         "precalc": precalc,
         "numero_formulario": f"F011 - Pré-Cálculo N{precalc.numero:05d}",
@@ -562,4 +618,6 @@ def visualizar_precalculo(request, pk):
         "campos_obs_tecnica": campos_obs_tecnica,
         "titulos_analise": TITULOS_ANALISE,
         "titulos_avaliacao": TITULOS_AVALIACAO,
+        "ferramentas_info": ferramentas_info,
+
     })

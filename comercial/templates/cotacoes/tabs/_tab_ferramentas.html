@@ -2,8 +2,8 @@
 {% load filters_gerais %}
 
 <form method="post">
-  <input type="hidden" name="aba" value="ferramentas">
-  <input type="hidden" name="form_regras_submitted" value="1">
+  <input type="hidden" id="abaSubmetidaInput" name="aba" value="ferramentas">
+  <input type="hidden" name="form_ferramentas_submitted" value="1">
 
   {% csrf_token %}
   {{ fs_ferr.management_form }}

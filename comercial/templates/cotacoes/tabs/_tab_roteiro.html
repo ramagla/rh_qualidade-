@@ -1,48 +1,48 @@
 {% load widget_tweaks %}
 {% load filters_gerais %}
-{% with qtde=analise.qtde_estimada|default_if_none:"1" %}
 
+{% with qtde=analise.qtde_estimada|default_if_none:"1" %}
 <form method="post" enctype="multipart/form-data">
   <input type="hidden" name="aba" value="roteiro">
   <input type="hidden" name="form_roteiro_submitted" value="1">
 
   {% csrf_token %}
-  {{ fs_rot.management_form }}
+  {{ fs_rot.management_form }} 
   <h5 class="mb-4">
     <i class="bi bi-diagram-3 text-primary me-2"></i> Roteiro de Produção
   </h5>
-  
- <!-- Bloco informativo -->
-<div class="alert alert-info small">
-  <div class="d-flex align-items-center mb-2">
-    <i class="bi bi-info-circle-fill me-2 text-primary"></i>
-    <strong>Informações sobre os cálculos:</strong>
+
+  <div class="alert alert-warning">
+    Total de formulários (total_form_count): {{ fs_rot.total_form_count }}<br>
+    Formulários iniciais (initial_form_count): {{ fs_rot.initial_form_count }}<br>
+    Prefixo do formset: {{ fs_rot.prefix }}
   </div>
-  <ul class="mb-2 ps-3">
-    <li>
-      Os campos <strong>Valor Total</strong> são calculados automaticamente com base nas fórmulas:
-      <ul class="mt-1">
-        <li><code>Setup (min) ÷ 60 × Custo Hora</code></li>
-        <li><code>Qtde Estimada ÷ Peças/hora × Custo Hora</code></li>
-      </ul>
-    </li>
-    <li>
-      O valor final é a soma dos dois totais quando aplicável.
-    </li>
-    <li>
-      A <strong>Média de Custo Hora</strong> no rodapé considera apenas os setores com valor de custo maior que zero.
-    </li>
-    <li>
-      Os valores são recalculados automaticamente ao alterar qualquer campo da tabela.
-    </li>
-  </ul>
-</div>
 
+  <!-- Bloco informativo -->
+  <div class="alert alert-info small">
+    <div class="d-flex align-items-center mb-2">
+      <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+      <strong>Informações sobre os cálculos:</strong>
+    </div>
+    <ul class="mb-2 ps-3">
+      <li>
+        Os campos <strong>Valor Total</strong> são calculados automaticamente com base nas fórmulas:
+        <ul class="mt-1">
+          <li><code>Setup (min) ÷ 60 × Custo Hora</code></li>
+          <li><code>Qtde Estimada ÷ Peças/hora × Custo Hora</code></li>
+        </ul>
+      </li>
+      <li>O valor final é a soma dos dois totais quando aplicável.</li>
+      <li>
+        A <strong>Média de Custo Hora</strong> no rodapé considera apenas os setores com valor de custo maior que zero.
+      </li>
+      <li>Os valores são recalculados automaticamente ao alterar qualquer campo da tabela.</li>
+    </ul>
+  </div>
 
-  <!-- ... tabela vem aqui ... -->
-  
   <div class="table-responsive mt-3">
-    <table class="table table-bordered align-middle text-center table-sm">
+    <table class="table table-bordered align-middle text-center table-sm"
+           data-qtde="{{ qtde|floatformat:2 }}">
       <thead class="table-light">
         <tr>
           <th><i class="bi bi-diagram-3-fill me-1 text-muted"></i> Setor</th>
@@ -54,33 +54,47 @@
       </thead>
       <tbody>
         {% for form in fs_rot.forms %}
-  <tr>
-    {{ form.id }}
-    <td>
-      <input type="text" class="form-control form-control-sm text-center bg-light"
-             value="{{ form.instance.setor.nome|default_if_none:'-' }}" readonly>
-      {{ form.setor.as_hidden }}
-      {{ form.etapa.as_hidden }}
-    </td>
-    <td>
-      {{ form.pph|add_class:"form-control form-control-sm text-center campo-pph"|attr:"autocomplete:off" }}
-    </td>
-    
-    <td>
-      {{ form.setup_minutos|add_class:"form-control form-control-sm text-center campo-setup"|attr:"autocomplete:off" }}
-    </td>
-    
-    <td>
-      {{ form.custo_hora|add_class:"form-control form-control-sm text-center campo-custo"|attr:"autocomplete:off" }}
-    </td>
-    <td>
-      {{ form.custo_total|add_class:"form-control form-control-sm text-center campo-total"|attr:"autocomplete:off" }}
-    </td>
-    
-  </tr>
-{% endfor %}
-
+          {% if not form.empty_permitted %}
+            <tr>
+              {{ form.id.as_hidden }}
+              {{ form.maquinas_roteiro.as_hidden }}
+              {{ form.etapa.as_hidden }}
+      
+              <!-- Setor -->
+              <td>
+                {{ form.setor }}
+              </td>
+      
+              <!-- Peças/hora -->
+              <td>
+                {{ form.pph }}
+              </td>
+      
+              <!-- Setup (min) -->
+              <td>
+                {{ form.setup_minutos }}
+              </td>
+      
+              <!-- Custo Hora -->
+              <td>
+                {{ form.custo_hora }}
+              </td>
+      
+              <!-- Custo Total -->
+              <td>
+                {{ form.custo_total }}
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      
+        <!-- Linha informativa (opcional) -->
+        <tr class="table-info">
+          <td colspan="5">Total de forms visíveis: {{ fs_rot.total_form_count }}</td>
+        </tr>
       </tbody>
+      
+      
       <tfoot>
         <tr class="table-light fw-bold">
           <td colspan="2" class="text-end">Totais:</td>
@@ -96,8 +110,45 @@
         </tr>
       </tfoot>
       
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          let totalSetup = 0;
+          let totalCusto = 0;
+          let totalCustoHora = 0;
+          let count = 0;
+      
+          document.querySelectorAll("input[id$='-setup_minutos']").forEach(input => {
+            totalSetup += parseFloat(input.value.replace(",", ".") || 0);
+          });
+      
+          document.querySelectorAll("input[id$='-custo_total']").forEach(input => {
+            totalCusto += parseFloat(input.value.replace(",", ".") || 0);
+          });
+      
+          document.querySelectorAll("input[id$='-custo_hora']").forEach(input => {
+            const valor = parseFloat(input.value.replace(",", "."));
+            if (!isNaN(valor)) {
+              totalCustoHora += valor;
+              count++;
+            }
+          });
+      
+          const mediaCustoHora = count > 0 ? totalCustoHora / count : 0;
+      
+          document.getElementById("total-setup").value = totalSetup.toFixed(2).replace(".", ",");
+          document.getElementById("total-custo").value = totalCusto.toFixed(2).replace(".", ",");
+          document.getElementById("media-custo-hora").value = mediaCustoHora.toFixed(2).replace(".", ",");
+        });
+      </script>
       
     </table>
+  </div>
+
+  <div class="mt-4">
+    <label for="id_observacoes_roteiro" class="form-label">
+      <i class="bi bi-journal-text me-1"></i> Observações do Roteiro
+    </label>
+    {{ form_roteiro.observacoes_roteiro }}
   </div>
 
   <div class="text-end mt-3">
@@ -109,80 +160,59 @@
 {% endwith %}
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const qtdeEstimada = parseFloat("{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".")) || 1;
+document.addEventListener("DOMContentLoaded", () => {
+  // Pega qtde e prefix dinamicamente
+  const tabela = document.querySelector("table[data-qtde]");
+  const qtdeEstimada = parseFloat(tabela.dataset.qtde?.replace(",", ".")) || 1;
+  const prefix = "{{ fs_rot.prefix }}";
 
-    function recalcularLinha(row) {
-      const pphInput = row.querySelector("input[name^='rot-'][name$='-pph']");
-      const setupInput = row.querySelector("input[name^='rot-'][name$='-setup_minutos']");
-      const custoHoraInput = row.querySelector("input[name^='rot-'][name$='-custo_hora']");
-      const custoTotalInput = row.querySelector("input[name^='rot-'][name$='-custo_total']");
+  // Recalcula valor total de uma linha
+  function recalcularLinha(row) {
+    const get = sel => row.querySelector(sel)?.value.replace(",", ".") || "0";
+    const pph   = parseFloat(get(`input[name^="${prefix}-"][name$="-pph"]`));
+    const setup = parseFloat(get(`input[name^="${prefix}-"][name$="-setup_minutos"]`));
+    const custo = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_hora"]`));
+    const total = custo * (setup/60 + qtdeEstimada/(pph || 1));
+    row.querySelector(`input[name^="${prefix}-"][name$="-custo_total"]`).value = total.toFixed(2);
+  }
 
-      if (!pphInput || !setupInput || !custoHoraInput || !custoTotalInput) return;
+  // Calcula totais de setup, custo e média de custo hora
+  function calcularTotais() {
+    const linhas = tabela.querySelectorAll("tbody tr");
+    let somaSetup = 0, somaCusto = 0, somaHoras = 0, cntHoras = 0;
 
-      const pph = parseFloat(pphInput.value.replace(",", ".")) || 0;
-      const setup = parseFloat(setupInput.value.replace(",", ".")) || 0;
-      const custo = parseFloat(custoHoraInput.value.replace(",", ".")) || 0;
+    linhas.forEach(row => {
+      const get = sel => row.querySelector(sel)?.value.replace(",", ".") || "0";
+      const setup     = parseFloat(get(`input[name^="${prefix}-"][name$="-setup_minutos"]`));
+      const custoHora = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_hora"]`));
+      const custoTot  = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_total"]`));
+      somaSetup += setup;
+      somaCusto += custoTot;
+      if (custoHora > 0) {
+        somaHoras += custoHora;
+        cntHoras++;
+      }
+    });
 
-      const total = custo * (setup / 60 + qtdeEstimada / (pph || 1));
-      custoTotalInput.value = total.toFixed(2);
-    }
+    document.getElementById("total-setup").value      = somaSetup.toFixed(2);
+    document.getElementById("total-custo").value      = somaCusto.toFixed(2);
+    document.getElementById("media-custo-hora").value = cntHoras
+      ? (somaHoras/cntHoras).toFixed(2) + " (Média)"
+      : "0.00 (Média)";
+  }
 
-    const linhas = document.querySelectorAll("tbody tr");
-    linhas.forEach((linha) => {
-      recalcularLinha(linha);
-
-      linha.querySelectorAll("input").forEach(input => {
-        input.addEventListener("input", () => {
-          recalcularLinha(linha);
-        });
+  // Inicializa e liga listeners
+  const linhas = tabela.querySelectorAll("tbody tr");
+  linhas.forEach(row => {
+    recalcularLinha(row);
+    row.querySelectorAll("input").forEach(input => {
+      input.addEventListener("input", () => {
+        recalcularLinha(row);
+        calcularTotais();
       });
     });
   });
+
+  calcularTotais();
+});
 </script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    function calcularTotaisRoteiro() {
-      const linhas = document.querySelectorAll("tbody tr");
-      let totalSetup = 0;
-      let totalCusto = 0;
-      let somaCustoHora = 0;
-      let contadorCustoHora = 0;
-
-      linhas.forEach(row => {
-        const setupInput = row.querySelector("input[name^='rot-'][name$='-setup_minutos']");
-        const custoHoraInput = row.querySelector("input[name^='rot-'][name$='-custo_hora']");
-        const custoTotalInput = row.querySelector("input[name^='rot-'][name$='-custo_total']");
-
-        const setup = parseFloat(setupInput?.value.replace(",", ".")) || 0;
-        const custoHora = parseFloat(custoHoraInput?.value.replace(",", ".")) || 0;
-        const custoTotal = parseFloat(custoTotalInput?.value.replace(",", ".")) || 0;
-
-        totalSetup += setup;
-        totalCusto += custoTotal;
-
-        if (custoHora > 0) {
-          somaCustoHora += custoHora;
-          contadorCustoHora += 1;
-        }
-      });
-
-      const mediaCustoHora = contadorCustoHora > 0 ? (somaCustoHora / contadorCustoHora) : 0;
-
-      document.getElementById("total-setup").value = totalSetup.toFixed(2);
-      document.getElementById("total-custo").value = totalCusto.toFixed(2);
-      document.getElementById("media-custo-hora").value = `${mediaCustoHora.toFixed(2)} (Média)`;
-    }
-
-    calcularTotaisRoteiro();
-
-    document.querySelectorAll("tbody input").forEach(input => {
-      input.addEventListener("input", calcularTotaisRoteiro);
-    });
-  });
-</script>
-
-
-
-  

@@ -8,6 +8,7 @@ from comercial.models.precalculo import (
 from decimal import Decimal
 from django.db.models import Q
 
+from django.forms import TextInput
 
 from django import forms
 from comercial.models.precalculo import PreCalculoMaterial
@@ -21,7 +22,6 @@ class PreCalculoMaterialForm(forms.ModelForm):
         exclude = (
             'cotacao', 'created_at', 'updated_at',
             'created_by', 'updated_by',
-            'descricao', 'unidade', 'nome_materia_prima'
         )
 
     def __init__(self, *args, **kwargs):
@@ -29,64 +29,91 @@ class PreCalculoMaterialForm(forms.ModelForm):
 
         # Oculta o campo roteiro
         self.fields['roteiro'].required = False
-        self.fields['roteiro'].widget = forms.HiddenInput()
+        self.fields['roteiro'].widget = HiddenInput()
 
-        # Campo código (readonly, preenchido via JS)
+        # Código (preenchido via Ajax)
         self.fields['codigo'].required = False
         self.fields['codigo'].widget.attrs.update({
             'class': 'form-control form-control-sm codigo-input',
             'readonly': 'readonly',
         })
 
-        # Campo status
+        # Status (campo opcional e estilizado)
         self.fields['status'].required = False
         self.fields['status'].widget.attrs.update({
             'class': 'form-control form-control-sm'
         })
 
-        # Campo ICMS
+        # ICMS (campo opcional e com placeholder)
         self.fields['icms'].required = False
         self.fields['icms'].widget.attrs.update({
             'class': 'form-control form-control-sm',
             'placeholder': '0.00'
         })
 
-        # Campos com estilos
+        # Aplica estilo nos campos relevantes
         campos = [
-            'lote_minimo', 'entrega_dias', 'fornecedor', 'icms', 'preco_kg',
-            'desenvolvido_mm', 'peso_liquido', 'peso_bruto'
+            'lote_minimo', 'entrega_dias', 'fornecedor', 'icms',
+            'preco_kg', 'desenvolvido_mm', 'peso_liquido', 'peso_bruto', 'peso_bruto_total'
         ]
         for campo in campos:
             if campo in self.fields:
                 widget = self.fields[campo].widget
-                css = (
+                css_class = (
                     'form-select form-select-sm'
                     if isinstance(widget, forms.Select)
                     else 'form-control form-control-sm'
                 )
                 self.fields[campo].required = False
-                self.fields[campo].widget.attrs.update({'class': css})
+                self.fields[campo].widget.attrs.update({'class': css_class})
 
-        # Corrige exibição como 0E-7 → 0.000
-        if self.instance and self.instance.pk:
-            for campo in ['peso_liquido', 'peso_bruto', 'desenvolvido_mm']:
+        # Estiliza peso_bruto_total (sem readonly para permitir detecção de alteração)
+        if 'peso_bruto_total' in self.fields:
+            self.fields['peso_bruto_total'].widget = TextInput(
+                attrs={
+                    'class': 'form-control form-control-sm text-end peso-bruto-total',
+                }
+            )
+
+        # ✅ Corrige formatação inicial de campos decimais para inputs em GET
+        if not self.is_bound and self.instance and self.instance.pk:
+            for campo in ['peso_liquido', 'peso_bruto', 'peso_bruto_total', 'desenvolvido_mm']:
                 valor = getattr(self.instance, campo, None)
                 if isinstance(valor, Decimal):
-                    self.initial[campo] = f"{valor:.3f}"
+                    self.initial[campo] = str(valor)  # mantém ponto como separador decimal
+
+    def has_changed(self):
+        """
+        Marca o form como alterado se o campo peso_bruto_total tiver valor no POST.
+        """
+        changed = super().has_changed()
+        peso_bruto_total_str = self.data.get(self.add_prefix("peso_bruto_total"), "").strip()
+        if not changed and peso_bruto_total_str and peso_bruto_total_str != "0,000":
+            return True
+        return changed
 
     def clean(self):
+        """
+        Faz a limpeza e conversão correta dos campos numéricos, considerando vírgula como separador decimal.
+        """
         cleaned_data = super().clean()
+
         campos_decimal = [
             'lote_minimo', 'entrega_dias', 'icms', 'preco_kg',
-            'peso_liquido', 'peso_bruto', 'desenvolvido_mm'
+            'peso_liquido', 'peso_bruto', 'peso_bruto_total', 'desenvolvido_mm'
         ]
+
         for campo in campos_decimal:
             valor = cleaned_data.get(campo)
-            if valor in ["", None]:
+            if isinstance(valor, str):
+                valor = valor.replace(".", "").replace(",", ".")
+            try:
+                cleaned_data[campo] = Decimal(valor) if valor not in [None, ''] else None
+            except (ValueError, InvalidOperation):
+                self.add_error(campo, f"Valor inválido em {campo}: {valor}")
                 cleaned_data[campo] = None
+
         return cleaned_data
-
-
 
     
 
@@ -102,16 +129,16 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
     class Meta:
         model = PreCalculoServicoExterno
         exclude = (
-            'cotacao', 'created_at', 'updated_at',
-            'created_by', 'updated_by',
-            'nome_insumo', 'codigo_materia_prima',
-            'descricao_materia_prima', 'unidade',
-        )
+    'cotacao', 'created_at', 'updated_at',
+    'created_by', 'updated_by',
+    'nome_insumo',  # ✅ Mantenha
+    'descricao_materia_prima', 'unidade',
+)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Filtra insumos de Tratamento Externo ou Oleamento
+        # Filtro para mostrar apenas insumos de setores relevantes
         self.fields['insumo'].queryset = InsumoEtapa.objects.filter(
             Q(etapa__setor__nome__icontains="Tratamento Externo") |
             Q(etapa__setor__nome__icontains="Oleamento")
@@ -119,45 +146,101 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
         self.fields['insumo'].required = True
         self.fields['insumo'].widget = forms.HiddenInput()
         self.fields['insumo'].label = "Insumo"
-
-        # Campo STATUS: torna opcional e estiliza
+        self.fields['codigo_materia_prima'].required = False
+        self.fields['codigo_materia_prima'].widget.attrs.update({
+            'class': 'form-control form-control-sm codigo-input',
+            'readonly': 'readonly',
+        })
+        # STATUS: opcional e estilizado
         if 'status' in self.fields:
             self.fields['status'].required = False
             self.fields['status'].widget.attrs.update({
                 'class': 'form-control form-control-sm'
             })
 
-        # Campo ICMS
+        # ICMS: opcional + placeholder
         if 'icms' in self.fields:
+            self.fields['icms'].required = False
             self.fields['icms'].widget.attrs.update({
                 'class': 'form-control form-control-sm',
                 'placeholder': '0.00'
             })
-            self.fields['icms'].required = False
 
-        # Campos de compra: optional e estilizados
+        # Campos visuais e opcionais
         campos = [
             'lote_minimo', 'entrega_dias', 'fornecedor', 'icms', 'preco_kg',
-            'desenvolvido_mm', 'peso_liquido', 'peso_bruto'
+            'desenvolvido_mm', 'peso_liquido', 'peso_bruto', 'peso_bruto_total'
         ]
+
         for campo in campos:
             if campo in self.fields:
                 widget = self.fields[campo].widget
                 css_class = (
                     'form-select form-select-sm'
-                    if widget.__class__.__name__ == 'Select'
+                    if isinstance(widget, forms.Select)
                     else 'form-control form-control-sm'
                 )
                 self.fields[campo].widget.attrs.update({'class': css_class})
                 self.fields[campo].required = False
 
-        # Corrige exibição de decimais
+        # Estiliza peso_bruto_total como readonly
+        if 'peso_bruto_total' in self.fields:
+            self.fields['peso_bruto_total'].widget = TextInput(
+                attrs={
+                    'class': 'form-control form-control-sm text-end peso-bruto-total',
+                    'readonly': 'readonly',
+                }
+            )
+
+        if 'desenvolvido_mm' in self.fields:
+            self.fields['desenvolvido_mm'].widget = TextInput(
+                attrs={
+                    'class': 'form-control form-control-sm',
+                }
+            )
+
+
+        # Exibição formatada de decimais
         if self.instance and self.instance.pk:
-            for campo in ['peso_liquido', 'peso_bruto', 'desenvolvido_mm']:
+            for campo in ['peso_liquido', 'peso_bruto', 'peso_bruto_total', 'desenvolvido_mm']:
                 valor = getattr(self.instance, campo, None)
                 if isinstance(valor, Decimal):
                     self.initial[campo] = f"{valor:.3f}"
 
+    def has_changed(self):
+        """
+        Marca o form como alterado se peso_bruto_total vier no POST com valor.
+        """
+        changed = super().has_changed()
+        peso_bruto_total_str = self.data.get(self.add_prefix("peso_bruto_total"), "").strip()
+
+        if not changed and peso_bruto_total_str and peso_bruto_total_str != "0,000":
+            return True
+
+        return changed
+
+    def clean(self):
+        """
+        Normaliza e converte campos numéricos com vírgula → ponto decimal.
+        """
+        cleaned_data = super().clean()
+
+        campos_decimal = [
+            'lote_minimo', 'entrega_dias', 'icms', 'preco_kg',
+            'peso_liquido', 'peso_bruto', 'peso_bruto_total', 'desenvolvido_mm'
+        ]
+
+        for campo in campos_decimal:
+            valor = cleaned_data.get(campo)
+            if isinstance(valor, str):
+                valor = valor.replace(".", "").replace(",", ".")
+            try:
+                cleaned_data[campo] = Decimal(valor) if valor not in [None, ''] else None
+            except (ValueError, InvalidOperation):
+                self.add_error(campo, f"Valor inválido em {campo}: {valor}")
+                cleaned_data[campo] = None
+
+        return cleaned_data
 
 
 
@@ -166,27 +249,43 @@ class RegrasCalculoForm(forms.ModelForm):
         model = RegrasCalculo
         exclude = ('cotacao','created_at','updated_at','created_by','updated_by')
 
+from comercial.models.centro_custo import CentroDeCusto
+
 class RoteiroCotacaoForm(forms.ModelForm):
     class Meta:
         model = RoteiroCotacao
-        exclude = ('precalculo', 'cotacao', 'created_at', 'updated_at', 'created_by', 'updated_by')
+        fields = (
+            'setor', 'etapa', 'pph', 'setup_minutos',
+            'custo_hora', 'custo_total'
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Campos visuais e ocultos
-        campos_visuais = ['pph', 'setup_minutos', 'custo_hora', 'custo_total']
-        for campo in campos_visuais:
-            if campo in self.fields:
-                self.fields[campo].required = False
-                self.fields[campo].widget.attrs.update({
-                    'class': 'form-control form-control-sm text-center'
-                })
+        # Define NumberInput com attrs diretamente (mais seguro que .update)
+        campos_numericos = ['pph', 'setup_minutos', 'custo_hora', 'custo_total']
+        for campo in campos_numericos:
+            self.fields[campo].required = False
+            self.fields[campo].widget = forms.NumberInput(attrs={
+                'class': 'form-control form-control-sm text-center',
+                'autocomplete': 'off'
+            })
 
-        # Oculta o campo etapa, mas mantém no POST
+        # Etapa como campo oculto
         if 'etapa' in self.fields:
             self.fields['etapa'].required = False
             self.fields['etapa'].widget = forms.HiddenInput()
+
+        # Garante que setor está visível com queryset válido
+        if 'setor' in self.fields:
+            self.fields['setor'].queryset = CentroDeCusto.objects.all()
+            self.fields['setor'].required = False
+            self.fields['setor'].widget.attrs.update({
+                'class': 'form-control form-control-sm text-center',
+                'autocomplete': 'off'
+            })
+
+
 
 
 from django_ckeditor_5.widgets import CKEditor5Widget
@@ -248,7 +347,7 @@ class AvaliacaoTecnicaForm(forms.ModelForm):
 class AnaliseComercialForm(forms.ModelForm):
     class Meta:
         model = AnaliseComercial
-        exclude = ('cotacao','created_at','updated_at','created_by','updated_by')
+        exclude = ('cotacao', 'created_at', 'updated_at', 'created_by', 'updated_by')
         widgets = {
             'status': forms.Select(attrs={'class': 'form-select form-select-sm'}),
             'motivo_reprovacao': forms.Textarea(attrs={'class': 'form-control form-control-sm', 'rows': 4}),
@@ -256,7 +355,21 @@ class AnaliseComercialForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.fields['status'].initial = 'andamento'
+
+        # ⚙️ Campo booleano novo - capacidade produtiva
+        self.fields['capacidade_produtiva'].required = False
+        self.fields['capacidade_produtiva'].widget = forms.Select(
+            choices=[
+                ('', '---------'),  # opção em branco
+                ('True', 'Sim'),
+                ('False', 'Não'),
+            ],
+            attrs={'class': 'form-select form-select-sm'}
+        )
+
+
 
 
 class DesenvolvimentoForm(forms.ModelForm):
@@ -274,10 +387,12 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 class PreCalculoForm(forms.ModelForm):
     class Meta:
         model = PreCalculo
-        fields = ['observacoes_materiais',"observacoes_servicos",]
+        fields = ['observacoes_materiais',"observacoes_servicos",'observacoes_roteiro',]
         widgets = {
             'observacoes_materiais': CKEditor5Widget(config_name='default'),
-            'observacoes_servicoes': CKEditor5Widget(config_name='default'),
+            'observacoes_servicos': CKEditor5Widget(config_name='default'),
+            'observacoes_roteiro': CKEditor5Widget(config_name='default'),
+
 
         }
 

@@ -68,6 +68,8 @@ class PreCalculo(models.Model):
         blank=True,
         null=True
     )
+    observacoes_roteiro = CKEditor5Field("Observações do Roteiro", config_name="default", blank=True, null=True)
+
     preco_selecionado = models.DecimalField(
         "Preço Final Selecionado (R$)",
         max_digits=12,
@@ -91,7 +93,7 @@ class PreCalculo(models.Model):
         custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
 
         mat = self.materiais.filter(selecionado=True).first()
-        materiais = (mat.peso_bruto or 0) * (mat.preco_kg or 0) if mat else 0
+        materiais = (mat.peso_bruto_total or 0) * (mat.preco_kg or 0) if mat else 0
 
         servicos = sum(
             (s.peso_bruto or 0) * (s.preco_kg or 0)
@@ -257,6 +259,7 @@ class AnaliseComercial(models.Model):
     conclusao = models.CharField("Conclusão da Análise Crítica", max_length=30, choices=RESULTADO)
     consideracoes = CKEditor5Field("Considerações", config_name="default", blank=True, null=True)
     qtde_estimada = models.PositiveIntegerField("Quantidade Estimada", null=True, blank=True)
+    capacidade_produtiva = models.BooleanField("Capacidade produtiva disponível?", null=True, blank=True)
 
     # 🔐 Metadados de Assinatura
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
@@ -296,12 +299,14 @@ class PreCalculoMaterial(AuditModel):
     entrega_dias = models.PositiveIntegerField("Entrega (dias)", null=True, blank=True)
     fornecedor = models.ForeignKey(FornecedorQualificado, on_delete=models.PROTECT, null=True, blank=True)
     icms = models.DecimalField("ICMS (%)", max_digits=5, decimal_places=2, null=True, blank=True)
+    tipo_material = models.CharField("Tipo de Material", max_length=100, blank=True, null=True)
 
     selecionado = models.BooleanField(default=False)
 
     desenvolvido_mm = models.DecimalField("Desenvolvido (mm)", max_digits=8, decimal_places=4)
     peso_liquido = models.DecimalField("Peso Líquido (kg)", max_digits=20, decimal_places=7)
     peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=20, decimal_places=7)
+    peso_bruto_total = models.DecimalField("Peso Bruto Total (kg)", max_digits=20, decimal_places=7, null=True, blank=True)
     preco_kg = models.DecimalField("Preço /kg", max_digits=12, decimal_places=4, null=True, blank=True)
 
     status = models.CharField("Status da Cotação", max_length=20, choices=STATUS_CHOICES, default='aguardando')
@@ -363,6 +368,7 @@ class PreCalculoServicoExterno(AuditModel):
     peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=20, decimal_places=7)
     preco_kg = models.DecimalField("Preço /kg", max_digits=12, decimal_places=4, null=True, blank=True)
     selecionado = models.BooleanField(default=False)
+    peso_bruto_total = models.DecimalField("Peso Bruto Total (kg)", max_digits=20, decimal_places=7, null=True, blank=True)
 
     status = models.CharField("Status da Cotação", max_length=20, choices=STATUS_CHOICES, default='aguardando')
 
@@ -527,6 +533,8 @@ class RoteiroCotacao(AuditModel):
     setup_minutos = models.PositiveIntegerField("Tempo de Setup (min)")
     custo_hora = models.DecimalField("Custo Hora", max_digits=12, decimal_places=4)
     custo_total = models.DecimalField("Custo Total", max_digits=14, decimal_places=4)
+    maquinas_roteiro = models.TextField("Máquinas da Etapa", blank=True, null=True)
+    nome_acao = models.TextField("Nome da Ação", blank=True, null=True)
 
     # 🔐 Metadados de Assinatura
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)

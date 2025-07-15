@@ -102,7 +102,7 @@
       </tr>
       <tr>
         <th><i class="bi bi-bar-chart"></i> Consumo estimado:</th>
-        <td>{{ precalc.analise_comercial_item.consumo_estimado|default:"---" }}</td>
+        <td>{{ precalc.analise_comercial_item.qtde_estimada|intcomma|default:"---" }}</td>
         <th><i class="bi bi-clock-history"></i> Período:</th>
         <td>{{ precalc.analise_comercial_item.periodo|default:"---" }}</td>
         <th><i class="bi bi-gear"></i> Capacidade produtiva?</th>
@@ -116,147 +116,416 @@
       <tr>
         <th><i class="bi bi-person-circle"></i> Responsável:</th>
         <td colspan="5">
-          {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
-            {{ precalc.analise_comercial_item.usuario.get_full_name }} /
-            {{ precalc.analise_comercial_item.usuario.funcionario.cargo_atual|default:"---" }}<br>
-            <i class="bi bi-calendar-event"></i> {{ precalc.analise_comercial_item.assinado_em|date:"d/m/Y H:i" }}
+            {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
+              <strong>{{ precalc.analise_comercial_item.usuario.get_full_name }}</strong><br>
+              <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
+              {{ precalc.analise_comercial_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
+              <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
+              {{ precalc.analise_comercial_item.assinado_em|date:"d/m/Y H:i" }}
+            {% else %}
+              {{ precalc.analise_comercial_item.assinatura_nome|default:"---" }}
+            {% endif %}
+          </td>
+          
+      </tr>
+    </table>
+  </div>
+  
+  
+
+  {% for material in precalc.materiais.all %}
+  {% if material.codigo and forloop.first %}
+    <h5 class="mt-4">Material</h5>
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle small">
+        <thead class="table-secondary text-center">
+          <tr><th colspan="6">Material</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th><i class="bi bi-upc-scan me-1"></i><strong>Código:</strong></th>
+            <td colspan="5">{{ material.codigo|default:"—" }}</td>
+          </tr>
+          <tr>
+            <th><i class="bi bi-box-seam me-1"></i><strong>Material:</strong></th>
+            <td colspan="5">{{ material.descricao|default:"—" }}</td>
+          </tr>
+          <tr>
+            <th><i class="bi bi-tags me-1"></i><strong>Tipo de Material:</strong></th>
+            <td colspan="5">{{ material.tipo_material|default:"—" }}</td>
+          </tr>
+          <tr style="font-size: 0.85rem;">
+            <th><i class="bi bi-rulers me-1"></i><strong>Desenvolvido:</strong></th>
+            <td>{{ material.desenvolvido_mm|default:"—" }} mm</td>
+            <th><i class="bi bi-box2-heart me-1"></i><strong>Peso líquido:</strong></th>
+            <td>{{ material.peso_liquido|default:"—" }} kg</td>
+            <th><i class="bi bi-box2-heart me-1"></i><strong>Peso bruto:</strong></th>
+            <td>{{ material.peso_bruto|default:"—" }} kg</td>
+          </tr>
+
+          {% if precalc.observacoes_materiais|striptags|length > 0 %}
+          <tr>
+            <th colspan="6">
+              <i class="bi bi-chat-left-text me-1"></i><strong>Observações:</strong>
+              <div class="mt-1">{{ precalc.observacoes_materiais|safe }}</div>
+            </th>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endfor %}
+
+<h5 class="mt-5">4. Serviços Externos Selecionados</h5>
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small text-center">
+    <thead class="table-secondary">
+      <tr>
+        <th colspan="3"><strong>Serviço externo</strong></th>
+      </tr>
+      <tr>
+        <th><i class="bi bi-tag-fill"></i> Código</th>
+        <th><i class="bi bi-tools"></i> Serviço externo</th>
+        <th><i class="bi bi-truck"></i> Fornecedor</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in precalc.servicos.all %}
+        {% if s.selecionado %}
+          <tr>
+            <td>{{ s.codigo_materia_prima|default:"—" }}</td>
+            <td>{{ s.descricao_materia_prima|default:"—" }}</td>
+            <td>{{ s.fornecedor|default:"—" }}</td>
+          </tr>
+        {% endif %}
+      {% empty %}
+        <tr>
+          <td colspan="3">Nenhum serviço selecionado.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    {% if precalc.observacoes_servicos|striptags|length > 0 %}
+    <tfoot>
+      <tr>
+        <td colspan="3" class="text-start">
+          <strong class="ms-2">Observações:</strong>
+          <div class="mt-1 ms-2">{{ precalc.observacoes_servicos|safe }}</div>
+        </td>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table>
+</div>
+
+<h5 class="mt-5">Fluxo Preliminar</h5>
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small text-center">
+    <thead class="table-secondary">
+      <tr>
+        <th><i class="bi bi-list-ol"></i> N°</th>
+        <th><i class="bi bi-tools"></i> Operação / Equipamento</th>
+        <th><i class="bi bi-stopwatch"></i> Setup (min)</th>
+        <th><i class="bi bi-gear-wide-connected"></i> PPH</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for etapa in precalc.roteiro_item.all %}
+        <tr>
+          <td>{{ etapa.etapa }}</td>
+          <td>
+            {{ etapa.nome_acao|default:"—" }}
+            {% if etapa.maquinas_roteiro %}
+              <br><small class="text-muted">{{ etapa.maquinas_roteiro }}</small>
+            {% endif %}
+          </td>
+          <td>{{ etapa.setup_minutos|default:"—" }}</td>
+          <td>{{ etapa.pph|default:"—" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">Nenhuma etapa cadastrada.</td></tr>
+      {% endfor %}
+    </tbody>
+
+    {% if precalc.observacoes_roteiro|striptags|length > 0 %}
+    <tfoot>
+      <tr>
+        <td colspan="4" class="text-start">
+          <strong class="ms-2">Observações:</strong>
+          <div class="mt-1 ms-2">{{ precalc.observacoes_roteiro|safe }}</div>
+        </td>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table>
+</div>
+
+{% for f in ferramentas_info %}
+  <table class="table table-bordered text-center align-middle" style="width: 100%;">
+    <thead class="table-light">
+      <tr>
+        <th colspan="6" style="background-color: #d9d9d9; font-weight: bold;">Ferramenta / Dispositivo</th>
+      </tr>
+      <tr>
+        <th colspan="2">Projeto</th>
+        <th colspan="2">Ferramenta</th>
+        <th colspan="2">Tipo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td colspan="2">{{ f.horas_projeto|floatformat:"2" }} h</td>
+        <td colspan="2">{{ f.horas_ferramentaria|floatformat:"2" }} h</td>
+        <td><input type="checkbox" {% if f.tipo == "Nova" %}checked{% endif %}> Ferramenta nova</td>
+        <td><input type="checkbox" {% if f.tipo == "Adpt" %}checked{% endif %}> Adaptação</td>
+      </tr>
+      <tr>
+        <td colspan="2"></td>
+        <td colspan="2"></td>
+        <td><input type="checkbox" {% if f.tipo == "Disp" %}checked{% endif %}> Dispositivo</td>
+        <td><input type="checkbox" {% if f.tipo == "Outro" %}checked{% endif %}> Outros</td>
+      </tr>
+      <tr>
+        <td colspan="6" class="text-start" style="height: 100px;">
+          <strong>Observações:</strong><br>
+          {{ f.observacoes|safe }}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" class="text-start">
+          <strong>Responsável:</strong><br>
+          {{ f.obj.usuario.get_full_name }}<br>
+          <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
+          {{ f.obj.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
+          <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
+          {{ f.obj.assinado_em|date:"d/m/Y H:i" }}
+        </td>
+      </tr>
+      
+      
+      
+      
+      
+    </tbody>
+  </table>
+{% endfor %}
+
+
+
+
+
+
+<h5 class="mt-5">2. Análise Comercial</h5>
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small text-center">
+    <thead class="table-secondary">
+      <tr>
+        <th colspan="4">Análise comercial (executada pelo Departamento de Vendas)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for campo, obs in campos_obs %}
+        <tr>
+          <td class="text-start">{{ forloop.counter }} - {{ titulos_analise|dict_get:campo }}</td>
+          <td>
+            {% if precalc.analise_comercial_item|attr:campo == False %}
+              ☒ Não ☐ Sim
+            {% elif precalc.analise_comercial_item|attr:campo == True %}
+              ☐ Não ☒ Sim
+            {% else %}
+              ☐ Não ☐ Sim
+            {% endif %}
+          </td>
+          <td>
+            {{ precalc.analise_comercial_item|attr:obs|default:"" }}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Conclusão -->
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small">
+    <thead class="table-secondary">
+      <tr>
+        <th colspan="3">Conclusão da análise crítica dos requisitos</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          {% if precalc.analise_comercial_item.conclusao == "Viável" %}
+            ☒ Viável (o produto pode ser produzido conforme especificado, sem revisões)
           {% else %}
-            {{ precalc.analise_comercial_item.assinatura_nome|default:"---" }}
+            ☐ Viável (o produto pode ser produzido conforme especificado, sem revisões)
           {% endif %}
         </td>
       </tr>
-    </table>
-  </div>
-  
-  
+      <tr>
+        <td>
+          {% if precalc.analise_comercial_item.conclusao == "Viável com alterações" %}
+            ☒ Viável (alterações recomendadas conforme considerações)
+          {% else %}
+            ☐ Viável (alterações recomendadas conforme considerações)
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {% if precalc.analise_comercial_item.conclusao == "Inviável" %}
+            ☒ Inviável (necessidade de revisão do projeto para a manufatura do produto dentro dos requisitos especificados)
+          {% else %}
+            ☐ Inviável (necessidade de revisão do projeto para a manufatura do produto dentro dos requisitos especificados)
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-  <!-- Caracterização Produto -->
-  <h5 class="mt-4">1. Caracterização de Produto</h5>
-  <div class="table-responsive">
-    <table class="table table-bordered">
-      <tr>
-        <th>Tipo de Embalagem</th>
-        <td>{{ precalc.analise_comercial_item.tipo_embalagem_obs|default:"---" }}</td>
-        <th>Periodicidade</th>
-        <td>{{ precalc.analise_comercial_item.periodo|default:"---" }}</td>
-      </tr>
-      <tr>
-        <th>Requisitos Específicos</th>
-        <td>{{ precalc.analise_comercial_item.requisito_especifico|yesno:"Sim,Não,Não Aplicável" }}</td>
-        <th>Item de Segurança?</th>
-        <td>{{ precalc.avaliacao_tecnica_item.seguranca|yesno:"Sim,Não,Não Aplicável" }}</td>
-      </tr>
-      <tr>
-        <th>Peso Líquido</th>
-        <td>{{ precalc.materiais.first.peso_liquido|default:"---" }} kg</td>
-        <th>Material</th>
-        <td>{{ precalc.materiais.first.nome_materia_prima|default:"---" }}</td>
-      </tr>
-    </table>
-  </div>
+<!-- Considerações e Responsável -->
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small">
+    <tr>
+      <th style="width: 15%;">Considerações:</th>
+      <td>
+        {% if precalc.analise_comercial_item.consideracoes|striptags|cut:" "|length > 0 %}
+        {{ precalc.analise_comercial_item.consideracoes|safe }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+          </tr>
+    <tr>
+      <th>Responsável:</th>
+      <td>
+        {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
+          <strong>{{ precalc.analise_comercial_item.usuario.get_full_name }}</strong><br>
+          <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
+          {{ precalc.analise_comercial_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
+          <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
+          {{ precalc.analise_comercial_item.assinado_em|date:"d/m/Y H:i" }}
+        {% else %}
+          {{ precalc.analise_comercial_item.assinatura_nome|default:"---" }}
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
 
-  <!-- Análise Comercial -->
-  <h5 class="mt-5">2. Análise Comercial</h5>
-  <div class="table-responsive">
-    <table class="table table-bordered">
-      {% for campo, obs in campos_obs %}
-        <tr>
-            <th>{{ titulos_analise|dict_get:campo }}</th>
-            <td>{{ precalc.analise_comercial_item|attr:campo|yesno:"Sim,Não" }}</td>
-          <th>Observações</th>
-          <td>{{ precalc.analise_comercial_item|attr:obs|default:"---" }}</td>
-        </tr>
-      {% endfor %}
-      <tr>
-        <th>Conclusão</th>
-        <td colspan="3">{{ precalc.analise_comercial_item.conclusao }}</td>
-      </tr>
-    </table>
-  </div>
 
   <!-- Avaliação Técnica -->
-  <h5 class="mt-5">3. Avaliação Técnica</h5>
-  <div class="table-responsive">
-    <table class="table table-bordered">
+<h5 class="mt-5">3. Avaliação Técnica</h5>
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small text-center">
+    <thead class="table-secondary">
+      <tr>
+        <th class="text-start">Questão</th>
+        <th>Não</th>
+        <th>Sim</th>
+        <th>Não aplicável</th>
+        <th class="text-start">Observações</th>
+      </tr>
+    </thead>
+    <tbody>
       {% for campo, obs in campos_obs_tecnica %}
         <tr>
-            <th>{{ titulos_avaliacao|dict_get:campo }}</th>
-            <td>{{ precalc.avaliacao_tecnica_item|attr:campo|yesno:"Sim,Não" }}</td>
-          <th>Observações</th>
-          <td>{{ precalc.avaliacao_tecnica_item|attr:obs|default:"---" }}</td>
+          <td class="text-start">{{ titulos_avaliacao|dict_get:campo }}</td>
+          <td>
+            <input type="checkbox" {% if precalc.avaliacao_tecnica_item|attr:campo == False %}checked{% endif %}>
+          </td>
+          <td>
+            <input type="checkbox" {% if precalc.avaliacao_tecnica_item|attr:campo == True %}checked{% endif %}>
+          </td>
+          <td>
+            <input type="checkbox" {% if precalc.avaliacao_tecnica_item|attr:campo == None %}checked{% endif %}>
+          </td>
+          <td class="text-start">
+            {{ precalc.avaliacao_tecnica_item|attr:obs|default:"—" }}
+          </td>
         </tr>
       {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Conclusão -->
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small">
+    <thead class="table-secondary">
       <tr>
-        <th>Conclusão</th>
-        <td colspan="3">{{ precalc.avaliacao_tecnica_item.conclusao_tec }}</td>
+        <th colspan="3">Conclusão da análise crítica dos requisitos</th>
       </tr>
-    </table>
-  </div>
-
-  <!-- Serviços Externos -->
-  <h5 class="mt-5">4. Serviços Externos</h5>
-  <div class="table-responsive">
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Descrição</th>
-          <th>Fornecedor</th>
-          <th>Preço/kg</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for s in precalc.servicos.all %}
-          <tr>
-            <td>{{ s.codigo_materia_prima }}</td>
-            <td>{{ s.descricao_materia_prima }}</td>
-            <td>{{ s.fornecedor }}</td>
-            <td>{{ s.preco_kg|floatformat:4 }}</td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="4">Nenhum serviço externo registrado.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Ferramentas -->
-  <h5 class="mt-5">5. Ferramentas</h5>
-  <div class="table-responsive">
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Ferramenta</th>
-          <th>Tipo</th>
-          <th>Valor Unitário</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for f in precalc.ferramentas_item.all %}
-          <tr>
-            <td>{{ f.ferramenta }}</td>
-            <td>{{ f.ferramenta.tipo }}</td>
-            <td>{{ f.ferramenta.valor_total|formatar_reais }}</td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="3">Nenhuma ferramenta vinculada.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Preço Final -->
-  <h5 class="mt-5">6. Preço Final</h5>
-  <div class="table-responsive">
-    <table class="table table-bordered">
+    </thead>
+    <tbody>
       <tr>
-        <th>Preço Manual</th>
-        <td>{{ precalc.preco_manual|formatar_reais|default:"---" }}</td>
-        <th>Preço Selecionado</th>
-        <td>{{ precalc.preco_selecionado|formatar_reais|default:"---" }}</td>
+        <td>
+          {% if precalc.avaliacao_tecnica_item.conclusao_tec == "Viável" %}
+            ☒ Viável (o produto pode ser produzido conforme especificado, sem revisões)
+          {% else %}
+            ☐ Viável (o produto pode ser produzido conforme especificado, sem revisões)
+          {% endif %}
+        </td>
       </tr>
-    </table>
-  </div>
+      <tr>
+        <td>
+          {% if precalc.avaliacao_tecnica_item.conclusao_tec == "Viável com alterações" %}
+            ☒ Viável (alterações recomendadas conforme considerações)
+          {% else %}
+            ☐ Viável (alterações recomendadas conforme considerações)
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {% if precalc.avaliacao_tecnica_item.conclusao_tec == "Inviável" %}
+            ☒ Inviável (necessidade de revisão do projeto para a manufatura do produto dentro dos requisitos especificados)
+          {% else %}
+            ☐ Inviável (necessidade de revisão do projeto para a manufatura do produto dentro dos requisitos especificados)
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Considerações e Responsável -->
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small">
+    <tr>
+      <th style="width: 15%;">Considerações:</th>
+      <td>
+        {% if precalc.avaliacao_tecnica_item.consideracoes_tec|striptags|cut:" "|length > 0 %}
+          {{ precalc.avaliacao_tecnica_item.consideracoes_tec|safe }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <th>Responsável:</th>
+      <td>
+        {% if precalc.avaliacao_tecnica_item.usuario and precalc.avaliacao_tecnica_item.usuario.funcionario %}
+          <strong>{{ precalc.avaliacao_tecnica_item.usuario.get_full_name }}</strong><br>
+          <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
+          {{ precalc.avaliacao_tecnica_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
+          <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
+          {{ precalc.avaliacao_tecnica_item.assinado_em|date:"d/m/Y H:i" }}
+        {% else %}
+          {{ precalc.avaliacao_tecnica_item.assinatura_nome|default:"---" }}
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+
+  
+  
+
 
 </div>
 
