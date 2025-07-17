@@ -54,6 +54,7 @@ class Cliente(models.Model):
     email_contato = models.EmailField(blank=True, null=True)
     telefone_contato = models.CharField(max_length=20, blank=True, null=True)
     cargo_contato = models.CharField(max_length=100, blank=True, null=True)
+    departamento_contato = models.CharField(max_length=100, blank=True, null=True)  # NOVO
 
     # Outros dados
     icms = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)

@@ -74,5 +74,7 @@ urlpatterns = [
 
     # Relatorios 
     path("cotacoes/precalculo/<int:pk>/visualizar/", precalc_views.visualizar_precalculo, name="visualizar_precalculo"),
+    path("cotacoes/precalculo/<int:pk>/precificacao/", precalc_views.precificacao_produto, name="precificacao_produto"),
+    path("cotacao/<int:cotacao_id>/gerar_proposta/", precalc_views.gerar_proposta_view, name="gerar_proposta"),
 
 ]

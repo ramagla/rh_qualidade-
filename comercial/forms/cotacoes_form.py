@@ -14,7 +14,7 @@ User = get_user_model()
 class CotacaoForm(forms.ModelForm):
     class Meta:
         model = Cotacao
-        fields = ["tipo", "cliente", "frete", "cond_pagamento", "icms", "observacoes"] 
+        fields = ["tipo", "cliente", "frete", "cond_pagamento", "icms", "validade_proposta", "observacoes"]
 
 
         widgets = {
@@ -24,6 +24,11 @@ class CotacaoForm(forms.ModelForm):
             "cond_pagamento": forms.TextInput(attrs={"class": "form-control", "placeholder": "Condição de pagamento"}),
             "icms": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "ICMS (%)"}),
             "observacoes": CKEditor5Widget(config_name="default"),
+            "validade_proposta": forms.NumberInput(attrs={
+                "class": "form-control",
+                "placeholder": "Validade da proposta (em dias)",
+                "min": "1"
+            }),
 
         }
 

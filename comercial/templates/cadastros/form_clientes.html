@@ -324,7 +324,12 @@
           </label>
           {{ form.email_contato|add_class:"form-control" }}
         </div>
-  
+        <div class="col-md-6">
+          <label for="{{ form.departamento_contato.id_for_label }}" class="form-label">
+            <i class="bi bi-diagram-3-fill me-1"></i> Departamento:
+          </label>
+          {{ form.departamento_contato|add_class:"form-control" }}
+        </div>
         <div class="col-md-6">
           <label for="{{ form.telefone_contato.id_for_label }}" class="form-label">
             <i class="bi bi-telephone-fill me-1"></i> Telefone:

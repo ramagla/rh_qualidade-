@@ -144,12 +144,14 @@
     </table>
   </div>
 
-  <div class="mt-4">
-    <label for="id_observacoes_roteiro" class="form-label">
-      <i class="bi bi-journal-text me-1"></i> Observações do Roteiro
+  <div class="mb-3 mt-3">
+    <label for="{{ form_precalculo.observacoes_roteiro.id_for_label }}" class="form-label">
+      <i class="bi bi-journal-text me-1 text-muted"></i> Observações do Roteiro
     </label>
-    {{ form_roteiro.observacoes_roteiro }}
+    {{ form_precalculo.observacoes_roteiro }}
   </div>
+  
+  
 
   <div class="text-end mt-3">
     <button type="submit" class="btn btn-success">
@@ -160,59 +162,71 @@
 {% endwith %}
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Pega qtde e prefix dinamicamente
-  const tabela = document.querySelector("table[data-qtde]");
-  const qtdeEstimada = parseFloat(tabela.dataset.qtde?.replace(",", ".")) || 1;
-  const prefix = "{{ fs_rot.prefix }}";
-
-  // Recalcula valor total de uma linha
-  function recalcularLinha(row) {
-    const get = sel => row.querySelector(sel)?.value.replace(",", ".") || "0";
-    const pph   = parseFloat(get(`input[name^="${prefix}-"][name$="-pph"]`));
-    const setup = parseFloat(get(`input[name^="${prefix}-"][name$="-setup_minutos"]`));
-    const custo = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_hora"]`));
-    const total = custo * (setup/60 + qtdeEstimada/(pph || 1));
-    row.querySelector(`input[name^="${prefix}-"][name$="-custo_total"]`).value = total.toFixed(2);
-  }
-
-  // Calcula totais de setup, custo e média de custo hora
-  function calcularTotais() {
-    const linhas = tabela.querySelectorAll("tbody tr");
-    let somaSetup = 0, somaCusto = 0, somaHoras = 0, cntHoras = 0;
-
-    linhas.forEach(row => {
+  document.addEventListener("DOMContentLoaded", () => {
+    // Pega qtde e prefix dinamicamente
+    const tabela = document.querySelector("table[data-qtde]");
+    const qtdeEstimada = parseFloat(tabela.dataset.qtde?.replace(",", ".")) || 1;
+    const prefix = "{{ fs_rot.prefix }}";
+  
+    // Recalcula valor total de uma linha
+    function recalcularLinha(row) {
       const get = sel => row.querySelector(sel)?.value.replace(",", ".") || "0";
-      const setup     = parseFloat(get(`input[name^="${prefix}-"][name$="-setup_minutos"]`));
-      const custoHora = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_hora"]`));
-      const custoTot  = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_total"]`));
-      somaSetup += setup;
-      somaCusto += custoTot;
-      if (custoHora > 0) {
-        somaHoras += custoHora;
-        cntHoras++;
+      const pph   = parseFloat(get(`input[name^="${prefix}-"][name$="-pph"]`));
+      const setup = parseFloat(get(`input[name^="${prefix}-"][name$="-setup_minutos"]`));
+      const custo = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_hora"]`));
+      const total = custo * (setup / 60 + qtdeEstimada / (pph || 1));
+  
+      // Protege contra erro se o campo não existir
+      const campoTotal = row.querySelector(`input[name^="${prefix}-"][name$="-custo_total"]`);
+      if (campoTotal) {
+        campoTotal.value = total.toFixed(2);
       }
-    });
-
-    document.getElementById("total-setup").value      = somaSetup.toFixed(2);
-    document.getElementById("total-custo").value      = somaCusto.toFixed(2);
-    document.getElementById("media-custo-hora").value = cntHoras
-      ? (somaHoras/cntHoras).toFixed(2) + " (Média)"
-      : "0.00 (Média)";
-  }
-
-  // Inicializa e liga listeners
-  const linhas = tabela.querySelectorAll("tbody tr");
-  linhas.forEach(row => {
-    recalcularLinha(row);
-    row.querySelectorAll("input").forEach(input => {
-      input.addEventListener("input", () => {
-        recalcularLinha(row);
-        calcularTotais();
+    }
+  
+    // Calcula totais de setup, custo e média de custo hora
+    function calcularTotais() {
+      const linhas = tabela.querySelectorAll("tbody tr");
+      let somaSetup = 0, somaCusto = 0, somaHoras = 0, cntHoras = 0;
+  
+      linhas.forEach(row => {
+        const get = sel => row.querySelector(sel)?.value.replace(",", ".") || "0";
+        const setup     = parseFloat(get(`input[name^="${prefix}-"][name$="-setup_minutos"]`));
+        const custoHora = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_hora"]`));
+        const custoTot  = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_total"]`));
+  
+        somaSetup += setup;
+        somaCusto += custoTot;
+  
+        if (custoHora > 0) {
+          somaHoras += custoHora;
+          cntHoras++;
+        }
+      });
+  
+      document.getElementById("total-setup").value = somaSetup.toFixed(2);
+      document.getElementById("total-custo").value = somaCusto.toFixed(2);
+      document.getElementById("media-custo-hora").value = cntHoras
+        ? (somaHoras / cntHoras).toFixed(2) + " (Média)"
+        : "0.00 (Média)";
+    }
+  
+    // Inicializa e liga listeners apenas nas linhas com campo de custo total
+    const linhas = tabela.querySelectorAll("tbody tr");
+    linhas.forEach(row => {
+      const campoTotal = row.querySelector(`input[name^="${prefix}-"][name$="-custo_total"]`);
+      if (!campoTotal) return; // pula linhas sem campo total
+  
+      recalcularLinha(row);
+  
+      row.querySelectorAll("input").forEach(input => {
+        input.addEventListener("input", () => {
+          recalcularLinha(row);
+          calcularTotais();
+        });
       });
     });
+  
+    calcularTotais();
   });
-
-  calcularTotais();
-});
-</script>
+  </script>
+  

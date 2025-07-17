@@ -74,6 +74,11 @@
       {{ form.icms|add_class:"form-control" }}
     </div>
 
+    <div class="col-md-4">
+      <label for="{{ form.validade_proposta.id_for_label }}" class="form-label">Validade da Proposta (dias) <span class="text-danger">*</span></label>
+      {{ form.validade_proposta|add_class:"form-control" }}
+    </div>
+
     {# Observações #}
     <div class="col-12">
       <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações</label>

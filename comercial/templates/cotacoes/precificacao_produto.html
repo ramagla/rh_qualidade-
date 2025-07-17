@@ -1,0 +1,628 @@
+{% extends 'base.html' %}
+
+{% block title %}Precificação - Pré-Cálculo Nº {{ precalc.numero|default:"---" }}{% endblock %}
+{% load humanize %}
+{% load filters_gerais %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container pdf-container">
+  {% load static %}
+
+ <!-- Cabeçalho da Precificação (versão compacta) -->
+<div class="table-responsive mb-2">
+    <table class="table table-bordered align-middle text-center mb-0" style="table-layout: fixed; font-size: 9px;">
+      <tr>
+        <!-- Coluna Logo -->
+        <td style="width: 20%; padding: 4px;">
+          <img src="{% static 'img/logo.png' %}" alt="Logo" class="img-fluid" style="max-height: 40px;">
+        </td>
+  
+        <!-- Título Central -->
+        <td style="width: 60%; padding: 4px;">
+          <div style="line-height: 1.2;">
+            <strong style="font-size: 10px;">PRECIFICAÇÃO DE PRODUTO / SERVIÇO</strong><br>
+            <span class="text-uppercase small">Baseado no Pré-Cálculo Técnico e Comercial</span>
+          </div>
+        </td>
+  
+        <td style="width: 20%; padding: 0;">
+            <table class="text-center mb-0 w-100" style="font-size: 9px; border: none;">
+              <tr>
+                <th class="p-1 text-center" style="border: none;">Nº Cotação</th>
+              </tr>
+              <tr>
+                <td class="text-danger fw-bold p-1 text-center" style="border: none;">
+                  {{ precalc.cotacao.numero|stringformat:"04d" }}
+                </td>
+              </tr>
+              <tr>
+                <td class="p-0" style="border: none;">
+                  <hr class="my-1" style="border-color: #999; opacity: 0.6;">
+                </td>
+              </tr>
+              <tr>
+                <th class="p-1 text-center" style="border: none;">Nº Pré-Cálculo</th>
+              </tr>
+              <tr>
+                <td class="text-danger fw-bold p-1 text-center" style="border: none;">
+                  {{ precalc.numero|stringformat:"05d" }}
+                </td>
+              </tr>
+            </table>
+          </td>
+          
+      </tr>
+    </table>
+  </div>
+  
+  {% with analise=precalc.analise_comercial_item item=analise.item cliente=precalc.cotacao.cliente %}
+<div class="border rounded mb-2 shadow-sm" style="font-size: 9px;">
+  <div class="bg-primary text-white p-1 fw-bold">
+    <i class="bi bi-building me-1"></i> Dados do Cliente
+  </div>
+
+  <div class="row px-2 py-2">
+    <!-- Coluna Esquerda -->
+    <div class="col-md-6 d-flex flex-column gap-1">
+      <div>
+        <i class="bi bi-person-badge me-1 text-secondary"></i>
+        <strong>Cliente:</strong> {{ cliente.razao_social }}
+      </div>
+
+      {% if item.codigo_desenho %}
+      <div>
+        <i class="bi bi-diagram-2 me-1 text-secondary"></i>
+        <strong>Desenho:</strong> {{ item.codigo_desenho }}
+      </div>
+      {% endif %}
+
+      {% if item.descricao %}
+      <div>
+        <i class="bi bi-upc me-1 text-secondary"></i>
+        <strong>Nº Peça:</strong> {{ item.descricao }}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Coluna Direita -->
+    <div class="col-md-6 d-flex flex-column gap-1 text-md-end align-items-md-end">
+      <div>
+        <i class="bi bi-calendar-event me-1 text-secondary"></i>
+        <strong>Data do Pré-Calculo:</strong> {{ precalc.criado_em|date:"d/m/Y" }}
+      </div>
+
+      {% if analise.qtde_estimada %}
+      {% load humanize %}
+      <div>
+        <i class="bi bi-123 me-1 text-secondary"></i>
+        <strong>Lote:</strong> {{ analise.qtde_estimada|floatformat:0|intcomma }}
+      </div>
+      {% endif %}
+
+      {% if analise.periodo %}
+      <div>
+        <i class="bi bi-clock-history me-1 text-secondary"></i>
+        <strong>Frequencia:</strong> {{ analise.periodo }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endwith %}
+
+
+  
+{% with mat=material %}
+{% if mat %}
+<div class="border rounded shadow-sm mb-3" style="font-size: 10px;">
+    <div class="bg-primary text-white p-1 fw-bold">
+      <i class="bi bi-box-seam me-1"></i> Custo Matéria-Prima
+    </div>
+  
+    <div class="row g-0 px-2 py-2">
+  
+      <!-- 📦 Material -->
+      <div class="col-4 mb-1">
+        <div class="fw-bold border-bottom mb-1"><i class="bi bi-box text-primary me-1"></i> Material</div>
+        <div><i class="bi bi-upc-scan me-1 text-secondary"></i><strong>Código:</strong> {{ mat.codigo }}</div>
+        <div><i class="bi bi-info-square me-1 text-secondary"></i><strong>Descrição:</strong> {{ mat.descricao|default:"—" }}</div>
+        <div><i class="bi bi-box2-heart me-1 text-secondary"></i><strong>Peso bruto (Kg):</strong> {{ mat.peso_bruto|floatformat:"6" }}</div>
+        <div><i class="bi bi-archive-fill me-1 text-secondary"></i><strong>Peso total (Kg):</strong> {{ mat.peso_bruto_total|floatformat:"6" }}</div>
+      </div>
+  
+      <!-- 🚚 Fornecedor -->
+      <div class="col-4 mb-1">
+        <div class="fw-bold border-bottom mb-1"><i class="bi bi-truck text-primary me-1"></i> Fornecedor</div>
+        <div><i class="bi bi-person-lines-fill me-1 text-secondary"></i><strong>Nome:</strong> {{ mat.fornecedor|default:"—" }}</div>
+        <div><i class="bi bi-clock-history me-1 text-secondary"></i><strong>Entrega:</strong> {{ mat.entrega_dias|default:"—" }} dias</div>
+        <div><i class="bi bi-boxes me-1 text-secondary"></i><strong>Lote mín.:</strong> {{ mat.lote_minimo|default:"—" }}</div>
+      </div>
+  
+      <!-- 💰 Valores -->
+      <div class="col-4 mb-1">
+        <div class="fw-bold border-bottom mb-1"><i class="bi bi-tags text-primary me-1"></i> Valores</div>
+        <div><i class="bi bi-currency-dollar me-1 text-secondary"></i><strong>Preço/Kg:</strong> R$ {{ mat.preco_kg|floatformat:2 }}</div>
+        <div><i class="bi bi-percent me-1 text-secondary"></i><strong>s/ ICMS:</strong>
+          {% with preco=mat.preco_kg|default_if_none:0 icms=mat.icms|default_if_none:0 %}
+            R$ {{ preco|subtrair_percentual:icms|floatformat:2 }}
+          {% endwith %}
+        </div>
+        <div><i class="bi bi-cash-stack me-1 text-secondary"></i><strong>Total c/ ICMS:</strong> R$ {{ preco_total_material|default:"—"|floatformat:2 }}</div>
+        <div><i class="bi bi-cash-coin me-1 text-secondary"></i><strong>Total s/ ICMS:</strong> R$ {{ preco_total_material_sem_icms|default:"—"|floatformat:2 }}</div>
+      </div>
+    </div>
+  
+    <!-- ℹ️ Info -->
+    <!-- ℹ️ Informativo Final -->
+    <div class="bg-lightyellow border-top px-2 py-2 small d-flex justify-content-between align-items-center">
+        <div>
+        <i class="bi bi-info-circle text-primary me-1"></i>
+        <strong>ICMS:</strong> {{ mat.icms|default:"0"|floatformat:2 }}%
+        <span class="mx-2 text-muted">|</span>
+        <strong>Valor do Lote mín.:</strong> {{ preco_total_lote_minimo|formatar_reais }}
+    </div>
+    </div>
+  
+  </div>
+  
+{% endif %}
+{% endwith %}
+
+
+
+  <!-- 🔧 Bloco: Serviços Externos (compacto) -->
+<div class="border rounded mb-3 shadow-sm" style="font-size: 9px;">
+    <div class="bg-primary text-white p-1 fw-bold">
+      <i class="bi bi-tools me-1"></i> Custo Serviços Externos
+    </div>
+  
+    <div class="p-2">
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm text-center align-middle mb-0" style="font-size: 9px;">
+            <thead class="table-light">
+                <tr>
+                  <th><i class="bi bi-wrench-adjustable-circle text-primary"></i><br><small>Serviço</small></th>
+                  <th><i class="bi bi-person-lines-fill text-primary"></i><br><small>Fornecedor</small></th>
+                  <th><i class="bi bi-truck text-primary"></i><br><small>Entrega</small></th>
+                  <th><i class="bi bi-percent text-primary"></i><br><small>ICMS</small></th>
+                  <th><i class="bi bi-box2-heart text-primary"></i><br><small>Peso L.</small></th>
+                  <th><i class="bi bi-archive-fill text-primary"></i><br><small>Peso T.</small></th>
+                  <th><i class="bi bi-currency-dollar text-primary"></i><br><small>R$/Kg</small></th>
+                  <th><i class="bi bi-cash-stack text-primary"></i><br><small>Total</small></th>
+                  <th><i class="bi bi-cash-coin text-primary"></i><br><small>s/ICMS</small></th>
+                  <th><i class="bi bi-boxes text-primary"></i><br><small>Lote Mín.</small></th>
+                  <th><i class="bi bi-wallet2 text-primary"></i><br><small>Tot. Lote</small></th>
+                </tr>
+              </thead>
+              
+          <tbody>
+            {% for s in precalc.servicos.all %}
+              {% if s.selecionado %}
+                {% with preco_kg=s.preco_kg|default_if_none:0 icms=s.icms|default_if_none:0 peso=s.peso_bruto_total|default_if_none:0 lote=s.lote_minimo|default_if_none:0 %}
+                  {% with preco_sem_icms=preco_kg|subtrair_percentual:icms %}
+                    <tr>
+                      <td>{{ s.nome_insumo|default:"—" }}</td>
+                      <td>{{ s.fornecedor|default:"—" }}</td>
+                      <td>{{ s.entrega_dias|default:"—" }}</td>
+                      <td>{{ s.icms|default:"0"|floatformat:0 }}</td>
+                      <td>{{ s.peso_liquido|floatformat:7 }}</td>
+                      <td>{{ s.peso_bruto_total|floatformat:2 }}</td>
+                      <td>R$ {{ preco_kg|floatformat:4 }}</td>
+                      <td>R$ {{ preco_kg|mul:peso|floatformat:2 }}</td>
+                      <td>R$ {{ preco_sem_icms|mul:peso|floatformat:2 }}</td>
+                      <td>{{ lote|default:"—" }}</td>
+                      <td>R$ {{ preco_sem_icms|mul:lote|floatformat:2 }}</td>
+                    </tr>
+                  {% endwith %}
+                {% endwith %}
+              {% endif %}
+            {% empty %}
+              <tr>
+                <td colspan="11" class="text-muted">Nenhum serviço externo selecionado.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  
+   
+  </div>
+  
+
+<!-- 🧭 Bloco: Roteiro de Produção (compacto) -->
+<div class="border rounded mb-3 shadow-sm" style="font-size: 9px;">
+    <div class="bg-primary text-white p-1 fw-bold">
+      <i class="bi bi-diagram-3 me-1"></i> Roteiro de Produção
+    </div>
+  
+    <div class="p-2">
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm text-center align-middle mb-0" style="font-size: 9px;">
+          <thead class="table-light">
+            <tr>
+              <th><i class="bi bi-123 text-primary"></i><br><small>Op.</small></th>
+              <th><i class="bi bi-hammer text-primary"></i><br><small>Recurso</small></th>
+              <th><i class="bi bi-diagram-3-fill text-primary"></i><br><small>Operação</small></th>
+              <th><i class="bi bi-currency-dollar text-primary"></i><br><small>Custo Hr</small></th>
+              <th><i class="bi bi-stopwatch text-primary"></i><br><small>Setup</small></th>
+              <th><i class="bi bi-clock text-primary"></i><br><small>T.PR/ Lote</small></th>
+              <th><i class="bi bi-speedometer2 text-primary"></i><br><small>Prod. Hr</small></th>
+              <th><i class="bi bi-clock-history text-primary"></i><br><small>Tp. Pça</small></th>
+              <th><i class="bi bi-hourglass-split text-primary"></i><br><small>Tp. Real</small></th>
+              <th><i class="bi bi-calculator text-primary"></i><br><small>Tx. CC</small></th>
+              <th><i class="bi bi-currency-exchange text-primary"></i><br><small>Cc.Ttl</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for linha in roteiro_calculado %}
+              <tr>
+                <td>{{ linha.etapa.etapa }}</td>
+                <td>{{ linha.etapa.maquinas_roteiro|default:"—" }}</td>
+                <td>{{ linha.etapa.nome_acao|default:"—" }}</td>
+                <td>R$ {{ linha.etapa.custo_hora|floatformat:4 }}</td>
+                <td>{{ linha.etapa.setup_minutos }}</td>
+                <td>{{ linha.tempo_por_lote|floatformat:4 }}</td>
+                <td>{{ linha.etapa.pph|floatformat:0 }}</td>
+                <td>{{ linha.tempo_por_peca|floatformat:4 }}</td>
+                <td>{{ linha.tempo_real|floatformat:4 }}</td>
+                <td>{{ linha.taxa_cc|floatformat:4 }}</td>
+                <td>{{ linha.custo_total|floatformat:4 }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="11" class="text-muted">Nenhuma etapa cadastrada.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  
+    <div class="bg-lightyellow border-top px-2 py-2 small d-flex align-items-center">
+      <i class="bi bi-info-circle text-primary me-1"></i>
+      <span>Tempos e custos estimados com base nos parâmetros do centro de custo.</span>
+    </div>
+  </div>
+  
+  
+  
+
+<!-- 💰 Bloco: Impostos (compacto) -->
+<div class="border rounded mb-3 shadow-sm" style="font-size: 9px;">
+    <div class="bg-primary text-white p-1 fw-bold">
+      <i class="bi bi-percent me-1"></i> Impostos
+    </div>
+  
+    <div class="p-2 table-responsive">
+      <table class="table table-bordered table-sm text-center align-middle mb-0" style="font-size: 9px;">
+        <thead class="table-light">
+          <tr>
+            <th><i class="bi bi-percent text-primary"></i><br><small>ICMS</small></th>
+            <th><i class="bi bi-cash-coin text-primary"></i><br><small>PIS</small></th>
+            <th><i class="bi bi-cash-stack text-primary"></i><br><small>COFINS</small></th>
+            <th><i class="bi bi-bank text-primary"></i><br><small>IR</small></th>
+            <th><i class="bi bi-piggy-bank text-primary"></i><br><small>CSLL</small></th>
+            <th><i class="bi bi-building text-primary"></i><br><small>DF</small></th>
+            <th><i class="bi bi-graph-up-arrow text-primary"></i><br><small>DV</small></th>
+            <th><i class="bi bi-calculator-fill text-success"></i><br><small>Total</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{ precalc.cotacao.icms|default:"0"|floatformat:2 }}%</td>
+            <td>{{ impostos.pis|default:"0"|floatformat:2 }}%</td>
+            <td>{{ impostos.confins|default:"0"|floatformat:2 }}%</td>
+            <td>{{ impostos.ir|default:"0"|floatformat:2 }}%</td>
+            <td>{{ impostos.csll|default:"0"|floatformat:2 }}%</td>
+            <td>{{ impostos.df|default:"0"|floatformat:2 }}%</td>
+            <td>{{ impostos.dv|default:"0"|floatformat:2 }}%</td>
+            <td><strong>{{ total_impostos|default:"0"|floatformat:2 }}%</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+
+
+
+<!-- 📊 Bloco: Preço Final (compacto) -->
+<div class="row gx-2 gy-3 text-center mt-3 align-items-start" style="font-size: 9px;">
+    <!-- 📉 Sem Impostos -->
+    <div class="col-md-4">
+      <div class="bg-light border fw-bold py-1">Sem impostos</div>
+      <table class="table table-bordered table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>%</th>
+            <th>Unit.</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for opcao in precos_sem_impostos %}
+          <tr>
+            <td>{{ opcao.percentual }}%</td>
+            <td>R$ {{ opcao.unitario|floatformat:4 }}</td>
+            <td>R$ {{ opcao.total|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  
+    <!-- 📈 Com Impostos -->
+    <div class="col-md-4">
+      <div class="bg-light border fw-bold py-1">Com impostos</div>
+      <table class="table table-bordered table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>%</th>
+            <th>Unit.</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for opcao in precos_com_impostos %}
+          <tr>
+            <td>{{ opcao.percentual }}%</td>
+            <td>R$ {{ opcao.unitario|floatformat:4 }}</td>
+            <td>R$ {{ opcao.total|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  
+    <!-- 🧮 Gráfico e Ferramental -->
+    <div class="col-md-4">
+      <div class="bg-light border fw-bold py-1">Gasto com Ferramental s/Impostos</div>
+      <table class="table table-bordered table-sm mb-2">
+        <tr>
+          <td class="text-end"><strong>Total:</strong></td>
+          <td class="text-start">{{ valor_ferramental|formatar_reais }}</td>
+        </tr>
+      </table>
+  
+     <!-- Gráfico de Pizza de Custos -->
+     <div class="text-center mt-2 small" style="font-size: 8px;">
+        <div class="fw-bold mb-2">Distribuição de Custos (% por item)</div>
+    <canvas id="graficoPizzaCusto" width="120" height="120" class="mx-auto" style="max-width: 130px;"></canvas>
+  
+    <div class="mt-2 d-flex justify-content-center flex-wrap gap-3" style="font-size: 7px;">
+        <div class="text-center">
+          <strong>Matéria Prima</strong><br>
+          U: {{ custo_materia.unitario|floatformat:4 }}<br>
+          T: {{ custo_materia.total|floatformat:2 }}<br>
+          ({{ custo_materia.percentual|floatformat:2 }}%)
+        </div>
+        <div class="text-center">
+          <strong>Serviço Externo</strong><br>
+          U: {{ custo_servico.unitario|floatformat:4 }}<br>
+          T: {{ custo_servico.total|floatformat:2 }}<br>
+          ({{ custo_servico.percentual|floatformat:2 }}%)
+        </div>
+        <div class="text-center">
+          <strong>Roteiro</strong><br>
+          U: {{ custo_roteiro.unitario|floatformat:4 }}<br>
+          T: {{ custo_roteiro.total|floatformat:2 }}<br>
+          ({{ custo_roteiro.percentual|floatformat:2 }}%)
+        </div>
+      </div>
+      
+  </div>
+  
+      
+      
+  </div>
+  
+  
+  <hr class="my-1">
+
+<div class="row" style="font-size: 7px; line-height: 1.1; text-align: left;">
+  <div class="col-md-8">
+    <strong>Legenda:</strong>
+    <ul class="mb-1 ps-3">
+      <li><strong>T.PR/Lote:</strong> Tempo por peça (incluindo setup) dividido pelo tamanho do lote.</li>
+      <li><strong>TP.Pça:</strong> Produção por hora, 60 min ÷ Prod. Hr.</li>
+      <li><strong>Tp.Real:</strong> Tempo real = T.PR/Lote + TP.Pça.</li>
+      <li><strong>Tx.CC:</strong> Taxa do centro de custo por minuto (Custo/Hora ÷ 60).</li>
+      <li><strong>Cc.Ttl:</strong> Tp.Real × Tx.CC.</li>
+    </ul>
+  </div>
+
+  <div class="col-md-4">
+    <strong>Regra de cálculo:</strong>
+    <ul class="mb-1 ps-3">
+      <li><strong>Sem imposto:</strong> Custo + IR + CSLL + DF + DV</li>
+      <li><strong>Com imposto:</strong> Custo + ICMS + PIS + COFINS + IR + CSLL + DF + DV</li>
+    </ul>
+  </div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+<script>
+  const data = [
+    parseFloat("{{ custo_materia.percentual|default:'0'|floatformat:2 }}"),
+    parseFloat("{{ custo_servico.percentual|default:'0'|floatformat:2 }}"),
+    parseFloat("{{ custo_roteiro.percentual|default:'0'|floatformat:2 }}")
+  ];
+
+  const labels = ["Matéria Prima", "Serviço Externo", "Roteiro"];
+  const colors = ["#a0a6ff", "#c2c2ff", "#9eaeff"];
+
+  const ctx = document.getElementById("graficoPizzaCusto").getContext("2d");
+  const maiorIndice = data.indexOf(Math.max(...data));
+
+  new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors,
+        offset: data.map((v, i) => i === maiorIndice ? 20 : 0)
+      }]
+    },
+    options: {
+      responsive: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const label = ctx.label || '';
+              const value = ctx.raw || 0;
+              return `${label}: ${value.toFixed(2)}%`;
+            }
+          }
+        },
+        datalabels: {
+          color: "#000",
+          font: { weight: 'bold', size: 8 },
+          formatter: (value, ctx) => `${ctx.chart.data.labels[ctx.dataIndex]}`
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+</script>
+
+  <style>
+    @media print {
+      /* Oculta elementos do layout base */
+      .sidebar, .navbar, .footer, .nav, .offcanvas, .btn, .btn-imprimir, .no-print {
+        display: none !important;
+      }
+  
+      /* Ajusta o conteúdo para ocupar toda a largura */
+      body, html, .container, .pdf-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        width: 100% !important;
+        color: black !important;
+        font-size: 10px !important;
+
+      }
+  
+      /* Remove sombras e bordas arredondadas */
+      .shadow, .shadow-sm, .card, .rounded, .border {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+
+      table, .small, .text-muted {
+        font-size: 10px !important;
+      }
+
+      .bg-primary, .fw-bold, .table th {
+        font-size: 10px !important;
+        padding: 4px !important;
+      }
+      .table td {
+        padding: 3px !important;
+      }
+      
+      .mb-4, .mt-4, .my-5, .mt-3, .mb-2, .mt-2, .mt-5, .mb-5 {
+        margin: 0,5 !important;
+      }
+      
+  
+      /* Evita quebra de tabela entre páginas */
+      table {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+  
+      tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+  
+      /* Quebra de página forçada */
+      .page-break {
+        page-break-before: always;
+      }
+    }
+
+    /* ➕ Estilos adicionais para manter colunas lado a lado */
+    .col-md-6 {
+      float: left !important;
+      width: 50% !important;
+    }
+
+    .col-md-4 {
+      float: left !important;
+      width: 33.3333% !important;
+    }
+
+    .col-md-8 {
+      float: left !important;
+      width: 66.6666% !important;
+    }
+
+    .row::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    .text-md-end {
+      text-align: right !important;
+    }
+
+    .align-items-md-end {
+      align-items: end !important;
+    }
+
+    .mt-md-0 {
+      margin-top: 0 !important;
+    }
+  
+  </style>
+  <style>
+    @media print {
+      .bg-primary {
+        background-color: #0d6efd !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+  
+      .text-white {
+        color: white !important;
+      }
+  
+      .shadow-sm {
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2) !important;
+      }
+  
+      .border {
+        border: 1px solid #dee2e6 !important;
+      }
+  
+      .rounded {
+        border-radius: 0.3rem !important;
+      }
+  
+      /* Garante que divs não sumam por overflow */
+      .table-responsive {
+        overflow: visible !important;
+      }
+  
+      /* Corrige possíveis margens ignoradas */
+      .mb-2,
+      .mb-4 {
+        margin-bottom: 1rem !important;
+      }
+    }
+  </style>
+  
+{% endblock %}

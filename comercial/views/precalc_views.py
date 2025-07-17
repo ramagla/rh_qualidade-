@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.contrib import messages
@@ -16,8 +16,8 @@ from comercial.models.precalculo import (
     PreCalculoServicoExterno,
 )
 from comercial.forms.precalculos_form import (
-    PreCalculoForm,
     AnaliseComercialForm,
+    PreCalculoForm,
     RegrasCalculoForm,
     AvaliacaoTecnicaForm,
     DesenvolvimentoForm,
@@ -88,6 +88,8 @@ def itens_precaculo(request, pk):
 
     return render(request, "cotacoes/precalculo_lista.html", {
         "cotacao": cot,
+        "precalculos": precalculos,  # ✅ Necessário para o modal funcionar
+
         "page_obj": page_obj,
         "total_materiais": sum(p.total_materiais for p in precalculos),
         "total_servicos": sum(p.total_servicos for p in precalculos),
@@ -107,12 +109,24 @@ def editar_precaculo(request, pk):
     # identifica aba submetida
     aba = request.POST.get("aba")
 
-
+    materiais_respondidos = False
+    servicos_respondidos = False
+    
     # form principal (observações gerais)
-    form_precalculo = PreCalculoForm(
-        request.POST if request.method == "POST" else None,
-        instance=precalc
-    )
+    # form principal (observações gerais) — inicializa com POST para abas que usam observações
+    if request.method == "POST" and aba in ["materiais", "servicos", "roteiro"]:
+        data = request.POST.copy()
+
+        # Corrige vírgulas decimais de campos de peso para evitar crash
+        for k in data:
+            if "peso_bruto_total" in k:
+                data[k] = data[k].replace(".", "").replace(",", ".")
+
+        form_precalculo = PreCalculoForm(data, instance=precalc)
+    else:
+        form_precalculo = PreCalculoForm(instance=precalc)
+
+
 
     # inicializa variáveis de retorno
     form_analise = form_regras = form_avali = form_desenv = form_precofinal = form_roteiro = None
@@ -144,9 +158,8 @@ def editar_precaculo(request, pk):
             any(k.startswith("mat-") for k in request.POST)
         ):
             materiais_respondidos = precalc.materiais.filter(preco_kg__isnull=False).exists()
-            salvo, form_precalculo, fs_mat = processar_aba_materiais(
-                request, precalc, materiais_respondidos
-            )
+            salvo, _, fs_mat = processar_aba_materiais(request, precalc, materiais_respondidos, form_precalculo)
+
 
 
         elif aba == "servicos" and (
@@ -157,22 +170,38 @@ def editar_precaculo(request, pk):
                 Q(preco_kg__isnull=True) | Q(preco_kg=0)
             ).exists()
             servicos_respondidos = not faltam
-            salvo, form_precalculo, fs_sev = processar_aba_servicos(
-                request, precalc, servicos_respondidos
-            )
+            salvo, _, fs_serv = processar_aba_servicos(request, precalc, form_precalculo)
+
+
 
 
         elif aba == "roteiro" and "form_roteiro_submitted" in request.POST:
-            form_precalculo = PreCalculoForm(request.POST, instance=precalc)  # garante os dados do POST
-            salvo, fs_rot, form_precalculo = processar_aba_roteiro(request, precalc, form_precalculo=form_precalculo)
-            form_roteiro = form_precalculo
-
-
+            salvo, fs_rot = processar_aba_roteiro(request, precalc, form_precalculo)
 
 
         elif aba == "ferramentas" and "form_ferramentas_submitted" in request.POST:
             salvo, fs_ferr = processar_aba_ferramentas(request, precalc)
 
+        # salvamento seguro do campo de observação
+        if form_precalculo and form_precalculo.is_valid():
+            campo_obs = {
+                'materiais': 'observacoes_materiais',
+                'servicos' : 'observacoes_servicos',
+                'roteiro'  : 'observacoes_roteiro',
+            }.get(aba)
+
+            if campo_obs and campo_obs in form_precalculo.cleaned_data:
+                valor = form_precalculo.cleaned_data[campo_obs]
+                setattr(precalc, campo_obs, valor)
+                precalc.save(update_fields=[campo_obs])
+                salvo = True  # força mensagem e redirect mesmo sem mudanças no formset
+
+
+
+
+
+
+        
         # Mensagens
         print("🧪 DEBUG FINAL")
         print("salvo:", salvo)
@@ -226,7 +255,11 @@ def editar_precaculo(request, pk):
         any(k.startswith("mat-") for k in request.POST)
     ):
         materiais_respondidos = precalc.materiais.filter(preco_kg__isnull=False).exists()
-        _, _, fs_mat = processar_aba_materiais(request, precalc, materiais_respondidos)
+        _, form_precalculo, fs_mat = processar_aba_materiais(
+            request, precalc, materiais_respondidos, form_precalculo=form_precalculo
+    )
+
+
 
     if not fs_sev and (
         request.method == "GET" or
@@ -236,11 +269,16 @@ def editar_precaculo(request, pk):
             Q(preco_kg__isnull=True) | Q(preco_kg=0)
         ).exists()
         servicos_respondidos = not faltam
-        _, _, fs_sev = processar_aba_servicos(request, precalc, servicos_respondidos)
+        _, form_precalculo, fs_sev = processar_aba_servicos(
+            request, precalc, servicos_respondidos, form_precalculo=form_precalculo
+    )
+
 
 
     if not fs_rot:
-        _, fs_rot, form_roteiro = processar_aba_roteiro(request, precalc)
+        _, fs_rot = processar_aba_roteiro(request, precalc)
+        form_roteiro = None  # ou use fs_rot se quiser alimentar o form principal de roteiro
+
 
 
 
@@ -249,7 +287,8 @@ def editar_precaculo(request, pk):
         _, fs_ferr = processar_aba_ferramentas(request, precalc)
 
     # campos de observações para o template
-    campos_obs = [
+        campos_obs = [
+        ("metodologia_aprovacao", ""),  # <-- Adicionado corretamente
         ("material_fornecido", "material_fornecido_obs"),
         ("requisitos_entrega", "requisitos_entrega_obs"),
         ("requisitos_pos_entrega", "requisitos_pos_entrega_obs"),
@@ -259,6 +298,7 @@ def editar_precaculo(request, pk):
         ("especificacao_identificacao", "especificacao_identificacao_obs"),
         ("tipo_embalagem", "tipo_embalagem_obs"),
     ]
+
     campos_obs_tecnica = [
         ("possui_projeto", "projeto_obs"),
         ("precisa_dispositivo", "dispositivo_obs"),
@@ -275,35 +315,55 @@ def editar_precaculo(request, pk):
         ("seguranca", "seguranca_obs"),
         ("requisito_especifico", "requisito_especifico_obs"),
     ]
+
+
+    perguntas_avaliacao_tecnica = [
+        {"campo": "caracteristicas_criticas", "label": "1. Existe característica especial além das relacionadas nas especificações?", "obs": "criticas_obs"},
+        {"campo": "item_aparencia", "label": "2. A peça é item de aparência?", "obs": "item_aparencia_obs"},
+        {"campo": "fmea", "label": "3. O cliente forneceu FMEA de produto?", "obs": "fmea_obs"},
+        {"campo": "teste_solicitado", "label": "4. O cliente solicitou algum teste além dos relacionados nas especificações?", "obs": "teste_solicitado_obs"},
+        {"campo": "lista_fornecedores", "label": "5. O cliente forneceu lista de fornecedores/materiais aprovados?", "obs": "lista_fornecedores_obs"},
+        {"campo": "normas_disponiveis", "label": "6. As normas/especificações/requisitos estão disponíveis?", "obs": "normas_disponiveis_obs"},
+        {"campo": "requisitos_regulamentares", "label": "7. São aplicáveis requisitos estatutários/regulamentares?", "obs": "requisitos_regulamentares_obs"},
+        {"campo": "requisitos_adicionais", "label": "8. Existem requisitos adicionais e/ou não declarados pelo cliente?", "obs": "requisitos_adicionais_obs"},
+        {"campo": "metas_a", "label": "9a. Metas de qualidade (exemplo: PPM)?", "obs": "metas_a_obs"},
+        {"campo": "metas_b", "label": "9b. Metas de produtividade?", "obs": "metas_b_obs"},
+        {"campo": "metas_c", "label": "9c. Metas de desempenho (exemplo: Cp, Cpk, etc.)?", "obs": "metas_c_obs"},
+        {"campo": "metas_confiabilidade", "label": "9d. Metas de confiabilidade (exemplo: vida útil)?", "obs": "metas_confiabilidade_obs"},
+        {"campo": "metas_d", "label": "9e. Metas de funcionamento?", "obs": "metas_d_obs"},
+        {"campo": "seguranca", "label": "10. Os requisitos sobre o item de segurança foram considerados?", "obs": "seguranca_obs"},
+        {"campo": "requisito_especifico", "label": "11. O cliente forneceu o requisito específico?", "obs": "requisito_especifico_obs"},
+    ]
+
     item_id = getattr(getattr(precalc, "analise_comercial_item", None), "item_id", None)
 
     return render(request, "cotacoes/form_precalculo.html", {
-        "cotacao": cot,
-        "precalc": precalc,
-        "form_precalculo": form_precalculo,
-        "form_analise": form_analise,
-        "form_regras": form_regras,
-        "form_avali": form_avali,
-        "form_desenv": form_desenv,
-        "form_precofinal": form_precofinal,
-        "form_roteiro": form_roteiro,
-        "fs_mat": fs_mat,
-        "fs_sev": fs_sev,
-        "fs_rot": fs_rot,
-        "fs_ferr": fs_ferr,
-        "campos_obs": campos_obs,
-        "campos_obs_tecnica": campos_obs_tecnica,
-        "item_id": item_id,
-        "edicao": True,
-        "aba_ativa": aba,
-       "precos_sem_impostos": precos_sem_impostos,
-        "precos_com_impostos": precos_com_impostos,
-        "analise": precalc.analise_comercial_item,
-        "materiais_respondidos": precalc.materiais.filter(preco_kg__isnull=False).exists(),
-        "servicos_respondidos": servicos_respondidos,
-        "aba_ativa": aba,
+    "cotacao": cot,
+    "precalc": precalc,
+    "form_precalculo": form_precalculo,
+    "form_analise": form_analise,
+    "form_regras": form_regras,
+    "form_avali": form_avali,
+    "form_desenv": form_desenv,
+    "form_precofinal": form_precofinal,
+    "form_roteiro": form_roteiro,
+    "fs_mat": fs_mat,
+    "fs_sev": fs_sev,
+    "fs_rot": fs_rot,
+    "fs_ferr": fs_ferr,
+    "campos_obs": campos_obs,
+    "campos_obs_tecnica": campos_obs_tecnica,
+    "item_id": item_id,
+    "edicao": True,
+    "aba_ativa": aba,
+    "precos_sem_impostos": precos_sem_impostos,
+    "precos_com_impostos": precos_com_impostos,
+    "analise": precalc.analise_comercial_item,
+    "materiais_respondidos": materiais_respondidos,
+    "servicos_respondidos": servicos_respondidos,
+    "perguntas_avaliacao_tecnica": perguntas_avaliacao_tecnica,
+})
 
-    })
 
 @login_required
 @permission_required('comercial.add_precalculomaterial', raise_exception=True)
@@ -529,6 +589,7 @@ def visualizar_precalculo(request, pk):
 
     # Campos booleanos da análise comercial + observações
     campos_obs = [
+        ("metodologia", ""),
         ("material_fornecido", "material_fornecido_obs"),
         ("requisitos_entrega", "requisitos_entrega_obs"),
         ("requisitos_pos_entrega", "requisitos_pos_entrega_obs"),
@@ -540,25 +601,34 @@ def visualizar_precalculo(request, pk):
     ]
 
     # Campos booleanos da avaliação técnica + observações
+    # Campos booleanos da avaliação técnica + observações
     campos_obs_tecnica = [
-        ("possui_projeto", "projeto_obs"),
-        ("precisa_dispositivo", "dispositivo_obs"),
         ("caracteristicas_criticas", "criticas_obs"),
-        ("precisa_amostras", "amostras_obs"),
-        ("restricao_dimensional", "restricao_obs"),
-        ("acabamento_superficial", "acabamento_obs"),
-        ("validacao_metrologica", "metrologia_obs"),
-        ("rastreabilidade", "rastreabilidade_obs"),
+        ("item_aparencia", "item_aparencia_obs"),
+        ("fmea", "fmea_obs"),
+        ("teste_solicitado", "teste_solicitado_obs"),
+        ("lista_fornecedores", "lista_fornecedores_obs"),
+        ("normas_disponiveis", "normas_disponiveis_obs"),
+        ("requisitos_regulamentares", "requisitos_regulamentares_obs"),
+        ("requisitos_adicionais", "requisitos_adicionais_obs"),
+        
+        # inserção lógica no template para linha do título 9
         ("metas_a", "metas_a_obs"),
         ("metas_b", "metas_b_obs"),
         ("metas_c", "metas_c_obs"),
+        ("metas_confiabilidade", "metas_confiabilidade_obs"),
         ("metas_d", "metas_d_obs"),
+
         ("seguranca", "seguranca_obs"),
         ("requisito_especifico", "requisito_especifico_obs"),
     ]
 
+
+
     # Títulos amigáveis
     TITULOS_ANALISE = {
+        "metodologia": "Metodologia de aprovação de produto",
+
         "material_fornecido": "Material fornecido pelo cliente?",
         "requisitos_entrega": "Requisitos de entrega?",
         "requisitos_pos_entrega": "Requisitos pós-entrega?",
@@ -568,22 +638,31 @@ def visualizar_precalculo(request, pk):
         "especificacao_identificacao": "Especificação de identificação?",
         "tipo_embalagem": "Tipo de embalagem?",
     }
+
     TITULOS_AVALIACAO = {
-        "possui_projeto": "Possui projeto próprio?",
-        "precisa_dispositivo": "Precisa de dispositivo?",
-        "caracteristicas_criticas": "Características críticas?",
-        "precisa_amostras": "Necessita amostras?",
-        "restricao_dimensional": "Restrições dimensionais?",
-        "acabamento_superficial": "Acabamento superficial?",
-        "validacao_metrologica": "Validação metrológica?",
-        "rastreabilidade": "Rastreabilidade técnica?",
-        "metas_a": "Metas de qualidade?",
-        "metas_b": "Metas de produtividade?",
-        "metas_c": "Metas de desempenho?",
-        "metas_d": "Metas de funcionamento?",
-        "seguranca": "Item de segurança?",
-        "requisito_especifico": "Requisito específico?",
-    }
+    "caracteristicas_criticas": "1. Existem características críticas definidas?",
+    "item_aparencia": "2. A peça é item de aparência?",
+    "fmea": "3. O cliente forneceu FMEA de produto?",
+    "teste_solicitado": "4. O cliente solicitou testes adicionais?",
+    "lista_fornecedores": "5. Lista de fornecedores/materiais aprovados?",
+    "normas_disponiveis": "6. Normas/especificações estão disponíveis?",
+    "requisitos_regulamentares": "7. Existem requisitos estatutários/regulamentares?",
+    "requisitos_adicionais": "8. Requisitos adicionais ou não declarados?",
+    
+    # Título visual para o bloco 9 (será usado como linha especial no template)
+    "titulo_9": "9. O cliente especificou requisitos para:",
+
+    "metas_a": "9a. Metas de qualidade?",
+    "metas_b": "9b. Metas de produtividade?",
+    "metas_c": "9c. Metas de desempenho?",
+    "metas_confiabilidade": "9d. Metas de confiabilidade?",
+    "metas_d": "9e. Metas de funcionamento?",
+    
+    "seguranca": "10. Item de segurança?",
+    "requisito_especifico": "11. Requisito específico do cliente?",
+}
+
+
 
     # ▶️ Enriquecimento: adiciona horas agrupadas por tipo na ferramenta
     ferramentas_info = []
@@ -621,3 +700,215 @@ def visualizar_precalculo(request, pk):
         "ferramentas_info": ferramentas_info,
 
     })
+
+
+from decimal import Decimal, InvalidOperation, DivisionByZero
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required, permission_required
+from comercial.models.precalculo import PreCalculo
+from decimal import Decimal, ROUND_HALF_UP
+
+@login_required
+@permission_required("comercial.view_precalculo", raise_exception=True)
+def precificacao_produto(request, pk):
+    precalc = get_object_or_404(PreCalculo, pk=pk)
+    material = precalc.materiais.filter(selecionado=True).first()
+    servico = precalc.servicos.filter(selecionado=True).first()
+
+    preco_total = preco_total_sem_icms = preco_total_lote_minimo = None
+    preco_total_servico = preco_total_servico_lote = preco_total_servico_sem_icms = None
+
+    # 🟢 Cálculo do Material
+    if material:
+        try:
+            preco_kg = Decimal(material.preco_kg or 0)
+            icms = Decimal(material.icms or 0)
+            peso_total = Decimal(material.peso_bruto_total or 0)
+            lote_minimo = Decimal(material.lote_minimo or 0)
+
+            preco_sem_icms = preco_kg * (Decimal("1") - icms / 100)
+            preco_total = preco_kg * peso_total
+            preco_total_sem_icms = preco_sem_icms * peso_total
+            preco_total_lote_minimo = preco_sem_icms * lote_minimo
+        except (InvalidOperation, TypeError):
+            pass
+
+    # 🟢 Cálculo do Serviço
+    if servico:
+        try:
+            preco_kg = Decimal(servico.preco_kg or 0)
+            icms = Decimal(servico.icms or 0)
+            peso_total = Decimal(servico.peso_bruto_total or 0)
+            lote_minimo = Decimal(servico.lote_minimo or 0)
+
+            preco_sem_icms = preco_kg * (Decimal("1") - icms / 100)
+            preco_total_servico = preco_kg * peso_total
+            preco_total_servico_sem_icms = preco_sem_icms * peso_total
+            preco_total_servico_lote = preco_sem_icms * lote_minimo
+        except (InvalidOperation, TypeError):
+            pass
+
+    # 🟣 Cálculo do Roteiro de Produção
+    roteiro_calculado = []
+    lote = Decimal(precalc.analise_comercial_item.qtde_estimada or 1)
+
+    for etapa in precalc.roteiro_item.all():
+        try:
+            setup = Decimal(etapa.setup_minutos or 0)
+            custo_hora = Decimal(etapa.custo_hora or 0)
+            producao_hr = Decimal(etapa.pph or 1)
+
+            tempo_por_lote = setup / lote
+            tempo_por_peca = Decimal("60") / producao_hr
+            tempo_real = tempo_por_lote + tempo_por_peca
+            taxa_cc = custo_hora / Decimal("60")
+            custo_total = tempo_real * taxa_cc
+
+            roteiro_calculado.append({
+                "etapa": etapa,
+                "tempo_por_lote": tempo_por_lote,
+                "tempo_por_peca": tempo_por_peca,
+                "tempo_real": tempo_real,
+                "taxa_cc": taxa_cc,
+                "custo_total": custo_total,
+            })
+        except (InvalidOperation, TypeError, AttributeError):
+            continue
+
+     # 🟠 Cálculo dos Impostos
+    impostos = precalc.regras_calculo_item if hasattr(precalc, "regras_calculo_item") else None
+    total_impostos = None
+
+    if impostos:
+        try:
+            total_impostos = sum([
+                Decimal(precalc.cotacao.icms or 0),
+                Decimal(impostos.pis or 0),
+                Decimal(impostos.confins or 0),
+                Decimal(impostos.ir or 0),
+                Decimal(impostos.csll or 0),
+                Decimal(impostos.df or 0),
+                Decimal(impostos.dv or 0),
+            ])
+        except (InvalidOperation, TypeError):
+            total_impostos = None          
+
+
+   # 🟡 Cálculo do Custo Final - para gráfico e resumo
+    qtde = Decimal(getattr(precalc.analise_comercial_item, "qtde_estimada", 1) or 1)
+
+    # ——— Materiais
+    mat = precalc.materiais.filter(selecionado=True).first()
+    total_materia = Decimal((mat.peso_bruto_total or 0)) * Decimal((mat.preco_kg or 0)) if mat else Decimal(0)
+    unit_materia = total_materia / qtde if qtde else Decimal(0)
+
+    # ——— Serviços
+    total_servico = sum(
+        Decimal((s.peso_bruto_total or 0)) * Decimal((s.preco_kg or 0))
+        for s in precalc.servicos.all()
+    )
+    unit_servico = total_servico / qtde if qtde else Decimal(0)
+
+    # ——— Roteiro
+    total_roteiro = sum(
+        Decimal(rot.custo_total or 0) for rot in precalc.roteiro_item.all()
+    )
+    unit_roteiro = total_roteiro / qtde if qtde else Decimal(0)
+
+    # ——— Total Geral
+    total_geral = total_materia + total_servico + total_roteiro
+
+    # ——— Função auxiliar para percentual
+    def pct(val):
+        return (val / total_geral * 100).quantize(Decimal("0.01")) if total_geral > 0 else Decimal("0.00")
+
+    # ——— Resultado formatado
+    custo_materia = {
+        "total": total_materia.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+        "unitario": unit_materia.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
+        "percentual": pct(total_materia),
+    }
+
+    custo_servico = {
+        "total": total_servico.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+        "unitario": unit_servico.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
+        "percentual": pct(total_servico),
+    }
+
+    custo_roteiro = {
+        "total": total_roteiro.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+        "unitario": unit_roteiro.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
+        "percentual": pct(total_roteiro),
+    }
+
+    # ——— Ferramental
+    valor_ferramental = Decimal("0.00")
+    for f in precalc.ferramentas_item.all():
+        try:
+            valor_ferramental += Decimal(f.ferramenta.valor_total or 0)
+        except AttributeError:
+            continue
+
+    analise = precalc.analise_comercial_item
+    item = analise.item if analise else None
+
+
+
+    return render(request, "cotacoes/precificacao_produto.html", {
+        "precalc": precalc,
+        "cotacao": precalc.cotacao,
+        "material": material,
+        "servico": servico,
+        "preco_total_material": preco_total,
+        "preco_total_material_sem_icms": preco_total_sem_icms,
+        "preco_total_lote_minimo": preco_total_lote_minimo,
+        "preco_total_servico": preco_total_servico,
+        "preco_total_servico_sem_icms": preco_total_servico_sem_icms,
+        "preco_total_servico_lote": preco_total_servico_lote,
+        "roteiro_calculado": roteiro_calculado,
+        "impostos": impostos,
+        "total_impostos": total_impostos,
+        "custo_materia": custo_materia,
+        "custo_servico": custo_servico,
+        "custo_roteiro": custo_roteiro,
+        "valor_ferramental": valor_ferramental,
+        "total_geral": total_geral,
+        "precos_sem_impostos": precalc.calcular_precos_sem_impostos(),
+        "precos_com_impostos": precalc.calcular_precos_com_impostos(),
+        "analise": analise,
+"item": item,
+    })
+
+
+
+
+from django.db.models import Prefetch
+
+def gerar_proposta_view(request, cotacao_id):
+    cotacao = get_object_or_404(Cotacao, id=cotacao_id)
+
+    if request.method == "POST":
+        ids = request.POST.getlist("precalculos_selecionados")
+
+        precalculos = (
+            PreCalculo.objects
+            .filter(id__in=ids)
+            .select_related("analise_comercial_item__item")
+            .prefetch_related(
+                "materiais",          # ✅ só prefetch direto
+                "servicos",
+                "ferramentas_item__ferramenta"
+            )
+        )
+
+        # Cálculo do valor total do ferramental
+        for precalc in precalculos:
+            precalc.valor_ferramental = sum(
+                (f.ferramenta.valor_total or 0)
+                for f in precalc.ferramentas_item.all()
+            )
+
+        return render(request, "cotacoes/proposta_preview.html", {
+            "cotacao": cotacao,
+            "precalculos": precalculos
+        })

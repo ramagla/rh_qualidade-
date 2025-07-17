@@ -393,3 +393,13 @@ def mul(value, arg):
         return float(value) * float(arg)
     except (ValueError, TypeError):
         return ''
+
+
+@register.filter
+def subtrair_percentual(valor, percentual):
+    try:
+        v = Decimal(str(valor or 0))
+        p = Decimal(str(percentual or 0))
+        return round(v * (1 - p / 100), 2)
+    except:
+        return valor

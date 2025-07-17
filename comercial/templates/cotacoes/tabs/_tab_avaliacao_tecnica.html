@@ -23,51 +23,40 @@
     {% endif %}
 
     <!-- Bloco principal -->
-    <div class="col-12">
-      <div class="border p-4 rounded shadow-sm bg-white">
-        <h5 class="mb-4">
-          <i class="bi bi-eyeglasses text-warning me-2"></i> Avaliação Técnica
-        </h5>
+<div class="col-12">
+  <div class="border p-4 rounded shadow-sm bg-white">
+    <h5 class="mb-4">
+      <i class="bi bi-eyeglasses text-warning me-2"></i> Avaliação Técnica
+    </h5>
 
-        {% for campo, detalhe in campos_obs_tecnica %}
-          {% with field=form_avali|dict_get:campo obs=form_avali|dict_get:detalhe %}
-          <div class="row align-items-center mb-3">
-            <label class="col-sm-5 col-form-label small">
-              <i class="bi bi-question-circle me-1 text-muted"></i> {{ field.label }}
-            </label>
-            <div class="col-sm-7 d-flex align-items-center gap-2 flex-wrap">
-              <div class="form-check form-check-inline mb-0">
-                <input type="radio" name="{{ campo }}" id="{{ campo }}_sim" value="True"
-                       class="form-check-input"
-                       {% if field.value|stringformat:"s" == "True" %}checked{% endif %}
-                       onchange="toggleObservacao('{{ campo }}')">
-                <label class="form-check-label" for="{{ campo }}_sim">Sim</label>
-              </div>
-              <div class="form-check form-check-inline mb-0">
-                <input type="radio" name="{{ campo }}" id="{{ campo }}_nao" value="False"
-                       class="form-check-input"
-                       {% if field.value|stringformat:"s" == "False" %}checked{% endif %}
-                       onchange="toggleObservacao('{{ campo }}')">
-                <label class="form-check-label" for="{{ campo }}_nao">Não</label>
-              </div>
-              {% if campo == "seguranca" or campo == "requisito_especifico" %}
-              <div class="form-check form-check-inline mb-0">
-                <input type="radio" name="{{ campo }}" id="{{ campo }}_na" value=""
-                       class="form-check-input"
-                       {% if field.value == None %}checked{% endif %}
-                       onchange="toggleObservacao('{{ campo }}')">
-                <label class="form-check-label" for="{{ campo }}_na">N/A</label>
-              </div>
-              {% endif %}
-              <div id="obs_{{ campo }}" style="display:{% if not field.value %}none{% endif %}; flex: 1;">
-                {{ obs|add_class:"form-control form-control-sm w-100" }}
-              </div>
+    {% with f=form_avali %}
+    {% for item in perguntas_avaliacao_tecnica %}
+      {% with field=f|dict_get:item.campo obs=f|dict_get:item.obs %}
+      {% with campo=item.campo %}
+        <div class="row align-items-center mb-3">
+          <label class="col-sm-5 col-form-label small">
+            <i class="bi bi-question-circle me-1 text-muted"></i> {{ item.label }}
+          </label>
+
+          <div class="col-sm-7 d-flex align-items-center gap-2 flex-wrap">
+            {{ field|add_class:"form-select form-select-sm" }}
+
+            <div id="obs_{{ campo }}" class="flex-grow-1"
+                 style="display: {% if field.value == 'True' or field.value == True %}block{% else %}none{% endif %};">
+              {{ obs|add_class:"form-control form-control-sm w-100" }}
             </div>
           </div>
-          {% endwith %}
-        {% endfor %}
-      </div>
-    </div>
+        </div>
+      {% endwith %}
+      {% endwith %}
+    {% endfor %}
+    {% endwith %}
+
+  </div>
+</div>
+
+
+
 
     <!-- Conclusão -->
     <div class="col-12">
@@ -94,14 +83,20 @@
 </form>
 
 <script>
-function toggleObservacao(campo) {
-  const sim = document.getElementById(`${campo}_sim`);
-  const obs = document.getElementById(`obs_${campo}`);
-  if (sim && obs) {
-    obs.style.display = sim.checked ? 'block' : 'none';
-  }
-}
+  document.addEventListener('DOMContentLoaded', function () {
+    const selects = document.querySelectorAll('select');
+    selects.forEach(select => {
+      select.addEventListener('change', function () {
+        const campo = this.name;
+        const obs = document.getElementById(`obs_${campo}`);
+        if (obs) {
+          obs.style.display = this.value === 'True' ? 'block' : 'none';
+        }
+      });
+    });
+  });
 </script>
+
 
 <style>
   .form-label { font-weight: 500; }

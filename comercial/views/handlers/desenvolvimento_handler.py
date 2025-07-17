@@ -3,9 +3,6 @@ from comercial.utils.assinatura_utils import preencher_assinatura
 
 
 def processar_aba_desenvolvimento(request, precalc):
-    """
-    Processa o formulário da aba Desenvolvimento.
-    """
     form = DesenvolvimentoForm(
         request.POST if request.method == "POST" else None,
         instance=getattr(precalc, 'desenvolvimento_item', None)

@@ -74,6 +74,14 @@ class Cotacao(AuditModel):
         decimal_places=2
     )
 
+    validade_proposta = models.PositiveIntegerField(
+        "Validade da proposta (dias)",
+        default=30,
+        help_text="Número de dias de validade da proposta a partir da data de abertura."
+    )
+
+
+
     class Meta:
         verbose_name = "Cotação"
         verbose_name_plural = "Cotações"

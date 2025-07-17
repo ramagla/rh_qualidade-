@@ -4,6 +4,10 @@
 {% block title %}Pré-Cálculo Cotação #{{ cotacao.numero }}{% endblock %}
 
 {% block content %}
+
+{% if form_precalculo %}{{ form_precalculo.media }}{% endif %}
+
+
 <div class="container-fluid mt-5">
   <h2 class="text-center mb-4">
     <i class="bi bi-calculator me-2"></i>
@@ -149,6 +153,28 @@
   }
 </style>
 
-
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document
+      .querySelectorAll('a[data-bs-toggle="tab"]')
+      .forEach(tab => {
+        tab.addEventListener('shown.bs.tab', e => {
+          const pane = document.querySelector(e.target.getAttribute('href'));
+          const taList = pane.querySelectorAll('textarea.ckeditor, textarea[data-config-name]');
+          taList.forEach(ta => {
+            // Só inicializa se ainda não existir
+            if (!ta._ckeditorInitialized) {
+              ClassicEditor
+                .create(ta)
+                .then(editor => { ta._ckeditorInitialized = true; })
+                .catch(console.error);
+            }
+          });
+        });
+      });
+  });
+  </script>
+  
+  
 
 {% endblock %}

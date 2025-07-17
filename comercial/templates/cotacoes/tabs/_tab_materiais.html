@@ -1,5 +1,5 @@
 {% load widget_tweaks %}
-{% if form_precalculo %}{{ form_precalculo.media }}{% endif %}
+
 
 <style>
   .bg-lightblue {
@@ -109,12 +109,14 @@
         {{ fs_mat.management_form }}
 
         <div class="mb-3 mt-3">
-          <label for="id_observacoes_materiais" class="form-label">
+          <label for="{{ form_precalculo.observacoes_materiais.id_for_label }}" class="form-label">
             <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
           </label>
-          {{ form_precalculo.observacoes_materiais }}
+          {{ form_precalculo.observacoes_materiais|add_class:"form-control" }}
         </div>
-
+        
+        
+        
         <div>
           {% if materiais_respondidos %}
             <button type="submit" name="form_materiais_submitted" class="btn btn-primary">

@@ -57,18 +57,10 @@ class PreCalculo(models.Model):
     numero = models.PositiveIntegerField("Número do Pré-Cálculo", editable=False)
     criado_em = models.DateTimeField(auto_now_add=True)
     criado_por = models.ForeignKey(User, on_delete=models.PROTECT)
-    observacoes_materiais = CKEditor5Field(
-        "Observações Materiais",
-        config_name="default",
-        blank=True,
-        null=True
-    )
-    observacoes_servicos = CKEditor5Field(
-        "Observações Serviços Externos",
-        blank=True,
-        null=True
-    )
-    observacoes_roteiro = CKEditor5Field("Observações do Roteiro", config_name="default", blank=True, null=True)
+    observacoes_materiais = CKEditor5Field("Observações gerais de materiais", blank=True, null=True)
+    observacoes_servicos = CKEditor5Field("Observações gerais de serviços", config_name="default", blank=True, null=True)
+    observacoes_roteiro = CKEditor5Field("Observações da Etapa", config_name="default", blank=True, null=True)
+
 
     preco_selecionado = models.DecimalField(
         "Preço Final Selecionado (R$)",
@@ -85,6 +77,8 @@ class PreCalculo(models.Model):
         blank=True
     )
 
+    from decimal import Decimal
+
     def calcular_precos_sem_impostos(self):
         regras = getattr(self, "regras_calculo_item", None)
         if not regras:
@@ -93,27 +87,29 @@ class PreCalculo(models.Model):
         custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
 
         mat = self.materiais.filter(selecionado=True).first()
-        materiais = (mat.peso_bruto_total or 0) * (mat.preco_kg or 0) if mat else 0
+        materiais = Decimal((mat.peso_bruto_total or 0)) * Decimal((mat.preco_kg or 0)) if mat else Decimal(0)
 
         servicos = sum(
-            (s.peso_bruto or 0) * (s.preco_kg or 0)
+            Decimal((s.peso_bruto or 0)) * Decimal((s.preco_kg or 0))
             for s in self.servicos.all()
         )
 
-        # 🚫 ferramentas removido
         base = custos_diretos + materiais + servicos
 
         impostos_basicos = base * (
-            Decimal(regras.ir + regras.csll + regras.df + regras.dv) / 100
-        )
+            Decimal(regras.ir or 0) + Decimal(regras.csll or 0) +
+            Decimal(regras.df or 0) + Decimal(regras.dv or 0)
+        ) / 100
 
         valores = []
-        qtde = getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1
+        qtde = Decimal(getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1)
 
-        for margem in range(10, 61, 5):
+        margens = [0, 5, 10, 15, 20, 25, 30, 35, 40]
+        for margem in margens:
             bruto = base + impostos_basicos
             total = bruto * (1 + Decimal(margem) / 100)
-            unitario = total / Decimal(qtde)
+            unitario = total / qtde if qtde else Decimal(0)
+
             valores.append({
                 "percentual": margem,
                 "total": round(total, 2),
@@ -121,11 +117,6 @@ class PreCalculo(models.Model):
             })
         return valores
 
-
-    class Meta:
-        verbose_name = "Pré-Cálculo"
-        verbose_name_plural = "Pré-Cálculos"
-        unique_together = ("cotacao", "numero")
 
     def calcular_precos_com_impostos(self):
         regras = getattr(self, "regras_calculo_item", None)
@@ -135,35 +126,39 @@ class PreCalculo(models.Model):
         custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
 
         mat = self.materiais.filter(selecionado=True).first()
-        materiais = (mat.peso_bruto or 0) * (mat.preco_kg or 0) if mat else 0
+        materiais = Decimal((mat.peso_bruto_total or 0)) * Decimal((mat.preco_kg or 0)) if mat else Decimal(0)
 
         servicos = sum(
-            (s.peso_bruto or 0) * (s.preco_kg or 0)
+            Decimal((s.peso_bruto_total or 0)) * Decimal((s.preco_kg or 0))
             for s in self.servicos.all()
         )
 
-        # 🚫 ferramentas removido
         base = custos_diretos + materiais + servicos
 
-        despesas = base * (Decimal(regras.df + regras.dv) / 100)
-        impostos = base * Decimal(
-            regras.icms + regras.pis + regras.confins +
-            regras.ir + regras.csll + regras.df + regras.dv
+        # ✅ Impostos completos: todos incluídos, conforme sua regra
+        impostos = base * (
+            Decimal(regras.icms or 0) + Decimal(regras.pis or 0) +
+            Decimal(regras.confins or 0) + Decimal(regras.ir or 0) +
+            Decimal(regras.csll or 0) + Decimal(regras.df or 0) +
+            Decimal(regras.dv or 0)
         ) / 100
 
         valores = []
-        qtde = getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1
+        qtde = Decimal(getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1)
 
-        for margem in range(10, 61, 5):
-            bruto = base + despesas + impostos
+        margens = [0, 5, 10, 15, 20, 25, 30, 35, 40]
+        for margem in margens:
+            bruto = base + impostos
             total = bruto * (1 + Decimal(margem) / 100)
-            unitario = total / Decimal(qtde)
+            unitario = total / qtde if qtde else Decimal(0)
+
             valores.append({
                 "percentual": margem,
                 "total": round(total, 2),
                 "unitario": round(unitario, 4),
             })
         return valores
+
 
 
     def opcoes_precos(self):
@@ -396,7 +391,7 @@ class PreCalculoServicoExterno(AuditModel):
 
 class AvaliacaoTecnica(AuditModel):
     RESULTADO = [
-        ("Viável", "Viavel (O produto pode ser produzido conforme especificado,sem revisoes) "),
+        ("Viável", "Viável (O produto pode ser produzido conforme especificado, sem revisões)"),
         ("Viável c/ Recomendações", "Viável (alterações recomendadas conforme considerações)"),
         ("Inviável", "Inviável (necessidade de revisão do projeto para a manufatura do produto dentro dos requisitos especificados)"),
     ]
@@ -407,66 +402,84 @@ class AvaliacaoTecnica(AuditModel):
         (False, "Não"),
     ]
 
-    """Questionário de avaliação técnica na cotação."""
     precalculo = models.OneToOneField(
         "PreCalculo", on_delete=models.CASCADE,
         related_name="avaliacao_tecnica_item", null=True, blank=True
     )
 
-    # 1. A empresa possui projeto próprio ou desenho fornecido?
-    possui_projeto = models.BooleanField("1. Existe característica especoal além das relacionadas nas especificações ?", default=False)
+    # ———————————— Questões Técnicas ————————————
+
+    possui_projeto = models.BooleanField("1. Existe característica especial além das relacionadas nas especificações?", default=False)
     projeto_obs = models.CharField("Detalhes sobre o projeto/desenho", max_length=300, blank=True)
 
-    # 2. É necessário desenvolvimento de dispositivo de controle?
-    precisa_dispositivo = models.BooleanField("2. A peça é item de aparência ?", default=False)
+    precisa_dispositivo = models.BooleanField("2. A peça é item de aparência?", default=False)
     dispositivo_obs = models.CharField("Detalhes sobre o dispositivo", max_length=300, blank=True)
 
-    # 3. Existem características críticas definidas?
-    caracteristicas_criticas = models.BooleanField("3. O cliente forneceu FMEA de produto ?", default=False)
+    caracteristicas_criticas = models.BooleanField("3. O cliente forneceu FMEA de produto?", default=False)
     criticas_obs = models.CharField("Quais são essas características?", max_length=300, blank=True)
 
-    # 4. Existe necessidade de amostras para validação?
-    precisa_amostras = models.BooleanField("4. O cliente solicitou algum teste além dos relacionados nas especificações ?", default=False)
+    precisa_amostras = models.BooleanField("4. O cliente solicitou testes adicionais?", default=False)
     amostras_obs = models.CharField("Detalhes sobre as amostras", max_length=300, blank=True)
 
-    # 5. Alguma restrição dimensional ou geométrica?
-    restricao_dimensional = models.BooleanField("5. O cliente forneceu lista de fornecedores/materiais aprovados ?", default=False)
+    restricao_dimensional = models.BooleanField("5. Lista de fornecedores/materiais aprovados?", default=False)
     restricao_obs = models.CharField("Descreva a restrição", max_length=300, blank=True)
 
-    # 6. Existe requisito de acabamento superficial?
-    acabamento_superficial = models.BooleanField("6 .As normas/especificações/requisitos estão disponiveis?", default=False)
+    acabamento_superficial = models.BooleanField("6. Normas/especificações estão disponíveis?", default=False)
     acabamento_obs = models.CharField("Descreva o acabamento", max_length=300, blank=True)
 
-    # 7. Haverá validação metrológica?
-    validacao_metrologica = models.BooleanField("7. São aplicaveis requisitos estatutários/regulamentares ?", default=False)
+    validacao_metrologica = models.BooleanField("7. Existem requisitos estatutários/regulamentares?", default=False)
     metrologia_obs = models.CharField("Detalhes sobre a validação", max_length=300, blank=True)
 
-    # 8. Há exigência de rastreabilidade técnica?
-    rastreabilidade = models.BooleanField("8. Existem requisitos adicionais e/ou não declarados pelo cliente ?", default=False)
+    rastreabilidade = models.BooleanField("8. Requisitos adicionais ou não declarados?", default=False)
     rastreabilidade_obs = models.CharField("Detalhes da rastreabilidade", max_length=300, blank=True)
 
-    metas_a = models.BooleanField("9a. Metas de qualidade (exemplo PPM) ?", default=False)
+    # Campos adicionais que estavam ausentes
+    item_aparencia = models.BooleanField("2. A peça é item de aparência?", null=True, blank=True)
+    item_aparencia_obs = models.CharField("Detalhes", max_length=300, blank=True)
+
+    fmea = models.BooleanField("3. O cliente forneceu FMEA de produto?", null=True, blank=True)
+    fmea_obs = models.CharField("Detalhes", max_length=300, blank=True)
+
+    teste_solicitado = models.BooleanField("4. O cliente solicitou testes adicionais?", null=True, blank=True)
+    teste_solicitado_obs = models.CharField("Detalhes", max_length=300, blank=True)
+
+    lista_fornecedores = models.BooleanField("5. Lista de fornecedores/materiais aprovados?", null=True, blank=True)
+    lista_fornecedores_obs = models.CharField("Detalhes", max_length=300, blank=True)
+
+    normas_disponiveis = models.BooleanField("6. Normas/especificações estão disponíveis?", null=True, blank=True)
+    normas_disponiveis_obs = models.CharField("Detalhes", max_length=300, blank=True)
+
+    requisitos_regulamentares = models.BooleanField("7. Existem requisitos estatutários/regulamentares?", null=True, blank=True)
+    requisitos_regulamentares_obs = models.CharField("Detalhes", max_length=300, blank=True)
+
+    requisitos_adicionais = models.BooleanField("8. Requisitos adicionais ou não declarados?", null=True, blank=True)
+    requisitos_adicionais_obs = models.CharField("Detalhes", max_length=300, blank=True)
+
+    metas_a = models.BooleanField("9a. Metas de qualidade (exemplo PPM)?", default=False)
     metas_a_obs = models.CharField("Detalhes", max_length=300, blank=True)
-    
-    metas_b = models.BooleanField("9b. Metas de produtividade ?", default=False)
+
+    metas_b = models.BooleanField("9b. Metas de produtividade?", default=False)
     metas_b_obs = models.CharField("Detalhes", max_length=300, blank=True)
 
-    metas_c = models.BooleanField("9c. Metas de desempenho (exemplo: Cp, Cpk, etc.) ?", default=False)
+    metas_c = models.BooleanField("9c. Metas de desempenho (exemplo: Cp, Cpk, etc.)?", default=False)
     metas_c_obs = models.CharField("Detalhes", max_length=300, blank=True)
 
-    metas_d = models.BooleanField("9d. Metas de funcionamento ?", default=False)
+    metas_confiabilidade = models.BooleanField("9d. Metas de confiabilidade?", null=True, blank=True)
+    metas_confiabilidade_obs = models.CharField("Detalhes", max_length=300, blank=True)
+
+    metas_d = models.BooleanField("9e. Metas de funcionamento?", default=False)
     metas_d_obs = models.CharField("Detalhes", max_length=300, blank=True)
 
-    seguranca = models.BooleanField("10. Os requisitos sobre o item de segurança foram considerados ?", null=True, choices=OPCOES_BOOL_EXTENDIDA)
+    seguranca = models.BooleanField("10. Os requisitos sobre o item de segurança foram considerados?", null=True, choices=OPCOES_BOOL_EXTENDIDA)
     seguranca_obs = models.CharField("Detalhes", max_length=300, blank=True)
 
-    requisito_especifico = models.BooleanField("11. O cliente forneceu requisito especifico ?", null=True, choices=OPCOES_BOOL_EXTENDIDA)
+    requisito_especifico = models.BooleanField("11. O cliente forneceu requisito específico?", null=True, choices=OPCOES_BOOL_EXTENDIDA)
     requisito_especifico_obs = models.CharField("Detalhes", max_length=300, blank=True)
 
     conclusao_tec = models.CharField("Conclusão da Análise Crítica", max_length=30, choices=RESULTADO)
     consideracoes_tec = models.TextField("Considerações", blank=True, null=True)
 
-# 🔐 Metadados de Assinatura
+    # 🔐 Metadados de Assinatura
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
     assinado_em = models.DateTimeField(auto_now_add=True)
     data_assinatura = models.DateTimeField("Data da assinatura", null=True, blank=True)
@@ -476,6 +489,7 @@ class AvaliacaoTecnica(AuditModel):
     class Meta:
         verbose_name = "Avaliação Técnica"
         verbose_name_plural = "Avaliações Técnicas"
+
 
 
 
@@ -551,7 +565,6 @@ class RoteiroCotacao(AuditModel):
 class Desenvolvimento(AuditModel):
     """Modelo final de desenvolvimento da cotação."""
     precalculo = models.OneToOneField("PreCalculo", on_delete=models.CASCADE, related_name="desenvolvimento_item",null=True, blank=True)
-
     completo = models.BooleanField("Tudo preenchido corretamente?", default=False)
     consideracoes = CKEditor5Field("Considerações Finais", config_name="default", blank=True, null=True)
 # 🔐 Metadados de Assinatura

@@ -1,26 +1,18 @@
 from decimal import Decimal
 from django.forms import inlineformset_factory
 from django.utils import timezone
-from comercial.forms.precalculos_form import PreCalculoForm, RoteiroCotacaoForm
+from comercial.forms.precalculos_form import RoteiroCotacaoForm
 from comercial.models.precalculo import PreCalculo, RoteiroCotacao
 from tecnico.models.roteiro import EtapaRoteiro, PropriedadesEtapa
+from django.contrib import messages
 
 
 def processar_aba_roteiro(request, precalc, form_precalculo=None):
-    # ———————————————— 0) Formulário principal para observações ————————————————
-    if form_precalculo is None:
-        form_precalculo = PreCalculoForm(
-            request.POST if request.method == "POST" else None,
-            instance=precalc
-        )
-
-
-
-    # ———————————————— 1) Cria linhas iniciais se necessário ————————————————
     if not precalc.roteiro_item.exists() and getattr(precalc, "analise_comercial_item", None):
         item = precalc.analise_comercial_item.item
-        if hasattr(item, "roteiro"):
-            roteiro = item.roteiro
+        roteiro = getattr(item, "roteiro", None)
+
+        if roteiro:
             qtde = precalc.analise_comercial_item.qtde_estimada or 1
 
             for etapa in roteiro.etapas.select_related("setor"):
@@ -32,13 +24,11 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
                     tempo_pecas = Decimal(qtde) / Decimal(pph)
                 except ZeroDivisionError:
                     tempo_pecas = Decimal(0)
+
                 tempo_setup = Decimal(setup) / Decimal(60)
                 total = (tempo_pecas + tempo_setup) * Decimal(custo_hora)
 
-
-                etapa_real = etapa  # já é EtapaRoteiro
-                propriedades = PropriedadesEtapa.objects.filter(etapa=etapa_real).first()
-
+                propriedades = PropriedadesEtapa.objects.filter(etapa=etapa).first()
                 maquinas_roteiro = None
                 nome_acao = None
 
@@ -63,7 +53,6 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
                     nome_acao=nome_acao,
                 )
 
-    # ———————————————— 2) Monta o formset ————————————————
     RotSet = inlineformset_factory(
         PreCalculo,
         RoteiroCotacao,
@@ -80,21 +69,15 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
         can_delete=False,
     )
 
+    data = request.POST.copy() if request.method == "POST" else None
+    fs_rot = RotSet(data, instance=precalc, prefix="rot")
 
-    fs_rot = RotSet(
-        request.POST if request.method == "POST" and "form_roteiro_submitted" in request.POST else None,
-        instance=precalc,
-        prefix="rot"
-    )
-
-    # ———————————————— 3) Injeta custo_hora para exibição ————————————————
     for form in fs_rot.forms:
         if hasattr(form.instance, 'setor') and form.instance.setor_id and not hasattr(form.instance, 'custo_hora'):
             form.instance.custo_hora = getattr(form.instance.setor, "custo_atual", 0)
 
-    # ———————————————— 4) Salva se foi submetido ————————————————
-    if request.method == "POST" and "form_roteiro_submitted" in request.POST:
-        if fs_rot.is_valid() and form_precalculo.is_valid():
+    if request.method == "POST" and request.POST.get("form_roteiro_submitted") is not None:
+        if fs_rot.is_valid():
             instancias = fs_rot.save(commit=False)
             alguma_alteracao = False
 
@@ -118,9 +101,8 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
                             propriedades = PropriedadesEtapa.objects.filter(etapa=etapa_real).first()
                             if propriedades:
                                 maquinas = propriedades.maquinas.all()
-                                maquinas_roteiro = ", ".join(m.codigo for m in maquinas)
-                                nome_acao = propriedades.nome_acao
-
+                                obj.maquinas_roteiro = ", ".join(m.codigo for m in maquinas)
+                                obj.nome_acao = propriedades.nome_acao
                     except Exception:
                         obj.maquinas_roteiro = None
                         obj.nome_acao = None
@@ -128,22 +110,11 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
                     obj.save()
                     alguma_alteracao = True
 
-
-            # Salva observações do roteiro se mudou
-           # Valida e salva o form_precalculo (observações do roteiro)
-            if form_precalculo and form_precalculo.is_valid():
-                if form_precalculo.has_changed():
-                    form_precalculo.save()
-                    alguma_alteracao = True
-
-
             if alguma_alteracao:
                 fs_rot.save_m2m()
-                return True, fs_rot, form_precalculo
+                return True, fs_rot
             else:
-                from django.contrib import messages
                 messages.error(request, "Nenhuma alteração válida foi identificada para salvar.")
-                return False, fs_rot, form_precalculo
+                return False, fs_rot
 
-
-    return False, fs_rot, form_precalculo
+    return False, fs_rot

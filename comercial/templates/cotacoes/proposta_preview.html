@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load filters_gerais %}
+{% block title %}Carta Proposta – Cotação Nº {{ cotacao.numero }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <!-- Estilos e botão de impressão padrão -->
+  {% include 'partials/global/_estilos_impressao.html' %}
+  {% include 'partials/global/_botao_impressao.html' %}
+  {% include 'partials/global/_styles_componentes.html' %}
+
+  <!-- Cabeçalho estilo proposta PDF -->
+<div class="p-3 mb-4" style="background-color: #f5f5f5;">
+
+    <!-- Logo centralizado -->
+    <div class="text-center mb-3">
+      <img src="{% static 'img/logo.png' %}" alt="Logo BRAS-MOL" style="max-height: 60px;">
+    </div>
+  
+    <!-- Faixa azul com seta -->
+    <div class="mb-3 text-center">
+      <div style="
+        background: linear-gradient(to right, #000851, #3A4ED0);
+        color: white;
+        padding: 6px 18px;
+        font-size: 20px;
+        font-weight: bold;
+        clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%);
+        display: inline-block;
+      ">
+        Cotação Nº: {{ cotacao.numero }}
+      </div>
+    </div>
+  
+    <!-- Data abaixo à direita -->
+    <div class="text-end small mb-3 me-1">
+      <span class="text-muted">data:</span><br>
+      <h5 style="color: #3A4ED0; border-bottom: 2px solid #3A4ED0; display: inline-block;">
+        {{ cotacao.data_abertura|date:"d/m/Y" }}
+      </h5>
+    </div>
+  
+    <!-- Informações em duas colunas -->
+    <div class="row small">
+      <!-- Esquerda: BRAS-MOL -->
+      <div class="col-6">
+        <strong>BRAS-MOL MOLAS ESTAMPADOS LTDA.</strong><br>
+        Estr. de Bonsucesso, 1953 - Rio Abaixo - Itaquaquecetuba / SP CEP: 08579-000<br>
+        Fone: (11) 4648-2611<br>
+        vendas@brasmol.com.br / www.brasmol.com.br
+      </div>
+  
+      <!-- Direita: Cliente -->
+      <div class="col-6">
+        <strong>Proposta para:</strong><br>
+        <strong>Cliente:</strong> {{ cotacao.cliente.razao_social }}<br>
+        <strong>Contato:</strong> {{ cotacao.cliente.nome_contato }}<br>
+        <strong>Departamento:</strong> {{ cotacao.cliente.departamento_contato|default:"—" }}<br>
+        <strong>Telefone:</strong> {{ cotacao.cliente.telefone_contato }}<br>
+        <strong>E-mail:</strong> {{ cotacao.cliente.email_contato }}
+      </div>
+    </div>
+  
+  </div>
+
+
+<!-- Tabela de Itens da Proposta -->
+<div class="table-responsive mt-4">
+    <table class="table table-bordered align-middle text-center small" style="table-layout: fixed;">
+      <thead style="background-color: #000099; color: white;">
+        <tr>
+          <th><i class="bi bi-diagram-3-fill"></i> Desenho</th>
+          <th><i class="bi bi-box-seam"></i> Matéria-Prima</th>
+          <th><i class="bi bi-droplet-half"></i> Tratamento superficial</th>
+          <th><i class="bi bi-tools"></i> Ferramental</th>
+          <th><i class="bi bi-stack"></i> Lote</th>
+          <th><i class="bi bi-currency-dollar"></i> Preço unit.</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for precalc in precalculos %}
+        <tr>
+          <td class="align-middle ">
+            {{ precalc.analise_comercial_item.item.codigo_desenho|default:"—" }}
+          </td>
+          <td class="align-middle ">
+            {{ precalc.materiais.first.descricao|default:"—" }}
+          </td>
+          <td class="align-middle ">
+            {{ precalc.servicos.first.descricao_materia_prima|default:"—" }}
+          </td>
+          <td class="align-middle">
+            {{ precalc.valor_ferramental|formatar_reais }}
+        </td>
+          <td class="align-middle">
+            {{ precalc.analise_comercial_item.qtde_estimada|intcomma|default:"—" }}
+        </td>
+        <td class="align-middle">
+          R$ {{ precalc.preco_manual|default:precalc.preco_selecionado|floatformat:4 }}
+        </td>
+        
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  
+    <!-- Rodapé da proposta comercial no final do conteúdo, respeitando altura real -->
+<div class="footer-proposta-print mt-5" style="page-break-inside: avoid;">
+    <hr>
+  
+    <div class="row mt-4">
+      <div class="col-12">
+        <strong style="color: #000099;">Nota:</strong><br>
+        {{ cotacao.observacoes|safe }}
+      </div>
+    </div>
+  
+    <div class="row mt-3 small">
+      <div class="col-6">
+        <strong style="color: #000099;">Níveis econômicos:</strong><br>
+        <strong>Condição de pagamento:</strong> {{ cotacao.cond_pagamento }}
+      </div>
+      <div class="col-6">
+        <strong style="color: #000099;">Impostos:</strong><br>
+        {% with prec=precalculos.0 %}
+        <strong>ICMS ({{ cotacao.icms|floatformat:2 }}%):</strong> Incluso &nbsp;&nbsp;
+        <strong>IPI ({{ prec.analise_comercial_item.item.ipi|floatformat:2 }}%):</strong> Excluso &nbsp;&nbsp;
+        <strong>PIS ({{ prec.regras_calculo_item.pis|floatformat:2 }}%) / COFINS ({{ prec.regras_calculo_item.confins|floatformat:2 }}%):</strong> Incluso
+        {% endwith %}
+      </div>
+    </div>
+  
+    <div class="row mt-2 small">
+      <div class="col-3">
+        <strong>Validade da proposta:</strong> {{ cotacao.validade_proposta }} dias
+      </div>
+      <div class="col-3">
+        {% with analise=precalculos.0.analise_comercial_item %}
+        <strong>Tipo de embalagem:</strong>
+        {{ analise.tipo_embalagem_obs|default:"—" }}
+      {% endwith %}
+            </div>
+      <div class="col-3">
+        <strong>Frete:</strong> {{ cotacao.frete }}
+      </div>
+      <div class="col-3">
+        <strong>Prazo de entrega:</strong> 30 dias após o aceite do pedido
+      </div>
+    </div>
+  
+    <div class="row mt-4" style="display: flex; flex-wrap: nowrap;">
+      <div class="col-6" style="width: 50%;">
+        <strong>Gerson Rodrigues</strong><br>
+        Gerente Comercial<br>
+        (11) 4648-2611 R-141<br>
+        <a href="mailto:gerson@bras-mol.com.br">gerson@bras-mol.com.br</a>
+      </div>
+      <div class="col-6" style="width: 50%; text-align: right;">
+        {% with funcionario=cotacao.responsavel.funcionario %}
+          <strong>{{ funcionario.nome }}</strong><br>
+          {{ funcionario.cargo_atual.nome|default:"—" }}<br>
+          <a href="mailto:{{ funcionario.user.email }}">{{ funcionario.user.email }}</a>
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+  
+  
+  {% include 'partials/global/_formulario_rodape.html' with numero_formulario="" %}
+  
+  <style>
+    @media print {
+      .footer-proposta-print {
+        page-break-inside: avoid;
+      }
+  
+      .footer-proposta-print .row {
+        display: flex;
+        flex-wrap: wrap;
+      }
+  
+      .footer-proposta-print .col-6 {
+        width: 50%;
+        float: left;
+      }
+  
+      .footer-proposta-print .col-3 {
+        width: 25%;
+        float: left;
+      }
+  
+      .footer-proposta-print a {
+        color: black;
+        text-decoration: none;
+      }
+    }
+  </style>
+
+  
+  
+{% endblock %}
