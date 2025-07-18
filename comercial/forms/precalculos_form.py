@@ -1,5 +1,6 @@
 # comercial/forms/precalculos.py
 from django import forms
+from comercial.models.item import Item
 from comercial.models.precalculo import (
     PreCalculoMaterial, PreCalculoServicoExterno, RegrasCalculo,
     RoteiroCotacao, CotacaoFerramenta, AvaliacaoTecnica,
@@ -301,6 +302,33 @@ class AvaliacaoTecnicaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
+        placeholders = {
+            "possui_projeto_obs": "Descreva se há projeto...",
+            "precisa_dispositivo_obs": "Dispositivo necessário? Qual?",
+            "caracteristicas_criticas_obs": "Detalhe as características críticas...",
+            "precisa_amostras_obs": "Quantas amostras? Para quê?",
+            "restricao_dimensional_obs": "Há restrições dimensionais?",
+            "acabamento_superficial_obs": "Especificar acabamento desejado...",
+            "validacao_metrologica_obs": "Como será feita a validação?",
+            "rastreabilidade_obs": "Descreva a rastreabilidade exigida...",
+            "item_aparencia_obs": "Quais requisitos de aparência?",
+            "fmea_obs": "Existe análise FMEA?",
+            "teste_solicitado_obs": "Detalhe os testes solicitados...",
+            "lista_fornecedores_obs": "Indique fornecedores aprovados...",
+            "normas_disponiveis_obs": "Liste normas aplicáveis...",
+            "requisitos_regulamentares_obs": "Detalhe os requisitos legais...",
+            "requisitos_adicionais_obs": "Há exigências extras?",
+            "metas_a_obs": "Meta de tipo A (se aplicável)...",
+            "metas_b_obs": "Meta de tipo B...",
+            "metas_c_obs": "Meta de tipo C...",
+            "metas_d_obs": "Meta de tipo D...",
+            "metas_confiabilidade_obs": "Detalhe a meta de confiabilidade...",
+            "seguranca_obs": "Quais aspectos de segurança são exigidos?",
+            "requisito_especifico_obs": "Existe algum requisito específico?",
+        }
+
+
         campos_bool = [
             'possui_projeto', 'precisa_dispositivo', 'caracteristicas_criticas',
             'precisa_amostras', 'restricao_dimensional', 'acabamento_superficial',
@@ -325,32 +353,135 @@ class AvaliacaoTecnicaForm(forms.ModelForm):
                     attrs={'class': 'form-select form-select-sm'}
                 )
 
+        for campo, texto in placeholders.items():
+            if campo in self.fields:
+                self.fields[campo].widget.attrs['placeholder'] = texto
+
+
+
+from comercial.models.item import Item  # garantir o import correto
+
+
+from comercial.models import Item
+from django import forms
+
+class ItemInlineForm(forms.ModelForm):
+    class Meta:
+        model = Item
+        fields = [
+            "codigo", "descricao", "ncm", "lote_minimo", "revisao", "data_revisao", "ipi",
+            "automotivo_oem", "requisito_especifico", "item_seguranca"
+        ]
+
+    def clean_codigo(self):
+        codigo = self.cleaned_data.get("codigo")
+        if not codigo:
+            raise forms.ValidationError("O campo 'Código do Desenho' é obrigatório.")
+        return codigo
+
 
 
 class AnaliseComercialForm(forms.ModelForm):
     class Meta:
         model = AnaliseComercial
-        exclude = ('cotacao', 'created_at', 'updated_at', 'created_by', 'updated_by')
+        exclude = ('precalculo', 'created_at', 'updated_at', 'created_by', 'updated_by')
         widgets = {
             'status': forms.Select(attrs={'class': 'form-select form-select-sm'}),
-            'motivo_reprovacao': forms.Textarea(attrs={'class': 'form-control form-control-sm', 'rows': 4}),
         }
 
     def __init__(self, *args, **kwargs):
+        cotacao = kwargs.pop("cotacao", None)
+        edicao = kwargs.pop("edicao", False)
         super().__init__(*args, **kwargs)
 
+        # Valor inicial para status
         self.fields['status'].initial = 'andamento'
 
-        # ⚙️ Campo booleano novo - capacidade produtiva
+        # Capacidade produtiva com select customizado
         self.fields['capacidade_produtiva'].required = False
         self.fields['capacidade_produtiva'].widget = forms.Select(
             choices=[
-                ('', '---------'),  # opção em branco
+                ('', '---------'),
                 ('True', 'Sim'),
                 ('False', 'Não'),
             ],
             attrs={'class': 'form-select form-select-sm'}
         )
+
+        # Se não for edição, remove obrigatoriedade dos campos ocultos no cadastro
+        if not edicao:
+            campos_opcionais = [
+                'conclusao', 'consideracoes', 'motivo_reprovacao',
+                'material_fornecido', 'material_fornecido_obs',
+                'requisitos_entrega', 'requisitos_entrega_obs',
+                'requisitos_pos_entrega', 'requisitos_pos_entrega_obs',
+                'requisitos_comunicacao', 'requisitos_comunicacao_obs',
+                'requisitos_notificacao', 'requisitos_notificacao_obs',
+                'especificacao_embalagem', 'especificacao_embalagem_obs',
+                'especificacao_identificacao', 'especificacao_identificacao_obs',
+                'tipo_embalagem', 'tipo_embalagem_obs',
+            ]
+            for campo in campos_opcionais:
+                if campo in self.fields:
+                    self.fields[campo].required = False
+
+       # Aplica o filtro de itens por cliente, se houver cotação
+        if cotacao:
+            cliente = cotacao.cliente
+            queryset_filtrado = Item.objects.filter(cliente=cliente, status="Ativo").order_by("codigo")
+
+            self.fields['item'] = forms.ModelChoiceField(
+                    queryset=queryset_filtrado,
+                    widget=forms.Select(attrs={
+                        'class': 'form-select form-select-sm select2 campo-analise'
+                    }),
+                    required=True,
+                    empty_label="---------"
+                )
+
+            # Corrige item inválido se estiver relacionado a outro cliente
+            if (
+                self.instance and self.instance.pk and
+                self.instance.item and self.instance.item.cliente != cliente
+            ):
+                print("⚠️ Resetando item não relacionado ao cliente da cotação.")
+                self.initial['item'] = None
+                self.fields["item"].required = False  # Evita erro se item vier vazio
+
+        # Placeholders para campos *_obs
+        placeholders = {
+            "material_fornecido_obs": "Descreva o material fornecido...",
+            "requisitos_entrega_obs": "Qual a frequência de entrega?",
+            "requisitos_pos_entrega_obs": "Há alguma exigência adicional?",
+            "requisitos_comunicacao_obs": "Qual o meio de comunicação? Ex: e-mail",
+            "requisitos_notificacao_obs": "Como será feita a notificação?",
+            "especificacao_embalagem_obs": "Ex: caixa padrão, plástico bolha...",
+            "especificacao_identificacao_obs": "Ex: etiqueta, impressão direta...",
+            "tipo_embalagem_obs": "Tipo de embalagem recomendada",
+        }
+        for nome_campo, texto in placeholders.items():
+            if nome_campo in self.fields:
+                self.fields[nome_campo].widget.attrs['placeholder'] = texto
+
+        print("🧪 Itens disponíveis no select:", list(self.fields['item'].queryset))
+
+    def clean_item(self):
+        item_pk = self.cleaned_data.get('item')
+
+        # Caso "__novo__" venha do POST manualmente, trata aqui:
+        if item_pk == "__novo__":
+            raise forms.ValidationError("Salve o novo item antes de prosseguir.")
+
+        if isinstance(item_pk, Item):
+            return item_pk
+
+        try:
+            return Item.objects.get(pk=item_pk)
+        except (TypeError, ValueError, Item.DoesNotExist):
+            raise forms.ValidationError("Selecione um item válido.")
+
+
+
 
 
 

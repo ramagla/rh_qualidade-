@@ -76,5 +76,9 @@ urlpatterns = [
     path("cotacoes/precalculo/<int:pk>/visualizar/", precalc_views.visualizar_precalculo, name="visualizar_precalculo"),
     path("cotacoes/precalculo/<int:pk>/precificacao/", precalc_views.precificacao_produto, name="precificacao_produto"),
     path("cotacao/<int:cotacao_id>/gerar_proposta/", precalc_views.gerar_proposta_view, name="gerar_proposta"),
+    path("cotacoes/precalculo/<int:pk>/duplicar/", precalc_views.duplicar_precaculo, name="duplicar_precalculo"),
+
+    path("clientes/importar/", cliente_views.importar_clientes_excel, name="importar_clientes_excel"),
+    path("itens/importar/", item_views.importar_itens_excel, name="importar_itens_excel"),
 
 ]

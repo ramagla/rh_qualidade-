@@ -29,28 +29,64 @@
       <i class="bi bi-eyeglasses text-warning me-2"></i> Avaliação Técnica
     </h5>
 
-    {% with f=form_avali %}
-    {% for item in perguntas_avaliacao_tecnica %}
-      {% with field=f|dict_get:item.campo obs=f|dict_get:item.obs %}
-      {% with campo=item.campo %}
-        <div class="row align-items-center mb-3">
-          <label class="col-sm-5 col-form-label small">
-            <i class="bi bi-question-circle me-1 text-muted"></i> {{ item.label }}
-          </label>
+   {% with f=form_avali %}
+  {% regroup perguntas_avaliacao_tecnica by tipo as perguntas_agrupadas %}
 
-          <div class="col-sm-7 d-flex align-items-center gap-2 flex-wrap">
-            {{ field|add_class:"form-select form-select-sm" }}
+  {% for grupo in perguntas_agrupadas %}
+  
 
-            <div id="obs_{{ campo }}" class="flex-grow-1"
-                 style="display: {% if field.value == 'True' or field.value == True %}block{% else %}none{% endif %};">
-              {{ obs|add_class:"form-control form-control-sm w-100" }}
-            </div>
-          </div>
-        </div>
-      {% endwith %}
+    {% for item in grupo.list %}
+      {% with field=f|dict_get:item.campo obs=f|dict_get:item.obs campo=item.campo %}
+       <div class="row align-items-center mb-3">
+  <label class="col-sm-5 col-form-label small">
+    <i class="bi bi-question-circle me-1 text-muted"></i> {{ item.label }}
+  </label>
+
+  <div class="col-sm-7 d-flex align-items-center gap-2 flex-wrap">
+
+    <!-- Radio SIM -->
+    <div class="form-check form-check-inline mb-0">
+      <input type="radio" name="{{ campo }}" id="{{ campo }}_sim" value="True"
+             class="form-check-input"
+             {% if field.value == True %}checked{% endif %}
+             onchange="toggleObservacao('{{ campo }}')">
+      <label class="form-check-label" for="{{ campo }}_sim">Sim</label>
+    </div>
+
+    <!-- Radio NÃO -->
+    <div class="form-check form-check-inline mb-0">
+      <input type="radio" name="{{ campo }}" id="{{ campo }}_nao" value="False"
+             class="form-check-input"
+             {% if field.value == False %}checked{% endif %}
+             onchange="toggleObservacao('{{ campo }}')">
+      <label class="form-check-label" for="{{ campo }}_nao">Não</label>
+    </div>
+
+    <!-- Radio NÃO APLICÁVEL -->
+    <div class="form-check form-check-inline mb-0">
+      <input type="radio" name="{{ campo }}" id="{{ campo }}_na" value=""
+             class="form-check-input"
+             {% if field.value == None %}checked{% endif %}
+             onchange="toggleObservacao('{{ campo }}')">
+      <label class="form-check-label" for="{{ campo }}_na">Não aplicável</label>
+    </div>
+
+    <!-- Observação com placeholder -->
+    <div id="obs_{{ campo }}" style="display:{% if field.value == True %}block{% else %}none{% endif %}; flex: 1;">
+     {{ obs|add_class:"form-control w-100" }}
+
+    </div>
+
+  </div>
+</div>
+
+
+
       {% endwith %}
     {% endfor %}
-    {% endwith %}
+  {% endfor %}
+{% endwith %}
+
 
   </div>
 </div>
@@ -69,7 +105,7 @@
         <label class="form-label">
           <i class="bi bi-chat-left-text me-1 text-muted"></i> Considerações
         </label>
-        {{ form_avali.consideracoes_tec|add_class:"form-control" }}
+        {{ form_avali.consideracoes_tec }}
       </div>
     </div>
 
@@ -127,3 +163,14 @@
     .col-form-label { font-size: 0.9rem; }
   }
 </style>
+<script>
+function toggleObservacao(campo) {
+  const radios = document.getElementsByName(campo);
+  const obs = document.getElementById(`obs_${campo}`);
+  if (obs && radios) {
+    const simSelecionado = Array.from(radios).find(r => r.value === "True" && r.checked);
+    obs.style.display = simSelecionado ? 'block' : 'none';
+  }
+}
+
+</script>

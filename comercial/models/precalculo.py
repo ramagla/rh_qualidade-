@@ -264,7 +264,7 @@ class AnaliseComercial(models.Model):
     assinatura_cn = models.CharField("CN da assinatura (email)", max_length=150, null=True, blank=True)
     periodo = models.CharField("Periodicidade de Fornecimento", max_length=20, choices=PERIODICIDADE, blank=True, null=True)
     status = models.CharField("Status da Análise", max_length=20, choices=STATUS_CHOICES, default="andamento")
-    motivo_reprovacao = models.TextField("Motivo da Reprovação", blank=True, null=True)
+    motivo_reprovacao = CKEditor5Field("Motivo da Reprovação", config_name="default", blank=True, null=True)
     
     class Meta:
         verbose_name = "Análise Comercial"
@@ -477,7 +477,7 @@ class AvaliacaoTecnica(AuditModel):
     requisito_especifico_obs = models.CharField("Detalhes", max_length=300, blank=True)
 
     conclusao_tec = models.CharField("Conclusão da Análise Crítica", max_length=30, choices=RESULTADO)
-    consideracoes_tec = models.TextField("Considerações", blank=True, null=True)
+    consideracoes_tec = CKEditor5Field("Considerações Técnicas", config_name="default", blank=True, null=True)
 
     # 🔐 Metadados de Assinatura
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)

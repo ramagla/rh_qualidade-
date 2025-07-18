@@ -132,14 +132,12 @@ def disparar_email_cotacao_servico(request, servico):
 
 
 def responder_cotacao_servico_lote(request, pk):
-    """
-    View pública para que fornecedores preencham os dados de cotação de serviço externo.
-    """
     servico = get_object_or_404(PreCalculoServicoExterno, pk=pk)
     codigo = servico.insumo.materia_prima.codigo
+
     servicos = PreCalculoServicoExterno.objects.filter(
         insumo__materia_prima__codigo=codigo
-    ).order_by("pk")
+    ).select_related("insumo", "insumo__materia_prima").order_by("pk")
 
     fornecedores = FornecedorQualificado.objects.filter(
         produto_servico__icontains="Trat",
@@ -153,7 +151,7 @@ def responder_cotacao_servico_lote(request, pk):
 
     cotacao_numero = servico.precalculo.cotacao.numero if servico.precalculo else None
     precalculo_numero = servico.precalculo.numero if servico.precalculo else None
-    observacoes_gerais = servico.precalculo.observacoes_materiais if servico.precalculo else ""
+    observacoes_gerais = servico.precalculo.observacoes_servicos if servico.precalculo else ""
 
     if request.method == "POST":
         for i, sev in enumerate(servicos):

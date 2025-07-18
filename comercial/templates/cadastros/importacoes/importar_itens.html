@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Importar Itens via Excel{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+    <!-- Título -->
+    <div class="text-center border-bottom pb-3 mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-upload text-primary me-2"></i>
+            Importar Itens via Excel
+        </h2>
+        <p class="text-muted fs-6">Faça upload de uma planilha conforme o modelo para cadastrar itens em lote.</p>
+    </div>
+
+    <!-- Formulário -->
+    <form method="post" enctype="multipart/form-data" class="row g-3 mb-4">
+        {% csrf_token %}
+        
+        <!-- Campo de upload -->
+        <div class="col-md-6">
+            <label for="arquivo" class="form-label">
+                <i class="bi bi-file-earmark-excel me-1 text-success"></i>Selecione o arquivo Excel:
+            </label>
+            <input type="file" name="arquivo" id="arquivo" accept=".xls,.xlsx" required class="form-control">
+        </div>
+
+        <div class="col-md-6"></div>
+
+        <!-- Botão -->
+        <div class="col-12 text-start">
+            <button type="submit" class="btn btn-cadastrar-personalizado">
+                <i class="bi bi-upload me-2"></i> Importar Arquivo
+            </button>
+        </div>
+    </form>
+
+    <!-- Tabela de Exemplo -->
+    <div class="mt-5">
+        <h5 class="mb-2">
+            <i class="bi bi-table me-2 text-info"></i>
+            Exemplo de Estrutura do Excel
+        </h5>
+        <p class="text-muted">A planilha deve conter as colunas abaixo com os nomes exatamente iguais:</p>
+
+        <div class="table-responsive mt-3">
+            <table class="table table-bordered table-striped align-middle text-center table-sm">
+                <thead class="table-light text-primary align-middle">
+                    <tr>
+                        <th><i class="bi bi-upc-scan"></i><br>Código</th>
+                        <th><i class="bi bi-file-text"></i><br>Descrição</th>
+                        <th><i class="bi bi-upc"></i><br>NCM</th>
+                        <th><i class="bi bi-person"></i><br>Cliente</th>
+                        <th><i class="bi bi-tools"></i><br>Ferramenta</th>
+                        <th><i class="bi bi-stack"></i><br>Lote Mínimo</th>
+                        <th><i class="bi bi-hash"></i><br>Código no Cliente</th>
+                        <th><i class="bi bi-card-text"></i><br>Descrição no Cliente</th>
+                        <th><i class="bi bi-percent"></i><br>IPI (%)</th>
+                        <th><i class="bi bi-check2-square"></i><br>Automotivo OEM</th>
+                        <th><i class="bi bi-patch-question"></i><br>Requisito Específico Cliente?</th>
+                        <th><i class="bi bi-shield-lock"></i><br>É Item de Segurança?</th>
+                        <th><i class="bi bi-tags"></i><br>Tipo de Item</th>
+                        <th><i class="bi bi-check-circle"></i><br>Status</th>
+                        <th><i class="bi bi-code-slash"></i><br>Código do Desenho</th>
+                        <th><i class="bi bi-pen"></i><br>Revisão</th>
+                        <th><i class="bi bi-calendar"></i><br>Data da Revisão</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ITEM001</td>
+                        <td>Parafuso Sextavado</td>
+                        <td>73181500</td>
+                        <td>Cliente Exemplo Ltda</td>
+                        <td>FERR001</td>
+                        <td>1000</td>
+                        <td>12345</td>
+                        <td>Parafuso M8</td>
+                        <td>9.75</td>
+                        <td>True</td>
+                        <td>False</td>
+                        <td>True</td>
+                        <td>Cotacao</td>
+                        <td>Ativo</td>
+                        <td>DES001</td>
+                        <td>A1</td>
+                        <td>2025-07-15</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Botão de download do modelo -->
+        <div class="mt-4">
+            <a href="{% static 'arquivos/modelo_importacao_itens.xlsx' %}" 
+               class="btn btn-importar-personalizado" 
+               download>
+                <i class="bi bi-download me-2"></i> Baixar Modelo de Importação (.xlsx)
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

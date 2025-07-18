@@ -1,4 +1,5 @@
 from django.db import models
+from django_ckeditor_5.fields import CKEditor5Field
 
 class Cliente(models.Model):
     STATUS_CHOICES = [
@@ -61,7 +62,8 @@ class Cliente(models.Model):
     cfop = models.CharField(max_length=10, blank=True, null=True)
     cond_pagamento = models.CharField(max_length=100, blank=True, null=True)
     cod_bm = models.CharField(max_length=50, blank=True, null=True)
-    observacao = models.TextField(blank=True, null=True)
+    observacao = CKEditor5Field("Particularidades do cliente", config_name="default", blank=True, null=True)
+
     atualizado_em = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
 
     def __str__(self):

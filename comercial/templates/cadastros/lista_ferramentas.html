@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Ferramentas Cadastradas{% endblock %}
+{% load humanize %}
 
 {% block content %}
 {% load custom_filters %}
@@ -88,23 +89,84 @@
       <caption class="visually-hidden">Tabela de ferramentas</caption>
       <thead class="table-light">
         <tr>
-          <th><i class="bi bi-upc me-1"></i> Código</th>
-          <th><i class="bi bi-card-text me-1"></i> Descrição</th>
-          <th><i class="bi bi-tools me-1"></i> Tipo</th>
-          <th><i class="bi bi-123 me-1"></i> Vida Útil (Pç)</th>
-          <th><i class="bi bi-file-earmark-pdf me-1"></i> Desenho</th>
-          <th><i class="bi bi-cash-coin me-1"></i> Valor Total</th>
-          <th><i class="bi bi-hourglass-split me-1"></i> Status</th>
-          <th><i class="bi bi-gear me-1"></i> Ações</th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-upc mb-1"></i>
+              <small>Código</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-card-text mb-1"></i>
+              <small>Descrição</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-tools mb-1"></i>
+              <small>Tipo</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-123 mb-1"></i>
+              <small>Vida Útil (Pç)</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-file-earmark-pdf mb-1"></i>
+              <small>Desenho</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-cash-coin mb-1"></i>
+              <small>Valor Total</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-hourglass-split mb-1"></i>
+              <small>Status</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-gear mb-1"></i>
+              <small>Ações</small>
+            </div>
+          </th>
         </tr>
       </thead>
+      
       <tbody>
         {% for ferramenta in page_obj %}
         <tr>
           <td>{{ ferramenta.codigo }}</td>
           <td class="text-start">{{ ferramenta.descricao }}</td>
-          <td>{{ ferramenta.get_tipo_display }}</td>
-          <td>{{ ferramenta.vida_util_em_pecas }}</td>
+          <td>
+            {% if ferramenta.tipo == "Nova" %}
+              <span class="badge bg-primary d-inline-flex align-items-center gap-1">
+                <i class="bi bi-plus-circle"></i> Ferramenta Nova
+              </span>
+            {% elif ferramenta.tipo == "Adpt" %}
+              <span class="badge bg-warning text-dark d-inline-flex align-items-center gap-1">
+                <i class="bi bi-wrench-adjustable-circle"></i> Adaptação
+              </span>
+            {% elif ferramenta.tipo == "Disp" %}
+              <span class="badge bg-info text-dark d-inline-flex align-items-center gap-1">
+                <i class="bi bi-pc-display"></i> Dispositivo
+              </span>
+            {% elif ferramenta.tipo == "Outro" %}
+              <span class="badge bg-secondary d-inline-flex align-items-center gap-1">
+                <i class="bi bi-three-dots"></i> Outros
+              </span>
+            {% else %}
+              <span class="text-muted">–</span>
+            {% endif %}
+          </td>
+                    <td>{{ ferramenta.vida_util_em_pecas|intcomma }}</td>
           <td>
             {% if ferramenta.desenho_pdf %}
               <a href="{{ ferramenta.desenho_pdf.url }}" target="_blank" class="btn btn-outline-primary btn-sm">

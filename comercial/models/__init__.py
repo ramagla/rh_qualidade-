@@ -4,4 +4,3 @@ from .ferramenta import Ferramenta, MaoDeObraFerramenta, ServicoFerramenta
 from .centro_custo import CentroDeCusto,HistoricoCustoCentroDeCusto
 from .cotacao import Cotacao
 from .precalculo import PreCalculo
-1

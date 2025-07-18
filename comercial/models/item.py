@@ -42,4 +42,4 @@ class Item(models.Model):
 
 
     def __str__(self):
-        return f"{self.codigo} – {self.descricao}"
+        return f"{self.codigo}"

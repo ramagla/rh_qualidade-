@@ -69,23 +69,56 @@
   <h5 class="mb-3">
     <i class="bi bi-table me-2 text-muted"></i> 📄 Lista de Centros de Custo
   </h5>
+<!-- Aviso importante -->
+<div class="alert alert-info d-flex align-items-start gap-2 small" role="alert">
+  <i class="bi bi-info-circle-fill fs-5 mt-1 text-primary"></i>
+  <div>
+    <strong>Aviso:</strong> os centros de custo <strong>"Tratamento Externo"</strong> e <strong>"Oleamento"</strong> são utilizados automaticamente nos cálculos de insumos das cotações.
+    <br>Por isso, <span class="text-danger fw-semibold">não altere a nomenclatura</span> desses centros para evitar erros no sistema.
+  </div>
+</div>
 
   <div class="table-responsive zebra-tabela mt-4">
     <table class="table table-bordered table-striped align-middle text-center">
       <thead class="table-light">
         <tr>
-          <th><i class="bi bi-diagram-3"></i> Centro de Custo</th>
-          <th><i class="bi bi-currency-dollar"></i> Custo Atual (R$)</th>
-          <th><i class="bi bi-calendar-check"></i> Valido Até</th>
-          <th><i class="bi bi-clock-history"></i> Histórico de Custos</th>
-
-          <th><i class="bi bi-gear"></i> Ações</th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-diagram-3 mb-1"></i>
+              <small>Centro de Custo</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-currency-dollar mb-1"></i>
+              <small>Custo Atual (R$)</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-calendar-check mb-1"></i>
+              <small>Válido Até</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-clock-history mb-1"></i>
+              <small>Histórico de Custos</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-gear mb-1"></i>
+              <small>Ações</small>
+            </div>
+          </th>
         </tr>
       </thead>
+      
       <tbody>
         {% for centro in page_obj %}
           <tr>
-            <td class="text-start">{{ centro.nome }}</td>
+            <td >{{ centro.nome }}</td>
             <td>
               {% if centro.custo_vigente %}
                 R$ {{ centro.custo_vigente|floatformat:2 }}
@@ -94,11 +127,15 @@
               {% endif %}
             </td>
                         <td>{{ centro.vigencia|date:"d/m/Y" }}</td>
-            <td>
-              <!-- Botão de modal -->
-              <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHistorico{{ centro.id }}">
-                <i class="bi bi-eye"></i>
-              </button>
+                        <td>
+                          {% if centro.historico_custos.exists %}
+                            <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHistorico{{ centro.id }}">
+                              <i class="bi bi-eye"></i>
+                            </button>
+                          {% else %}
+                            <span class="text-muted">Sem histórico</span>
+                          {% endif %}
+                        
       
            <!-- Modal -->
 <div class="modal fade" id="modalHistorico{{ centro.id }}" tabindex="-1" aria-labelledby="modalLabel{{ centro.id }}" aria-hidden="true">
@@ -119,7 +156,7 @@
         </div>
 
         {% if centro.historico_custos.exists %}
-          <table class="table table-sm table-bordered align-middle text-center">
+        <table class="table table-sm table-bordered align-middle text-center">
             <thead class="table-light">
               <tr>
                 <th><i class="bi bi-cash-stack me-1"></i> Custo Anterior</th>
@@ -134,8 +171,14 @@
                   <td>R$ {{ h.custo_anterior|floatformat:2 }}</td>
                   <td>{{ h.centro.vigencia|date:"d/m/Y" }}</td>
                   <td>{{ h.alterado_em|date:"d/m/Y H:i" }}</td>
-                  <td>R$ {{ h.novo_custo|floatformat:2 }}</td>
-                </tr>
+                  <td>
+                    {% if h.novo_custo %}
+                      R$ {{ h.novo_custo|floatformat:2 }}
+                    {% else %}
+                      <span class="text-muted">Sem histórico</span>
+                    {% endif %}
+                  </td>
+                                  </tr>
               {% empty %}
                 <tr>
                   <td colspan="4" class="text-muted text-center">Nenhum histórico registrado.</td>

@@ -1,10 +1,9 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Clientes Cadastrados{% endblock %}
 
 {% block content %}
-{% load custom_filters %}
-
 {% include "partials/global/_styles_componentes.html" %}
 
 <div class="container-fluid mt-5">
@@ -14,83 +13,88 @@
   {% include "partials/global/_estilos_botoes_acoes.html" %}
 
   <!-- Botões -->
-<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
-  {% include "partials/global/_botao_filtros_offcanvas.html" %}
-  {% if request.user|has_permission:"comercial.add_cliente" %}
-  <a href="{% url 'cadastrar_cliente' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
-    <i class="bi bi-person-plus-fill me-2" aria-hidden="true"></i> Cadastrar
-  </a>
-  
-  {% endif %}
-</div>
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"comercial.add_cliente" %}
+    <a href="{% url 'cadastrar_cliente' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-person-plus-fill me-2"></i> Cadastrar
+    </a>
+    {% endif %}
+    {% if request.user|has_permission:"comercial.importar_excel_clientes" %}
+    <a href="{% url 'importar_clientes_excel' %}"
+    class="btn btn-importar-personalizado d-inline-flex align-items-center">
+   <i class="bi bi-upload me-2"></i> Importar Excel
+ </a>
+ 
+{% endif %}
 
+  </div>
 
-  <!-- Offcanvas Filtros Clientes -->
+  <!-- Offcanvas de Filtros -->
   <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
     <div class="offcanvas-header">
       <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
         <i class="bi bi-funnel-fill me-2"></i>Filtros de Clientes
       </h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
     </div>
-  
+
     <div class="offcanvas-body">
       <form method="get" class="row g-3">
-  
-         <!-- Razão Social com select2 -->
-    <div class="mb-3">
-      <label for="id_razao_social" class="form-label"><i class="bi bi-building"></i> Razão Social</label>
-      <select name="razao_social" id="id_razao_social" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
-        <option value="">---</option>
-        {% for cliente in clientes_all %}
-          <option value="{{ cliente.id }}" {% if request.GET.razao_social == cliente.id|stringformat:"s" %}selected{% endif %}>
-            {{ cliente.razao_social }}
-          </option>
-        {% endfor %}
-      </select>
-      
-    </div>
-  
-        <!-- CNPJ -->
-        <div class="col-12 filtro-wrapper">
-          <label for="cnpj" class="form-label">
-            <i class="bi bi-123 me-1" aria-hidden="true"></i> CNPJ
+
+        <!-- Razão Social -->
+        <div class="col-12">
+          <label for="id_razao_social" class="form-label">
+            <i class="bi bi-building me-1"></i> Razão Social
           </label>
-          <input type="text" name="cnpj" id="cnpj" class="form-control" placeholder="CNPJ" value="{{ request.GET.cnpj }}">
+          <select name="razao_social" id="id_razao_social" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">---</option>
+            {% for cliente in clientes_all %}
+              <option value="{{ cliente.id }}" {% if request.GET.razao_social == cliente.id|stringformat:"s" %}selected{% endif %}>
+                {{ cliente.razao_social }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
 
-      <!-- Cidade -->
-<div class="col-12 filtro-wrapper">
-  <label for="cidade" class="form-label">
-    <i class="bi bi-geo-alt-fill me-1"></i> Cidade
-  </label>
-  <select name="cidade" id="cidade" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
-    <option value="">Todas</option>
-    {% for cidade in cidades_distintas %}
-  {% if cidade %}
-    <option value="{{ cidade }}" {% if request.GET.cidade == cidade %}selected{% endif %}>{{ cidade }}</option>
-  {% endif %}
-{% endfor %}
+        <!-- CNPJ -->
+        <div class="col-12">
+          <label for="cnpj" class="form-label">
+            <i class="bi bi-123 me-1"></i> CNPJ
+          </label>
+          <input type="text" name="cnpj" id="cnpj" class="form-control" value="{{ request.GET.cnpj }}">
+        </div>
 
-  </select>
-</div>
-<!-- Tipo de Cliente -->
-<div class="col-12 filtro-wrapper">
-  <label for="tipo_cliente" class="form-label">
-    <i class="bi bi-tags me-1"></i> Tipo
-  </label>
-  <select name="tipo_cliente" id="tipo_cliente" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
-    <option value="">Todos</option>
-    <option value="Automotivo" {% if request.GET.tipo_cliente == "Automotivo" %}selected{% endif %}>Automotivo</option>
-    <option value="Não Automotivo" {% if request.GET.tipo_cliente == "Não Automotivo" %}selected{% endif %}>Não Automotivo</option>
-    <option value="Reposição" {% if request.GET.tipo_cliente == "Reposição" %}selected{% endif %}>Reposição</option>
-  </select>
-</div>
+        <!-- Cidade -->
+        <div class="col-12">
+          <label for="cidade" class="form-label">
+            <i class="bi bi-geo-alt-fill me-1"></i> Cidade
+          </label>
+          <select name="cidade" id="cidade" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todas</option>
+            {% for cidade in cidades_distintas %}
+              {% if cidade %}
+              <option value="{{ cidade }}" {% if request.GET.cidade == cidade %}selected{% endif %}>{{ cidade }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
 
+        <!-- Tipo de Cliente -->
+        <div class="col-12">
+          <label for="tipo_cliente" class="form-label">
+            <i class="bi bi-tags me-1"></i> Tipo de Cliente
+          </label>
+          <select name="tipo_cliente" id="tipo_cliente" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            <option value="Automotivo" {% if request.GET.tipo_cliente == "Automotivo" %}selected{% endif %}>Automotivo</option>
+            <option value="Não Automotivo" {% if request.GET.tipo_cliente == "Não Automotivo" %}selected{% endif %}>Não Automotivo</option>
+            <option value="Reposição" {% if request.GET.tipo_cliente == "Reposição" %}selected{% endif %}>Reposição</option>
+          </select>
+        </div>
 
-  
         <!-- Tipo de Cadastro -->
-        <div class="col-12 filtro-wrapper">
+        <div class="col-12">
           <label for="tipo_cadastro" class="form-label">
             <i class="bi bi-truck-front me-1"></i> Tipo de Cadastro
           </label>
@@ -100,11 +104,11 @@
             <option value="Transportadora" {% if request.GET.tipo_cadastro == "Transportadora" %}selected{% endif %}>Transportadora</option>
           </select>
         </div>
-  
+
         <!-- Status -->
-        <div class="col-12 filtro-wrapper">
+        <div class="col-12">
           <label for="status" class="form-label">
-            <i class="bi bi-toggle-on me-1" aria-hidden="true"></i> Status
+            <i class="bi bi-toggle-on me-1"></i> Status
           </label>
           <select name="status" id="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todos</option>
@@ -112,127 +116,134 @@
             <option value="Inativo" {% if request.GET.status == "Inativo" %}selected{% endif %}>Inativo</option>
           </select>
         </div>
-  
-        <!-- Botão Filtrar -->
+
+        <!-- Botão -->
         <div class="col-12 mt-3">
           {% include "partials/global/_botao_filtrar.html" %}
         </div>
       </form>
     </div>
   </div>
-  
 
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-5 g-3 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Clientes" valor=total_clientes subtitulo="Apenas ativos" icone="bi-people-fill" %}
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Automotivo" valor=total_automotivo subtitulo="Tipo Automotivo" icone="bi-truck" %}
+    {% include "partials/global/_card_indicador.html" with cor="secondary" titulo="Não Automotivo" valor=total_nao_automotivo subtitulo="Tipo Não Automotivo" icone="bi-tools" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Reposição" valor=total_reposicao subtitulo="Tipo Reposição" icone="bi-arrow-repeat" %}
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Atualizadas este Mês" valor=atualizadas_mes subtitulo=subtitle_atualizadas icone="bi-calendar-event" %}
+  </div>
 
-<!-- Indicadores -->
-<div class="row row-cols-1 row-cols-md-5 g-3 mb-4">
-  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Clientes" valor=total_clientes subtitulo="Apenas ativos" icone="bi-people-fill" %}
-  {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Automotivo" valor=total_automotivo subtitulo="Clientes do tipo Automotivo" icone="bi-truck" %}
-  {% include "partials/global/_card_indicador.html" with cor="secondary" titulo="Não Automotivo" valor=total_nao_automotivo subtitulo="Clientes do tipo Não Automotivo" icone="bi-tools" %}
-  {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Reposição" valor=total_reposicao subtitulo="Clientes do tipo Reposição" icone="bi-arrow-repeat" %}
-  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Atualizadas este Mês" valor=atualizadas_mes subtitulo=subtitle_atualizadas icone="bi-calendar-event" %}
-
-</div>
-  
- 
-
-
-
-  <!-- Lista de Clientes -->
+  <!-- Tabela de Clientes -->
   <h5 class="mb-3">
-    <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
-    📄 Lista de Clientes
+    <i class="bi bi-table me-2 text-muted"></i> 📄 Lista de Clientes
   </h5>
 
   <div class="table-responsive zebra-tabela mt-4">
     <table class="table table-bordered table-striped align-middle text-center">
       <caption class="visually-hidden">Tabela de clientes</caption>
-      <thead class="table-light">
+      <thead class="table-light text-center align-middle">
         <tr>
-          <th class="align-middle"><i class="bi bi-image me-1" aria-hidden="true"></i> Logotipo</th>
-          <th class="align-middle"><i class="bi bi-building me-1" aria-hidden="true"></i> Razão Social</th>
-          <th class="align-middle"><i class="bi bi-123 me-1" aria-hidden="true"></i> CNPJ</th>
-          <th class="align-middle"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Cidade</th>
-          <th class="align-middle"><i class="bi bi-telephone me-1" aria-hidden="true"></i> Telefone</th>
-          <th class="align-middle"><i class="bi bi-envelope me-1" aria-hidden="true"></i> E-mail</th>
-          <th class="align-middle"><i class="bi bi-person-lines-fill me-1"></i> Contato</th>
-
-          <th class="align-middle"><i class="bi bi-folder2-open me-1" aria-hidden="true"></i> Anexos</th>
-
-          <th class="align-middle"><i class="bi bi-gear me-1" aria-hidden="true"></i> Ações</th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-image"></i>
+              <span>Logotipo</span>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-building"></i>
+              <span>Razão Social</span>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-geo-alt"></i>
+              <span>Cidade</span>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-telephone"></i>
+              <span>Telefone</span>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-tags"></i>
+              <span>Tipo</span>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-person-lines-fill"></i>
+              <span>Contato</span>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-folder2-open"></i>
+              <span>Anexos</span>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-gear"></i>
+              <span>Ações</span>
+            </div>
+          </th>
         </tr>
       </thead>
+      
 
       <tbody>
         {% for cliente in page_obj %}
         <tr>
           <td>
             {% if cliente.logotipo %}
-            <img src="{{ cliente.logotipo.url }}" alt="Logotipo de {{ cliente.razao_social }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid black;">
+              <img src="{{ cliente.logotipo.url }}" alt="Logotipo" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
             {% else %}
-            <span>Sem Logotipo</span>
+              <span class="text-muted">Sem Logotipo</span>
             {% endif %}
           </td>
           <td class="text-start">{{ cliente.razao_social }}</td>
-          <td>{{ cliente.cnpj }}</td>
           <td>{{ cliente.cidade }} - {{ cliente.uf }}</td>
           <td>{{ cliente.telefone_contato|default:"-" }}</td>
-          <td>{{ cliente.email_contato|default:"-" }}</td>
-          <td>{{ cliente.nome_contato|default:"-" }}</td>
-          
+          <td>
+            {% if cliente.tipo_cliente == "Automotivo" %}
+              <span class="badge bg-primary">Automotivo</span>
+            {% elif cliente.tipo_cliente == "Não Automotivo" %}
+              <span class="badge bg-secondary">Não Automotivo</span>
+            {% elif cliente.tipo_cliente == "Reposição" %}
+              <span class="badge bg-warning text-dark">Reposição</span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+                    <td>{{ cliente.nome_contato|default:"-" }}</td>
+
           <td>
             {% if cliente.documentos.exists %}
               <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAnexos{{ cliente.id }}">
                 <i class="bi bi-eye"></i>
               </button>
-          
-              <!-- Modal de Anexos -->
-              <div class="modal fade" id="modalAnexos{{ cliente.id }}" tabindex="-1" aria-labelledby="modalAnexosLabel{{ cliente.id }}" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-scrollable modal-lg">
-                  <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                      <h5 class="modal-title" id="modalAnexosLabel{{ cliente.id }}">
-                        <i class="bi bi-folder2-open me-2"></i> Documentos de {{ cliente.razao_social }}
-                      </h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body">
-                      {% if cliente.documentos.all %}
-                        <ul class="list-group list-group-flush">
-                          {% for doc in cliente.documentos.all %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                              <span><i class="bi bi-file-earmark-text me-2"></i>{{ doc.tipo|default:"Sem tipo" }}</span>
-                              <a href="{{ doc.arquivo.url }}" class="btn btn-sm btn-outline-success" target="_blank">
-                                <i class="bi bi-download me-1"></i> Baixar
-                              </a>
-                            </li>
-                          {% endfor %}
-                        </ul>
-                      {% else %}
-                        <p class="text-muted">Nenhum documento anexado.</p>
-                      {% endif %}
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {% comment %} {% include "partials/global/_modal_anexos_cliente.html" with cliente=cliente %} {% endcomment %}
             {% else %}
               <span class="text-muted">-</span>
             {% endif %}
           </td>
-          
+
           <td>
-            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+            <div class="d-flex flex-wrap gap-1 justify-content-center">
               {% if request.user|has_permission:"comercial.view_cliente" %}
-              {% include "partials/global/_botao_visualizar.html" with objeto=cliente url_visualizar="visualizar_cliente" label="cliente" %}
+                {% include "partials/global/_botao_visualizar.html" with objeto=cliente url_visualizar="visualizar_cliente" label="cliente" %}
               {% endif %}
               {% if request.user|has_permission:"comercial.change_cliente" %}
-              {% include "partials/global/_botao_editar.html" with objeto=cliente url_editar="editar_cliente" label="cliente" %}
+                {% include "partials/global/_botao_editar.html" with objeto=cliente url_editar="editar_cliente" label="cliente" %}
               {% endif %}
               {% if request.user|has_permission:"comercial.delete_cliente" %}
-              {% include "partials/global/_botao_excluir.html" with objeto=cliente url_excluir="excluir_cliente" label="cliente" %}
-              {% include "partials/global/_modal_exclusao.html" with objeto=cliente url_excluir="excluir_cliente" %}
+                {% include "partials/global/_botao_excluir.html" with objeto=cliente url_excluir="excluir_cliente" label="cliente" %}
+                {% include "partials/global/_modal_exclusao.html" with objeto=cliente url_excluir="excluir_cliente" %}
               {% endif %}
             </div>
           </td>
@@ -243,10 +254,8 @@
       </tbody>
     </table>
 
-    <!-- Paginação -->
     {% include 'partials/global/_paginacao.html' %}
   </div>
 
 </div>
-
 {% endblock %}

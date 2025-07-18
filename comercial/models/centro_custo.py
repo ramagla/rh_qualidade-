@@ -1,12 +1,13 @@
 from django.db import models
-from Funcionario.models.departamentos import Departamentos
 from django.utils import timezone
+from django_ckeditor_5.fields import CKEditor5Field
+from datetime import datetime
 
 class CentroDeCusto(models.Model):
     nome = models.CharField("Centro de Custo", max_length=100)
     custo_atual = models.DecimalField("Custo do Setor", max_digits=12, decimal_places=2)
     vigencia = models.DateField("Início da Vigência")
-    observacao = models.TextField("Observação", blank=True, null=True)  # ← CAMPO ADICIONADO
+    observacao = CKEditor5Field("Particularidades do cliente", config_name="default", blank=True, null=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -52,5 +53,9 @@ class HistoricoCustoCentroDeCusto(models.Model):
         verbose_name_plural = "Históricos de Custo"
         ordering = ["-alterado_em"]
 
+    
+
     def __str__(self):
         return f"{self.centro.departamento.sigla} | R$ {self.custo_anterior} → R$ {self.novo_custo} em {self.alterado_em.strftime('%d/%m/%Y')}"
+    
+   

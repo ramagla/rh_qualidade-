@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from comercial.models import Cotacao
 from comercial.models.precalculo import (
+    AnaliseComercial,
     PreCalculo,
     PreCalculoMaterial,
     PreCalculoServicoExterno,
@@ -139,6 +140,11 @@ def editar_precaculo(request, pk):
     # POST: processa a aba correta via handler
     if request.method == "POST":
         if aba == "analise" and "form_analise_submitted" in request.POST:
+            form_analise = AnaliseComercialForm(
+                request.POST,
+                instance=getattr(precalc, "analise_comercial_item", None),
+                cotacao=precalc.cotacao
+            )
             salvo, form_analise = processar_aba_analise(request, precalc)
 
         elif aba == "regras" and "form_regras_submitted" in request.POST:
@@ -155,10 +161,16 @@ def editar_precaculo(request, pk):
 
         elif aba == "materiais" and (
             "form_materiais_submitted" in request.POST or
-            any(k.startswith("mat-") for k in request.POST)
+            any(k.startswith("mat-") for k in request.POST) or
+            request.POST.get("atualizar_materiais") == "1"
         ):
             materiais_respondidos = precalc.materiais.filter(preco_kg__isnull=False).exists()
             salvo, _, fs_mat = processar_aba_materiais(request, precalc, materiais_respondidos, form_precalculo)
+
+            # Redireciona apenas se não for atualização do roteiro
+            if salvo and not request.POST.get("atualizar_materiais") == "1":
+                return redirect(reverse("editar_precaculo", args=[precalc.pk]) + "?aba=materiais")
+
 
 
 
@@ -208,10 +220,11 @@ def editar_precaculo(request, pk):
         print("aba:", aba)
         print("mensagem_precofinal:", mensagem_precofinal)
 
-        if salvo:
+        if salvo and aba != "atualizar_materiais":
             print("✅ ENVIANDO MENSAGEM DE SUCESSO")
             messages.success(request, "Pré-cálculo atualizado com sucesso.")
             return redirect("itens_precaculo", pk=precalc.cotacao.pk)
+
 
         elif aba == "precofinal":
             print("⚠️ ENVIANDO MENSAGEM DE AVISO")
@@ -226,7 +239,12 @@ def editar_precaculo(request, pk):
 
     # GET ou fallback: carrega todas as abas para navegação
     if not form_analise:
-        _, form_analise = processar_aba_analise(request, precalc)
+        form_analise = AnaliseComercialForm(
+            instance=getattr(precalc, "analise_comercial_item", None),
+            cotacao=precalc.cotacao
+        )
+
+
     if not form_regras:
         _, form_regras = processar_aba_regras(request, precalc)
     if not form_avali:
@@ -288,7 +306,6 @@ def editar_precaculo(request, pk):
 
     # campos de observações para o template
         campos_obs = [
-        ("metodologia_aprovacao", ""),  # <-- Adicionado corretamente
         ("material_fornecido", "material_fornecido_obs"),
         ("requisitos_entrega", "requisitos_entrega_obs"),
         ("requisitos_pos_entrega", "requisitos_pos_entrega_obs"),
@@ -365,15 +382,62 @@ def editar_precaculo(request, pk):
 })
 
 
+from comercial.models.item import Item  # certifique-se de importar
+# ...
+
+
+
 @login_required
 @permission_required('comercial.add_precalculomaterial', raise_exception=True)
 def criar_precaculo(request, pk):
     cot = get_object_or_404(Cotacao, pk=pk)
 
     aba = next((k.replace("form_", "").replace("_submitted", "") for k in request.POST if k.startswith("form_")), None)
+    novo_item_instancia = None
 
-    # Define formulários com POST apenas na aba ativa
-    form_analise = AnaliseComercialForm(request.POST if aba == "analise" else None)
+    # Intercepta criação de novo item antes de instanciar o formulário
+    if request.method == "POST" and aba == "analise" and request.POST.get("item") == "__novo__":
+        novo_item_instancia = Item.objects.create(
+            cliente=cot.cliente,
+            tipo_item="Cotacao",
+            codigo=request.POST.get("novo_codigo"),
+            descricao=request.POST.get("novo_descricao") or "",
+            ncm=request.POST.get("novo_ncm") or "",
+            lote_minimo=request.POST.get("novo_lote_minimo") or 1,
+            revisao=request.POST.get("novo_revisao") or "",
+            data_revisao=request.POST.get("novo_data_revisao") or None,
+            ipi=request.POST.get("novo_ipi") or None,
+            automotivo_oem=bool(request.POST.get("novo_automotivo_oem")),
+            requisito_especifico=bool(request.POST.get("novo_requisito_especifico")),
+            item_seguranca=bool(request.POST.get("novo_item_seguranca")),
+            status="Ativo",
+        )
+        mutable = request.POST._mutable
+        request.POST._mutable = True
+        request.POST["item"] = str(novo_item_instancia.pk)
+        request.POST._mutable = mutable
+
+    item_id = request.POST.get("item")
+    item_instancia = None
+    if aba == "analise":
+        if item_id == "__novo__" and novo_item_instancia:
+            item_instancia = novo_item_instancia
+        elif item_id and item_id != "__novo__":
+            try:
+                item_instancia = Item.objects.get(pk=item_id)
+            except Item.DoesNotExist:
+                messages.error(request, "O item selecionado não foi encontrado.")
+                return redirect(request.path)
+
+        form_analise = AnaliseComercialForm(
+            request.POST,
+            cotacao=cot,
+            edicao=False,
+            instance=AnaliseComercial(item=item_instancia) if item_instancia else None
+        )
+    else:
+        form_analise = AnaliseComercialForm(None, cotacao=cot, edicao=False)
+    form_analise.data = form_analise.data.copy()
     if aba == "regras":
         form_regras = RegrasCalculoForm(
             request.POST or None,
@@ -390,13 +454,15 @@ def criar_precaculo(request, pk):
     else:
         form_regras = RegrasCalculoForm()
 
-    form_avali = AvaliacaoTecnicaForm(request.POST if aba == "avali" else None)
-    form_desenv = DesenvolvimentoForm(request.POST if aba == "desenv" else None)
-
     if request.method == "POST":
         if not aba:
             messages.error(request, "Nenhuma aba foi enviada.")
-        else:
+            return redirect(request.path)
+
+        print("🛠 Erros do form_analise:", form_analise.errors)
+
+        if aba == "analise" and form_analise.is_valid():
+            # Só aqui criamos o pré-cálculo
             ultimo = PreCalculo.objects.filter(cotacao=cot).order_by("-numero").first()
             proximo_numero = (ultimo.numero + 1) if ultimo else 1
             novo = PreCalculo.objects.create(cotacao=cot, numero=proximo_numero, criado_por=request.user)
@@ -409,20 +475,34 @@ def criar_precaculo(request, pk):
                 obj.data_assinatura = timezone.now()
                 obj.save()
 
-            if aba == "analise" and form_analise.is_valid():
-                preencher_assinatura(form_analise.save(commit=False))
-            elif aba == "regras" and form_regras.is_valid():
-                preencher_assinatura(form_regras.save(commit=False))
-            elif aba == "avali" and form_avali.is_valid():
-                preencher_assinatura(form_avali.save(commit=False))
-            elif aba == "desenv" and form_desenv.is_valid():
-                preencher_assinatura(form_desenv.save(commit=False))
-            else:
-                messages.error(request, "Erro ao validar o formulário da aba.")
-                return redirect(request.path)
+            analise = form_analise.save(commit=False)
+            analise.item = item_instancia
+            preencher_assinatura(analise)
 
-            messages.success(request, "Pré-cálculo salvo com sucesso.")
-            return redirect("itens_precaculo", pk=cot.pk)
+        elif aba == "regras" and form_regras.is_valid():
+            # Também só criamos o pré-cálculo aqui
+            ultimo = PreCalculo.objects.filter(cotacao=cot).order_by("-numero").first()
+            proximo_numero = (ultimo.numero + 1) if ultimo else 1
+            novo = PreCalculo.objects.create(cotacao=cot, numero=proximo_numero, criado_por=request.user)
+
+            def preencher_assinatura(obj):
+                obj.precalculo = novo
+                obj.usuario = request.user
+                obj.assinatura_nome = request.user.get_full_name() or request.user.username
+                obj.assinatura_cn = request.user.email
+                obj.data_assinatura = timezone.now()
+                obj.save()
+
+            preencher_assinatura(form_regras.save(commit=False))
+
+        else:
+            messages.error(request, "Erro ao validar o formulário da aba.")
+            return redirect(request.path)
+
+        messages.success(request, "Pré-cálculo salvo com sucesso.")
+        return redirect("itens_precaculo", pk=cot.pk)
+
+
 
     campos_obs = [
         ("material_fornecido", "material_fornecido_obs"),
@@ -456,12 +536,13 @@ def criar_precaculo(request, pk):
         "cotacao": cot,
         "form_analise": form_analise,
         "form_regras": form_regras,
-        "form_avali": form_avali,
-        "form_desenv": form_desenv,
         "campos_obs": campos_obs,
         "edicao": False,
         "campos_obs_tecnica": campos_obs_tecnica,
     })
+
+
+
 
 
 
@@ -912,3 +993,62 @@ def gerar_proposta_view(request, cotacao_id):
             "cotacao": cotacao,
             "precalculos": precalculos
         })
+
+
+@login_required
+@permission_required("comercial.add_precalculo", raise_exception=True)
+def duplicar_precaculo(request, pk):
+    original = get_object_or_404(PreCalculo, pk=pk)
+    cotacao = original.cotacao
+
+    # Novo número sequencial
+    ultimo = PreCalculo.objects.filter(cotacao=cotacao).order_by("-numero").first()
+    proximo_numero = (ultimo.numero + 1) if ultimo else 1
+
+    clone = PreCalculo.objects.create(
+        cotacao=cotacao,
+        numero=proximo_numero,
+        criado_por=request.user,
+        observacoes_materiais=original.observacoes_materiais,
+        observacoes_servicos=original.observacoes_servicos,
+        observacoes_roteiro=original.observacoes_roteiro,
+    )
+
+    # Clona os relacionamentos (analise, regras, etc.)
+    for relacao in ['analise_comercial_item', 'avaliacao_tecnica_item', 'regras_calculo_item', 'desenvolvimento_item']:
+        item = getattr(original, relacao, None)
+        if item:
+            item.pk = None  # força cópia
+            item.precalculo = clone
+            item.usuario = request.user
+            item.assinatura_nome = request.user.get_full_name() or request.user.username
+            item.assinatura_cn = request.user.email
+            item.data_assinatura = timezone.now()
+            item.save()
+
+    # Clonar materiais
+    for mat in original.materiais.all():
+        mat.pk = None
+        mat.precalculo = clone
+        mat.save()
+
+    # Clonar serviços
+    for sev in original.servicos.all():
+        sev.pk = None
+        sev.precalculo = clone
+        sev.save()
+
+    # Clonar etapas do roteiro
+    for rot in original.roteiro_item.all():
+        rot.pk = None
+        rot.precalculo = clone
+        rot.save()
+
+    # Clonar ferramentas
+    for ferr in original.ferramentas_item.all():
+        ferr.pk = None
+        ferr.precalculo = clone
+        ferr.save()
+
+    messages.success(request, "Pré-cálculo duplicado com sucesso.")
+    return redirect("itens_precaculo", pk=cotacao.pk)

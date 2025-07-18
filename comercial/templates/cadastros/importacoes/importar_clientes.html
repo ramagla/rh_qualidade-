@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Importar Clientes via Excel{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Título -->
+  <div class="text-center border-bottom pb-3 mb-4">
+    <h2 class="fw-bold">
+      <i class="bi bi-upload text-primary me-2"></i>
+      Importar Clientes via Excel
+    </h2>
+    <p class="text-muted fs-6">Faça upload de uma planilha conforme o modelo para cadastrar clientes em lote.</p>
+  </div>
+
+ <!-- Formulário -->
+<form method="post" enctype="multipart/form-data" class="row g-3 mb-4">
+    {% csrf_token %}
+    
+    <!-- Campo de upload -->
+    <div class="col-md-6">
+      <label for="arquivo" class="form-label">
+        <i class="bi bi-file-earmark-excel me-1 text-success"></i>Selecione o arquivo Excel:
+      </label>
+      <input type="file" name="arquivo" id="arquivo" accept=".xls,.xlsx" required class="form-control">
+    </div>
+  
+    <!-- Linha vazia para preencher grid -->
+    <div class="col-md-6"></div>
+  
+    <!-- Botão em linha separada -->
+    <div class="col-12 text-start">
+      <button type="submit" class="btn btn-cadastrar-personalizado">
+        <i class="bi bi-upload me-2"></i> Importar Arquivo
+      </button>
+    </div>
+  </form>
+  
+
+  <!-- Tabela de Exemplo -->
+  <div class="mt-5">
+    <h5 class="mb-2">
+      <i class="bi bi-table me-2 text-info"></i>
+      Exemplo de Estrutura do Excel
+    </h5>
+    <p class="text-muted">A planilha deve conter as colunas abaixo com os nomes exatamente iguais:</p>
+
+    <div class="table-responsive mt-3">
+      <table class="table table-bordered table-striped align-middle text-center table-sm">
+        <thead class="table-light text-primary align-middle">
+          <tr>
+            <th><i class="bi bi-building"></i><br>Razão Social</th>
+            <th><i class="bi bi-file-earmark-lock2"></i><br>CNPJ</th>
+            <th><i class="bi bi-geo-alt"></i><br>Endereço</th>
+            <th><i class="bi bi-123"></i><br>Número</th>
+            <th><i class="bi bi-signpost"></i><br>Bairro</th>
+            <th><i class="bi bi-building-fill"></i><br>Cidade</th>
+            <th><i class="bi bi-mailbox"></i><br>CEP</th>
+            <th><i class="bi bi-flag"></i><br>UF</th>
+            <th><i class="bi bi-tags"></i><br>Tipo Cliente</th>
+            <th><i class="bi bi-check-circle"></i><br>Status</th>
+            <th><i class="bi bi-telephone"></i><br>Telefone</th>
+            <th><i class="bi bi-envelope"></i><br>Email</th>
+            <th><i class="bi bi-person"></i><br>Contato Nome</th>
+            <th><i class="bi bi-envelope-at"></i><br>Contato Email</th>
+            <th><i class="bi bi-phone"></i><br>Contato Telefone</th>
+            <th><i class="bi bi-person-badge"></i><br>Contato Cargo</th>
+            <th><i class="bi bi-diagram-3"></i><br>Contato Departamento</th>
+            <th><i class="bi bi-clipboard-data"></i><br>IE</th>
+            <th><i class="bi bi-file-earmark-plus"></i><br>Complemento</th>
+            <th><i class="bi bi-percent"></i><br>ICMS</th>
+            <th><i class="bi bi-hash"></i><br>CFOP</th>
+            <th><i class="bi bi-cash-coin"></i><br>Cond Pagamento</th>
+            <th><i class="bi bi-code"></i><br>Cod BM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cliente Exemplo Ltda</td>
+            <td>12.345.678/0001-90</td>
+            <td>Rua Exemplo</td>
+            <td>123</td>
+            <td>Centro</td>
+            <td>Sorocaba</td>
+            <td>18000-000</td>
+            <td>SP</td>
+            <td>Automotivo</td>
+            <td>Ativo</td>
+            <td>(15) 1234-5678</td>
+            <td>cliente@exemplo.com</td>
+            <td>João Silva</td>
+            <td>joao@exemplo.com</td>
+            <td>(15) 99999-0000</td>
+            <td>Compras</td>
+            <td>Suprimentos</td>
+            <td>123456789</td>
+            <td>Ap. 202</td>
+            <td>12.00</td>
+            <td>5102</td>
+            <td>30 dias</td>
+            <td>CL001</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Botão de download do modelo -->
+    <div class="mt-4">
+      <a href="{% static 'arquivos/modelo_importacao_clientes.xlsx' %}" 
+         class="btn btn-importar-personalizado" 
+         download>
+        <i class="bi bi-download me-2"></i> Baixar Modelo de Importação (.xlsx)
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -42,70 +42,82 @@
 
     <form method="post" class="mt-4">
       {% csrf_token %}
-      <table class="table table-bordered align-middle text-center">
-        <thead class="table-light">
-          <tr>
-            <th style="width: 30%;"><i class="bi bi-building me-1"></i> Fornecedor</th>
-            <th style="width: 10%;"><i class="bi bi-percent me-1"></i> ICMS (%)</th>
-            <th style="width: 15%;"><i class="bi bi-boxes me-1"></i> Lote Mínimo</th>
-            <th style="width: 15%;"><i class="bi bi-truck me-1"></i> Entrega (dias)</th>
-            <th style="width: 15%;"><i class="bi bi-currency-dollar me-1"></i> Preço/kg</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for sev in servicos %}
-          <tr>
-            <td>
-              <select name="fornecedor_{{ forloop.counter0 }}" class="form-select select2">
-                <option value="">Selecione o fornecedor</option>
-                {% for f in fornecedores %}
-                  <option value="{{ f.id }}" {% if sev.fornecedor and f.id == sev.fornecedor.id %}selected{% endif %}>
-                    {{ f.nome }}
-                  </option>
-                {% endfor %}
-              </select>
-            </td>
-            <td>
-              <input type="number"
-                     step="0.01"
-                     name="icms_{{ forloop.counter0 }}"
-                     value="{{ sev.icms|default:'0.00' }}"
-                     class="form-control"
-                     placeholder="Ex: 18.00" />
-            </td>
-            <td>
-              <input type="number"
-                     name="lote_minimo_{{ forloop.counter0 }}"
-                     value="{{ sev.lote_minimo }}"
-                     class="form-control"
-                     placeholder="Ex: 250" />
-            </td>
-            <td>
-              <input type="number"
-                     name="entrega_dias_{{ forloop.counter0 }}"
-                     value="{{ sev.entrega_dias }}"
-                     class="form-control"
-                     placeholder="Ex: 30" />
-            </td>
-            <td>
-              <input type="number"
-                     step="0.01"
-                     name="preco_kg_{{ forloop.counter0 }}"
-                     value="{{ sev.preco_kg }}"
-                     class="form-control"
-                     placeholder="Ex: 14.90" />
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
+    
+      {% regroup servicos by insumo as grupos_servico %}
+    
+      {% for grupo in grupos_servico %}
+        <div class="mb-4">
+          <h5 class="text-primary mb-3">
+            <i class="bi bi-tools me-1"></i> Insumo: {{ grupo.grouper }}
+          </h5>
+    
+          <table class="table table-bordered align-middle text-center">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 30%;"><i class="bi bi-building me-1"></i> Fornecedor</th>
+                <th style="width: 10%;"><i class="bi bi-percent me-1"></i> ICMS (%)</th>
+                <th style="width: 15%;"><i class="bi bi-boxes me-1"></i> Lote Mínimo</th>
+                <th style="width: 15%;"><i class="bi bi-truck me-1"></i> Entrega (dias)</th>
+                <th style="width: 15%;"><i class="bi bi-currency-dollar me-1"></i> Preço/kg</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sev in grupo.list %}
+                <tr>
+                  <td>
+                    <select name="fornecedor_{{ forloop.counter0 }}" class="form-select select2">
+                      <option value="">Selecione o fornecedor</option>
+                      {% for f in fornecedores %}
+                        <option value="{{ f.id }}" {% if sev.fornecedor and f.id == sev.fornecedor.id %}selected{% endif %}>
+                          {{ f.nome }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number"
+                           step="0.01"
+                           name="icms_{{ forloop.counter0 }}"
+                           value="{{ sev.icms|default:'0.00' }}"
+                           class="form-control"
+                           placeholder="Ex: 18.00" />
+                  </td>
+                  <td>
+                    <input type="number"
+                           name="lote_minimo_{{ forloop.counter0 }}"
+                           value="{{ sev.lote_minimo }}"
+                           class="form-control"
+                           placeholder="Ex: 250" />
+                  </td>
+                  <td>
+                    <input type="number"
+                           name="entrega_dias_{{ forloop.counter0 }}"
+                           value="{{ sev.entrega_dias }}"
+                           class="form-control"
+                           placeholder="Ex: 30" />
+                  </td>
+                  <td>
+                    <input type="number"
+                           step="0.01"
+                           name="preco_kg_{{ forloop.counter0 }}"
+                           value="{{ sev.preco_kg }}"
+                           class="form-control"
+                           placeholder="Ex: 14.90" />
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    
       <div class="text-end">
         <button type="submit" class="btn btn-success">
           <i class="bi bi-check-circle me-1"></i> Salvar Cotações
         </button>
       </div>
     </form>
+    
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

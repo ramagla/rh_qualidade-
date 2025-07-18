@@ -15,6 +15,62 @@ from comercial.models import Cotacao, Cliente
 
 User = get_user_model()
 
+
+from collections import Counter
+
+def montar_status_analises_por_cotacao(cotacoes):
+    from decimal import Decimal
+    status_por_cotacao = {}
+    total_aprovado_por_cotacao = {}
+    completo_por_cotacao = {}
+
+    for cot in cotacoes:
+        contagem = Counter()
+        total = Decimal("0.00")
+        completos = []
+        tem_precaculos = False
+
+        for precalc in cot.precalculos.all():
+            tem_precaculos = True
+            analise = getattr(precalc, "analise_comercial_item", None)
+            if analise and analise.status:
+                contagem[analise.get_status_display()] += 1
+                if analise.status == "aprovado" and precalc.preco_selecionado:
+                    total += precalc.preco_selecionado
+
+            dev = getattr(precalc, "desenvolvimento_item", None)
+            if dev:
+                completos.append(dev.completo)
+
+        status_por_cotacao[cot.id] = dict(contagem)
+        total_aprovado_por_cotacao[cot.id] = total
+        if not tem_precaculos:
+            completo_por_cotacao[cot.id] = None
+        else:
+            completo_por_cotacao[cot.id] = all(completos) if completos else False
+
+    return status_por_cotacao, total_aprovado_por_cotacao, completo_por_cotacao
+
+
+def montar_itens_por_cotacao(cotacoes):
+    itens_por_cotacao = {}
+
+    for cot in cotacoes:
+        itens = []
+        for precalc in cot.precalculos.all():
+            analise = getattr(precalc, "analise_comercial_item", None)
+            if analise:
+                itens.append({
+                    "item": str(analise.item),
+                    "status": analise.get_status_display() if analise.status else "-",
+                    "periodicidade": analise.get_periodo_display() if analise.periodo else "-",
+                    "qtde_estimada": analise.qtde_estimada or "-",
+                })
+        itens_por_cotacao[cot.id] = itens
+
+    return itens_por_cotacao
+
+
 @login_required
 @permission_required("comercial.view_cotacao", raise_exception=True)
 def lista_cotacoes(request):
@@ -67,6 +123,11 @@ def lista_cotacoes(request):
     paginator = Paginator(qs, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+    cotacoes = page_obj.object_list.select_related("cliente", "responsavel").prefetch_related(
+        "precalculos__analise_comercial_item"
+    )
+    status_analises_dict, total_aprovado_dict, completo_dict = montar_status_analises_por_cotacao(cotacoes)
+    itens_por_cotacao = montar_itens_por_cotacao(cotacoes)
 
     # --- Dados para filtros ---
     clientes = Cliente.objects.all().order_by("razao_social")
@@ -80,7 +141,20 @@ def lista_cotacoes(request):
         "abertas_mes": abertas_mes,
         "clientes": clientes,
         "usuarios": usuarios,
+        "status_analises_dict": status_analises_dict,
+        "total_aprovado_dict": total_aprovado_dict,
+        "completo_dict": completo_dict,
+        "itens_por_cotacao": itens_por_cotacao,
+
+
     })
+
+
+
+
+
+
+
 @login_required
 @permission_required('comercial.add_cotacao', raise_exception=True)
 def cadastrar_cotacao(request):

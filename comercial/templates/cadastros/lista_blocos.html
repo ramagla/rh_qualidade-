@@ -82,13 +82,39 @@
       <caption class="visually-hidden">Tabela de blocos</caption>
       <thead class="table-light">
         <tr>
-          <th><i class="bi bi-hash me-1"></i> Nº do Bloco</th>
-          <th><i class="bi bi-box me-1"></i> Peso VND (kg)</th>
-          <th><i class="bi bi-box me-1"></i> Peso SAE 1020 (kg)</th>
-          <th><i class="bi bi-weight me-1"></i> Peso Total (kg)</th>
-          <th><i class="bi bi-gear me-1"></i> Ações</th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-hash mb-1"></i>
+              <small>Nº do Bloco</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-box mb-1"></i>
+              <small>Peso VND (kg)</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-box mb-1"></i>
+              <small>Peso SAE 1020 (kg)</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-box mb-1"></i>
+              <small>Peso Total (kg)</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-gear mb-1"></i>
+              <small>Ações</small>
+            </div>
+          </th>
         </tr>
       </thead>
+      
       <tbody>
         {% for bloco in page_obj %}
         <tr>

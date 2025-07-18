@@ -55,6 +55,7 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "revisao", "view_revisao", "Pode visualizar descrição da revisão"),
     ("Funcionario", "integracaofuncionario", "imprimir_integracao", "Pode imprimir integração"),
     ("Funcionario", "listapresenca", "imprimir_lista_presenca", "Pode imprimir lista de presença"),
+
     # Relatórios RH
     ("Funcionario", "relatorio", "relatorio_indicador", "Pode acessar o Indicador de Treinamentos"),
     ("Funcionario", "relatorio", "relatorio_indicador_anual", "Pode acessar o Indicador Anual"),
@@ -96,6 +97,13 @@ CUSTOM_PERMISSOES = [
     ("metrologia", "cronograma", "cronograma_calibracao_dispositivos", "Pode acessar o cronograma de Calibração de Dispositivos"),
 
     ("comercial", "dashboard", "acesso_comercial", "Pode acessar o módulo Comercial"),
+    ("comercial", "ferramenta", "enviar_cotacao", "Pode enviar cotação de ferramenta"),
+    ("comercial", "precalculo", "gerar_proposta", "Pode gerar proposta comercial"),
+    ("comercial", "precalculo", "ver_precificacao", "Pode acessar precificação detalhada do produto"),
+    ("comercial", "precalculo", "duplicar_precalculo", "Pode duplicar pré-cálculo"),
+    ("comercial", "cliente", "importar_excel_clientes", "Pode importar clientes via Excel"),
+    ("comercial", "item", "importar_excel_itens", "Pode importar itens via Excel"),
+
     ("metrologia", "relatorio", "relatorio_f062", "Pode acessar o relatório Solicitação de Orçamento para Calibração (F062)"),
     ("metrologia", "relatorio", "gerar_f062", "Pode gerar a Solicitação de Orçamento para Calibração (F062)"),
     ("metrologia", "controleentradasaida", "view_controleentradasaida", "Pode visualizar movimentações de dispositivo"),

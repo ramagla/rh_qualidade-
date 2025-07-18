@@ -44,66 +44,68 @@
           </div>
         {% endif %}
 
-        <table class="table table-bordered align-middle table-sm">
-          <thead class="table-light align-middle text-center">
-            <tr>
-              <th>Selecionar</th>
-              <th><i class="bi bi-upc-scan me-1"></i> Código</th>
-              <th><i class="bi bi-boxes me-1"></i> Lote Mínimo</th>
-              <th><i class="bi bi-truck me-1"></i> Entrega (dias)</th>
-              <th><i class="bi bi-building me-1"></i> Fornecedor</th>
-              <th><i class="bi bi-percent me-1"></i> ICMS (%)</th>
-              <th><i class="bi bi-currency-dollar me-1"></i> Preço/kg</th>
-              <th><i class="bi bi-rulers me-1"></i> Desenv. (mm)</th>
-              <th><i class="bi bi-weight me-1"></i> Peso Líquido</th>
-              <th><i class="bi bi-box me-1"></i> Peso Bruto</th>
-              <th><i class="bi bi-basket-fill me-1"></i> Peso Bruto Total</th>
-              <th><i class="bi bi-flag me-1"></i> Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for form in fs_sev.forms %}
-              <tr>
-                {{ form.id }}
-                <td class="text-center align-middle">
-                  <input type="radio"
-                         name="servico_selecionado"
-                         value="{{ form.prefix }}"
-                         class="form-check-input mt-1"
-                         {% if form.instance.selecionado %}checked{% endif %}>
-                </td>
-                <td>
-                  {{ form.codigo_materia_prima|add_class:"form-control form-control-sm codigo-input"|attr:"readonly:readonly" }}
-{{ form.insumo }}
+        {% regroup fs_sev.forms by instance.insumo as insumos_agrupados %}
 
-                </td>
-                
-                
-                <td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
-                <td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
-                <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
-                <td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
-                <td class="bg-lightblue">{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
-  
-                <td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm" }}</td>
-                <td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm" }}</td>
-                <td class="bg-lightyellow">{{ form.peso_bruto|add_class:"form-control form-control-sm" }}</td>
-                <td class="bg-lightyellow">
-                  {{ form.peso_bruto_total|add_class:"form-control form-control-sm text-end peso-bruto-total"|attr:"readonly:readonly" }}
-                </td>
-                
-                
-                <td class="text-center">
-                  {% if form.instance.pk and form.instance.preco_kg %}
-                    <span class="badge bg-success">OK</span>
-                  {% else %}
-                    <span class="badge bg-warning text-dark">Aguardando</span>
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+{% for grupo in insumos_agrupados %}
+  <div class="mt-4">
+    <h6 class="text-primary">
+      <i class="bi bi-tools me-1"></i> Insumo: {{ grupo.grouper }}
+    </h6>
+
+    <table class="table table-bordered align-middle table-sm">
+      <thead class="table-light align-middle text-center">
+        <tr>
+          <th>Selecionar</th>
+          <th><i class="bi bi-upc-scan me-1"></i> Código</th>
+          <th><i class="bi bi-boxes me-1"></i> Lote Mínimo</th>
+          <th><i class="bi bi-truck me-1"></i> Entrega (dias)</th>
+          <th><i class="bi bi-building me-1"></i> Fornecedor</th>
+          <th><i class="bi bi-percent me-1"></i> ICMS (%)</th>
+          <th><i class="bi bi-currency-dollar me-1"></i> Preço/kg</th>
+          <th><i class="bi bi-rulers me-1"></i> Desenv. (mm)</th>
+          <th><i class="bi bi-weight me-1"></i> Peso Líquido</th>
+          <th><i class="bi bi-box me-1"></i> Peso Bruto</th>
+          <th><i class="bi bi-basket-fill me-1"></i> Peso Bruto Total</th>
+          <th><i class="bi bi-flag me-1"></i> Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in grupo.list %}
+          <tr>
+            {{ form.id }}
+            <td class="text-center align-middle">
+              <input type="radio"
+                     name="selecionado_insumo_{{ form.instance.insumo.id }}"
+                     value="{{ form.prefix }}"
+                     class="form-check-input mt-1"
+                     {% if form.instance.selecionado %}checked{% endif %}>
+            </td>
+            <td>{{ form.codigo_materia_prima|add_class:"form-control form-control-sm codigo-input"|attr:"readonly:readonly" }}{{ form.insumo }}</td>
+            <td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
+            <td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
+            <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
+            <td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
+            <td class="bg-lightblue">{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
+            <td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm" }}</td>
+            <td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm" }}</td>
+            <td class="bg-lightyellow">{{ form.peso_bruto|add_class:"form-control form-control-sm" }}</td>
+            <td class="bg-lightyellow">
+              {{ form.peso_bruto_total|add_class:"form-control form-control-sm text-end peso-bruto-total"|attr:"readonly:readonly" }}
+            </td>
+            <td class="text-center">
+              {% if form.instance.pk and form.instance.preco_kg %}
+                <span class="badge bg-success">OK</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Aguardando</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endfor %}
+
 
         {{ fs_sev.management_form }}
 

@@ -17,8 +17,10 @@ register = template.Library()
 
 @register.filter
 def dict_get(d, key):
-    """Retorna o valor de uma chave em dicionário."""
-    return d.get(key, "")
+    if isinstance(d, dict):
+        return d.get(key)
+    return None
+
 
 @register.filter
 def get_nested_item(dictionary, keys):
@@ -403,3 +405,40 @@ def subtrair_percentual(valor, percentual):
         return round(v * (1 - p / 100), 2)
     except:
         return valor
+    
+@register.filter
+def basename(value):
+    return os.path.basename(value)
+
+
+from django.utils.timezone import now
+
+@register.filter
+def esta_valida(cotacao):
+    """
+    Retorna True se a cotação ainda estiver dentro da validade.
+    """
+    if not cotacao.data_abertura or not cotacao.validade_proposta:
+        return None
+    data_limite = cotacao.data_abertura + timedelta(days=cotacao.validade_proposta)
+    return now().date() <= data_limite.date()
+
+
+@register.filter
+def dias_restantes(cotacao):
+    """
+    Retorna a quantidade de dias restantes até o vencimento da cotação.
+    """
+    if not cotacao.data_abertura or not cotacao.validade_proposta:
+        return None
+
+    data_limite = cotacao.data_abertura + timedelta(days=cotacao.validade_proposta)
+    return (data_limite.date() - now().date()).days
+
+
+@register.filter
+def abs_valor(value):
+    try:
+        return abs(int(value))
+    except Exception:
+        return value

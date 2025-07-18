@@ -105,12 +105,21 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
                 form_precalculo.instance = precalc
                 form_precalculo.save()
 
-            selecionado = request.POST.get("servico_selecionado")
-            for sev_form in fs_sev:
-                if sev_form.cleaned_data and not sev_form.cleaned_data.get("DELETE", False):
-                    sev = sev_form.save(commit=False)
-                    sev.selecionado = (sev_form.prefix == selecionado)
-                    sev.save()
+            # Reseta todos como não selecionados inicialmente
+            for sev in precalc.servicos.all():
+                sev.selecionado = False
+                sev.save(update_fields=["selecionado"])
+
+            # Verifica os campos 'selecionado_insumo_<id>' do POST
+            for key in request.POST:
+                if key.startswith("selecionado_insumo_"):
+                    prefixo = request.POST[key]
+                    for sev_form in fs_sev:
+                        if sev_form.prefix == prefixo and not sev_form.cleaned_data.get("DELETE", False):
+                            sev = sev_form.save(commit=False)
+                            sev.selecionado = True
+                            sev.save()
+
             fs_sev.save()
 
             if not servicos_respondidos:

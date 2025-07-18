@@ -65,7 +65,7 @@
   <div class="border rounded bg-light p-3"
        style="white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; font-size: 0.95rem; max-height: 250px; overflow-y: auto; text-align: left;">
     {% if centro.observacao %}
-      {{ centro.observacao|linebreaksbr }}
+      {{ centro.observacao|safe }}
     {% else %}
       <span class="text-muted">Nenhuma observação informada.</span>
     {% endif %}

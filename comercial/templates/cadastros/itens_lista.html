@@ -19,6 +19,13 @@
       <i class="bi bi-plus-circle-fill me-2"></i> Cadastrar
     </a>
     {% endif %}
+
+    {% if request.user|has_permission:"comercial.importar_excel_itens" %}
+      <a href="{% url 'importar_itens_excel' %}" class="btn btn-importar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-upload me-2"></i> Importar Excel
+      </a>
+      {% endif %}
+
   </div>
 
   <!-- Filtros Offcanvas (Itens) -->
@@ -95,15 +102,57 @@
       <caption class="visually-hidden">Tabela de Itens</caption>
       <thead class="table-light">
         <tr>
-          <th><i class="bi bi-upc me-1"></i> Código</th>
-          <th><i class="bi bi-tag me-1"></i> Tipo</th>
-          <th><i class="bi bi-person-badge me-1"></i> Cliente</th>
-          <th><i class="bi bi-tools me-1"></i> Ferramenta</th>
-          <th><i class="bi bi-stack me-1"></i> Lote Mínimo</th>
-          <th><i class="bi bi-file-earmark me-1"></i> Revisão</th>
-          <th><i class="bi bi-gear me-1"></i> Ações</th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-upc mb-1"></i>
+              <small>Código</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-tag mb-1"></i>
+              <small>Tipo</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-person-badge mb-1"></i>
+              <small>Cliente</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-tools mb-1"></i>
+              <small>Ferramenta</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-stack mb-1"></i>
+              <small>Lote Mínimo</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-file-earmark mb-1"></i>
+              <small>Revisão</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-shield-lock mb-1"></i>
+              <small>Segurança</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-gear mb-1"></i>
+              <small>Ações</small>
+            </div>
+          </th>
         </tr>
       </thead>
+      
       <tbody>
         {% for item in page_obj %}
         <tr>
@@ -131,6 +180,15 @@
           </td>
                     <td>{{ item.lote_minimo }}</td>
           <td>{{ item.revisao }}</td>
+          {% load static %}
+<td class="text-center align-middle">
+  {% if item.item_seguranca %}
+    <img src="{% static 'img/seguranca.png' %}" alt="Item de Segurança" title="Item de Segurança" style="height: 22px;" />
+  {% else %}
+    <span class="text-muted">–</span>
+  {% endif %}
+</td>
+
           <td>
             <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
               {% if request.user|has_permission:"comercial.view_item" %}

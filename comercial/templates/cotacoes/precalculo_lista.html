@@ -22,21 +22,30 @@
 
   <!-- Botões -->
   <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
-    <a href="{% url 'lista_cotacoes' %}"
-    class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
-   <i class="bi bi-arrow-left-circle-fill me-2"></i>
-   Voltar às Cotações
- </a>
- 
-    {% if request.user|has_permission:"comercial.add_precalculo" %}
-      <a href="{% url 'criar_precalculo' cotacao.id %}"
-         class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
-        <i class="bi bi-plus-circle-fill me-2"></i>
-        Novo Item
+    <a href="{% url 'lista_cotacoes' %}" class="btn btn-importar-personalizado d-inline-flex align-items-center">
+    <i class="bi bi-arrow-left-circle-fill me-2"></i>
+    Voltar às Cotações
+  </a>
+ {% if request.user|has_permission:"comercial.add_precalculo" %}
+      <a href="{% url 'criar_precalculo' cotacao.id %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2"></i>
+      Novo Item
+    </a>
+      {% if request.user|has_permission:"comercial.gerar_proposta" %}
+
+        <a href="#" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center" style="background: linear-gradient(135deg, #ffc107, #ffca2c); box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);">
+        <i class="bi bi-file-earmark-richtext me-2"></i>
+        Gerar Proposta
       </a>
-      <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalGerarProposta">
-        <i class="bi bi-file-earmark-richtext me-1"></i> Gerar Proposta
-      </a>
+      {% endif %}
+
+      {% if request.user|has_permission:"comercial.add_precalculo" %}
+         <a href="#" class="btn btn-importar-personalizado d-inline-flex align-items-center" style="background: linear-gradient(135deg, #6f42c1, #5a32a3); box-shadow: 0 4px 12px rgba(111, 66, 193, 0.25);" data-bs-toggle="modal" data-bs-target="#modalDuplicarPrecalc">
+      <i class="bi bi-files me-2"></i>
+      Duplicar Pré-Cálculo
+    </a>
+      {% endif %}
+
       <!-- Modal Gerar Proposta -->
 <div class="modal fade" id="modalGerarProposta" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -84,6 +93,47 @@
   </div>
 </div>
 
+
+
+<div class="modal fade" id="modalDuplicarPrecalc" tabindex="-1" aria-labelledby="modalDuplicarLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="get" action="" id="formDuplicarPrecalc">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalDuplicarLabel">Duplicar Item de Pré-Cálculo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <label for="selectPrecalc" class="form-label">Selecione o item a duplicar:</label>
+          <select class="form-select" id="selectPrecalc" name="precalc_id" required>
+            {% for precalc in precalculos %}
+              <option value="{{ precalc.id }}">
+                Nº {{ precalc.numero }} - {{ precalc.analise_comercial_item.item.codigo }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-copy me-1"></i> Duplicar
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById("formDuplicarPrecalc").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const id = document.getElementById("selectPrecalc").value;
+    const url = `{% url 'duplicar_precalculo' 9999 %}`.replace("9999", id);
+    window.location.href = url;
+  });
+</script>
+
+
+
     {% endif %}
   </div>
 
@@ -102,20 +152,71 @@
 
   <div class="table-responsive zebra-tabela mt-4">
     <table class="table table-bordered table-striped align-middle text-center">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
-          <th>Código</th>
-          <th>Qtde Estimada</th>
-          <th>Status da Análise</th>
-          <th>Periodicidade</th>
-          <th>Valor Total (R$)</th>
-          <th>Ferramental (R$)</th>
-          <th>Total Geral (R$)</th>
-          <th>Preço Escolhido (R$)</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
+     <thead class="table-light">
+  <tr>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hash mb-1"></i>
+        <small>#</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-stack mb-1"></i>
+        <small>Qtde Estimada</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-bar-chart-line mb-1"></i>
+        <small>Status Análise</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-arrow-repeat mb-1"></i>
+        <small>Periodicidade</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-cash-stack mb-1"></i>
+        <small>Valor Total</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-tools mb-1"></i>
+        <small>Ferramental</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calculator mb-1"></i>
+        <small>Total Geral</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-currency-exchange mb-1"></i>
+        <small>Preço Escolhido</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       
       
       <tbody>
@@ -130,60 +231,104 @@
             </td>
       
             <!-- Status da Análise -->
-            <td>
-              {% if item.analise_comercial_item.status == "aprovado" %}
-                <span class="badge bg-success">Aprovado</span>
-              {% elif item.analise_comercial_item.status == "reprovado" %}
-                <span class="badge bg-danger">Reprovado</span>
-              {% elif item.analise_comercial_item.status == "amostras" %}
-                <span class="badge bg-warning text-dark">Solicitação de Amostras</span>
-              {% else %}
-                <span class="badge bg-secondary">Em Andamento</span>
-              {% endif %}
-            </td>
+           <td>
+  {% with status=item.analise_comercial_item.status %}
+    {% if status == "aprovado" %}
+      <span class="badge bg-success d-inline-flex align-items-center">
+        <i class="bi bi-check-circle-fill me-1"></i> Aprovado
+      </span>
+    {% elif status == "reprovado" %}
+      <span class="badge bg-danger d-inline-flex align-items-center">
+        <i class="bi bi-x-circle-fill me-1"></i> Reprovado
+      </span>
+    {% elif status == "amostras" %}
+      <span class="badge bg-warning text-dark d-inline-flex align-items-center">
+        <i class="bi bi-flask me-1"></i> Solicitação de Amostras
+      </span>
+    {% else %}
+      <span class="badge bg-secondary d-inline-flex align-items-center">
+        <i class="bi bi-hourglass-split me-1"></i> Em Andamento
+      </span>
+    {% endif %}
+  {% endwith %}
+</td>
+
       
             <!-- Periodicidade -->
             <td>
-              {% with periodo=item.analise_comercial_item.periodo %}
-                {% if periodo == "Mensal" %}
-                  <span class="badge bg-info"><i class="bi bi-calendar2-date me-1"></i> Mensal</span>
-                {% elif periodo == "Trimestral" %}
-                  <span class="badge bg-warning text-dark"><i class="bi bi-calendar2-range me-1"></i> Trimestral</span>
-                {% elif periodo == "Semestral" %}
-                  <span class="badge bg-primary"><i class="bi bi-calendar2-event me-1"></i> Semestral</span>
-                {% elif periodo == "Anual" %}
-                  <span class="badge bg-success"><i class="bi bi-calendar2-check me-1"></i> Anual</span>
-                {% else %}
-                  <span class="badge bg-secondary"><i class="bi bi-calendar2-week me-1"></i> Esporádico</span>
-                {% endif %}
-              {% endwith %}
-            </td>
+  {% with periodo=item.analise_comercial_item.periodo %}
+    {% if periodo == "Mensal" %}
+      <span class="badge bg-info text-dark d-inline-flex align-items-center">
+        <i class="bi bi-calendar2-date me-1"></i> Mensal
+      </span>
+    {% elif periodo == "Trimestral" %}
+      <span class="badge bg-warning text-dark d-inline-flex align-items-center">
+        <i class="bi bi-calendar2-range me-1"></i> Trimestral
+      </span>
+    {% elif periodo == "Semestral" %}
+      <span class="badge bg-primary d-inline-flex align-items-center">
+        <i class="bi bi-calendar2-event me-1"></i> Semestral
+      </span>
+    {% elif periodo == "Anual" %}
+      <span class="badge bg-success d-inline-flex align-items-center">
+        <i class="bi bi-calendar2-check me-1"></i> Anual
+      </span>
+    {% else %}
+      <span class="badge bg-secondary d-inline-flex align-items-center">
+        <i class="bi bi-calendar2-week me-1"></i> Esporádico
+      </span>
+    {% endif %}
+  {% endwith %}
+</td>
+
       
-            <!-- Valor Total (R$) da margem escolhida -->
-<td>
+          <td>
   {% with preco=item.preco_selecionado %}
     {% with precos=item.calcular_precos_com_impostos %}
-      {% for p in precos %}
-        {% if p.unitario|floatformat:"4" == preco|floatformat:"4" %}
-          {{ p.total|formatar_reais }}
+      {% with valor_exibido=None %}
+        {% for p in precos %}
+          {% if p.unitario|floatformat:"4" == preco|floatformat:"4" %}
+            {{ p.total|formatar_reais }}
+            {% with valor_exibido=True %}{% endwith %}
+          {% endif %}
+        {% endfor %}
+        {% if not valor_exibido %}
+          <span class="text-muted fst-italic">Ainda não definido</span>
         {% endif %}
-      {% endfor %}
+      {% endwith %}
     {% endwith %}
   {% endwith %}
 </td>
 
+
             
-      
-            <!-- 🛠 Valor Ferramental -->
-            <td>{{ item.valor_ferramental|formatar_reais|default:"—" }}</td>
+      <!-- 🛠 Valor Ferramental -->
+<td>
+  {% if item.valor_ferramental %}
+    {{ item.valor_ferramental|formatar_reais }}
+  {% else %}
+    <span class="text-muted fst-italic">Ainda não definido</span>
+  {% endif %}
+</td>
 
-      
-            <!-- 💰 Total Geral (produto + ferramental) -->
-            <td>{{ item.total_geral|formatar_reais|default:"—" }}</td>
+<!-- 💰 Total Geral (produto + ferramental) -->
+<td>
+  {% if item.total_geral %}
+    {{ item.total_geral|formatar_reais }}
+  {% else %}
+    <span class="text-muted fst-italic">Ainda não definido</span>
+  {% endif %}
+</td>
 
-      
-            <!-- 📈 Preço Escolhido (R$ + % margem) -->
-            <td>{{ item.preco_margem_formatado|default:"—" }}</td>
+<!-- 📈 Preço Escolhido (R$ + % margem) -->
+<td>
+  {% if item.preco_margem_formatado %}
+    {{ item.preco_margem_formatado }}
+  {% else %}
+    <span class="text-muted fst-italic">Ainda não definido</span>
+  {% endif %}
+</td>
+
 
       
             <!-- Ações -->
@@ -194,18 +339,22 @@
                 {% endif %}
                 {% if request.user|has_permission:"comercial.view_precalculo" %}
                 <a href="{% url 'visualizar_precalculo' item.pk %}"
-                class="btn btn-sm btn-info mt-1"
-                title="Visualizar F011 (Relatório)"
-                aria-label="Visualizar F011 (Relatório)">
-               <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-             </a>
-             <a href="{% url 'precificacao_produto' item.pk %}"
-   class="btn btn-sm btn-warning mt-1"
-   title="Precificação do Produto"
-   aria-label="Precificação do Produto">
-  <i class="bi bi-currency-dollar" aria-hidden="true"></i>
-</a>
+                    class="btn btn-sm btn-info mt-1"
+                    title="Visualizar F011 (Relatório)"
+                    aria-label="Visualizar F011 (Relatório)">
+                  <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                </a>
                 {% endif %}
+
+             {% if request.user|has_permission:"comercial.ver_precificacao" %}
+                <a href="{% url 'precificacao_produto' item.pk %}"
+                        class="btn btn-sm btn-warning mt-1"
+                        title="Precificação do Produto"
+                        aria-label="Precificação do Produto">
+                        <i class="bi bi-currency-dollar" aria-hidden="true"></i>
+                  </a>
+                  {% endif %}
+
                 {% if request.user|has_permission:"comercial.delete_precalculo" %}
                   {% include "partials/global/_botao_excluir.html" with objeto=item url_excluir="excluir_precalculo" label="precalculo" %}
                   {% include "partials/global/_modal_exclusao.html" with objeto=item url_excluir="excluir_precalculo" %}

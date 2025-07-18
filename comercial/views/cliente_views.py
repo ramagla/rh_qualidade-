@@ -209,15 +209,22 @@ def visualizar_cliente(request, pk):
     })
 
 
+from django.db.models import ProtectedError
 
-@login_required
-@permission_required('comercial.delete_cliente', raise_exception=True)
+@permission_required("comercial.delete_cliente")
 def excluir_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
-    if request.method == 'POST':
-        cliente.delete()
-        return redirect('lista_clientes')
-    return render(request, 'comercial/clientes_excluir.html', {'cliente': cliente})
+
+    if request.method == "POST":
+        try:
+            cliente.delete()
+            messages.success(request, "✅ Cliente excluído com sucesso.")
+        except ProtectedError:
+            messages.error(
+                request,
+                "❌ Este cliente não pode ser excluído pois está vinculado a registros no sistema (como cotações, análises ou itens)."
+            )
+        return redirect("lista_clientes")
 
 
 from django.http import JsonResponse
@@ -228,3 +235,72 @@ def verificar_cnpj_existente(request):
     cnpj = request.GET.get("cnpj")
     existe = Cliente.objects.filter(cnpj=cnpj).exists()
     return JsonResponse({"existe": existe})
+
+import pandas as pd
+
+
+from django.contrib.auth.decorators import permission_required
+from django.shortcuts import render, redirect
+from comercial.models import Cliente
+from django.contrib import messages
+import pandas as pd
+
+@permission_required("comercial.importar_excel_clientes", raise_exception=True)
+def importar_clientes_excel(request):
+    if request.method == "POST" and request.FILES.get("arquivo"):
+        excel_file = request.FILES["arquivo"]
+        try:
+            df = pd.read_excel(excel_file)
+
+            obrigatorios = ["Razão Social", "CNPJ", "Endereço", "Número", "Bairro", "Cidade", "CEP", "UF", "Tipo Cliente"]
+
+            for col in obrigatorios:
+                if col not in df.columns:
+                    messages.error(request, f"Coluna obrigatória ausente: {col}")
+                    return redirect("importar_clientes_excel")
+
+            criados = 0
+            ignorados = 0
+
+            for _, row in df.iterrows():
+                cnpj = str(row["CNPJ"]).strip()
+                if Cliente.objects.filter(cnpj=cnpj).exists():
+                    ignorados += 1
+                    continue
+
+                Cliente.objects.create(
+                    razao_social=row["Razão Social"],
+                    cnpj=cnpj,
+                    endereco=row["Endereço"],
+                    numero=str(row["Número"]),
+                    bairro=row["Bairro"],
+                    cidade=row["Cidade"],
+                    cep=row["CEP"],
+                    uf=row["UF"],
+                    tipo_cliente=row["Tipo Cliente"],  # deve estar em conformidade com os choices
+                    tipo_cadastro=row.get("Tipo Cadastro", "Cliente"),
+                    telefone=row.get("Telefone", ""),
+                    email=row.get("Email", ""),
+                    status=row.get("Status", "Ativo"),
+                    ie=row.get("IE", ""),
+                    complemento=row.get("Complemento", ""),
+                    nome_contato=row.get("Contato Nome", ""),
+                    email_contato=row.get("Contato Email", ""),
+                    telefone_contato=row.get("Contato Telefone", ""),
+                    cargo_contato=row.get("Contato Cargo", ""),
+                    departamento_contato=row.get("Contato Departamento", ""),
+                    icms=row.get("ICMS", None),
+                    cfop=row.get("CFOP", ""),
+                    cond_pagamento=row.get("Cond Pagamento", ""),
+                    cod_bm=row.get("Cod BM", ""),
+                )
+                criados += 1
+
+            messages.success(request, f"Importação concluída: {criados} cliente(s) criados, {ignorados} ignorados (CNPJ duplicado).")
+            return redirect("lista_clientes")
+
+        except Exception as e:
+            messages.error(request, f"Erro ao importar: {e}")
+            return redirect("importar_clientes_excel")
+
+    return render(request, "cadastros/importacoes/importar_clientes.html")

@@ -1,67 +1,60 @@
 def menu_comercial(user):
+    if not user.has_perm("comercial.acesso_comercial"):
+        return []
+
     menu = []
 
     # Dashboard
-    if user.has_perm("comercial.acesso_comercial"):
-        menu.append({
-            "name": "Dashboard",
-            "url": "comercial_home",
-            "icon": "fas fa-home",
-            "perm": "comercial.acesso_comercial",
-        })
+    menu.append({
+        "name": "Dashboard",
+        "url": "comercial_home",
+        "icon": "fas fa-home",
+    })
 
-    # Cadastro (submenu)
-    cadastro_submenu = []
+    # Submenu Cadastros
+    submenu_cadastros = []
 
     if user.has_perm("comercial.view_cliente"):
-        cadastro_submenu.append({
+        submenu_cadastros.append({
             "name": "Clientes",
             "url": "lista_clientes",
             "icon": "fas fa-user-tag",
-            "perm": "comercial.view_cliente",
         })
 
     if user.has_perm("comercial.view_item"):
-        cadastro_submenu.append({
+        submenu_cadastros.append({
             "name": "Itens",
             "url": "lista_itens",
             "icon": "fas fa-box-open",
-            "perm": "comercial.view_item",
         })
 
-
     if user.has_perm("comercial.view_ferramenta"):
-        cadastro_submenu.append({
+        submenu_cadastros.append({
             "name": "Ferramentas",
             "url": "lista_ferramentas",
             "icon": "fas fa-tools",
-            "perm": "comercial.view_ferramenta",
         })
 
     if user.has_perm("Funcionario.view_centrodecusto"):
-        cadastro_submenu.append({
+        submenu_cadastros.append({
             "name": "Centros de Custo",
             "url": "lista_centros_custo",
             "icon": "fas fa-cash-register",
-            "perm": "Funcionario.view_centrodecusto",
         })
 
-
-    if cadastro_submenu:
+    if submenu_cadastros:
         menu.append({
-            "name": "Cadastro",
+            "name": "Cadastros",
             "icon": "fas fa-folder-open",
-            "perm": None,  # deixa como None pois o submenu já tem permissões
-            "submenu": cadastro_submenu,
+            "submenu": submenu_cadastros,
         })
 
+    # Cotações
     if user.has_perm("comercial.view_cotacao"):
         menu.append({
             "name": "Cotações",
             "url": "lista_cotacoes",
             "icon": "fas fa-file-signature",
-            "perm": "comercial.view_cotacao",
         })
-
 
     return menu

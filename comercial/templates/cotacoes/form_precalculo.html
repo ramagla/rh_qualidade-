@@ -16,6 +16,7 @@
 
   {% include "partials/global/_toast_mensagens.html" %}
   {% include "partials/global/_estilos_botoes_acoes.html" %}
+  {% include "partials/global/_styles_componentes.html" %}
 
   {% if request.method == "POST" %}
     <pre>{{ request.POST }}</pre>
@@ -44,16 +45,22 @@
         </a>
       </li>
      
-      <li class="nav-item" role="presentation">
-        <a class="nav-link text-success" id="tab-materiais" data-bs-toggle="tab" href="#pane-materiais" role="tab">
-          <i class="bi bi-box-seam me-1"></i> Matéria-Prima
-        </a>
-      </li>
+      {% if precalc.materiais.exists %}
+        <li class="nav-item" role="presentation">
+          <a class="nav-link text-success" id="tab-materiais" data-bs-toggle="tab" href="#pane-materiais" role="tab">
+            <i class="bi bi-box-seam me-1"></i> Matéria-Prima
+          </a>
+        </li>
+        {% endif %}
+
+      {% if precalc.servicos_externos.exists %}
       <li class="nav-item" role="presentation">
         <a class="nav-link text-danger" id="tab-servicos" data-bs-toggle="tab" href="#pane-servicos" role="tab">
-          <i class="bi bi-tools me-1"></i> Serviços Externos
+          <i class="bi bi-tools me-1"></i> Serviços
         </a>
       </li>
+      {% endif %}
+      
       <li class="nav-item" role="presentation">
         <a class="nav-link text-dark" id="tab-ferramentas" data-bs-toggle="tab" href="#pane-ferramentas" role="tab">
           <i class="bi bi-hammer me-1"></i> Ferramentas
@@ -91,12 +98,18 @@
       <div class="tab-pane fade bg-regras" id="pane-regras" role="tabpanel">
         {% include "cotacoes/tabs/_tab_regras_calculo.html" %}
       </div>
-      <div class="tab-pane fade bg-materiais" id="pane-materiais" role="tabpanel">
-        {% include "cotacoes/tabs/_tab_materiais.html" %}
-      </div>
-      <div class="tab-pane fade bg-servicos" id="pane-servicos" role="tabpanel">
-        {% include "cotacoes/tabs/_tab_servicos_externos.html" %}
-      </div>
+     {% if precalc.materiais.exists %}
+<div class="tab-pane fade bg-materiais" id="pane-materiais" role="tabpanel">
+  {% include "cotacoes/tabs/_tab_materiais.html" %}
+</div>
+{% endif %}
+
+      {% if precalc.servicos_externos.exists %}
+<div class="tab-pane fade bg-servicos" id="pane-servicos" role="tabpanel">
+  {% include "cotacoes/tabs/_tab_servicos_externos.html" %}
+</div>
+{% endif %}
+
       <div class="tab-pane fade bg-ferramentas" id="pane-ferramentas" role="tabpanel">
         {% include "cotacoes/tabs/_tab_ferramentas.html" %}
       </div>

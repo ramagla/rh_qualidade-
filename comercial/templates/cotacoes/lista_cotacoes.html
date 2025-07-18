@@ -4,6 +4,8 @@
 
 {% block content %}
 {% load custom_filters %}
+{% load filters_gerais %}
+{% load humanize %}
 
 {% include "partials/global/_styles_componentes.html" %}
 
@@ -153,54 +155,318 @@
     <table class="table table-bordered table-striped align-middle text-center">
       <caption class="visually-hidden">Tabela de cotações</caption>
       <thead class="table-light">
-        <tr>
-          <th class="align-middle">Nº Cotação</th>
-          <th class="align-middle">Data Abertura</th>
-          <th class="align-middle">Tipo</th>
-          <th class="align-middle">Responsável</th>
-          <th class="align-middle">Cliente</th>
-          <th class="align-middle">Frete</th>
-          <th class="align-middle">Condição Pagamento</th>
-          <th class="align-middle">ICMS (%)</th>
-          <th class="align-middle">Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hash mb-1"></i>
+        <small>Nº</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Abertura</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-diagram-3 mb-1"></i>
+        <small>Tipo</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-workspace mb-1"></i>
+        <small>Responsável</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Cliente</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-truck mb-1"></i>
+        <small>Frete</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-cash-coin mb-1"></i>
+        <small>Pagamento</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-percent mb-1"></i>
+        <small>ICMS</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hourglass-split mb-1"></i>
+        <small>Validade</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-box mb-1"></i>
+        <small>Itens</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-pie-chart mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-currency-dollar mb-1"></i>
+        <small>Aprovado</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-check2-square mb-1"></i>
+        <small>Completo?</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for cot in page_obj %}
+          {% with precalc=cot.precalculos.first %}
           <tr>
             <td>{{ cot.numero }}</td>
             <td>{{ cot.data_abertura|date:"d/m/Y H:i" }}</td>
-            <td>{{ cot.tipo }}</td>
-            <td>{{ cot.responsavel.get_full_name }}</td>
-            <td class="text-start">{{ cot.cliente.razao_social }}</td>
+<td class="text-center">
+  {% if cot.tipo == "Novo" %}
+    <span class="text-success d-inline-flex align-items-center gap-1">
+      <i class="bi bi-file-earmark-plus-fill"></i> Novo
+    </span>
+  {% elif cot.tipo == "Atualização" %}
+    <span class="text-warning d-inline-flex align-items-center gap-1">
+      <i class="bi bi-arrow-repeat"></i> Atualização
+    </span>
+  {% else %}
+    <span class="text-muted">-</span>
+  {% endif %}
+</td>
+<td>{{ cot.responsavel.get_full_name|primeiro_nome }}</td>
+<td class="text-start">{{ cot.cliente.razao_social|primeiro_nome }}</td>
             <td>{{ cot.frete }}</td>
             <td>{{ cot.cond_pagamento }}</td>
             <td>{{ cot.icms|stringformat:"0.2f" }}</td>
+<td>
+  {% with dias=cot|dias_restantes %}
+    {% if dias is not None %}
+      {% if dias > 0 %}
+        <span class="text-success d-inline-flex align-items-center gap-1">
+          <i class="bi bi-check-circle-fill"></i> Faltam {{ dias }} dia{% if dias > 1 %}s{% endif %}
+        </span>
+      {% elif dias == 0 %}
+        <span class="text-warning d-inline-flex align-items-center gap-1">
+          <i class="bi bi-exclamation-triangle-fill"></i> Vence hoje
+        </span>
+      {% else %}
+        <span class="text-danger d-inline-flex align-items-center gap-1">
+<i class="bi bi-x-circle-fill"></i> Vencida há {{ dias|abs_valor }} dia{% if dias|abs_valor > 1 %}s{% endif %}
+        </span>
+      {% endif %}
+    {% else %}
+      <span class="text-muted">-</span>
+    {% endif %}
+  {% endwith %}
+</td>
+
+           <td>
+  <button type="button" class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#modalItensCotacao{{ cot.id }}" title="Ver Itens">
+    <i class="bi bi-eye-fill text-primary"></i>
+  </button>
+  <!-- Modal Itens da Cotação -->
+<div class="modal fade" id="modalItensCotacao{{ cot.id }}" tabindex="-1" aria-labelledby="modalItensCotacaoLabel{{ cot.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalItensCotacaoLabel{{ cot.id }}">
+          <i class="bi bi-list-task me-2"></i>Itens da Cotação Nº {{ cot.numero }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+{% with itens=itens_por_cotacao|get_item:cot.id %}
+          {% if itens %}
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle">
+                <thead class="table-light">
+  <tr>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-box mb-1"></i>
+        <small>Item</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clipboard-check mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-range mb-1"></i>
+        <small>Periodicidade</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-123 mb-1"></i>
+        <small>Qtde Estimada</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
+                <tbody>
+                  {% for item in itens %}
+                    <tr>
+                      <td>{{ item.item }}</td>
+ <td>
+        {% if item.status == "aprovado" %}
+          <span class="text-success d-inline-flex align-items-center gap-1">
+            <i class="bi bi-check-circle-fill"></i> Aprovado
+          </span>
+        {% elif item.status == "reprovado" %}
+          <span class="text-danger d-inline-flex align-items-center gap-1">
+            <i class="bi bi-x-circle-fill"></i> Reprovado
+          </span>
+        {% elif item.status == "andamento" %}
+          <span class="text-warning d-inline-flex align-items-center gap-1">
+            <i class="bi bi-hourglass-split"></i> Em Andamento
+          </span>
+        {% else %}
+          <span class="text-muted d-inline-flex align-items-center gap-1">
+            <i class="bi bi-question-circle"></i> {{ item.status|default:"-" }}
+          </span>
+        {% endif %}
+      </td>                      
+ <td>
+        {% if item.periodicidade == "Única" %}
+          <span class="text-primary d-inline-flex align-items-center gap-1">
+            <i class="bi bi-1-circle-fill"></i> Única
+          </span>
+        {% elif item.periodicidade == "Mensal" %}
+          <span class="text-info d-inline-flex align-items-center gap-1">
+            <i class="bi bi-calendar-event"></i> Mensal
+          </span>
+        {% elif item.periodicidade == "Trimestral" %}
+          <span class="text-purple d-inline-flex align-items-center gap-1">
+            <i class="bi bi-calendar3"></i> Trimestral
+          </span>
+        {% elif item.periodicidade == "Semestral" %}
+          <span class="text-secondary d-inline-flex align-items-center gap-1">
+            <i class="bi bi-calendar-range"></i> Semestral
+          </span>
+        {% else %}
+          <span class="text-muted d-inline-flex align-items-center gap-1">
+            <i class="bi bi-question-circle"></i> {{ item.periodicidade|default:"-" }}
+          </span>
+        {% endif %}
+      </td>
+<td>{{ item.qtde_estimada|intcomma }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted">Nenhum item encontrado para esta cotação.</p>
+          {% endif %}
+        {% endwith %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</td>
+
+
+<td>
+  {% with status=status_analises_dict|dict_get:cot.id %}
+    {% if status %}
+      {% for nome, qtd in status.items %}
+        {{ qtd }} {{ nome }}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    {% else %}
+      -
+    {% endif %}
+  {% endwith %}
+</td>
+
+
+<td>
+  {% with total=total_aprovado_dict|dict_get:cot.id %}
+    {% if total and total > 0 %}
+      R$ {{ total|stringformat:"0.2f" }}
+    {% else %}
+      -
+    {% endif %}
+  {% endwith %}
+</td>
+
+
             <td>
-                <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
-                    {% if request.user|has_permission:"comercial.view_cotacao" %}
-                    {% if request.user|has_permission:"comercial.view_precaculo" %}
+             {% with completo=completo_dict|dict_get:cot.id %}
+  {% if completo is None %}
+    -
+  {% elif completo %}
+    <i class="bi bi-check-circle-fill text-success" title="Todos completos"></i>
+  {% else %}
+    <i class="bi bi-x-circle-fill text-danger" title="Incompleto(s)"></i>
+  {% endif %}
+{% endwith %}
+
+            </td>
+            <td>
+              <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+                {% if request.user|has_permission:"comercial.view_cotacao" %}
+                  {% if request.user|has_permission:"comercial.view_precaculo" %}
                     <a href="{% url 'itens_precaculo' cot.id %}"
-                    class="btn btn-outline-info btn-sm mt-1"
-                    title="Ver Pré-Cálculo">
-                    <i class="bi bi-calculator"></i>
-                 </a>
-                      {% endif %}
-                      {% include "partials/global/_botao_visualizar.html" with objeto=cot url_visualizar="visualizar_cotacao" label="cotacao" %}
-                    {% endif %}
-                    {% if request.user|has_permission:"comercial.change_cotacao" %}
-                      {% include "partials/global/_botao_editar.html" with objeto=cot url_editar="editar_cotacao" label="cotacao" %}
-                    {% endif %}
-                    {% if request.user|has_permission:"comercial.delete_cotacao" %}
-                      {% include "partials/global/_botao_excluir.html" with objeto=cot url_excluir="excluir_cotacao" label="cotacao" %}
-                      {% include "partials/global/_modal_exclusao.html"   with objeto=cot url_excluir="excluir_cotacao" %}
-                    {% endif %}
-                  </div>
-                  
+                       class="btn btn-outline-info btn-sm mt-1"
+                       title="Ver Pré-Cálculo">
+                      <i class="bi bi-calculator"></i>
+                    </a>
+                  {% endif %}
+                {% endif %}
+                {% if request.user|has_permission:"comercial.change_cotacao" %}
+                  {% include "partials/global/_botao_editar.html" with objeto=cot url_editar="editar_cotacao" label="cotacao" %}
+                {% endif %}
+                {% if request.user|has_permission:"comercial.delete_cotacao" %}
+                  {% include "partials/global/_botao_excluir.html" with objeto=cot url_excluir="excluir_cotacao" label="cotacao" %}
+                  {% include "partials/global/_modal_exclusao.html"   with objeto=cot url_excluir="excluir_cotacao" %}
+                {% endif %}
+              </div>
             </td>
           </tr>
+          {% endwith %}
         {% empty %}
-          {% include "partials/global/_sem_resultados.html" with colspan=9 mensagem="Nenhuma cotação encontrada." %}
+          {% include "partials/global/_sem_resultados.html" with colspan=14 mensagem="Nenhuma cotação encontrada." %}
         {% endfor %}
       </tbody>
     </table>
