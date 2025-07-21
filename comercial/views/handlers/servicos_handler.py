@@ -20,6 +20,7 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
     salvo = False
     tratamentos = []
 
+    # Na tela de GET, busca no roteiro todos os insumos de setores de tratamento
     if request.method == "GET" and hasattr(precalc, "analise_comercial_item"):
         try:
             item = precalc.analise_comercial_item.item
@@ -28,20 +29,30 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
                 etapas = roteiro.etapas.select_related("setor").all()
                 for etapa in etapas:
                     def normalizar(texto):
-                        return unicodedata.normalize("NFKD", texto).encode("ASCII", "ignore").decode("ASCII").lower()
+                        return unicodedata.normalize("NFKD", texto) \
+                                      .encode("ASCII", "ignore") \
+                                      .decode("ASCII") \
+                                      .lower()
 
                     setor_nome = normalizar(etapa.setor.nome or "")
                     palavras_chave = ["externo", "oleo", "oleamento", "tratamento"]
-                    if any(palavra in setor_nome for palavra in palavras_chave):
+                    if any(p in setor_nome for p in palavras_chave):
                         for insumo in etapa.insumos.select_related("materia_prima").all():
                             if insumo.materia_prima_id:
                                 tratamentos.append(insumo)
 
-                servicos_invalidos = PreCalculoServicoExterno.objects.filter(precalculo=precalc).exclude(insumo__in=tratamentos)
+                # Remove serviços antigos não mais válidos
+                servicos_invalidos = PreCalculoServicoExterno.objects.filter(
+                    precalculo=precalc
+                ).exclude(insumo__in=tratamentos)
                 if servicos_invalidos.exists():
                     servicos_invalidos.delete()
 
-                novos_insumos = [i for i in tratamentos if not precalc.servicos.filter(insumo=i).exists()]
+                # Cria novos registros (3 cópias de cada insumo)
+                novos_insumos = [
+                    i for i in tratamentos
+                    if not precalc.servicos.filter(insumo=i).exists()
+                ]
                 for insumo in novos_insumos:
                     for _ in range(3):
                         PreCalculoServicoExterno.objects.create(
@@ -55,7 +66,8 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
                             nome_insumo=getattr(insumo.materia_prima, "codigo", ""),
                             codigo_materia_prima=getattr(insumo.materia_prima, "codigo", ""),
                             descricao_materia_prima=getattr(insumo.materia_prima, "descricao", ""),
-                            unidade=getattr(insumo.materia_prima, "unidade", ""),
+                            # ** CORREÇÃO **: usa o campo unidade de InsumoEtapa, não de MateriaPrimaCatalogo
+                            unidade=getattr(insumo, "unidade", ""),
                         )
                 precalc.refresh_from_db()
 
@@ -67,6 +79,7 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
         data = request.POST.copy()
         total = int(data.get("sev-TOTAL_FORMS", 0))
 
+        # Normaliza decimais no POST
         status_field = PreCalculoServicoExterno._meta.get_field("status")
         default_status = status_field.get_default() or status_field.choices[0][0]
 
@@ -87,6 +100,7 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
             if not data.get(sk):
                 data[sk] = default_status
 
+    # Monta o formset
     SevSet = inlineformset_factory(
         PreCalculo,
         PreCalculoServicoExterno,
@@ -97,20 +111,19 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
     )
     fs_sev = SevSet(data if request.method == "POST" else None, instance=precalc, prefix="sev")
 
+    # POST: salva e dispara e-mails de cotação se for o caso
     if request.method == "POST" and "form_servicos_submitted" in request.POST:
         if fs_sev.is_valid():
             fs_sev.save()
-
             if form_precalculo and form_precalculo.is_valid():
                 form_precalculo.instance = precalc
                 form_precalculo.save()
 
-            # Reseta todos como não selecionados inicialmente
+            # marca somente o selecionado
             for sev in precalc.servicos.all():
                 sev.selecionado = False
                 sev.save(update_fields=["selecionado"])
 
-            # Verifica os campos 'selecionado_insumo_<id>' do POST
             for key in request.POST:
                 if key.startswith("selecionado_insumo_"):
                     prefixo = request.POST[key]

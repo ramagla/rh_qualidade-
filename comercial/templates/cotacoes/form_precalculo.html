@@ -28,57 +28,60 @@
   <!-- Nav Tabs -->
   <ul class="nav nav-tabs mb-3" id="precalculoTabs" role="tablist">
     <li class="nav-item" role="presentation">
-      <a class="nav-link active text-primary" id="tab-analise" data-bs-toggle="tab" href="#pane-analise" role="tab">
+<a class="nav-link bg-analise text-dark active" id="tab-analise" data-bs-toggle="tab" href="#pane-analise" role="tab">
         <i class="bi bi-graph-up-arrow me-1"></i> Análise Comercial
       </a>
     </li>
 
     {% if edicao %}
     <li class="nav-item" role="presentation">
-      <a class="nav-link text-info" id="tab-regras" data-bs-toggle="tab" href="#pane-regras" role="tab">
+<a class="nav-link bg-regras text-dark" id="tab-regras" data-bs-toggle="tab" href="#pane-regras" role="tab">
         <i class="bi bi-calculator-fill me-1"></i> Regras de Cálculo
       </a>
     </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link text-warning" id="tab-avaliacao" data-bs-toggle="tab" href="#pane-avaliacao" role="tab">
+<a class="nav-link bg-avaliacao text-dark" id="tab-avaliacao" data-bs-toggle="tab" href="#pane-avaliacao" role="tab">
           <i class="bi bi-eyeglasses me-1"></i> Avaliação Técnica
         </a>
       </li>
      
       {% if precalc.materiais.exists %}
         <li class="nav-item" role="presentation">
-          <a class="nav-link text-success" id="tab-materiais" data-bs-toggle="tab" href="#pane-materiais" role="tab">
+<a class="nav-link bg-materiais text-dark" id="tab-materiais" data-bs-toggle="tab" href="#pane-materiais" role="tab">
             <i class="bi bi-box-seam me-1"></i> Matéria-Prima
           </a>
         </li>
         {% endif %}
 
-      {% if precalc.servicos_externos.exists %}
-      <li class="nav-item" role="presentation">
-        <a class="nav-link text-danger" id="tab-servicos" data-bs-toggle="tab" href="#pane-servicos" role="tab">
-          <i class="bi bi-tools me-1"></i> Serviços
-        </a>
-      </li>
+        {% if precalc.servicos.all %}
+        <li class="nav-item" role="presentation">
+          <a class="nav-link bg-servicos text-dark {% if aba_ativa == 'servicos' %}active{% endif %}"
+   id="tab-servicos" data-bs-toggle="tab" href="#pane-servicos" role="tab">
+
+            <i class="bi bi-tools me-1"></i> Serviços
+          </a>
+        </li>
       {% endif %}
       
       <li class="nav-item" role="presentation">
-        <a class="nav-link text-dark" id="tab-ferramentas" data-bs-toggle="tab" href="#pane-ferramentas" role="tab">
+<a class="nav-link bg-ferramentas text-dark" id="tab-ferramentas" data-bs-toggle="tab" href="#pane-ferramentas" role="tab">
           <i class="bi bi-hammer me-1"></i> Ferramentas
         </a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link text-secondary" id="tab-roteiro" data-bs-toggle="tab" href="#pane-roteiro" role="tab">
+<a class="nav-link bg-roteiro text-dark" id="tab-roteiro" data-bs-toggle="tab" href="#pane-roteiro" role="tab">
           <i class="bi bi-diagram-3-fill me-1"></i> Roteiro
         </a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link {% if aba_ativa == 'precofinal' %}active{% endif %}" id="precofinal-tab"
-           data-bs-toggle="tab" href="#pane-precofinal" role="tab" aria-controls="pane-precofinal">
+       <a class="nav-link bg-precofinal text-dark {% if aba_ativa == 'precofinal' %}active{% endif %}" id="precofinal-tab"
+   data-bs-toggle="tab" href="#pane-precofinal" role="tab" aria-controls="pane-precofinal">
+
           <i class="bi bi-currency-dollar me-1"></i> Preço Final
         </a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link text-purple" id="tab-desenvolvimento" data-bs-toggle="tab" href="#pane-desenvolvimento" role="tab">
+<a class="nav-link bg-desenvolvimento text-dark" id="tab-desenvolvimento" data-bs-toggle="tab" href="#pane-desenvolvimento" role="tab">
           <i class="bi bi-lightbulb-fill me-1"></i> Desenvolvimento
         </a>
       </li>
@@ -104,11 +107,11 @@
 </div>
 {% endif %}
 
-      {% if precalc.servicos_externos.exists %}
-<div class="tab-pane fade bg-servicos" id="pane-servicos" role="tabpanel">
-  {% include "cotacoes/tabs/_tab_servicos_externos.html" %}
-</div>
-{% endif %}
+        {% if precalc.servicos.all %}
+        <div class="tab-pane fade bg-servicos" id="pane-servicos" role="tabpanel">
+          {% include "cotacoes/tabs/_tab_servicos_externos.html" %}
+        </div>
+      {% endif %}
 
       <div class="tab-pane fade bg-ferramentas" id="pane-ferramentas" role="tabpanel">
         {% include "cotacoes/tabs/_tab_ferramentas.html" %}
@@ -160,6 +163,18 @@
   .bg-roteiro        { background-color: #e2e3e5; }
   .bg-ferramentas    { background-color: #fefefe; }
   .bg-desenvolvimento{ background-color: #f3e5f5; }
+
+
+
+  .bg-analise        { background-color: #e8f4fd !important; }
+.bg-avaliacao      { background-color: #fff3cd !important; }
+.bg-regras         { background-color: #d1ecf1 !important; }
+.bg-materiais      { background-color: #d4edda !important; }
+.bg-servicos       { background-color: #f8d7da !important; }
+.bg-roteiro        { background-color: #e2e3e5 !important; }
+.bg-ferramentas    { background-color: #fefefe !important; }
+.bg-precofinal     { background-color: #e9ecef !important; }
+.bg-desenvolvimento{ background-color: #f3e5f5 !important; }
 
   .nav-tabs .nav-link.text-purple {
     color: #6f42c1 !important;

@@ -84,7 +84,7 @@ def itens_precaculo(request, pk):
         )
 
     # Paginação
-    paginator = Paginator(precalculos, 20)
+    paginator = Paginator(precalculos, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
 
     return render(request, "cotacoes/precalculo_lista.html", {
@@ -105,10 +105,16 @@ def editar_precaculo(request, pk):
     precalc = get_object_or_404(PreCalculo, pk=pk)
     cot    = precalc.cotacao
     salvo  = False
-    mensagem_precofinal = None 
+    mensagem_precofinal = None   
+
+
 
     # identifica aba submetida
-    aba = request.POST.get("aba")
+    if request.method == "GET":
+        aba = request.GET.get("aba", "analise")
+    else:
+        aba = request.POST.get("aba")
+    salvo = False
 
     materiais_respondidos = False
     servicos_respondidos = False
@@ -161,17 +167,10 @@ def editar_precaculo(request, pk):
 
         elif aba == "materiais" and (
             "form_materiais_submitted" in request.POST or
-            any(k.startswith("mat-") for k in request.POST) or
-            request.POST.get("atualizar_materiais") == "1"
+            any(k.startswith("mat-") for k in request.POST)
         ):
             materiais_respondidos = precalc.materiais.filter(preco_kg__isnull=False).exists()
             salvo, _, fs_mat = processar_aba_materiais(request, precalc, materiais_respondidos, form_precalculo)
-
-            # Redireciona apenas se não for atualização do roteiro
-            if salvo and not request.POST.get("atualizar_materiais") == "1":
-                return redirect(reverse("editar_precaculo", args=[precalc.pk]) + "?aba=materiais")
-
-
 
 
         elif aba == "servicos" and (
@@ -182,8 +181,12 @@ def editar_precaculo(request, pk):
                 Q(preco_kg__isnull=True) | Q(preco_kg=0)
             ).exists()
             servicos_respondidos = not faltam
-            salvo, _, fs_serv = processar_aba_servicos(request, precalc, form_precalculo)
-
+            salvo, _, fs_sev = processar_aba_servicos(
+                request,
+                precalc,
+                servicos_respondidos=servicos_respondidos,
+                form_precalculo=form_precalculo,
+            )
 
 
 
@@ -268,6 +271,7 @@ def editar_precaculo(request, pk):
 
 
 
+    # Carrega apenas se for GET puro e formset ainda não tiver sido processado
     if not fs_mat and (
         request.method == "GET" or
         any(k.startswith("mat-") for k in request.POST)
@@ -276,7 +280,6 @@ def editar_precaculo(request, pk):
         _, form_precalculo, fs_mat = processar_aba_materiais(
             request, precalc, materiais_respondidos, form_precalculo=form_precalculo
     )
-
 
 
     if not fs_sev and (
@@ -288,8 +291,11 @@ def editar_precaculo(request, pk):
         ).exists()
         servicos_respondidos = not faltam
         _, form_precalculo, fs_sev = processar_aba_servicos(
-            request, precalc, servicos_respondidos, form_precalculo=form_precalculo
-    )
+            request,
+            precalc,
+            servicos_respondidos=servicos_respondidos,
+            form_precalculo=form_precalculo,
+        )
 
 
 

@@ -500,8 +500,7 @@ class CotacaoFerramenta(AuditModel):
     ferramenta = models.ForeignKey(
         Ferramenta, on_delete=models.PROTECT
     )
-    observacoes = CKEditor5Field("Observações", config_name="default", blank=True, null=True)
-# 🔐 Metadados de Assinatura
+    observacoes  = CKEditor5Field("Observações da Ferramenta", config_name="default", blank=True, null=True)
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
     assinado_em = models.DateTimeField(auto_now_add=True)
     data_assinatura = models.DateTimeField("Data da assinatura", null=True, blank=True)

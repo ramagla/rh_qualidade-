@@ -54,21 +54,82 @@
 
     <table class="table table-bordered align-middle table-sm">
       <thead class="table-light align-middle text-center">
-        <tr>
-          <th>Selecionar</th>
-          <th><i class="bi bi-upc-scan me-1"></i> Código</th>
-          <th><i class="bi bi-boxes me-1"></i> Lote Mínimo</th>
-          <th><i class="bi bi-truck me-1"></i> Entrega (dias)</th>
-          <th><i class="bi bi-building me-1"></i> Fornecedor</th>
-          <th><i class="bi bi-percent me-1"></i> ICMS (%)</th>
-          <th><i class="bi bi-currency-dollar me-1"></i> Preço/kg</th>
-          <th><i class="bi bi-rulers me-1"></i> Desenv. (mm)</th>
-          <th><i class="bi bi-weight me-1"></i> Peso Líquido</th>
-          <th><i class="bi bi-box me-1"></i> Peso Bruto</th>
-          <th><i class="bi bi-basket-fill me-1"></i> Peso Bruto Total</th>
-          <th><i class="bi bi-flag me-1"></i> Status</th>
-        </tr>
-      </thead>
+  <tr>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-check-circle mb-1"></i>
+        <small>Selecionar</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-boxes mb-1"></i>
+        <small>Lote Mín.</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-truck mb-1"></i>
+        <small>Prazo</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Fornecedor</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-percent mb-1"></i>
+        <small>ICMS</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-currency-dollar mb-1"></i>
+        <small>Preço/kg</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-rulers mb-1"></i>
+        <small>Desenv. (mm)</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-box  mb-1"></i>
+        <small>P.Líquido</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-box mb-1"></i>
+        <small>P.Bruto</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-basket-fill mb-1"></i>
+        <small>P.Total</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-flag mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for form in grupo.list %}
           <tr>

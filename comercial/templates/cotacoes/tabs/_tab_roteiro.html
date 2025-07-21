@@ -12,11 +12,7 @@
     <i class="bi bi-diagram-3 text-primary me-2"></i> Roteiro de Produção
   </h5>
 
-  <div class="alert alert-warning">
-    Total de formulários (total_form_count): {{ fs_rot.total_form_count }}<br>
-    Formulários iniciais (initial_form_count): {{ fs_rot.initial_form_count }}<br>
-    Prefixo do formset: {{ fs_rot.prefix }}
-  </div>
+ 
 
   <!-- Bloco informativo -->
   <div class="alert alert-info small">
@@ -43,15 +39,41 @@
   <div class="table-responsive mt-3">
     <table class="table table-bordered align-middle text-center table-sm"
            data-qtde="{{ qtde|floatformat:2 }}">
-      <thead class="table-light">
-        <tr>
-          <th><i class="bi bi-diagram-3-fill me-1 text-muted"></i> Setor</th>
-          <th><i class="bi bi-speedometer2 me-1 text-muted"></i> Peças/hora</th>
-          <th><i class="bi bi-stopwatch me-1 text-muted"></i> Setup (min)</th>
-          <th><i class="bi bi-currency-dollar me-1 text-muted"></i> Custo Hora</th>
-          <th><i class="bi bi-calculator-fill me-1 text-muted"></i> Valor Total (R$)</th>
-        </tr>
-      </thead>
+      <thead class="table-light align-middle text-center">
+  <tr>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-diagram-3-fill mb-1 text-muted"></i>
+        <small>Setor</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-speedometer2 mb-1 text-muted"></i>
+        <small>Peças/hora</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-stopwatch mb-1 text-muted"></i>
+        <small>Setup (min)</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-currency-dollar mb-1 text-muted"></i>
+        <small>Custo Hora</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calculator-fill mb-1 text-muted"></i>
+        <small>Valor Total (R$)</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for form in fs_rot.forms %}
           {% if not form.empty_permitted %}
@@ -88,10 +110,7 @@
           {% endif %}
         {% endfor %}
       
-        <!-- Linha informativa (opcional) -->
-        <tr class="table-info">
-          <td colspan="5">Total de forms visíveis: {{ fs_rot.total_form_count }}</td>
-        </tr>
+      
       </tbody>
       
       

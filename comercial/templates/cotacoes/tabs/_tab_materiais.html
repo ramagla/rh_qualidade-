@@ -64,17 +64,9 @@
           </ul>
         </div>
         {% endif %}
-<div class="d-flex justify-content-end mb-3">
-  <form method="post">
-  {% csrf_token %}
-  <input type="hidden" name="atualizar_materiais" value="1">
-  <button type="submit" class="btn btn-outline-primary btn-sm float-end">
-    <i class="bi bi-arrow-clockwise me-1"></i> Atualizar do Roteiro
-  </button>
-</form>
 
-</div>
 
+  
         <table class="table table-bordered align-middle table-sm">
           <thead class="table-light align-middle text-center">
   <tr>
@@ -167,16 +159,32 @@
               </td>
 
               <td>{{ form.codigo|add_class:"form-control form-control-sm codigo-input" }}</td>
-              <td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
-              <td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
-              <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
-              <td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
-              <td class="bg-lightblue">{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
-
+              <td class="bg-lightblue">
+              {{ form.lote_minimo|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 100" }}
+              <td class="bg-lightblue">
+              {{ form.entrega_dias|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 5" }}
+              </td>              <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
+                            <td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
+              <td class="bg-lightblue">
+              {{ form.preco_kg|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 12,345" }}
+              </td>
               <td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm" }}</td>
-              <td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm" }}</td>
-              <td class="bg-lightyellow">{{ form.peso_bruto|add_class:"form-control form-control-sm" }}</td>
-              <td class="bg-lightyellow">
+<td class="bg-lightyellow">
+<input type="text"
+       name="{{ form.peso_liquido.html_name }}"
+       id="{{ form.peso_liquido.id_for_label }}"
+       class="form-control form-control-sm"
+       value="{{ form.peso_liquido.value|floatformat:"3"|default_if_none:'' }}"
+       placeholder="Ex: 1,234">
+</td>              
+<td class="bg-lightyellow">
+<input type="text"
+       name="{{ form.peso_bruto.html_name }}"
+       id="{{ form.peso_bruto.id_for_label }}"
+       class="form-control form-control-sm"
+       value="{{ form.peso_bruto.value|floatformat:"3"|default_if_none:'' }}"
+       placeholder="Ex: 1,500">
+</td>              <td class="bg-lightyellow">
                 {{ form.peso_bruto_total|add_class:"form-control form-control-sm text-end" }}
               </td>
               
@@ -197,11 +205,12 @@
         {{ fs_mat.management_form }}
 
         <div class="mb-3 mt-3">
-          <label for="{{ form_precalculo.observacoes_materiais.id_for_label }}" class="form-label">
-            <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
-          </label>
-          {{ form_precalculo.observacoes_materiais|add_class:"form-control" }}
-        </div>
+<label for="{{ form_precalculo.observacoes_materiais.id_for_label }}" class="form-label">
+<i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
+</label>
+{{ form_precalculo.observacoes_materiais|add_class:"form-control"|attr:"placeholder:Ex: Informe aqui detalhes ou observações relevantes…" }}
+</div>
+
         
         
         

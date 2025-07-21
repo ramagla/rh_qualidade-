@@ -55,14 +55,35 @@
         </h6>
         <div class="table-responsive mb-3">
           <table class="table table-bordered text-center align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>Selecionar</th>
-                <th>Descrição</th>
-                <th>Preço Unitário (R$)</th>
-                <th>Preço Total (R$)</th>
-              </tr>
-            </thead>
+            <thead class="table-light align-middle text-center">
+  <tr>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-check-circle mb-1 text-muted"></i>
+        <small>Selecionar</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-card-text mb-1 text-muted"></i>
+        <small>Descrição</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-currency-dollar mb-1 text-muted"></i>
+        <small>Preço Unit.</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calculator mb-1 text-muted"></i>
+        <small>Preço Total</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
             <tbody>
               {% with qtde=precalc.analise_comercial_item.qtde_estimada %}
                 {% for opcao in precos_sem_impostos %}
@@ -102,14 +123,35 @@
         </h6>
         <div class="table-responsive mb-3">
           <table class="table table-bordered text-center align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>Selecionar</th>
-                <th>Margem</th>
-                <th>Preço Unitário (R$)</th>
-                <th>Preço Total (R$)</th>
-              </tr>
-            </thead>
+           <thead class="table-light align-middle text-center">
+  <tr>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-check-circle mb-1 text-muted"></i>
+        <small>Selecionar</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-card-text mb-1 text-muted"></i>
+        <small>Descrição</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-currency-dollar mb-1 text-muted"></i>
+        <small>Preço Unit.</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calculator mb-1 text-muted"></i>
+        <small>Preço Total</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
             <tbody>
               {% with qtde=precalc.analise_comercial_item.qtde_estimada %}
               {% for opcao in precos_com_impostos %}

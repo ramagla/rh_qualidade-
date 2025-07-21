@@ -1,24 +1,59 @@
 from django.forms import inlineformset_factory
 from decimal import Decimal
-from comercial.forms.precalculos_form import PreCalculoMaterialForm
+from comercial.forms.precalculos_form import PreCalculoForm, PreCalculoMaterialForm
 from comercial.models.precalculo import PreCalculo, PreCalculoMaterial
 from comercial.utils.email_cotacao_utils import disparar_email_cotacao_material
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
-from comercial.utils.precalculo_utils import atualizar_materiais_do_roteiro  # ⬅️ Certifique-se que essa função está acessível aqui
-
+from tecnico.models.roteiro import InsumoEtapa
 
 def processar_aba_materiais(request, precalc, materiais_respondidos, form_precalculo=None):
     salvo = False
 
-    # 🔄 Atualização manual: botão "Atualizar do Roteiro"
-    if request.method == "POST" and request.POST.get("atualizar_materiais") == "1":
-        atualizar_materiais_do_roteiro(precalc)
-
-    # Primeira carga via GET se não houver materiais
+    # Preenche automaticamente os insumos se ainda não houverem registros
+    # Cria registros de matéria-prima com base no roteiro — apenas se ainda não houver nenhum
+    # ⚠️ Só cria os registros se não houver nenhum — nunca altera os existentes
     if request.method == "GET" and not precalc.materiais.exists():
-        atualizar_materiais_do_roteiro(precalc)
+        item = getattr(precalc.analise_comercial_item, "item", None)
+        roteiro = getattr(item, "roteiro", None)
+
+        if roteiro:
+            insumos_materia_prima = InsumoEtapa.objects.filter(
+                etapa__roteiro=roteiro,
+                tipo_insumo="matéria_prima"
+            ).select_related("materia_prima")[:3]
+
+            for insumo in insumos_materia_prima:
+                mp = insumo.materia_prima
+                if mp:
+                    PreCalculoMaterial.objects.create(
+                        precalculo=precalc,
+                        roteiro=roteiro,
+                        codigo=mp.codigo,
+                        nome_materia_prima=mp.codigo,
+                        descricao=getattr(mp, 'descricao', ''),
+                        tipo_material=getattr(mp, 'tipo_material', ''),
+                        desenvolvido_mm=Decimal("0.0000000"),
+                        peso_liquido=Decimal("0.0000000"),
+                        peso_bruto=Decimal("0.0000000"),
+                    )
+
+            # 🟢 Cria linhas em branco apenas se ainda não atingir 3
+            total_existente = precalc.materiais.count()
+            for _ in range(3 - total_existente):
+                PreCalculoMaterial.objects.create(
+                    precalculo=precalc,
+                    codigo="",
+                    desenvolvido_mm=Decimal("0.0000000"),
+                    peso_liquido=Decimal("0.0000000"),
+                    peso_bruto=Decimal("0.0000000"),
+                )
+
+
 
     qs_materiais = PreCalculoMaterial.objects.filter(precalculo=precalc)
+    print("🔎 Materiais carregados do banco:")
+    for m in qs_materiais:
+        print(f" - {m.codigo} | Peso Bruto: {m.peso_bruto} | Peso Total: {m.peso_bruto_total}")
 
     MatSet = inlineformset_factory(
         PreCalculo,
@@ -28,9 +63,9 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
         can_delete=True,
     )
 
-    fs_mat = MatSet(instance=precalc, queryset=qs_materiais, prefix="mat")
+    fs_mat = MatSet(instance=precalc, queryset=qs_materiais, prefix="mat")  # Para GET
 
-    if request.method == "POST" and not request.POST.get("atualizar_materiais"):
+    if request.method == "POST":
         data = request.POST.copy()
         total = int(data.get("mat-TOTAL_FORMS", 0))
 
@@ -42,12 +77,14 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
                     valor = valor.replace(".", "").replace(",", ".")
                     data[campo] = str(Decimal(valor))
                 except Exception as e:
+                    print(f"⚠️ Erro ao converter {campo} = '{valor}': {e}")
                     data[campo] = ""
 
         assert form_precalculo is not None, "form_precalculo não foi passado corretamente"
 
         fs_mat = MatSet(data=data, instance=precalc, queryset=qs_materiais, prefix="mat")
 
+        # ⚠️ Verifica se houve envio da aba mesmo com valor ''
         if "form_materiais_submitted" in request.POST:
             if fs_mat.is_valid():
                 selecionado = request.POST.get("material_selecionado")
@@ -68,14 +105,14 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
                         if mat.peso_bruto and qtde_estimada:
                             mat.peso_bruto_total = Decimal(mat.peso_bruto) * Decimal(qtde_estimada)
 
-                        try:
-                            mp = MateriaPrimaCatalogo.objects.get(codigo=mat.codigo)
-                            if not mat.descricao:
-                                mat.descricao = mp.descricao
-                            if not mat.tipo_material:
-                                mat.tipo_material = mp.tipo_material
-                        except MateriaPrimaCatalogo.DoesNotExist:
-                            pass
+                        # try:
+                        #     mp = MateriaPrimaCatalogo.objects.get(codigo=mat.codigo)
+                        #     if not mat.descricao:
+                        #         mat.descricao = mp.descricao
+                        #     if not mat.tipo_material:
+                        #         mat.tipo_material = mp.tipo_material
+                        # except MateriaPrimaCatalogo.DoesNotExist:
+                        #     pass
 
                         mat.save()
 
@@ -88,9 +125,11 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
                             codigos_disparados.add(mat.codigo)
 
                 fs_mat.save()
+
+               
                 salvo = True
             else:
-                print("❌ Erros no formset de materiais:")
+                print("❌ ERROS DO FORMSET DE MATERIAIS:")
                 for form in fs_mat:
                     print(form.errors)
                 print("non_form_errors:", fs_mat.non_form_errors())

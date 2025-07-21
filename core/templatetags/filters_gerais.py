@@ -442,3 +442,8 @@ def abs_valor(value):
         return abs(int(value))
     except Exception:
         return value
+
+
+@register.filter
+def trim(value):
+    return value.strip() if isinstance(value, str) else value

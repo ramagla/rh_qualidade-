@@ -1,3 +1,7 @@
+{% load filters_gerais %}
+
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -9,34 +13,56 @@
 </head>
 <body class="bg-light">
   <div class="container mt-5 p-4 bg-white shadow rounded">
-    <h2 class="mb-3">
-      <i class="bi bi-receipt-cutoff me-2 text-primary"></i>
-      Responder Cotação – Código: <strong>{{ codigo }}</strong>
-    </h2>
+  <h2 class="mb-1">
+  <i class="bi bi-receipt-cutoff me-2 text-primary"></i>
+  Responder Cotação – Código: <strong>{{ codigo }}</strong>
+</h2>
+<p class="text-muted mb-4">
+  <i class="bi bi-card-text me-1"></i> {{ materiais.0.descricao }}
+</p>
 
-    <!-- Alerta com orientação -->
-    <div class="alert alert-info d-flex align-items-center gap-2 small">
-      <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
-      Cotar no mínimo <strong>2 fornecedores diferentes</strong>. Caso não haja fonte homologada, consulte o setor responsável.
-    </div>
 
-    <p class="mb-1">
-      <strong>
-        <i class="bi bi-basket-fill me-1 text-muted"></i> Peso Bruto Total:
-      </strong>
-      {{ materiais.0.peso_bruto_total|floatformat:2 }}
-    </p>
-    
-    
-    <div class="mb-3">
-      <label>
-        <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
-      </label>
-      <div class="border p-3 bg-light" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto;">
-        {{ observacoes_gerais|default:"Sem observações"|safe }}
-      </div>
+   <!-- Alerta com orientação -->
+<div class="alert alert-info small">
+  <div class="d-flex align-items-center gap-2 mb-1">
+    <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+    Cotar no mínimo <strong>2 fornecedores diferentes</strong>. Caso não haja fonte homologada, consulte o setor responsável.
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-clock fs-5 text-muted"></i>
+    O prazo de entrega deve ser informado em <strong>dias corridos</strong>.
+  </div>
+</div>
+
+
+
+   <!-- Destaque para o Peso Bruto Total -->
+<div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 mb-3 shadow-sm">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-basket-fill fs-4 text-dark"></i>
+    <span class="fw-bold fs-5">Peso Bruto Total:</span>
+  </div>
+  <span class="fs-5 text-primary fw-semibold">
+    {{ materiais.0.peso_bruto_total|floatformat:2 }} kg
+  </span>
+</div>
+
+   {% if observacoes_gerais|trim %}
+  <div class="mb-3">
+    <label class="form-label mb-1">
+      <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
+    </label>
+    <div class="border rounded bg-light px-3 py-2" style="
+      white-space: pre-wrap;
+      line-height: 1.3;
+      margin-bottom: 0;
+    ">
+      {{ observacoes_gerais|trim|safe }}
     </div>
-    
+  </div>
+{% endif %}
+
+
 
     {% if messages %}
       <div class="mb-3">
@@ -50,24 +76,40 @@
       {% csrf_token %}
       <table class="table table-bordered align-middle text-center">
         <thead class="table-light">
-          <tr>
-            <th style="width: 30%;">
-              <i class="bi bi-building me-1"></i> Fornecedor
-            </th>
-            <th style="width: 15%;">
-              <i class="bi bi-percent me-1"></i> ICMS (%)
-            </th>
-            <th style="width: 15%;">
-              <i class="bi bi-boxes me-1"></i> Lote Mínimo
-            </th>
-            <th style="width: 15%;">
-              <i class="bi bi-truck me-1"></i> Entrega (dias corridos)
-            </th>
-            <th style="width: 15%;">
-              <i class="bi bi-currency-dollar me-1"></i> Preço/kg
-            </th>
-          </tr>
-        </thead>
+  <tr>
+    <th class="text-center align-middle" style="width: 30%;">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Fornecedor</small>
+      </div>
+    </th>
+    <th class="text-center align-middle" style="width: 15%;">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-percent mb-1"></i>
+        <small>ICMS (%)</small>
+      </div>
+    </th>
+    <th class="text-center align-middle" style="width: 15%;">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-boxes mb-1"></i>
+        <small>Lote Mínimo</small>
+      </div>
+    </th>
+    <th class="text-center align-middle" style="width: 15%;">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-truck mb-1"></i>
+        <small>Entrega (dias)</small>
+      </div>
+    </th>
+    <th class="text-center align-middle" style="width: 15%;">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-currency-dollar mb-1"></i>
+        <small>Preço/kg</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
         <tbody>
           {% for mat in materiais %}
           <tr>
