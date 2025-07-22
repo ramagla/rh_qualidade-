@@ -180,14 +180,30 @@
           </td>
                     <td>{{ item.lote_minimo }}</td>
           <td>{{ item.revisao }}</td>
-          {% load static %}
-<td class="text-center align-middle">
+         <td class="text-center align-middle">
   {% if item.item_seguranca %}
-    <img src="{% static 'img/seguranca.png' %}" alt="Item de Segurança" title="Item de Segurança" style="height: 22px;" />
+    <div class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
+      {% if item.seguranca_mp and item.simbolo_mp %}
+        <img src="{{ item.simbolo_mp.url }}" alt="MP" title="MP" class="img-thumbnail border" style="height: 22px; width: auto;">
+      {% endif %}
+      {% if item.seguranca_ts and item.simbolo_ts %}
+        <img src="{{ item.simbolo_ts.url }}" alt="TS" title="TS" class="img-thumbnail border" style="height: 22px; width: auto;">
+      {% endif %}
+      {% if item.seguranca_m1 and item.simbolo_m1 %}
+        <img src="{{ item.simbolo_m1.url }}" alt="M1" title="M1" class="img-thumbnail border" style="height: 22px; width: auto;">
+      {% endif %}
+      {% if item.seguranca_l1 and item.simbolo_l1 %}
+        <img src="{{ item.simbolo_l1.url }}" alt="L1" title="L1" class="img-thumbnail border" style="height: 22px; width: auto;">
+      {% endif %}
+      {% if item.seguranca_l2 and item.simbolo_l2 %}
+        <img src="{{ item.simbolo_l2.url }}" alt="L2" title="L2" class="img-thumbnail border" style="height: 22px; width: auto;">
+      {% endif %}
+    </div>
   {% else %}
     <span class="text-muted">–</span>
   {% endif %}
 </td>
+
 
           <td>
             <div class="d-inline-flex flex-wrap gap-1 justify-content-center">

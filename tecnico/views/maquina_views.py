@@ -90,3 +90,41 @@ def excluir_maquina(request, pk):
         messages.success(request, "Máquina excluída com sucesso.")
         return redirect("tecnico:tecnico_maquinas")
     return render(request, "maquinas/confirmar_exclusao.html", {"maquina": maquina})
+
+
+# views.py
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from tecnico.models.maquina import ServicoRealizado
+from django.template.loader import render_to_string
+import json
+
+@login_required
+def ajax_listar_servicos(request):
+    servicos = ServicoRealizado.objects.all().order_by("nome")
+    html = render_to_string("maquinas/_lista_servicos.html", {"servicos": servicos})
+
+    return HttpResponse(html)
+
+@csrf_exempt
+@login_required
+def ajax_adicionar_servico(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        ServicoRealizado.objects.get_or_create(nome=data.get("nome"))
+        return JsonResponse({"success": True})
+
+@csrf_exempt
+@login_required
+def ajax_editar_servico(request, pk):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        ServicoRealizado.objects.filter(pk=pk).update(nome=data.get("nome"))
+        return JsonResponse({"success": True})
+
+@csrf_exempt
+@login_required
+def ajax_excluir_servico(request, pk):
+    if request.method == "POST":
+        ServicoRealizado.objects.filter(pk=pk).delete()
+        return JsonResponse({"success": True})

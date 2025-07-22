@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load filters_gerais %}
 
 {% block title %}{{ titulo_pagina }}{% endblock %}
 
@@ -149,34 +150,142 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="col-md-4">
+  <div class="form-check form-switch mt-4">
+    {{ form.item_seguranca|add_class:"form-check-input" }}
+    <label class="form-check-label" for="{{ form.item_seguranca.id_for_label }}">
+      <i class="bi bi-shield-lock me-1"></i> Item de Segurança
+    </label>
+  </div>
+</div>
 
-                        <div class="col-md-4">
-                            <div class="form-check form-switch mt-4">
-                                {{ form.item_seguranca|add_class:"form-check-input" }}
-                                <label class="form-check-label" for="{{ form.item_seguranca.id_for_label }}">
-                                    <i class="bi bi-shield-lock me-1"></i> Item de Segurança
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="{{ form.status.id_for_label }}" class="form-label"><i class="bi bi-check2-circle me-1"></i> Status:</label>
-                            {{ form.status|add_class:"form-select" }}
-                        </div>
-                       
-                          
-                        <div class="col-md-6" id="campoSimboloSeguranca" style="display: none;">
-                            <label for="{{ form.simbolo_seguranca.id_for_label }}" class="form-label">
-                              <i class="bi bi-exclamation-diamond-fill me-1"></i> Imagem de Simbologia de Segurança:
-                            </label>
-                            {{ form.simbolo_seguranca|add_class:"form-control" }}
-                          
-                            {% if item and item.simbolo_seguranca %}
-                              <div class="mt-2">
-                                <strong>Imagem atual:</strong><br>
-                                <img src="{{ item.simbolo_seguranca.url }}" alt="Simbologia de Segurança" class="img-thumbnail border" style="max-height: 120px;">
-                              </div>
-                            {% endif %}
-                          </div>
+
+                       <!-- Características de Segurança -->
+<div id="grupoCaracteristicasSeguranca" style="display: none;">
+  <div class="row g-3 mt-3">
+    <!-- Switches -->
+    <div class="col-md-2">
+      <div class="form-check form-switch">
+        {{ form.seguranca_mp|add_class:"form-check-input" }}
+        <label class="form-check-label" for="{{ form.seguranca_mp.id_for_label }}">MP</label>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="form-check form-switch">
+        {{ form.seguranca_ts|add_class:"form-check-input" }}
+        <label class="form-check-label" for="{{ form.seguranca_ts.id_for_label }}">TS</label>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="form-check form-switch">
+        {{ form.seguranca_m1|add_class:"form-check-input" }}
+        <label class="form-check-label" for="{{ form.seguranca_m1.id_for_label }}">M1</label>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="form-check form-switch">
+        {{ form.seguranca_l1|add_class:"form-check-input" }}
+        <label class="form-check-label" for="{{ form.seguranca_l1.id_for_label }}">L1</label>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="form-check form-switch">
+        {{ form.seguranca_l2|add_class:"form-check-input" }}
+        <label class="form-check-label" for="{{ form.seguranca_l2.id_for_label }}">L2</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Imagens condicionais de características de segurança -->
+<div class="row g-3 mt-3">
+
+  {% with field=form.simbolo_mp %}
+  <div class="col-md-6" id="campoSimbolo_mp" style="display: none;">
+    <label for="{{ field.id_for_label }}" class="form-label">
+      <i class="bi bi-image me-1"></i> Imagem MP:
+    </label>
+    {{ field|add_class:"form-control" }}
+    {% if item and field.value %}
+      <div class="mt-2">
+        <strong>Imagem atual:</strong><br>
+        <img src="{{ field.value.url }}" class="img-thumbnail border" style="max-height: 120px;">
+      </div>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  {% with field=form.simbolo_ts %}
+  <div class="col-md-6" id="campoSimbolo_ts" style="display: none;">
+    <label for="{{ field.id_for_label }}" class="form-label">
+      <i class="bi bi-image me-1"></i> Imagem TS:
+    </label>
+    {{ field|add_class:"form-control" }}
+    {% if item and field.value %}
+      <div class="mt-2">
+        <strong>Imagem atual:</strong><br>
+        <img src="{{ field.value.url }}" class="img-thumbnail border" style="max-height: 120px;">
+      </div>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  {% with field=form.simbolo_m1 %}
+  <div class="col-md-6" id="campoSimbolo_m1" style="display: none;">
+    <label for="{{ field.id_for_label }}" class="form-label">
+      <i class="bi bi-image me-1"></i> Imagem M1:
+    </label>
+    {{ field|add_class:"form-control" }}
+    {% if item and field.value %}
+      <div class="mt-2">
+        <strong>Imagem atual:</strong><br>
+        <img src="{{ field.value.url }}" class="img-thumbnail border" style="max-height: 120px;">
+      </div>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  {% with field=form.simbolo_l1 %}
+  <div class="col-md-6" id="campoSimbolo_l1" style="display: none;">
+    <label for="{{ field.id_for_label }}" class="form-label">
+      <i class="bi bi-image me-1"></i> Imagem L1:
+    </label>
+    {{ field|add_class:"form-control" }}
+    {% if item and field.value %}
+      <div class="mt-2">
+        <strong>Imagem atual:</strong><br>
+        <img src="{{ field.value.url }}" class="img-thumbnail border" style="max-height: 120px;">
+      </div>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  {% with field=form.simbolo_l2 %}
+  <div class="col-md-6" id="campoSimbolo_l2" style="display: none;">
+    <label for="{{ field.id_for_label }}" class="form-label">
+      <i class="bi bi-image me-1"></i> Imagem L2:
+    </label>
+    {{ field|add_class:"form-control" }}
+    {% if item and field.value %}
+      <div class="mt-2">
+        <strong>Imagem atual:</strong><br>
+        <img src="{{ field.value.url }}" class="img-thumbnail border" style="max-height: 120px;">
+      </div>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+</div>
+
+</div>
+
+
+
+<!-- Status -->
+<div class="col-md-4">
+  <label for="{{ form.status.id_for_label }}" class="form-label"><i class="bi bi-check2-circle me-1"></i> Status:</label>
+  {{ form.status|add_class:"form-select" }}
+</div>
+
                           
                           
                         
@@ -194,45 +303,78 @@
 
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const tipoItem = document.getElementById("id_tipo_item");
-      const codigoDesenho = document.getElementById("id_codigo_desenho");
-      const inputCodigo = document.getElementById("id_codigo");
-    
-      const campoCodigo = document.getElementById("campoCodigo");
-      const campoDescricao = document.getElementById("campoDescricao");
-      const campoCodigoCliente = document.getElementById("campoCodigoCliente");
-      const campoDescricaoCliente = document.getElementById("campoDescricaoCliente");
-    
-      const switchSeguranca = document.getElementById("id_item_seguranca");
-      const campoSimbolo = document.getElementById("campoSimboloSeguranca");
-    
-      function atualizarVisibilidadeCampos() {
-        const isCotacao = tipoItem.value.toLowerCase() === "cotacao";
-    
-        campoCodigo.style.display = isCotacao ? "none" : "block";
-        campoDescricao.style.display = isCotacao ? "none" : "block";
-        campoCodigoCliente.style.display = isCotacao ? "none" : "block";
-        campoDescricaoCliente.style.display = isCotacao ? "none" : "block";
-    
-        if (isCotacao) {
-          inputCodigo.value = codigoDesenho.value;
+  document.addEventListener("DOMContentLoaded", function () {
+    const tipoItem = document.getElementById("id_tipo_item");
+    const codigoDesenho = document.getElementById("id_codigo_desenho");
+    const inputCodigo = document.getElementById("id_codigo");
+
+    const campoCodigo = document.getElementById("campoCodigo");
+    const campoDescricao = document.getElementById("campoDescricao");
+    const campoCodigoCliente = document.getElementById("campoCodigoCliente");
+    const campoDescricaoCliente = document.getElementById("campoDescricaoCliente");
+
+    const switchItemSeguranca = document.getElementById("id_item_seguranca");
+    const grupoSeguranca = document.getElementById("grupoCaracteristicasSeguranca");
+
+    function atualizarVisibilidadeCampos() {
+      const isCotacao = tipoItem.value.toLowerCase() === "cotacao";
+
+      campoCodigo.style.display = isCotacao ? "none" : "block";
+      campoDescricao.style.display = isCotacao ? "none" : "block";
+      campoCodigoCliente.style.display = isCotacao ? "none" : "block";
+      campoDescricaoCliente.style.display = isCotacao ? "none" : "block";
+
+      if (isCotacao) {
+        inputCodigo.value = codigoDesenho.value;
+      }
+    }
+
+    function toggleGrupoSeguranca() {
+      grupoSeguranca.style.display = switchItemSeguranca.checked ? "block" : "none";
+    }
+
+    function toggleCamposSimbolos() {
+      const mapa = {
+        "id_seguranca_mp": "campoSimbolo_mp",
+        "id_seguranca_ts": "campoSimbolo_ts",
+        "id_seguranca_m1": "campoSimbolo_m1",
+        "id_seguranca_l1": "campoSimbolo_l1",
+        "id_seguranca_l2": "campoSimbolo_l2"
+      };
+
+      for (const [switchId, divId] of Object.entries(mapa)) {
+        const checkbox = document.getElementById(switchId);
+        const div = document.getElementById(divId);
+        if (checkbox && div) {
+          div.style.display = checkbox.checked ? "block" : "none";
         }
       }
-    
-      function toggleCampoSimbolo() {
-        campoSimbolo.style.display = switchSeguranca.checked ? "block" : "none";
-      }
-    
-      tipoItem.addEventListener("change", atualizarVisibilidadeCampos);
-      codigoDesenho.addEventListener("input", atualizarVisibilidadeCampos);
-      switchSeguranca.addEventListener("change", toggleCampoSimbolo);
-    
-      // Executa ao carregar a página
-      atualizarVisibilidadeCampos();
-      toggleCampoSimbolo();
+    }
+
+    tipoItem.addEventListener("change", atualizarVisibilidadeCampos);
+    codigoDesenho.addEventListener("input", atualizarVisibilidadeCampos);
+    switchItemSeguranca.addEventListener("change", toggleGrupoSeguranca);
+
+    const switches = [
+      "id_seguranca_mp",
+      "id_seguranca_ts",
+      "id_seguranca_m1",
+      "id_seguranca_l1",
+      "id_seguranca_l2"
+    ];
+    switches.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("change", toggleCamposSimbolos);
     });
-    </script>
+
+    // Inicial
+    atualizarVisibilidadeCampos();
+    toggleGrupoSeguranca();
+    toggleCamposSimbolos();
+  });
+</script>
+
+
     
   
 {% endblock %}

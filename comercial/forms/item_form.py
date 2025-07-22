@@ -12,18 +12,8 @@ class ItemForm(forms.ModelForm):
     )
     class Meta:
         model = Item
-        fields = [
-            "cliente", "codigo", "descricao", "ncm", "ipi",
-            "ferramenta", "lote_minimo",
-            "codigo_cliente", "descricao_cliente",
-            "codigo_desenho",
-            "automotivo_oem", "requisito_especifico", "item_seguranca",
-            "simbolo_seguranca",  # novo
-            "status",             # novo
-            "desenho", "revisao", "data_revisao",
-            "tipo_item",
+        fields = '__all__'
 
-        ]
 
         widgets = {
             "cliente": Select(attrs={"class": "form-select select2"}),
@@ -39,10 +29,21 @@ class ItemForm(forms.ModelForm):
             "item_seguranca": CheckboxInput(attrs={"class": "form-check-input"}),
             "desenho": FileInput(attrs={"class": "form-control"}),
             "revisao": TextInput(attrs={"class": "form-control", "placeholder": "Ex: A, B1"}),
-            "data_revisao": DateInput(attrs={"class": "form-control", "type": "date"}),
+            "data_revisao": DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
             "codigo_desenho": TextInput(attrs={"class": "form-control", "placeholder": "Código do desenho"}),
             "status": Select(attrs={"class": "form-select"}),
-            "simbolo_seguranca": FileInput(attrs={"class": "form-control"}),
+            "seguranca_mp": CheckboxInput(attrs={"class": "form-check-input"}),
+            "seguranca_ts": CheckboxInput(attrs={"class": "form-check-input"}),
+            "seguranca_m1": CheckboxInput(attrs={"class": "form-check-input"}),
+            "seguranca_l1": CheckboxInput(attrs={"class": "form-check-input"}),
+            "seguranca_l2": CheckboxInput(attrs={"class": "form-check-input"}),
+
+            "simbolo_mp": FileInput(attrs={"class": "form-control"}),
+            "simbolo_ts": FileInput(attrs={"class": "form-control"}),
+            "simbolo_m1": FileInput(attrs={"class": "form-control"}),
+            "simbolo_l1": FileInput(attrs={"class": "form-control"}),
+            "simbolo_l2": FileInput(attrs={"class": "form-control"}),
+
             "tipo_item": Select(attrs={"class": "form-select"}),
 
         }
@@ -64,8 +65,19 @@ class ItemForm(forms.ModelForm):
             "data_revisao": "Data da Revisão",
             "codigo_desenho": "Código do Desenho",
                 "status": "Status do Item",
-    "simbolo_seguranca": "Imagem de Simbologia de Segurança",
-    "tipo_item": "Tipo de Item",
+           "seguranca_mp": "Possui MP",
+            "seguranca_ts": "Possui TS",
+            "seguranca_m1": "Possui M1",
+            "seguranca_l1": "Possui L1",
+            "seguranca_l2": "Possui L2",
+
+            "simbolo_mp": "Imagem MP",
+            "simbolo_ts": "Imagem TS",
+            "simbolo_m1": "Imagem M1",
+            "simbolo_l1": "Imagem L1",
+            "simbolo_l2": "Imagem L2",
+
+                "tipo_item": "Tipo de Item",
 
         }
 

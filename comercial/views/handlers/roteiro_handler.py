@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django.forms import inlineformset_factory
 from django.utils import timezone
 from comercial.forms.precalculos_form import RoteiroCotacaoForm
@@ -16,17 +16,31 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
             qtde = precalc.analise_comercial_item.qtde_estimada or 1
 
             for etapa in roteiro.etapas.select_related("setor"):
-                pph = etapa.pph or 1
-                setup = etapa.setup_minutos or 0
-                custo_hora = etapa.setor.custo_atual or 0
+                try:
+                    pph = Decimal(etapa.pph)
+                except (InvalidOperation, TypeError):
+                    pph = Decimal(0)
 
                 try:
-                    tempo_pecas = Decimal(qtde) / Decimal(pph)
-                except ZeroDivisionError:
+                    setup = Decimal(etapa.setup_minutos)
+                except (InvalidOperation, TypeError):
+                    setup = Decimal(0)
+
+                try:
+                    custo_hora = Decimal(str(etapa.setor.custo_atual).replace(",", "."))
+                except (InvalidOperation, AttributeError):
+                    custo_hora = Decimal(0)
+
+                try:
+                    tempo_pecas = Decimal(qtde) / pph if pph > 0 else Decimal(0)
+                except (ZeroDivisionError, InvalidOperation):
                     tempo_pecas = Decimal(0)
 
-                tempo_setup = Decimal(setup) / Decimal(60)
-                total = (tempo_pecas + tempo_setup) * Decimal(custo_hora)
+                tempo_setup = setup / Decimal(60)
+                total = (tempo_pecas + tempo_setup) * custo_hora
+
+                # continua com o restante do processamento...
+
 
                 propriedades = PropriedadesEtapa.objects.filter(etapa=etapa).first()
                 maquinas_roteiro = None

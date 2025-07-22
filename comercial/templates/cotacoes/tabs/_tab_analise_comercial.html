@@ -351,3 +351,20 @@ $('.select2').select2({
   });
 </script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectItem = document.querySelector('select[name="item"]');
+    if (selectItem) {
+      const jaTemNovo = [...selectItem.options].some(opt => opt.value === "__novo__");
+      if (!jaTemNovo) {
+        const option = new Option("🆕 Criar Novo Item...", "__novo__", false, false);
+        selectItem.add(option);
+      }
+
+      $(selectItem).on("change", function () {
+        const valor = this.value;
+        document.getElementById("blocoNovoItem").style.display = valor === "__novo__" ? "block" : "none";
+      }).trigger("change");  // já atualiza na carga
+    }
+  });
+</script>

@@ -24,7 +24,20 @@ class Item(models.Model):
     descricao_cliente = models.CharField("Descrição no Cliente", max_length=255, blank=True, null=True)
     ipi = models.DecimalField("IPI (%)", max_digits=5, decimal_places=2, blank=True, null=True)
     status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES, default="Ativo")
-    simbolo_seguranca = models.ImageField("Simbol. Segurança", upload_to="itens/simbolos/", blank=True, null=True)
+    # switches
+    seguranca_mp = models.BooleanField("Possui MP", default=False)
+    seguranca_ts = models.BooleanField("Possui TS", default=False)
+    seguranca_m1 = models.BooleanField("Possui M1", default=False)
+    seguranca_l1 = models.BooleanField("Possui L1", default=False)
+    seguranca_l2 = models.BooleanField("Possui L2", default=False)
+
+    # imagens
+    simbolo_mp = models.ImageField("Imagem MP", upload_to="itens/simbolos/", blank=True, null=True)
+    simbolo_ts = models.ImageField("Imagem TS", upload_to="itens/simbolos/", blank=True, null=True)
+    simbolo_m1 = models.ImageField("Imagem M1", upload_to="itens/simbolos/", blank=True, null=True)
+    simbolo_l1 = models.ImageField("Imagem L1", upload_to="itens/simbolos/", blank=True, null=True)
+    simbolo_l2 = models.ImageField("Imagem L2", upload_to="itens/simbolos/", blank=True, null=True)
+
     automotivo_oem = models.BooleanField("Automotivo OEM", default=False)
     requisito_especifico = models.BooleanField("Requisito Específico Cliente?", default=False)
     item_seguranca = models.BooleanField("É Item de Segurança?", default=False)

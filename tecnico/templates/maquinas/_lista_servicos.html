@@ -1,0 +1,29 @@
+<table class="table table-bordered table-sm align-middle text-center">
+  <thead class="table-light">
+    <tr>
+      <th>Nome</th>
+      <th style="width: 160px;">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in servicos %}
+    <tr>
+      <td>
+        <input type="text" class="form-control form-control-sm" value="{{ s.nome }}">
+      </td>
+      <td>
+        <button class="btn btn-sm btn-primary btn-editar-servico" data-id="{{ s.id }}">
+          <i class="bi bi-pencil-square"></i>
+        </button>
+        <button class="btn btn-sm btn-danger btn-excluir-servico" data-id="{{ s.id }}">
+          <i class="bi bi-trash3"></i>
+        </button>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="2" class="text-center text-muted">Nenhum serviço cadastrado.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

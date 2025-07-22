@@ -6,7 +6,7 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 class RoteiroProducaoForm(forms.ModelForm):
     class Meta:
         model = RoteiroProducao
-        fields = ["item", "massa_mil_pecas", "observacoes_gerais"]
+        fields = ["item", "massa_mil_pecas", "revisao", "observacoes_gerais"]
         widgets = {
             "item": forms.Select(attrs={"class": "form-select select2"}),
             "massa_mil_pecas": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),

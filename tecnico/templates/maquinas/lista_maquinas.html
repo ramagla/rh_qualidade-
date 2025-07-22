@@ -18,6 +18,42 @@
      class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
     <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
   </a>
+
+  <button type="button"
+        class="btn btn-outline-secondary"
+        data-bs-toggle="modal"
+        data-bs-target="#modalServicos">
+  <i class="bi bi-wrench-adjustable-circle me-1"></i> Cadastrar Serviços
+</button>
+<div class="modal fade" id="modalServicos" tabindex="-1" aria-labelledby="modalServicosLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalServicosLabel">
+          <i class="bi bi-wrench-adjustable-circle me-2"></i> Serviços Realizados
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Área de formulário -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-10">
+            <input type="text" class="form-control" id="inputNovoServico" placeholder="Digite o nome do novo serviço">
+          </div>
+          <div class="col-md-2 text-end">
+            <button type="button" class="btn btn-success w-100" id="btnSalvarServico">
+              <i class="bi bi-plus-circle me-1"></i> Adicionar
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de serviços -->
+        <div id="listaServicosContainer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endif %}
 
   </div>
@@ -62,17 +98,53 @@
 
   <div class="table-responsive zebra-tabela mt-4">
     <table class="table table-bordered table-striped align-middle text-center">
-      <thead class="table-light">
-        <tr>
-          <th>Código</th>
-          <th>Nome</th>
-          <th>Serviço</th>
-          <th>Velocidade (unid/h)</th>
-          <th>Valor Hora (R$)</th>
-          <th>Consumo (kWh)</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
+      <thead class="table-light align-middle text-center">
+  <tr>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear-fill mb-1"></i>
+        <small>Nome</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-tools mb-1"></i>
+        <small>Serviço</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-speedometer2 mb-1"></i>
+        <small>Velocidade<br>(unid/h)</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-currency-dollar mb-1"></i>
+        <small>Valor Hora<br>(R$)</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-lightning-charge-fill mb-1"></i>
+        <small>Consumo<br>(kWh)</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-three-dots mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for m in page_obj %}
         <tr>
@@ -104,4 +176,68 @@
   </div>
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  function carregarServicos() {
+    fetch("{% url 'tecnico:ajax_listar_servicos' %}")
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("listaServicosContainer").innerHTML = html;
+      });
+  }
+
+  // Abrir modal = carregar lista
+  const modalEl = document.getElementById("modalServicos");
+  modalEl.addEventListener("shown.bs.modal", carregarServicos);
+
+  // Adicionar novo serviço
+  document.getElementById("btnSalvarServico").addEventListener("click", () => {
+    const nome = document.getElementById("inputNovoServico").value.trim();
+    if (!nome) return;
+
+    fetch("{% url 'tecnico:ajax_adicionar_servico' %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ nome })
+    }).then(() => {
+      document.getElementById("inputNovoServico").value = "";
+      carregarServicos();
+    });
+  });
+
+  // Delegação para excluir/editar
+  document.addEventListener("click", e => {
+    if (e.target.classList.contains("btn-excluir-servico")) {
+      const id = e.target.dataset.id;
+      if (!confirm("Excluir este serviço?")) return;
+
+      fetch(`/tecnico/servicos/${id}/excluir/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" }
+      }).then(carregarServicos);
+    }
+
+    if (e.target.classList.contains("btn-editar-servico")) {
+      const linha = e.target.closest("tr");
+      const input = linha.querySelector("input");
+      const novoNome = input.value.trim();
+      const id = e.target.dataset.id;
+
+      fetch(`/tecnico/servicos/${id}/editar/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ nome: novoNome })
+      }).then(carregarServicos);
+    }
+  });
+});
+</script>
+
 {% endblock %}

@@ -50,9 +50,9 @@ def processar_aba_precofinal(request, precalc):
 
             if preco_manual_unit is not None and preco_manual_unit > 0:
                 preco_salvo = preco_manual_unit
-                print(f"✅ Usando preco_manual (unitário) = {preco_salvo}")
-                precalc.preco_manual = preco_salvo
-                precalc.preco_selecionado = Decimal("0.00")
+                precalc.preco_manual     = preco_salvo
+                precalc.preco_selecionado = preco_salvo
+
 
             elif preco_tabela is not None:
                 preco_salvo = preco_tabela.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)

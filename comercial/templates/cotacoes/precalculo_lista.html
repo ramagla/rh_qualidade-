@@ -33,10 +33,13 @@
     </a>
       {% if request.user|has_permission:"comercial.gerar_proposta" %}
 
-        <a href="#" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center" style="background: linear-gradient(135deg, #ffc107, #ffca2c); box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);">
-        <i class="bi bi-file-earmark-richtext me-2"></i>
-        Gerar Proposta
-      </a>
+       <a href="#" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center"
+   data-bs-toggle="modal" data-bs-target="#modalGerarProposta"
+   style="background: linear-gradient(135deg, #ffc107, #ffca2c); box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);">
+  <i class="bi bi-file-earmark-richtext me-2"></i>
+  Gerar Proposta
+</a>
+
       {% endif %}
 
       {% if request.user|has_permission:"comercial.add_precalculo" %}
@@ -60,26 +63,46 @@
           <p>Selecione os pré-cálculos que farão parte da proposta:</p>
           <div class="table-responsive">
             <table class="table table-sm table-bordered">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>Nº</th>
-                  <th>Item</th>
-                  <th>Preço Final</th>
-                </tr>
-              </thead>
+              <thead class="table-light">
+  <tr class="align-middle text-center">
+    <th>
+      <i class="bi bi-check-square text-primary"></i><br>
+      <small>Selecionar</small>
+    </th>
+    <th>
+      <i class="bi bi-hash text-primary"></i><br>
+      <small>Nº</small>
+    </th>
+    <th>
+      <i class="bi bi-upc-scan text-primary"></i><br>
+      <small>Código</small>
+    </th>
+    <th>
+      <i class="bi bi-currency-dollar text-primary"></i><br>
+      <small>Preço Final</small>
+    </th>
+  </tr>
+</thead>
+
               <tbody>
-                {% for precalc in precalculos %}
-                <tr>
-                  <td>
-                    <input type="checkbox" name="precalculos_selecionados" value="{{ precalc.id }}">
-                  </td>
-                  <td>{{ precalc.numero }}</td>
-                  <td>{{ precalc.analise_comercial_item.item.codigo }}</td>
-                  <td>R$ {{ precalc.preco_manual|default:precalc.preco_selecionado|floatformat:4 }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
+  {% for precalc in precalculos %}
+    <tr>
+      <td class="align-middle text-center">
+        <input type="checkbox" name="precalculos_selecionados" value="{{ precalc.id }}">
+      </td>
+      <td class="align-middle text-center">
+        {{ precalc.numero }}
+      </td>
+      <td class="align-middle text-center">
+        {{ precalc.analise_comercial_item.item.codigo }}
+      </td>
+      <td class="align-middle text-center">
+        {{ precalc.preco_manual|default:precalc.preco_selecionado|formatar_reais }}
+      </td>
+    </tr>
+  {% endfor %}
+</tbody>
+
             </table>
           </div>
         </div>
@@ -138,12 +161,13 @@
   </div>
 
   <!-- Indicadores -->
-  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
-    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Materiais" valor=total_materiais subtitulo="Itens de Matéria-Prima" icone="bi-box-seam" %}
-    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Serviços Ext." valor=total_servicos subtitulo="Itens de Serviço Externo" icone="bi-gear-fill" %}
-    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Itens" valor=total_itens subtitulo="Materiais + Serviços" icone="bi-list-ul" %}
-    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Itens na Página" valor=page_obj|length subtitulo="Registros desta página" icone="bi-card-list" %}
-  </div>
+<div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+{% include "partials/global/_card_indicador.html" with cor="success" titulo="Aprovados" valor=status_aprovado subtitulo="Itens Aprovados" icone="bi-check-circle-fill" %}
+{% include "partials/global/_card_indicador.html" with cor="danger" titulo="Reprovados" valor=status_reprovado subtitulo="Itens Reprovados" icone="bi-x-circle-fill" %}
+{% include "partials/global/_card_indicador.html" with cor="warning" titulo="Amostras" valor=status_amostras subtitulo="Solicitação de Amostras" icone="bi-droplet" %}
+{% include "partials/global/_card_indicador.html" with cor="secondary" titulo="Em Andamento" valor=status_andamento subtitulo="Análises em Andamento" icone="bi-hourglass-split" %}
+</div>
+
 
   <!-- Lista de Itens de Pré-Cálculo -->
   <h5 class="mb-3">
@@ -283,51 +307,45 @@
 
       
           <td>
-  {% with preco=item.preco_selecionado %}
-    {% with precos=item.calcular_precos_com_impostos %}
-      {% with valor_exibido=None %}
-        {% for p in precos %}
-          {% if p.unitario|floatformat:"4" == preco|floatformat:"4" %}
-            {{ p.total|formatar_reais }}
-            {% with valor_exibido=True %}{% endwith %}
-          {% endif %}
-        {% endfor %}
-        {% if not valor_exibido %}
-          <span class="text-muted fst-italic">Ainda não definido</span>
-        {% endif %}
-      {% endwith %}
-    {% endwith %}
-  {% endwith %}
+  {% if item.valor_total is not None %}
+    {{ item.valor_total|formatar_reais }}
+  {% else %}
+    <span class="text-muted fst-italic">Ainda não definido</span>
+  {% endif %}
 </td>
+
 
 
             
       <!-- 🛠 Valor Ferramental -->
 <td>
-  {% if item.valor_ferramental %}
+  {% if item.valor_ferramental is not None %}
     {{ item.valor_ferramental|formatar_reais }}
   {% else %}
     <span class="text-muted fst-italic">Ainda não definido</span>
   {% endif %}
 </td>
 
+
 <!-- 💰 Total Geral (produto + ferramental) -->
 <td>
-  {% if item.total_geral %}
+  {% if item.total_geral is not None %}
     {{ item.total_geral|formatar_reais }}
   {% else %}
     <span class="text-muted fst-italic">Ainda não definido</span>
   {% endif %}
 </td>
 
+
 <!-- 📈 Preço Escolhido (R$ + % margem) -->
 <td>
-  {% if item.preco_margem_formatado %}
+  {% if item.preco_margem_formatado is not None %}
     {{ item.preco_margem_formatado }}
   {% else %}
     <span class="text-muted fst-italic">Ainda não definido</span>
   {% endif %}
 </td>
+
 
 
       

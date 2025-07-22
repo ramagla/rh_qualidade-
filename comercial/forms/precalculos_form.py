@@ -248,7 +248,9 @@ class RoteiroCotacaoForm(forms.ModelForm):
             self.fields[campo].required = False
             self.fields[campo].widget = forms.NumberInput(attrs={
                 'class': 'form-control form-control-sm text-center',
-                'autocomplete': 'off'
+                'autocomplete': 'off',
+                'step': '1' if campo == 'pph' else '0.0001',  # ⬅️ Aqui está o controle das casas decimais
+                'min': '0'
             })
 
         # Etapa como campo oculto

@@ -16,7 +16,7 @@ class CentroDeCusto(models.Model):
         ordering = ["nome"] 
         
     def __str__(self):
-        return f"{self.nome} – R$ {self.custo_atual}"
+        return f"{self.nome}"
 
     @property
     def custo_vigente(self):

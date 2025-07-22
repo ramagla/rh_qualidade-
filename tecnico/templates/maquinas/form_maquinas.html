@@ -59,9 +59,12 @@
             </div>
 
             <div class="col-md-12">
-              <label class="form-label"><i class="bi bi-hammer me-1"></i> Serviço Realizado <span class="text-danger">*</span></label>
-              {{ form.servico_realizado|add_class:"form-control" }}
-            </div>
+  <label class="form-label">
+    <i class="bi bi-hammer me-1"></i> Serviços Realizados
+  </label>
+  {{ form.servicos_realizados }}
+</div>
+
 
             <div class="col-md-4">
               <label class="form-label"><i class="bi bi-speedometer2 me-1"></i> Velocidade (unid/h) <span class="text-danger">*</span></label>
@@ -93,4 +96,14 @@
        </div>
   </form>
 </div>
+
+<script>
+  $(document).ready(function() {
+    $('select[name="servicos_realizados"]').select2({
+      placeholder: "Selecione os serviços",
+      width: '100%'
+    });
+  });
+</script>
+
 {% endblock %}

@@ -38,63 +38,89 @@ from comercial.views.handlers.regras_handler import processar_aba_regras
 from comercial.views.handlers.roteiro_handler import processar_aba_roteiro
 from comercial.views.handlers.servicos_handler import processar_aba_servicos
 
+from collections import Counter
 
 
 
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 @login_required
 @permission_required("comercial.view_precalculo", raise_exception=True)
 def itens_precaculo(request, pk):
     cot = get_object_or_404(Cotacao, pk=pk)
-
-    # Lista todos os pré-cálculos da cotação
     precalculos = PreCalculo.objects.filter(cotacao=cot).order_by("numero")
 
-    # Enriquecimento para exibição no template
+    # Enriquecimento de cada pré-cálculo
     for precalc in precalculos:
         precalc.tipo_precalculo = "Item de Cotação"
         precalc.total_materiais = precalc.materiais.count()
         precalc.total_servicos = precalc.servicos.count()
-        precalc.total_geral = precalc.total_materiais + precalc.total_servicos
         precalc.analise_ok = hasattr(precalc, "analise_comercial_item")
         precalc.regras_ok = hasattr(precalc, "regras_calculo_item")
         precalc.avaliacao_ok = hasattr(precalc, "avaliacao_tecnica_item")
         precalc.desenvolvimento_ok = hasattr(precalc, "desenvolvimento_item")
 
-        # ✅ Valor total das ferramentas
+        # Valor Ferramental
         precalc.valor_ferramental = sum(
-            f.ferramenta.valor_total or 0
+            f.ferramenta.valor_total or Decimal("0.00")
             for f in precalc.ferramentas_item.all()
         )
 
-        # ✅ Total Geral (produto + ferramentas)
-        preco_final = precalc.preco_selecionado or Decimal("0.00")
-        precalc.total_geral = preco_final + Decimal(precalc.valor_ferramental)
-
-        # ✅ Preço Escolhido com percentual (%)
-        precalc.preco_margem_formatado = next(
-            (
-                f"{item['unitario']:.2f} ({item['percentual']}%)"
-                for item in precalc.calcular_precos_com_impostos()
-                if round(item['unitario'], 4) == round(preco_final, 4)
-            ),
-            f"{preco_final:.2f}" if preco_final else None
+        # Preço efetivo (override manual ou selecionado)
+        preco_final = (
+            precalc.preco_manual
+            if precalc.preco_manual and precalc.preco_manual > Decimal("0.00")
+            else (precalc.preco_selecionado or Decimal("0.00"))
         )
+
+        # Valor Total = Preço Escolhido × Qtde Estimada
+        qtde = getattr(precalc.analise_comercial_item, "qtde_estimada", 0) or 0
+        precalc.valor_total = preco_final * Decimal(qtde)
+
+        # Total Geral = Valor Total + Ferramental
+        precalc.total_geral = precalc.valor_total + precalc.valor_ferramental
+
+        # Preço Escolhido com percentual (%)
+        if precalc.preco_manual and precalc.preco_manual > Decimal("0.00"):
+            custo_unitario = precalc.calcular_precos_com_impostos()[0]["unitario"]
+            percentual_manual = (
+                (preco_final - custo_unitario)
+                / custo_unitario
+                * Decimal("100")
+            ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            precalc.preco_margem_formatado = f"{preco_final:.2f} ({percentual_manual}%)"
+        else:
+            precalc.preco_margem_formatado = next(
+                (
+                    f"{item['unitario']:.2f} ({item['percentual']}%)"
+                    for item in precalc.calcular_precos_com_impostos()
+                    if round(item["unitario"], 4) == round(preco_final, 4)
+                ),
+                f"{preco_final:.2f}" if preco_final else None
+            )
 
     # Paginação
     paginator = Paginator(precalculos, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
 
+    # Contagem de itens por status de análise
+    lista_status = []
+    for p in precalculos:
+        if hasattr(p, "analise_comercial_item"):
+            lista_status.append(p.analise_comercial_item.status)
+        else:
+            lista_status.append("andamento")
+    contagem = Counter(lista_status)
+
     return render(request, "cotacoes/precalculo_lista.html", {
         "cotacao": cot,
-        "precalculos": precalculos,  # ✅ Necessário para o modal funcionar
-
+        "precalculos": precalculos,
         "page_obj": page_obj,
-        "total_materiais": sum(p.total_materiais for p in precalculos),
-        "total_servicos": sum(p.total_servicos for p in precalculos),
-        "total_itens": precalculos.count(),
+        "status_aprovado": contagem.get("aprovado", 0),
+        "status_reprovado": contagem.get("reprovado", 0),
+        "status_amostras": contagem.get("amostras", 0),
+        "status_andamento": contagem.get("andamento", 0),
     })
 
 
@@ -392,6 +418,7 @@ from comercial.models.item import Item  # certifique-se de importar
 # ...
 
 
+from datetime import datetime
 
 @login_required
 @permission_required('comercial.add_precalculomaterial', raise_exception=True)
@@ -401,17 +428,28 @@ def criar_precaculo(request, pk):
     aba = next((k.replace("form_", "").replace("_submitted", "") for k in request.POST if k.startswith("form_")), None)
     novo_item_instancia = None
 
+
+    data_str = request.POST.get("novo_data_revisao")
+    data_formatada = None
+    if data_str:
+        try:
+            data_formatada = datetime.strptime(data_str, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    codigo_desenho = request.POST.get("novo_codigo_desenho") or ""
+
     # Intercepta criação de novo item antes de instanciar o formulário
     if request.method == "POST" and aba == "analise" and request.POST.get("item") == "__novo__":
         novo_item_instancia = Item.objects.create(
             cliente=cot.cliente,
             tipo_item="Cotacao",
-            codigo=request.POST.get("novo_codigo"),
+            codigo=codigo_desenho,            
             descricao=request.POST.get("novo_descricao") or "",
             ncm=request.POST.get("novo_ncm") or "",
             lote_minimo=request.POST.get("novo_lote_minimo") or 1,
             revisao=request.POST.get("novo_revisao") or "",
-            data_revisao=request.POST.get("novo_data_revisao") or None,
+            data_revisao=data_formatada,
+            codigo_desenho=request.POST.get("novo_codigo_desenho") or "",
             ipi=request.POST.get("novo_ipi") or None,
             automotivo_oem=bool(request.POST.get("novo_automotivo_oem")),
             requisito_especifico=bool(request.POST.get("novo_requisito_especifico")),

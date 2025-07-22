@@ -316,6 +316,23 @@ class PreCalculoMaterial(AuditModel):
     class Meta:
         verbose_name = "Pré-Cálculo Matéria-Prima"
         verbose_name_plural = "Materiais Pré-Cálculo"
+    
+    def save(self, *args, **kwargs):
+        # 🧠 Preenchimento automático a partir do catálogo (caso esteja faltando)
+        if self.codigo:
+            try:
+                materia = MateriaPrimaCatalogo.objects.get(codigo=self.codigo)
+
+                # Atualiza se estiver em branco ou quiser sempre forçar
+                if not self.descricao:
+                    self.descricao = materia.descricao
+                if not self.tipo_material:
+                    self.tipo_material = materia.tipo_material
+
+            except MateriaPrimaCatalogo.DoesNotExist:
+                pass  # evita erro se não encontrar o código
+
+        super().save(*args, **kwargs)
 
 
 

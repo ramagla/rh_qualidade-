@@ -147,59 +147,25 @@
 
 
           <tbody>
-            
-            {% for form in fs_mat.forms %}
-            <tr>
-              {{ form.id }}
-              <td class="text-center align-middle">
-                <input type="radio" name="material_selecionado"
-                       value="{{ form.prefix }}"
-                       class="form-check-input mt-1"
-                       {% if form.instance.selecionado %}checked{% endif %}>
-              </td>
+{% for form in fs_mat.forms %}
+<tr>
+{{ form.id }}
+<td class="text-center align-middle"><input type="radio" name="material_selecionado" value="{{ form.prefix }}" class="form-check-input mt-1" {% if form.instance.selecionado %}checked{% endif %}></td>
+<td>{{ form.codigo|add_class:"form-control form-control-sm codigo-input" }}</td>
+<td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 100" }}</td>
+<td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 5" }}</td>
+<td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
+<td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
+<td class="bg-lightblue">{{ form.preco_kg|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 12,345" }}</td>
+<td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm"|attr:"placeholder:Desenv. (mm)" }}</td>
+<td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 1,234" }}</td>
+<td class="bg-lightyellow">{{ form.peso_bruto|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 1,500" }}</td>
+<td class="bg-lightyellow text-end">{{ form.peso_bruto_total|add_class:"form-control form-control-sm text-end" }}</td>
+<td class="text-center">{% if form.instance.pk and form.instance.preco_kg %}<span class="badge bg-success">OK</span>{% else %}<span class="badge bg-warning text-dark">Aguardando</span>{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody>
 
-              <td>{{ form.codigo|add_class:"form-control form-control-sm codigo-input" }}</td>
-              <td class="bg-lightblue">
-              {{ form.lote_minimo|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 100" }}
-              <td class="bg-lightblue">
-              {{ form.entrega_dias|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 5" }}
-              </td>              <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
-                            <td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
-              <td class="bg-lightblue">
-              {{ form.preco_kg|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 12,345" }}
-              </td>
-              <td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm" }}</td>
-<td class="bg-lightyellow">
-<input type="text"
-       name="{{ form.peso_liquido.html_name }}"
-       id="{{ form.peso_liquido.id_for_label }}"
-       class="form-control form-control-sm"
-       value="{{ form.peso_liquido.value|floatformat:"3"|default_if_none:'' }}"
-       placeholder="Ex: 1,234">
-</td>              
-<td class="bg-lightyellow">
-<input type="text"
-       name="{{ form.peso_bruto.html_name }}"
-       id="{{ form.peso_bruto.id_for_label }}"
-       class="form-control form-control-sm"
-       value="{{ form.peso_bruto.value|floatformat:"3"|default_if_none:'' }}"
-       placeholder="Ex: 1,500">
-</td>              <td class="bg-lightyellow">
-                {{ form.peso_bruto_total|add_class:"form-control form-control-sm text-end" }}
-              </td>
-              
-              
-
-              <td class="text-center">
-                {% if form.instance.pk and form.instance.preco_kg %}
-                  <span class="badge bg-success">OK</span>
-                {% else %}
-                  <span class="badge bg-warning text-dark">Aguardando</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
         </table>
 
         {{ fs_mat.management_form }}

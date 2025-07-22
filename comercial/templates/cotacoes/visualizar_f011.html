@@ -8,6 +8,11 @@
 {% include 'partials/global/_estilos_impressao.html' %}
 {% include 'partials/global/_botao_impressao.html' %}
 {% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+
+<div class="no-print alert alert-info mt-3">
+  <strong>Atenção:</strong> Ative a <u>impressão frente e verso (duplex)</u> nas configurações da impressora.
+</div>
 
 <div class="container pdf-container">
     {% load static %}
@@ -104,8 +109,22 @@
           {% endwith %}
         </td>
         
-        <th style="text-align: right;"><i class="bi bi-file-earmark"></i> Desenho:</th>
-        <td>{{ precalc.analise_comercial_item.item.codigo_desenho|default:"---" }}</td>
+       <th style="text-align: right;"><i class="bi bi-file-earmark"></i> Desenho:</th>
+<td>
+  {% if precalc.analise_comercial_item.item.codigo_desenho %}
+    {% if precalc.analise_comercial_item.item.desenho %}
+      <a href="{{ precalc.analise_comercial_item.item.desenho.url }}" target="_blank">
+        {{ precalc.analise_comercial_item.item.codigo_desenho }}
+      </a>
+    {% else %}
+      {{ precalc.analise_comercial_item.item.codigo_desenho }}
+    {% endif %}
+  {% else %}
+    <span class="text-muted fst-italic">—</span>
+  {% endif %}
+</td>
+
+
       </tr>
       <tr>
         <th style="text-align: right;"><i class="bi bi-list-ol"></i> Revisão:</th>
@@ -116,8 +135,15 @@
       <tr>
         <th style="text-align: right;"><i class="bi bi-hash"></i> Nº da peça:</th>
         <td colspan="2">{{ precalc.analise_comercial_item.item.descricao|default:"---" }}</td>
-        <th style="text-align: right;"><i class="bi bi-tag"></i> Código Bras-Mol:</th>
-        <td colspan="2">{{ precalc.analise_comercial_item.item.codigo|default:"---" }}</td>
+       <th style="text-align: right;"><i class="bi bi-tag"></i> Código Bras-Mol:</th>
+<td colspan="2">
+  {% if precalc.analise_comercial_item.item.tipo_item == "Corrente" %}
+    {{ precalc.analise_comercial_item.item.codigo|default:"—" }}
+  {% else %}
+    <span class="text-muted fst-italic">Ainda não definido</span>
+  {% endif %}
+</td>
+
       </tr>
       <tr>
         <th style="text-align: right;"><i class="bi bi-bar-chart"></i> Consumo estimado:</th>

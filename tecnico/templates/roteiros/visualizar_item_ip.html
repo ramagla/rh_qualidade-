@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load custom_filters %}
+{% block title %}IP do Item - {{ item.codigo }}{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% load static %}
+
+<div class="container pdf-container">
+
+  <!-- Alerta para impressão -->
+  <div class="no-print alert alert-info mt-3">
+    <strong>Atenção:</strong> Ative a <u>impressão frente e verso (duplex)</u> nas configurações da impressora.
+  </div>
+
+  <!-- Cabeçalho institucional -->
+  <div class="table-responsive mb-4">
+    <table class="table table-bordered align-middle text-center" style="table-layout: fixed;">
+      <tr>
+        <td style="width: 20%;">
+          <img src="{% static 'img/logo.png' %}" alt="Logo" class="img-fluid" style="max-height: 70px;">
+        </td>
+        <td style="width: 60%;">
+          <strong>INSTRUÇÃO DE PROCESSO</strong><br>
+          <span class="text-uppercase">Detalhamento de Etapas, Equipamentos e Parâmetros</span>
+        </td>
+        <td style="width: 20%; padding: 0;">
+          <table class="table table-bordered mb-0 small">
+            <tr><th class="p-1">Código BM</th></tr>
+            <tr><td class="text-danger fw-bold p-1">{{ item.codigo|default:"—" }}</td></tr>
+            <tr><th class="p-1">Revisão</th></tr>
+<tr>
+  <td class="fw-bold p-1">
+    {{ roteiro.revisao|default:"—" }}
+  </td>
+</tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+ <!-- Dados Técnicos -->
+<h6 class="mt-4 mb-2 text-uppercase"><i class="bi bi-clipboard2-data me-1"></i> Dados Técnicos</h6>
+
+<div class="table-responsive mb-4">
+  <table class="table table-bordered align-middle small">
+    <tr>
+      <th style="text-align: right;"><i class="bi bi-file-earmark"></i> Código do Desenho:</th>
+      <td>
+        {% if item.desenho %}
+          <a href="{{ item.desenho.url }}" target="_blank">{{ item.codigo_desenho|default:"—" }}</a>
+        {% else %}
+          {{ item.codigo_desenho|default:"—" }}
+        {% endif %}
+      </td>
+      <th style="text-align: right;"><i class="bi bi-list-ol"></i> Revisão:</th>
+      <td>{{ item.revisao|default:"—" }}</td>
+    </tr>
+    <tr>
+      <th style="text-align: right;"><i class="bi bi-calendar"></i> Data da Revisão:</th>
+      <td>{{ item.data_revisao|date:"d/m/Y"|default:"—" }}</td>
+      <th style="text-align: right;"><i class="bi bi-diagram-3"></i> Descrição do Material:</th>
+      <td>{{ materia_prima.descricao|default:"—" }}</td>
+    </tr>
+    <tr>
+      <th style="text-align: right;"><i class="bi bi-rulers"></i> Bitola:</th>
+      <td>Ø {{ materia_prima.bitola|default:"—" }}</td>
+      <th style="text-align: right;"><i class="bi bi-box2-heart"></i> Peso por 1.000 peças:</th>
+      <td>{{ roteiro.massa_mil_pecas|default:"—" }} kg</td>
+    </tr>
+  </table>
+</div>
+
+
+
+  <!-- Etapas do Processo -->
+<h6 class="mt-4 mb-2 text-uppercase"><i class="bi bi-list-ol me-1"></i> Etapas do Processo</h6>
+
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small text-center">
+    <thead class="table-light">
+      <tr>
+        <th>Nº</th>
+        <th>Descrição da operação</th>
+        <th>Equipamento</th>
+        <th>Ferramenta/Dispositivo</th>
+        <th>Setup (h)</th>
+        <th>Produção (pcs/h)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for etapa in etapas %}
+        <tr>
+          <td>{{ etapa.numero }}</td>
+<td class="text-start">
+  {{ etapa.descricao|default:"—" }}
+  {% for simbolo in etapa.simbolos_seguranca %}
+    {% if simbolo %}
+      <img src="{{ simbolo }}" alt="⚠" style="height: 18px; margin-left: 4px;">
+    {% endif %}
+  {% endfor %}
+</td>
+
+          <td>
+        {% if etapa.equipamento_codigos %}
+            {% for codigo in etapa.equipamento_codigos %}
+            <span class="d-block">{{ codigo }}</span>
+            {% endfor %}
+        {% else %}
+            —
+        {% endif %}
+        </td>
+
+          <td>{{ etapa.ferramenta|default:"—" }}</td>
+          <td>{{ etapa.tempo_regulagem|floatformat:2|default:"—" }}</td>
+          <td>{{ etapa.producao|floatformat:0|default:"—" }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6">Nenhuma etapa cadastrada.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<!-- Seção de Embalagem -->
+<h6 class="mt-4 mb-2 text-uppercase">
+  <i class="bi bi-box-seam me-1"></i> Embalagem
+</h6>
+<div class="table-responsive mb-4">
+  <table class="table table-bordered align-middle text-center small">
+    <thead class="table-light">
+      <tr>
+        <th>
+          Tipo de embalagem
+          <div class="small text-muted">Conforme TB028</div>
+        </th>
+        <th>
+          Quantidade de peças por embalagem
+          <div class="small text-muted">Conforme TB028</div>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pack in embalagem %}
+        <tr>
+          <td>{{ pack.tipo|default:"—" }}</td>
+          <td>
+            {% if pack.pecas_por_embalagem %}
+              {{ pack.pecas_por_embalagem }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="2">Nenhuma embalagem cadastrada.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+   <!-- Observações finais -->
+  <div
+    class="mt-4"
+    style="flex: 0 0 auto !important; align-self: flex-start !important;"
+  >
+    <h6><i class="bi bi-chat-left-text"></i> Observações Gerais</h6>
+    <div class="border p-3 small bg-light" style="height: auto !important;">
+      {% if roteiro.observacoes_gerais %}
+        {{ roteiro.observacoes_gerais|safe }}
+      {% endif %}
+
+      {% for etapa in etapas %}
+        {% if etapa.alivio_tensao and etapa.alivio_tensao != "-" %}
+          <p class="mb-1">
+            <strong>{{ etapa.descricao }}:</strong>
+            {{ etapa.alivio_tensao }}
+          </p>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+       <!-- Assinaturas -->
+  <h6 class="mt-4 mb-2 text-uppercase">
+    <i class="bi bi-pen-fill me-1"></i> Assinaturas
+  </h6>
+  <div class="table-responsive mb-4">
+    <table class="table table-bordered align-middle small text-center">
+      <tr>
+        <th>Elaborado por:</th>
+        <th>Aprovado por:</th>
+      </tr>
+      <tr>
+        {# COLUNA “ELABORADO POR” #}
+        <td class="text-start ps-3">
+          {% if elaborado_por.get_full_name %}
+            <strong>{{ elaborado_por.get_full_name }}</strong><br>
+          {% else %}
+            <strong>{{ elaborado_por.username }}</strong><br>
+          {% endif %}
+          {% if elaborado_por.funcionario and elaborado_por.funcionario.cargo_atual %}
+            <i class="bi bi-person-badge-fill"></i>
+            {{ elaborado_por.funcionario.cargo_atual.nome }}<br>
+          {% endif %}
+          <i class="bi bi-calendar-event-fill"></i>
+          {{ data_elaborado|date:"d/m/Y H:i" }}
+        </td>
+
+        {# COLUNA “APROVADO POR” #}
+        <td class="text-start ps-3">
+          {% if roteiro.aprovado and roteiro.aprovado_por %}
+            {% if roteiro.aprovado_por.get_full_name %}
+              <strong>{{ roteiro.aprovado_por.get_full_name }}</strong><br>
+            {% else %}
+              <strong>{{ roteiro.aprovado_por.username }}</strong><br>
+            {% endif %}
+            {% if roteiro.aprovado_por.funcionario and roteiro.aprovado_por.funcionario.cargo_atual %}
+              <i class="bi bi-person-badge-fill"></i>
+              {{ roteiro.aprovado_por.funcionario.cargo_atual.nome }}<br>
+            {% endif %}
+            <i class="bi bi-calendar-event-fill"></i>
+            {{ roteiro.aprovado_em|date:"d/m/Y H:i" }}
+          {% else %}
+            ___________________________<br>
+            <small class="text-muted">data / assinatura</small>
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+
+
+
+
+
+</div>
+
+{% include 'partials/global/_formulario_rodape.html' with numero_formulario="F108 Rev.03" %}
+{% endblock %}

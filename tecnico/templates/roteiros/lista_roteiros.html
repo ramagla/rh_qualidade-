@@ -13,15 +13,63 @@
   {% include "partials/global/_toast_mensagens.html" %}
 
   <!-- Botões -->
+    <!-- Botões -->
   <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
     {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
     {% if request.user|has_permission:"tecnico.add_roteiroproducao" %}
-    <a href="{% url 'tecnico:tecnico_cadastrar_roteiro' %}
-" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
-      <i class="bi bi-file-earmark-plus-fill me-2"></i> Cadastrar
-    </a>
+      <a href="{% url 'tecnico:tecnico_cadastrar_roteiro' %}"
+         class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-file-earmark-plus-fill me-2"></i> Cadastrar
+      </a>
+    {% endif %}
+
+    {% if request.user|has_permission:"tecnico.change_roteiroproducao" %}
+      <button type="button"
+              class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center"
+              data-bs-toggle="modal"
+              data-bs-target="#modalAprovarRoteiros">
+        <i class="bi bi-patch-check me-2"></i> Aprovar Roteiros
+      </button>
     {% endif %}
   </div>
+
+  <!-- Modal de Aprovação -->
+  <div class="modal fade" id="modalAprovarRoteiros" tabindex="-1" aria-labelledby="modalAprovarRoteirosLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content border-success shadow">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="modalAprovarRoteirosLabel">
+            <i class="bi bi-patch-check-fill me-2"></i> Aprovação de Roteiros
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="post" action="{% url 'tecnico:aprovar_roteiros_lote' %}">
+          {% csrf_token %}
+          <div class="modal-body">
+            <label for="roteiros_aprovados" class="form-label">
+              <i class="bi bi-list-ol me-1"></i> Selecione o Roteiro
+            </label>
+            <select id="roteiros_aprovados" name="roteiros_aprovados" class="form-select" required>
+              <option value="" disabled selected>Selecione...</option>
+              {% for r in roteiros_pendentes %}
+                <option value="{{ r.pk }}">#{{ r.item.codigo }} – {{ r.item.descricao }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle me-1"></i> Cancelar
+            </button>
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check2-circle me-1"></i> Confirmar Aprovação
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Offcanvas de Filtros -->
   <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
@@ -55,15 +103,44 @@
   <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📄 Lista de Roteiros</h5>
   <div class="table-responsive zebra-tabela mt-4">
     <table class="table table-bordered table-striped align-middle text-center">
-      <thead class="table-light">
-        <tr>
-          <th><i class="bi bi-upc me-1"></i> Código do Item</th>
-          <th><i class="bi bi-tag me-1"></i> Descrição</th>
-          <th><i class="bi bi-list-ol me-1"></i> Nº de Etapas</th>
-          <th><i class="bi bi-calendar-plus me-1"></i> Criado em</th>
-          <th><i class="bi bi-gear me-1"></i> Ações</th>
-        </tr>
-      </thead>
+     <thead class="table-light align-middle text-center">
+  <tr>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc mb-1"></i>
+        <small>Código do Item</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-tag mb-1"></i>
+        <small>Descrição</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-list-ol mb-1"></i>
+        <small>Nº de Etapas</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-plus mb-1"></i>
+        <small>Criado em</small>
+      </div>
+    </th>
+     <th>
+      <i class="bi bi-check2-circle me-1"></i> Aprovado?
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for roteiro in page_obj %}
         <tr>
@@ -71,9 +148,23 @@
           <td class="text-start">{{ roteiro.item.descricao }}</td>
           <td>{{ roteiro.etapas.count }}</td>
           <td>{{ roteiro.criado_em|date:"d/m/Y H:i" }}</td>
-          <td>
-            <div class="d-inline-flex gap-1 justify-content-center flex-wrap">
-              {% if request.user|has_permission:"tecnico.view_roteiroproducao" %}
+            <td class="text-center align-middle">
+      {% if roteiro.aprovado %}
+        <span class="badge bg-success d-inline-flex align-items-center gap-1">
+          <i class="bi bi-check-circle"></i> Sim
+          <span class="ms-1 text-white-50 small">
+            ({{ roteiro.aprovado_por.get_full_name|default:roteiro.aprovado_por.username }} – {{ roteiro.aprovado_em|date:"d/m/Y H:i" }})
+          </span>
+        </span>
+      {% else %}
+        <span class="badge bg-secondary">
+          <i class="bi bi-hourglass-split me-1"></i> Não
+        </span>
+      {% endif %}
+    </td>
+         <td>
+              <div class="d-inline-flex gap-1 justify-content-center flex-wrap">
+              {% if request.user|has_permission:"tecnico.view_roteiroproducao" and roteiro.item.tipo_item != "Cotacao" %}
               {% include "partials/global/_botao_visualizar.html" with objeto=roteiro url_visualizar="tecnico:tecnico_visualizar_roteiro" label="roteiro" %}
               {% endif %}
               {% if request.user|has_permission:"tecnico.change_roteiroproducao" %}
@@ -82,9 +173,9 @@
               {% if request.user|has_permission:"tecnico.delete_roteiroproducao" %}
               {% include "partials/global/_botao_excluir.html" with objeto=roteiro url_excluir="tecnico:tecnico_excluir_roteiro" label="roteiro" %}
               {% endif %}
-            </div>
-            
-          </td>
+              </div>
+              </td>
+
         </tr>
         {% empty %}
         {% include "partials/global/_sem_resultados.html" with colspan=5 mensagem="Nenhum roteiro encontrado." %}

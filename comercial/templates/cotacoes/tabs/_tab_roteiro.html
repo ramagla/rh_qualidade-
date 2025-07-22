@@ -129,36 +129,7 @@
         </tr>
       </tfoot>
       
-      <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          let totalSetup = 0;
-          let totalCusto = 0;
-          let totalCustoHora = 0;
-          let count = 0;
       
-          document.querySelectorAll("input[id$='-setup_minutos']").forEach(input => {
-            totalSetup += parseFloat(input.value.replace(",", ".") || 0);
-          });
-      
-          document.querySelectorAll("input[id$='-custo_total']").forEach(input => {
-            totalCusto += parseFloat(input.value.replace(",", ".") || 0);
-          });
-      
-          document.querySelectorAll("input[id$='-custo_hora']").forEach(input => {
-            const valor = parseFloat(input.value.replace(",", "."));
-            if (!isNaN(valor)) {
-              totalCustoHora += valor;
-              count++;
-            }
-          });
-      
-          const mediaCustoHora = count > 0 ? totalCustoHora / count : 0;
-      
-          document.getElementById("total-setup").value = totalSetup.toFixed(2).replace(".", ",");
-          document.getElementById("total-custo").value = totalCusto.toFixed(2).replace(".", ",");
-          document.getElementById("media-custo-hora").value = mediaCustoHora.toFixed(2).replace(".", ",");
-        });
-      </script>
       
     </table>
   </div>
@@ -179,64 +150,103 @@
   </div>
 </form>
 {% endwith %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    let totalSetup = 0;
+    let totalCusto = 0;
+    let totalCustoHora = 0;
+    let count = 0;
+
+    document.querySelectorAll("input[id$='-setup_minutos']").forEach(input => {
+      totalSetup += parseFloat(input.value.replace(",", ".") || 0);
+    });
+
+    document.querySelectorAll("input[id$='-custo_total']").forEach(input => {
+      totalCusto += parseFloat(input.value.replace(",", ".") || 0);
+    });
+
+    document.querySelectorAll("input[id$='-custo_hora']").forEach(input => {
+      const valor = parseFloat(input.value.replace(",", "."));
+      if (!isNaN(valor)) {
+        totalCustoHora += valor;
+        count++;
+      }
+    });
+
+    const mediaCustoHora = count > 0 ? totalCustoHora / count : 0;
+
+    document.getElementById("total-setup").value = totalSetup.toFixed(2).replace(".", ",");
+    document.getElementById("total-custo").value = totalCusto.toFixed(2).replace(".", ",");
+    document.getElementById("media-custo-hora").value = mediaCustoHora.toFixed(2).replace(".", ",");
+  });
+</script>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // Pega qtde e prefix dinamicamente
     const tabela = document.querySelector("table[data-qtde]");
     const qtdeEstimada = parseFloat(tabela.dataset.qtde?.replace(",", ".")) || 1;
     const prefix = "{{ fs_rot.prefix }}";
-  
-    // Recalcula valor total de uma linha
+
     function recalcularLinha(row) {
       const get = sel => row.querySelector(sel)?.value.replace(",", ".") || "0";
       const pph   = parseFloat(get(`input[name^="${prefix}-"][name$="-pph"]`));
       const setup = parseFloat(get(`input[name^="${prefix}-"][name$="-setup_minutos"]`));
       const custo = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_hora"]`));
-      const total = custo * (setup / 60 + qtdeEstimada / (pph || 1));
-  
-      // Protege contra erro se o campo não existir
+
+      const divisor = pph > 0 ? pph : null;
+      const total = divisor
+        ? custo * (setup / 60 + qtdeEstimada / divisor)
+        : custo * (setup / 60);
+
       const campoTotal = row.querySelector(`input[name^="${prefix}-"][name$="-custo_total"]`);
       if (campoTotal) {
         campoTotal.value = total.toFixed(2);
       }
+
+      // 🔔 (Opcional) Aplica destaque visual se pph for 0
+      const campoPph = row.querySelector(`input[name^="${prefix}-"][name$="-pph"]`);
+      if (campoPph) {
+        if (pph <= 0) {
+          campoPph.classList.add("is-invalid");
+        } else {
+          campoPph.classList.remove("is-invalid");
+        }
+      }
     }
-  
-    // Calcula totais de setup, custo e média de custo hora
+
     function calcularTotais() {
       const linhas = tabela.querySelectorAll("tbody tr");
       let somaSetup = 0, somaCusto = 0, somaHoras = 0, cntHoras = 0;
-  
+
       linhas.forEach(row => {
         const get = sel => row.querySelector(sel)?.value.replace(",", ".") || "0";
         const setup     = parseFloat(get(`input[name^="${prefix}-"][name$="-setup_minutos"]`));
         const custoHora = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_hora"]`));
         const custoTot  = parseFloat(get(`input[name^="${prefix}-"][name$="-custo_total"]`));
-  
+
         somaSetup += setup;
         somaCusto += custoTot;
-  
+
         if (custoHora > 0) {
           somaHoras += custoHora;
           cntHoras++;
         }
       });
-  
-      document.getElementById("total-setup").value = somaSetup.toFixed(2);
-      document.getElementById("total-custo").value = somaCusto.toFixed(2);
+
+      document.getElementById("total-setup").value = somaSetup.toFixed(2).replace(".", ",");
+      document.getElementById("total-custo").value = somaCusto.toFixed(2).replace(".", ",");
       document.getElementById("media-custo-hora").value = cntHoras
-        ? (somaHoras / cntHoras).toFixed(2) + " (Média)"
-        : "0.00 (Média)";
+        ? (somaHoras / cntHoras).toFixed(2).replace(".", ",") + " (Média)"
+        : "0,00 (Média)";
     }
-  
-    // Inicializa e liga listeners apenas nas linhas com campo de custo total
+
     const linhas = tabela.querySelectorAll("tbody tr");
     linhas.forEach(row => {
       const campoTotal = row.querySelector(`input[name^="${prefix}-"][name$="-custo_total"]`);
-      if (!campoTotal) return; // pula linhas sem campo total
-  
+      if (!campoTotal) return;
+
       recalcularLinha(row);
-  
+
       row.querySelectorAll("input").forEach(input => {
         input.addEventListener("input", () => {
           recalcularLinha(row);
@@ -244,8 +254,23 @@
         });
       });
     });
-  
+
     calcularTotais();
   });
-  </script>
-  
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(`input[name$="-pph"]`).forEach(input => {
+      // Remove casas decimais ao carregar
+      if (input.value) {
+        input.value = parseInt(input.value || "0");
+      }
+
+      // Força valor inteiro durante a digitação
+      input.addEventListener("input", () => {
+        input.value = input.value.replace(/[^\d]/g, "");
+      });
+    });
+  });
+</script>

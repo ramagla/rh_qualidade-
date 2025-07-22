@@ -7,6 +7,11 @@
 {% block content %}
 {% include 'partials/global/_estilos_impressao.html' %}
 {% include 'partials/global/_botao_impressao.html' %}
+
+
+<div class="no-print alert alert-info mt-3">
+  <strong>Atenção:</strong> Ative a <u>impressão frente e verso (duplex)</u> nas configurações da impressora.
+</div>
 {% include 'partials/global/_styles_componentes.html' %}
 
 <div class="container pdf-container">
@@ -332,7 +337,7 @@
 
 
 <!-- 📊 Bloco: Preço Final (compacto) -->
-<div class="row gx-2 gy-3 text-center mt-3 align-items-start" style="font-size: 9px;">
+<div class="quebra-se-preciso row gx-2 gy-3 text-center mt-3 align-items-start" style="font-size: 9px;">
     <!-- 📉 Sem Impostos -->
     <div class="col-md-4">
       <div class="bg-light border fw-bold py-1">Sem impostos</div>
@@ -595,6 +600,9 @@
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+       .quebra-se-preciso {
+    page-break-before: always;
+  }
   
       .text-white {
         color: white !important;
