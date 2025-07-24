@@ -1,0 +1,143 @@
+{% load widget_tweaks %}
+
+<div class="accordion" id="accordionComercial">
+
+  <!-- Dados Principais -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingPrincipais">
+      <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePrincipais" aria-expanded="true" aria-controls="collapsePrincipais">
+        <i class="bi bi-card-list me-2"></i> Dados Principais
+      </button>
+    </h2>
+    <div id="collapsePrincipais" class="accordion-collapse collapse show" aria-labelledby="headingPrincipais" data-bs-parent="#accordionComercial">
+      <div class="accordion-body row g-3">
+
+        <div class="col-md-4">
+          <label class="form-label"><i class="bi bi-calculator me-1"></i> {{ form.precalculo.label }}</label>
+          {{ form.precalculo|add_class:"form-select select2" }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label"><i class="bi bi-box-seam me-1"></i> {{ form.item.label }}</label>
+          {{ form.item|add_class:"form-select select2" }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label"><i class="bi bi-envelope-at me-1"></i> {{ form.email_ppap.label }}</label>
+          {{ form.email_ppap|add_class:"form-control" }}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-tag me-1"></i> {{ form.codigo_brasmol.label }}</label>
+          {{ form.codigo_brasmol|add_class:"form-control" }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ form.prazo_solicitado.label }}</label>
+          {{ form.prazo_solicitado|add_class:"form-control" }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-123 me-1"></i> {{ form.qtde_amostra.label }}</label>
+          {{ form.qtde_amostra|add_class:"form-control" }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-info-circle me-1"></i> {{ form.razao.label }}</label>
+          {{ form.razao|add_class:"form-select select2" }}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Cliente e Características -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingCliente">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCliente" aria-expanded="false" aria-controls="collapseCliente">
+        <i class="bi bi-person-badge-fill me-2"></i> Cliente e Características
+      </button>
+    </h2>
+    <div id="collapseCliente" class="accordion-collapse collapse" aria-labelledby="headingCliente" data-bs-parent="#accordionComercial">
+      <div class="accordion-body row g-3">
+
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-person-badge me-1"></i> {{ form.cliente.label }}</label>
+          {{ form.cliente|add_class:"form-select select2" }}
+        </div>
+
+        <div class="col-md-2 form-check form-switch">
+          <label class="form-check-label"><i class="bi bi-car-front-fill me-1"></i> {{ form.automotivo_oem.label }}</label>
+          {{ form.automotivo_oem|add_class:"form-check-input"|attr:"role=switch" }}
+        </div>
+        <div class="col-md-2 form-check form-switch">
+          <label class="form-check-label"><i class="bi bi-ui-checks me-1"></i> {{ form.requisito_especifico.label }}</label>
+          {{ form.requisito_especifico|add_class:"form-check-input"|attr:"role=switch" }}
+        </div>
+        <div class="col-md-2 form-check form-switch">
+          <label class="form-check-label"><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ form.item_seguranca.label }}</label>
+          {{ form.item_seguranca|add_class:"form-check-input"|attr:"role=switch" }}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Desenho e Aprovação -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingDesenho">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDesenho" aria-expanded="false" aria-controls="collapseDesenho">
+        <i class="bi bi-file-earmark-text-fill me-2"></i> Dados do Desenho e Aprovação
+      </button>
+    </h2>
+    <div id="collapseDesenho" class="accordion-collapse collapse" aria-labelledby="headingDesenho" data-bs-parent="#accordionComercial">
+      <div class="accordion-body row g-3">
+
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-person-lines-fill me-1"></i> {{ form.comprador.label }}</label>
+          {{ form.comprador|add_class:"form-control" }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-file-earmark-text me-1"></i> {{ form.codigo_desenho.label }}</label>
+          {{ form.codigo_desenho|add_class:"form-control" }}
+        </div>
+        <div class="col-md-2">
+          <label class="form-label"><i class="bi bi-file-earmark-check me-1"></i> {{ form.revisao.label }}</label>
+          {{ form.revisao|add_class:"form-control" }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-calendar2-check me-1"></i> {{ form.data_revisao.label }}</label>
+          {{ form.data_revisao|add_class:"form-control" }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label"><i class="bi bi-clipboard-check me-1"></i> {{ form.metodologia_aprovacao.label }}</label>
+          {{ form.metodologia_aprovacao|add_class:"form-control" }}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Observações -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingObs">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseObs" aria-expanded="false" aria-controls="collapseObs">
+        <i class="bi bi-journal-text me-2"></i> Observações Gerais
+      </button>
+    </h2>
+    <div id="collapseObs" class="accordion-collapse collapse" aria-labelledby="headingObs" data-bs-parent="#accordionComercial">
+      <div class="accordion-body">
+        <div class="col-md-12">
+          <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ form.observacao.label }}</label>
+          {{ form.observacao|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Botões de Ação -->
+<div class="col-12 mt-4 text-end">
+  <button type="submit" name="aba" value="comercial" class="btn btn-primary">
+    <i class="bi bi-save me-1"></i> Salvar Dados Comerciais
+  </button>
+  <a href="{% url 'lista_ordens_desenvolvimento' %}" class="btn btn-secondary">
+    <i class="bi bi-x-circle me-1"></i> Cancelar
+  </a>
+</div>

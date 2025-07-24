@@ -1,0 +1,706 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load filters_gerais %}
+
+{% block title %}F017 - Ordem de Desenvolvimento Nº {{ ordem.numero|stringformat:"03d" }}{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container pdf-container mt-4">
+    {% load static %}
+
+  <!-- Cabeçalho Modernizado -->
+<div class="table-responsive mb-4">
+  <table class="table table-bordered align-middle text-center" style="table-layout: fixed;">
+    <tr>
+      <!-- Logo -->
+      <td style="width: 20%;">
+        <img src="{% static 'img/logo.png' %}" alt="Logo Bras-Mol" class="img-fluid" style="max-height: 70px;">
+      </td>
+
+      <!-- Título Central -->
+      <td style="width: 60%;">
+        <div class="d-flex flex-column justify-content-center align-items-center">
+          <h5 class="mb-1 text-uppercase fw-bold">
+            <i class="bi bi-file-earmark-text-fill me-2 text-primary"></i>
+            Ordem de Desenvolvimento
+          </h5>
+          <small class="text-muted fst-italic">
+            Formulário para controle técnico e comercial do desenvolvimento de itens
+          </small>
+        </div>
+      </td>
+
+      <!-- Número da Ordem -->
+      <td style="width: 20%;">
+        <div class="text-center">
+          <span class="fw-bold text-danger">
+            Nº {{ ordem.numero|stringformat:"03d" }}-{{ ordem.created_at.year }}
+          </span>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- DADOS COMERCIAIS -->
+<h5 class="mb-2 mt-0 text-primary">
+  <i class="bi bi-building-check me-1"></i> Dados Comerciais
+</h5>
+
+<div class="table-responsive">
+  <table class="table table-bordered align-middle small">
+    <tbody>
+      <!-- Cliente ocupa a linha inteira -->
+      <tr>
+        <th style="text-align: right;"><i class="bi bi-person-badge me-1"></i> Cliente:</th>
+        <td colspan="5">{{ ordem.cliente }}</td>
+      </tr>
+
+      <!-- Comprador + E-mail -->
+      <tr>
+        <th style="text-align: right;"><i class="bi bi-person-lines-fill me-1"></i> Comprador:</th>
+        <td>{{ ordem.comprador|default:"—" }}</td>
+
+        <th style="text-align: right;"><i class="bi bi-envelope-at me-1"></i> E-mail p/ envio PPAP:</th>
+        <td colspan="3">{{ ordem.email_ppap|default:"—" }}</td>
+      </tr>
+
+      <!-- Requisito Específico + Item de Segurança + Automotivo OEM -->
+      <tr>
+        <th style="text-align: right;"><i class="bi bi-check2-square me-1"></i> Requisito Específico?</th>
+        <td>
+          {% if ordem.requisito_especifico %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;"><i class="bi bi-shield-check me-1"></i> Item de Segurança?</th>
+        <td>
+          {% if ordem.item_seguranca %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;"><i class="bi bi-car-front me-1"></i> Automotivo OEM:</th>
+        <td>
+          {% if ordem.automotivo_oem %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- Desenho, Revisão, Data -->
+      <tr>
+        <th style="text-align: right;"><i class="bi bi-file-earmark me-1"></i> Desenho:</th>
+        <td>{{ ordem.codigo_desenho|default:"—" }}</td>
+
+        <th style="text-align: right;"><i class="bi bi-arrow-repeat me-1"></i> Revisão:</th>
+        <td>{{ ordem.revisao|default:"—" }}</td>
+
+        <th style="text-align: right;"><i class="bi bi-calendar-date me-1"></i> Data:</th>
+        <td>{{ ordem.data_revisao|date:"d/m/Y"|default:"—" }}</td>
+      </tr>
+
+      <!-- Nº Peça, Código Bras-Mol -->
+      <tr>
+        <th style="text-align: right;"><i class="bi bi-hash me-1"></i> Nº da Peça:</th>
+        <td colspan="2">{{ ordem.item.descricao|default:"—" }}</td>
+
+        <th style="text-align: right;"><i class="bi bi-tag me-1"></i> Código Bras-Mol:</th>
+        <td colspan="2">{{ ordem.codigo_brasmol|default:"—" }}</td>
+      </tr>
+
+      <!-- Prazo, Qtde. Amostra, Metodologia -->
+      <tr>
+        <th style="text-align: right;"><i class="bi bi-hourglass-split me-1"></i> Prazo solicitado:</th>
+        <td>{{ ordem.prazo_solicitado|date:"d/m/Y"|default:"—" }}</td>
+
+        <th style="text-align: right;"><i class="bi bi-boxes me-1"></i> Qtde. de amostra:</th>
+        <td>{{ ordem.qtde_amostra|default:"—" }}</td>
+
+        <th style="text-align: right;"><i class="bi bi-journal-check me-1"></i> Metodologia de aprovação:</th>
+        <td>{{ ordem.metodologia_aprovacao|default:"—" }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+<!-- Razão do Desenvolvimento -->
+<div class="table-responsive">
+  <table class="table table-bordered table-sm align-middle">
+    <thead class="table-light text-center">
+      <tr>
+        <th>
+          <i class="bi bi-lightbulb-fill me-1 text-warning"></i>
+          Razão do Desenvolvimento
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="px-3 py-2">
+          {% for key, label in razoes_choices %}
+            {% if ordem.razao == key %}
+              {% if key == "novo" %}
+                <i class="bi bi-plus-circle-fill text-success me-1"></i> {{ label }}
+              {% elif key == "revisao" %}
+                <i class="bi bi-arrow-repeat text-primary me-1"></i> {{ label }}
+              {% elif key == "melhoria" %}
+                <i class="bi bi-graph-up-arrow text-info me-1"></i> {{ label }}
+              {% elif key == "padronizacao" %}
+                <i class="bi bi-sliders2 text-secondary me-1"></i> {{ label }}
+              {% elif key == "reclamacao" %}
+                <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> {{ label }}
+              {% elif key == "prototipo" %}
+                <i class="bi bi-box-seam text-muted me-1"></i> {{ label }}
+              {% else %}
+                <i class="bi bi-dot me-1 text-dark"></i> {{ label }}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+<!-- Observações -->
+<div class="table-responsive mt-4 mb-3">
+  <table class="table table-bordered table-sm align-middle">
+    <thead class="table-light text-center">
+      <tr>
+        <th>
+          <i class="bi bi-chat-left-text-fill me-1 text-primary"></i>
+          Observações
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="px-3 py-2">
+          {% if ordem.observacao or cotacao_numero or precalculo_numero %}
+            {% if ordem.observacao %}
+              <div class="mb-2">{{ ordem.observacao|safe }}</div>
+            {% endif %}
+
+            {% if cotacao_numero and precalculo_numero %}
+              <div class="text-muted small fst-italic">
+                <i class="bi bi-file-earmark-text me-1"></i>
+                Cotação nº {{ cotacao_numero }} – Pré-Cálculo nº {{ precalculo_numero }}
+              </div>
+            {% elif precalculo_numero %}
+              <div class="text-muted small fst-italic">
+                <i class="bi bi-clipboard-data me-1"></i>
+                Pré-Cálculo nº {{ precalculo_numero }}
+              </div>
+            {% endif %}
+          {% else %}
+            <span class="text-muted fst-italic">
+              <i class="bi bi-info-circle me-1"></i> Nenhuma observação registrada.
+            </span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+
+
+
+<!-- Assinatura – Departamento Comercial -->
+<div class="table-responsive mb-4">
+  <table class="table table-bordered align-middle small">
+    <thead class="table-light text-center">
+      <tr>
+        <th colspan="2">
+          <i class="bi bi-pencil-square me-1 text-primary"></i>
+          Assinatura – Departamento Comercial
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th class="text-end" style="width: 25%;">
+          <i class="bi bi-person-circle me-1"></i> Responsável Comercial:
+        </th>
+        <td>
+          {% if ordem.assinatura_comercial_nome %}
+            <div class="fw-bold">{{ ordem.assinatura_comercial_nome }}</div>
+            <div class="mt-2 small text-muted">
+              <i class="bi bi-envelope-at me-1"></i>{{ ordem.assinatura_comercial_email|default:"—" }}<br>
+              <i class="bi bi-calendar-event-fill me-1"></i>{{ ordem.assinatura_comercial_data|date:"d/m/Y H:i" }}
+            </div>
+          {% else %}
+            <span class="text-muted fst-italic">
+              <i class="bi bi-exclamation-circle me-1"></i> Não preenchido
+            </span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+  
+<!-- Dados Técnicos -->
+<h5 class="mb-2 mt-0 text-primary">
+  <i class="bi bi-tools me-1"></i> Dados Técnicos
+</h5>
+
+<div class="table-responsive">
+  <table class="table table-bordered small align-middle">
+    <thead class="table-light text-center">
+      <tr>
+        <th colspan="6">
+          <i class="bi bi-gear-wide-connected me-1 text-secondary"></i>
+          Informações Técnicas
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Linha: Material | Revisar PIR? | Aprovado? -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-box me-1"></i> Material:
+        </th>
+        <td>{{ ordem.get_material_display|default:"—" }}</td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-journal-code me-1"></i> Revisar PIR?
+        </th>
+        <td>
+          {% if ordem.revisar_pir %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-check-circle me-1"></i> Aprovado?
+        </th>
+        <td>
+          {% if ordem.aprovado %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- Linha: Rotinas do Sistema | Prazo -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-cpu me-1"></i> Rotinas do Sistema:
+        </th>
+        <td colspan="2">{{ ordem.get_rotinas_sistema_display|default:"—" }}</td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-calendar-range me-1"></i> Prazo:
+        </th>
+        <td colspan="2">{{ ordem.prazo_rotinas|date:"d/m/Y"|default:"—" }}</td>
+      </tr>
+
+      <!-- Linha: Documentos de produção | Prazo -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-file-earmark-text me-1"></i> Documentos de produção:
+        </th>
+        <td colspan="2">{{ ordem.documentos_producao|default:"—" }}</td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-calendar-check me-1"></i> Prazo:
+        </th>
+        <td colspan="2">{{ ordem.prazo_docs|date:"d/m/Y"|default:"—" }}</td>
+      </tr>
+
+      <!-- Linha: Família de Produto -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-grid-3x3-gap me-1"></i> Família de Produto:
+        </th>
+        <td colspan="5">{{ ordem.familia_produto|familia_produto_descricao }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+ <!-- Ferramenta / Dispositivo / Amostra -->
+<div class="table-responsive">
+  <table class="table table-bordered small align-middle">
+    <thead class="table-light text-center">
+      <tr>
+        <th colspan="6">
+          <i class="bi bi-tools me-1 text-secondary"></i>
+          Ferramenta / Dispositivo / Amostra
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Linha: Ferramenta -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-hammer me-1"></i> Ferramenta:
+        </th>
+        <td>
+          {% if ordem.ferramenta %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-list-ul me-1"></i> Tipo:
+        </th>
+        <td>{{ ordem.get_tipo_ferramenta_display|default:"—" }}</td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-file-earmark-bar-graph me-1"></i> OS nº:
+        </th>
+        <td>{{ ordem.os_ferramenta|default:"—" }}</td>
+      </tr>
+
+      <!-- Linha: Dispositivo -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-tools me-1"></i> Dispositivo:
+        </th>
+        <td>
+          {% if ordem.dispositivo %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-list-ul me-1"></i> Tipo:
+        </th>
+        <td>{{ ordem.get_tipo_dispositivo_display|default:"—" }}</td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-file-earmark-bar-graph me-1"></i> OS nº:
+        </th>
+        <td>{{ ordem.os_dispositivo|default:"—" }}</td>
+      </tr>
+
+      <!-- Linha: Amostra -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-box-seam me-1"></i> Amostra:
+        </th>
+        <td>
+          {% if ordem.amostra %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-123 me-1"></i> OP nº:
+        </th>
+        <td>{{ ordem.numero_op|default:"—" }}</td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-calendar-date me-1"></i> Prazo:
+        </th>
+        <td>{{ ordem.prazo_amostra|date:"d/m/Y"|default:"—" }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+ <!-- Tratamentos / Ensaios -->
+<div class="table-responsive">
+  <table class="table table-bordered small align-middle">
+    <thead class="table-light text-center">
+      <tr>
+        <th colspan="6">
+          <i class="bi bi-flask me-1 text-secondary"></i>
+          Tratamentos / Ensaios
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Térmico externo -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-thermometer-half me-1"></i> Térmico externo:
+        </th>
+        <td>
+          {% if ordem.tratamento_termico %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-tags me-1"></i> Tipo:
+        </th>
+        <td>{{ ordem.get_tipo_tte_display|default:"—" }}</td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-check2-circle me-1"></i> Aprovado?
+        </th>
+        <td>
+          {% if ordem.status_tte %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- Superficial externo -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-droplet-half me-1"></i> Superficial externo:
+        </th>
+        <td>
+          {% if ordem.tratamento_superficial %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-tags me-1"></i> Tipo:
+        </th>
+        <td>{{ ordem.get_tipo_tse_display|default:"—" }}</td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-check2-circle me-1"></i> Aprovado?
+        </th>
+        <td>
+          {% if ordem.status_tse %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- Resistência à corrosão -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-shield-exclamation me-1"></i> Resistência à corrosão:
+        </th>
+        <td>
+          {% if ordem.resistencia_corrosao %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-file-earmark-text me-1"></i> Requisito:
+        </th>
+        <td colspan="3">{{ ordem.requisito_resistencia|default:"—" }}</td>
+      </tr>
+
+      <!-- Durabilidade / Ciclagem -->
+      <tr>
+        <th style="text-align: right;">
+          <i class="bi bi-recycle me-1"></i> Durabilidade / Ciclagem:
+        </th>
+        <td>
+          {% if ordem.durabilidade %}
+            <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+          {% else %}
+            <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+          {% endif %}
+        </td>
+
+        <th style="text-align: right;">
+          <i class="bi bi-file-earmark-text me-1"></i> Requisito:
+        </th>
+        <td colspan="3">{{ ordem.requisito_durabilidade|default:"—" }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+
+{% if ordem.observacao_geral %}
+<!-- Observações Gerais -->
+<div class="table-responsive mt-4 mb-3">
+  <table class="table table-bordered table-sm align-middle">
+    <thead class="table-light text-center">
+      <tr>
+        <th>
+          <i class="bi bi-chat-left-text-fill me-1 text-primary"></i>
+          Observações Gerais
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="px-3 py-2">
+          {{ ordem.observacao_geral|safe }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+
+<!-- Assinatura – Departamento Técnico -->
+<div class="table-responsive mb-4">
+  <table class="table table-bordered align-middle small">
+    <thead class="table-light text-center">
+      <tr>
+        <th colspan="2">
+          <i class="bi bi-pencil-square me-1 text-primary"></i>
+          Assinatura – Departamento Técnico
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th class="text-end" style="width: 25%;">
+          <i class="bi bi-person-gear me-1"></i> Responsável Técnico:
+        </th>
+        <td>
+          {% if ordem.assinatura_tecnica_nome %}
+            <div class="fw-bold">{{ ordem.assinatura_tecnica_nome }}</div>
+            <div class="mt-2 small text-muted">
+              <i class="bi bi-envelope-at me-1"></i>{{ ordem.assinatura_tecnica_email|default:"—" }}<br>
+              <i class="bi bi-calendar-event-fill me-1"></i>{{ ordem.assinatura_tecnica_data|date:"d/m/Y H:i" }}
+            </div>
+          {% else %}
+            <span class="text-muted fst-italic">
+              <i class="bi bi-exclamation-circle me-1"></i> Não preenchido
+            </span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Legendas -->
+<div class="mt-4 mb-2">
+  <h6 class="text-primary">
+    <i class="bi bi-info-circle-fill me-1"></i> Legenda dos Documentos de Produção
+  </h6>
+
+  <div class="border rounded p-3 small bg-light">
+   <div class="row row-cols-1 row-cols-md-2 g-1 print-legenda">
+  <div class="col"><strong>PC</strong> – Plano de Controle</div>
+  <div class="col"><strong>IP</strong> – Instrução de Processo</div>
+  <div class="col"><strong>DB</strong> – Desenho BrasMol</div>
+  <div class="col"><strong>IRM</strong> – Instrução de Regulagem de Máquinas</div>
+  <div class="col"><strong>F048</strong> – Relatório de Inspeção de Processo e Produto</div>
+  <div class="col"><strong>F049</strong> – Certificado de Qualidade</div>
+  <div class="col"><strong>TB027</strong> – Tabela de Expedição para Trat. Térmico e Superficial</div>
+  <div class="col"><strong>TB028</strong> – Tabela de Embalagem</div>
+</div>
+
+  </div>
+</div>
+
+
+
+  <!-- Rodapé -->
+  {% include 'partials/global/_formulario_rodape.html' with numero_formulario="F017 Rev.05" %}
+</div>
+
+<style>
+  @media print {
+    .pdf-container {
+      font-size: 12px !important;
+      padding: 0 !important;
+    }
+
+    .table th,
+    .table td {
+      padding: 2px 4px !important;
+      vertical-align: middle !important;
+    }
+
+    h5, h6 {
+      font-size: 12px !important;
+      margin: 0.3rem 0 !important;
+    }
+
+    .table-responsive {
+      margin-bottom: 0.4rem !important;
+    }
+
+    .mb-4, .mt-4, .mb-3, .mt-3, .mb-2, .mt-2 {
+      margin: 0.2rem 0 !important;
+    }
+
+    .small, .text-muted, .form-check-label, .form-check-input {
+      font-size: 10px !important;
+    }
+
+    img {
+      max-height: 50px !important;
+    }
+
+    .border, .table {
+      border-width: 1px !important;
+    }
+
+    .container {
+      padding: 0 !important;
+    }
+
+    .row > .col {
+      padding: 0.2rem 0.5rem !important;
+    }
+
+    .rounded {
+      border-radius: 3px !important;
+    }
+    .print-legenda .col {
+    display: inline-block !important;
+    width: 49% !important;
+    padding: 0.2rem 0.5rem !important;
+    vertical-align: top !important;
+  }
+  }
+</style>
+
+{% endblock %}

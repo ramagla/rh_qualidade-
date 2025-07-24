@@ -8,6 +8,7 @@ from comercial.utils.email_cotacao_utils import (
     responder_cotacao_materia_prima,
     responder_cotacao_servico_lote,
 )
+from comercial.views import ordem_desenvolvimento_views
 
 urlpatterns = [
     # Dashboard
@@ -70,6 +71,7 @@ urlpatterns = [
     # Ajax
     path("ajax/codigo-materia-prima/", ajax_views.ajax_codigo_materia_prima_por_roteiro, name="ajax_codigo_materia_prima"),
     path("ajax/valor_ferramenta/", ajax_views.ajax_valor_ferramenta, name="ajax_valor_ferramenta"),
+    path('ajax/precalculo/<int:pk>/dados/', ajax_views.dados_precalculo, name='ajax_dados_precalculo'),
 
 
     # Relatorios 
@@ -80,5 +82,14 @@ urlpatterns = [
 
     path("clientes/importar/", cliente_views.importar_clientes_excel, name="importar_clientes_excel"),
     path("itens/importar/", item_views.importar_itens_excel, name="importar_itens_excel"),
+
+    # Ordens de Desenvolvimento
+    path("ordens-desenvolvimento/", ordem_desenvolvimento_views.lista_ordens_desenvolvimento, name="lista_ordens_desenvolvimento"),
+    path("ordens-desenvolvimento/cadastrar/", ordem_desenvolvimento_views.cadastrar_ordem_desenvolvimento, name="cadastrar_ordem_desenvolvimento"),
+    path("ordens-desenvolvimento/editar/<int:pk>/", ordem_desenvolvimento_views.editar_ordem_desenvolvimento, name="editar_ordem_desenvolvimento"),
+    path("ordens-desenvolvimento/visualizar/<int:pk>/", ordem_desenvolvimento_views.visualizar_ordem_desenvolvimento, name="visualizar_ordem_desenvolvimento"),
+    path("ordens-desenvolvimento/excluir/<int:pk>/", ordem_desenvolvimento_views.excluir_ordem_desenvolvimento, name="excluir_ordem_desenvolvimento"),
+
+    
 
 ]

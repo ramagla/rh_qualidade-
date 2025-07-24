@@ -447,3 +447,35 @@ def abs_valor(value):
 @register.filter
 def trim(value):
     return value.strip() if isinstance(value, str) else value
+
+
+
+
+FAMILIA_PRODUTO_LABELS = {
+    "MCGC": "Mola de Compressão Grupo C",
+    "MCGD": "Mola de Compressão Grupo D",
+    "MTRAGC": "Mola de Tração Grupo C",
+    "MTRAGX": "Mola de Tração Grupo X",
+    "MTRAGD": "Mola de Tração Grupo D",
+    "MTORGC": "Mola de Torção Grupo C",
+    "MTORGX": "Mola de Torção Grupo X",
+    "MTORGD": "Mola de Torção Grupo D",
+    "PEGE": "Peças Estampadas Grupo E",
+    "PEGP": "Peças Estampadas Grupo P",
+    "HGD": "Hastes Grupo D",
+    "HGM": "Hastes Grupo M",
+    "HGE": "Hastes Grupo E",
+    "HGC": "Hastes Grupo C",
+    "AGC": "Anel Grupo C",
+    "AGD": "Anel Grupo D",
+    "AGE": "Anel Grupo E",
+    "PGC": "Pino Grupo C",
+    "PGE": "Pino Grupo E",
+}
+
+@register.filter
+def familia_produto_descricao(codigo):
+    if not codigo:
+        return "—"
+    return f"{codigo} – {FAMILIA_PRODUTO_LABELS.get(codigo, 'Descrição não encontrada')}"
+

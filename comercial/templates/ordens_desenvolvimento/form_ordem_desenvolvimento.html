@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load filters_gerais %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<style>
+  /* Cores para abas ativas */
+  .nav-tabs .nav-link.active#tab-comercial-tab {
+    background-color: #0d6efd !important; /* azul */
+    color: white !important;
+  }
+
+  .nav-tabs .nav-link.active#tab-tecnica-tab {
+    background-color: #198754 !important; /* verde */
+    color: white !important;
+  }
+
+  /* Remover borda inferior quando ativa */
+  .nav-tabs .nav-link {
+    border-bottom: 2px solid transparent;
+  }
+</style>
+
+<div class="container mt-4">
+  {% include "partials/global/_toast_mensagens.html" %}
+
+<h2 class="mb-4 text-center"><i class="bi bi-tools me-2"></i>{{ titulo }}</h2>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form %}{{ form.media }}{% endif %}
+
+    <ul class="nav nav-tabs mb-3" id="tabOrdem" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-comercial-tab" data-bs-toggle="tab" data-bs-target="#tab-comercial" type="button" role="tab">
+          <i class="bi bi-briefcase me-1"></i> Comercial
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-tecnica-tab" data-bs-toggle="tab" data-bs-target="#tab-tecnica" type="button" role="tab">
+          <i class="bi bi-gear me-1"></i> Técnico
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="tabOrdemContent">
+      <div class="tab-pane fade show active" id="tab-comercial" role="tabpanel">
+        {% include "ordens_desenvolvimento/tabs/_tab_comercial.html" %}
+      </div>
+      <div class="tab-pane fade" id="tab-tecnica" role="tabpanel">
+        {% include "ordens_desenvolvimento/tabs/_tab_tecnica.html" %}
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    $('.select2').select2();
+
+    $('#id_precalculo').on('change', function () {
+      const precalcId = $(this).val();
+      if (!precalcId) return;
+
+      fetch(`/comercial/ajax/precalculo/${precalcId}/dados/`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.item) $('#id_item').val(data.item).trigger('change');
+          if (data.cliente) $('#id_cliente').val(data.cliente).trigger('change');
+          if (data.comprador) $('#id_comprador').val(data.comprador);
+          if (data.codigo_desenho) $('#id_codigo_desenho').val(data.codigo_desenho);
+          if (data.revisao) $('#id_revisao').val(data.revisao);
+          if (data.data_revisao) $('#id_data_revisao').val(data.data_revisao);
+          if (data.metodologia_aprovacao) $('#id_metodologia_aprovacao').val(data.metodologia_aprovacao);
+          $('#id_automotivo_oem').prop('checked', data.automotivo_oem);
+          $('#id_requisito_especifico').prop('checked', data.requisito_especifico);
+          $('#id_item_seguranca').prop('checked', data.item_seguranca);
+        })
+        .catch(err => console.error('Erro ao buscar dados do Pré-Cálculo:', err));
+    });
+  });
+</script>
+{% endblock %}

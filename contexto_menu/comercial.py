@@ -57,4 +57,13 @@ def menu_comercial(user):
             "icon": "fas fa-file-signature",
         })
 
+    # Ordem de Desenvolvimento
+    if user.has_perm("comercial.view_ordemdesenvolvimento"):
+        menu.append({
+            "name": "Ordem de Desenvolvimento",
+            "url": "lista_ordens_desenvolvimento",
+            "icon": "fas fa-project-diagram",
+        })
+
+
     return menu

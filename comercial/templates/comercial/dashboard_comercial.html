@@ -1,8 +1,380 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
+{% load static %}
+{% load filters_gerais %}
 {% block title %}Dashboard Comercial{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Dashboard Comercial</h1>
-<p>Este é o dashboard inicial do módulo Comercial. Conteúdo em construção.</p>
+<style>
+  .card-resumo {
+    border-radius: 12px;
+    color: #fff;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.1);
+    height: 100%; /* Faz o card ocupar toda a altura da coluna */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centraliza verticalmente */
+  }
+  .row > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+  }
+  .resumo-azul     { background: linear-gradient(135deg, #00c6ff, #007bff); }
+  .resumo-roxo     { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+  .resumo-claro    { background: linear-gradient(135deg, #76c7c0, #67b26f); }
+  .resumo-conversao { background: linear-gradient(135deg, #00b09b, #96c93d); }
+  .resumo-title    { font-size: 0.9rem; font-weight: 500; }
+  .resumo-valor    { font-size: 2rem; font-weight: bold; }
+</style>
+
+<div class="container py-4">
+  <h4 class="mb-4 text-primary"><i class="bi bi-bar-chart-fill me-2"></i>Dashboard Comercial</h4>
+
+  <!-- Cards Resumo -->
+<!-- Cards Resumo -->
+<div class="row mb-4">
+  <!-- Qtde de Cotações -->
+  <div class="col-md-3">
+    <div class="card-resumo resumo-azul text-center">
+      <div class="resumo-valor">
+        <i class="bi bi-clipboard-data me-1"></i> {{ total_cotacoes }}
+      </div>
+      <div class="resumo-title">Qtde de Cotações</div>
+      <small>
+        <i class="bi bi-x-circle-fill me-1" title="Perdidas"></i> {{ perdidas }} |
+        <i class="bi bi-check-circle-fill me-1" title="Aprovadas"></i> {{ aprovadas }}<br>
+        <i class="bi bi-hourglass-split me-1" title="Em Análise"></i> {{ em_analise }}
+      </small>
+    </div>
+  </div>
+
+  <!-- Valor Total das Cotações -->
+  <div class="col-md-3">
+    <div class="card-resumo resumo-roxo text-center">
+      <div class="resumo-valor">
+        <i class="bi bi-cash-coin me-1"></i> {{ valor_total|formatar_reais }}
+      </div>
+      <div class="resumo-title">Valor Total das Cotações</div>
+      <small>
+        <i class="bi bi-x-circle-fill me-1" title="Valor Perdidas"></i> {{ valor_reprovadas|formatar_reais }} |
+        <i class="bi bi-check-circle-fill me-1" title="Valor Aprovadas"></i> {{ valor_aprovadas|formatar_reais }}<br>
+        <i class="bi bi-hourglass-split me-1" title="Valor Em Análise"></i> {{ valor_andamento|formatar_reais }}
+      </small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card-resumo resumo-conversao text-center">
+      <div class="resumo-valor">
+        <i class="bi bi-graph-up-arrow me-1"></i> {{ taxa_conversao }}%
+      </div>
+      <div class="resumo-title">Taxa de Conversão</div>
+      <small>Com base no valor total</small><br>
+      <small class="text-white-50">(Aprovadas ÷ com análise) × 100</small>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card-resumo resumo-claro text-center">
+      <div class="resumo-valor">
+        <i class="bi bi-person-check me-1"></i> {{ total_clientes }}
+      </div>
+      <div class="resumo-title">Clientes Ativos</div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Informações e Últimas Cotações -->
+  <div class="row gy-4">
+    <div class="col-md-6">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h5 class="card-title text-success"><i class="bi bi-gear-wide-connected"></i> Ordens de Desenvolvimento</h5>
+          <p class="fs-3 fw-bold text-dark">{{ total_ordens }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card bg-light">
+        <div class="card-header bg-white"><strong>🕑 Últimas Cotações</strong></div>
+        <div class="card-body">
+          {% if ultimas_cotacoes %}
+            <ul class="list-group list-group-flush">
+              {% for c in ultimas_cotacoes %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span><strong>#{{ c.numero }}</strong> – {{ c.cliente.razao_social }}</span>
+                  <span class="text-muted">{{ c.data_abertura|date:"d/m/Y" }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">Nenhuma cotação recente.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="row mt-4">
+    <div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header bg-white"><strong>📊 Pré-Cálculos por Mês</strong></div>
+      <div class="card-body"><canvas id="grafico_prec_por_mes" height="200"></canvas></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header bg-white"><strong>📈 Tipo de Item por Mês</strong></div>
+      <div class="card-body"><canvas id="grafico_tipo_mes" height="200"></canvas></div>
+    </div>
+  </div>
+</div>
+
+    <div class="col-md-12 mb-4">
+      <div class="card">
+        <div class="card-header bg-white"><strong>🏆 Top 5 Clientes por Valor</strong></div>
+        <div class="card-body"><canvas id="grafico_top_clientes" height="100"></canvas></div>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+  <div class="card h-100">
+    <div class="card-header bg-white">
+      <strong>🏭 Pré-Cálculo por Setor Primário</strong>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive small">
+        <table class="table table-bordered table-hover align-middle mb-0">
+          <thead class="table-light text-center">
+            <tr>
+              <th>Setor Primário</th>
+              <th>Valor</th>
+              <th>Qtde Cotações</th>
+            </tr>
+          </thead>
+         <tbody>
+  {% for s in faturamento_setores %}
+    <tr class="{% if s.total == 0 %}text-muted{% endif %}">
+      <td>{{ s.setor }}</td>
+      <td class="text-end">{{ s.total|formatar_reais }}</td>
+      <td class="text-center">{{ s.qtd }}</td>
+    </tr>
+  {% endfor %}
+  <tr class="fw-bold bg-light">
+    <td class="text-end">Total</td>
+    <td class="text-end">{{ faturamento_setores_total|formatar_reais }}</td>
+    <td class="text-center">{{ faturamento_setores_qtd_total }}</td>
+  </tr>
+</tbody>
+
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="col-md-6 mb-4">
+      <div class="card">
+        <div class="card-header bg-white"><strong>🔎 Cotações por Segmento</strong></div>
+        <div class="card-body"><canvas id="grafico_segmentos" height="200"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  new Chart(document.getElementById("grafico_prec_por_mes"), {
+  type: 'line',
+  data: {
+    labels: [{% for k in dados_prec_mes.keys %}"{{ k }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+    datasets: [{
+      label: 'Pré-Cálculos por Mês',
+      data: [{% for v in dados_prec_mes.values %}{{ v }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+      borderColor: '#007bff',
+      backgroundColor: 'rgba(0, 123, 255, 0.2)',
+      fill: true,
+      tension: 0.3,
+      pointBackgroundColor: '#007bff',
+      pointBorderColor: '#fff',
+      pointRadius: 5,
+      pointHoverRadius: 7
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return ` ${context.parsed.y} pré-cálculos`;
+          }
+        }
+      }
+    },
+    scales: {
+  x: {
+    title: { display: true, text: 'Mês:' }
+  },
+  y: {
+    min: 0,
+    max: 180,
+    ticks: {
+      stepSize: 25
+    },
+    title: {
+      display: true,
+      text: 'Quantidade'
+    }
+  }
+}
+
+  }
+});
+
+
+  new Chart(document.getElementById("grafico_tipo_mes"), {
+  type: 'bar',
+  data: {
+    labels: [{% for mes in dados_tipo_mes.keys %}"{{ mes }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+    datasets: [
+      {
+        label: 'Cotação',
+        data: [{% for d in dados_tipo_mes.values %}{{ d.Cotacao|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+        backgroundColor: '#00aaff',
+        borderWidth: 0,
+        barPercentage: 0.45,
+        categoryPercentage: 0.7
+      },
+      {
+        label: 'Corrente',
+        data: [{% for d in dados_tipo_mes.values %}{{ d.Corrente|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+        backgroundColor: '#001d8b',
+        borderWidth: 0,
+        barPercentage: 0.45,
+        categoryPercentage: 0.7
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        stacked: false,
+        title: {
+          display: true,
+          text: 'Mês'
+        },
+        grid: {
+          display: false
+        }
+      },
+      y: {
+        stacked: false,
+        beginAtZero: true,
+        max: 100,  // ajuste conforme necessário
+        ticks: {
+          stepSize: 20
+        },
+        title: {
+          display: true,
+          text: 'Quantidade'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${context.parsed.y}`;
+          }
+        }
+      }
+    }
+  }
+});
+
+
+  new Chart(document.getElementById("grafico_top_clientes"), {
+  type: 'bar',
+  data: {
+    labels: [{% for c in top_clientes %}"{{ c.cotacao__cliente__razao_social|truncatechars:20 }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+    datasets: [{
+      label: 'Valor Total (R$)',
+      data: [{% for c in top_clientes %}{{ c.total|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+      backgroundColor: '#2EFEC8',  // tom de verde água claro
+      borderWidth: 0,
+      barPercentage: 0.6,
+      categoryPercentage: 0.8
+    }]
+  },
+  options: {
+    indexAxis: 'y',  // ↩️ chave para barras horizontais
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Valor em R$'
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Cliente'
+        },
+        ticks: {
+          autoSkip: false
+        }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `R$ ${context.parsed.x.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+          }
+        }
+      }
+    }
+  }
+});
+
+
+  new Chart(document.getElementById("grafico_faturamento_setor"), {
+    type: 'pie',
+    data: {
+      labels: [{% for s in faturamento_setores %}"{{ s.roteiro_item__setor__nome }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+      datasets: [{
+        label: 'Faturamento',
+        data: [{% for s in faturamento_setores %}{{ s.total|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+        backgroundColor: ['#00c6ff', '#4a00e0', '#67b26f', '#ff6384', '#36a2eb']
+      }]
+    }
+  });
+
+  new Chart(document.getElementById("grafico_segmentos"), {
+    type: 'doughnut',
+    data: {
+      labels: [{% for s in cotacoes_por_segmento %}"{{ s.cliente__tipo_cliente }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+      datasets: [{
+        label: 'Segmentos',
+        data: [{% for s in cotacoes_por_segmento %}{{ s.total }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+        backgroundColor: ['#007bff', '#dc3545', '#ffc107', '#28a745']
+      }]
+    }
+  });
+</script>
 {% endblock %}

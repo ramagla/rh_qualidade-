@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Ordens de Desenvolvimento{% endblock %}
+
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Ordens de Desenvolvimento" icone="bi bi-kanban" emoji="📌" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"comercial.add_ordemdesenvolvimento" %}
+    <a href="{% url 'cadastrar_ordem_desenvolvimento' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2"></i> Cadastrar
+    </a>
+    {% endif %}
+  </div>
+
+
+  <!-- Offcanvas Filtros Ordens de Desenvolvimento -->
+<div class="offcanvas offcanvas-end offcanvas-modern"
+     tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Ordens de Desenvolvimento
+    </h5>
+    <button type="button" class="btn-close text-reset"
+            data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+
+      <!-- Período de Criação -->
+      <div class="col-md-6 filtro-wrapper">
+        <label for="data_de" class="form-label">
+          <i class="bi bi-calendar-event me-1"></i> De
+        </label>
+        <input type="date" name="data_criacao_de" id="data_de"
+               class="form-control" value="{{ request.GET.data_criacao_de }}">
+      </div>
+
+      <div class="col-md-6 filtro-wrapper">
+        <label for="data_ate" class="form-label">
+          <i class="bi bi-calendar-event me-1"></i> Até
+        </label>
+        <input type="date" name="data_criacao_ate" id="data_ate"
+               class="form-control" value="{{ request.GET.data_criacao_ate }}">
+      </div>
+
+      <!-- Cliente -->
+      <div class="col-12 filtro-wrapper">
+        <label for="cliente" class="form-label">
+          <i class="bi bi-buildings me-1"></i> Cliente
+        </label>
+        <select name="cliente" id="cliente"
+                class="form-select select2"
+                data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for c in clientes %}
+            <option value="{{ c.id }}"
+              {% if request.GET.cliente == c.id|stringformat:"s" %}selected{% endif %}>
+              {{ c.razao_social }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Razão -->
+      <div class="col-12 filtro-wrapper">
+        <label for="razao" class="form-label">
+          <i class="bi bi-chat-left-text me-1"></i> Razão
+        </label>
+        <select name="razao" id="razao"
+                class="form-select select2"
+                data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todas</option>
+          {% for val, label in ordem_model.RAZOES %}
+            <option value="{{ val }}"
+              {% if request.GET.razao == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- OEM -->
+      <div class="col-12 filtro-wrapper">
+        <label for="oem" class="form-label">
+          <i class="bi bi-car-front me-1"></i> OEM
+        </label>
+        <select name="oem" id="oem"
+                class="form-select select2"
+                data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          <option value="1" {% if request.GET.oem == '1' %}selected{% endif %}>Sim</option>
+          <option value="0" {% if request.GET.oem == '0' %}selected{% endif %}>Não</option>
+        </select>
+      </div>
+
+      <!-- Metodologia -->
+      <div class="col-12 filtro-wrapper">
+        <label for="metodologia" class="form-label">
+          <i class="bi bi-diagram-3 me-1"></i> Metodologia
+        </label>
+        <select name="metodologia" id="metodologia"
+                class="form-select select2"
+                data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todas</option>
+          {% for m in metodologias %}
+            <option value="{{ m }}"
+              {% if request.GET.metodologia == m %}selected{% endif %}>
+              {{ m }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Botão Filtrar -->
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Ordens" valor=total_ordens subtitulo="Registradas no sistema." icone="bi-kanban" %}
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Com Amostras" valor=total_com_amostra subtitulo="Qtde de Ordens com amostras." icone="bi-box" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Com Ferramenta" valor=total_com_ferramenta subtitulo="Ordens com ferramental." icone="bi-tools" %}
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Com Prazo" valor=total_com_prazo subtitulo="Ordens com prazos definidos." icone="bi-calendar-check" %}
+  </div>
+
+  <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📄 Lista de Ordens de Desenvolvimento</h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+     <thead class="table-light">
+  <tr>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hash mb-1"></i>
+        <small>Nº</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        <small>Item</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-buildings mb-1"></i>
+        <small>Cliente</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-chat-left-text mb-1"></i>
+        <small>Razão</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-car-front mb-1"></i>
+        <small>OEM</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-diagram-3 mb-1"></i>
+        <small>Metodologia</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-check mb-1"></i>
+        <small>Prazo</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-box-seam mb-1"></i>
+        <small>Amostras</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-activity mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
+
+     <tbody>
+  {% for ordem in page_obj %}
+  <tr>
+    <td>#{{ ordem.numero|stringformat:"03d" }} - {{ ordem.created_at|date:"Y" }}</td>
+    <td>{{ ordem.item.codigo }}</td>
+<td>{{ ordem.cliente.razao_social|primeiro_nome }}</td>
+    <td>{{ ordem.get_razao_display|default:"—" }}</td>
+    <td>
+      {% if ordem.automotivo_oem %}
+        <i class="bi bi-check-circle-fill text-success me-1"></i> Sim
+      {% else %}
+        <i class="bi bi-x-circle-fill text-danger me-1"></i> Não
+      {% endif %}
+    </td>
+    <td>{{ ordem.metodologia_aprovacao|default:"—" }}</td>
+    <td>{{ ordem.prazo_solicitado|date:"d/m/Y" }}</td>
+    <td>{{ ordem.qtde_amostra }}</td>
+    <td>
+      {% if not ordem.assinatura_comercial_nome %}
+        <span class="badge bg-warning text-dark">
+          <i class="bi bi-hourglass-split me-1"></i> Aguardando Comercial
+        </span>
+      {% elif not ordem.assinatura_tecnica_nome %}
+        <span class="badge bg-warning text-dark">
+          <i class="bi bi-hourglass-split me-1"></i> Aguardando Técnica
+        </span>
+      {% else %}
+        <span class="badge bg-success">
+          <i class="bi bi-check-circle me-1"></i> OK
+        </span>
+      {% endif %}
+    </td>
+    <td>
+      <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+        {% if request.user|has_permission:"comercial.view_ordemdesenvolvimento" %}
+{% include "partials/global/_botao_visualizar.html" with objeto=ordem url_visualizar="visualizar_ordem_desenvolvimento" label="F017" icone="bi bi-file-earmark-text" %}
+        {% endif %}
+
+        {% if request.user|has_permission:"comercial.change_ordemdesenvolvimento" %}
+          {% include "partials/global/_botao_editar.html" with objeto=ordem url_editar="editar_ordem_desenvolvimento" label="ordem" %}
+        {% endif %}
+        {% if request.user|has_permission:"comercial.delete_ordemdesenvolvimento" %}
+          {% include "partials/global/_botao_excluir.html" with objeto=ordem url_excluir="excluir_ordem_desenvolvimento" label="ordem" %}
+          {% include "partials/global/_modal_exclusao.html" with objeto=ordem url_excluir="excluir_ordem_desenvolvimento" %}
+        {% endif %}
+      </div>
+    </td>
+  </tr>
+  {% empty %}
+    {% include "partials/global/_sem_resultados.html" with colspan=10 mensagem="Nenhuma ordem registrada." %}
+  {% endfor %}
+</tbody>
+
+    </table>
+
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+
+</div>
+{% endblock %}

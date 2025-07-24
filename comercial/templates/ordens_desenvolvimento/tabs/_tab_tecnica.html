@@ -1,0 +1,177 @@
+{% load widget_tweaks %}
+
+<div class="accordion" id="accordionTecnica">
+
+  <!-- Família e Materiais -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingMaterial">
+      <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMaterial" aria-expanded="true" aria-controls="collapseMaterial">
+        <i class="bi bi-boxes me-2"></i> Família e Materiais
+      </button>
+    </h2>
+    <div id="collapseMaterial" class="accordion-collapse collapse show" aria-labelledby="headingMaterial" data-bs-parent="#accordionTecnica">
+      <div class="accordion-body row g-3">
+
+        <div class="col-md-12">
+          <label class="form-label"><i class="bi bi-grid-1x2 me-1"></i> {{ form.familia_produto.label }}</label>
+          {{ form.familia_produto|add_class:"form-select select2" }}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-boxes me-1"></i> {{ form.material.label }}</label>
+          {{ form.material|add_class:"form-select" }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-question-circle me-1"></i> {{ form.revisar_pir.label }}</label>
+          {{ form.revisar_pir|add_class:"form-select" }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-check-circle me-1"></i> {{ form.aprovado.label }}</label>
+          {{ form.aprovado|add_class:"form-select" }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-calendar me-1"></i> {{ form.prazo_material.label }}</label>
+          {{ form.prazo_material|add_class:"form-control" }}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Rotinas e Documentos -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingDocs">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDocs" aria-expanded="false" aria-controls="collapseDocs">
+        <i class="bi bi-file-earmark-text me-2"></i> Rotinas e Documentos de Produção
+      </button>
+    </h2>
+    <div id="collapseDocs" class="accordion-collapse collapse" aria-labelledby="headingDocs" data-bs-parent="#accordionTecnica">
+      <div class="accordion-body row g-3">
+
+        <div class="col-md-6">
+          <label class="form-label"><i class="bi bi-cpu me-1"></i> {{ form.rotinas_sistema.label }}</label>
+          {{ form.rotinas_sistema|add_class:"form-select" }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="bi bi-calendar-range me-1"></i> {{ form.prazo_rotinas.label }}</label>
+          {{ form.prazo_rotinas|add_class:"form-control" }}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label"><i class="bi bi-file-earmark-text me-1"></i> {{ form.documentos_producao.label }}</label>
+          {{ form.documentos_producao }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ form.prazo_docs.label }}</label>
+          {{ form.prazo_docs|add_class:"form-control" }}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Ferramentas e Dispositivos -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingFerramentas">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFerramentas" aria-expanded="false" aria-controls="collapseFerramentas">
+        <i class="bi bi-gear-wide-connected me-2"></i> Ferramentas e Dispositivos
+      </button>
+    </h2>
+    <div id="collapseFerramentas" class="accordion-collapse collapse" aria-labelledby="headingFerramentas" data-bs-parent="#accordionTecnica">
+      <div class="accordion-body row g-3">
+
+        <!-- Ferramenta -->
+        <div class="col-md-3">{{ form.ferramenta.label_tag }}{{ form.ferramenta|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.tipo_ferramenta.label_tag }}{{ form.tipo_ferramenta|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.os_ferramenta.label_tag }}{{ form.os_ferramenta|add_class:"form-control" }}</div>
+        <div class="col-md-3">{{ form.prazo_ferramental.label_tag }}{{ form.prazo_ferramental|add_class:"form-control" }}</div>
+
+        <!-- Dispositivo -->
+        <div class="col-md-3">{{ form.dispositivo.label_tag }}{{ form.dispositivo|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.tipo_dispositivo.label_tag }}{{ form.tipo_dispositivo|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.os_dispositivo.label_tag }}{{ form.os_dispositivo|add_class:"form-control" }}</div>
+        <div class="col-md-3">{{ form.prazo_dispositivo.label_tag }}{{ form.prazo_dispositivo|add_class:"form-control" }}</div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Amostra -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingAmostra">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAmostra" aria-expanded="false" aria-controls="collapseAmostra">
+        <i class="bi bi-box-fill me-2"></i> Amostras e O.P.
+      </button>
+    </h2>
+    <div id="collapseAmostra" class="accordion-collapse collapse" aria-labelledby="headingAmostra" data-bs-parent="#accordionTecnica">
+      <div class="accordion-body row g-3">
+
+        <div class="col-md-3">{{ form.amostra.label_tag }}{{ form.amostra|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.numero_op.label_tag }}{{ form.numero_op|add_class:"form-control" }}</div>
+        <div class="col-md-3">{{ form.prazo_amostra.label_tag }}{{ form.prazo_amostra|add_class:"form-control" }}</div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Tratamentos -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingTratamentos">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTratamentos" aria-expanded="false" aria-controls="collapseTratamentos">
+        <i class="bi bi-tools me-2"></i> Tratamentos
+      </button>
+    </h2>
+    <div id="collapseTratamentos" class="accordion-collapse collapse" aria-labelledby="headingTratamentos" data-bs-parent="#accordionTecnica">
+      <div class="accordion-body row g-3">
+
+        <!-- Tratamento Térmico -->
+        <div class="col-md-3">{{ form.tratamento_termico.label_tag }}{{ form.tratamento_termico|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.tipo_tte.label_tag }}{{ form.tipo_tte|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.status_tte.label_tag }}{{ form.status_tte|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.prazo_tte.label_tag }}{{ form.prazo_tte|add_class:"form-control" }}</div>
+
+        <!-- Tratamento Superficial -->
+        <div class="col-md-3">{{ form.tratamento_superficial.label_tag }}{{ form.tratamento_superficial|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.tipo_tse.label_tag }}{{ form.tipo_tse|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.status_tse.label_tag }}{{ form.status_tse|add_class:"form-select" }}</div>
+        <div class="col-md-3">{{ form.prazo_tse.label_tag }}{{ form.prazo_tse|add_class:"form-control" }}</div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Resistência e Observações -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingResistencia">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResistencia" aria-expanded="false" aria-controls="collapseResistencia">
+        <i class="bi bi-shield-check me-2"></i> Resistência e Observações
+      </button>
+    </h2>
+    <div id="collapseResistencia" class="accordion-collapse collapse" aria-labelledby="headingResistencia" data-bs-parent="#accordionTecnica">
+      <div class="accordion-body row g-3">
+
+        <div class="col-md-4">{{ form.resistencia_corrosao.label_tag }}{{ form.resistencia_corrosao|add_class:"form-select" }}</div>
+        <div class="col-md-4">{{ form.prazo_resistencia.label_tag }}{{ form.prazo_resistencia|add_class:"form-control" }}</div>
+        <div class="col-md-4">{{ form.durabilidade.label_tag }}{{ form.durabilidade|add_class:"form-select" }}</div>
+        <div class="col-md-4">{{ form.prazo_durabilidade.label_tag }}{{ form.prazo_durabilidade|add_class:"form-control" }}</div>
+
+        <div class="col-md-12 mt-3">
+          <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ form.observacao_geral.label }}</label>
+          {{ form.observacao_geral|add_class:"form-control" }}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Botões -->
+<div class="col-12 mt-4 text-end">
+  <button type="submit" name="aba" value="tecnica" class="btn btn-primary">
+    <i class="bi bi-save me-1"></i> Salvar Dados Técnicos
+  </button>
+  <a href="{% url 'lista_ordens_desenvolvimento' %}" class="btn btn-secondary">
+    <i class="bi bi-x-circle me-1"></i> Cancelar
+  </a>
+</div>

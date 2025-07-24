@@ -57,4 +57,13 @@ comercial_permissions = {
     "importar_excel_clientes": "comercial.importar_excel_clientes",
     "importar_excel_itens": "comercial.importar_excel_itens",
 
+
+        # Ordens de Desenvolvimento
+    "lista_ordens_desenvolvimento": "comercial.view_ordemdesenvolvimento",
+    "cadastrar_ordem_desenvolvimento": "comercial.add_ordemdesenvolvimento",
+    "editar_ordem_desenvolvimento": "comercial.change_ordemdesenvolvimento",
+    "visualizar_ordem_desenvolvimento": "comercial.view_ordemdesenvolvimento",
+    "excluir_ordem_desenvolvimento": "comercial.delete_ordemdesenvolvimento",
+
+
 }

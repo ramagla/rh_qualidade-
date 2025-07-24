@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container mt-4">
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <h2 class="mb-4"><i class="bi bi-tools me-2"></i>{{ titulo }}</h2>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="accordion" id="accordionOrdem">
+
+      <!-- 📦 Dados Comerciais -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingComercial">
+    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseComercial">
+      📦 Dados Comerciais
+    </button>
+  </h2>
+  <div id="collapseComercial" class="accordion-collapse collapse show">
+    <div class="accordion-body row g-3">
+      <div class="col-md-3">
+        <label class="form-label"><i class="bi bi-calculator me-1"></i> {{ form.precalculo.label }}</label>
+        {{ form.precalculo|add_class:"form-select select2"|attr:"id=id_precalculo" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label"><i class="bi bi-box-seam me-1"></i> {{ form.item.label }}</label>
+        {{ form.item|add_class:"form-select select2"|attr:"id=id_item" }}
+      </div>
+      <div class="col-md-3">
+  <label class="form-label">
+    <i class="bi bi-envelope-at me-1"></i> {{ form.email_ppap.label }}
+  </label>
+  {{ form.email_ppap|add_class:"form-control" }}
+</div>
+
+      <div class="col-md-3">
+        <label class="form-label"><i class="bi bi-tag me-1"></i> {{ form.codigo_brasmol.label }}</label>
+        {{ form.codigo_brasmol|add_class:"form-control" }}
+      </div>
+      <div class="col-md-3">
+  <label class="form-label"><i class="bi bi-calendar-event me-1"></i> {{ form.prazo_solicitado.label }}</label>
+  {{ form.prazo_solicitado|add_class:"form-control" }}
+</div>
+<div class="col-md-3">
+  <label class="form-label"><i class="bi bi-123 me-1"></i> {{ form.qtde_amostra.label }}</label>
+  {{ form.qtde_amostra|add_class:"form-control" }}
+</div>
+<div class="col-md-3">
+  <label class="form-label"><i class="bi bi-info-circle me-1"></i> {{ form.razao.label }}</label>
+  {{ form.razao|add_class:"form-select select2" }}
+</div>
+<div class="col-md-3">
+  <label class="form-label"><i class="bi bi-person-badge me-1"></i> {{ form.cliente.label }}</label>
+  {{ form.cliente|add_class:"form-select select2"|attr:"id=id_cliente" }}
+</div>
+<div class="col-md-2 form-check form-switch">
+  <label class="form-check-label" for="id_automotivo_oem">
+    <i class="bi bi-car-front-fill me-1"></i> {{ form.automotivo_oem.label }}
+  </label>
+  {{ form.automotivo_oem|add_class:"form-check-input"|attr:"role=switch"|attr:"id=id_automotivo_oem" }}
+</div>
+
+
+<div class="col-md-2 form-check form-switch">
+  <label class="form-check-label" for="id_requisito_especifico">
+    <i class="bi bi-ui-checks me-1"></i> {{ form.requisito_especifico.label }}
+  </label>
+  {{ form.requisito_especifico|add_class:"form-check-input"|attr:"role=switch"|attr:"id=id_requisito_especifico" }}
+</div>
+
+<div class="col-md-2 form-check form-switch">
+  <label class="form-check-label" for="id_item_seguranca">
+    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ form.item_seguranca.label }}
+  </label>
+  {{ form.item_seguranca|add_class:"form-check-input"|attr:"role=switch"|attr:"id=id_item_seguranca" }}
+</div>
+
+<div class="col-md-3">
+  <label class="form-label">
+    <i class="bi bi-person-lines-fill me-1"></i> {{ form.comprador.label }}
+  </label>
+  {{ form.comprador|add_class:"form-control"|attr:"id=id_comprador" }}
+</div>
+
+<div class="col-md-3">
+  <label class="form-label">
+    <i class="bi bi-file-earmark-text me-1"></i> {{ form.codigo_desenho.label }}
+  </label>
+  {{ form.codigo_desenho|add_class:"form-control"|attr:"id=id_codigo_desenho" }}
+</div>
+
+      <div class="col-md-2">
+        <label class="form-label"><i class="bi bi-file-earmark-check me-1"></i> {{ form.revisao.label }}</label>
+        {{ form.revisao|add_class:"form-control"|attr:"id=id_revisao" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label"><i class="bi bi-calendar2-check me-1"></i> {{ form.data_revisao.label }}</label>
+        {{ form.data_revisao|add_class:"form-control"|attr:"id=id_data_revisao" }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label"><i class="bi bi-clipboard-check me-1"></i> {{ form.metodologia_aprovacao.label }}</label>
+        {{ form.metodologia_aprovacao|add_class:"form-control"|attr:"id=id_metodologia_aprovacao" }}
+      </div>
+      <div class="col-md-12">
+        <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ form.observacao.label }}</label>
+        {{ form.observacao|add_class:"form-control" }}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+     <!-- ⚙️ Dados Técnicos -->
+<div class="accordion-item mt-3">
+  <h2 class="accordion-header" id="headingTecnico">
+    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTecnico">
+      ⚙️ Dados Técnicos
+    </button>
+  </h2>
+  <div id="collapseTecnico" class="accordion-collapse collapse">
+    <div class="accordion-body row g-3">
+
+      <!-- Família de Produto -->
+      <div class="col-md-12">
+        <label class="form-label"><i class="bi bi-grid-1x2 me-1"></i> Família de Produto</label>
+        {{ form.familia_produto|add_class:"form-select select2" }}
+      </div>
+
+      <!-- Material, Revisar PIR, Aprovado, Prazo -->
+      <div class="col-md-3">
+        <label class="form-label">Material</label>
+        {{ form.material|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Revisar PIR?</label>
+        {{ form.revisar_pir|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Aprovado?</label>
+        {{ form.aprovado|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Prazo</label>
+        {{ form.prazo_material|add_class:"form-control" }}
+      </div>
+
+      <!-- Rotinas do Sistema + Prazo -->
+      <div class="col-md-6">
+        <label class="form-label">Rotinas do Sistema</label>
+        {{ form.rotinas_sistema|add_class:"form-select" }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Prazo</label>
+        {{ form.prazo_rotinas|add_class:"form-control" }}
+      </div>
+<!-- Documentos de Produção + Prazo (Linha isolada) -->
+<div class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label">
+      <i class="bi bi-files me-1"></i> Documentos de Produção:
+    </label>
+    {{ form.documentos_producao|add_class:"form-select select2" }}
+  </div>
+
+  <div class="col-md-3">
+    <label class="form-label">
+      <i class="bi bi-calendar3 me-1"></i> Prazo
+    </label>
+    {{ form.prazo_docs|add_class:"form-control" }}
+  </div>
+</div>
+
+
+      <!-- Ferramenta -->
+      <div class="col-md-3">
+        <label class="form-label">Ferramenta</label>
+        {{ form.ferramenta|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Tipo</label>
+        {{ form.tipo_ferramenta|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">OS nº</label>
+        {{ form.os_ferramenta|add_class:"form-control" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Prazo</label>
+        {{ form.prazo_ferramental|add_class:"form-control" }}
+      </div>
+
+      <!-- Dispositivo -->
+      <div class="col-md-3">
+        <label class="form-label">Dispositivo</label>
+        {{ form.dispositivo|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Tipo</label>
+        {{ form.tipo_dispositivo|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">OS nº</label>
+        {{ form.os_dispositivo|add_class:"form-control" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Prazo</label>
+        {{ form.prazo_dispositivo|add_class:"form-control" }}
+      </div>
+
+      <!-- Amostra -->
+      <div class="col-md-4">
+        <label class="form-label">Amostra</label>
+        {{ form.amostra|add_class:"form-select" }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Nº OP</label>
+        {{ form.numero_op|add_class:"form-control" }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Prazo</label>
+        {{ form.prazo_amostra|add_class:"form-control" }}
+      </div>
+
+      <!-- Trat. térmico externo -->
+      <div class="col-md-3">
+        <label class="form-label">Trat. térmico externo</label>
+        {{ form.tratamento_termico|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Tipo</label>
+        {{ form.tipo_tte|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Status</label>
+        {{ form.status_tte|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Prazo</label>
+        {{ form.prazo_tte|add_class:"form-control" }}
+      </div>
+
+      <!-- Trat. superficial externo -->
+      <div class="col-md-3">
+        <label class="form-label">Trat. superficial externo</label>
+        {{ form.tratamento_superficial|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Tipo</label>
+        {{ form.tipo_tse|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Status</label>
+        {{ form.status_tse|add_class:"form-select" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Prazo</label>
+        {{ form.prazo_tse|add_class:"form-control" }}
+      </div>
+
+      <!-- Resistência à corrosão -->
+      <div class="col-md-3">
+        <label class="form-label">Resistência à corrosão</label>
+        {{ form.resistencia_corrosao|add_class:"form-select" }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Requisito</label>
+        {{ form.requisito_resistencia|add_class:"form-control" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Prazo</label>
+        {{ form.prazo_resistencia|add_class:"form-control" }}
+      </div>
+
+      <!-- Durabilidade / Ciclagem -->
+      <div class="col-md-3">
+        <label class="form-label">Durabilidade / Ciclagem</label>
+        {{ form.durabilidade|add_class:"form-select" }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Requisito</label>
+        {{ form.requisito_durabilidade|add_class:"form-control" }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Prazo</label>
+        {{ form.prazo_durabilidade|add_class:"form-control" }}
+      </div>
+
+      <!-- Observação Geral -->
+      <div class="col-md-12">
+        <label class="form-label">Observações Gerais</label>
+        {{ form.observacao_geral|add_class:"form-control" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{% include 'partials/global/_botoes_salvar_cancelar.html' with url_voltar="lista_ordens_desenvolvimento" %}
+  </form>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    $('.select2').select2();
+
+    $('#id_precalculo').on('change', function () {
+      const precalcId = $(this).val();
+      if (!precalcId) return;
+
+      fetch(`/comercial/ajax/precalculo/${precalcId}/dados/`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.item) $('#id_item').val(data.item).trigger('change');
+          if (data.cliente) $('#id_cliente').val(data.cliente).trigger('change');
+          if (data.comprador) $('#id_comprador').val(data.comprador);
+          if (data.codigo_desenho) $('#id_codigo_desenho').val(data.codigo_desenho);
+          if (data.revisao) $('#id_revisao').val(data.revisao);
+          if (data.data_revisao) $('#id_data_revisao').val(data.data_revisao);
+          if (data.metodologia_aprovacao) $('#id_metodologia_aprovacao').val(data.metodologia_aprovacao);
+          $('#id_automotivo_oem').prop('checked', data.automotivo_oem);
+          $('#id_requisito_especifico').prop('checked', data.requisito_especifico);
+          $('#id_item_seguranca').prop('checked', data.item_seguranca);
+        })
+        .catch(err => console.error('Erro ao buscar dados do Pré-Cálculo:', err));
+    });
+  });
+</script>
+
+{% endblock %}
