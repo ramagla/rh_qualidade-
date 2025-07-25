@@ -91,16 +91,25 @@ def itens_precaculo(request, pk):
                 / custo_unitario
                 * Decimal("100")
             ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            precalc.preco_margem_formatado = f"{preco_final:.2f} ({percentual_manual}%)"
+            precalc.preco_margem_formatado = f"{preco_final:.2f} ({percentual_manual}%) ✍️"
+
         else:
-            precalc.preco_margem_formatado = next(
-                (
-                    f"{item['unitario']:.2f} ({item['percentual']}%)"
-                    for item in precalc.calcular_precos_com_impostos()
-                    if round(item["unitario"], 4) == round(preco_final, 4)
-                ),
-                f"{preco_final:.2f}" if preco_final else None
-            )
+            encontrado = None
+
+            for item in precalc.calcular_precos_com_impostos():
+                if round(item["unitario"], 4) == round(preco_final, 4):
+                    encontrado = f"{item['unitario']:.2f} ({item['percentual']}%) 💰"
+                    break
+
+            if not encontrado:
+                for item in precalc.calcular_precos_sem_impostos():
+                    if round(item["unitario"], 4) == round(preco_final, 4):
+                        encontrado = f"{item['unitario']:.2f} ({item['percentual']}%) 🧮"
+                        break
+
+            precalc.preco_margem_formatado = encontrado or (f"{preco_final:.2f}" if preco_final else None)
+
+
 
     # Paginação
     paginator = Paginator(precalculos, 10)
@@ -609,9 +618,7 @@ def criar_precaculo(request, pk):
         
     })
 
-
-
-
+from django.db.models import ProtectedError
 
 
 @login_required
@@ -619,8 +626,16 @@ def criar_precaculo(request, pk):
 def excluir_precalculo(request, pk):
     item = get_object_or_404(PreCalculo, pk=pk)
     cotacao_id = item.cotacao.id  # guarda antes de deletar
-    item.delete()
-    messages.success(request, "Item de Pré-Cálculo excluído com sucesso.")
+
+    try:
+        item.delete()
+        messages.success(request, f"Pré-cálculo Nº {item.numero} excluído com sucesso.")
+    except ProtectedError:
+        messages.error(
+            request,
+            f"Não é possível excluir o Pré-Cálculo Nº {item.numero} pois ele está vinculado a uma Ordem de Desenvolvimento."
+        )
+
     return redirect("itens_precaculo", pk=cotacao_id)
 
 
@@ -628,103 +643,12 @@ def excluir_precalculo(request, pk):
 
 
 
-def responder_cotacao_materia_prima(request, pk):
-    material = get_object_or_404(PreCalculoMaterial, pk=pk)
-    codigo = material.codigo
-
-    # Busca todas as cotações com o mesmo código
-    materiais = PreCalculoMaterial.objects.filter(codigo=codigo).order_by("pk")
-    fornecedores = FornecedorQualificado.objects.filter(
-        produto_servico__in=[
-            "Fita de Aço/Inox", "Arame de Aço", "Arame de inox"
-        ],
-        ativo="Ativo"
-    ).order_by("nome")
-
-
-    try:
-        materia_prima = MateriaPrimaCatalogo.objects.get(codigo=codigo)
-    except MateriaPrimaCatalogo.DoesNotExist:
-        materia_prima = None
-
-    cotacao_numero = material.precalculo.cotacao.numero if material.precalculo and material.precalculo.cotacao else None
-    precalculo_numero = material.precalculo.numero if material.precalculo else None
-    observacoes_gerais = material.precalculo.observacoes_materiais if material.precalculo else ""
-
-    if request.method == "POST":
-        for i, mat in enumerate(materiais):
-            # Evita alterações em materiais com status finalizado
-            if mat.status == "ok":
-                continue
-
-            mat.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
-            mat.icms = request.POST.get(f"icms_{i}") or None
-            mat.lote_minimo = request.POST.get(f"lote_minimo_{i}") or None
-            mat.entrega_dias = request.POST.get(f"entrega_dias_{i}") or None
-            mat.preco_kg = request.POST.get(f"preco_kg_{i}") or None
-            mat.save()
-
-        messages.success(request, "Cotações salvas com sucesso.")
-        return redirect(request.path)  # Ou redirecione para a lista
-
-    return render(request, "cotacoes/responder_cotacao_material.html", {
-        "materiais": materiais,
-        "fornecedores": fornecedores,
-        "cotacao_numero": cotacao_numero,
-        "precalculo_numero": precalculo_numero,
-        "materia_prima": materia_prima,
-        "observacoes_gerais": observacoes_gerais,
-        "codigo": codigo,
-    })
 
 
 
 
 
-def responder_cotacao_servico_lote(request, pk):
-    servico = get_object_or_404(PreCalculoServicoExterno, pk=pk)
-    codigo = servico.insumo.materia_prima.codigo
-    servicos = PreCalculoServicoExterno.objects.filter(insumo__materia_prima__codigo=codigo).order_by("pk")
 
-    fornecedores = FornecedorQualificado.objects.filter(
-        produto_servico__icontains="Trat",  # Padrão usado para tratamento
-        status__in=["Qualificado", "Qualificado Condicional"]
-    ).order_by("nome")
-
-    try:
-        materia_prima = servico.insumo.materia_prima
-    except:
-        materia_prima = None
-
-    cotacao_numero = servico.precalculo.cotacao.numero if servico.precalculo and servico.precalculo.cotacao else None
-    precalculo_numero = servico.precalculo.numero if servico.precalculo else None
-    observacoes_gerais = servico.precalculo.observacoes_materiais if servico.precalculo else ""
-
-    if request.method == "POST":
-        for i, sev in enumerate(servicos):
-            sev.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
-            sev.lote_minimo = request.POST.get(f"lote_minimo_{i}") or None
-            sev.entrega_dias = request.POST.get(f"entrega_dias_{i}") or None
-            preco_raw = request.POST.get(f"preco_kg_{i}") or None
-            if preco_raw:
-                preco_raw = preco_raw.replace(",", ".")
-            sev.preco_kg = preco_raw
-            sev.save()
-
-        messages.success(request, "Cotações salvas com sucesso.")
-        return redirect(request.path)
-    
-    
-    return render(request, "cotacoes/responder_cotacao_servico_lote.html", {
-        "servicos": servicos,
-        "fornecedores": fornecedores,
-        "cotacao_numero": cotacao_numero,
-        "precalculo_numero": precalculo_numero,
-        "materia_prima": materia_prima,
-        "observacoes_gerais": observacoes_gerais,
-        "codigo": codigo,
-
-    })
 
 
 from django.contrib.auth.decorators import login_required, permission_required
@@ -977,20 +901,20 @@ def precificacao_produto(request, pk):
 
     # ——— Resultado formatado
     custo_materia = {
-        "total": total_materia.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
-        "unitario": unit_materia.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
-        "percentual": pct(total_materia),
+    "total": Decimal(total_materia).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+    "unitario": Decimal(unit_materia).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
+    "percentual": pct(total_materia),
     }
 
     custo_servico = {
-        "total": total_servico.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
-        "unitario": unit_servico.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
+        "total": Decimal(total_servico).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+        "unitario": Decimal(unit_servico).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
         "percentual": pct(total_servico),
     }
 
     custo_roteiro = {
-        "total": total_roteiro.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
-        "unitario": unit_roteiro.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
+        "total": Decimal(total_roteiro).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+        "unitario": Decimal(unit_roteiro).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
         "percentual": pct(total_roteiro),
     }
 
@@ -1005,6 +929,7 @@ def precificacao_produto(request, pk):
     analise = precalc.analise_comercial_item
     item = analise.item if analise else None
 
+    tem_servicos_selecionados = precalc.servicos.filter(selecionado=True).exists()
 
 
     return render(request, "cotacoes/precificacao_produto.html", {
@@ -1029,7 +954,9 @@ def precificacao_produto(request, pk):
         "precos_sem_impostos": precalc.calcular_precos_sem_impostos(),
         "precos_com_impostos": precalc.calcular_precos_com_impostos(),
         "analise": analise,
-"item": item,
+    "item": item,
+    "tem_servicos_selecionados": tem_servicos_selecionados,  # ✅ variável de controle
+
     })
 
 

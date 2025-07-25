@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, F, Case, When
 from django.db.models.functions import Coalesce
+from django.db.models import FloatField, ExpressionWrapper
 
 from comercial.models import Cliente, Cotacao, OrdemDesenvolvimento
 from comercial.models.precalculo import PreCalculo, AnaliseComercial
@@ -167,6 +168,28 @@ def dashboard_comercial(request):
             .order_by("cliente__tipo_cliente")
 
 
+    precalculos_margem = PreCalculo.objects.filter(**filtro_data).exclude(preco_manual=0, preco_selecionado=None)
+
+    margens = []
+    for p in precalculos_margem:
+        try:
+            preco_final = (
+                p.preco_manual if p.preco_manual and p.preco_manual > Decimal("0.00")
+                else p.preco_selecionado
+            )
+
+            custos = p.calcular_precos_com_impostos()
+            if custos and custos[0]["unitario"] > 0:
+                custo_unitario = custos[0]["unitario"]
+                margem = ((preco_final - custo_unitario) / custo_unitario) * 100
+                margens.append(margem)
+        except Exception as e:
+            print(f"⚠️ Erro ao calcular margem para PreCalculo {p.id}: {e}")
+
+    margem_media = round(sum(margens) / len(margens), 2) if margens else 0
+
+
+
     # Contexto do template
     context = {
         "total_clientes": total_clientes,
@@ -195,6 +218,7 @@ def dashboard_comercial(request):
         "total_clientes": total_clientes,
         "data_inicio": data_inicio,
         "data_fim": data_fim,
+        "margem_media": margem_media,
 
     }
 

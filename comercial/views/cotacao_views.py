@@ -204,13 +204,21 @@ def editar_cotacao(request, pk):
         'form': form,
         'cotacao': cot,  # usado no template para exibir botão "Itens"
     })
+from django.db.models import ProtectedError
 
 
 @login_required
 @permission_required("comercial.delete_cotacao", raise_exception=True)
 def excluir_cotacao(request, pk):
     cotacao = get_object_or_404(Cotacao, pk=pk)
-    cotacao.delete()
+    try:
+        cotacao.delete()
+        messages.success(request, f"Cotação Nº {cotacao.numero} excluída com sucesso.")
+    except ProtectedError:
+        messages.error(
+            request,
+            f"Não é possível excluir a Cotação Nº {cotacao.numero} pois ela está vinculada a outros registros (ex: Pré-Cálculos ou Ordens de Desenvolvimento)."
+        )
     return redirect("lista_cotacoes")
 
 @login_required

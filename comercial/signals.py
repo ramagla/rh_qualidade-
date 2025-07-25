@@ -2,7 +2,13 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import IntegrityError
 from comercial.models import OrdemDesenvolvimento, Item
+from comercial.models.precalculo import AnaliseComercial
+from comercial.models.ordem_desenvolvimento import OrdemDesenvolvimento
+from django.db import transaction
+from django.utils.timezone import now
 import logging
+
+from django.db import models
 
 logger = logging.getLogger(__name__)
 
@@ -35,3 +41,106 @@ def atualizar_item_a_partir_da_od(sender, instance, **kwargs):
         logger.info(f"✅ Código e tipo do Item #{item.pk} atualizados com sucesso.")
     except IntegrityError as e:
         logger.error(f"Erro ao salvar Item #{item.pk}: {e}")
+
+
+
+@receiver(post_save, sender=AnaliseComercial)
+def criar_ordem_desenvolvimento_ao_aprovar(sender, instance, created, **kwargs):
+    try:
+        if instance.status != "aprovado":
+            return
+
+        precalc = instance.precalculo
+
+        # Já possui OD?
+        if OrdemDesenvolvimento.objects.filter(precalculo=precalc).exists():
+            return
+
+        item = instance.item
+        cliente = item.cliente
+
+        # Garante atomicidade
+        with transaction.atomic():
+            ultimo_numero = OrdemDesenvolvimento.objects.aggregate(
+                models.Max("numero")
+            )["numero__max"] or 99
+
+            od = OrdemDesenvolvimento.objects.create(
+                numero=ultimo_numero + 1,
+                precalculo=precalc,
+                item=item,
+                cliente=cliente,
+                razao="novo",  # Valor padrão, pode ser ajustado
+                metodologia_aprovacao=instance.metodologia,
+                qtde_amostra=instance.qtde_estimada or 0,
+                automotivo_oem=item.automotivo_oem,
+                comprador=cliente.comprador if hasattr(cliente, "comprador") else "",
+                requisito_especifico=item.requisito_especifico,
+                item_seguranca=item.item_seguranca,
+                codigo_desenho=item.codigo_desenho,
+                revisao=item.revisao,
+                data_revisao=item.data_revisao,
+                assinatura_comercial_nome=instance.assinatura_nome,
+                assinatura_comercial_email=instance.assinatura_cn,
+                assinatura_comercial_data=instance.data_assinatura or now(),
+            )
+
+            logger.info(f"✅ OD #{od.numero} criada automaticamente para o Pré-Cálculo #{precalc.pk}")
+    except Exception as e:
+        logger.error(f"❌ Erro ao criar OD automática: {e}")
+
+from datetime import datetime
+
+
+@receiver(post_save, sender=AnaliseComercial)
+def criar_ordem_amostra_ao_solicitar(sender, instance, created, **kwargs):
+    try:
+        if instance.status != "amostras":
+            return
+
+        precalc = instance.precalculo
+        if not precalc or OrdemDesenvolvimento.objects.filter(precalculo=precalc).exists():
+            return
+
+        item = instance.item
+        cliente = item.cliente
+
+        with transaction.atomic():
+            # Gera código Bras-Mol baseado na data
+            hoje_str = datetime.now().strftime("%Y%m%d")
+            base_codigo = f"{hoje_str}-"
+            sufixo = 1
+            codigo_final = f"{base_codigo}{sufixo:02d}"
+
+            # Garante unicidade incremental
+            while OrdemDesenvolvimento.objects.filter(codigo_brasmol=codigo_final).exists():
+                sufixo += 1
+                codigo_final = f"{base_codigo}{sufixo:02d}"
+
+            ultimo_numero = OrdemDesenvolvimento.objects.aggregate(
+                models.Max("numero")
+            )["numero__max"] or 99
+
+            OrdemDesenvolvimento.objects.create(
+                numero=ultimo_numero + 1,
+                precalculo=precalc,
+                item=item,
+                cliente=cliente,
+                razao="amostras",
+                amostra="sim",  # Campo de amostra
+                codigo_brasmol=codigo_final,
+                metodologia_aprovacao=instance.metodologia,
+                qtde_amostra=instance.qtde_estimada or 0,
+                automotivo_oem=item.automotivo_oem,
+                comprador=getattr(cliente, "comprador", ""),
+                requisito_especifico=item.requisito_especifico,
+                item_seguranca=item.item_seguranca,
+                codigo_desenho=item.codigo_desenho,
+                revisao=item.revisao,
+                data_revisao=item.data_revisao,
+                assinatura_comercial_nome=instance.assinatura_nome,
+                assinatura_comercial_email=instance.assinatura_cn,
+                assinatura_comercial_data=instance.data_assinatura or now(),
+            )
+    except Exception as e:
+        logger.error(f"❌ Erro ao criar OD para amostras: {e}")

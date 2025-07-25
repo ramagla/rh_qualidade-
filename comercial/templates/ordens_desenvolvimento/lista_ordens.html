@@ -184,12 +184,13 @@
         <small>Prazo</small>
       </div>
     </th>
-    <th class="text-center align-middle">
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-box-seam mb-1"></i>
-        <small>Amostras</small>
-      </div>
-    </th>
+   <th class="text-center align-middle">
+  <div class="d-flex flex-column align-items-center">
+    <i class="bi bi-tag-fill mb-1"></i>
+    <small>Tipo</small>
+  </div>
+</th>
+
     <th class="text-center align-middle">
       <div class="d-flex flex-column align-items-center">
         <i class="bi bi-activity mb-1"></i>
@@ -222,7 +223,15 @@
     </td>
     <td>{{ ordem.metodologia_aprovacao|default:"—" }}</td>
     <td>{{ ordem.prazo_solicitado|date:"d/m/Y" }}</td>
-    <td>{{ ordem.qtde_amostra }}</td>
+<td>
+  {% if ordem.razao == "amostras" %}
+    <span class="badge bg-info text-dark"><i class="bi bi-box-seam me-1"></i> Amostra</span>
+  {% elif ordem.razao == "novo" or ordem.razao == "revalidacao" %}
+    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Aprovação</span>
+  {% else %}
+    <span class="badge bg-secondary"><i class="bi bi-circle me-1"></i> Manual</span>
+  {% endif %}
+</td>
     <td>
       {% if not ordem.assinatura_comercial_nome %}
         <span class="badge bg-warning text-dark">

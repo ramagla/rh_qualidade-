@@ -49,7 +49,10 @@ def responder_cotacao_materia_prima(request, pk):
     """
     material = get_object_or_404(PreCalculoMaterial, pk=pk)
     codigo = material.codigo
-    materiais = PreCalculoMaterial.objects.filter(codigo=codigo).order_by("pk")
+    materiais = PreCalculoMaterial.objects.filter(
+        precalculo=material.precalculo,
+        codigo=codigo
+    ).order_by("pk")
 
     fornecedores = FornecedorQualificado.objects.filter(
         produto_servico__in=["Fita de Aço/Inox", "Arame de Aço", "Arame de inox"],
@@ -97,38 +100,52 @@ def responder_cotacao_materia_prima(request, pk):
     })
 
 
-def disparar_email_cotacao_servico(request, servico):
-    """
-    Envia e-mail para solicitar resposta de cotação de serviço externo.
-    """
-    link = request.build_absolute_uri(
-        reverse("responder_cotacao_servico_lote", args=[servico.pk])
-    )
+from django.urls import reverse
+from django.core.mail import send_mail
+from django.conf import settings
 
-    try:
-        mp = servico.insumo.materia_prima
-        descricao = mp.descricao
-        codigo = mp.codigo
-    except Exception:
-        descricao = "---"
-        codigo = "sem código"
+def disparar_emails_cotacao_servicos(request, precalc):
+    """
+    Dispara e-mails de cotação de serviços externos agrupados por insumo.
+    """
+    grupos = {}
+    for servico in precalc.servicos.all():
+        insumo = servico.insumo
+        if insumo not in grupos:
+            grupos[insumo] = []
+        grupos[insumo].append(servico)
 
-    corpo = f"""
+    for insumo, lista in grupos.items():
+        pk_primeiro = lista[0].pk  # usado no link de resposta
+
+        try:
+            mp = insumo.materia_prima
+            codigo = mp.codigo
+            descricao = mp.descricao
+        except Exception:
+            codigo = "sem código"
+            descricao = "---"
+
+        link = request.build_absolute_uri(
+            reverse("responder_cotacao_servico_lote", args=[pk_primeiro])
+        )
+
+        corpo = f"""
 🔧 Cotação de Serviço Externo – Tratamento
 
 📦 Código: {codigo}
 📝 Descrição: {descricao}
 
 🔗 Link para resposta: {link}
-"""
+        """
 
-    send_mail(
-        subject="📨 Cotação de Serviço Externo",
-        message=corpo.strip(),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["rafael.almeida@brasmol.com.br"],
-        fail_silently=False,
-    )
+        send_mail(
+            subject="📨 Cotação de Serviço Externo",
+            message=corpo.strip(),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=["rafael.almeida@brasmol.com.br"],
+            fail_silently=False,
+        )
 
 
 def responder_cotacao_servico_lote(request, pk):
@@ -136,6 +153,7 @@ def responder_cotacao_servico_lote(request, pk):
     codigo = servico.insumo.materia_prima.codigo
 
     servicos = PreCalculoServicoExterno.objects.filter(
+        precalculo=servico.precalculo,
         insumo__materia_prima__codigo=codigo
     ).select_related("insumo", "insumo__materia_prima").order_by("pk")
 
@@ -156,8 +174,9 @@ def responder_cotacao_servico_lote(request, pk):
     if request.method == "POST":
         for i, sev in enumerate(servicos):
             sev.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
-            sev.lote_minimo = request.POST.get(f"lote_minimo_{i}") or None
-            sev.entrega_dias = request.POST.get(f"entrega_dias_{i}") or None
+            sev.icms          = request.POST.get(f"icms_{i}") or None  # ← campo ICMS
+            sev.lote_minimo   = request.POST.get(f"lote_minimo_{i}") or None
+            sev.entrega_dias  = request.POST.get(f"entrega_dias_{i}") or None
             preco_raw = request.POST.get(f"preco_kg_{i}") or None
             if preco_raw:
                 preco_raw = preco_raw.replace(",", ".")
@@ -166,6 +185,7 @@ def responder_cotacao_servico_lote(request, pk):
                 except:
                     sev.preco_kg = None
             sev.save()
+
 
         messages.success(request, "Cotações salvas com sucesso.")
         return redirect(request.path)

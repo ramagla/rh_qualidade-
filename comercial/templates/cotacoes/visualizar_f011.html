@@ -26,32 +26,34 @@
           <img src="{% static 'img/logo.png' %}" alt="Logo" class="img-fluid" style="max-height: 70px;">
         </td>
   
-        <!-- Título Central -->
-        <td style="width: 60%;">
-          <div>
-            <strong>PRÉ-CÁLCULO DE ORÇAMENTO</strong><br>
-            <span class="text-uppercase">CARACTERIZAÇÃO DE MERCADO / PRODUTO</span>
-          </div>
-        </td>
-  
+        <!-- Título Central com imagem se item for de segurança -->
+<td style="width: 60%;" class="px-2 py-1 text-center align-middle">
+  <div class="d-flex align-items-center justify-content-center gap-3">
+    <div class="text-center">
+      <strong>PRÉ-CÁLCULO DE ORÇAMENTO</strong><br>
+      <span class="text-uppercase">CARACTERIZAÇÃO DE MERCADO / PRODUTO</span>
+    </div>
+
+    {% if precalc.analise_comercial_item.item.item_seguranca %}
+      <div>
+        <img src="{% static 'seguranca.png' %}" alt="Item de Segurança"
+             style="max-height: 40px;">
+      </div>
+    {% endif %}
+  </div>
+</td>
+
         <!-- Coluna Nº Cotação e Nº Pré-Cálculo -->
-        <td style="width: 20%; padding: 0;">
-          <table class="table table-bordered text-center mb-0">
-            <tr>
-              <th class="p-1">Nº Cotação</th>
-            </tr>
-            <tr>
-              <td class="text-danger fw-bold p-1">{{ precalc.cotacao.numero|stringformat:"04d" }}</td>
-            </tr>
-            <tr>
-              <th class="p-1">Nº Pré-Cálculo</th>
-            </tr>
-            <tr>
-              <td class="text-danger fw-bold p-1">{{ precalc.numero|stringformat:"05d" }}</td>
-            </tr>
-           
-          </table>
-        </td>
+       <td style="width: 20%; padding: 0; vertical-align: middle;">
+  <div class="text-center p-1" style="border-top: none; border-left: none; border-right: none; border-bottom: none;">
+    <strong class="d-block">Nº Cotação</strong>
+    <span class="text-danger fw-bold">{{ precalc.cotacao.numero|stringformat:"04d" }}</span>
+    <hr style="border-top: 1px solid #000; margin: 4px 0;">
+    <strong class="d-block">Nº Pré-Cálculo</strong>
+    <span class="text-danger fw-bold">{{ precalc.numero|stringformat:"05d" }}</span>
+  </div>
+</td>
+
       </tr>
     </table>
   </div>
@@ -64,7 +66,7 @@
         <th style="text-align: right;"><i class="bi bi-person-badge"></i> Cliente:</th>
         <td colspan="3">{{ precalc.analise_comercial_item.item.cliente }}</td>
         <th style="text-align: right;"><i class="bi bi-check2-square"></i> Requisito específico?</th>
-        <td class="text-center">
+<td class="text-center" style="min-width: 180px;">
           <div class="form-check form-check-inline mb-0">
             <input class="form-check-input" type="checkbox" 
                    {% if precalc.analise_comercial_item.item.requisito_especifico == True %}checked{% endif %}>
@@ -128,13 +130,25 @@
       </tr>
       <tr>
         <th style="text-align: right;"><i class="bi bi-list-ol"></i> Revisão:</th>
-        <td>{{ precalc.analise_comercial_item.item.revisao|default:"---" }}</td>
+<td>
+  {% if precalc.analise_comercial_item.item.revisao %}
+    {{ precalc.analise_comercial_item.item.revisao }}
+  {% else %}
+    <span class="text-muted fst-italic">Não informada</span>
+  {% endif %}
+</td>
         <th style="text-align: right;"><i class="bi bi-calendar-date"></i> Data:</th>
         <td colspan="3">{{ precalc.analise_comercial_item.item.data_revisao|date:"d/m/Y"|default:"---" }}</td>
       </tr>
       <tr>
         <th style="text-align: right;"><i class="bi bi-hash"></i> Nº da peça:</th>
-        <td colspan="2">{{ precalc.analise_comercial_item.item.descricao|default:"---" }}</td>
+<td colspan="2">
+  {% if precalc.analise_comercial_item.item.descricao %}
+    {{ precalc.analise_comercial_item.item.descricao }}
+  {% else %}
+    <span class="text-muted fst-italic">Não informado</span>
+  {% endif %}
+</td>
        <th style="text-align: right;"><i class="bi bi-tag"></i> Código Bras-Mol:</th>
 <td colspan="2">
   {% if precalc.analise_comercial_item.item.tipo_item == "Corrente" %}
@@ -167,7 +181,7 @@
       </tr>
       <tr>
         <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
-        <td colspan="5">
+<td colspan="5" class="px-2 py-1">
             {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
               <strong>{{ precalc.analise_comercial_item.usuario.get_full_name }}</strong><br>
               <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
@@ -190,7 +204,11 @@
     <div class="table-responsive">
       <table class="table table-bordered align-middle small">
         <thead class="table-secondary text-center">
-          <tr><th colspan="6">Material</th></tr>
+<tr>
+  <th colspan="6">
+    <i class="bi bi-box-seam me-1 text-muted"></i>Material
+  </th>
+</tr>
         </thead>
         <tbody>
           <tr>
@@ -216,7 +234,7 @@
         {% if precalc.observacoes_servicos|conteudo_real %}
   <tfoot>
     <tr>
-      <td colspan="6" class="text-start">
+<td colspan="6" class="text-start px-2 py-1">
         <strong class="ms-2">Observações:</strong>
         <div class="mt-1 ms-2">{{ precalc.observacoes_servicos|safe }}</div>
       </td>
@@ -236,8 +254,12 @@
     <table class="table table-bordered align-middle small text-center">
       <thead class="table-secondary">
         <tr>
-          <th colspan="3"><strong>Tratamentos Externos e Internos</strong></th>
+          <th colspan="3">
+            <i class="bi bi-droplet-half me-1 text-muted"></i>
+            <strong>Tratamentos Externos e Internos</strong>
+          </th>
         </tr>
+
         <tr>
           <th><i class="bi bi-tag-fill"></i> Código</th>
           <th><i class="bi bi-tools"></i> Serviço externo</th>
@@ -277,9 +299,13 @@
 <div class="table-responsive">
   <table class="table table-bordered align-middle small text-center">
     <thead class="table-secondary">
-      <tr>
-        <th colspan="4"><strong>Fluxo Preliminar</strong></th>
-      </tr>
+     <tr>
+  <th colspan="4">
+    <i class="bi bi-diagram-3 me-1 text-muted"></i>
+    <strong>Fluxo Preliminar</strong>
+  </th>
+</tr>
+
       <tr>
         <th><i class="bi bi-list-ol"></i> N°</th>
         <th><i class="bi bi-tools"></i> Operação / Equipamento</th>
@@ -297,33 +323,49 @@
               <br><small class="text-muted">{{ etapa.maquinas_roteiro }}</small>
             {% endif %}
           </td>
-          <td>{{ etapa.setup_minutos|default:"—" }}</td>
-          <td>{{ etapa.pph|floatformat:"-3"|intcomma }}</td>
-        </tr>
+<td>
+  {% if etapa.setup_minutos and etapa.setup_minutos != 0 %}
+    {{ etapa.setup_minutos }}
+  {% else %}
+    —
+  {% endif %}
+</td>          
+<td>
+  {% if etapa.pph and etapa.pph != 0 %}
+    {{ etapa.pph|floatformat:"-3"|intcomma }}
+  {% else %}
+    —
+  {% endif %}
+</td>        </tr>
       {% empty %}
         <tr><td colspan="4">Nenhuma etapa cadastrada.</td></tr>
       {% endfor %}
     </tbody>
 
-    {% if precalc.observacoes_roteiro|striptags|length > 0 %}
-    <tfoot>
-      <tr>
-        <td colspan="4" class="text-start">
-          <strong class="ms-2">Observações:</strong>
-          <div class="mt-1 ms-2">{{ precalc.observacoes_roteiro|safe }}</div>
-        </td>
-      </tr>
-    </tfoot>
-    {% endif %}
+{% if precalc.observacoes_roteiro|conteudo_real %}
+  <tfoot>
+    <tr>
+      <td colspan="4" class="text-start">
+        <strong class="ms-2">Observações:</strong>
+        <div class="mt-1 ms-2">{{ precalc.observacoes_roteiro|safe }}</div>
+      </td>
+    </tr>
+  </tfoot>
+{% endif %}
+
   </table>
 </div>
 
 {% for f in ferramentas_info %}
   <table class="table table-bordered text-center align-middle" style="width: 100%;">
     <thead class="table-light">
-      <tr>
-        <th colspan="6" style="background-color: #d9d9d9; font-weight: bold;">Ferramenta / Dispositivo</th>
-      </tr>
+     <tr>
+  <th colspan="6" style="background-color: #d9d9d9; font-weight: bold;">
+    <i class="bi bi-tools me-1 text-muted"></i>
+    Ferramenta / Dispositivo
+  </th>
+</tr>
+
       <tr>
         <th colspan="2">
           <i class="bi bi-easel-fill me-1 text-primary"></i> Projeto
@@ -342,7 +384,7 @@
         <td colspan="2">{{ f.horas_projeto|floatformat:"2" }} h</td>
         <td colspan="2">{{ f.horas_ferramentaria|floatformat:"2" }} h</td>
         <td colspan="2">
-          <div class="d-flex justify-content-center gap-3 flex-wrap">
+<div class="d-flex justify-content-center gap-3 flex-wrap text-start" style="min-height: 30px;">
             <label><input type="checkbox" {% if f.tipo == "Nova" %}checked{% endif %}> Ferramenta nova</label>
             <label><input type="checkbox" {% if f.tipo == "Adpt" %}checked{% endif %}> Adaptação</label>
             <label><input type="checkbox" {% if f.tipo == "Disp" %}checked{% endif %}> Dispositivo</label>
@@ -362,7 +404,7 @@
 
       
       <tr>
-        <th class="text-start"><i class="bi bi-person-circle"></i> Responsável:</th>
+        <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
         <td colspan="5" class="text-start">
           {% if f.obj.usuario and f.obj.usuario.funcionario %}
             <strong>{{ f.obj.usuario.get_full_name }}</strong><br>
@@ -388,9 +430,13 @@
 <div class="table-responsive">
   <table class="table table-bordered table-sm align-middle text-center" style="font-size: 10px;">
     <thead class="table-secondary">
-      <tr>
-        <th colspan="4" class="py-1">Análise comercial (executada pelo Departamento de Vendas)</th>
-      </tr>
+     <tr>
+  <th colspan="4" class="py-1">
+    <i class="bi bi-bar-chart-line me-1 text-muted"></i>
+    Análise comercial (executada pelo Departamento de Vendas)
+  </th>
+</tr>
+
     </thead>
     <tbody>
       {% for campo, obs in campos_obs %}
@@ -432,20 +478,24 @@
 <div class="table-responsive">
   <table class="table table-bordered table-sm align-middle" style="font-size: 10px;">
     <thead class="table-secondary">
-      <tr>
-        <th colspan="3" class="py-1">Conclusão da análise crítica dos requisitos</th>
-      </tr>
+     <tr>
+  <th colspan="3" class="py-1">
+    <i class="bi bi-check2-circle me-1 text-muted"></i>
+    Conclusão da análise crítica dos requisitos
+  </th>
+</tr>
+
     </thead>
     <tbody>
       <tr>
-        <td class="d-flex align-items-center gap-2 px-2 py-1">
+<td class="d-flex align-items-start gap-2 px-2 py-1" style="line-height: 1.2;">
           <input type="checkbox" class="form-check-input"
             {% if precalc.analise_comercial_item.conclusao == "Viável" %}checked{% endif %}>
           <span>Viável (o produto pode ser produzido conforme especificado, sem revisões)</span>
         </td>
       </tr>
       <tr>
-        <td class="d-flex align-items-center gap-2 px-2 py-1">
+<td class="d-flex align-items-start gap-2 px-2 py-1" style="line-height: 1.2;">
           <input type="checkbox" class="form-check-input"
             {% if precalc.analise_comercial_item.conclusao == "Viável com alterações" %}checked{% endif %}>
           <span>Viável (alterações recomendadas conforme considerações)</span>
@@ -473,19 +523,21 @@
   </tr>
 {% endif %}
 
-      <th>Responsável:</th>
-      <td>
-        {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
-          <strong>{{ precalc.analise_comercial_item.usuario.get_full_name }}</strong><br>
-          <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
-          {{ precalc.analise_comercial_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
-          <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
-          {{ precalc.analise_comercial_item.assinado_em|date:"d/m/Y H:i" }}
-        {% else %}
-          {{ precalc.analise_comercial_item.assinatura_nome|default:"---" }}
-        {% endif %}
-      </td>
-    </tr>
+     <tr>
+  <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
+  <td colspan="5" class="text-start">
+    {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
+      <strong>{{ precalc.analise_comercial_item.usuario.get_full_name }}</strong><br>
+      <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
+      {{ precalc.analise_comercial_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
+      <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
+      {{ precalc.analise_comercial_item.assinado_em|date:"d/m/Y H:i" }}
+    {% else %}
+      {{ precalc.analise_comercial_item.assinatura_nome|default:"---" }}
+    {% endif %}
+  </td>
+</tr>
+
   </table>
 </div>
 
@@ -493,9 +545,13 @@
 <div class="table-responsive">
   <table class="table table-bordered table-sm align-middle text-center" style="font-size: 10px;">
     <thead class="table-secondary">
-      <tr>
-        <th colspan="5" class="py-1">Análise técnica (executada pelo Departamento de Desenvolvimento)</th>
-      </tr>
+     <tr>
+  <th colspan="5" class="py-1">
+    <i class="bi bi-gear me-1 text-muted"></i>
+    Análise técnica (executada pelo Departamento de Desenvolvimento)
+  </th>
+</tr>
+
       <tr>
         <th class="text-start px-2 py-1">Questão</th>
         <th class="px-1 py-1">Não</th>
@@ -538,8 +594,12 @@
   <table class="table table-bordered table-sm align-middle" style="font-size: 10px;">
     <thead class="table-secondary">
       <tr>
-        <th colspan="3" class="py-1">Conclusão da análise crítica dos requisitos</th>
-      </tr>
+  <th colspan="3" class="py-1">
+    <i class="bi bi-journal-check me-1 text-muted"></i>
+    Conclusão da análise crítica dos requisitos
+  </th>
+</tr>
+
     </thead>
     <tbody>
       <tr>
@@ -580,19 +640,20 @@
 {% endif %}
 
     <tr>
-      <th>Responsável:</th>
-      <td class="px-2 py-1">
-        {% if precalc.avaliacao_tecnica_item.usuario and precalc.avaliacao_tecnica_item.usuario.funcionario %}
-          <strong>{{ precalc.avaliacao_tecnica_item.usuario.get_full_name }}</strong><br>
-          <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
-          {{ precalc.avaliacao_tecnica_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
-          <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
-          {{ precalc.avaliacao_tecnica_item.assinado_em|date:"d/m/Y H:i" }}
-        {% else %}
-          {{ precalc.avaliacao_tecnica_item.assinatura_nome|default:"---" }}
-        {% endif %}
-      </td>
-    </tr>
+  <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
+  <td colspan="5" class="text-start">
+    {% if precalc.avaliacao_tecnica_item.usuario and precalc.avaliacao_tecnica_item.usuario.funcionario %}
+      <strong>{{ precalc.avaliacao_tecnica_item.usuario.get_full_name }}</strong><br>
+      <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
+      {{ precalc.avaliacao_tecnica_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
+      <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
+      {{ precalc.avaliacao_tecnica_item.assinado_em|date:"d/m/Y H:i" }}
+    {% else %}
+      {{ precalc.avaliacao_tecnica_item.assinatura_nome|default:"---" }}
+    {% endif %}
+  </td>
+</tr>
+
   </table>
 </div>
 
@@ -601,12 +662,13 @@
 <div class="table-responsive mt-0">
   <table class="table table-bordered align-middle small">
     <thead class="table-secondary text-center">
-      <tr>
-        <th colspan="3" class="text-uppercase">
-          Análise crítica para o início do desenvolvimento
-          <small class="text-lowercase">(executada pelo Departamento de Desenvolvimento)</small>
-        </th>
-      </tr>
+     <tr>
+  <th colspan="3" class="text-uppercase">
+    <i class="bi bi-clipboard-check me-1 text-muted"></i>
+    Análise crítica para o início do desenvolvimento
+  </th>
+</tr>
+
     </thead>
     <tbody>
       <tr>
@@ -635,20 +697,23 @@
   </tr>
 {% endif %}
 
-      <tr>
-        <th>Responsável:</th>
-        <td colspan="2">
-          {% if precalc.desenvolvimento_item.usuario and precalc.desenvolvimento_item.usuario.funcionario %}
-            <strong>{{ precalc.desenvolvimento_item.usuario.get_full_name }}</strong><br>
-            <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
-            {{ precalc.desenvolvimento_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
-            <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
-            {{ precalc.desenvolvimento_item.assinado_em|date:"d/m/Y H:i" }}
-          {% else %}
-            {{ precalc.desenvolvimento_item.assinatura_nome|default:"---" }}
-          {% endif %}
-        </td>
-      </tr>
+ <tr>
+  <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
+  <td colspan="1" class="text-start">
+    {% if precalc.desenvolvimento_item.usuario and precalc.desenvolvimento_item.usuario.funcionario %}
+      <strong>{{ precalc.desenvolvimento_item.usuario.get_full_name }}</strong><br>
+      <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
+      {{ precalc.desenvolvimento_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
+      <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
+      {{ precalc.desenvolvimento_item.assinado_em|date:"d/m/Y H:i" }}
+    {% else %}
+      {{ precalc.desenvolvimento_item.assinatura_nome|default:"---" }}
+    {% endif %}
+  </td>
+</tr>
+
+
+
     </tbody>
   </table>
 </div>
@@ -699,6 +764,7 @@
   .page-break {
     page-break-before: always;
   }
+  
 }
 
 </style>

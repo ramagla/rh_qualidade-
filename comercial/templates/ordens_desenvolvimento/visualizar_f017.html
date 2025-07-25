@@ -23,16 +23,25 @@
 
       <!-- Título Central -->
       <td style="width: 60%;">
-        <div class="d-flex flex-column justify-content-center align-items-center">
-          <h5 class="mb-1 text-uppercase fw-bold">
-            <i class="bi bi-file-earmark-text-fill me-2 text-primary"></i>
-            Ordem de Desenvolvimento
-          </h5>
-          <small class="text-muted fst-italic">
-            Formulário para controle técnico e comercial do desenvolvimento de itens
-          </small>
-        </div>
-      </td>
+  <div class="d-flex align-items-center justify-content-center gap-2" style="line-height: 1.2;">
+    <div class="text-center">
+      <h5 class="mb-1 text-uppercase fw-bold">
+        <i class="bi bi-file-earmark-text-fill me-2 text-primary"></i>
+        Ordem de Desenvolvimento
+      </h5>
+      <small class="text-muted fst-italic">
+        Formulário para controle técnico e comercial do desenvolvimento de itens
+      </small>
+    </div>
+
+    {% if ordem.item_seguranca %}
+      <div class="ms-2 d-flex align-items-center">
+        <img src="{% static 'seguranca.png' %}" alt="Item de Segurança" style="max-height: 28px;">
+      </div>
+    {% endif %}
+  </div>
+</td>
+
 
       <!-- Número da Ordem -->
       <td style="width: 20%;">

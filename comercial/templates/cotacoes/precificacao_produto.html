@@ -26,13 +26,24 @@
           <img src="{% static 'img/logo.png' %}" alt="Logo" class="img-fluid" style="max-height: 40px;">
         </td>
   
-        <!-- Título Central -->
-        <td style="width: 60%; padding: 4px;">
-          <div style="line-height: 1.2;">
-            <strong style="font-size: 10px;">PRECIFICAÇÃO DE PRODUTO / SERVIÇO</strong><br>
-            <span class="text-uppercase small">Baseado no Pré-Cálculo Técnico e Comercial</span>
-          </div>
-        </td>
+        <!-- Título Central com imagem se item for de segurança -->
+<td style="width: 60%; padding: 4px;">
+  <div class="d-flex align-items-center justify-content-center" style="line-height: 1.2;">
+    <div class="text-center">
+      <strong style="font-size: 10px;">PRECIFICAÇÃO DE PRODUTO / SERVIÇO</strong><br>
+      <span class="text-uppercase small">Baseado no Pré-Cálculo Técnico e Comercial</span>
+    </div>
+    
+    {% if precalc.analise_comercial_item.item.item_seguranca %}
+      <div class="ms-2 d-flex align-items-center">
+        <img src="{% static 'seguranca.png' %}" alt="Item de Segurança"
+             style="max-height: 28px;">
+      </div>
+    {% endif %}
+  </div>
+</td>
+
+
   
         <td style="width: 20%; padding: 0;">
             <table class="text-center mb-0 w-100" style="font-size: 9px; border: none;">
@@ -180,6 +191,8 @@
 
 
   <!-- 🔧 Bloco: Serviços Externos (compacto) -->
+   {% if tem_servicos_selecionados %}
+
 <div class="border rounded mb-3 shadow-sm" style="font-size: 9px;">
     <div class="bg-primary text-white p-1 fw-bold">
       <i class="bi bi-tools me-1"></i> Custo Serviços Externos
@@ -237,7 +250,8 @@
   
    
   </div>
-  
+  {% endif %}
+
 
 <!-- 🧭 Bloco: Roteiro de Produção (compacto) -->
 <div class="border rounded mb-3 shadow-sm" style="font-size: 9px;">
@@ -406,12 +420,15 @@
           T: {{ custo_materia.total|floatformat:2 }}<br>
           ({{ custo_materia.percentual|floatformat:2 }}%)
         </div>
-        <div class="text-center">
-          <strong>Serviço Externo</strong><br>
-          U: {{ custo_servico.unitario|floatformat:4 }}<br>
-          T: {{ custo_servico.total|floatformat:2 }}<br>
-          ({{ custo_servico.percentual|floatformat:2 }}%)
-        </div>
+        {% if tem_servicos_selecionados %}
+<div class="text-center">
+  <strong>Serviço Externo</strong><br>
+  U: {{ custo_servico.unitario|floatformat:4 }}<br>
+  T: {{ custo_servico.total|floatformat:2 }}<br>
+  ({{ custo_servico.percentual|floatformat:2 }}%)
+</div>
+{% endif %}
+
         <div class="text-center">
           <strong>Roteiro</strong><br>
           U: {{ custo_roteiro.unitario|floatformat:4 }}<br>
@@ -456,12 +473,21 @@
 <script>
   const data = [
     parseFloat("{{ custo_materia.percentual|default:'0'|floatformat:2 }}"),
-    parseFloat("{{ custo_servico.percentual|default:'0'|floatformat:2 }}"),
+    {% if tem_servicos_selecionados %}parseFloat("{{ custo_servico.percentual|default:'0'|floatformat:2 }}"),{% endif %}
     parseFloat("{{ custo_roteiro.percentual|default:'0'|floatformat:2 }}")
   ];
 
-  const labels = ["Matéria Prima", "Serviço Externo", "Roteiro"];
-  const colors = ["#a0a6ff", "#c2c2ff", "#9eaeff"];
+  const labels = [
+    "Matéria Prima",
+    {% if tem_servicos_selecionados %}"Serviço Externo",{% endif %}
+    "Roteiro"
+  ];
+
+  const colors = [
+    "#a0a6ff",
+    {% if tem_servicos_selecionados %}"#c2c2ff",{% endif %}
+    "#9eaeff"
+  ];
 
   const ctx = document.getElementById("graficoPizzaCusto").getContext("2d");
   const maiorIndice = data.indexOf(Math.max(...data));

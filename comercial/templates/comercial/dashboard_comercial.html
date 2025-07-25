@@ -26,6 +26,10 @@
   .resumo-conversao { background: linear-gradient(135deg, #00b09b, #96c93d); }
   .resumo-title    { font-size: 0.9rem; font-weight: 500; }
   .resumo-valor    { font-size: 2rem; font-weight: bold; }
+  .resumo-margem {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+}
+
 </style>
 
 <div class="container py-4">
@@ -67,9 +71,9 @@
 
   <!-- Cards Resumo -->
 <!-- Cards Resumo -->
-<div class="row mb-4">
+<div class="row mb-4 row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-3">
   <!-- Qtde de Cotações -->
-  <div class="col-md-3">
+  <div class="col">
     <div class="card-resumo resumo-azul text-center">
       <div class="resumo-valor">
         <i class="bi bi-clipboard-data me-1"></i> {{ total_cotacoes }}
@@ -84,7 +88,7 @@
   </div>
 
   <!-- Valor Total das Cotações -->
-  <div class="col-md-3">
+  <div class="col">
     <div class="card-resumo resumo-roxo text-center">
       <div class="resumo-valor">
         <i class="bi bi-cash-coin me-1"></i> {{ valor_total|formatar_reais }}
@@ -97,7 +101,9 @@
       </small>
     </div>
   </div>
-  <div class="col-md-3">
+
+  <!-- Taxa de Conversão -->
+  <div class="col">
     <div class="card-resumo resumo-conversao text-center">
       <div class="resumo-valor">
         <i class="bi bi-graph-up-arrow me-1"></i> {{ taxa_conversao }}%
@@ -108,20 +114,32 @@
     </div>
   </div>
 
-  <div class="col-md-3">
+  <!-- Clientes Ativos + Reativados -->
+  <div class="col">
     <div class="card-resumo resumo-claro text-center">
       <div class="resumo-valor">
-  <i class="bi bi-person-check me-1"></i> {{ total_clientes }}
-</div>
-<div class="resumo-title">Clientes Ativos + Reativados</div>
-<small>
-  <i class="bi bi-person-fill-check me-1" title="Ativos"></i> {{ clientes_ativos }} |
-  <i class="bi bi-arrow-repeat me-1" title="Reativados"></i> {{ clientes_reativados }}
-</small>
+        <i class="bi bi-person-check me-1"></i> {{ total_clientes }}
+      </div>
+      <div class="resumo-title">Clientes Ativos + Reativados</div>
+      <small>
+        <i class="bi bi-person-fill-check me-1" title="Ativos"></i> {{ clientes_ativos }} |
+        <i class="bi bi-arrow-repeat me-1" title="Reativados"></i> {{ clientes_reativados }}
+      </small>
+    </div>
+  </div>
 
+  <!-- Margem Média Praticada -->
+  <div class="col">
+    <div class="card-resumo resumo-margem text-center">
+      <div class="resumo-valor">
+        <i class="bi bi-percent me-1"></i> {{ margem_media }}%
+      </div>
+      <div class="resumo-title">Margem Média Praticada</div>
+      <small>Com base nos preços finais escolhidos</small>
     </div>
   </div>
 </div>
+
 
 
   <!-- Informações e Últimas Cotações -->

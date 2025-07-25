@@ -23,17 +23,18 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
                     .select_related("materia_prima", "etapa")
                 )
 
-                # Remove materiais antigos que não estão mais relacionados
-                materiais_invalidos = PreCalculoMaterial.objects.filter(precalculo=precalc).exclude(
-                    codigo__in=[i.materia_prima.codigo for i in insumos_materia_prima if i.materia_prima]
-                )
-                if materiais_invalidos.exists():
-                    materiais_invalidos.delete()
+                # 🔥 Remove todos os materiais herdados (inclusive os duplicados da cópia)
+                materiais_atuais = list(precalc.materiais.values_list("codigo", flat=True))
+                codigos_do_roteiro = [i.materia_prima.codigo for i in insumos_materia_prima if i.materia_prima]
 
+                # Se os materiais atuais forem diferentes dos do roteiro, substitui todos
+                if set(materiais_atuais) != set(codigos_do_roteiro):
+                    PreCalculoMaterial.objects.filter(precalculo=precalc).delete()
+                    
                 # Cria novos registros (3 cópias por insumo)
                 novos_insumos = [
                     i for i in insumos_materia_prima
-                    if not precalc.materiais.filter(codigo=i.materia_prima.codigo).exists()
+                    if not PreCalculoMaterial.objects.filter(precalculo=precalc, codigo=i.materia_prima.codigo).exists()
                 ]
                 for insumo in novos_insumos:
                     mp = insumo.materia_prima
@@ -54,6 +55,7 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
 
         except Exception as e:
             print("⚠️ Erro ao processar insumos de matéria-prima:", e)
+
 
     # Normaliza os dados para POST
     data = None
@@ -110,8 +112,8 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
             fs_mat.save()
 
             # E-mail de cotação
+            enviados = set()
             if not materiais_respondidos:
-                enviados = set()
                 for mat in precalc.materiais.all():
                     if mat.codigo and not mat.preco_kg and mat.codigo not in enviados:
                         disparar_email_cotacao_material(request, mat)

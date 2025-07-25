@@ -150,6 +150,25 @@
   <h5 class="mb-3">
     <i class="bi bi-table me-2 text-muted"></i>📄 Lista de Cotações
   </h5>
+  <div class="alert alert-info d-flex align-items-start gap-2 small" role="alert">
+  <i class="bi bi-info-circle-fill fs-5 mt-1 text-primary"></i>
+  <div>
+    <strong>Legenda:</strong><br>
+    <span class="d-inline-block me-3 text-success">
+      <i class="bi bi-check-circle-fill me-1"></i> Aprovado
+    </span>
+    <span class="d-inline-block me-3 text-warning">
+      <i class="bi bi-box-fill me-1"></i> Solicitação de Amostra
+    </span>
+    <span class="d-inline-block me-3 text-secondary">
+      <i class="bi bi-circle-half me-1"></i> Em Análise
+    </span>
+    <span class="d-inline-block text-muted">
+      <i class="bi bi-question-circle me-1"></i> Não Avaliado
+    </span>
+  </div>
+</div>
+
 
   <div class="table-responsive zebra-tabela mt-4">
     <table class="table table-bordered table-striped align-middle text-center">
@@ -186,12 +205,7 @@
         <small>Cliente</small>
       </div>
     </th>
-    <th class="text-center align-middle">
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-truck mb-1"></i>
-        <small>Frete</small>
-      </div>
-    </th>
+   
     <th class="text-center align-middle">
       <div class="d-flex flex-column align-items-center">
         <i class="bi bi-cash-coin mb-1"></i>
@@ -264,7 +278,6 @@
 </td>
 <td>{{ cot.responsavel.get_full_name|primeiro_nome }}</td>
 <td class="text-start">{{ cot.cliente.razao_social|primeiro_nome }}</td>
-            <td>{{ cot.frete }}</td>
             <td>{{ cot.cond_pagamento }}</td>
             <td>{{ cot.icms|stringformat:"0.2f" }}</td>
 <td>
@@ -411,13 +424,30 @@
   {% with status=status_analises_dict|dict_get:cot.id %}
     {% if status %}
       {% for nome, qtd in status.items %}
-        {{ qtd }} {{ nome }}{% if not forloop.last %}, {% endif %}
+        {% if nome == "Aprovado" %}
+          <span class="text-success d-inline-flex align-items-center me-2" title="Aprovado">
+            <i class="bi bi-check-circle-fill me-1"></i> {{ qtd }}
+          </span>
+        {% elif nome == "Solicitação de Amostras" %}
+          <span class="text-warning d-inline-flex align-items-center me-2" title="Solicitação de Amostras">
+            <i class="bi bi-box-fill me-1"></i> {{ qtd }}
+          </span>
+        {% elif nome == "Em Análise" %}
+          <span class="text-secondary d-inline-flex align-items-center me-2" title="Em Análise">
+            <i class="bi bi-circle-half me-1"></i> {{ qtd }}
+          </span>
+        {% else %}
+          <span class="text-muted d-inline-flex align-items-center me-2" title="{{ nome }}">
+            <i class="bi bi-circle-half me-1"></i> {{ qtd }}
+          </span>
+        {% endif %}
       {% endfor %}
     {% else %}
-      -
+      <span class="text-muted">-</span>
     {% endif %}
   {% endwith %}
 </td>
+
 
 
 <td>

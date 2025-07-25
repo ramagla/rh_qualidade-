@@ -65,24 +65,10 @@
 
 <!-- Roteiro Selecionado -->
 <div class="col-12 col-md-4">
-  <label class="form-label">
+  <label for="{{ form_analise.roteiro_selecionado.id_for_label }}" class="form-label">
     <i class="bi bi-diagram-3-fill me-1 text-muted"></i> Roteiro Selecionado
   </label>
-
-  {% if edicao %}
-    <select class="form-control-sm campo-analise" disabled>
-      {% for choice in form_analise.fields.roteiro_selecionado.queryset %}
-        <option value="{{ choice.pk }}"
-          {% if choice.pk == form_analise.initial.roteiro_selecionado %}
-            selected
-          {% endif %}
-        >
-          {{ choice }}
-        </option>
-      {% endfor %}
-    </select>
-    <input type="hidden" name="roteiro_selecionado" value="{{ form_analise.initial.roteiro_selecionado }}">
-  {% elif form_analise.roteiro_selecionado.errors %}
+  {% if form_analise.roteiro_selecionado.errors %}
     {{ form_analise.roteiro_selecionado|add_class:"form-control-sm campo-analise is-invalid" }}
   {% else %}
     {{ form_analise.roteiro_selecionado|add_class:"form-control-sm campo-analise" }}

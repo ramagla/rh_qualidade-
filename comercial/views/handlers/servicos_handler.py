@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db.models import Q
 from comercial.forms.precalculos_form import PreCalculoForm, PreCalculoServicoExternoForm
 from comercial.models.precalculo import PreCalculo, PreCalculoServicoExterno
-from comercial.utils.email_cotacao_utils import disparar_email_cotacao_servico
+from comercial.utils.email_cotacao_utils import disparar_emails_cotacao_servicos
 from tecnico.models.roteiro import InsumoEtapa
 import unicodedata
 
@@ -121,11 +121,12 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
                 setattr(precalc, campo_obs, valor)
                 precalc.save(update_fields=[campo_obs])
 
-            # marca somente o selecionado
+            # Dentro do bloco POST do handler
             for sev in precalc.servicos.all():
                 sev.selecionado = False
                 sev.save(update_fields=["selecionado"])
 
+            # Seleciona o correto com base nos radios enviados no POST
             for key in request.POST:
                 if key.startswith("selecionado_insumo_"):
                     prefixo = request.POST[key]
@@ -135,15 +136,14 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
                             sev.selecionado = True
                             sev.save()
 
+
             fs_sev.save()
 
             if not servicos_respondidos:
-                enviados = set()
-                for sev in precalc.servicos.all():
-                    codigo = getattr(sev.insumo.materia_prima, "codigo", None)
-                    if codigo and not sev.preco_kg and codigo not in enviados:
-                        disparar_email_cotacao_servico(request, sev)
-                        enviados.add(codigo)
+                disparar_emails_cotacao_servicos(request, precalc)
+
+
+
 
             salvo = True
 

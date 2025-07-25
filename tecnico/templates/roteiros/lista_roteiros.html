@@ -57,7 +57,7 @@
           <label for="selectRoteiroClonar" class="form-label">Selecione o roteiro a clonar:</label>
           <select class="form-select" id="selectRoteiroClonar" name="roteiro_id" required>
           {% for r in roteiros %}
-              <option value="{{ r.pk }}">#{{ r.item.codigo }} – {{ r.item.descricao }}</option>
+<option value="{{ r.pk }}">#{{ r.item.codigo }} – Tipo {{ r.tipo_roteiro }} – {{ r.item.descricao }}</option>
             {% endfor %}
           </select>
         </div>

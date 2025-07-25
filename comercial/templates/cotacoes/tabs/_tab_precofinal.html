@@ -100,7 +100,7 @@
                     
                     
                     <td>{{ opcao.percentual }}%</td>
-                    <td>{{ opcao.unitario|formatar_reais }}</td>
+                    <td>R$ {{ opcao.unitario|stringformat:"0.4f"|floatformat:"4" }}</td>
                     <td>{{ opcao.total|formatar_reais }}</td>
 
                   </tr>
@@ -167,8 +167,9 @@
                 
                 
                     <td>{{ opcao.percentual }}%</td>
-                    <td>R$ {{ opcao.unitario|formatar_reais}}</td>
-                    <td>R$ {{ opcao.total|formatar_reais}}</td>
+                                        <td>R$ {{ opcao.unitario|stringformat:"0.4f"|floatformat:"4" }}</td>
+
+                    <td>{{ opcao.total|formatar_reais}}</td>
                   </tr>
                 {% empty %}
                   <tr>
