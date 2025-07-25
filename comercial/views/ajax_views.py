@@ -85,3 +85,29 @@ def dados_precalculo(request, pk):
         })
     except PreCalculo.DoesNotExist:
         return JsonResponse({}, status=404)
+
+
+from tecnico.models.roteiro import RoteiroProducao
+from django.http import JsonResponse
+
+from django.http import JsonResponse
+from tecnico.models.roteiro import RoteiroProducao
+from comercial.models.item import Item
+from django.views.decorators.http import require_GET
+
+@require_GET
+def ajax_roteiros_por_item(request):
+    item_id = request.GET.get("item_id")
+    roteiros = RoteiroProducao.objects.filter(item_id=item_id).order_by("tipo_roteiro")
+
+    data = {
+        "roteiros": [
+            {
+                "id": r.id,
+                "label": f"{r.item.codigo} {r.get_tipo_roteiro_display()} ({r.etapas.count()} Etapas)"
+            }
+            for r in roteiros
+        ]
+    }
+
+    return JsonResponse(data)

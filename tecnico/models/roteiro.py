@@ -11,22 +11,29 @@ from django.db import models
 from comercial.models.item import Item
 
 class RoteiroProducao(models.Model):
-    item = models.OneToOneField(
+    item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
-        related_name="roteiro",
+        related_name="roteiros",
         verbose_name="Item"
+    )
+
+    tipo_roteiro = models.CharField(
+        "Tipo do Roteiro",
+        max_length=1,
+        choices=[("A", "A"), ("B", "B"), ("C", "C"), ("D", "D")],
+        default="A"
     )
     revisao = models.PositiveIntegerField(
             "Revisão do Roteiro", default=1
         )
-    massa_mil_pecas = models.DecimalField(
-            "Massa por 1.000 peças (kg)",
-            max_digits=10,
-            decimal_places=2,
-            blank=True,
-            null=True
-        )
+    peso_unitario_gramas = models.DecimalField(
+        "Peso Unitário (g)",
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
     observacoes_gerais = CKEditor5Field(
             "Observações Gerais",
             config_name="default",
@@ -55,8 +62,9 @@ class RoteiroProducao(models.Model):
         verbose_name_plural = "Roteiros de Produção"
     
     def __str__(self):
-        # se você quiser manter a contagem de etapas
-        return f"Roteiro - {self.item.codigo} ({self.etapas.count()} etapas)"
+        tipo_display = self.get_tipo_roteiro_display()
+        qtde_etapas = self.etapas.count()
+        return f"{self.item.codigo} {tipo_display} ({qtde_etapas} etapa{'s' if qtde_etapas != 1 else ''})"
 
 
 

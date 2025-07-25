@@ -5,7 +5,9 @@ class Cliente(models.Model):
     STATUS_CHOICES = [
         ('Ativo', 'Ativo'),
         ('Inativo', 'Inativo'),
+        ('Reativado', 'Reativado'),
     ]
+
 
     TIPO_CHOICES = [
     ('Automotivo', 'Automotivo'),

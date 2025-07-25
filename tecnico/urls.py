@@ -23,5 +23,6 @@ urlpatterns = [
     path("servicos/<int:pk>/editar/", maquina_views.ajax_editar_servico, name="ajax_editar_servico"),
     path("servicos/<int:pk>/excluir/", maquina_views.ajax_excluir_servico, name="ajax_excluir_servico"),
     path("servicos/adicionar/", maquina_views.ajax_adicionar_servico, name="ajax_adicionar_servico"),
+    path("roteiros/clonar/<int:pk>/", roteiros_views.clonar_roteiro, name="clonar_roteiro"),
 
 ]

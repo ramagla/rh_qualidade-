@@ -58,10 +58,40 @@
 {% if form_analise.item.errors %}
   {{ form_analise.item|add_class:"form-control-sm select2 campo-analise is-invalid" }}
 {% else %}
-  {{ form_analise.item|add_class:"form-control-sm select2 campo-analise" }}
+{{ form_analise.item|add_class:"form-control-sm select2 campo-analise" }}
 {% endif %}
 
   </div>
+
+<!-- Roteiro Selecionado -->
+<div class="col-12 col-md-4">
+  <label class="form-label">
+    <i class="bi bi-diagram-3-fill me-1 text-muted"></i> Roteiro Selecionado
+  </label>
+
+  {% if edicao %}
+    <select class="form-control-sm campo-analise" disabled>
+      {% for choice in form_analise.fields.roteiro_selecionado.queryset %}
+        <option value="{{ choice.pk }}"
+          {% if choice.pk == form_analise.initial.roteiro_selecionado %}
+            selected
+          {% endif %}
+        >
+          {{ choice }}
+        </option>
+      {% endfor %}
+    </select>
+    <input type="hidden" name="roteiro_selecionado" value="{{ form_analise.initial.roteiro_selecionado }}">
+  {% elif form_analise.roteiro_selecionado.errors %}
+    {{ form_analise.roteiro_selecionado|add_class:"form-control-sm campo-analise is-invalid" }}
+  {% else %}
+    {{ form_analise.roteiro_selecionado|add_class:"form-control-sm campo-analise" }}
+  {% endif %}
+</div>
+
+
+
+
 
   <!-- Metodologia -->
   <div class="col-12 col-md-4">
@@ -243,10 +273,7 @@ function toggleObservacao(campo) {
   }
 }
 
-$('.select2').select2({
-  theme: 'bootstrap5',
-  width: '100%'
-});
+
 
 </script>
 
@@ -368,3 +395,49 @@ $('.select2').select2({
     }
   });
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const $itemSelect = $('select[name="item"]');
+    const roteiroSelect = document.querySelector('select[name="roteiro_selecionado"]');
+
+    function carregarRoteiros(itemId) {
+      if (!itemId || itemId === "__novo__") {
+        roteiroSelect.innerHTML = '<option value="">---------</option>';
+        return;
+      }
+
+      fetch(`/comercial/ajax/roteiros-por-item/?item_id=${itemId}`)
+        .then(response => response.json())
+        .then(data => {
+          roteiroSelect.innerHTML = '<option value="">---------</option>';
+          data.roteiros.forEach(r => {
+            const opt = new Option(r.label, r.id, false, false);
+            roteiroSelect.appendChild(opt);
+          });
+
+          // Reaplica o Select2 se já estiver ativo
+          if ($(roteiroSelect).data('select2')) {
+            $(roteiroSelect).trigger('change.select2');
+          }
+        })
+        .catch(error => console.error("Erro ao carregar roteiros:", error));
+    }
+
+    if ($itemSelect.length && roteiroSelect) {
+      // Quando selecionar um item via Select2
+      $itemSelect.on('select2:select', function (e) {
+        const itemId = e.params.data.id;
+        carregarRoteiros(itemId);
+      });
+
+      // Verifica se já tem valor preenchido na carga inicial
+      const valorInicial = $itemSelect.val();
+      if (valorInicial && roteiroSelect.options.length <= 1) {
+        carregarRoteiros(valorInicial);
+      }
+    }
+  });
+</script>
+
+
+

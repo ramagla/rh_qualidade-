@@ -478,4 +478,20 @@ def familia_produto_descricao(codigo):
     if not codigo:
         return "—"
     return f"{codigo} – {FAMILIA_PRODUTO_LABELS.get(codigo, 'Descrição não encontrada')}"
+from django.utils.html import strip_tags
 
+@register.filter
+def conteudo_real(value):
+    """
+    Verifica se há conteúdo real no texto do CKEditor, ignorando tags, espaços e entidades.
+    """
+    if not value:
+        return False
+
+    # Remove todas as tags HTML
+    texto_limpo = strip_tags(value)
+
+    # Remove entidades HTML como &nbsp;, espaços, tabs, quebras de linha e outros invisíveis
+    texto_limpo = re.sub(r'(&nbsp;|[\u00A0\s\r\n\t])+', '', texto_limpo, flags=re.IGNORECASE)
+
+    return bool(texto_limpo)

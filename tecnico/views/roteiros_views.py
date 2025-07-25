@@ -9,6 +9,7 @@ from tecnico.forms.roteiro_form import RoteiroProducaoForm
 from tecnico.forms.roteiro_formsets import EtapaFormSet, InsumoFormSet, PropriedadesFormSet
 from comercial.models.ferramenta import Ferramenta
 from tecnico.models.maquina import ServicoRealizado
+from django.db import transaction
 
 from tecnico.models.roteiro import RoteiroProducao
 from django.core.paginator import Paginator
@@ -24,6 +25,8 @@ from qualidade_fornecimento.models import MateriaPrimaCatalogo
 from django.utils.timezone import now
 from django.contrib import messages
 from django.shortcuts import redirect
+
+from django.db.models import Max, Count, Q
 
 @login_required
 @permission_required("tecnico.view_roteiroproducao", raise_exception=True)
@@ -42,17 +45,25 @@ def lista_roteiros(request):
     atualizadas_mes     = qs.filter(atualizado_em__month=mes_atual).count()
     subtitle_atualizadas = f"Atualizadas em {datetime.now():%m/%Y}"
 
+    total_aprovados = qs.filter(aprovado=True).count()
+    total_revisao_acima_3 = qs.filter(revisao__gt=3).count()
+    ultima_data = qs.aggregate(max_data=Max("atualizado_em"))["max_data"]
+
     paginator    = Paginator(qs, 20)
     page_obj     = paginator.get_page(request.GET.get("page"))
-    # novos: roteiros ainda não aprovados, para popular o modal
-    roteiros_pendentes = RoteiroProducao.objects.filter(aprovado=False).order_by("item__codigo")
+    roteiros = RoteiroProducao.objects.select_related("item").all().order_by("item__codigo")
+    roteiros_pendentes = RoteiroProducao.objects.select_related("item").filter(aprovado=False).order_by("item__codigo")
 
     return render(request, "roteiros/lista_roteiros.html", {
         "page_obj": page_obj,
+        "roteiros": roteiros,
         "roteiros_pendentes": roteiros_pendentes,
         "total_roteiros": total_roteiros,
         "atualizadas_mes": atualizadas_mes,
         "subtitle_atualizadas": subtitle_atualizadas,
+        "total_aprovados": total_aprovados,
+        "total_revisao_acima_3": total_revisao_acima_3,
+        "ultima_data": ultima_data,
         "request": request,
     })
 
@@ -161,6 +172,7 @@ def visualizar_roteiro(request, pk):
             break
 
     # 4) Monta dados de embalagem da etapa de "Expedição"
+    # 4) Monta dados de embalagem da etapa de "Expedição"
     embalagem = []
     etapa_exped = next(
         (e for e in etapas if e.setor.nome.lower() == "expedição"),
@@ -169,11 +181,7 @@ def visualizar_roteiro(request, pk):
     if etapa_exped:
         for ins in etapa_exped.insumos.all():
             tipo = ins.materia_prima.descricao
-            qtd_para_mil = ins.quantidade or 0
-            try:
-                pecas_por_emb = int(1000 / qtd_para_mil) if qtd_para_mil else None
-            except Exception:
-                pecas_por_emb = None
+            pecas_por_emb = int(ins.quantidade) if ins.quantidade else None
 
             embalagem.append({
                 "tipo": tipo,
@@ -301,7 +309,6 @@ def cadastrar_roteiro(request):
             messages.success(request, "Roteiro cadastrado com sucesso.")
             return redirect("tecnico:tecnico_roteiros")
 
-        messages.error(request, "Corrija os erros no formulário.")
     segurancas = [
         ("seguranca_mp", "MP"),
         ("seguranca_ts", "TS"),
@@ -323,6 +330,7 @@ def cadastrar_roteiro(request):
     })
 
  
+from pprint import pprint
 
 
 @login_required
@@ -331,56 +339,63 @@ def editar_roteiro(request, pk):
     roteiro = get_object_or_404(RoteiroProducao, pk=pk)
     form = RoteiroProducaoForm(request.POST or None, instance=roteiro)
 
-    # Dados para carregamento do template
-    insumos_data = list(MateriaPrimaCatalogo.objects.order_by("descricao").values("id", "codigo", "descricao"))
-    maquinas_data = list(Maquina.objects.order_by("nome").values("id", "codigo", "nome"))
-    setores_data = list(CentroDeCusto.objects.order_by("nome").values("id", "nome"))
-    ferramentas_data = list(Ferramenta.objects.order_by("codigo").values("id", "codigo", "descricao"))
+    # Dados para o template
+    insumos_data = list(
+        MateriaPrimaCatalogo.objects.order_by("descricao")
+        .values("id", "codigo", "descricao")
+    )
+    maquinas_data = list(
+        Maquina.objects.order_by("nome")
+        .values("id", "codigo", "nome")
+    )
+    setores_data = list(
+        CentroDeCusto.objects.order_by("nome")
+        .values("id", "nome")
+    )
+    ferramentas_data = list(
+        Ferramenta.objects.order_by("codigo")
+        .values("id", "codigo", "descricao")
+    )
 
-    # Dados para preencher o formulário no template
-    roteiro_data = {
-        "item": roteiro.item_id,
-        "etapas": []
-    }
-
+    # Monta o JSON inicial para o template
+    roteiro_data = {"item": roteiro.item_id, "etapas": []}
     for etapa in roteiro.etapas.all().order_by("etapa"):
         insumos_list = [
             {
-                "materia_prima_id": i.materia_prima_id,
-                "quantidade": float(i.quantidade),
-                "tipo_insumo": i.tipo_insumo,
-                "obrigatorio": i.obrigatorio,
-            } for i in etapa.insumos.all()
+                "materia_prima_id": ins.materia_prima_id,
+                "quantidade": float(ins.quantidade),
+                "tipo_insumo": ins.tipo_insumo,
+                "obrigatorio": ins.obrigatorio,
+            }
+            for ins in etapa.insumos.all()
         ]
 
         try:
             p = etapa.propriedades
             props = {
-                    "nome_acao": p.nome_acao,
-                    "nome_acao_id": str(p.nome_acao_id) if hasattr(p, "nome_acao_id") else "",  # para o select2 funcionar
-                    "descricao_detalhada": p.descricao_detalhada,
-                    "maquinas": [{"id": m.id, "nome": m.nome} for m in p.maquinas.all()],
-                    "ferramenta": {
-                        "id": p.ferramenta.id if p.ferramenta else "",
-                        "texto": f"{p.ferramenta.codigo} – {p.ferramenta.descricao}" if p.ferramenta else ""
-                    },
-                    "seguranca_mp": p.seguranca_mp,
-                    "seguranca_ts": p.seguranca_ts,
-                    "seguranca_m1": p.seguranca_m1,
-                    "seguranca_l1": p.seguranca_l1,
-                    "seguranca_l2": p.seguranca_l2,
-                }
-
+                "nome_acao": p.nome_acao,
+                "descricao_detalhada": p.descricao_detalhada,
+                "maquinas": [{"id": m.id, "nome": m.nome} for m in p.maquinas.all()],
+                "ferramenta": {
+                    "id": p.ferramenta.id if p.ferramenta else None,
+                    "texto": f"{p.ferramenta.codigo} – {p.ferramenta.descricao}" if p.ferramenta else ""
+                },
+                "seguranca_mp": p.seguranca_mp,
+                "seguranca_ts": p.seguranca_ts,
+                "seguranca_m1": p.seguranca_m1,
+                "seguranca_l1": p.seguranca_l1,
+                "seguranca_l2": p.seguranca_l2,
+            }
         except PropriedadesEtapa.DoesNotExist:
             props = {}
 
         segurancas = [
-        ("seguranca_mp", "MP"),
-        ("seguranca_ts", "TS"),
-        ("seguranca_m1", "M1"),
-        ("seguranca_l1", "L1"),
-        ("seguranca_l2", "L2"),
-    ]
+            ("seguranca_mp", "MP"),
+            ("seguranca_ts", "TS"),
+            ("seguranca_m1", "M1"),
+            ("seguranca_l1", "L1"),
+            ("seguranca_l2", "L2"),
+        ]
 
         roteiro_data["etapas"].append({
             "etapa": etapa.etapa,
@@ -389,89 +404,83 @@ def editar_roteiro(request, pk):
             "setup_minutos": etapa.setup_minutos or 0,
             "insumos": insumos_list,
             "propriedades": props,
-                "segurancas": segurancas,  # ✅ Aqui está certo!
-
+            "segurancas": segurancas,
         })
 
     if request.method == "POST":
         dados_json = request.POST.get("dados_json", "")
-        if form.is_valid() and dados_json:
-            roteiro.revisao = (roteiro.revisao or 1) + 1
-            roteiro.save(update_fields=["revisao"])
-            form.save()
-            payload = json.loads(dados_json)
+        print("🚨 RECEBEU POST em editar_roteiro")
+        print("   request.POST keys:", list(request.POST.keys()))
+        print("   dados_json raw:", dados_json)
+        print("   form.errors antes de is_valid():", form.errors)
 
-            print("DEBUG ▶️ Dados JSON recebidos:")
-            from pprint import pprint
-            pprint(payload)
+        if form.is_valid():
+            print("✅ form.is_valid() == True")
+            with transaction.atomic():
+                roteiro = form.save()
+                print(f"   • form.save() → roteiro.id = {roteiro.id}")
+                roteiro.revisao = (roteiro.revisao or 1) + 1
+                roteiro.save(update_fields=["revisao"])
+                print(f"   • revisao agora = {roteiro.revisao}")
+                roteiro.etapas.all().delete()
+                print("   • etapas antigas excluídas")
 
-            roteiro.etapas.all().delete()
+                try:
+                    payload = json.loads(dados_json)
+                    print("   • JSON carregado:")
+                    pprint(payload)
+                except Exception as e:
+                    print("   ❌ erro ao json.loads:", e)
+                    payload = {"etapas": []}
 
-            for index, et in enumerate(payload.get("etapas", [])):
-                print(f"\n➡️ Etapa {index+1} - Criando Etapa Nº {et.get('etapa')}")
-
-                etapa = EtapaRoteiro.objects.create(
-                    roteiro=roteiro,
-                    etapa=et["etapa"],
-                    setor_id=et["setor"],
-                    pph=et.get("pph") or None,
-                    setup_minutos=et.get("setup_minutos") or None,
-                )
-
-                # Insumos
-                for ins in et.get("insumos", []):
-                    print(f"  ➕ Insumo: {ins}")
-                    InsumoEtapa.objects.create(
-                        etapa=etapa,
-                        materia_prima_id=ins["materia_prima_id"],
-                        quantidade=ins["quantidade"],
-                        tipo_insumo=ins["tipo_insumo"],
-                        obrigatorio=ins["obrigatorio"],
+                for idx, et in enumerate(payload.get("etapas", []), start=1):
+                    print(f"\n   ➡️ Etapa {idx}: {et}")
+                    etapa_obj = EtapaRoteiro.objects.create(
+                        roteiro=roteiro,
+                        etapa=et["etapa"],
+                        setor_id=et["setor"],
+                        pph=et.get("pph") or None,
+                        setup_minutos=et.get("setup_minutos") or None,
                     )
+                    print(f"      • EtapaRoteiro criado id={etapa_obj.id}")
 
-                # Propriedades
-                props = et.get("propriedades") or {}
+                    for ins in et.get("insumos", []):
+                        print(f"      • criando InsumoEtapa: {ins}")
+                        InsumoEtapa.objects.create(
+                            etapa=etapa_obj,
+                            materia_prima_id=ins["materia_prima_id"],
+                            quantidade=ins["quantidade"],
+                            tipo_insumo=ins["tipo_insumo"],
+                            obrigatorio=ins["obrigatorio"],
+                        )
 
-                print("  ⚙️ Propriedades recebidas:")
-                pprint(props)
+                    props = et.get("propriedades") or {}
+                    print("      • propriedades recebidas:", props)
 
-                ferramenta_raw = props.get("ferramenta", {}).get("id")
-                print("  🔍 Ferramenta raw ID recebido:", ferramenta_raw)
-
-                ferramenta_id = int(ferramenta_raw) if ferramenta_raw and str(ferramenta_raw).isdigit() else None
-                print("  ✅ ID validado para ferramenta:", ferramenta_id)
-
-                if props.get("nome_acao"):
-                    prop_obj = PropriedadesEtapa.objects.create(
-                        etapa=etapa,
-                        nome_acao=props.get("nome_acao", ""),
-                        descricao_detalhada=props.get("descricao_detalhada", ""),
-                        ferramenta_id=props.get("ferramenta", {}).get("id") or None,
-                        seguranca_mp=props.get("seguranca_mp", False),
-                        seguranca_ts=props.get("seguranca_ts", False),
-                        seguranca_m1=props.get("seguranca_m1", False),
-                        seguranca_l1=props.get("seguranca_l1", False),
-                        seguranca_l2=props.get("seguranca_l2", False),
-                    )
-
-                    ids = [m["id"] for m in props.get("maquinas", [])]
-                    prop_obj.maquinas.set(ids)
-
+                    if props.get("nome_acao"):
+                        prop_obj = PropriedadesEtapa.objects.create(
+                            etapa=etapa_obj,
+                            nome_acao=props.get("nome_acao", ""),
+                            descricao_detalhada=props.get("descricao_detalhada", ""),
+                            ferramenta_id=props.get("ferramenta", {}).get("id") or None,
+                            seguranca_mp=props.get("seguranca_mp", False),
+                            seguranca_ts=props.get("seguranca_ts", False),
+                            seguranca_m1=props.get("seguranca_m1", False),
+                            seguranca_l1=props.get("seguranca_l1", False),
+                            seguranca_l2=props.get("seguranca_l2", False),
+                        )
+                        print(f"      • PropriedadesEtapa criado id={prop_obj.id}")
+                        maquinas_ids = [m["id"] for m in props.get("maquinas", [])]
+                        prop_obj.maquinas.set(maquinas_ids)
+                        print(f"      • máquinas vinculadas: {maquinas_ids}")
 
             messages.success(request, "Roteiro atualizado com sucesso.")
-            messages.success(request,
-                f"Roteiro atualizado com sucesso. Nova revisão: {roteiro.revisao}"
-            )
             return redirect("tecnico:tecnico_roteiros")
 
-        messages.error(request, "Corrija os erros abaixo.")
-    segurancas = [
-        ("seguranca_mp", "MP"),
-        ("seguranca_ts", "TS"),
-        ("seguranca_m1", "M1"),
-        ("seguranca_l1", "L1"),
-        ("seguranca_l2", "L2"),
-    ]
+        else:
+            print("❌ form.is_valid() == False")
+            print("   form.errors após is_valid():", form.errors)
+            messages.error(request, "Corrija os erros abaixo.")
 
     return render(request, "roteiros/form.roteiros.html", {
         "form": form,
@@ -481,8 +490,87 @@ def editar_roteiro(request, pk):
         "setores_data": setores_data,
         "roteiro_data": roteiro_data,
         "ferramentas": ferramentas_data,
-        "segurancas": segurancas, 
+        "segurancas": [
+            ("seguranca_mp", "MP"),
+            ("seguranca_ts", "TS"),
+            ("seguranca_m1", "M1"),
+            ("seguranca_l1", "L1"),
+            ("seguranca_l2", "L2"),
+        ],
         "servicos": list(ServicoRealizado.objects.order_by("nome").values("id", "nome")),
-
     })
 
+
+
+
+
+
+
+
+from tecnico.models.roteiro import RoteiroProducao, EtapaRoteiro, PropriedadesEtapa, InsumoEtapa
+from django.db import transaction
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+
+@login_required
+@permission_required("tecnico.add_roteiroproducao", raise_exception=True)
+def clonar_roteiro(request, pk):
+    original = get_object_or_404(RoteiroProducao, pk=pk)
+
+    # Letras disponíveis: A–Z
+    letras = [chr(i) for i in range(ord("A"), ord("Z") + 1)]
+
+    # Letras já utilizadas para o mesmo item
+    tipos_existentes = RoteiroProducao.objects.filter(item=original.item).values_list("tipo_roteiro", flat=True)
+    proximo_tipo = next((l for l in letras if l not in tipos_existentes), None)
+
+    if not proximo_tipo:
+        messages.error(request, "Não foi possível clonar. Todos os tipos de roteiro (A–Z) já foram usados para este item.")
+        return redirect("tecnico:tecnico_roteiros")
+
+    with transaction.atomic():
+        clone = RoteiroProducao.objects.create(
+            item=original.item,
+            tipo_roteiro=proximo_tipo,
+            revisao=1,
+            peso_unitario_gramas=original.peso_unitario_gramas,
+            observacoes_gerais=original.observacoes_gerais,
+            aprovado=False,
+        )
+
+        for etapa in original.etapas.all():
+            nova_etapa = EtapaRoteiro.objects.create(
+                roteiro=clone,
+                etapa=etapa.etapa,
+                setor=etapa.setor,
+                pph=etapa.pph,
+                setup_minutos=etapa.setup_minutos,
+            )
+
+            for insumo in etapa.insumos.all():
+                InsumoEtapa.objects.create(
+                    etapa=nova_etapa,
+                    materia_prima=insumo.materia_prima,
+                    quantidade=insumo.quantidade,
+                    tipo_insumo=insumo.tipo_insumo,
+                    obrigatorio=insumo.obrigatorio,
+                )
+
+            if hasattr(etapa, "propriedades"):
+                prop = etapa.propriedades
+                nova_prop = PropriedadesEtapa.objects.create(
+                    etapa=nova_etapa,
+                    nome_acao=prop.nome_acao,
+                    descricao_detalhada=prop.descricao_detalhada,
+                    ferramenta=prop.ferramenta,
+                    seguranca_mp=prop.seguranca_mp,
+                    seguranca_ts=prop.seguranca_ts,
+                    seguranca_m1=prop.seguranca_m1,
+                    seguranca_l1=prop.seguranca_l1,
+                    seguranca_l2=prop.seguranca_l2,
+                )
+                nova_prop.maquinas.set(prop.maquinas.all())
+
+    messages.success(request, f"Roteiro clonado com sucesso como tipo {proximo_tipo}.")
+    return redirect("tecnico:tecnico_roteiros")

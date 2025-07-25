@@ -1,4 +1,4 @@
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from django.forms import inlineformset_factory
 from django.utils import timezone
 from comercial.forms.precalculos_form import RoteiroCotacaoForm
@@ -9,38 +9,24 @@ from django.contrib import messages
 
 def processar_aba_roteiro(request, precalc, form_precalculo=None):
     if not precalc.roteiro_item.exists() and getattr(precalc, "analise_comercial_item", None):
-        item = precalc.analise_comercial_item.item
-        roteiro = getattr(item, "roteiro", None)
+        roteiro = getattr(precalc.analise_comercial_item, "roteiro_selecionado", None)
+
 
         if roteiro:
             qtde = precalc.analise_comercial_item.qtde_estimada or 1
 
             for etapa in roteiro.etapas.select_related("setor"):
-                try:
-                    pph = Decimal(etapa.pph)
-                except (InvalidOperation, TypeError):
-                    pph = Decimal(0)
+                pph = etapa.pph or 1
+                setup = etapa.setup_minutos or 0
+                custo_hora = etapa.setor.custo_atual or 0
 
                 try:
-                    setup = Decimal(etapa.setup_minutos)
-                except (InvalidOperation, TypeError):
-                    setup = Decimal(0)
-
-                try:
-                    custo_hora = Decimal(str(etapa.setor.custo_atual).replace(",", "."))
-                except (InvalidOperation, AttributeError):
-                    custo_hora = Decimal(0)
-
-                try:
-                    tempo_pecas = Decimal(qtde) / pph if pph > 0 else Decimal(0)
-                except (ZeroDivisionError, InvalidOperation):
+                    tempo_pecas = Decimal(qtde) / Decimal(pph)
+                except ZeroDivisionError:
                     tempo_pecas = Decimal(0)
 
-                tempo_setup = setup / Decimal(60)
-                total = (tempo_pecas + tempo_setup) * custo_hora
-
-                # continua com o restante do processamento...
-
+                tempo_setup = Decimal(setup) / Decimal(60)
+                total = (tempo_pecas + tempo_setup) * Decimal(custo_hora)
 
                 propriedades = PropriedadesEtapa.objects.filter(etapa=etapa).first()
                 maquinas_roteiro = None
@@ -78,6 +64,8 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
             'setup_minutos',
             'custo_hora',
             'custo_total',
+            'maquinas_roteiro',       # ADICIONE
+            'nome_acao',    
         ),
         extra=0,
         can_delete=False,
@@ -91,14 +79,21 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
             form.instance.custo_hora = getattr(form.instance.setor, "custo_atual", 0)
 
     if request.method == "POST" and request.POST.get("form_roteiro_submitted") is not None:
-        if fs_rot.is_valid():
-            instancias = fs_rot.save(commit=False)
-            alguma_alteracao = False
+            print("📥 RECEBIDO POST para aba roteiro")
+            print("🔍 Dados POST:", dict(request.POST))
+            print("🔍 Número de forms:", len(fs_rot.forms))
 
-            for i, obj in enumerate(instancias):
-                form = fs_rot.forms[i]
+            if fs_rot.is_valid():
+                print("✅ Formset Roteiro VÁLIDO")
 
-                if form.has_changed():
+                alguma_alteracao = False
+
+                for i, form in enumerate(fs_rot.forms):
+                    if not form.cleaned_data:
+                        continue
+
+                    obj = form.save(commit=False)
+
                     obj.precalculo = precalc
                     obj.usuario = request.user
                     obj.assinatura_nome = request.user.get_full_name() or request.user.username
@@ -108,7 +103,7 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
                     try:
                         etapa_real = EtapaRoteiro.objects.filter(
                             etapa=obj.etapa,
-                            roteiro__item=precalc.analise_comercial_item.item
+                            roteiro=precalc.analise_comercial_item.roteiro_selecionado
                         ).first()
 
                         if etapa_real:
@@ -117,18 +112,41 @@ def processar_aba_roteiro(request, precalc, form_precalculo=None):
                                 maquinas = propriedades.maquinas.all()
                                 obj.maquinas_roteiro = ", ".join(m.codigo for m in maquinas)
                                 obj.nome_acao = propriedades.nome_acao
-                    except Exception:
-                        obj.maquinas_roteiro = None
-                        obj.nome_acao = None
+                            else:
+                                obj.maquinas_roteiro = ""
+                                obj.nome_acao = ""
+                        else:
+                            obj.maquinas_roteiro = ""
+                            obj.nome_acao = ""
+                    except Exception as e:
+                        print("⚠️ Erro ao buscar propriedades:", str(e))
+                        obj.maquinas_roteiro = ""
+                        obj.nome_acao = ""
 
                     obj.save()
                     alguma_alteracao = True
+                    print("💾 Roteiro atualizado:", obj)
 
-            if alguma_alteracao:
-                fs_rot.save_m2m()
-                return True, fs_rot
+
+                if alguma_alteracao:
+                    if form_precalculo and form_precalculo.is_valid():
+                        campo_obs = "observacoes_roteiro"
+                        valor = form_precalculo.cleaned_data.get(campo_obs)
+                        setattr(precalc, campo_obs, valor)
+                        precalc.save(update_fields=[campo_obs])
+                    return True, fs_rot
+
+                else:
+                    messages.error(request, "Nenhuma alteração válida foi identificada para salvar.")
+                    return False, fs_rot
+
+
             else:
-                messages.error(request, "Nenhuma alteração válida foi identificada para salvar.")
-                return False, fs_rot
+                print("❌ Formset Roteiro INVÁLIDO")
+                print(fs_rot.errors)
+
+
+
+         
 
     return False, fs_rot

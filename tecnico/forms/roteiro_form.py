@@ -6,7 +6,7 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 class RoteiroProducaoForm(forms.ModelForm):
     class Meta:
         model = RoteiroProducao
-        fields = ["item", "massa_mil_pecas", "revisao", "observacoes_gerais"]
+        fields = ["item", "tipo_roteiro", "peso_unitario_gramas", "revisao", "observacoes_gerais"]
         widgets = {
             "item": forms.Select(attrs={"class": "form-select select2"}),
             "massa_mil_pecas": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
@@ -17,12 +17,19 @@ class RoteiroProducaoForm(forms.ModelForm):
             "observacoes_gerais": "Observações Gerais",
         }
 
-    def clean_item(self):
-        item = self.cleaned_data["item"]
-        qs = RoteiroProducao.objects.filter(item=item)
-        # se estivermos editando, exclui a instância atual
-        if self.instance and self.instance.pk:
-            qs = qs.exclude(pk=self.instance.pk)
-        if qs.exists():
-            raise ValidationError("Já existe um roteiro cadastrado para este item.")
-        return item
+    def clean(self):
+        cleaned = super().clean()
+        item = cleaned.get("item")
+        tipo = cleaned.get("tipo_roteiro")
+        if item and tipo:
+            qs = RoteiroProducao.objects.filter(
+                item=item,
+                tipo_roteiro=tipo
+            )
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError(
+                    "Já existe um roteiro para este item e tipo de roteiro."
+                )
+        return cleaned

@@ -69,6 +69,8 @@ class PreCalculo(models.Model):
         null=True,
         blank=True
     )
+
+   
     preco_manual = models.DecimalField(
         "Preço Final Manual (R$)",
         max_digits=12,
@@ -222,6 +224,14 @@ class AnaliseComercial(models.Model):
         ("Anual", "Anual"),
         ("Esporádico", "Esporádico"),
     ]
+
+    roteiro_selecionado = models.ForeignKey(
+        RoteiroProducao,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Roteiro Selecionado"
+    )
     precalculo = models.OneToOneField("PreCalculo", on_delete=models.CASCADE, related_name="analise_comercial_item", null=True, blank=True)
     item = models.ForeignKey(Item, on_delete=models.PROTECT, verbose_name="Selecione o item")
 

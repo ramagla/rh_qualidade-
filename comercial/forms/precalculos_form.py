@@ -237,6 +237,8 @@ from comercial.models.centro_custo import CentroDeCusto
 class RoteiroCotacaoForm(forms.ModelForm):
     class Meta:
         model = RoteiroCotacao
+        exclude = ('maquinas_roteiro', 'nome_acao', 'precalculo', 'usuario', 'assinatura_nome', 'assinatura_cn', 'data_assinatura')
+
         fields = "__all__"
     
     def __init__(self, *args, **kwargs):
@@ -383,6 +385,12 @@ class ItemInlineForm(forms.ModelForm):
 
 
 
+from django import forms
+from comercial.models.precalculo import AnaliseComercial
+from comercial.models import Item
+from tecnico.models.roteiro import RoteiroProducao
+
+
 class AnaliseComercialForm(forms.ModelForm):
     class Meta:
         model = AnaliseComercial
@@ -427,19 +435,19 @@ class AnaliseComercialForm(forms.ModelForm):
                 if campo in self.fields:
                     self.fields[campo].required = False
 
-       # Aplica o filtro de itens por cliente, se houver cotação
+        # Aplica o filtro de itens por cliente, se houver cotação
         if cotacao:
             cliente = cotacao.cliente
             queryset_filtrado = Item.objects.filter(cliente=cliente, status="Ativo").order_by("codigo")
 
             self.fields['item'] = forms.ModelChoiceField(
-                    queryset=queryset_filtrado,
-                    widget=forms.Select(attrs={
-                        'class': 'form-select form-select-sm select2 campo-analise'
-                    }),
-                    required=True,
-                    empty_label="---------"
-                )
+                queryset=queryset_filtrado,
+                widget=forms.Select(attrs={
+'class': 'form-select form-select-sm campo-analise'
+                }),
+                required=True,
+                empty_label="---------"
+            )
 
             # Corrige item inválido se estiver relacionado a outro cliente
             if (
@@ -449,6 +457,25 @@ class AnaliseComercialForm(forms.ModelForm):
                 print("⚠️ Resetando item não relacionado ao cliente da cotação.")
                 self.initial['item'] = None
                 self.fields["item"].required = False  # Evita erro se item vier vazio
+
+            # Campo ROTEIRO vinculado ao item (via AJAX ou instância)
+            self.fields["roteiro_selecionado"] = forms.ModelChoiceField(
+                queryset=RoteiroProducao.objects.none(),
+                required=False,
+                label="Roteiro Selecionado",
+                widget=forms.Select(attrs={
+                    "class": "form-select form-select-sm select2 campo-analise"
+                })
+            )
+
+            # Se item já preenchido, mostra roteiros disponíveis
+            item_id = self.data.get("item") or getattr(self.instance, "item_id", None)
+            if item_id:
+                try:
+                    roteiros = RoteiroProducao.objects.filter(item_id=item_id)
+                    self.fields["roteiro_selecionado"].queryset = roteiros
+                except Exception:
+                    pass
 
         # Placeholders para campos *_obs
         placeholders = {
@@ -470,7 +497,6 @@ class AnaliseComercialForm(forms.ModelForm):
     def clean_item(self):
         item_pk = self.cleaned_data.get('item')
 
-        # Caso "__novo__" venha do POST manualmente, trata aqui:
         if item_pk == "__novo__":
             raise forms.ValidationError("Salve o novo item antes de prosseguir.")
 
@@ -481,6 +507,7 @@ class AnaliseComercialForm(forms.ModelForm):
             return Item.objects.get(pk=item_pk)
         except (TypeError, ValueError, Item.DoesNotExist):
             raise forms.ValidationError("Selecione um item válido.")
+
 
 
 
@@ -506,7 +533,7 @@ class PreCalculoForm(forms.ModelForm):
             'observacoes_servicos',
             'observacoes_roteiro',
         ]
-        widgets = {
+        widgets = {            
             'observacoes_materiais': CKEditor5Widget(config_name='default'),
             'observacoes_servicos': CKEditor5Widget(config_name='default'),
             'observacoes_roteiro': CKEditor5Widget(config_name='default'),

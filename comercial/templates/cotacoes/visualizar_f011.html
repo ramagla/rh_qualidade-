@@ -8,7 +8,7 @@
 {% include 'partials/global/_estilos_impressao.html' %}
 {% include 'partials/global/_botao_impressao.html' %}
 {% include 'partials/global/_styles_componentes.html' %}
-{% include 'partials/global/_botao_impressao.html' %}
+
 
 <div class="no-print alert alert-info mt-3">
   <strong>Atenção:</strong> Ative a <u>impressão frente e verso (duplex)</u> nas configurações da impressora.
@@ -213,60 +213,66 @@
             <th style="text-align: right;"><i class="bi bi-box2-heart me-1"></i><strong>Peso bruto:</strong></th>
             <td>{{ material.peso_bruto|default:"—" }} kg</td>
           </tr>
+        {% if precalc.observacoes_servicos|conteudo_real %}
+  <tfoot>
+    <tr>
+      <td colspan="6" class="text-start">
+        <strong class="ms-2">Observações:</strong>
+        <div class="mt-1 ms-2">{{ precalc.observacoes_servicos|safe }}</div>
+      </td>
+    </tr>
+  </tfoot>
+{% endif %}
 
-          {% if precalc.observacoes_materiais|striptags|length > 0 %}
-          <tr>
-            <th colspan="6">
-              <i class="bi bi-chat-left-text me-1"></i><strong>Observações:</strong>
-              <div class="mt-1">{{ precalc.observacoes_materiais|safe }}</div>
-            </th>
-          </tr>
-          {% endif %}
-        </tbody>
       </table>
     </div>
   {% endif %}
 {% endfor %}
 
-<div class="table-responsive">
-  <table class="table table-bordered align-middle small text-center">
-    <thead class="table-secondary">
-      <tr>
-        <th colspan="3"><strong>Tratamentos Externos e Internos</strong></th>
-      </tr>
-      <tr>
-        <th><i class="bi bi-tag-fill"></i> Código</th>
-        <th><i class="bi bi-tools"></i> Serviço externo</th>
-        <th><i class="bi bi-truck"></i> Fornecedor</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for s in precalc.servicos.all %}
-        {% if s.selecionado %}
+
+
+{% if tem_servicos_selecionados or precalc.observacoes_servicos|conteudo_real %}
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle small text-center">
+      <thead class="table-secondary">
+        <tr>
+          <th colspan="3"><strong>Tratamentos Externos e Internos</strong></th>
+        </tr>
+        <tr>
+          <th><i class="bi bi-tag-fill"></i> Código</th>
+          <th><i class="bi bi-tools"></i> Serviço externo</th>
+          <th><i class="bi bi-truck"></i> Fornecedor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in precalc.servicos.all %}
+          {% if s.selecionado %}
+            <tr>
+              <td>{{ s.codigo_materia_prima|default:"—" }}</td>
+              <td>{{ s.descricao_materia_prima|default:"—" }}</td>
+              <td>{{ s.fornecedor|default:"—" }}</td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+        {% if not tem_servicos_selecionados %}
           <tr>
-            <td>{{ s.codigo_materia_prima|default:"—" }}</td>
-            <td>{{ s.descricao_materia_prima|default:"—" }}</td>
-            <td>{{ s.fornecedor|default:"—" }}</td>
+            <td colspan="3">Nenhum serviço selecionado.</td>
           </tr>
         {% endif %}
-      {% empty %}
-        <tr>
-          <td colspan="3">Nenhum serviço selecionado.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-    {% if precalc.observacoes_servicos|striptags|length > 0 %}
-    <tfoot>
-      <tr>
-        <td colspan="3" class="text-start">
-          <strong class="ms-2">Observações:</strong>
-          <div class="mt-1 ms-2">{{ precalc.observacoes_servicos|safe }}</div>
-        </td>
-      </tr>
-    </tfoot>
-    {% endif %}
-  </table>
-</div>
+      </tbody>
+      {% if precalc.observacoes_servicos|conteudo_real %}
+        <tfoot>
+          <tr>
+            <td colspan="3" class="text-start">
+              <strong class="ms-2">Observações:</strong>
+              <div class="mt-1 ms-2">{{ precalc.observacoes_servicos|safe }}</div>
+            </td>
+          </tr>
+        </tfoot>
+      {% endif %}
+    </table>
+  </div>
+{% endif %}
 
 <div class="table-responsive">
   <table class="table table-bordered align-middle small text-center">
@@ -345,12 +351,15 @@
         </td>
       </tr>
       
-      <tr>
-        <td colspan="6" class="text-start pt-2 pb-2" style="padding-left: 12px; padding-right: 12px;">
-          <strong>Observações:</strong><br>
-          <div class="mt-1">{{ f.observacoes|safe }}</div>
-        </td>
-      </tr>
+      {% if f.observacoes|conteudo_real %}
+  <tr>
+    <td colspan="6" class="text-start pt-2 pb-2" style="padding-left: 12px; padding-right: 12px;">
+      <strong>Observações:</strong><br>
+      <div class="mt-1">{{ f.observacoes|safe }}</div>
+    </td>
+  </tr>
+{% endif %}
+
       
       <tr>
         <th class="text-start"><i class="bi bi-person-circle"></i> Responsável:</th>
@@ -457,17 +466,13 @@
 <!-- Considerações e Responsável -->
 <div class="table-responsive">
   <table class="table table-bordered align-middle small">
-    <tr>
-      <th style="width: 15%;">Considerações:</th>
-      <td>
-        {% if precalc.analise_comercial_item.consideracoes|striptags|cut:" "|length > 0 %}
-        {{ precalc.analise_comercial_item.consideracoes|safe }}
-        {% else %}
-          —
-        {% endif %}
-      </td>
-          </tr>
-    <tr>
+   {% if precalc.analise_comercial_item.consideracoes|conteudo_real %}
+  <tr>
+    <th style="width: 15%;">Considerações:</th>
+    <td>{{ precalc.analise_comercial_item.consideracoes|safe }}</td>
+  </tr>
+{% endif %}
+
       <th>Responsável:</th>
       <td>
         {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
@@ -483,7 +488,6 @@
     </tr>
   </table>
 </div>
-
 
  <!-- Análise Técnica (Compactada) -->
 <div class="table-responsive">
@@ -566,16 +570,15 @@
 <!-- Considerações e Responsável (Compactado) -->
 <div class="table-responsive">
   <table class="table table-bordered table-sm align-middle" style="font-size: 10px;">
-    <tr>
-      <th style="width: 15%;">Considerações:</th>
-      <td class="px-2 py-1">
-        {% if precalc.avaliacao_tecnica_item.consideracoes_tec|striptags|cut:" "|length > 0 %}
-          {{ precalc.avaliacao_tecnica_item.consideracoes_tec|safe }}
-        {% else %}
-          —
-        {% endif %}
-      </td>
-    </tr>
+   {% if precalc.avaliacao_tecnica_item.consideracoes_tec|conteudo_real %}
+  <tr>
+    <th style="width: 15%;">Considerações:</th>
+    <td class="px-2 py-1">
+      {{ precalc.avaliacao_tecnica_item.consideracoes_tec|safe }}
+    </td>
+  </tr>
+{% endif %}
+
     <tr>
       <th>Responsável:</th>
       <td class="px-2 py-1">
@@ -623,16 +626,15 @@
         </td>
       </tr>
       
-      <tr>
-        <th style="width: 15%;">Considerações:</th>
-        <td colspan="2">
-          {% if precalc.desenvolvimento_item.consideracoes|striptags|cut:" "|length > 0 %}
-            {{ precalc.desenvolvimento_item.consideracoes|safe }}
-          {% else %}
-            —
-          {% endif %}
-        </td>
-      </tr>
+     {% if precalc.desenvolvimento_item.consideracoes|conteudo_real %}
+  <tr>
+    <th style="width: 15%;">Considerações:</th>
+    <td colspan="2">
+      {{ precalc.desenvolvimento_item.consideracoes|safe }}
+    </td>
+  </tr>
+{% endif %}
+
       <tr>
         <th>Responsável:</th>
         <td colspan="2">
@@ -660,43 +662,45 @@
 </div>
 <style>
   @media print {
-    .page-break {
-      page-break-before: always;
-    }
-
-    .pdf-container {
-      font-size: 10px !important; /* redução máxima sem prejudicar legibilidade */
-    }
-
-    table th,
-    table td {
-      padding: 2px !important; /* ainda menor */
-      vertical-align: middle !important;
-    }
-
-    .form-check-label,
-    .form-check-input {
-      font-size: 8px !important; /* rótulos de checkbox ainda mais compactos */
-    }
-
-    .form-check {
-      margin-bottom: 0 !important;
-      margin-right: 4px !important;
-    }
-
-    .table-responsive {
-      margin-bottom: 0.5rem !important; /* menos espaço entre blocos */
-    }
-
-    h5, h6 {
-      font-size: 10px !important;
-      margin: 0 !important;
-    }
-
-    .table {
-      margin-bottom: 0.25rem !important;
-    }
+  body, .pdf-container {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
   }
+
+  table {
+    font-size: 9px !important;
+    margin-bottom: 0.2rem !important;
+  }
+
+  table th,
+  table td {
+    padding: 1px 2px !important;
+    vertical-align: middle !important;
+  }
+
+  .form-check-label,
+  .form-check-input {
+    font-size: 8px !important;
+  }
+
+  .form-check {
+    margin: 0 !important;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 10px !important;
+    margin: 0 0 2px 0 !important;
+  }
+
+  .table-responsive {
+    margin-bottom: 0.3rem !important;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+}
+
 </style>
 
 

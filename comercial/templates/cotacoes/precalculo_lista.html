@@ -77,6 +77,13 @@
       <i class="bi bi-upc-scan text-primary"></i><br>
       <small>Código</small>
     </th>
+    <th class="text-center align-middle">
+  <div class="d-flex flex-column align-items-center">
+    <i class="bi bi-diagram-3 mb-1"></i>
+    <small>Roteiro</small>
+  </div>
+</th>
+
     <th>
       <i class="bi bi-currency-dollar text-primary"></i><br>
       <small>Preço Final</small>
@@ -176,7 +183,7 @@
 
   <div class="table-responsive zebra-tabela mt-4">
     <table class="table table-bordered table-striped align-middle text-center">
-     <thead class="table-light">
+    <thead class="table-light">
   <tr>
     <th class="text-center align-middle">
       <div class="d-flex flex-column align-items-center">
@@ -188,6 +195,13 @@
       <div class="d-flex flex-column align-items-center">
         <i class="bi bi-upc-scan mb-1"></i>
         <small>Código</small>
+      </div>
+    </th>
+    <!-- NOVA COLUNA: Roteiro -->
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-diagram-3 mb-1"></i>
+        <small>Roteiro</small>
       </div>
     </th>
     <th class="text-center align-middle">
@@ -241,6 +255,7 @@
   </tr>
 </thead>
 
+
       
       
       <tbody>
@@ -248,7 +263,21 @@
           <tr>
             <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
             <td>{{ item.analise_comercial_item.item.codigo }}</td>
-      
+            
+<td>
+  {% with roteiro=item.analise_comercial_item.roteiro_selecionado %}
+    {% if roteiro %}
+      <span class="badge bg-secondary">
+{{ roteiro.get_tipo_roteiro_display }} - Rev. {{ roteiro.revisao }}
+      </span>
+    {% else %}
+      <span class="text-muted fst-italic">—</span>
+    {% endif %}
+  {% endwith %}
+</td>
+
+
+
             <!-- Quantidade Estimada -->
             <td>
               {{ item.analise_comercial_item.qtde_estimada|intcomma|default:"—" }}

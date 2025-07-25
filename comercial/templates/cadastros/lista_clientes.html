@@ -110,11 +110,13 @@
           <label for="status" class="form-label">
             <i class="bi bi-toggle-on me-1"></i> Status
           </label>
-          <select name="status" id="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
-            <option value="">Todos</option>
-            <option value="Ativo" {% if request.GET.status == "Ativo" or not request.GET.status %}selected{% endif %}>Ativo</option>
-            <option value="Inativo" {% if request.GET.status == "Inativo" %}selected{% endif %}>Inativo</option>
-          </select>
+         <select name="status" id="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+  <option value="">Todos</option>
+  <option value="Ativo" {% if request.GET.status == "Ativo" or not request.GET.status %}selected{% endif %}>Ativo</option>
+  <option value="Inativo" {% if request.GET.status == "Inativo" %}selected{% endif %}>Inativo</option>
+  <option value="Reativado" {% if request.GET.status == "Reativado" %}selected{% endif %}>Reativado</option>
+</select>
+
         </div>
 
         <!-- Botão -->
@@ -227,10 +229,42 @@
               <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAnexos{{ cliente.id }}">
                 <i class="bi bi-eye"></i>
               </button>
-              {% comment %} {% include "partials/global/_modal_anexos_cliente.html" with cliente=cliente %} {% endcomment %}
+             <!-- Modal de Anexos -->
+              <div class="modal fade" id="modalAnexos{{ cliente.id }}" tabindex="-1" aria-labelledby="modalAnexosLabel{{ cliente.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                      <h5 class="modal-title" id="modalAnexosLabel{{ cliente.id }}">
+                        <i class="bi bi-folder2-open me-2"></i> Documentos de {{ cliente.razao_social }}
+                      </h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                      {% if cliente.documentos.all %}
+                        <ul class="list-group list-group-flush">
+                          {% for doc in cliente.documentos.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                              <span><i class="bi bi-file-earmark-text me-2"></i>{{ doc.tipo|default:"Sem tipo" }}</span>
+                              <a href="{{ doc.arquivo.url }}" class="btn btn-sm btn-outline-success" target="_blank">
+                                <i class="bi bi-download me-1"></i> Baixar
+                              </a>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <p class="text-muted">Nenhum documento anexado.</p>
+                      {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             {% else %}
               <span class="text-muted">-</span>
             {% endif %}
+          </td>
           </td>
 
           <td>
@@ -258,4 +292,7 @@
   </div>
 
 </div>
+
+
+  
 {% endblock %}

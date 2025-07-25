@@ -11,50 +11,94 @@
     <i class="bi bi-diagram-3 me-2"></i>
     {% if edicao %}Editar{% else %}Cadastrar{% endif %} Roteiro de Produção
   </h2>
+<form method="post" id="roteiroForm">
 
-  <form method="post" id="roteiroForm">
-    {% csrf_token %}
-    <div class="row mb-3 align-items-end">
-  <div class="col-md-6">
-    <label for="{{ form.item.id_for_label }}" class="form-label">
-      <i class="bi bi-box-seam me-1"></i> Item Vinculado <span class="text-danger">*</span>
-    </label>
-    {{ form.item|add_class:"form-select select2 w-100" }}
-  </div>
-  <div class="col-md-4">
-    <label for="{{ form.massa_mil_pecas.id_for_label }}" class="form-label">
-      <i class="bi bi-speedometer2 me-1"></i> Massa por 1.000 peças (kg)
-    </label>
-    {{ form.massa_mil_pecas|add_class:"form-control" }}
+  {% if form.errors %}
+<div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+  <strong>Erros no formulário:</strong>
+  <ul class="mb-0">
+    {% for field, errors in form.errors.items %}
+      {% for error in errors %}
+        <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+      {% endfor %}
+    {% endfor %}
+  </ul>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+</div>
+{% endif %}
+
+  {% csrf_token %}
+  <div class="accordion mb-4" id="accordion-info-geral">
+  <div class="accordion-item border rounded">
+    <h2 class="accordion-header" id="heading-info">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-info" aria-expanded="true" aria-controls="collapse-info">
+        <i class="bi bi-info-circle me-2"></i> Informações do Roteiro
+      </button>
+    </h2>
+    <div id="collapse-info" class="accordion-collapse collapse show" aria-labelledby="heading-info" data-bs-parent="#accordion-info-geral">
+      <div class="accordion-body">
+
+        <div class="row g-3 align-items-end">
+          <div class="col-md-5">
+            <label for="{{ form.item.id_for_label }}" class="form-label">
+              <i class="bi bi-box-seam me-1"></i> Item Vinculado <span class="text-danger">*</span>
+            </label>
+            {{ form.item|add_class:"form-select select2 w-100" }}
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">
+              <i class="bi bi-tag me-1"></i> Tipo de Roteiro
+            </label>
+            {{ form.tipo_roteiro|add_class:"form-select" }}
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">
+              <i class="bi bi-weight me-1"></i> Peso Unitário (g)
+            </label>
+            {{ form.peso_unitario_gramas|add_class:"form-control" }}
+          </div>
+
+          <div class="col-md-2">
+            <label for="{{ form.revisao.id_for_label }}" class="form-label">
+              <i class="bi bi-arrow-repeat me-1"></i> Revisão do Roteiro
+            </label>
+            {{ form.revisao|add_class:"form-control text-center" }}
+          </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+          <div class="col-12">
+            <label for="{{ form.observacoes_gerais.id_for_label }}" class="form-label">
+              <i class="bi bi-card-text me-1"></i> Observações Gerais
+            </label>
+            {{ form.observacoes_gerais }}
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
 </div>
-<div class="col-md-2">
-    <label for="{{ form.revisao.id_for_label }}" class="form-label">
-      <i class="bi bi-arrow-repeat me-1"></i> Revisão do Roteiro
-    </label>
-    {{ form.revisao|add_class:"form-control text-center" }}
-  </div>
-
-      <div class="col-12 mt-3">
-        <label for="{{ form.observacoes_gerais.id_for_label }}" class="form-label">
-          <i class="bi bi-card-text me-1"></i> Observações Gerais
-        </label>
-        {{ form.observacoes_gerais }}
-      </div>
-      
 
     <hr>
 
-    <div id="etapas-container"></div>
-  <button type="button" id="addEtapa" class="btn btn-outline-primary btn-sm mb-3">
-    <i class="bi bi-plus-circle me-1"></i> Adicionar Etapa
-  </button>
-  <input type="hidden" name="dados_json" id="dados_json">
-    <div class="text-center mt-4">
-        {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=edicao url_voltar='tecnico:tecnico_roteiros' %}
-    
-    </div>
-  </form>
+<div class="accordion mb-3" id="etapas-container"></div>
+  <div class="text-end">
+ <button type="button" id="addEtapa" class="btn btn-outline-success btn-sm mb-3">
+  <i class="bi bi-plus-circle me-1"></i> Adicionar Etapa
+</button>
+
+</div>
+
+<input type="hidden" name="dados_json" id="dados_json">
+
+<div class="text-center mt-4">
+  {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=edicao url_voltar='tecnico:tecnico_roteiros' %}
+</div>
+</form>
+</div>
 </div>
 
 {{ insumos_data|json_script:"insumos-data" }}
@@ -74,17 +118,42 @@ if (!window.roteiroScriptRegistrado) {
     const insumosData   = JSON.parse(document.getElementById("insumos-data").textContent);
     const maquinasData  = JSON.parse(document.getElementById("maquinas-data").textContent);
     const setoresData   = JSON.parse(document.getElementById("setores-data").textContent);
+    let roteiroData = {};
     const roteiroDataEl = document.getElementById("roteiro-data");
-    const roteiroData   = roteiroDataEl ? JSON.parse(roteiroDataEl.textContent) : { etapas: [] };
+    if (roteiroDataEl && roteiroDataEl.textContent.trim() !== "") {
+      try {
+        roteiroData = JSON.parse(roteiroDataEl.textContent);
+      } catch (e) {
+        console.warn("⚠️ Erro ao interpretar roteiro_data:", e);
+        roteiroData = {};
+      }
+    }
 
     let etapaIndex = 0;
     const container = document.getElementById("etapas-container");
+
 
     function criarEtapa(index, data = null) {
       const div = document.createElement("div");
       div.className = "border rounded p-3 mb-3 etapa-form";
       div.dataset.index = index;
       div.innerHTML = `
+  <div class="accordion-item border rounded">
+    <h2 class="accordion-header px-2" id="heading-${index}">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <button class="accordion-button collapsed flex-grow-1 text-start" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapse-${index}"
+                aria-expanded="false" aria-controls="collapse-${index}">
+          Etapa <span class="ms-1 badge bg-secondary">${index + 1}</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger ms-2 remover-etapa" title="Remover Etapa">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </h2>
+
+    <div id="collapse-${index}" class="accordion-collapse collapse" aria-labelledby="heading-${index}" data-bs-parent="#etapas-container">
+      <div class="accordion-body">
         <div class="row g-3">
           <div class="col-md-2">
             <label class="form-label"><i class="bi bi-list-ol me-1"></i> Etapa Nº</label>
@@ -105,29 +174,32 @@ if (!window.roteiroScriptRegistrado) {
             <label class="form-label"><i class="bi bi-stopwatch me-1"></i> Setup (min)</label>
             <input type="number" step="0.01" min="0" class="form-control" name="etapas[${index}][setup_minutos]">
           </div>
-          <div class="col-md-2 d-flex align-items-end">
-            <button type="button" class="btn btn-sm btn-danger remover-etapa"><i class="bi bi-trash"></i></button>
+          <div class="col-md-2 d-flex align-items-end justify-content-between gap-1">
+            <button type="button" class="btn btn-sm btn-info w-100 btn-add-insumo" data-bs-toggle="modal" data-bs-target="#modalInsumo" title="Adicionar Insumo">
+              <i class="bi bi-box-seam"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary w-100 btn-add-propriedades" data-bs-toggle="modal" data-bs-target="#modalPropriedades" title="Adicionar Propriedades">
+              <i class="bi bi-gear"></i>
+            </button>
           </div>
         </div>
 
-        <div class="mt-3">
+        <div class="mt-4">
           <label class="form-label"><i class="bi bi-box-seam me-1"></i> Insumos</label>
           <ul class="list-group lista-insumos mb-2"></ul>
-          <button type="button" class="btn btn-sm btn-info btn-add-insumo" data-bs-toggle="modal" data-bs-target="#modalInsumo">
-            <i class="bi bi-box-seam"></i> Insumo
-          </button>
         </div>
 
         <div class="mt-3">
           <label class="form-label"><i class="bi bi-gear me-1"></i> Propriedades</label>
           <ul class="list-group lista-propriedades mb-2"></ul>
-          <button type="button" class="btn btn-sm btn-secondary btn-add-propriedades" data-bs-toggle="modal" data-bs-target="#modalPropriedades">
-            <i class="bi bi-gear"></i> Propriedades
-          </button>
         </div>
 
         <input type="hidden" class="dados-etapa" name="etapas[${index}][data]" value='{"insumos":[],"propriedades":{}}'>
-      `;
+      </div>
+    </div>
+  </div>
+`;
+
       $(div).find("select.select2").select2({ dropdownParent: div });
 
       if (data) {
@@ -169,14 +241,20 @@ if (!window.roteiroScriptRegistrado) {
       return div;
     }
 
-    roteiroData.etapas.forEach(et => {
-      container.appendChild(criarEtapa(etapaIndex, et));
-      etapaIndex++;
-    });
+  
 
     function adicionarEtapa() {
       container.appendChild(criarEtapa(etapaIndex));
       etapaIndex++;
+    }
+
+    if (roteiroData.etapas && Array.isArray(roteiroData.etapas) && roteiroData.etapas.length > 0) {
+      roteiroData.etapas.forEach(et => {
+        container.appendChild(criarEtapa(etapaIndex, et));
+        etapaIndex++;
+      });
+    } else {
+      adicionarEtapa();
     }
 
     document.getElementById("addEtapa").addEventListener("click", adicionarEtapa);
@@ -186,12 +264,36 @@ if (!window.roteiroScriptRegistrado) {
       if (!etapaDiv) return;
 
       if (e.target.closest(".remover-etapa")) {
-        etapaDiv.remove();
+        etapaDiv.classList.add("etapa-removida");
+        etapaDiv.style.display = "none";
         return;
       }
 
-      if (e.target.closest(".btn-add-insumo") || e.target.closest(".btn-add-propriedades")) {
+      if (e.target.closest(".btn-add-insumo")) {
         window.etapaAtiva = etapaDiv;
+      }
+
+      if (e.target.closest(".btn-add-propriedades")) {
+        window.etapaAtiva = etapaDiv;
+        const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
+        const props = data.propriedades || {};
+        const modal = document.getElementById("modalPropriedades");
+
+        modal.querySelector('select[name="nome_acao"]').value = props.nome_acao_id || "";
+        const maquinasSel = modal.querySelector('select[name="maquinas"]');
+        if (props.maquinas?.length) {
+          Array.from(maquinasSel.options).forEach(opt => {
+            opt.selected = props.maquinas.some(m => m.id == opt.value);
+          });
+        } else {
+          maquinasSel.value = null;
+        }
+        modal.querySelector('select[name="ferramenta"]').value = props.ferramenta?.id || "";
+        ["mp", "ts", "m1", "l1", "l2"].forEach(sigla => {
+          modal.querySelector(`input[name="seguranca_${sigla}"]`).checked = !!props[`seguranca_${sigla}`];
+        });
+        modal.querySelector('textarea[name="descricao_detalhada"]').value = props.descricao_detalhada || "";
+        $(modal).find("select.select2").trigger("change");
       }
 
       if (e.target.closest(".remover-insumo")) {
@@ -206,22 +308,31 @@ if (!window.roteiroScriptRegistrado) {
 
     document.getElementById("roteiroForm").addEventListener("submit", function (e) {
       e.preventDefault();
-      const payload = { item: document.querySelector('[name="item"]').value, etapas: [] };
-      container.querySelectorAll(".etapa-form").forEach(div => {
-        const idx = div.dataset.index;
+
+      const form = this;
+      const payload = {
+        item: document.querySelector('[name="item"]').value,
+        etapas: []
+      };
+
+      const etapaDivs = Array.from(container.querySelectorAll(".etapa-form")).filter(div => !div.classList.contains("etapa-removida"));
+
+      etapaDivs.forEach((div) => {
         const data = JSON.parse(div.querySelector(".dados-etapa").value);
-        data.etapa = div.querySelector(`[name="etapas[${idx}][etapa]"]`).value;
-        data.setor = div.querySelector(`[name="etapas[${idx}][setor]"]`).value;
-        data.pph = div.querySelector(`[name="etapas[${idx}][pph]"]`).value;
-        data.setup_minutos = div.querySelector(`[name="etapas[${idx}][setup_minutos]"]`).value.replace(",", ".");
+        data.etapa = div.querySelector('input[name^="etapas"][name$="[etapa]"]').value;
+        data.setor = div.querySelector('select[name^="etapas"][name$="[setor]"]').value;
+        data.pph = div.querySelector('input[name^="etapas"][name$="[pph]"]').value;
+        data.setup_minutos = div.querySelector('input[name^="etapas"][name$="[setup_minutos]"]').value.replace(",", ".");
         payload.etapas.push(data);
       });
+
       document.getElementById("dados_json").value = JSON.stringify(payload);
-      this.submit();
+      setTimeout(() => form.submit(), 50);
     });
   });
 }
 </script>
+
 
 
 {% endblock %}

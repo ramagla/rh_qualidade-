@@ -23,8 +23,8 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
     # Na tela de GET, busca no roteiro todos os insumos de setores de tratamento
     if request.method == "GET" and hasattr(precalc, "analise_comercial_item"):
         try:
-            item = precalc.analise_comercial_item.item
-            roteiro = getattr(item, "roteiro", None)
+            roteiro = getattr(precalc.analise_comercial_item, "roteiro_selecionado", None)
+
             if roteiro:
                 etapas = roteiro.etapas.select_related("setor").all()
                 for etapa in etapas:
@@ -116,8 +116,10 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
         if fs_sev.is_valid():
             fs_sev.save()
             if form_precalculo and form_precalculo.is_valid():
-                form_precalculo.instance = precalc
-                form_precalculo.save()
+                campo_obs = "observacoes_servicos"
+                valor = form_precalculo.cleaned_data.get(campo_obs)
+                setattr(precalc, campo_obs, valor)
+                precalc.save(update_fields=[campo_obs])
 
             # marca somente o selecionado
             for sev in precalc.servicos.all():

@@ -31,6 +31,40 @@
 <div class="container py-4">
   <h4 class="mb-4 text-primary"><i class="bi bi-bar-chart-fill me-2"></i>Dashboard Comercial</h4>
 
+  <form method="get" class="row g-3 align-items-end mb-4 px-2">
+  <div class="col-xl-3 col-md-4 col-sm-6">
+    <label for="data_inicio" class="form-label mb-1 text-muted">
+      <i class="bi bi-calendar-event me-1"></i> De
+    </label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+      <input type="date" name="data_inicio" id="data_inicio" class="form-control"
+             value="{{ request.GET.data_inicio }}">
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-4 col-sm-6">
+    <label for="data_fim" class="form-label mb-1 text-muted">
+      <i class="bi bi-calendar-check me-1"></i> Até
+    </label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
+      <input type="date" name="data_fim" id="data_fim" class="form-control"
+             value="{{ request.GET.data_fim }}">
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-4 col-sm-12 d-flex gap-2 mt-2">
+    <button type="submit" class="btn btn-primary w-100">
+      <i class="bi bi-search me-1"></i> Filtrar
+    </button>
+   
+  </div>
+</form>
+
+
+
+
   <!-- Cards Resumo -->
 <!-- Cards Resumo -->
 <div class="row mb-4">
@@ -77,9 +111,14 @@
   <div class="col-md-3">
     <div class="card-resumo resumo-claro text-center">
       <div class="resumo-valor">
-        <i class="bi bi-person-check me-1"></i> {{ total_clientes }}
-      </div>
-      <div class="resumo-title">Clientes Ativos</div>
+  <i class="bi bi-person-check me-1"></i> {{ total_clientes }}
+</div>
+<div class="resumo-title">Clientes Ativos + Reativados</div>
+<small>
+  <i class="bi bi-person-fill-check me-1" title="Ativos"></i> {{ clientes_ativos }} |
+  <i class="bi bi-arrow-repeat me-1" title="Reativados"></i> {{ clientes_reativados }}
+</small>
+
     </div>
   </div>
 </div>
@@ -183,7 +222,20 @@
     </div>
   </div>
 </div>
+<style>
+  input[type="date"] {
+  min-height: 38px;
+}
 
+.input-group-text {
+  background-color: #f1f1f1;
+  border-right: 0;
+}
+
+.input-group .form-control {
+  border-left: 0;
+}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 

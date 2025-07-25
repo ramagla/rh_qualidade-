@@ -115,31 +115,33 @@
 
         {{ formset.management_form }}
 
-        <div id="formset-documentos" class="row g-3">
-          {% for form_doc in formset %}
-            <div class="documento-form row g-3">
-              <div class="col-md-4">
-                <label class="form-label">Tipo:</label>
-                {{ form_doc.tipo|add_class:"form-select mb-2" }}
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Arquivo:</label>
-                {{ form_doc.arquivo|add_class:"form-control mb-2" }}
-              </div>
-              <div class="col-md-2 d-flex align-items-end">
-                {% if form_doc.instance.pk %}
-                  <label class="form-check-label me-2">Excluir:</label>
-                  {{ form_doc.DELETE }}
-                {% else %}
-                  <button type="button" class="btn btn-danger btn-sm remover-documento">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                {% endif %}
-              </div>
-              <hr class="my-2">
-            </div>
-          {% endfor %}
-        </div>
+<div id="formset-documentos" class="row g-3">
+  {% for form_doc in formset %}
+    {{ form_doc.id }}  {# <-- ESSENCIAL #}
+    <div class="documento-form row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Tipo:</label>
+        {{ form_doc.tipo|add_class:"form-select mb-2" }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Arquivo:</label>
+        {{ form_doc.arquivo|add_class:"form-control mb-2" }}
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        {% if form_doc.instance.pk %}
+          <label class="form-check-label me-2">Excluir:</label>
+          {{ form_doc.DELETE }}
+        {% else %}
+          <button type="button" class="btn btn-danger btn-sm remover-documento">
+            <i class="bi bi-trash"></i>
+          </button>
+        {% endif %}
+      </div>
+      <hr class="my-2">
+    </div>
+  {% endfor %}
+</div>
+
 
         <!-- Botão de adicionar documento -->
         <div class="mt-2">

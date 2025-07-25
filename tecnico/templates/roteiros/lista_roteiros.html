@@ -13,26 +13,72 @@
   {% include "partials/global/_toast_mensagens.html" %}
 
   <!-- Botões -->
-    <!-- Botões -->
-  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
-    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+   <!-- Botões -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
 
-    {% if request.user|has_permission:"tecnico.add_roteiroproducao" %}
-      <a href="{% url 'tecnico:tecnico_cadastrar_roteiro' %}"
-         class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
-        <i class="bi bi-file-earmark-plus-fill me-2"></i> Cadastrar
-      </a>
-    {% endif %}
+  {% if request.user|has_permission:"tecnico.add_roteiroproducao" %}
+    <a href="{% url 'tecnico:tecnico_cadastrar_roteiro' %}"
+       class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-file-earmark-plus-fill me-2"></i> Cadastrar
+    </a>
+  {% endif %}
 
-    {% if request.user|has_permission:"tecnico.change_roteiroproducao" %}
-      <button type="button"
-              class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center"
-              data-bs-toggle="modal"
-              data-bs-target="#modalAprovarRoteiros">
-        <i class="bi bi-patch-check me-2"></i> Aprovar Roteiros
-      </button>
-    {% endif %}
+  {% if request.user|has_permission:"tecnico.change_roteiroproducao" %}
+    <button type="button"
+            class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center"
+            data-bs-toggle="modal"
+            data-bs-target="#modalAprovarRoteiros">
+      <i class="bi bi-patch-check me-2"></i> Aprovar Roteiros
+    </button>
+  {% endif %}
+
+  {% if request.user|has_permission:"tecnico.add_roteiroproducao" %}
+    <a href="#" class="btn btn-importar-personalizado d-inline-flex align-items-center"
+       style="background: linear-gradient(135deg, #6f42c1, #5a32a3); box-shadow: 0 4px 12px rgba(111, 66, 193, 0.25);"
+       data-bs-toggle="modal" data-bs-target="#modalClonarRoteiro">
+      <i class="bi bi-files me-2"></i> Clonar Roteiro
+    </a>
+  {% endif %}
+</div>
+
+<!-- Modal Clonar Roteiro -->
+<div class="modal fade" id="modalClonarRoteiro" tabindex="-1" aria-labelledby="modalClonarRoteiroLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="get" action="" id="formClonarRoteiro">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalClonarRoteiroLabel">
+            <i class="bi bi-files me-2"></i> Clonar Roteiro Existente
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <label for="selectRoteiroClonar" class="form-label">Selecione o roteiro a clonar:</label>
+          <select class="form-select" id="selectRoteiroClonar" name="roteiro_id" required>
+          {% for r in roteiros %}
+              <option value="{{ r.pk }}">#{{ r.item.codigo }} – {{ r.item.descricao }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-copy me-1"></i> Clonar
+          </button>
+        </div>
+      </div>
+    </form>
   </div>
+</div>
+
+<script>
+  document.getElementById("formClonarRoteiro").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const id = document.getElementById("selectRoteiroClonar").value;
+    const url = `{% url 'tecnico:clonar_roteiro' 9999 %}`.replace("9999", id);
+    window.location.href = url;
+  });
+</script>
 
   <!-- Modal de Aprovação -->
   <div class="modal fade" id="modalAprovarRoteiros" tabindex="-1" aria-labelledby="modalAprovarRoteirosLabel" aria-hidden="true">
@@ -94,10 +140,16 @@
     </div>
   </div>
 
-  <!-- Indicadores -->
-  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
-    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Roteiros" valor=total_roteiros subtitulo="Roteiros de produção cadastrados." icone="bi bi-diagram-3-fill" %}
-  </div>
+<!-- Indicadores -->
+<div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+  {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Roteiros" valor=total_roteiros subtitulo="Roteiros de produção cadastrados." icone="bi bi-diagram-3-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="Roteiros Aprovados" valor=total_aprovados subtitulo="Processos finalizados e aprovados." icone="bi bi-patch-check-fill" %}
+  {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Revisão Alta" valor=total_revisao_acima_3 subtitulo="Roteiros com revisão maior que 3." icone="bi bi-arrow-repeat" %}
+  {% if ultima_data %}
+    {% include "partials/global/_card_indicador.html" with cor="dark" titulo="Última Atualização" valor=ultima_data|date:"d/m/Y" subtitulo="Data da última edição." icone="bi bi-clock-history" %}
+  {% endif %}
+</div>
+
 
   <!-- Tabela de Roteiros -->
   <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📄 Lista de Roteiros</h5>
@@ -112,11 +164,13 @@
       </div>
     </th>
     <th>
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-tag mb-1"></i>
-        <small>Descrição</small>
-      </div>
-    </th>
+  <div class="d-flex flex-column align-items-center">
+    <i class="bi bi-bookmark mb-1"></i>
+    <small>Tipo</small>
+  </div>
+</th>
+
+    
     <th>
       <div class="d-flex flex-column align-items-center">
         <i class="bi bi-list-ol mb-1"></i>
@@ -145,7 +199,8 @@
         {% for roteiro in page_obj %}
         <tr>
           <td>{{ roteiro.item.codigo }}</td>
-          <td class="text-start">{{ roteiro.item.descricao }}</td>
+          <td>{{ roteiro.tipo_roteiro }}</td>
+
           <td>{{ roteiro.etapas.count }}</td>
           <td>{{ roteiro.criado_em|date:"d/m/Y H:i" }}</td>
             <td class="text-center align-middle">

@@ -1,8 +1,96 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 {% block title %}Dashboard Técnico{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2 class="text-center"><i class="bi bi-tools me-2"></i> Dashboard Técnico</h2>
-  <p class="text-muted text-center">Bem-vindo ao módulo técnico. Funcionalidades em desenvolvimento.</p>
+<style>
+  .card-resumo {
+    border-radius: 12px;
+    color: #fff;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .row > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+  }
+  .resumo-azul     { background: linear-gradient(135deg, #00c6ff, #007bff); }
+  .resumo-verde    { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+  .resumo-vermelho { background: linear-gradient(135deg, #f85032, #e73827); }
+  .resumo-cinza    { background: linear-gradient(135deg, #bdc3c7, #2c3e50); }
+  .resumo-roxo     { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+  .resumo-title    { font-size: 0.9rem; font-weight: 500; }
+  .resumo-valor    { font-size: 2rem; font-weight: bold; }
+</style>
+
+<div class="container py-4">
+  <h4 class="mb-4 text-primary">
+    <i class="bi bi-gear-wide-connected me-2"></i>Dashboard Técnico
+  </h4>
+
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card-resumo resumo-azul text-center">
+        <div class="resumo-valor">
+          <i class="bi bi-diagram-3 me-1"></i> {{ total_roteiros }}
+        </div>
+        <div class="resumo-title">Total de Roteiros</div>
+        <small>Inclui todos os tipos e revisões</small>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card-resumo resumo-verde text-center">
+        <div class="resumo-valor">
+          <i class="bi bi-patch-check-fill me-1"></i> {{ total_aprovados }}
+        </div>
+        <div class="resumo-title">Roteiros Aprovados</div>
+        <small>Com status aprovado</small>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card-resumo resumo-vermelho text-center">
+        <div class="resumo-valor">
+          <i class="bi bi-arrow-repeat me-1"></i> {{ revisao_alta }}
+        </div>
+        <div class="resumo-title">Revisões Altas</div>
+        <small>Revisão maior que 3</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card-resumo resumo-roxo text-center">
+        <div class="resumo-valor">
+          <i class="bi bi-cpu me-1"></i> {{ total_maquinas }}
+        </div>
+        <div class="resumo-title">Máquinas Cadastradas</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-resumo resumo-cinza text-center">
+        <div class="resumo-valor">
+          <i class="bi bi-nut me-1"></i> {{ total_etapas }}
+        </div>
+        <div class="resumo-title">Total de Etapas</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-resumo resumo-cinza text-center">
+        <div class="resumo-valor">
+          <i class="bi bi-clock-history me-1"></i>
+          {{ ultima_data|date:"d/m/Y H:i" }}
+        </div>
+        <div class="resumo-title">Ultima Atualização</div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

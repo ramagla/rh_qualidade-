@@ -72,6 +72,7 @@ urlpatterns = [
     path("ajax/codigo-materia-prima/", ajax_views.ajax_codigo_materia_prima_por_roteiro, name="ajax_codigo_materia_prima"),
     path("ajax/valor_ferramenta/", ajax_views.ajax_valor_ferramenta, name="ajax_valor_ferramenta"),
     path('ajax/precalculo/<int:pk>/dados/', ajax_views.dados_precalculo, name='ajax_dados_precalculo'),
+    path("ajax/roteiros-por-item/", ajax_views.ajax_roteiros_por_item, name="ajax_roteiros_por_item"),
 
 
     # Relatorios 

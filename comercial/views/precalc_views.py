@@ -45,6 +45,8 @@ from collections import Counter
 
 from decimal import Decimal, ROUND_HALF_UP
 
+from tecnico.models.roteiro import RoteiroProducao
+
 @login_required
 @permission_required("comercial.view_precalculo", raise_exception=True)
 def itens_precaculo(request, pk):
@@ -128,6 +130,7 @@ def itens_precaculo(request, pk):
 @login_required
 @permission_required("comercial.change_precalculo", raise_exception=True)
 def editar_precaculo(request, pk):
+    tipoRoteiro = request.GET.get("tipoRoteiro", "")
     precalc = get_object_or_404(PreCalculo, pk=pk)
     cot    = precalc.cotacao
     salvo  = False
@@ -220,6 +223,8 @@ def editar_precaculo(request, pk):
             salvo, fs_rot = processar_aba_roteiro(request, precalc, form_precalculo)
 
 
+
+
         elif aba == "ferramentas" and "form_ferramentas_submitted" in request.POST:
             salvo, fs_ferr = processar_aba_ferramentas(request, precalc)
 
@@ -230,6 +235,13 @@ def editar_precaculo(request, pk):
                 'servicos' : 'observacoes_servicos',
                 'roteiro'  : 'observacoes_roteiro',
             }.get(aba)
+
+
+            # ⚠️ Recarrega os valores anteriores das outras observações para evitar sobrescrita
+            campos_obs = ["observacoes_materiais", "observacoes_servicos", "observacoes_roteiro"]
+            for campo in campos_obs:
+                if campo != campo_obs:  # preserva os campos não submetidos agora
+                    setattr(precalc, campo, getattr(precalc, campo))
 
             if campo_obs and campo_obs in form_precalculo.cleaned_data:
                 valor = form_precalculo.cleaned_data[campo_obs]
@@ -333,6 +345,9 @@ def editar_precaculo(request, pk):
 
 
 
+
+
+
     if not fs_ferr:
         _, fs_ferr = processar_aba_ferramentas(request, precalc)
 
@@ -385,6 +400,11 @@ def editar_precaculo(request, pk):
     ]
 
     item_id = getattr(getattr(precalc, "analise_comercial_item", None), "item_id", None)
+    tipo_item = request.GET.get("tipo_roteiro") or getattr(
+        getattr(precalc.analise_comercial_item, "item", None), "tipo_item", "A"
+    )
+    tipo_roteiro_choices = RoteiroProducao._meta.get_field("tipo_roteiro").choices
+
 
     return render(request, "cotacoes/form_precalculo.html", {
     "cotacao": cot,
@@ -411,6 +431,8 @@ def editar_precaculo(request, pk):
     "materiais_respondidos": materiais_respondidos,
     "servicos_respondidos": servicos_respondidos,
     "perguntas_avaliacao_tecnica": perguntas_avaliacao_tecnica,
+     "tipo_item": tipo_item,
+        "tipo_roteiro_choices": tipo_roteiro_choices,    # lista de (value,label)
 })
 
 
@@ -579,10 +601,12 @@ def criar_precaculo(request, pk):
     return render(request, "cotacoes/form_precalculo.html", {
         "cotacao": cot,
         "form_analise": form_analise,
+        "form": form_analise,
         "form_regras": form_regras,
         "campos_obs": campos_obs,
         "edicao": False,
         "campos_obs_tecnica": campos_obs_tecnica,
+        
     })
 
 
@@ -689,7 +713,8 @@ def responder_cotacao_servico_lote(request, pk):
 
         messages.success(request, "Cotações salvas com sucesso.")
         return redirect(request.path)
-
+    
+    
     return render(request, "cotacoes/responder_cotacao_servico_lote.html", {
         "servicos": servicos,
         "fornecedores": fornecedores,
@@ -698,6 +723,7 @@ def responder_cotacao_servico_lote(request, pk):
         "materia_prima": materia_prima,
         "observacoes_gerais": observacoes_gerais,
         "codigo": codigo,
+
     })
 
 
@@ -813,7 +839,7 @@ def visualizar_precalculo(request, pk):
             "assinatura_cn": cot_ferr.assinatura_cn,
         })
 
-
+    tem_servicos_selecionados = precalc.servicos.filter(selecionado=True).exists()
 
     return render(request, "cotacoes/visualizar_f011.html", {
         "precalc": precalc,
@@ -823,6 +849,8 @@ def visualizar_precalculo(request, pk):
         "titulos_analise": TITULOS_ANALISE,
         "titulos_avaliacao": TITULOS_AVALIACAO,
         "ferramentas_info": ferramentas_info,
+        "tem_servicos_selecionados": tem_servicos_selecionados,  # ✅ adicionada aqui
+
 
     })
 
