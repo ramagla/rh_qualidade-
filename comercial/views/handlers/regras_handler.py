@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from comercial.forms.precalculos_form import RegrasCalculoForm
 from comercial.models.precalculo import RegrasCalculo
-from comercial.utils.assinatura_utils import preencher_assinatura
+from comercial.utils.assinatura_utils import criar_assinatura_eletronica
 
 
 def processar_aba_regras(request, precalc):
@@ -40,7 +40,7 @@ def processar_aba_regras(request, precalc):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.precalculo = precalc
-            preencher_assinatura(request, obj)
+            criar_assinatura_eletronica(obj)
             obj.save()
             return True, form
 

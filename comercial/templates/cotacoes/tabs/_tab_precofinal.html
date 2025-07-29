@@ -45,7 +45,35 @@
         </div>
       </div>
     </div>
-    
+    <!-- 🔍 Resumo dos Custos Unitários -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="border rounded p-2 bg-light">
+      <small class="text-muted fw-bold">💰 Custo Unit. Total (Sem Impostos)</small>
+      <div class="fs-5 text-dark">R$ {{ custo_total|floatformat:4 }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="border rounded p-2 bg-light">
+      <small class="text-muted fw-bold">🧱 Matéria-Prima (Unitário)</small>
+      <div class="fs-5 text-dark">R$ {{ custo_mp|floatformat:4 }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="border rounded p-2 bg-light">
+      <small class="text-muted fw-bold">🔧 Serviços Externos (Unitário)</small>
+      <div class="fs-5 text-dark">R$ {{ custo_serv|floatformat:4 }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="border rounded p-2 bg-light">
+      <small class="text-muted fw-bold">🏭 Roteiro (Unitário)</small>
+      <div class="fs-5 text-dark">R$ {{ custo_roteiro|floatformat:4 }}</div>
+    </div>
+  </div>
+</div>
+
+
     
     <div class="row">
       <!-- Sem Impostos -->
@@ -189,6 +217,14 @@
         {{ form_precofinal.preco_manual|add_class:"form-control text-end" }}
       </div>
     </div>
+<div class="row mt-3">
+  <div class="col-md-12">
+    <label for="{{ form_precofinal.observacoes_precofinal.id_for_label }}" class="form-label">
+      <i class="bi bi-chat-left-text-fill me-1 text-secondary"></i> Observações sobre o Preço Final
+    </label>
+    {{ form_precofinal.observacoes_precofinal }}
+  </div>
+</div>
 
     <div class="text-end mt-3">
       <button type="submit" class="btn btn-primary">

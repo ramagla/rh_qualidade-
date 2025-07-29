@@ -8,7 +8,7 @@ from comercial.models import Cliente, Cotacao, OrdemDesenvolvimento
 from comercial.models.precalculo import PreCalculo, AnaliseComercial
 from decimal import Decimal
 
-from django.db.models import F, Case, When, DecimalField, Sum
+from django.db.models import F, Case, When, DecimalField, Sum, Min
 from django.db.models.functions import TruncMonth
 from django.db.models import Count
 from django.db.models import F, Case, When, DecimalField, ExpressionWrapper
@@ -32,6 +32,18 @@ def dashboard_comercial(request):
     clientes_ativos = Cliente.objects.filter(status="Ativo").count()
     clientes_reativados = Cliente.objects.filter(status="Reativado").count()
 
+    # IDs únicos de pré-cálculos (1 por item + roteiro por cotação)
+    precalc_ids_unicos = (
+        PreCalculo.objects
+        .filter(**filtro_data)
+        .values(
+            "cotacao_id",
+            "analise_comercial_item__item_id",
+            "analise_comercial_item__roteiro_selecionado_id"
+        )
+        .annotate(precalc_id=Min("id"))
+        .values_list("precalc_id", flat=True)
+    )
 
 
     total_clientes = clientes_ativos + clientes_reativados
@@ -51,7 +63,7 @@ def dashboard_comercial(request):
     aprovadas = analises.filter(status="aprovado").count()
     em_analise = analises.filter(status="andamento").count()
 
-    precos = PreCalculo.objects.filter(**filtro_data).annotate(
+    precos = PreCalculo.objects.filter(id__in=precalc_ids_unicos).annotate(
         preco_final=Case(
             When(preco_manual__gt=0, then=F("preco_manual")),
             default=F("preco_selecionado"),
@@ -67,10 +79,10 @@ def dashboard_comercial(request):
     valor_aprovadas = precos.filter(analise_comercial_item__status="aprovado").aggregate(total=Sum("valor_total"))["total"] or 0
     valor_reprovadas = precos.filter(analise_comercial_item__status="reprovado").aggregate(total=Sum("valor_total"))["total"] or 0
     valor_andamento = precos.filter(analise_comercial_item__status="andamento").aggregate(total=Sum("valor_total"))["total"] or 0
-    total_cotacoes_com_analise = PreCalculo.objects.filter(analise_comercial_item__isnull=False, **filtro_data).count()
+    total_cotacoes_com_analise = PreCalculo.objects.filter(id__in=precalc_ids_unicos, analise_comercial_item__isnull=False).count()
 
     # Total de cotações aprovadas
-    total_aprovadas = PreCalculo.objects.filter(analise_comercial_item__status="aprovado", **filtro_data).count()
+    total_aprovadas = PreCalculo.objects.filter(id__in=precalc_ids_unicos, analise_comercial_item__status="aprovado").count()
     valor_total = valor_aprovadas + valor_reprovadas + valor_andamento
     taxa_conversao = round((total_aprovadas / total_cotacoes_com_analise * 100), 1) if total_cotacoes_com_analise else 0
     
@@ -102,7 +114,7 @@ def dashboard_comercial(request):
 
     # 3. Top 5 clientes com maior valor total em cotações
     top_clientes_base = (
-    PreCalculo.objects.filter(**filtro_data).annotate(
+    PreCalculo.objects.filter(id__in=precalc_ids_unicos).annotate(
         valor_total=F("analise_comercial_item__qtde_estimada") * Case(
             When(preco_manual__gt=0, then=F("preco_manual")),
             default=F("preco_selecionado"),
@@ -116,10 +128,16 @@ def dashboard_comercial(request):
         .order_by("-total")[:5]
     )
 
+    top_itens = (
+        top_clientes_base.values("analise_comercial_item__item__codigo", "analise_comercial_item__item__descricao")
+        .annotate(total=Sum("valor_total"))
+        .order_by("-total")[:5]
+    )
+
 
     # 4. Faturamento por setor (setor da 1ª etapa)
     from tecnico.models import RoteiroProducao
-    prec_base = PreCalculo.objects.filter(**filtro_data).annotate(
+    prec_base = PreCalculo.objects.filter(id__in=precalc_ids_unicos).annotate(
         preco_unitario=Coalesce(
             Case(
                 When(preco_manual__gt=0, then=F("preco_manual")),
@@ -168,7 +186,7 @@ def dashboard_comercial(request):
             .order_by("cliente__tipo_cliente")
 
 
-    precalculos_margem = PreCalculo.objects.filter(**filtro_data).exclude(preco_manual=0, preco_selecionado=None)
+    precalculos_margem = PreCalculo.objects.filter(id__in=precalc_ids_unicos).exclude(preco_manual=0, preco_selecionado=None)
 
     margens = []
     for p in precalculos_margem:
@@ -219,6 +237,7 @@ def dashboard_comercial(request):
         "data_inicio": data_inicio,
         "data_fim": data_fim,
         "margem_media": margem_media,
+        "top_itens": list(top_itens),
 
     }
 

@@ -379,13 +379,45 @@
 
 <!-- 📈 Preço Escolhido (R$ + % margem) -->
 <td>
-  {% if item.preco_margem_formatado is not None %}
-    {{ item.preco_margem_formatado }}
+  {% if item.preco_margem_formatado %}
+    <span>{{ item.preco_margem_formatado }}</span>
+    {% if item.observacoes_precofinal %}
+      <button class="btn btn-sm btn-link p-0 ms-1" 
+              data-bs-toggle="modal" 
+              data-bs-target="#modalObsPrecoFinal{{ item.id }}" 
+              title="Ver Observações">
+        <i class="bi bi-chat-left-text text-primary"></i>
+      </button>
+    {% endif %}
   {% else %}
     <span class="text-muted fst-italic">Ainda não definido</span>
   {% endif %}
 </td>
 
+{% for item in page_obj %}
+  {% if item.observacoes_precofinal %}
+    <div class="modal fade" id="modalObsPrecoFinal{{ item.id }}" tabindex="-1" aria-labelledby="modalLabel{{ item.id }}" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalLabel{{ item.id }}">
+              <i class="bi bi-chat-left-text text-primary me-2"></i> Observações sobre o Preço Final - Item #{{ item.numero }}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            {{ item.observacoes_precofinal|safe }}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle"></i> Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
 
 
       

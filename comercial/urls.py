@@ -1,5 +1,5 @@
 from django.urls import path
-from comercial.views import centro_custo_views, cliente_views, ferramenta_views
+from comercial.views import centro_custo_views, cliente_views, ferramenta_views, viabilidade_views
 from comercial.views import item_views
 from comercial.views import dashboard_views
 from comercial.views import cotacao_views, precalc_views
@@ -90,7 +90,14 @@ urlpatterns = [
     path("ordens-desenvolvimento/editar/<int:pk>/", ordem_desenvolvimento_views.editar_ordem_desenvolvimento, name="editar_ordem_desenvolvimento"),
     path("ordens-desenvolvimento/visualizar/<int:pk>/", ordem_desenvolvimento_views.visualizar_ordem_desenvolvimento, name="visualizar_ordem_desenvolvimento"),
     path("ordens-desenvolvimento/excluir/<int:pk>/", ordem_desenvolvimento_views.excluir_ordem_desenvolvimento, name="excluir_ordem_desenvolvimento"),
-
     
+    # Viabilidade / Análise de Risco
+    path("viabilidades/", viabilidade_views.lista_viabilidades, name="lista_viabilidades"),
+    path("viabilidades/cadastrar/", viabilidade_views.cadastrar_viabilidade, name="cadastrar_viabilidade"),
+    path("viabilidades/editar/<int:pk>/", viabilidade_views.editar_viabilidade, name="editar_viabilidade"),
+    path("viabilidades/visualizar/<int:pk>/", viabilidade_views.visualizar_viabilidade, name="visualizar_viabilidade"),
+    path("viabilidades/excluir/<int:pk>/", viabilidade_views.excluir_viabilidade, name="excluir_viabilidade"),
+
+
 
 ]

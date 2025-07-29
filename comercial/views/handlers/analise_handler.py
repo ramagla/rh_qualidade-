@@ -2,6 +2,8 @@
 
 from django.utils import timezone
 from comercial.forms.precalculos_form import AnaliseComercialForm
+from comercial.utils.assinatura_utils import criar_assinatura_eletronica
+
 
 def processar_aba_analise(request, precalc):
     """
@@ -20,12 +22,12 @@ def processar_aba_analise(request, precalc):
         form = AnaliseComercialForm(request.POST, instance=instance)
         if form.is_valid():
             obj = form.save(commit=False)
-            obj.precalculo      = precalc
-            obj.usuario         = request.user
-            obj.assinatura_nome = request.user.get_full_name() or request.user.username
-            obj.assinatura_cn   = request.user.email
-            obj.data_assinatura = timezone.now()
+            obj.usuario = request.user
+            obj.assinatura_nome = request.user.get_full_name()
+            obj.assinado_em = timezone.now()
             obj.save()
+
+            criar_assinatura_eletronica(obj)
             return True, form
 
     # 3) em todos os outros casos, retorna False + form populado

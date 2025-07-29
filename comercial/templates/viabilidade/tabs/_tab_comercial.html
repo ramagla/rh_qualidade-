@@ -1,0 +1,116 @@
+{% load widget_tweaks %}
+
+<form method="post" action="{% if viabilidade and viabilidade.pk %}{% url 'editar_viabilidade' viabilidade.pk %}{% else %}{% url 'cadastrar_viabilidade' %}{% endif %}">
+  {% csrf_token %}
+  <input type="hidden" name="aba" value="comercial">
+
+  <div class="accordion" id="accordionComercial">
+
+    <!-- Dados do Pré-Cálculo e Cliente -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingCalc">
+        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCalc" aria-expanded="true" aria-controls="collapseCalc">
+          <i class="bi bi-calculator me-2"></i> Dados Comerciais do Pré-Cálculo
+        </button>
+      </h2>
+      <div id="collapseCalc" class="accordion-collapse collapse show" aria-labelledby="headingCalc" data-bs-parent="#accordionComercial">
+        <div class="accordion-body row g-3">
+          <div class="col-md-4">
+            <label class="form-label"><i class="bi bi-hash me-1"></i> {{ form.precalculo.label }}</label>
+            {{ form.precalculo|add_class:"form-control" }}
+          </div>
+          <div class="col-md-8">
+            <label class="form-label"><i class="bi bi-buildings me-1"></i> {{ form.cliente.label }}</label>
+            {{ form.cliente|add_class:"form-control"|attr:"readonly" }}
+          </div>
+
+          <div class="col-md-4 form-check form-switch">
+            <label class="form-check-label d-block"><i class="bi bi-ui-checks me-1"></i> {{ form.requisito_especifico.label }}</label>
+            {{ form.requisito_especifico|add_class:"form-check-input"|attr:"disabled" }}
+          </div>
+          <div class="col-md-4 form-check form-switch">
+            <label class="form-check-label d-block"><i class="bi bi-car-front me-1"></i> {{ form.automotivo_oem.label }}</label>
+            {{ form.automotivo_oem|add_class:"form-check-input"|attr:"disabled" }}
+          </div>
+          <div class="col-md-4 form-check form-switch">
+            <label class="form-check-label d-block"><i class="bi bi-exclamation-triangle me-1"></i> {{ form.item_seguranca.label }}</label>
+            {{ form.item_seguranca|add_class:"form-check-input"|attr:"disabled" }}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label"><i class="bi bi-file-earmark-text me-1"></i> {{ form.codigo_desenho.label }}</label>
+            {{ form.codigo_desenho|add_class:"form-control"|attr:"readonly" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Perguntas Obrigatórias -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingPerguntas">
+        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePerguntas" aria-expanded="false" aria-controls="collapsePerguntas">
+          <i class="bi bi-question-circle-fill me-2"></i> Análise Comercial - Perguntas
+        </button>
+      </h2>
+      <div id="collapsePerguntas" class="accordion-collapse collapse" aria-labelledby="headingPerguntas" data-bs-parent="#accordionComercial">
+        <div class="accordion-body row g-3">
+          <div class="col-md-6">
+            <label class="form-label">
+              <i class="bi bi-patch-check-fill me-1"></i> O produto está devidamente definido (incluindo requisitos de aplicação, etc.) possibilitando a avaliação da viabilidade?
+            </label>
+            {% for radio in form.produto_definido %}
+              <div class="form-check">
+                {{ radio.tag }}
+                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">
+              <i class="bi bi-exclamation-diamond-fill me-1"></i> Existe algum risco comercial relevante aplicável a este produto e respectivo fornecimento, além do item apresentado acima?
+            </label>
+            {% for radio in form.risco_comercial %}
+              <div class="form-check">
+                {{ radio.tag }}
+                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conclusão e Observações -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingConclusao">
+        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConclusao" aria-expanded="false" aria-controls="collapseConclusao">
+          <i class="bi bi-clipboard-check-fill me-2"></i> Conclusão e Considerações
+        </button>
+      </h2>
+      <div id="collapseConclusao" class="accordion-collapse collapse" aria-labelledby="headingConclusao" data-bs-parent="#accordionComercial">
+        <div class="accordion-body row g-3">
+          <div class="col-md-4">
+            <label class="form-label"><i class="bi bi-check2-square me-1"></i> {{ form.conclusao_comercial.label }}</label>
+            {{ form.conclusao_comercial|add_class:"form-select" }}
+          </div>
+          <div class="col-md-12">
+            <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ form.consideracoes_comercial.label }}</label>
+            {{ form.consideracoes_comercial|add_class:"form-control" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Botões de ação -->
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{% url 'lista_viabilidades' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Cancelar
+    </a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-save me-1"></i> Salvar Análise Comercial
+    </button>
+  </div>
+</form>

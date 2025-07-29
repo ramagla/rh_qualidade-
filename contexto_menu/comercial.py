@@ -66,4 +66,13 @@ def menu_comercial(user):
         })
 
 
+    if user.has_perm("comercial.view_viabilidade"):
+        menu.append({
+            "name": "Viabilidade / Análise de Risco",
+            "url": "lista_viabilidades",
+            "icon": "fas fa-shield-alt",
+        })
+
+
+
     return menu

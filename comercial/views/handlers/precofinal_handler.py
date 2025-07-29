@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from comercial.forms.precalculos_form import PrecoFinalForm
+from django.utils.html import strip_tags
 
 
 def processar_aba_precofinal(request, precalc):
@@ -11,11 +12,9 @@ def processar_aba_precofinal(request, precalc):
         print("📥 POST detectado com submissão da aba Preço Final")
         print("📦 request.POST =", request.POST)
 
-        # 🔁 DE: campos brutos diretamente do POST (com vírgula)
         preco_raw = request.POST.get("preco_selecionado", "").strip().replace(",", ".")
         preco_manual_raw = request.POST.get("preco_manual", "").strip().replace(",", ".")
 
-        # ✅ PARA: sobrescreve o POST antes da validação do form
         mutable_post = request.POST.copy()
         mutable_post["preco_manual"] = preco_manual_raw
 
@@ -33,8 +32,6 @@ def processar_aba_precofinal(request, precalc):
             print("❌ Erro ao converter preco_manual")
             preco_manual_unit = None
 
-        # ⬅️ DE: form = PrecoFinalForm(request.POST, instance=precalc)
-        # ✅ PARA: usa o POST mutável com "." no lugar da vírgula
         form = PrecoFinalForm(mutable_post, instance=precalc)
 
         if form.is_valid():
@@ -46,23 +43,32 @@ def processar_aba_precofinal(request, precalc):
             print(f"💡 preco_atual = {preco_atual}")
             print(f"💡 manual_atual = {manual_atual}")
 
-            preco_salvo = None
+            campos_alterados = []
 
+            # Preço final (manual ou da tabela)
             if preco_manual_unit is not None and preco_manual_unit > 0:
-                preco_salvo = preco_manual_unit
-                precalc.preco_manual     = preco_salvo
-                precalc.preco_selecionado = preco_salvo
-
+                if preco_manual_unit != manual_atual:
+                    precalc.preco_manual = preco_manual_unit
+                    precalc.preco_selecionado = preco_manual_unit
+                    campos_alterados += ["preco_manual", "preco_selecionado"]
 
             elif preco_tabela is not None:
-                preco_salvo = preco_tabela.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
-                print(f"✅ Usando preco_tabela (unitário) = {preco_salvo}")
-                precalc.preco_selecionado = preco_salvo
-                precalc.preco_manual = Decimal("0.00")
+                preco_tabela = preco_tabela.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+                if preco_tabela != preco_atual:
+                    precalc.preco_selecionado = preco_tabela
+                    precalc.preco_manual = Decimal("0.00")
+                    campos_alterados += ["preco_selecionado", "preco_manual"]
 
-            if preco_salvo is not None:
-                precalc.save(update_fields=["preco_selecionado", "preco_manual"])
-                print("💾 Preço salvo com sucesso:", preco_salvo)
+            # Observações – comparação com texto limpo (sem tags)
+            precalc.observacoes_precofinal = form.cleaned_data["observacoes_precofinal"]
+            campos_alterados.append("observacoes_precofinal")
+
+
+
+
+            if campos_alterados:
+                precalc.save(update_fields=campos_alterados)
+                print("💾 Campos salvos com sucesso:", campos_alterados)
 
                 return (
                     True, form,
@@ -71,14 +77,13 @@ def processar_aba_precofinal(request, precalc):
                     "Preço salvo com sucesso."
                 )
             else:
-                print("⚠️ Nenhum valor válido informado")
+                print("⚠️ Nenhuma alteração detectada")
                 return (
                     False, form,
                     precalc.calcular_precos_sem_impostos(),
                     precalc.calcular_precos_com_impostos(),
-                    "Nenhum valor válido informado."
+                    "Nenhuma alteração detectada."
                 )
-
         else:
             print("❌ Formulário inválido. Erros:", form.errors)
             return (

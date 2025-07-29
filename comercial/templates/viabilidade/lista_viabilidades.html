@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Viabilidade / Análise de Risco{% endblock %}
+
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+
+<div class="container-fluid mt-5">
+  {% include "partials/global/_header_titulo.html" with titulo="Viabilidade / Análise de Risco" icone="bi bi-shield-check" emoji="🛡️" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"comercial.add_viabilidadeanaliserisco" %}
+    <a href="{% url 'cadastrar_viabilidade' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2"></i> Cadastrar
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Indicadores -->
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Viabilidades" valor=total_viabilidades subtitulo="Registradas no sistema." icone="bi-shield-check" %}
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Aprovadas" valor=total_aprovadas subtitulo="Conclusão Técnica: Viável." icone="bi-check-circle" %}
+    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Inviáveis" valor=total_inviaveis subtitulo="Conclusão Técnica: Inviável." icone="bi-x-octagon" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Comercial Assinada" valor=total_comercial_assinada subtitulo="Assinaturas comerciais registradas." icone="bi-person-check" %}
+  </div>
+
+  <div class="table-responsive zebra-tabela">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <thead class="table-light">
+  <tr>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hash mb-1"></i>
+        <small>Nº</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-buildings mb-1"></i>
+        <small>Cliente</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-shield-lock mb-1"></i>
+        <small>Item de Segurança</small>
+      </div>
+    </th>   
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-easel mb-1"></i>
+        <small>Desenho</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-check2-square mb-1 text-primary"></i>
+        <small>Conclusão Comercial</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-cash-coin mb-1 text-warning"></i>
+        <small>Conclusão Custos</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-wrench-adjustable-circle mb-1 text-success"></i>
+        <small>Conclusão Técnica</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
+      <tbody>
+  {% for v in page_obj %}
+  <tr>
+    <td>#{{ v.numero|stringformat:"03d" }}</td>
+    <td>{{ v.cliente.razao_social|default:"---" }}</td>
+    <td>
+      {% if v.item_seguranca %}
+        <i class="bi bi-check-circle-fill text-success"></i>
+      {% else %}
+        <i class="bi bi-x-circle-fill text-danger"></i>
+      {% endif %}
+    </td>
+    <td>{{ v.codigo_desenho }} - {{ v.revisao }}</td>
+
+    <!-- Conclusão Comercial -->
+    <td>
+      {% if v.conclusao_comercial == 'viavel' %}
+        <i class="bi bi-check-circle-fill text-success"></i>
+        <span class="text-success">Viável</span>
+      {% elif v.conclusao_comercial == 'alteracoes' %}
+        <i class="bi bi-exclamation-circle-fill text-warning"></i>
+        <span class="text-warning">Com alterações</span>
+      {% elif v.conclusao_comercial == 'inviavel' %}
+        <i class="bi bi-x-circle-fill text-danger"></i>
+        <span class="text-danger">Inviável</span>
+      {% else %}
+        <i class="bi bi-hourglass-split text-secondary"></i>
+        <span class="text-secondary">---</span>
+      {% endif %}
+    </td>
+
+    <!-- Conclusão Custos -->
+    <td>
+      {% if v.conclusao_custos == 'viavel' %}
+        <i class="bi bi-check-circle-fill text-success"></i>
+        <span class="text-success">Viável</span>
+      {% elif v.conclusao_custos == 'alteracoes' %}
+        <i class="bi bi-exclamation-circle-fill text-warning"></i>
+        <span class="text-warning">Com alterações</span>
+      {% elif v.conclusao_custos == 'inviavel' %}
+        <i class="bi bi-x-circle-fill text-danger"></i>
+        <span class="text-danger">Inviável</span>
+      {% else %}
+        <i class="bi bi-hourglass-split text-secondary"></i>
+        <span class="text-secondary">---</span>
+      {% endif %}
+    </td>
+
+    <!-- Conclusão Técnica -->
+    <td>
+      {% if v.conclusao_tecnica == 'viavel' %}
+        <i class="bi bi-check-circle-fill text-success"></i>
+        <span class="text-success">Viável</span>
+      {% elif v.conclusao_tecnica == 'alteracoes' %}
+        <i class="bi bi-exclamation-circle-fill text-warning"></i>
+        <span class="text-warning">Com alterações</span>
+      {% elif v.conclusao_tecnica == 'inviavel' %}
+        <i class="bi bi-x-circle-fill text-danger"></i>
+        <span class="text-danger">Inviável</span>
+      {% else %}
+        <i class="bi bi-hourglass-split text-secondary"></i>
+        <span class="text-secondary">---</span>
+      {% endif %}
+    </td>
+
+    <td>
+      <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+        {% include "partials/global/_botao_visualizar.html" with objeto=v url_visualizar="visualizar_viabilidade" label="F106" icone="bi bi-file-earmark-text" %}
+        {% include "partials/global/_botao_editar.html" with objeto=v url_editar="editar_viabilidade" label="viabilidade" %}
+        {% include "partials/global/_botao_excluir.html" with objeto=v url_excluir="excluir_viabilidade" label="viabilidade" %}
+        {% include "partials/global/_modal_exclusao.html" with objeto=v url_excluir="excluir_viabilidade" %}
+      </div>
+    </td>
+  </tr>
+  {% empty %}
+    {% include "partials/global/_sem_resultados.html" with colspan=9 mensagem="Nenhuma viabilidade registrada." %}
+  {% endfor %}
+</tbody>
+
+    </table>
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+</div>
+{% endblock %}

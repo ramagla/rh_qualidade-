@@ -545,12 +545,13 @@ from decimal import Decimal, InvalidOperation
 class PrecoFinalForm(forms.ModelForm):
     class Meta:
         model = PreCalculo
-        fields = ['preco_selecionado', 'preco_manual']
+        fields = ['preco_selecionado', 'preco_manual', 'observacoes_precofinal']
         widgets = {
             'preco_manual': forms.TextInput(attrs={
                 'class': 'form-control text-end',
-                'placeholder': 'Ex: 32.000,00'
-            }),
+                'placeholder': 'Ex: 0,0049'
+            }),     
+            'observacoes_precofinal': CKEditor5Widget(config_name='default'),      
         }
 
     def clean_preco_manual(self):

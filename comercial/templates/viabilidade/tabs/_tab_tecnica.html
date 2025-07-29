@@ -1,0 +1,132 @@
+{% load widget_tweaks %}
+
+<form method="post" action="{% if viabilidade and viabilidade.pk %}{% url 'editar_viabilidade' viabilidade.pk %}{% else %}{% url 'cadastrar_viabilidade' %}{% endif %}">
+  {% csrf_token %}
+  <input type="hidden" name="aba" value="tecnica">
+
+  <div class="accordion" id="accordionTecnica">
+
+    <!-- Perguntas Técnicas -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingPerguntasTecnica">
+        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePerguntasTecnica" aria-expanded="true" aria-controls="collapsePerguntasTecnica">
+          <i class="bi bi-gear-wide-connected me-2 text-success"></i> Análise Técnica - Avaliação dos Requisitos
+        </button>
+      </h2>
+      <div id="collapsePerguntasTecnica" class="accordion-collapse collapse show" aria-labelledby="headingPerguntasTecnica" data-bs-parent="#accordionTecnica">
+        <div class="accordion-body row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-tools me-1"></i> Os recursos existentes são suficientes para a manufatura do produto (ex.: Equipamentos, ferramental, instalações, meios de medição, etc.)? </label>
+            {% for radio in form.recursos_suficientes %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-diagram-3 me-1"></i> As especificações de desempenho de engenharia podem ser atendidas conforme descrito?</label>
+            {% for radio in form.atende_especificacoes %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-rulers me-1"></i> O produto pode ser manufaturado de acordo com as tolerâncias e materiais especificados no desenho?</label>
+            {% for radio in form.atende_tolerancias %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-graph-up me-1"></i> O produto pode ser manufaturado com uma capacidade de processo que atende aos requisitos (ex.: PPM, etc.)?</label>
+            {% for radio in form.capacidade_processo %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-box me-1"></i> O projeto permite o uso de técnicas eficientes de manuseio de material?</label>
+            {% for radio in form.permite_manuseio %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-bar-chart me-1"></i> É necessário o controle estatístico do processo para o produto?</label>
+            {% for radio in form.precisa_cep %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-bar-chart-steps me-1"></i> O controle estatístico de processo está sendo atualmente utilizado em produtos similares?</label>
+            {% for radio in form.cep_usado_similares %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-check2-circle me-1"></i> Os processos estão sob controle e estáveis?</label>
+            {% for radio in form.processos_estaveis %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-check-circle me-1"></i> A capabilidade do processo atende aos requisitos do cliente?</label>
+            {% for radio in form.capabilidade_ok %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-person-check me-1"></i> É possível atender ao requisito específico do Cliente? Justifique nas considerações, caso a resposta for não?</label>
+            {% for radio in form.atende_requisito_cliente %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label"><i class="bi bi-exclamation-diamond me-1"></i> Existe algum risco técnico relevante e aplicável a este produto e respectivo fornecimento, além dos itens apresentados acima?</label>
+            {% for radio in form.risco_tecnico %}
+              <div class="form-check">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Conclusão Técnica -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingConclusaoTecnica">
+        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConclusaoTecnica" aria-expanded="false" aria-controls="collapseConclusaoTecnica">
+          <i class="bi bi-clipboard-check-fill me-2 text-success"></i> Conclusão da Análise Técnica
+        </button>
+      </h2>
+      <div id="collapseConclusaoTecnica" class="accordion-collapse collapse" aria-labelledby="headingConclusaoTecnica" data-bs-parent="#accordionTecnica">
+        <div class="accordion-body row g-3">
+          <div class="col-md-4">
+            <label class="form-label"><i class="bi bi-check2-square me-1"></i> {{ form.conclusao_tecnica.label }}</label>
+            {{ form.conclusao_tecnica|add_class:"form-select" }}
+          </div>
+          <div class="col-md-12">
+            <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ form.consideracoes_tecnicas.label }}</label>
+            {{ form.consideracoes_tecnicas|add_class:"form-control" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{% url 'lista_viabilidades' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Cancelar
+    </a>
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save me-1"></i> Salvar Análise Técnica
+    </button>
+  </div>
+</form>

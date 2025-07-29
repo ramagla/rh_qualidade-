@@ -495,3 +495,8 @@ def conteudo_real(value):
     texto_limpo = re.sub(r'(&nbsp;|[\u00A0\s\r\n\t])+', '', texto_limpo, flags=re.IGNORECASE)
 
     return bool(texto_limpo)
+
+
+@register.filter
+def getattribute(obj, attr_name):
+    return getattr(obj, attr_name, None)

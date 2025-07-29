@@ -196,6 +196,18 @@
         <div class="card-body"><canvas id="grafico_top_clientes" height="100"></canvas></div>
       </div>
     </div>
+
+<div class="col-md-12 mb-4">
+  <div class="card">
+    <div class="card-header bg-white"><strong>📦 Top 5 Itens por Valor</strong></div>
+    <div class="card-body"><canvas id="grafico_top_itens" height="100"></canvas></div>
+  </div>
+</div>
+
+
+
+
+
     <div class="col-md-6 mb-4">
   <div class="card h-100">
     <div class="card-header bg-white">
@@ -231,6 +243,11 @@
     </div>
   </div>
 </div>
+
+
+
+
+
 
     <div class="col-md-6 mb-4">
       <div class="card">
@@ -373,6 +390,53 @@
   }
 });
 
+new Chart(document.getElementById("grafico_top_itens"), {
+  type: 'bar',
+  data: {
+    labels: [{% for i in top_itens %}"{{ i.analise_comercial_item__item__codigo|truncatechars:25 }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+    datasets: [{
+      label: 'Valor Total (R$)',
+      data: [{% for i in top_itens %}{{ i.total|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+      backgroundColor: '#ffc107',
+      borderWidth: 0,
+      barPercentage: 0.6,
+      categoryPercentage: 0.8
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Valor em R$'
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Item'
+        },
+        ticks: {
+          autoSkip: false
+        }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `R$ ${context.parsed.x.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+          }
+        }
+      }
+    }
+  }
+});
 
   new Chart(document.getElementById("grafico_top_clientes"), {
   type: 'bar',

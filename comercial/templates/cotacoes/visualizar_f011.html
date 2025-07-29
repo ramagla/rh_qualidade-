@@ -179,21 +179,12 @@
         </td>
         
       </tr>
-      <tr>
-        <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
-<td colspan="5" class="px-2 py-1">
-            {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
-              <strong>{{ precalc.analise_comercial_item.usuario.get_full_name }}</strong><br>
-              <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
-              {{ precalc.analise_comercial_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
-              <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
-              {{ precalc.analise_comercial_item.assinado_em|date:"d/m/Y H:i" }}
-            {% else %}
-              {{ precalc.analise_comercial_item.assinatura_nome|default:"---" }}
-            {% endif %}
-          </td>
-          
-      </tr>
+     <tr>
+  <td colspan="6" class="px-2 py-1">
+    {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.analise_comercial titulo="Assinatura Digital — Análise Comercial" %}
+  </td>
+</tr>
+
     </table>
   </div>
   
@@ -403,24 +394,15 @@
 {% endif %}
 
       
-      <tr>
-        <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
-        <td colspan="5" class="text-start">
-          {% if f.obj.usuario and f.obj.usuario.funcionario %}
-            <strong>{{ f.obj.usuario.get_full_name }}</strong><br>
-            <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
-            {{ f.obj.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
-            <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
-            {{ f.obj.assinado_em|date:"d/m/Y H:i" }}
-          {% else %}
-            {{ f.obj.assinatura_nome|default:"---" }}
-          {% endif %}
-        </td>
-      </tr>         
+
+
+
       
       
     </tbody>
   </table>
+   {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinatura_ferramenta titulo="Assinatura Digital — Ferramenta / Dispositivo" %}
+
 {% endfor %}
 
 <div class="page-break"></div>
@@ -523,20 +505,13 @@
   </tr>
 {% endif %}
 
-     <tr>
-  <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
-  <td colspan="5" class="text-start">
-    {% if precalc.analise_comercial_item.usuario and precalc.analise_comercial_item.usuario.funcionario %}
-      <strong>{{ precalc.analise_comercial_item.usuario.get_full_name }}</strong><br>
-      <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
-      {{ precalc.analise_comercial_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
-      <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
-      {{ precalc.analise_comercial_item.assinado_em|date:"d/m/Y H:i" }}
-    {% else %}
-      {{ precalc.analise_comercial_item.assinatura_nome|default:"---" }}
-    {% endif %}
+  <tr>
+  <td colspan="6" class="text-start px-2 py-1">
+    {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.analise_comercial titulo="Assinatura Digital — Análise Comercial" %}
   </td>
 </tr>
+
+
 
   </table>
 </div>
@@ -638,21 +613,17 @@
     </td>
   </tr>
 {% endif %}
-
-    <tr>
-  <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
-  <td colspan="5" class="text-start">
-    {% if precalc.avaliacao_tecnica_item.usuario and precalc.avaliacao_tecnica_item.usuario.funcionario %}
-      <strong>{{ precalc.avaliacao_tecnica_item.usuario.get_full_name }}</strong><br>
-      <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
-      {{ precalc.avaliacao_tecnica_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
-      <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
-      {{ precalc.avaliacao_tecnica_item.assinado_em|date:"d/m/Y H:i" }}
+<tr>
+  <td colspan="6" class="text-start px-2 py-1">
+    {% if assinaturas.avaliacao_tecnica %}
+      {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.avaliacao_tecnica titulo="Assinatura Digital — Avaliação Técnica" %}
     {% else %}
-      {{ precalc.avaliacao_tecnica_item.assinatura_nome|default:"---" }}
+      <em>Assinatura não encontrada.</em>
     {% endif %}
   </td>
 </tr>
+
+
 
   </table>
 </div>
@@ -698,17 +669,9 @@
 {% endif %}
 
  <tr>
-  <th style="text-align: right;"><i class="bi bi-person-circle"></i> Responsável:</th>
-  <td colspan="1" class="text-start">
-    {% if precalc.desenvolvimento_item.usuario and precalc.desenvolvimento_item.usuario.funcionario %}
-      <strong>{{ precalc.desenvolvimento_item.usuario.get_full_name }}</strong><br>
-      <i class="bi bi-person-badge-fill"></i> <strong>Cargo:</strong>
-      {{ precalc.desenvolvimento_item.usuario.funcionario.cargo_atual.nome|default:"---" }}<br>
-      <i class="bi bi-calendar-event-fill"></i> <strong>Data do Preenchimento:</strong>
-      {{ precalc.desenvolvimento_item.assinado_em|date:"d/m/Y H:i" }}
-    {% else %}
-      {{ precalc.desenvolvimento_item.assinatura_nome|default:"---" }}
-    {% endif %}
+  <td colspan="2" class="text-start px-2 py-1">
+{% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.desenvolvimento titulo="Assinatura Digital — Desenvolvimento" %}
+
   </td>
 </tr>
 

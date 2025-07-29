@@ -144,3 +144,61 @@ def criar_ordem_amostra_ao_solicitar(sender, instance, created, **kwargs):
             )
     except Exception as e:
         logger.error(f"❌ Erro ao criar OD para amostras: {e}")
+
+
+
+from comercial.models.viabilidade import ViabilidadeAnaliseRisco  # já que está fora do arquivo do modelo
+from comercial.models.precalculo import AnaliseComercial
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db import transaction
+import logging
+
+@receiver(post_save, sender=AnaliseComercial)
+def criar_viabilidade_automatica(sender, instance, created, **kwargs):
+    try:
+        if instance.status != "aprovado":
+            return
+
+        precalc = instance.precalculo
+        item = instance.item
+
+        if not item.automotivo_oem:
+            return
+
+        if ViabilidadeAnaliseRisco.objects.filter(precalculo=precalc).exists():
+            return  # já existe viabilidade
+
+        with transaction.atomic():
+            ultima_viabilidade = ViabilidadeAnaliseRisco.objects.aggregate(
+                models.Max("numero")
+            )["numero__max"] or 99
+
+            viabilidade = ViabilidadeAnaliseRisco.objects.create(
+                numero=ultima_viabilidade + 1,
+                precalculo=precalc,
+                cliente=item.cliente,
+                requisito_especifico=item.requisito_especifico,
+                automotivo_oem=item.automotivo_oem,
+                item_seguranca=item.item_seguranca,
+                codigo_desenho=item.codigo_desenho,
+                revisao=item.revisao,
+                data_desenho=item.data_revisao,
+                codigo_brasmol=item.codigo,
+
+                # Valores padrão (ou ajuste caso adicione depois)
+                produto_definido=False,
+                risco_comercial=False,
+
+                assinatura_comercial_nome=instance.assinatura_nome,
+                assinatura_comercial_departamento="COMERCIAL",
+                assinatura_comercial_data=instance.data_assinatura,
+                conclusao_comercial=instance.conclusao,
+                consideracoes_comercial=instance.consideracoes,
+                criado_por=instance.usuario
+            )
+
+
+            logger.info(f"✅ Viabilidade #{viabilidade.numero} criada automaticamente para o Pré-Cálculo #{precalc.pk}")
+    except Exception as e:
+        logger.error(f"❌ Erro ao criar Viabilidade automática: {e}")

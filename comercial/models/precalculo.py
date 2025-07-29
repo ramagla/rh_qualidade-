@@ -18,6 +18,7 @@ from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 from comercial.models.ferramenta import Ferramenta
 from .item import Item
+from decimal import Decimal, ROUND_HALF_UP
 
 User = get_user_model()
 
@@ -78,46 +79,61 @@ class PreCalculo(models.Model):
         null=True,
         blank=True
     )
+    observacoes_precofinal = CKEditor5Field("Observações sobre o Preço Final", config_name="default", blank=True, null=True)
 
-    from decimal import Decimal
+
+
+    from decimal import Decimal, ROUND_HALF_UP
 
     def calcular_precos_sem_impostos(self):
         regras = getattr(self, "regras_calculo_item", None)
         if not regras:
             return []
 
+        # Componentes de custo
         custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
 
         mat = self.materiais.filter(selecionado=True).first()
-        materiais = Decimal((mat.peso_bruto_total or 0)) * Decimal((mat.preco_kg or 0)) if mat else Decimal(0)
+        materiais = Decimal(mat.peso_bruto_total or 0) * Decimal(mat.preco_kg or 0) if mat else Decimal(0)
 
         servicos = sum(
-            Decimal((s.peso_bruto or 0)) * Decimal((s.preco_kg or 0))
-            for s in self.servicos.all()
+            Decimal(s.peso_bruto or 0) * Decimal(s.preco_kg or 0)
+            for s in self.servicos.filter(selecionado=True)
         )
 
-        base = custos_diretos + materiais + servicos
+        base = (custos_diretos + materiais + servicos).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
-        impostos_basicos = base * (
-            Decimal(regras.ir or 0) + Decimal(regras.csll or 0) +
-            Decimal(regras.df or 0) + Decimal(regras.dv or 0)
-        ) / 100
+        # Impostos sobre lucro (IR, CSLL, DF, DV)
+        percentual_total = (
+            Decimal(regras.ir or 0) +
+            Decimal(regras.csll or 0) +
+            Decimal(regras.df or 0) +
+            Decimal(regras.dv or 0)
+        )
 
-        valores = []
+        # CORREÇÃO: aplicar markup direto com os tributos embutidos
+        bruto = (base / (1 - percentual_total / 100)).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
         qtde = Decimal(getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1)
 
         margens = [0, 5, 10, 15, 20, 25, 30, 35, 40]
-        for margem in margens:
-            bruto = base + impostos_basicos
-            total = bruto * (1 + Decimal(margem) / 100)
-            unitario = total / qtde if qtde else Decimal(0)
+        valores = []
 
+        for margem in margens:
+            if margem >= 100:
+                continue
+            total = (bruto / (1 - Decimal(margem) / 100)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            unitario = (total / qtde).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
             valores.append({
                 "percentual": margem,
-                "total": round(total, 2),
-                "unitario": round(unitario, 4),
+                "total": total,
+                "unitario": unitario,
             })
+
         return valores
+
+
+
 
 
     def calcular_precos_com_impostos(self):
@@ -125,41 +141,53 @@ class PreCalculo(models.Model):
         if not regras:
             return []
 
+        # Componentes de custo
         custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
 
         mat = self.materiais.filter(selecionado=True).first()
-        materiais = Decimal((mat.peso_bruto_total or 0)) * Decimal((mat.preco_kg or 0)) if mat else Decimal(0)
+        materiais = Decimal(mat.peso_bruto_total or 0) * Decimal(mat.preco_kg or 0) if mat else Decimal(0)
 
         servicos = sum(
-            Decimal((s.peso_bruto_total or 0)) * Decimal((s.preco_kg or 0))
-            for s in self.servicos.all()
+            Decimal(s.peso_bruto_total or 0) * Decimal(s.preco_kg or 0)
+            for s in self.servicos.filter(selecionado=True)
         )
 
-        base = custos_diretos + materiais + servicos
+        base = (custos_diretos + materiais + servicos).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
-        # ✅ Impostos completos: todos incluídos, conforme sua regra
-        impostos = base * (
-            Decimal(regras.icms or 0) + Decimal(regras.pis or 0) +
-            Decimal(regras.confins or 0) + Decimal(regras.ir or 0) +
-            Decimal(regras.csll or 0) + Decimal(regras.df or 0) +
+        # Todos os tributos incidentes no custo (inclusive ICMS/PIS/COFINS)
+        percentual_total = (
+            Decimal(regras.icms or 0) +
+            Decimal(regras.pis or 0) +
+            Decimal(regras.confins or 0) +
+            Decimal(regras.ir or 0) +
+            Decimal(regras.csll or 0) +
+            Decimal(regras.df or 0) +
             Decimal(regras.dv or 0)
-        ) / 100
+        )
 
-        valores = []
+        # ✅ Corrigido: aplicar markup direto com os tributos embutidos
+        bruto = (base / (1 - percentual_total / 100)).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
         qtde = Decimal(getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1)
 
         margens = [0, 5, 10, 15, 20, 25, 30, 35, 40]
-        for margem in margens:
-            bruto = base + impostos
-            total = bruto * (1 + Decimal(margem) / 100)
-            unitario = total / qtde if qtde else Decimal(0)
+        valores = []
 
+        for margem in margens:
+            if margem >= 100:
+                continue
+            total = (bruto / (1 - Decimal(margem) / 100)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            unitario = (total / qtde).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
             valores.append({
                 "percentual": margem,
-                "total": round(total, 2),
-                "unitario": round(unitario, 4),
+                "total": total,
+                "unitario": unitario,
             })
+
         return valores
+
+
+
 
 
 
@@ -177,6 +205,38 @@ class PreCalculo(models.Model):
                 "valor": item["total"]
             })
         return opcoes
+    
+
+    @property
+    def qtde_estimada(self):
+        return Decimal(getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1)
+
+
+    def custo_unitario_materia_prima(self):
+        mat = self.materiais.filter(selecionado=True).first()
+        total = Decimal((mat.peso_bruto_total or 0)) * Decimal((mat.preco_kg or 0)) if mat else Decimal(0)
+        return total / self.qtde_estimada  # ✅ Sem parênteses
+
+    def custo_unitario_servicos_externos(self):
+        total = sum(
+            Decimal((s.peso_bruto_total or 0)) * Decimal((s.preco_kg or 0))
+            for s in self.servicos.filter(selecionado=True)
+        )
+        return total / self.qtde_estimada  # ✅ Sem parênteses
+
+    def custo_unitario_roteiro(self):
+        total = sum(rot.custo_total for rot in self.roteiro_item.all())
+        return total / self.qtde_estimada  # ✅ Sem parênteses
+
+
+    def custo_unitario_total_sem_impostos(self):
+        return (
+            self.custo_unitario_materia_prima()
+            + self.custo_unitario_servicos_externos()
+            + self.custo_unitario_roteiro()
+        )
+
+
 
     def save(self, *args, **kwargs):
         if not self.numero:

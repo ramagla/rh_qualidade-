@@ -1,0 +1,86 @@
+<style media="print">
+  .assinatura-compacta {
+    font-size: 9px !important;
+    padding: 6px 10px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .assinatura-compacta i {
+    font-size: 1rem !important;
+    margin-right: 4px !important;
+  }
+
+  .assinatura-compacta img {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .assinatura-compacta .text-muted {
+    font-size: 8px !important;
+  }
+
+  .assinatura-compacta .fw-bold.fs-6 {
+    font-size: 10px !important;
+  }
+
+  .assinatura-compacta .row > div {
+    padding: 0 4px !important;
+  }
+
+  .assinatura-compacta .row > div div {
+    margin-bottom: 2px !important;
+  }
+
+  .assinatura-compacta .border-top {
+    border-color: #ccc !important;
+  }
+</style>
+
+
+<div class="d-flex border rounded p-3 bg-light mt-2 mb-4 shadow-sm assinatura-compacta">
+  <div class="flex-grow-1">
+    <div class="row">
+      <div class="col-4">
+        {% if titulo %}
+          <div class="text-muted small mb-1 fw-semibold">{{ titulo }}</div>
+        {% endif %}
+        <div class="fw-bold fs-6">{{ dados.nome|default:"—" }}</div>
+      </div>
+      <div class="col-4">
+        {% if dados.departamento %}
+          <div>
+            <i class="bi bi-person-badge-fill me-1"></i>
+            <strong>Cargo:</strong> {{ dados.departamento }}
+          </div>
+        {% endif %}
+        {% if dados.email %}
+          <div>
+            <i class="bi bi-envelope-fill me-1"></i>
+            <strong>Email:</strong> {{ dados.email }}
+          </div>
+        {% endif %}
+      </div>
+      <div class="col-4">
+        {% if dados.data %}
+          <div>
+            <i class="bi bi-calendar-event-fill me-1"></i>
+            <strong>Data:</strong> {{ dados.data|date:"d/m/Y H:i" }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if dados.hash %}
+      <div class="text-muted small mt-2 pt-2 border-top">
+        <i class="bi bi-shield-lock-fill me-1"></i>
+        <code class="text-break">{{ dados.hash }}</code>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if dados.qr %}
+    <div class="ms-3 d-flex align-items-center justify-content-center">
+      <img src="data:image/png;base64,{{ dados.qr }}" width="100" height="100" class="border rounded shadow-sm">
+    </div>
+  {% endif %}
+</div>

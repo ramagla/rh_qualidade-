@@ -12,6 +12,7 @@ from django.utils import timezone
 from comercial.models import Cotacao
 from comercial.models.precalculo import (
     AnaliseComercial,
+    CotacaoFerramenta,
     PreCalculo,
     PreCalculoMaterial,
     PreCalculoServicoExterno,
@@ -40,12 +41,25 @@ from comercial.views.handlers.servicos_handler import processar_aba_servicos
 
 from collections import Counter
 
-
+from assinatura_eletronica.models import AssinaturaEletronica
+from django.urls import reverse
+from django.utils.timezone import localtime
+import qrcode
+import base64
+from io import BytesIO
 
 
 from decimal import Decimal, ROUND_HALF_UP
 
 from tecnico.models.roteiro import RoteiroProducao
+
+def gerar_qrcode_base64(url):
+    img = qrcode.make(url)
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return base64.b64encode(buffer.getvalue()).decode()
+
+
 
 @login_required
 @permission_required("comercial.view_precalculo", raise_exception=True)
@@ -201,7 +215,9 @@ def editar_precaculo(request, pk):
             salvo, form_desenv = processar_aba_desenvolvimento(request, precalc)
 
         elif aba == "precofinal" and "form_precofinal_submitted" in request.POST:
+            # ✅ Chama o handler corretamente e processa a submissão
             salvo, form_precofinal, precos_sem_impostos, precos_com_impostos, mensagem_precofinal = processar_aba_precofinal(request, precalc)
+
 
         elif aba == "materiais" and (
             "form_materiais_submitted" in request.POST or
@@ -442,6 +458,13 @@ def editar_precaculo(request, pk):
     "perguntas_avaliacao_tecnica": perguntas_avaliacao_tecnica,
      "tipo_item": tipo_item,
         "tipo_roteiro_choices": tipo_roteiro_choices,    # lista de (value,label)
+
+   "custo_total": precalc.custo_unitario_total_sem_impostos(),
+"custo_mp": precalc.custo_unitario_materia_prima(),
+"custo_serv": precalc.custo_unitario_servicos_externos(),
+"custo_roteiro": precalc.custo_unitario_roteiro(),
+
+
 })
 
 
@@ -657,6 +680,21 @@ from comercial.models.precalculo import PreCalculo
 
 from django.db.models import Sum
 
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import get_object_or_404, render
+from django.db.models import Sum
+from django.utils.timezone import localtime
+from django.urls import reverse
+from assinatura_eletronica.models import AssinaturaEletronica
+from django.contrib.contenttypes.models import ContentType
+from comercial.models import PreCalculo
+
+import qrcode
+import base64
+from io import BytesIO
+
+
+
 @login_required
 @permission_required("comercial.view_precalculo", raise_exception=True)
 def visualizar_precalculo(request, pk):
@@ -675,8 +713,6 @@ def visualizar_precalculo(request, pk):
         ("tipo_embalagem", "tipo_embalagem_obs"),
     ]
 
-    # Campos booleanos da avaliação técnica + observações
-    # Campos booleanos da avaliação técnica + observações
     campos_obs_tecnica = [
         ("caracteristicas_criticas", "criticas_obs"),
         ("item_aparencia", "item_aparencia_obs"),
@@ -686,24 +722,17 @@ def visualizar_precalculo(request, pk):
         ("normas_disponiveis", "normas_disponiveis_obs"),
         ("requisitos_regulamentares", "requisitos_regulamentares_obs"),
         ("requisitos_adicionais", "requisitos_adicionais_obs"),
-        
-        # inserção lógica no template para linha do título 9
         ("metas_a", "metas_a_obs"),
         ("metas_b", "metas_b_obs"),
         ("metas_c", "metas_c_obs"),
         ("metas_confiabilidade", "metas_confiabilidade_obs"),
         ("metas_d", "metas_d_obs"),
-
         ("seguranca", "seguranca_obs"),
         ("requisito_especifico", "requisito_especifico_obs"),
     ]
 
-
-
-    # Títulos amigáveis
     TITULOS_ANALISE = {
         "metodologia": "Metodologia de aprovação de produto",
-
         "material_fornecido": "Material fornecido pelo cliente?",
         "requisitos_entrega": "Requisitos de entrega?",
         "requisitos_pos_entrega": "Requisitos pós-entrega?",
@@ -715,43 +744,29 @@ def visualizar_precalculo(request, pk):
     }
 
     TITULOS_AVALIACAO = {
-    "caracteristicas_criticas": "1. Existem características críticas definidas?",
-    "item_aparencia": "2. A peça é item de aparência?",
-    "fmea": "3. O cliente forneceu FMEA de produto?",
-    "teste_solicitado": "4. O cliente solicitou testes adicionais?",
-    "lista_fornecedores": "5. Lista de fornecedores/materiais aprovados?",
-    "normas_disponiveis": "6. Normas/especificações estão disponíveis?",
-    "requisitos_regulamentares": "7. Existem requisitos estatutários/regulamentares?",
-    "requisitos_adicionais": "8. Requisitos adicionais ou não declarados?",
-    
-    # Título visual para o bloco 9 (será usado como linha especial no template)
-    "titulo_9": "9. O cliente especificou requisitos para:",
+        "caracteristicas_criticas": "1. Existem características críticas definidas?",
+        "item_aparencia": "2. A peça é item de aparência?",
+        "fmea": "3. O cliente forneceu FMEA de produto?",
+        "teste_solicitado": "4. O cliente solicitou testes adicionais?",
+        "lista_fornecedores": "5. Lista de fornecedores/materiais aprovados?",
+        "normas_disponiveis": "6. Normas/especificações estão disponíveis?",
+        "requisitos_regulamentares": "7. Existem requisitos estatutários/regulamentares?",
+        "requisitos_adicionais": "8. Requisitos adicionais ou não declarados?",
+        "titulo_9": "9. O cliente especificou requisitos para:",
+        "metas_a": "9a. Metas de qualidade?",
+        "metas_b": "9b. Metas de produtividade?",
+        "metas_c": "9c. Metas de desempenho?",
+        "metas_confiabilidade": "9d. Metas de confiabilidade?",
+        "metas_d": "9e. Metas de funcionamento?",
+        "seguranca": "10. Item de segurança?",
+        "requisito_especifico": "11. Requisito específico do cliente?",
+    }
 
-    "metas_a": "9a. Metas de qualidade?",
-    "metas_b": "9b. Metas de produtividade?",
-    "metas_c": "9c. Metas de desempenho?",
-    "metas_confiabilidade": "9d. Metas de confiabilidade?",
-    "metas_d": "9e. Metas de funcionamento?",
-    
-    "seguranca": "10. Item de segurança?",
-    "requisito_especifico": "11. Requisito específico do cliente?",
-}
-
-
-
-    # ▶️ Enriquecimento: adiciona horas agrupadas por tipo na ferramenta
     ferramentas_info = []
-
     for cot_ferr in precalc.ferramentas_item.all():
         ferramenta = cot_ferr.ferramenta
-
-        horas_projeto = ferramenta.mao_obra.filter(tipo="Projeto").aggregate(
-            total=Sum("horas")
-        ).get("total") or 0
-
-        horas_ferramentaria = ferramenta.mao_obra.filter(tipo="Ferramentaria").aggregate(
-            total=Sum("horas")
-        ).get("total") or 0
+        horas_projeto = ferramenta.mao_obra.filter(tipo="Projeto").aggregate(total=Sum("horas")).get("total") or 0
+        horas_ferramentaria = ferramenta.mao_obra.filter(tipo="Ferramentaria").aggregate(total=Sum("horas")).get("total") or 0
 
         ferramentas_info.append({
             "obj": cot_ferr,
@@ -765,6 +780,36 @@ def visualizar_precalculo(request, pk):
 
     tem_servicos_selecionados = precalc.servicos.filter(selecionado=True).exists()
 
+    # 🔐 Assinatura eletrônica
+    assinaturas = {}
+    # 🔐 Assinatura eletrônica com nomes corretos
+    modelos = {
+    "analise_comercial": ("AnaliseComercial", getattr(precalc, "analise_comercial_item", None)),
+    "avaliacao_tecnica": ("AvaliacaoTecnica", getattr(precalc, "avaliacao_tecnica_item", None)),
+    "desenvolvimento": ("Desenvolvimento", getattr(precalc, "desenvolvimento_item", None)),
+    "ferramenta": ("CotacaoFerramenta", precalc.ferramentas_item.first()),  # ← correta
+    }
+
+    for chave, (modelo_nome, obj) in modelos.items():
+        if obj:
+            assinatura = AssinaturaEletronica.objects.filter(
+                origem_model=modelo_nome,  # ← usa string fixa correta
+                origem_id=obj.pk
+            ).order_by("-data_assinatura").first()
+
+            if assinatura:
+                url = request.build_absolute_uri(reverse("validar_assinatura", args=[assinatura.hash]))
+                assinaturas[chave] = {
+                    "nome": assinatura.usuario.get_full_name(),
+                    "departamento": assinatura.origem_model,
+                    "email": assinatura.usuario.email,
+                    "data": localtime(assinatura.data_assinatura),
+                    "hash": assinatura.hash,
+                    "qr": gerar_qrcode_base64(url),
+                }
+
+
+    # ⬇️ render com nome alternativo para o objeto da ferramenta (evita conflito com assinatura_ferramenta)
     return render(request, "cotacoes/visualizar_f011.html", {
         "precalc": precalc,
         "numero_formulario": f"F011 - Pré-Cálculo N{precalc.numero:05d}",
@@ -773,10 +818,14 @@ def visualizar_precalculo(request, pk):
         "titulos_analise": TITULOS_ANALISE,
         "titulos_avaliacao": TITULOS_AVALIACAO,
         "ferramentas_info": ferramentas_info,
-        "tem_servicos_selecionados": tem_servicos_selecionados,  # ✅ adicionada aqui
-
-
+        "tem_servicos_selecionados": tem_servicos_selecionados,
+        "assinaturas": assinaturas,
+        "assinatura_ferramenta": assinaturas.get("ferramenta"),
+        "obj_ferramenta": modelos.get("ferramenta"),  # ← Renomeado para evitar colisão no template
     })
+
+
+
 
 
 from decimal import Decimal, InvalidOperation, DivisionByZero
@@ -1023,6 +1072,11 @@ def duplicar_precaculo(request, pk):
             item.assinatura_nome = request.user.get_full_name() or request.user.username
             item.assinatura_cn = request.user.email
             item.data_assinatura = timezone.now()
+
+            # Força status "andamento" na análise comercial
+            if relacao == "analise_comercial_item":
+                item.status = "andamento"
+
             item.save()
 
     # Clonar materiais

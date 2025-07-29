@@ -1,0 +1,105 @@
+{% load widget_tweaks %}
+
+<form method="post" action="{% if viabilidade and viabilidade.pk %}{% url 'editar_viabilidade' viabilidade.pk %}{% else %}{% url 'cadastrar_viabilidade' %}{% endif %}">
+  {% csrf_token %}
+  <input type="hidden" name="aba" value="custos">
+
+  <div class="accordion" id="accordionCustos">
+
+    <!-- Perguntas de Análise de Custos -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingPerguntasCustos">
+        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePerguntasCustos" aria-expanded="true" aria-controls="collapsePerguntasCustos">
+          <i class="bi bi-cash-stack me-2 text-warning"></i> Análise de Custos
+        </button>
+      </h2>
+      <div id="collapsePerguntasCustos" class="accordion-collapse collapse show" aria-labelledby="headingPerguntasCustos" data-bs-parent="#accordionCustos">
+        <div class="accordion-body row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-gear-wide-connected me-1"></i> Existe capacidade adequada para fabricação do produto?</label>
+            {% for radio in form.capacidade_fabricacao %}
+              <div class="form-check">
+                {{ radio.tag }}
+                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-tools me-1"></i> Custos de equipamento de transformação?</label>
+            {% for radio in form.custo_transformacao %}
+              <div class="form-check">
+                {{ radio.tag }}
+                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-hammer me-1"></i> Custos de ferramental?</label>
+            {% for radio in form.custo_ferramental %}
+              <div class="form-check">
+                {{ radio.tag }}
+                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-shuffle me-1"></i> Métodos alternativos de manufatura?</label>
+            {% for radio in form.metodo_alternativo %}
+              <div class="form-check">
+                {{ radio.tag }}
+                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label"><i class="bi bi-truck me-1"></i> Existe algum risco logístico relevante e aplicável a este produto e respectivo fornecimento, além dos itens apresentados acima?</label>
+            {% for radio in form.risco_logistico %}
+              <div class="form-check">
+                {{ radio.tag }}
+                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+              </div>
+            {% endfor %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Conclusão e Considerações -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingConclusaoCustos">
+        <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConclusaoCustos" aria-expanded="false" aria-controls="collapseConclusaoCustos">
+          <i class="bi bi-check2-square me-2 text-warning"></i> Conclusão da Análise de Custos
+        </button>
+      </h2>
+      <div id="collapseConclusaoCustos" class="accordion-collapse collapse" aria-labelledby="headingConclusaoCustos" data-bs-parent="#accordionCustos">
+        <div class="accordion-body row g-3">
+          <div class="col-md-4">
+            <label class="form-label"><i class="bi bi-clipboard-check me-1"></i> {{ form.conclusao_custos.label }}</label>
+            {{ form.conclusao_custos|add_class:"form-select" }}
+          </div>
+          <div class="col-md-12">
+            <label class="form-label"><i class="bi bi-journal-text me-1"></i> {{ form.consideracoes_custos.label }}</label>
+            {{ form.consideracoes_custos|add_class:"form-control" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{% url 'lista_viabilidades' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Cancelar
+    </a>
+    <button type="submit" class="btn btn-warning text-dark">
+      <i class="bi bi-save me-1"></i> Salvar Análise de Custos
+    </button>
+  </div>
+</form>
