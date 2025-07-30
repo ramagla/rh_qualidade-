@@ -7,8 +7,10 @@ from metrologia.models.models_dispositivos import Dispositivo
 
 from ..models.models_calibracao import Calibracao
 from ..models.models_tabelatecnica import TabelaTecnica
+from django.contrib.auth.decorators import login_required, permission_required
 
-
+@login_required
+@permission_required("metrologia.cronograma_calibracao_equipamentos", raise_exception=True)
 def cronograma_equipamentos(request):
     # Filtros
     today = date.today()
@@ -123,7 +125,8 @@ def cronograma_equipamentos(request):
 
     return render(request, "cronogramas/cronograma_equipamentos.html", context)
 
-
+@login_required
+@permission_required("metrologia.cronograma_calibracao_dispositivos", raise_exception=True)
 def cronograma_dispositivos(request):
     today = date.today()
 

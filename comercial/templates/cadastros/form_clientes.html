@@ -444,7 +444,17 @@
           </label>
           {{ form.observacao|add_class:"form-control" }}
         </div>
-  
+  <!-- Após observacao -->
+<div class="col-md-4">
+  <label for="{{ form.status_adimplencia.id_for_label }}" class="form-label">
+    <i class="bi bi-exclamation-octagon-fill me-1"></i> Status de Adimplência:
+  </label>
+  {{ form.status_adimplencia|add_class:"form-select" }}
+</div>
+
+{% include 'partials/global/_campo_anexo.html' with form=form campo="comprovante_adimplencia" %}
+
+
       </div>
     </div>
   </div>

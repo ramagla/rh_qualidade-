@@ -7,8 +7,10 @@ from django.views.decorators.csrf import csrf_exempt
 
 from metrologia.forms.CalibracaoDispositivoForm import CalibracaoDispositivoForm
 from metrologia.models import Afericao, CalibracaoDispositivo, Cota, Dispositivo
+from django.contrib.auth.decorators import login_required, permission_required
 
-
+@login_required
+@permission_required("metrologia.view_calibracaodispositivo", raise_exception=True)
 def lista_calibracoes_dispositivos(request):
     dispositivos = Dispositivo.objects.all()
     # Filtros
@@ -71,6 +73,8 @@ def lista_calibracoes_dispositivos(request):
 
     return render(request, "calibracoes/lista_calibracoes_dispositivos.html", context)
 
+
+@login_required
 def salvar_calibracao_dispositivo(request, pk=None):
     if pk:
         calibracao = get_object_or_404(CalibracaoDispositivo, pk=pk)
@@ -140,7 +144,8 @@ def salvar_calibracao_dispositivo(request, pk=None):
     return render(request, "calibracoes/form_calibracao_dispositivo.html", context)
 
 
-
+@login_required
+@permission_required("metrologia.add_calibracaodispositivo", raise_exception=True)
 def cadastrar_calibracao_dispositivo(request):
     return salvar_calibracao_dispositivo(request)
 
@@ -173,12 +178,14 @@ def get_dispositivo_info(request, dispositivo_id):
         "cotas": cotas_data
     })
 
-
+@login_required
+@permission_required("metrologia.change_calibracaodispositivo", raise_exception=True)
 def editar_calibracao_dispositivo(request, pk):
     return salvar_calibracao_dispositivo(request, pk=pk)
 
 
-
+@login_required
+@permission_required("metrologia.delete_calibracaodispositivo", raise_exception=True)
 def excluir_calibracao_dispositivo(request, id):
     calibracao = get_object_or_404(CalibracaoDispositivo, id=id)
     if request.method == "POST":
@@ -192,7 +199,8 @@ def excluir_calibracao_dispositivo(request, id):
         {"calibracao": calibracao},
     )
 
-
+@login_required
+@permission_required("metrologia.view_calibracaodispositivo", raise_exception=True)
 def imprimir_calibracao_dispositivo(request, dispositivo_id):
     calibracoes = CalibracaoDispositivo.objects.filter(
         codigo_dispositivo_id=dispositivo_id

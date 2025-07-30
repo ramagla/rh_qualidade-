@@ -8,8 +8,10 @@ from django.utils.timezone import now
 
 from Funcionario.models import Funcionario
 from metrologia.models.models_tabelatecnica import TabelaTecnica
+from django.contrib.auth.decorators import login_required, permission_required
 
-
+@login_required
+@permission_required("metrologia.relatorio_equipamentos_calibrar", raise_exception=True)
 def lista_equipamentos_a_calibrar(request):
     today = now().date()
     range_end = today + timedelta(days=30)
@@ -45,7 +47,8 @@ def lista_equipamentos_a_calibrar(request):
     }
     return render(request, "relatorios/equipamentos_a_calibrar.html", context)
 
-
+@login_required
+@permission_required("metrologia.relatorio_equipamentos_por_funcionario", raise_exception=True)
 def listar_equipamentos_funcionario(request, funcionario_id):
     funcionario = get_object_or_404(Funcionario, id=funcionario_id)
 
@@ -64,12 +67,14 @@ def listar_equipamentos_funcionario(request, funcionario_id):
 
 
 
-
+@login_required
+@permission_required("metrologia.relatorio_equipamentos_por_funcionario", raise_exception=True)
 def listar_funcionarios_ativos(request):
     funcionarios = Funcionario.objects.filter(status="Ativo").values("id", "nome")
     return JsonResponse(list(funcionarios), safe=False)
 
-
+@login_required
+@permission_required("metrologia.relatorio_equipamentos_por_funcionario", raise_exception=True)
 def equipamentos_por_funcionario(request):
     funcionario_id = request.GET.get("funcionario_id") or request.POST.get("funcionario_id")
     funcionario = None
@@ -93,6 +98,7 @@ from metrologia.models.models_tabelatecnica import TabelaTecnica
 from django.utils.timezone import now
 
 @login_required
+@permission_required("metrologia.relatorio_f062", raise_exception=True)
 def equipamentos_para_calibracao(request):
     equipamentos = TabelaTecnica.objects.all().order_by("codigo")
     funcionarios = Funcionario.objects.filter(status="Ativo").order_by("nome")
@@ -114,6 +120,7 @@ from django.utils.timezone import now
 from datetime import datetime
 
 @login_required
+@permission_required("metrologia.gerar_f062", raise_exception=True)
 def gerar_f062(request):
     if request.method == "POST":
         equipamentos_selecionados = request.POST.getlist("equipamentos_selecionados")

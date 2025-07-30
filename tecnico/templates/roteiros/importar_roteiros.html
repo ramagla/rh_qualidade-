@@ -1,0 +1,127 @@
+{# tecnico/templates/roteiros/importar_roteiros.html #}
+{% extends 'base.html' %}
+{% block title %}Importar Roteiros via Excel{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <div class="text-center border-bottom pb-3 mb-4">
+    <h2 class="fw-bold">
+      <i class="bi bi-upload text-primary me-2"></i>
+      Importar Roteiros via Excel
+    </h2>
+    <p class="text-muted fs-6">Faça upload de uma planilha conforme o modelo para cadastrar etapas de roteiros em lote.</p>
+  </div>
+
+  <!-- Formulário -->
+  <form method="post" enctype="multipart/form-data" class="row g-3 mb-4">
+    {% csrf_token %}
+    <div class="col-md-6">
+      <label for="arquivo" class="form-label">
+        <i class="bi bi-file-earmark-excel me-1 text-success"></i>Selecione o arquivo Excel:
+      </label>
+      <input type="file" name="arquivo" id="arquivo" accept=".xls,.xlsx" required class="form-control">
+    </div>
+    <div class="col-md-6"></div>
+    <div class="col-12 text-start">
+      <button type="submit" class="btn btn-cadastrar-personalizado">
+        <i class="bi bi-upload me-2"></i> Importar Arquivo
+      </button>
+    </div>
+  </form>
+
+  <!-- Exemplo -->
+  <div class="mt-5">
+    <h5 class="mb-2">
+      <i class="bi bi-table me-2 text-info"></i>
+      Exemplo de Estrutura do Excel
+    </h5>
+    <p class="text-muted">A planilha deve conter as colunas abaixo com os nomes exatamente iguais:</p>
+
+    <div class="table-responsive mt-3">
+  <table class="table table-bordered table-striped align-middle text-center table-sm">
+    <thead class="table-light text-primary align-middle">
+      <tr>
+        <th>Código Item</th>
+        <th>Tipo Roteiro</th>
+        <th>Etapa Nº</th>
+        <th>Setor</th>
+        <th>PPH</th>
+        <th>Setup (min)</th>
+        <th>Nome Ação</th>
+        <th>Descrição Detalhada</th>
+        <th>Ferramenta</th>
+        <th>Máquinas</th>
+        <th>MP Código</th>
+        <th>Qtde</th>
+        <th>Tipo Insumo</th>
+        <th>Obrigatório</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ITEM123</td>
+        <td>A</td>
+        <td>1</td>
+        <td>Estamparia</td>
+        <td>600</td>
+        <td>15</td>
+        <td>Corte Inicial</td>
+        <td>Corte com guilhotina hidráulica</td>
+        <td>FER001</td>
+        <td>MAQ01, MAQ02</td>
+        <td>MP001</td>
+        <td>1.5</td>
+        <td>matéria_prima</td>
+        <td>Sim</td>
+      </tr>
+      <tr>
+        <td>ITEM123</td>
+        <td>A</td>
+        <td>2</td>
+        <td>Solda</td>
+        <td>450</td>
+        <td>10</td>
+        <td>Soldagem</td>
+        <td>Solda ponto com prensa</td>
+        <td>FER002</td>
+        <td>MAQ03</td>
+        <td>MP002</td>
+        <td>2.0</td>
+        <td>componente</td>
+        <td>Sim</td>
+      </tr>
+      <tr>
+        <td>ITEM123</td>
+        <td>A</td>
+        <td>3</td>
+        <td>Expedição</td>
+        <td>300</td>
+        <td>5</td>
+        <td>Conferência Final</td>
+        <td>Inspeção visual e embalagem</td>
+        <td></td>
+        <td></td>
+        <td>MP003</td>
+        <td>0.5</td>
+        <td>outros</td>
+        <td>Não</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+    <!-- Botão de download do modelo -->
+    <div class="mt-4">
+      <a href="{% static 'arquivos/modelo_importacao_roteiros.xlsx' %}"
+         class="btn btn-importar-personalizado"
+         download>
+        <i class="bi bi-download me-2"></i> Baixar Modelo de Importação (.xlsx)
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

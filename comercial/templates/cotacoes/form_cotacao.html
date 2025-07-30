@@ -122,23 +122,63 @@
     </div>
   </form>
 </div>
+<!-- Modal de Cliente Inadimplente -->
+<div class="modal fade" id="modalInadimplente" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-danger shadow">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i> Cliente Inadimplente</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">O cliente selecionado está <strong>inadimplente</strong>.</p>
+        <p class="mb-0">
+          <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
+          <a href="#" id="linkRelatorioAdimplencia" target="_blank" class="link-danger">Ver comprovante de inadimplência</a>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-  $(document).ready(function() {
-    $('#id_cliente').on('change', function() {
+  $(document).ready(function () {
+    $('#id_cliente').on('change', function () {
       const clienteId = $(this).val();
+
       if (clienteId) {
         $.ajax({
           url: "{% url 'dados_cliente_ajax' %}",
           data: { cliente_id: clienteId },
           dataType: 'json',
-          success: function(data) {
+          success: function (data) {
             $('#id_cond_pagamento').val(data.cond_pagamento);
             $('#id_icms').val(data.icms);
+
+            // Verifica se o cliente está inadimplente
+            if (data.inadimplente) {
+              if (data.url_relatorio) {
+                $('#linkRelatorioAdimplencia')
+                  .attr('href', data.url_relatorio)
+                  .show();
+              } else {
+                $('#linkRelatorioAdimplencia').hide();
+              }
+
+              const modal = new bootstrap.Modal(document.getElementById('modalInadimplente'));
+              modal.show();
+            }
+          },
+          error: function () {
+            console.error("Erro ao buscar dados do cliente.");
           }
         });
       }
     });
   });
 </script>
+
 {% endblock %}

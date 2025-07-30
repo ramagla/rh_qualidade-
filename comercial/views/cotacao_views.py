@@ -1,22 +1,20 @@
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, get_object_or_404, redirect
-from comercial.models import Cotacao  # Supondo que o model exista
-from comercial.forms.cotacoes_form import CotacaoForm
-from django.utils import timezone
-from django.shortcuts import render
+from collections import Counter
+from decimal import Decimal
+
+from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
+from django.db.models import ProtectedError
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.db.models import Count, Q
-from django.contrib.auth import get_user_model
-from django.contrib import messages
 
-from comercial.models import Cotacao, Cliente
+from comercial.forms.cotacoes_form import CotacaoForm
+from comercial.models import Cliente, Cotacao
 
 User = get_user_model()
 
-
-from collections import Counter
 
 def montar_status_analises_por_cotacao(cotacoes):
     from decimal import Decimal
@@ -150,11 +148,6 @@ def lista_cotacoes(request):
     })
 
 
-
-
-
-
-
 @login_required
 @permission_required('comercial.add_cotacao', raise_exception=True)
 def cadastrar_cotacao(request):
@@ -176,7 +169,6 @@ def cadastrar_cotacao(request):
         'form': form,
         'cotacao': None,
     })
-
 
 
 
@@ -228,8 +220,6 @@ def visualizar_cotacao(request, pk):
     return render(request, "comercial/cotacoes/visualizar.html", {"cotacao": cotacao})
 
 
-from django.http import JsonResponse
-from comercial.models import Cliente
 
 @login_required
 def dados_cliente_ajax(request):

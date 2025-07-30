@@ -519,3 +519,10 @@ def sum(valores):
 @register.filter(name="soma_valores_dict")
 def soma_valores_dict(valores):
     return sum(valores.values()) if isinstance(valores, dict) else 0
+
+@register.filter
+def getitem(obj, key):
+    try:
+        return obj[key]
+    except (KeyError, AttributeError, TypeError):
+        return None

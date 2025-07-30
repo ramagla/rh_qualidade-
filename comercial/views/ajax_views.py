@@ -111,3 +111,25 @@ def ajax_roteiros_por_item(request):
     }
 
     return JsonResponse(data)
+
+# cotacao_views.py
+from django.http import JsonResponse
+from comercial.models import Cliente
+from django.shortcuts import get_object_or_404
+
+def dados_cliente_ajax(request):
+    cliente_id = request.GET.get("cliente_id")
+
+    try:
+        cliente = get_object_or_404(Cliente, id=cliente_id)
+
+        dados = {
+            "cond_pagamento": cliente.cond_pagamento or "",
+            "icms": cliente.icms or "",
+            "inadimplente": cliente.status_adimplencia == "Inadimplente",
+            "url_relatorio": cliente.comprovante_adimplencia.url if cliente.comprovante_adimplencia else "",
+        }
+        return JsonResponse(dados)
+
+    except Exception as e:
+        return JsonResponse({"erro": str(e)}, status=400)

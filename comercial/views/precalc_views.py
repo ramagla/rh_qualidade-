@@ -835,7 +835,7 @@ from comercial.models.precalculo import PreCalculo
 from decimal import Decimal, ROUND_HALF_UP
 
 @login_required
-@permission_required("comercial.view_precalculo", raise_exception=True)
+@permission_required("comercial.ver_precificacao", raise_exception=True)
 def precificacao_produto(request, pk):
     precalc = get_object_or_404(PreCalculo, pk=pk)
     material = precalc.materiais.filter(selecionado=True).first()
@@ -1009,10 +1009,8 @@ def precificacao_produto(request, pk):
     })
 
 
-
-
-from django.db.models import Prefetch
-
+@login_required
+@permission_required("comercial.gerar_proposta", raise_exception=True)
 def gerar_proposta_view(request, cotacao_id):
     cotacao = get_object_or_404(Cotacao, id=cotacao_id)
 
@@ -1044,7 +1042,7 @@ def gerar_proposta_view(request, cotacao_id):
 
 
 @login_required
-@permission_required("comercial.add_precalculo", raise_exception=True)
+@permission_required("comercial.duplicar_precalculo", raise_exception=True)
 def duplicar_precaculo(request, pk):
     original = get_object_or_404(PreCalculo, pk=pk)
     cotacao = original.cotacao

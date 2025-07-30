@@ -65,5 +65,17 @@ comercial_permissions = {
     "visualizar_ordem_desenvolvimento": "comercial.view_ordemdesenvolvimento",
     "excluir_ordem_desenvolvimento": "comercial.delete_ordemdesenvolvimento",
 
+    # Indicadores Comercial
+    "indicador_prazo_cotacao": "comercial.view_indicador_prazo_cotacao",
+    "indicador_itens_novos": "comercial.view_indicador_itens_novos",
+    "indicador_cotacoes_funcionario": "comercial.view_indicador_cotacoes_funcionario",
+    "indicador_taxa_aprovacao": "comercial.view_indicador_taxa_aprovacao",
+
+
+    "lista_viabilidades": "comercial.view_viabilidadeanaliserisco",
+    "cadastrar_viabilidade": "comercial.add_viabilidadeanaliserisco",
+    "editar_viabilidade": "comercial.change_viabilidadeanaliserisco",
+    "visualizar_viabilidade": "comercial.view_viabilidadeanaliserisco",
+    "excluir_viabilidade": "comercial.delete_viabilidadeanaliserisco",
 
 }

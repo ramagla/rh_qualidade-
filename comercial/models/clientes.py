@@ -65,6 +65,23 @@ class Cliente(models.Model):
     cond_pagamento = models.CharField(max_length=100, blank=True, null=True)
     cod_bm = models.CharField(max_length=50, blank=True, null=True)
     observacao = CKEditor5Field("Particularidades do cliente", config_name="default", blank=True, null=True)
+  # ✅ Novos campos de adimplência
+    STATUS_ADIMPLENCIA_CHOICES = [
+        ('Adimplente', 'Adimplente'),
+        ('Inadimplente', 'Inadimplente'),
+    ]
+    status_adimplencia = models.CharField(
+        max_length=20,
+        choices=STATUS_ADIMPLENCIA_CHOICES,
+        default='Adimplente',
+        verbose_name="Status de Adimplência"
+    )
+    comprovante_adimplencia = models.FileField(
+        upload_to='comprovantes_adimplencia/',
+        blank=True,
+        null=True,
+        verbose_name="Comprovante de Adimplência (PDF)"
+    )
 
     atualizado_em = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
 

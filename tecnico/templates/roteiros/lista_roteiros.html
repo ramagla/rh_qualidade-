@@ -40,6 +40,14 @@
       <i class="bi bi-files me-2"></i> Clonar Roteiro
     </a>
   {% endif %}
+
+  {% if request.user|has_permission:"tecnico.add_roteiroproducao" %}
+  <a href="{% url 'tecnico:importar_roteiros_excel' %}"
+     class="btn btn-importar-personalizado d-inline-flex align-items-center">
+    <i class="bi bi-upload me-2"></i> Importar Excel
+  </a>
+{% endif %}
+
 </div>
 
 <!-- Modal Clonar Roteiro -->

@@ -1,23 +1,19 @@
-from django.shortcuts import render
+from collections import defaultdict
+from datetime import datetime
+from decimal import Decimal
+
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, F, Case, When
-from django.db.models.functions import Coalesce
-from django.db.models import FloatField, ExpressionWrapper
+from django.db.models import (
+    Count, Min, Sum, F, Case, When, DecimalField, ExpressionWrapper, Q
+)
+from django.db.models.functions import Coalesce, TruncMonth
+from django.shortcuts import render
+from django.utils.timezone import now
 
 from comercial.models import Cliente, Cotacao, OrdemDesenvolvimento
 from comercial.models.precalculo import PreCalculo, AnaliseComercial
-from decimal import Decimal
 from comercial.models.viabilidade import ViabilidadeAnaliseRisco
 
-from django.db.models import F, Case, When, DecimalField, Sum, Min
-from django.db.models.functions import TruncMonth
-from django.db.models import Count
-from django.db.models import F, Case, When, DecimalField, ExpressionWrapper
-from collections import defaultdict
-from django.db.models import Q
-from datetime import datetime
-from django.utils.timezone import now
-from comercial.models.ordem_desenvolvimento import OrdemDesenvolvimento
 
 @login_required
 def dashboard_comercial(request):

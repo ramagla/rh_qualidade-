@@ -1,7 +1,6 @@
 from datetime import timedelta
-
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db.models import DateField, DurationField, ExpressionWrapper, F, Value
@@ -14,7 +13,8 @@ from Funcionario.models import Funcionario
 from ..forms import TabelaTecnicaForm
 from ..models.models_tabelatecnica import TabelaTecnica
 
-
+@login_required
+@permission_required("metrologia.view_tabelatecnica", raise_exception=True)
 def lista_tabelatecnica(request):
     today = now().date()
     range_start = today
@@ -108,8 +108,8 @@ def lista_tabelatecnica(request):
 
     return render(request, "tabelatecnica/lista_tabelatecnica.html", context)
 
-
 @login_required
+@permission_required("metrologia.add_tabelatecnica", raise_exception=True)
 def cadastrar_tabelatecnica(request):
     if request.method == "POST":
         form = TabelaTecnicaForm(request.POST, request.FILES)
@@ -131,6 +131,7 @@ def cadastrar_tabelatecnica(request):
 
 
 @login_required
+@permission_required("metrologia.change_tabelatecnica", raise_exception=True)
 def editar_tabelatecnica(request, id):
     tabela = get_object_or_404(TabelaTecnica, id=id)
 
@@ -155,6 +156,7 @@ def editar_tabelatecnica(request, id):
 from django.utils import timezone
 
 @login_required
+@permission_required("metrologia.view_tabelatecnica", raise_exception=True)
 def visualizar_tabelatecnica(request, id):
     tabelatecnica = get_object_or_404(TabelaTecnica, id=id)
     context = {
@@ -164,13 +166,15 @@ def visualizar_tabelatecnica(request, id):
     return render(request, "tabelatecnica/visualizar_tabelatecnica.html", context)
 
 @login_required
+@permission_required("metrologia.delete_tabelatecnica", raise_exception=True)
 def excluir_tabelatecnica(request, id):
     tabela = get_object_or_404(TabelaTecnica, id=id)
     tabela.delete()
     messages.success(request, "Tabela Técnica excluída com sucesso.")
     return redirect("lista_tabelatecnica")
 
-
+@login_required
+@permission_required("metrologia.imprimir_tabelatecnica", raise_exception=True)
 def imprimir_tabelatecnica(request):
     # Filtra equipamentos com status 'Ativo', ignorando maiúsculas/minúsculas
     tabelas = TabelaTecnica.objects.filter(status__iexact="Ativo").order_by("codigo")

@@ -574,3 +574,99 @@ def clonar_roteiro(request, pk):
 
     messages.success(request, f"Roteiro clonado com sucesso como tipo {proximo_tipo}.")
     return redirect("tecnico:tecnico_roteiros")
+
+
+# tecnico/views/roteiros_views.py
+import pandas as pd
+from django.contrib import messages
+from tecnico.models.roteiro import RoteiroProducao, EtapaRoteiro
+from comercial.models import Item, CentroDeCusto
+
+from tecnico.models.roteiro import RoteiroProducao, EtapaRoteiro, PropriedadesEtapa, InsumoEtapa
+from qualidade_fornecimento.models import MateriaPrimaCatalogo
+from tecnico.models import Maquina
+from comercial.models import Item, CentroDeCusto, Ferramenta
+import pandas as pd
+
+@login_required
+@permission_required("tecnico.add_roteiroproducao", raise_exception=True)
+def importar_roteiros_excel(request):
+    if request.method == "POST" and request.FILES.get("arquivo"):
+        excel = request.FILES["arquivo"]
+        try:
+            df = pd.read_excel(excel).fillna("")
+
+            obrigatorias = ["Código Item", "Tipo Roteiro", "Etapa Nº", "Setor", "PPH", "Setup (min)"]
+            for col in obrigatorias:
+                if col not in df.columns:
+                    messages.error(request, f"Coluna obrigatória ausente: {col}")
+                    return redirect("importar_roteiros_excel")
+
+            agrupado = df.groupby(["Código Item", "Tipo Roteiro"])
+            criados = 0
+
+            with transaction.atomic():
+                for (codigo_item, tipo_roteiro), grupo in agrupado:
+                    try:
+                        item = Item.objects.get(codigo=str(codigo_item).strip())
+                        roteiro, _ = RoteiroProducao.objects.get_or_create(
+                            item=item,
+                            tipo_roteiro=tipo_roteiro.strip().upper(),
+                            defaults={"revisao": 1}
+                        )
+
+                        for _, row in grupo.iterrows():
+                            setor = CentroDeCusto.objects.get(nome__iexact=row["Setor"].strip())
+                            etapa = EtapaRoteiro.objects.create(
+                                roteiro=roteiro,
+                                etapa=int(row["Etapa Nº"]),
+                                setor=setor,
+                                pph=float(row["PPH"]) or None,
+                                setup_minutos=float(row["Setup (min)"]) or None,
+                            )
+
+                            # Insumo
+                            if row["MP Código"]:
+                                try:
+                                    mp = MateriaPrimaCatalogo.objects.get(codigo=row["MP Código"].strip())
+                                    InsumoEtapa.objects.create(
+                                        etapa=etapa,
+                                        materia_prima=mp,
+                                        quantidade=float(row["Qtde"]),
+                                        tipo_insumo=row["Tipo Insumo"],
+                                        obrigatorio=(str(row["Obrigatório"]).strip().lower() == "sim"),
+                                    )
+                                except MateriaPrimaCatalogo.DoesNotExist:
+                                    messages.warning(request, f"MP {row['MP Código']} não encontrada (etapa {etapa}).")
+
+                            # Propriedades
+                            if row["Nome Ação"]:
+                                ferramenta = None
+                                if row["Ferramenta"]:
+                                    ferramenta = Ferramenta.objects.filter(codigo__iexact=row["Ferramenta"].strip()).first()
+
+                                prop = PropriedadesEtapa.objects.create(
+                                    etapa=etapa,
+                                    nome_acao=row["Nome Ação"],
+                                    descricao_detalhada=row["Descrição Detalhada"],
+                                    ferramenta=ferramenta
+                                )
+
+                                # Máquinas (lista separada por vírgula)
+                                codigos_maquinas = [m.strip() for m in str(row["Máquinas"]).split(",") if m.strip()]
+                                maquinas = Maquina.objects.filter(codigo__in=codigos_maquinas)
+                                prop.maquinas.set(maquinas)
+
+                        criados += 1
+                    except Exception as e:
+                        messages.error(request, f"Erro ao processar {codigo_item} tipo {tipo_roteiro}: {e}")
+                        return redirect("importar_roteiros_excel")
+
+            messages.success(request, f"Importação finalizada: {criados} roteiro(s) criados.")
+            return redirect("tecnico:tecnico_roteiros")
+
+        except Exception as e:
+            messages.error(request, f"Erro ao processar o Excel: {e}")
+            return redirect("importar_roteiros_excel")
+
+    return render(request, "roteiros/importar_roteiros.html")

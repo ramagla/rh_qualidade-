@@ -1,19 +1,33 @@
-from django.utils import timezone
+import uuid
+from decimal import Decimal, InvalidOperation
+from collections import defaultdict  # se não usar, remover
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import get_object_or_404, redirect, render
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
-from django.urls import reverse
-from comercial.forms.ferramenta_form import FerramentaForm
-from comercial.models import Ferramenta
-from comercial.models.ferramenta import BlocoFerramenta, ItemBloco, MaoDeObraFerramenta,  ServicoFerramenta
-from decimal import Decimal, InvalidOperation
-from comercial.forms.ferramenta_form import BlocoForm, ItemBlocoFormSet
+from django.db import transaction
 from django.db.models import Sum, Avg
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.html import strip_tags
+from django.utils.timezone import now  # se usar nos AJAX/centro de custo
+
+from comercial.forms.ferramenta_form import (
+    FerramentaForm, BlocoForm, ItemBlocoFormSet, MaoDeObraFormSet, ServicoFormSet
+)
+from comercial.models import Ferramenta, CentroDeCusto
+from comercial.models.ferramenta import (
+    BlocoFerramenta, ItemBloco, MaoDeObraFerramenta, ServicoFerramenta
+)
+
 
 
 @login_required
-@permission_required("comercial.view_ferramenta", raise_exception=True)
+@permission_required("comercial.enviar_cotacao", raise_exception=True)
 def lista_ferramentas(request):
     ferramentas = Ferramenta.objects.all()
 
@@ -47,21 +61,6 @@ def lista_ferramentas(request):
     }
 
     return render(request, "cadastros/lista_ferramentas.html", context)
-
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.db import transaction
-
-from comercial.models import Ferramenta
-from comercial.forms.ferramenta_form import (
-    FerramentaForm,
-    MaoDeObraFormSet,
-    ServicoFormSet
-)
-from django.db.models.query import QuerySet  # no topo se necessário
-
 
 
 @login_required
@@ -114,21 +113,6 @@ def cadastrar_ferramenta(request):
         "formsets_agrupados": [mo_formset, servico_formset],
         "ferramenta": ferramenta
     })
-
-
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib import messages
-from django.db import transaction
-
-from comercial.models import Ferramenta
-from comercial.forms.ferramenta_form import (
-    FerramentaForm,
-    MaoDeObraFormSet,
-    ServicoFormSet
-)
-from comercial.models.ferramenta import  MaoDeObraFerramenta, ServicoFerramenta
 
 
 @login_required
@@ -186,7 +170,6 @@ def editar_ferramenta(request, pk):
 
 
 
-
 @login_required
 @permission_required("comercial.delete_ferramenta", raise_exception=True)
 def excluir_ferramenta(request, pk):
@@ -195,14 +178,6 @@ def excluir_ferramenta(request, pk):
     messages.success(request, "Ferramenta excluída com sucesso.")
     return redirect("lista_ferramentas")
 
-
-
-
-import uuid
-from django.core.mail import send_mail
-from django.contrib.auth.decorators import user_passes_test
-from django.conf import settings
-from django.utils.html import strip_tags
 
 @login_required
 @permission_required("comercial.view_ferramenta", raise_exception=True)
@@ -246,13 +221,6 @@ def enviar_cotacao_ferramenta(request, pk):
     return redirect("lista_ferramentas")
 
 
-
-
-
-from decimal import Decimal, InvalidOperation
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib import messages
-from comercial.models import Ferramenta
 
 
 def formulario_cotacao(request, token):
@@ -345,18 +313,6 @@ def formulario_cotacao(request, token):
 
 
 
-from decimal import Decimal
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, get_object_or_404
-from comercial.models import Ferramenta
-
-
-from decimal import Decimal
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, get_object_or_404
-from comercial.models import Ferramenta
-
-
 @login_required
 @permission_required("comercial.view_ferramenta", raise_exception=True)
 def visualizar_ferramenta(request, pk):
@@ -418,16 +374,6 @@ def visualizar_ferramenta(request, pk):
     return render(request, "cadastros/visualizar_ferramenta.html", context)
 
 
-
-
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.utils.timezone import now
-from comercial.models import CentroDeCusto
-
-from django.http import JsonResponse
-from django.utils.timezone import now
-from comercial.models import CentroDeCusto
 
 def ajax_valor_hora_centro_custo(request):
     tipo = request.GET.get("tipo")
@@ -580,11 +526,6 @@ def excluir_bloco(request, pk):
     return redirect("lista_blocos")  # A exclusão será confirmada via modal, então redireciona
 
 
-from django.http import JsonResponse
-from comercial.models.ferramenta import ItemBloco, BlocoFerramenta
-
-from django.http import JsonResponse
-from comercial.models.ferramenta import BlocoFerramenta
 
 @login_required
 def ajax_materiais_do_bloco(request, bloco_id):

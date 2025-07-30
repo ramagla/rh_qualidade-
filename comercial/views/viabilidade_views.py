@@ -1,18 +1,20 @@
-# comercial/views/viabilidade_views.py
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib import messages
-from django.core.paginator import Paginator
-from django.utils.timezone import make_aware
 from datetime import datetime
-from django.utils import timezone  # ← esta é a correta!
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.timezone import make_aware
+
 from assinatura_eletronica.models import AssinaturaEletronica
-from comercial.models.viabilidade import ViabilidadeAnaliseRisco
+from assinatura_eletronica.utils import gerar_assinatura, gerar_qrcode_base64
 from comercial.forms.viabilidade_forms import ViabilidadeAnaliseRiscoForm
 from comercial.models import Cliente, PreCalculo
 from comercial.models.viabilidade import ViabilidadeAnaliseRisco
-from assinatura_eletronica.utils import gerar_assinatura,gerar_qrcode_base64
+
 
 
 @login_required
@@ -265,10 +267,6 @@ def editar_viabilidade(request, pk):
         "viabilidade": viabilidade,
         "item": item,
     })
-
-
-from django.core.exceptions import ObjectDoesNotExist
-from django.urls import reverse
 
 
 @login_required

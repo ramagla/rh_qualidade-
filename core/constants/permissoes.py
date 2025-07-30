@@ -51,7 +51,6 @@ CUSTOM_PERMISSOES = [
     ("Funcionario", "evento", "imprimir_calendario", "Pode imprimir o calendário"),
     ("Funcionario", "funcionario", "acesso_rh", "Pode acessar o módulo RH"),
     ("Funcionario", "cargo", "visualizar_organograma", "Pode visualizar o organograma de cargos"),
-    ("metrologia", "tabelatecnica", "acesso_metrologia", "Pode acessar o módulo Metrologia"),
     ("Funcionario", "revisao", "view_revisao", "Pode visualizar descrição da revisão"),
     ("Funcionario", "integracaofuncionario", "imprimir_integracao", "Pode imprimir integração"),
     ("Funcionario", "listapresenca", "imprimir_lista_presenca", "Pode imprimir lista de presença"),
@@ -85,16 +84,25 @@ CUSTOM_PERMISSOES = [
     ("portaria", "relatorio", "relatorio_consumo_agua", "Pode acessar relatório de consumo de água"),
     ("portaria", "relatorio", "relatorio_horas_extras", "Pode acessar relatório de horas extras"),
 
-    # Acesso ao módulo
+    # Acesso ao módulo – manter UMA vez apenas
     ("metrologia", "tabelatecnica", "acesso_metrologia", "Pode acessar o módulo Metrologia"),
 
-    # Relatórios
-    ("metrologia", "relatorio", "relatorio_equipamentos_calibrar", "Pode acessar o relatório de Equipamentos a Calibrar"),
-    ("metrologia", "relatorio", "relatorio_equipamentos_por_funcionario", "Pode acessar o relatório de Equipamentos por Funcionário"),
+    # Relatórios – ancorar em TabelaTecnica (ou Calibracao, se preferir)
+    ("metrologia", "tabelatecnica", "relatorio_equipamentos_calibrar", "Pode acessar o relatório de Equipamentos a Calibrar"),
+    ("metrologia", "tabelatecnica", "relatorio_equipamentos_por_funcionario", "Pode acessar o relatório de Equipamentos por Funcionário"),
 
-    # Cronogramas
-    ("metrologia", "cronograma", "cronograma_calibracao_equipamentos", "Pode acessar o cronograma de Calibração de Equipamentos"),
-    ("metrologia", "cronograma", "cronograma_calibracao_dispositivos", "Pode acessar o cronograma de Calibração de Dispositivos"),
+    # Cronogramas – ancorar em modelos existentes
+    ("metrologia", "tabelatecnica", "cronograma_calibracao_equipamentos", "Pode acessar o cronograma de Calibração de Equipamentos"),
+    ("metrologia", "dispositivo",   "cronograma_calibracao_dispositivos", "Pode acessar o cronograma de Calibração de Dispositivos"),
+
+    # F062 – ancorar em Calibracao (ou TabelaTecnica, escolha um padrão)
+    ("metrologia", "calibracao", "relatorio_f062", "Pode acessar o relatório Solicitação de Orçamento para Calibração (F062)"),
+    ("metrologia", "calibracao", "gerar_f062",    "Pode gerar a Solicitação de Orçamento para Calibração (F062)"),
+
+    # Movimentações – já está correto
+    ("metrologia", "controleentradasaida", "view_controleentradasaida", "Pode visualizar movimentações de dispositivo"),
+    ("metrologia", "tabelatecnica", "imprimir_tabelatecnica", "Pode imprimir Tabela Técnica"),
+
 
     ("comercial", "dashboard", "acesso_comercial", "Pode acessar o módulo Comercial"),
     ("comercial", "ferramenta", "enviar_cotacao", "Pode enviar cotação de ferramenta"),
@@ -103,6 +111,11 @@ CUSTOM_PERMISSOES = [
     ("comercial", "precalculo", "duplicar_precalculo", "Pode duplicar pré-cálculo"),
     ("comercial", "cliente", "importar_excel_clientes", "Pode importar clientes via Excel"),
     ("comercial", "item", "importar_excel_itens", "Pode importar itens via Excel"),
+    # Comercial – Indicadores
+    ("comercial", "indicadores", "view_indicador_prazo_cotacao", "Pode acessar indicador 4.1 - Atendimento do Prazo de Cotação"),
+    ("comercial", "indicadores", "view_indicador_itens_novos", "Pode acessar indicador 4.2 - Número de Itens Novos Vendidos"),
+    ("comercial", "indicadores", "view_indicador_cotacoes_funcionario", "Pode acessar indicador 4.3 - Nº de Cotações por Funcionário"),
+    ("comercial", "indicadores", "view_indicador_taxa_aprovacao", "Pode acessar indicador 4.4 - Taxa de Orçamentos Aprovados"),
 
     ("metrologia", "relatorio", "relatorio_f062", "Pode acessar o relatório Solicitação de Orçamento para Calibração (F062)"),
     ("metrologia", "relatorio", "gerar_f062", "Pode gerar a Solicitação de Orçamento para Calibração (F062)"),

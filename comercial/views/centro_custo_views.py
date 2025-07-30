@@ -6,9 +6,19 @@ from django.utils.timezone import now
 
 from comercial.models.centro_custo import CentroDeCusto
 from comercial.forms.centro_custo_form import CentroDeCustoForm
+from functools import wraps
+from django.core.exceptions import PermissionDenied
 
+def requer_acesso_comercial(view_func):
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.has_perm("comercial.acesso_comercial"):
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+    return _wrapped
 
 @login_required
+@requer_acesso_comercial
 @permission_required("comercial.view_centrodecusto", raise_exception=True)
 def lista_centros_custo(request):
     centros = CentroDeCusto.objects.all()

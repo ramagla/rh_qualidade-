@@ -18,8 +18,11 @@ from metrologia.models.models_dispositivos import (
     Dispositivo,
 )
 from metrologia.models.models_tabelatecnica import TabelaTecnica
+from django.contrib.auth.decorators import login_required, permission_required
 
 
+@login_required
+@permission_required("metrologia.view_dispositivo", raise_exception=True)
 def lista_dispositivos(request):
     today = now().date()
     range_start = today
@@ -131,7 +134,8 @@ def salvar_dispositivo_e_cotas(request, dispositivo_form, cota_formset, disposit
 
     return dispositivo
 
-
+@login_required
+@permission_required("metrologia.add_dispositivo", raise_exception=True)
 def cadastrar_dispositivo(request):
     CotaFormSet = modelformset_factory(
         Cota,
@@ -164,7 +168,8 @@ def cadastrar_dispositivo(request):
     )
 
 
-
+@login_required
+@permission_required("metrologia.change_dispositivo", raise_exception=True)
 def editar_dispositivo(request, dispositivo_id):
     dispositivo = get_object_or_404(Dispositivo, id=dispositivo_id)
 
@@ -205,7 +210,8 @@ def editar_dispositivo(request, dispositivo_id):
 
 
 
-
+@login_required
+@permission_required("metrologia.delete_dispositivo", raise_exception=True)
 def excluir_dispositivo(request, id):
     dispositivo = get_object_or_404(Dispositivo, id=id)
 
@@ -223,6 +229,8 @@ def excluir_dispositivo(request, id):
 
 from django.utils.timezone import now
 
+@login_required
+@permission_required("metrologia.view_dispositivo", raise_exception=True)
 def visualizar_dispositivo(request, id):
     dispositivo = get_object_or_404(Dispositivo, id=id)
     cotas = Cota.objects.filter(dispositivo=dispositivo)
@@ -238,7 +246,8 @@ def visualizar_dispositivo(request, id):
     )
 
 
-
+@login_required
+@permission_required("metrologia.relatorio_equipamentos_calibrar", raise_exception=True)
 def imprimir_dispositivo(request):
     """Imprime a lista de dispositivos."""
     dispositivos = TabelaTecnica.objects.all()
@@ -248,7 +257,8 @@ def imprimir_dispositivo(request):
         {"dispositivos": dispositivos},
     )
 
-
+@login_required
+@permission_required("metrologia.view_controleentradasaida", raise_exception=True)
 def historico_movimentacoes(request, dispositivo_id):
     dispositivo = get_object_or_404(Dispositivo, id=dispositivo_id)
     movimentacoes = ControleEntradaSaida.objects.filter(
@@ -264,7 +274,8 @@ def historico_movimentacoes(request, dispositivo_id):
         },
     )
 
-
+@login_required
+@permission_required("metrologia.add_controleentradasaida", raise_exception=True)
 def cadastrar_movimentacao(request, dispositivo_id):
     dispositivo = get_object_or_404(Dispositivo, id=dispositivo_id)
     # Busca setores distintos, classificados em ordem alfabética
@@ -294,7 +305,8 @@ def cadastrar_movimentacao(request, dispositivo_id):
         },
     )
 
-
+@login_required
+@permission_required("metrologia.delete_controleentradasaida", raise_exception=True)
 def excluir_movimentacao(request, id):
     movimentacao = get_object_or_404(ControleEntradaSaida, id=id)
     dispositivo_id = movimentacao.dispositivo.id

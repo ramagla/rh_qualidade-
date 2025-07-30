@@ -1,7 +1,7 @@
 # metrologia/views.py
 from datetime import timedelta
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import DateField, ExpressionWrapper, F
 from django.shortcuts import render
 from django.utils.timezone import now
@@ -11,6 +11,7 @@ from metrologia.models.models_tabelatecnica import TabelaTecnica
 
 
 @login_required
+@permission_required("comercial.acesso_comercial", raise_exception=True)
 def home(request):
     today = now().date()
 

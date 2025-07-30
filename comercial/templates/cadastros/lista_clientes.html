@@ -190,6 +190,13 @@
           </th>
           <th class="align-middle">
             <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-shield-check"></i>
+              <span>Adimplência</span>
+            </div>
+          </th>
+
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
               <i class="bi bi-gear"></i>
               <span>Ações</span>
             </div>
@@ -266,6 +273,45 @@
             {% endif %}
           </td>
           </td>
+<td>
+  {% if cliente.status_adimplencia %}
+    {% if cliente.comprovante_adimplencia %}
+      <a href="{{ cliente.comprovante_adimplencia.url }}" target="_blank" class="text-decoration-none"
+   data-bs-toggle="tooltip" data-bs-placement="top" title="Ver relatório protector">
+  <span class="badge 
+    {% if cliente.status_adimplencia == 'Adimplente' %}bg-success
+    {% elif cliente.status_adimplencia == 'Inadimplente' %}bg-danger
+    {% else %}bg-secondary
+    {% endif %}
+    d-inline-flex align-items-center gap-1">
+    {% if cliente.status_adimplencia == 'Adimplente' %}
+      <i class="bi bi-check-circle-fill"></i>
+    {% else %}
+      <i class="bi bi-exclamation-triangle-fill"></i>
+    {% endif %}
+    {{ cliente.status_adimplencia }}
+  </span>
+</a>
+
+    {% else %}
+      <span class="badge 
+        {% if cliente.status_adimplencia == 'Adimplente' %}bg-success
+        {% elif cliente.status_adimplencia == 'Inadimplente' %}bg-danger
+        {% else %}bg-secondary
+        {% endif %}
+        d-inline-flex align-items-center gap-1">
+        {% if cliente.status_adimplencia == 'Adimplente' %}
+          <i class="bi bi-check-circle-fill"></i>
+        {% else %}
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        {% endif %}
+        {{ cliente.status_adimplencia }}
+      </span>
+    {% endif %}
+  {% else %}
+    <span class="text-muted">-</span>
+  {% endif %}
+</td>
 
           <td>
             <div class="d-flex flex-wrap gap-1 justify-content-center">
@@ -293,6 +339,14 @@
 
 </div>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+      new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>
 
   
 {% endblock %}

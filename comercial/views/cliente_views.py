@@ -1,22 +1,21 @@
-from pyexpat.errors import messages
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, redirect, get_object_or_404
-from comercial.models import Cliente
-from comercial.forms.cliente_form import ClienteDocumentoFormSet, ClienteForm
-from django.core.paginator import Paginator
+from functools import wraps
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
-from django.shortcuts import render
+from django.core.exceptions import PermissionDenied
+from django.db import IntegrityError
+from django.db.models import ProtectedError
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
+from comercial.forms.cliente_form import ClienteDocumentoFormSet, ClienteForm
 from comercial.models import Cliente
 from comercial.models.clientes import ClienteDocumento
-from django.utils import timezone
 
-from django.contrib.auth.decorators import login_required, permission_required
-from django.core.paginator import Paginator
-from django.shortcuts import render
-from django.utils import timezone
-from comercial.models import Cliente
+import pandas as pd
+
 
 @login_required
 @permission_required('comercial.view_cliente', raise_exception=True)
@@ -86,17 +85,6 @@ def lista_clientes(request):
     })
 
 
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from comercial.forms.cliente_form import ClienteForm, ClienteDocumentoFormSet
-from comercial.models.clientes import ClienteDocumento
-
-from django.contrib import messages
-from django.shortcuts import render, redirect, get_object_or_404
-from django.db import IntegrityError
-from django.contrib.auth.decorators import login_required, permission_required
-from comercial.forms.cliente_form import ClienteForm, ClienteDocumentoFormSet
-from comercial.models.clientes import Cliente, ClienteDocumento
 
 @login_required
 @permission_required('comercial.add_cliente', raise_exception=True)
@@ -191,9 +179,6 @@ def editar_cliente(request, pk):
     })
 
 
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import get_object_or_404, render
-from comercial.models import Cliente
 
 @login_required
 @permission_required('comercial.view_cliente', raise_exception=True)
@@ -209,7 +194,6 @@ def visualizar_cliente(request, pk):
     })
 
 
-from django.db.models import ProtectedError
 
 @permission_required("comercial.delete_cliente")
 def excluir_cliente(request, pk):
@@ -227,8 +211,6 @@ def excluir_cliente(request, pk):
         return redirect("lista_clientes")
 
 
-from django.http import JsonResponse
-from comercial.models import Cliente
 
 # cliente_views.py
 def verificar_cnpj_existente(request):
@@ -236,15 +218,7 @@ def verificar_cnpj_existente(request):
     existe = Cliente.objects.filter(cnpj=cnpj).exists()
     return JsonResponse({"existe": existe})
 
-import pandas as pd
-
-
-from django.contrib.auth.decorators import permission_required
-from django.shortcuts import render, redirect
-from comercial.models import Cliente
-from django.contrib import messages
-import pandas as pd
-
+@login_required
 @permission_required("comercial.importar_excel_clientes", raise_exception=True)
 def importar_clientes_excel(request):
     if request.method == "POST" and request.FILES.get("arquivo"):

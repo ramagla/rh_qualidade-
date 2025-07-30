@@ -1,19 +1,13 @@
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, redirect, get_object_or_404
+import pandas as pd
+
 from django.contrib import messages
-from comercial.models import Item
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.paginator import Paginator
+from django.db.models import ProtectedError
+from django.shortcuts import get_object_or_404, redirect, render
+
 from comercial.forms.item_form import ItemForm
-
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.core.paginator import Paginator
-from django.shortcuts import render
-from comercial.models import Item
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.core.paginator import Paginator
-from django.shortcuts import render
-from comercial.models import Item
+from comercial.models import Item, Cliente, Ferramenta
 
 
 @login_required
@@ -69,13 +63,6 @@ def lista_itens(request):
 
 
 
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, redirect, get_object_or_404
-from comercial.models import Item
-from comercial.forms.item_form import ItemForm
-
-
 @login_required
 @permission_required('comercial.add_item', raise_exception=True)
 def cadastrar_item(request):
@@ -128,7 +115,6 @@ def visualizar_item(request, pk):
     item = get_object_or_404(Item, pk=pk)
     return render(request, 'cadastros/itens_visualizar.html', {'item': item})
 
-from django.db.models import ProtectedError
 
 @login_required
 @permission_required('comercial.delete_item', raise_exception=True)
@@ -149,9 +135,8 @@ def excluir_item(request, pk):
     # Como o modal já envia direto via POST, não precisa renderizar nada aqui
     return redirect('lista_itens')
 
-import pandas as pd
-from comercial.models import Item, Cliente, Ferramenta
 
+@login_required
 @permission_required("comercial.importar_excel_itens", raise_exception=True)
 def importar_itens_excel(request):
     if request.method == "POST" and request.FILES.get("arquivo"):

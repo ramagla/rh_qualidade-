@@ -9,8 +9,10 @@ from django.views.decorators.csrf import csrf_exempt
 from metrologia.forms import CalibracaoForm
 from metrologia.models.models_calibracao import Calibracao
 from metrologia.models.models_tabelatecnica import TabelaTecnica
+from django.contrib.auth.decorators import login_required, permission_required
 
-
+@login_required
+@permission_required("metrologia.view_calibracao", raise_exception=True)
 def lista_calibracoes(request):
     # Query inicial para pegar os equipamentos com calibração associada
     calibracoes = Calibracao.objects.select_related("codigo").all()
@@ -104,22 +106,27 @@ def salvar_calibracao(request, pk=None):
     }
     return render(request, "calibracoes/form_calibracao.html", contexto)
 
-
+@login_required
+@permission_required("metrologia.view_calibracao", raise_exception=True)
 def metrologia_calibracoes(request):
     calibracoes = Calibracao.objects.all()
     return render(
         request, "calibracoes/lista_calibracoes.html", {"calibracoes": calibracoes}
     )
 
-
+@login_required
+@permission_required("metrologia.add_calibracao", raise_exception=True)
 def cadastrar_calibracao(request):
     return salvar_calibracao(request)
 
 
+@login_required
+@permission_required("metrologia.change_calibracao", raise_exception=True)
 def editar_calibracao(request, pk):
     return salvar_calibracao(request, pk=pk)
 
-
+@login_required
+@permission_required("metrologia.delete_calibracao", raise_exception=True)
 def excluir_calibracao(request, id):
     calibracao = get_object_or_404(Calibracao, id=id)
     if request.method == "POST":

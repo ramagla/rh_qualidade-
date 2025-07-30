@@ -1,32 +1,27 @@
 import io
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render
-from django.db.models.functions import TruncMonth
-from django.db.models import Count, Q, Min
-from datetime import timedelta
-from comercial.models import PreCalculo
-from django.utils.timezone import now
+import base64
 import calendar
-from Funcionario.models.funcionario import Funcionario
-
-import matplotlib.pyplot as plt
-import base64
-from io import BytesIO
-
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required, permission_required
-from comercial.models import PreCalculo
-from django.db.models import Min
 from datetime import datetime, timedelta
-from babel.dates import format_date
-import matplotlib.pyplot as plt
-import base64
 from io import BytesIO
+
+import matplotlib
+matplotlib.use("Agg")  # se for gerar gráficos no servidor
+import matplotlib.pyplot as plt
+
+from babel.dates import format_date
+from django.contrib.auth.decorators import login_required, permission_required
+from django.db.models import Count, Q, Min
+from django.db.models.functions import TruncMonth, ExtractQuarter
+from django.shortcuts import render
 from django.utils.timezone import now
+
+from comercial.models import PreCalculo, Cotacao
+from Funcionario.models.funcionario import Funcionario
 from comercial.utils.indicadores import salvar_registro_indicador
 
+
 @login_required
-@permission_required("comercial.view_cotacao", raise_exception=True)
+@permission_required("comercial.view_indicador_prazo_cotacao", raise_exception=True)
 def indicador_prazo_cotacao(request):
     ano = int(request.GET.get("ano", now().year))
     mes_atual = datetime.now().month
@@ -169,32 +164,8 @@ def indicador_prazo_cotacao(request):
     return render(request, "indicadores/4_1_prazo_cotacao.html", contexto)
 
 
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render
-from django.utils.timezone import now
-from django.db.models import Min, Count
-from django.db.models.functions import ExtractQuarter
-
-from comercial.models import PreCalculo
-
-import io, base64
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.db.models import Min, Count
-from django.db.models.functions import ExtractQuarter
-from django.shortcuts import render
-from django.utils.timezone import now
-import matplotlib.pyplot as plt
-import io
-import base64
-
-from comercial.models import PreCalculo
-
 @login_required
-@permission_required("comercial.view_cotacao", raise_exception=True)
+@permission_required("comercial.view_indicador_itens_novos", raise_exception=True)
 def indicador_itens_novos(request):
     ano = int(request.GET.get("ano", now().year))
     meta = 8
@@ -327,28 +298,8 @@ def indicador_itens_novos(request):
 
 
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required, permission_required
-from django.db.models import Count
-from django.db.models.functions import TruncMonth
-from datetime import datetime
-from collections import defaultdict
-from comercial.models import Cotacao
-
-import io
-import base64
-import matplotlib.pyplot as plt
-from datetime import datetime
-from collections import defaultdict
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required, permission_required
-from django.db.models import Count
-from django.db.models.functions import TruncMonth
-from Funcionario.models.funcionario import Funcionario
-from comercial.models import Cotacao
-
 @login_required
-@permission_required("comercial.view_cotacao", raise_exception=True)
+@permission_required("comercial.view_indicador_cotacoes_funcionario", raise_exception=True)
 def indicador_cotacoes_funcionario(request):
     ano = int(request.GET.get("ano", datetime.now().year))
     mes_atual = datetime.now().month
@@ -455,22 +406,9 @@ def indicador_cotacoes_funcionario(request):
 
     return render(request, "indicadores/4_3_cotacoes_funcionario.html", context)
 
-import io
-import base64
-import calendar
-import matplotlib.pyplot as plt
-
-from datetime import datetime
-from django.db.models.functions import TruncMonth
-from django.db.models import Count, Q
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required, permission_required
-
-from comercial.models import PreCalculo, Cotacao
-
 
 @login_required
-@permission_required("comercial.view_cotacao", raise_exception=True)
+@permission_required("comercial.view_indicador_taxa_aprovacao", raise_exception=True)
 def indicador_taxa_aprovacao(request):
     ano = int(request.GET.get("ano", datetime.now().year))
     mes_atual = datetime.now().month

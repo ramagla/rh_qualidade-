@@ -1,24 +1,18 @@
-from datetime import timezone
-from pyexpat.errors import messages
-from django.shortcuts import render, redirect, get_object_or_404
+from datetime import datetime
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.timezone import make_aware
+
 from assinatura_eletronica.models import AssinaturaEletronica
 from assinatura_eletronica.utils import gerar_assinatura, gerar_qrcode_base64
 from comercial.forms.ordem_desenvolvimento_form import OrdemDesenvolvimentoForm
-from comercial.models import OrdemDesenvolvimento
-from django.contrib.auth.decorators import login_required, permission_required
-from django.core.paginator import Paginator
-from django.shortcuts import render
-from comercial.models import OrdemDesenvolvimento
-from comercial.models.clientes import Cliente
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required, permission_required
-from django.core.paginator import Paginator
-from django.utils.timezone import make_aware
-from datetime import datetime
-from django.urls import reverse
-
 from comercial.models import OrdemDesenvolvimento, Cliente
+
 @login_required
 @permission_required("comercial.view_ordemdesenvolvimento", raise_exception=True)
 def lista_ordens_desenvolvimento(request):
@@ -92,14 +86,6 @@ def lista_ordens_desenvolvimento(request):
     return render(request, "ordens_desenvolvimento/lista_ordens.html", context)
 
 
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.utils import timezone
-from comercial.forms.ordem_desenvolvimento_form import OrdemDesenvolvimentoForm
-from comercial.models.ordem_desenvolvimento import OrdemDesenvolvimento
-
-
 
 @login_required
 @permission_required("comercial.add_ordemdesenvolvimento", raise_exception=True)
@@ -159,9 +145,6 @@ def cadastrar_ordem_desenvolvimento(request):
         "titulo": "Cadastrar Ordem de Desenvolvimento",
         "ordem": None,
     })
-
-
-
 
 @login_required
 @permission_required("comercial.change_ordemdesenvolvimento", raise_exception=True)
@@ -236,16 +219,6 @@ def editar_ordem_desenvolvimento(request, pk):
         "titulo": f"Editar Ordem de Desenvolvimento Nº {ordem.numero:03d}",
         "ordem": ordem,
     })
-
-
-
-
-
-from comercial.models import OrdemDesenvolvimento
-
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, get_object_or_404
-from comercial.models import OrdemDesenvolvimento
 
 
 @login_required
