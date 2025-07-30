@@ -34,6 +34,11 @@
           {{ form.prazo_solicitado|add_class:"form-control" }}
         </div>
         <div class="col-md-3">
+  <label class="form-label"><i class="bi bi-upc-scan me-1"></i> {{ form.codigo_amostra.label }}</label>
+  {{ form.codigo_amostra|add_class:"form-control" }}
+</div>
+
+        <div class="col-md-3">
           <label class="form-label"><i class="bi bi-123 me-1"></i> {{ form.qtde_amostra.label }}</label>
           {{ form.qtde_amostra|add_class:"form-control" }}
         </div>

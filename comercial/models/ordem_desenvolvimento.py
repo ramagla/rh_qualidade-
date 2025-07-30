@@ -18,6 +18,7 @@ class OrdemDesenvolvimento(AuditModel):
     codigo_brasmol = models.CharField("Código Bras-Mol", max_length=50, blank=True, null=True)
     prazo_solicitado = models.DateField("Prazo solicitado", blank=True, null=True)
     qtde_amostra = models.PositiveIntegerField("Quantidade de amostra", blank=True, null=True)
+    codigo_amostra = models.CharField("Código da Amostra", max_length=50, blank=True, null=True)
 
     RAZOES = [
         ("novo", "Novo item"), ("discrepancia", "Correção de discrepância"),

@@ -43,7 +43,7 @@ class ItemForm(forms.ModelForm):
             "simbolo_m1": FileInput(attrs={"class": "form-control"}),
             "simbolo_l1": FileInput(attrs={"class": "form-control"}),
             "simbolo_l2": FileInput(attrs={"class": "form-control"}),
-
+            "codigo_amostra": TextInput(attrs={"class": "form-control", "placeholder": "Código de amostra"}),
             "tipo_item": Select(attrs={"class": "form-select"}),
 
         }
@@ -76,6 +76,7 @@ class ItemForm(forms.ModelForm):
             "simbolo_m1": "Imagem M1",
             "simbolo_l1": "Imagem L1",
             "simbolo_l2": "Imagem L2",
+            "codigo_amostra": "Código de Amostra",
 
                 "tipo_item": "Tipo de Item",
 

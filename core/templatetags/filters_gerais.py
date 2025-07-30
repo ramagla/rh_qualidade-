@@ -500,3 +500,11 @@ def conteudo_real(value):
 @register.filter
 def getattribute(obj, attr_name):
     return getattr(obj, attr_name, None)
+
+
+@register.filter
+def multiply(value, arg):
+    try:
+        return Decimal(value) * Decimal(arg)
+    except:
+        return None

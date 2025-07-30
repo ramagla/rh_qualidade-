@@ -122,23 +122,28 @@
 
       <!-- Nº Peça, Código Bras-Mol -->
       <tr>
-        <th style="text-align: right;"><i class="bi bi-hash me-1"></i> Nº da Peça:</th>
-        <td colspan="2">{{ ordem.item.descricao|default:"—" }}</td>
+  <th style="text-align: right;"><i class="bi bi-hash me-1"></i> Nº da Peça:</th>
+  <td>{{ ordem.item.descricao|default:"—" }}</td>
 
-        <th style="text-align: right;"><i class="bi bi-tag me-1"></i> Código Bras-Mol:</th>
-        <td colspan="2">{{ ordem.codigo_brasmol|default:"—" }}</td>
-      </tr>
+  <th style="text-align: right;"><i class="bi bi-tag me-1"></i> Código Bras-Mol:</th>
+  <td>{{ ordem.codigo_brasmol|default:"—" }}</td>
+
+  <th style="text-align: right;"><i class="bi bi-upc-scan me-1"></i> Código da Amostra:</th>
+  <td>{{ ordem.codigo_amostra|default:"—" }}</td>
+</tr>
 
       <!-- Prazo, Qtde. Amostra, Metodologia -->
       <tr>
         <th style="text-align: right;"><i class="bi bi-hourglass-split me-1"></i> Prazo solicitado:</th>
         <td>{{ ordem.prazo_solicitado|date:"d/m/Y"|default:"—" }}</td>
 
+        <th style="text-align: right;"><i class="bi bi-journal-check me-1"></i> Metodologia de aprovação:</th>
+        <td>{{ ordem.metodologia_aprovacao|default:"—" }}</td>
+
         <th style="text-align: right;"><i class="bi bi-boxes me-1"></i> Qtde. de amostra:</th>
         <td>{{ ordem.qtde_amostra|default:"—" }}</td>
 
-        <th style="text-align: right;"><i class="bi bi-journal-check me-1"></i> Metodologia de aprovação:</th>
-        <td>{{ ordem.metodologia_aprovacao|default:"—" }}</td>
+        
       </tr>
     </tbody>
   </table>

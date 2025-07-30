@@ -7,6 +7,7 @@ from django.db.models import FloatField, ExpressionWrapper
 from comercial.models import Cliente, Cotacao, OrdemDesenvolvimento
 from comercial.models.precalculo import PreCalculo, AnaliseComercial
 from decimal import Decimal
+from comercial.models.viabilidade import ViabilidadeAnaliseRisco
 
 from django.db.models import F, Case, When, DecimalField, Sum, Min
 from django.db.models.functions import TruncMonth
@@ -15,6 +16,8 @@ from django.db.models import F, Case, When, DecimalField, ExpressionWrapper
 from collections import defaultdict
 from django.db.models import Q
 from datetime import datetime
+from django.utils.timezone import now
+from comercial.models.ordem_desenvolvimento import OrdemDesenvolvimento
 
 @login_required
 def dashboard_comercial(request):
@@ -48,6 +51,28 @@ def dashboard_comercial(request):
 
     total_clientes = clientes_ativos + clientes_reativados
     total_ordens = OrdemDesenvolvimento.objects.filter(created_at__range=filtro_data["criado_em__range"]).count() if filtro_data else OrdemDesenvolvimento.objects.count()
+
+    hoje = now().date()
+
+    ods_qs = OrdemDesenvolvimento.objects.all()
+    if filtro_data:
+        ods_qs = ods_qs.filter(created_at__range=filtro_data["criado_em__range"])
+
+    ods_dentro_prazo = ods_qs.filter(
+        prazo_amostra__isnull=False,
+        prazo_amostra__gte=hoje
+    ).count()
+
+    ods_fora_prazo = ods_qs.filter(
+        prazo_amostra__isnull=False,
+        prazo_amostra__lt=hoje
+    ).count()
+
+    ods_amostras = ods_qs.filter(amostra="sim").count()
+    ods_novos_itens = ods_qs.filter(razao="novo").count()
+
+
+
 
     # Últimas cotações abertas
     ultimas_cotacoes = Cotacao.objects.filter(data_abertura__range=filtro_data["criado_em__range"]) if filtro_data else Cotacao.objects.all().order_by("-data_abertura")[:5]
@@ -125,14 +150,43 @@ def dashboard_comercial(request):
     top_clientes = (
         top_clientes_base.values("cotacao__cliente__razao_social")
         .annotate(total=Sum("valor_total"))
+        .filter(total__gt=0)
         .order_by("-total")[:5]
     )
+
 
     top_itens = (
         top_clientes_base.values("analise_comercial_item__item__codigo", "analise_comercial_item__item__descricao")
         .annotate(total=Sum("valor_total"))
+        .filter(total__gt=0)
         .order_by("-total")[:5]
     )
+
+
+    total_viabilidades = (
+        ViabilidadeAnaliseRisco.objects.filter(criado_em__range=filtro_data["criado_em__range"]).count()
+        if filtro_data else
+        ViabilidadeAnaliseRisco.objects.count()
+    )
+
+
+    # 1. Carrega viabilidades
+    viabilidades = ViabilidadeAnaliseRisco.objects.all()
+    if filtro_data:
+        viabilidades = viabilidades.filter(criado_em__range=filtro_data["criado_em__range"])
+
+    # 2. Conta conclusões por área
+    def contar_conclusao(queryset, campo):
+        return {
+            "viavel": queryset.filter(**{campo: "viavel"}).count(),
+            "alteracoes": queryset.filter(**{campo: "alteracoes"}).count(),
+            "inviavel": queryset.filter(**{campo: "inviavel"}).count(),
+        }
+
+    comercial = contar_conclusao(viabilidades, "conclusao_comercial")
+    viab_custos = contar_conclusao(viabilidades, "conclusao_custos")
+    tecnica = contar_conclusao(viabilidades, "conclusao_tecnica")
+
 
 
     # 4. Faturamento por setor (setor da 1ª etapa)
@@ -164,11 +218,15 @@ def dashboard_comercial(request):
             vistos.add(pid)
 
     faturamento_setores = sorted(
-        [{"setor": setor, "total": dados["total"], "qtd": dados["qtd"]}
-        for setor, dados in valores_por_setor.items()],
+        [
+            {"setor": setor, "total": dados["total"], "qtd": dados["qtd"]}
+            for setor, dados in valores_por_setor.items()
+            if dados["total"] > 0
+        ],
         key=lambda x: x["total"],
         reverse=True
     )
+
 
     faturamento_setores_total = sum(x["total"] for x in faturamento_setores)
     faturamento_setores_qtd_total = sum(x["qtd"] for x in faturamento_setores)
@@ -196,15 +254,48 @@ def dashboard_comercial(request):
                 else p.preco_selecionado
             )
 
-            custos = p.calcular_precos_com_impostos()
-            if custos and custos[0]["unitario"] > 0:
-                custo_unitario = custos[0]["unitario"]
-                margem = ((preco_final - custo_unitario) / custo_unitario) * 100
-                margens.append(margem)
+            if preco_final is None:
+                continue  # pula se não tem preço final
+
+            precos_calculados = p.calcular_precos_com_impostos()
+            if precos_calculados:
+                custo_unitario = precos_calculados[0].get("unitario")
+                if custo_unitario and custo_unitario > 0:
+                    margem = ((preco_final - custo_unitario) / custo_unitario) * 100
+                    margens.append(margem)
         except Exception as e:
             print(f"⚠️ Erro ao calcular margem para PreCalculo {p.id}: {e}")
 
+
     margem_media = round(sum(margens) / len(margens), 2) if margens else 0
+
+    ultimos_precalculos = (
+        PreCalculo.objects
+        .filter(id__in=precalc_ids_unicos)
+        .select_related(
+            "cotacao", 
+            "cotacao__cliente", 
+            "analise_comercial_item", 
+            "analise_comercial_item__item"
+        )
+        .order_by("-criado_em")[:5]
+        .annotate(
+            preco_final=Case(
+                When(preco_manual__gt=0, then=F("preco_manual")),
+                default=F("preco_selecionado"),
+                output_field=DecimalField()
+            ),
+            valor_total=ExpressionWrapper(
+                F("analise_comercial_item__qtde_estimada") *
+                Case(
+                    When(preco_manual__gt=0, then=F("preco_manual")),
+                    default=F("preco_selecionado"),
+                    output_field=DecimalField()
+                ),
+                output_field=DecimalField()
+            )
+        )
+    )
 
 
 
@@ -238,6 +329,26 @@ def dashboard_comercial(request):
         "data_fim": data_fim,
         "margem_media": margem_media,
         "top_itens": list(top_itens),
+        "total_viabilidades": total_viabilidades,
+        "ods_dentro_prazo": ods_dentro_prazo,
+        "ods_fora_prazo": ods_fora_prazo,
+        "ods_amostras": ods_amostras,
+        "ods_novos_itens": ods_novos_itens,
+
+       "viab_com_viavel": comercial["viavel"],
+        "viab_com_alt": comercial["alteracoes"],
+        "viab_com_inv": comercial["inviavel"],
+
+       "viab_cus_viavel": viab_custos["viavel"],
+        "viab_cus_alt": viab_custos["alteracoes"],
+        "viab_cus_inv": viab_custos["inviavel"],
+
+
+        "viab_tec_viavel": tecnica["viavel"],
+        "viab_tec_alt": tecnica["alteracoes"],
+        "viab_tec_inv": tecnica["inviavel"],
+        "ultimos_precalculos": ultimos_precalculos,
+
 
     }
 

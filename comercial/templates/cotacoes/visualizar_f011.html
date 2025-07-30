@@ -181,7 +181,7 @@
       </tr>
      <tr>
   <td colspan="6" class="px-2 py-1">
-    {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.analise_comercial titulo="Assinatura Digital — Análise Comercial" %}
+<p class="mb-0"><strong>Departamento Comercial</strong> — assinatura disponível na última página</p>
   </td>
 </tr>
 
@@ -375,12 +375,21 @@
         <td colspan="2">{{ f.horas_projeto|floatformat:"2" }} h</td>
         <td colspan="2">{{ f.horas_ferramentaria|floatformat:"2" }} h</td>
         <td colspan="2">
-<div class="d-flex justify-content-center gap-3 flex-wrap text-start" style="min-height: 30px;">
-            <label><input type="checkbox" {% if f.tipo == "Nova" %}checked{% endif %}> Ferramenta nova</label>
-            <label><input type="checkbox" {% if f.tipo == "Adpt" %}checked{% endif %}> Adaptação</label>
-            <label><input type="checkbox" {% if f.tipo == "Disp" %}checked{% endif %}> Dispositivo</label>
-            <label><input type="checkbox" {% if f.tipo == "Outro" %}checked{% endif %}> Outros</label>
-          </div>
+<div class="d-flex justify-content-center align-items-center gap-3 flex-wrap text-start" style="min-height: 30px;">
+  <label class="d-flex align-items-center gap-1 m-0">
+    <input type="checkbox" {% if f.tipo == "Nova" %}checked{% endif %}> Ferramenta nova
+  </label>
+  <label class="d-flex align-items-center gap-1 m-0">
+    <input type="checkbox" {% if f.tipo == "Adpt" %}checked{% endif %}> Adaptação
+  </label>
+  <label class="d-flex align-items-center gap-1 m-0">
+    <input type="checkbox" {% if f.tipo == "Disp" %}checked{% endif %}> Dispositivo
+  </label>
+  <label class="d-flex align-items-center gap-1 m-0">
+    <input type="checkbox" {% if f.tipo == "Outro" %}checked{% endif %}> Outros
+  </label>
+</div>
+
         </td>
       </tr>
       
@@ -391,22 +400,37 @@
       <div class="mt-1">{{ f.observacoes|safe }}</div>
     </td>
   </tr>
+  
 {% endif %}
 
-      
+      <tr>
+  <td colspan="6" class="text-start px-2 py-1">
+    <em><strong>Engenharia / Ferramentaria</strong> — assinatura disponível na última página</em>
+  </td>
+</tr>
 
 
 
+
       
-      
+
     </tbody>
+
   </table>
-   {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinatura_ferramenta titulo="Assinatura Digital — Ferramenta / Dispositivo" %}
 
 {% endfor %}
 
 <div class="page-break"></div>
 
+<div class="text-center mt-2 mb-3">
+  <h5 class="text-uppercase mb-1">
+    <i class="bi bi-clipboard-data-fill me-1 text-primary"></i> Análises do Produto
+  </h5>
+  <p class="small text-muted mb-0">
+    Cotação Nº <strong>{{ precalc.cotacao.numero|stringformat:"04d" }}</strong> &nbsp; | &nbsp;
+    Pré-Cálculo Nº <strong>{{ precalc.numero|stringformat:"05d" }}</strong>
+  </p>
+</div>
 
 <!-- Análise Comercial Otimizada -->
 <div class="table-responsive">
@@ -507,7 +531,7 @@
 
   <tr>
   <td colspan="6" class="text-start px-2 py-1">
-    {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.analise_comercial titulo="Assinatura Digital — Análise Comercial" %}
+<p class="mb-0"><strong>Departamento Comercial</strong> — assinatura disponível na última página</p>
   </td>
 </tr>
 
@@ -520,13 +544,12 @@
 <div class="table-responsive">
   <table class="table table-bordered table-sm align-middle text-center" style="font-size: 10px;">
     <thead class="table-secondary">
-     <tr>
-  <th colspan="5" class="py-1">
-    <i class="bi bi-gear me-1 text-muted"></i>
-    Análise técnica (executada pelo Departamento de Desenvolvimento)
-  </th>
-</tr>
-
+      <tr>
+        <th colspan="5" class="py-1">
+          <i class="bi bi-gear me-1 text-muted"></i>
+          Análise técnica (executada pelo Departamento de Desenvolvimento)
+        </th>
+      </tr>
       <tr>
         <th class="text-start px-2 py-1">Questão</th>
         <th class="px-1 py-1">Não</th>
@@ -547,13 +570,25 @@
         <tr>
           <td class="text-start px-2 py-1">{{ titulos_avaliacao|dict_get:campo }}</td>
           <td class="px-1 py-1">
-            <input type="checkbox" {% if precalc.avaliacao_tecnica_item|attr:campo == False %}checked{% endif %}>
+            <div class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="checkbox" 
+                     {% if precalc.avaliacao_tecnica_item|attr:campo == False %}checked{% endif %}>
+              <label class="form-check-label small">Não</label>
+            </div>
           </td>
           <td class="px-1 py-1">
-            <input type="checkbox" {% if precalc.avaliacao_tecnica_item|attr:campo == True %}checked{% endif %}>
+            <div class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="checkbox" 
+                     {% if precalc.avaliacao_tecnica_item|attr:campo == True %}checked{% endif %}>
+              <label class="form-check-label small">Sim</label>
+            </div>
           </td>
           <td class="px-1 py-1">
-            <input type="checkbox" {% if precalc.avaliacao_tecnica_item|attr:campo == None %}checked{% endif %}>
+            <div class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="checkbox" 
+                     {% if precalc.avaliacao_tecnica_item|attr:campo == None %}checked{% endif %}>
+              <label class="form-check-label small">N/A</label>
+            </div>
           </td>
           <td class="text-start px-2 py-1">
             {{ precalc.avaliacao_tecnica_item|attr:obs|default:"—" }}
@@ -563,6 +598,7 @@
     </tbody>
   </table>
 </div>
+
 
 <!-- Conclusão Técnica -->
 <div class="table-responsive">
@@ -616,7 +652,7 @@
 <tr>
   <td colspan="6" class="text-start px-2 py-1">
     {% if assinaturas.avaliacao_tecnica %}
-      {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.avaliacao_tecnica titulo="Assinatura Digital — Avaliação Técnica" %}
+<p class="mb-0"><strong>Departamento Técnico</strong> — assinatura disponível na última página</p>
     {% else %}
       <em>Assinatura não encontrada.</em>
     {% endif %}
@@ -670,7 +706,7 @@
 
  <tr>
   <td colspan="2" class="text-start px-2 py-1">
-{% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.desenvolvimento titulo="Assinatura Digital — Desenvolvimento" %}
+<p class="mb-0"><strong>Departamento de Desenvolvimento</strong> — assinatura disponível na última página</p>
 
   </td>
 </tr>
@@ -681,6 +717,35 @@
   </table>
 </div>
 
+<div class="page-break"></div>
+
+<div class="container mt-4">
+  <h4 class="text-center mb-1 text-uppercase">
+    <i class="bi bi-shield-lock-fill me-2 text-primary"></i>Assinaturas Digitais do Documento
+  </h4>
+  <p class="text-center text-muted mb-4 small">
+    Cotação Nº <strong>{{ precalc.cotacao.numero|stringformat:"04d" }}</strong> &nbsp; | &nbsp;
+    Pré-Cálculo Nº <strong>{{ precalc.numero|stringformat:"05d" }}</strong>
+  </p>
+
+  <div class="mb-4">
+    {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.analise_comercial titulo="Assinatura Digital — Análise Comercial" %}
+  </div>
+
+  <div class="mb-4">
+    {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.avaliacao_tecnica titulo="Assinatura Digital — Avaliação Técnica" %}
+  </div>
+
+  <div class="mb-4">
+    {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinaturas.desenvolvimento titulo="Assinatura Digital — Desenvolvimento" %}
+  </div>
+
+  {% if assinatura_ferramenta %}
+    <div class="mb-4">
+      {% include 'partials/global/_assinatura_com_qrcode.html' with dados=assinatura_ferramenta titulo="Assinatura Digital — Ferramenta / Dispositivo" %}
+    </div>
+  {% endif %}
+</div>
 
   
   
@@ -688,6 +753,9 @@
 
 </div>
 </div>
+
+
+
 <style>
   @media print {
   body, .pdf-container {

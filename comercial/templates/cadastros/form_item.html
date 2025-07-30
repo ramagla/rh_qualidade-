@@ -58,7 +58,12 @@
                             </label>
                             {{ form.codigo_desenho|add_class:"form-control" }}
                         </div>
-                        
+                        <div class="col-md-4">
+  <label for="{{ form.codigo_amostra.id_for_label }}" class="form-label">
+    <i class="bi bi-qr-code me-1"></i> Código de Amostra:
+  </label>
+  {{ form.codigo_amostra|add_class:"form-control" }}
+</div>
 
                         <div class="col-md-4">
                             <label for="{{ form.revisao.id_for_label }}" class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Revisão:</label>

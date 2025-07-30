@@ -42,6 +42,7 @@ class Item(models.Model):
     requisito_especifico = models.BooleanField("Requisito Específico Cliente?", default=False)
     item_seguranca = models.BooleanField("É Item de Segurança?", default=False)
     codigo_desenho = models.CharField("Código do Desenho", max_length=50, blank=True, null=True)
+    codigo_amostra = models.CharField("Código de Amostra", max_length=50, blank=True, null=True)
 
     desenho = models.FileField("Desenho", upload_to="itens/desenhos/", blank=True, null=True)
     revisao = models.CharField("Revisão", max_length=10, blank=True, null=True)

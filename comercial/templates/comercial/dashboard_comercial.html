@@ -142,36 +142,122 @@
 
 
 
-  <!-- Informações e Últimas Cotações -->
   <div class="row gy-4">
-    <div class="col-md-6">
-      <div class="card bg-light">
-        <div class="card-body text-center">
-          <h5 class="card-title text-success"><i class="bi bi-gear-wide-connected"></i> Ordens de Desenvolvimento</h5>
-          <p class="fs-3 fw-bold text-dark">{{ total_ordens }}</p>
-        </div>
-      </div>
+  <!-- Ordens de Desenvolvimento -->
+<div class="col-md-4">
+  <div class="card h-100 bg-light">
+    <div class="card-header bg-white">
+      <strong><i class="bi bi-gear-wide-connected me-1"></i> Ordens de Desenvolvimento</strong>
     </div>
-    <div class="col-md-6">
-      <div class="card bg-light">
-        <div class="card-header bg-white"><strong>🕑 Últimas Cotações</strong></div>
-        <div class="card-body">
-          {% if ultimas_cotacoes %}
-            <ul class="list-group list-group-flush">
-              {% for c in ultimas_cotacoes %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span><strong>#{{ c.numero }}</strong> – {{ c.cliente.razao_social }}</span>
-                  <span class="text-muted">{{ c.data_abertura|date:"d/m/Y" }}</span>
-                </li>
-              {% endfor %}
-            </ul>
-          {% else %}
-            <p class="text-muted">Nenhuma cotação recente.</p>
-          {% endif %}
-        </div>
+    <div class="card-body text-center">
+      <p class="fs-3 fw-bold text-dark">{{ total_ordens }}</p>
+      <hr class="my-2">
+      <div class="text-start small">
+        
+        <p class="mb-1">
+          <i class="bi bi-box-seam me-1"></i>
+          <strong>Amostras:</strong> {{ ods_amostras }}
+        </p>
+        <p class="mb-0">
+          <i class="bi bi-stars me-1"></i>
+          <strong>Novos Itens:</strong> {{ ods_novos_itens }}
+        </p>
       </div>
     </div>
   </div>
+</div>
+
+
+  <!-- Análises de Viabilidade -->
+<div class="col-md-4">
+  <div class="card h-100 bg-light">
+    <div class="card-header bg-white">
+      <strong><i class="bi bi-shield-check me-1"></i> Análises de Viabilidade</strong>
+    </div>
+    <div class="card-body text-center">
+      <p class="fs-3 fw-bold text-dark">{{ total_viabilidades }}</p>
+      <hr class="my-2">
+      <div class="text-start small">
+        <p class="mb-1">
+          <i class="bi bi-clipboard-check me-1 text-primary"></i>
+          <strong>Comercial:</strong>
+          Viáveis: {{ viab_com_viavel }} |
+          Alterações: {{ viab_com_alt }} |
+          Inviáveis: {{ viab_com_inv }}
+        </p>
+        <p class="mb-1">
+          <i class="bi bi-currency-dollar me-1 text-success"></i>
+          <strong>Custos:</strong>
+          Viáveis: {{ viab_cus_viavel }} |
+          Alterações: {{ viab_cus_alt }} |
+          Inviáveis: {{ viab_cus_inv }}
+        </p>
+        <p class="mb-0">
+          <i class="bi bi-wrench-adjustable me-1 text-secondary"></i>
+          <strong>Técnica:</strong>
+          Viáveis: {{ viab_tec_viavel }} |
+          Alterações: {{ viab_tec_alt }} |
+          Inviáveis: {{ viab_tec_inv }}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Últimas Cotações -->
+  <div class="col-md-4">
+  <div class="card h-100 bg-light">
+    <div class="card-header bg-white">
+      <strong><i class="bi bi-clock-history me-1"></i> Últimos Pré-Cálculos</strong>
+    </div>
+    <div class="card-body p-0" style="max-height: 360px; overflow-y: auto;">
+      {% if ultimos_precalculos %}
+        <ul class="list-group list-group-flush">
+          {% for p in ultimos_precalculos %}
+            <li class="list-group-item">
+  <div class="fw-semibold mb-1">
+    #{{ p.cotacao.numero }} – {{ p.numero }} – {{ p.cotacao.cliente.razao_social|default:"–" }}
+  </div>
+  <div class="text-muted small mb-1">
+    {% if p.analise_comercial_item and p.analise_comercial_item.item %}
+      🧾 <strong>Item:</strong>
+      {{ p.analise_comercial_item.item.codigo }} – {{ p.analise_comercial_item.item.descricao|truncatechars:40 }}
+    {% else %}
+      🧾 <strong>Item:</strong> –
+    {% endif %}
+  </div>
+  <div class="text-muted small">
+    📦 <strong>Qtd:</strong> {{ p.analise_comercial_item.qtde_estimada|default:"–" }}<br>
+    💰 💰 <strong>Unitário:</strong> R$ {{ p.preco_final|floatformat:4|default:"–" }}
+<br>
+    💲 <strong>Total:</strong> {{ p.valor_total|formatar_reais|default:"–" }}
+  </div>
+  <div class="text-end small">
+    <span class="badge bg-secondary">
+      {{ p.analise_comercial_item.get_status_display|default:"–" }}
+    </span>
+  </div>
+   <div class="mt-1">
+        <a href="{% url 'visualizar_precalculo' p.id %}" class="btn btn-outline-primary btn-sm me-1" title="Visualizar F011">
+          <i class="bi bi-file-earmark-text"></i>
+        </a>
+        <a href="{% url 'precificacao_produto' p.id %}" class="btn btn-outline-success btn-sm" title="Precificação do Produto">
+          <i class="bi bi-currency-dollar"></i>
+        </a>
+      </div>
+</li>
+
+
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted m-3">Nenhum pré-cálculo recente.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
 
   <!-- Gráficos -->
   <div class="row mt-4">

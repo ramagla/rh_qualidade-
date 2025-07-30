@@ -19,7 +19,7 @@
 
  <!-- Cabeçalho da Precificação (versão compacta) -->
 <div class="table-responsive mb-2">
-    <table class="table table-bordered align-middle text-center mb-0" style="table-layout: fixed; font-size: 9px;">
+<table class="table table-bordered align-middle text-center mb-0 tabela-cabecalho" style="table-layout: fixed; font-size: 9px;">
       <tr>
         <!-- Coluna Logo -->
         <td style="width: 20%; padding: 4px;">
@@ -148,6 +148,7 @@
         <div><i class="bi bi-info-square me-1 text-secondary"></i><strong>Descrição:</strong> {{ mat.descricao|default:"—" }}</div>
         <div><i class="bi bi-box2-heart me-1 text-secondary"></i><strong>Peso bruto (Kg):</strong> {{ mat.peso_bruto|floatformat:"6" }}</div>
         <div><i class="bi bi-archive-fill me-1 text-secondary"></i><strong>Peso total (Kg):</strong> {{ mat.peso_bruto_total|floatformat:"6" }}</div>
+        
       </div>
   
       <!-- 🚚 Fornecedor -->
@@ -156,6 +157,8 @@
         <div><i class="bi bi-person-lines-fill me-1 text-secondary"></i><strong>Nome:</strong> {{ mat.fornecedor|default:"—" }}</div>
         <div><i class="bi bi-clock-history me-1 text-secondary"></i><strong>Entrega:</strong> {{ mat.entrega_dias|default:"—" }} dias</div>
         <div><i class="bi bi-boxes me-1 text-secondary"></i><strong>Lote mín.:</strong> {{ mat.lote_minimo|default:"—" }}</div>
+        <div><i class="bi bi-droplet-half me-1 text-secondary"></i><strong>Peso líquido unitário (Kg):</strong> {{ mat.peso_liquido|floatformat:"6" }}</div>
+<div><i class="bi bi-droplet-fill me-1 text-secondary"></i><strong>Peso líquido total (Kg):</strong> {{ mat.peso_liquido_total|floatformat:"6" }}</div>
       </div>
   
       <!-- 💰 Valores -->
@@ -351,7 +354,7 @@
 
 
 <!-- 📊 Bloco: Preço Final (compacto) -->
-<div class="quebra-se-preciso row gx-2 gy-3 text-center mt-3 align-items-start" style="font-size: 9px;">
+<div class=" row gx-2 gy-3 text-center mt-3 align-items-start" style="font-size: 9px;">
     <!-- 📉 Sem Impostos -->
     <div class="col-md-4">
       <div class="bg-light border fw-bold py-1">Sem impostos</div>
@@ -398,50 +401,59 @@
       </table>
     </div>
   
-    <!-- 🧮 Gráfico e Ferramental -->
     <div class="col-md-4">
-      <div class="bg-light border fw-bold py-1">Gasto com Ferramental s/Impostos</div>
-      <table class="table table-bordered table-sm mb-2">
-        <tr>
-          <td class="text-end"><strong>Total:</strong></td>
-          <td class="text-start">{{ valor_ferramental|formatar_reais }}</td>
-        </tr>
-      </table>
-  
-     <!-- Gráfico de Pizza de Custos -->
-     <div class="text-center mt-2 small" style="font-size: 8px;">
-        <div class="fw-bold mb-2">Distribuição de Custos (% por item)</div>
-    <canvas id="graficoPizzaCusto" width="120" height="120" class="mx-auto" style="max-width: 130px;"></canvas>
-  
-    <div class="mt-2 d-flex justify-content-center flex-wrap gap-3" style="font-size: 7px;">
-        <div class="text-center">
-          <strong>Matéria Prima</strong><br>
-          U: {{ custo_materia.unitario|floatformat:4 }}<br>
-          T: {{ custo_materia.total|floatformat:2 }}<br>
-          ({{ custo_materia.percentual|floatformat:2 }}%)
-        </div>
-        {% if tem_servicos_selecionados %}
-<div class="text-center">
-  <strong>Serviço Externo</strong><br>
-  U: {{ custo_servico.unitario|floatformat:4 }}<br>
-  T: {{ custo_servico.total|floatformat:2 }}<br>
-  ({{ custo_servico.percentual|floatformat:2 }}%)
-</div>
-{% endif %}
+  {% if valor_ferramental > 0 %}
+  <!-- Gasto com Ferramental -->
+  <div class="bg-light border fw-bold py-1">Gasto com Ferramental s/Impostos</div>
+  <table class="table table-bordered table-sm mb-2">
+    <tr>
+      <td class="text-end"><strong>Total:</strong></td>
+      <td class="text-start">{{ valor_ferramental|formatar_reais }}</td>
+    </tr>
+  </table>
+  {% endif %}
 
-        <div class="text-center">
-          <strong>Roteiro</strong><br>
-          U: {{ custo_roteiro.unitario|floatformat:4 }}<br>
-          T: {{ custo_roteiro.total|floatformat:2 }}<br>
-          ({{ custo_roteiro.percentual|floatformat:2 }}%)
-        </div>
+  <!-- Preço de Custo s/Impostos (sempre visível) -->
+  <div class="text-center mt-1 mb-2" style="font-size: 10px;">
+    <span class="text-muted me-1">
+      <i class="bi bi-currency-dollar text-primary"></i>
+      <strong>Preço de Custo:</strong>
+    </span>
+    <span class="fw-semibold">R$ {{ precalc.custo_unitario_total_sem_impostos|floatformat:4 }}</span>
+  </div>
+
+  <!-- Gráfico de Pizza de Custos -->
+  <div class="text-center mt-2 small" style="font-size: 8px;">
+    <div class="fw-bold mb-2">Distribuição de Custos (% por item)</div>
+    <canvas id="graficoPizzaCusto" width="120" height="120" class="mx-auto" style="max-width: 130px;"></canvas>
+
+    <div class="mt-2 d-flex justify-content-center flex-wrap gap-3" style="font-size: 7px;">
+      <div class="text-center">
+        <strong>Matéria Prima</strong><br>
+        U: {{ custo_materia.unitario|floatformat:4 }}<br>
+        T: {{ custo_materia.total|floatformat:2 }}<br>
+        ({{ custo_materia.percentual|floatformat:2 }}%)
       </div>
-      
+
+      {% if tem_servicos_selecionados %}
+      <div class="text-center">
+        <strong>Serviço Externo</strong><br>
+        U: {{ custo_servico.unitario|floatformat:4 }}<br>
+        T: {{ custo_servico.total|floatformat:2 }}<br>
+        ({{ custo_servico.percentual|floatformat:2 }}%)
+      </div>
+      {% endif %}
+
+      <div class="text-center">
+        <strong>Roteiro</strong><br>
+        U: {{ custo_roteiro.unitario|floatformat:4 }}<br>
+        T: {{ custo_roteiro.total|floatformat:2 }}<br>
+        ({{ custo_roteiro.percentual|floatformat:2 }}%)
+      </div>
+    </div>
   </div>
-  
-      
-      
-  </div>
+</div>
+
   
   
   <hr class="my-1">
@@ -658,5 +670,46 @@
       }
     }
   </style>
+  <style>
+@media print {
+  .tabela-cabecalho {
+    font-size: 6.6px !important; /* Reduz ainda mais o texto */
+    line-height: 1.0 !important; /* Altura de linha mínima aceitável */
+  }
+
+  .tabela-cabecalho td {
+    padding: 0.5px 1px !important; /* Menor altura possível sem colapsar */
+    vertical-align: middle !important;
+  }
+
+  .tabela-cabecalho strong {
+    font-size: 7px !important;
+  }
+
+  .tabela-cabecalho span {
+    font-size: 5.8px !important;
+  }
+
+  .tabela-cabecalho img {
+    max-height: 32px !important; /* Aumenta levemente o logo */
+    margin-top: 0 !important;
+  }
+
+  .tabela-cabecalho hr {
+    margin: 1px auto !important;
+  }
+
+  .tabela-cabecalho .text-danger {
+    font-size: 7.5px !important;
+  }
+
+  .tabela-cabecalho table {
+    margin: 0 !important;
+  }
   
+}
+</style>
+
+
+
 {% endblock %}

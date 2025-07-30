@@ -72,7 +72,7 @@ def criar_ordem_desenvolvimento_ao_aprovar(sender, instance, created, **kwargs):
                 cliente=cliente,
                 razao="novo",  # Valor padrão, pode ser ajustado
                 metodologia_aprovacao=instance.metodologia,
-                qtde_amostra=instance.qtde_estimada or 0,
+                qtde_amostra=None,
                 automotivo_oem=item.automotivo_oem,
                 comprador=cliente.comprador if hasattr(cliente, "comprador") else "",
                 requisito_especifico=item.requisito_especifico,
@@ -106,16 +106,14 @@ def criar_ordem_amostra_ao_solicitar(sender, instance, created, **kwargs):
         cliente = item.cliente
 
         with transaction.atomic():
-            # Gera código Bras-Mol baseado na data
             hoje_str = datetime.now().strftime("%Y%m%d")
-            base_codigo = f"{hoje_str}-"
-            sufixo = 1
-            codigo_final = f"{base_codigo}{sufixo:02d}"
 
-            # Garante unicidade incremental
-            while OrdemDesenvolvimento.objects.filter(codigo_brasmol=codigo_final).exists():
-                sufixo += 1
-                codigo_final = f"{base_codigo}{sufixo:02d}"
+            # Gera código da amostra
+            sufixo_amostra = 1
+            codigo_amostra = f"{hoje_str}-{sufixo_amostra:02d}"
+            while OrdemDesenvolvimento.objects.filter(codigo_amostra=codigo_amostra).exists():
+                sufixo_amostra += 1
+                codigo_amostra = f"{hoje_str}-{sufixo_amostra:02d}"
 
             ultimo_numero = OrdemDesenvolvimento.objects.aggregate(
                 models.Max("numero")
@@ -127,10 +125,10 @@ def criar_ordem_amostra_ao_solicitar(sender, instance, created, **kwargs):
                 item=item,
                 cliente=cliente,
                 razao="amostras",
-                amostra="sim",  # Campo de amostra
-                codigo_brasmol=codigo_final,
+                amostra="sim",
+                codigo_amostra=codigo_amostra,  # ✅ Apenas este campo gerado
                 metodologia_aprovacao=instance.metodologia,
-                qtde_amostra=instance.qtde_estimada or 0,
+                qtde_amostra=300,
                 automotivo_oem=item.automotivo_oem,
                 comprador=getattr(cliente, "comprador", ""),
                 requisito_especifico=item.requisito_especifico,
@@ -144,6 +142,8 @@ def criar_ordem_amostra_ao_solicitar(sender, instance, created, **kwargs):
             )
     except Exception as e:
         logger.error(f"❌ Erro ao criar OD para amostras: {e}")
+
+
 
 
 
@@ -202,3 +202,40 @@ def criar_viabilidade_automatica(sender, instance, created, **kwargs):
             logger.info(f"✅ Viabilidade #{viabilidade.numero} criada automaticamente para o Pré-Cálculo #{precalc.pk}")
     except Exception as e:
         logger.error(f"❌ Erro ao criar Viabilidade automática: {e}")
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from comercial.models import OrdemDesenvolvimento, Item
+import logging
+
+logger = logging.getLogger(__name__)
+
+@receiver(post_save, sender=OrdemDesenvolvimento)
+def atualizar_item_com_codigos_da_od(sender, instance, **kwargs):
+    try:
+        item = instance.item
+        atualizado = False
+
+        # Atualiza o código (código interno) do item com base no código Bras-Mol
+        if instance.codigo_brasmol and item.codigo != instance.codigo_brasmol:
+            if not Item.objects.exclude(pk=item.pk).filter(codigo=instance.codigo_brasmol).exists():
+                item.codigo = instance.codigo_brasmol
+                atualizado = True
+            else:
+                logger.warning(f"❌ Código Bras-Mol '{instance.codigo_brasmol}' já está em uso por outro item.")
+
+        # Atualiza o campo codigo_amostra no item
+        if instance.codigo_amostra and item.codigo_amostra != instance.codigo_amostra:
+            if not Item.objects.exclude(pk=item.pk).filter(codigo_amostra=instance.codigo_amostra).exists():
+                item.codigo_amostra = instance.codigo_amostra
+                atualizado = True
+            else:
+                logger.warning(f"❌ Código de amostra '{instance.codigo_amostra}' já está em uso por outro item.")
+
+        if atualizado:
+            item.full_clean()
+            item.save()
+            logger.info(f"✅ Item #{item.pk} atualizado com sucesso com base na OD #{instance.pk}")
+    except Exception as e:
+        logger.error(f"❌ Erro ao atualizar o item via OD #{instance.pk}: {e}")

@@ -62,6 +62,7 @@ class OrdemDesenvolvimentoForm(forms.ModelForm):
             "tipo_tse": forms.Select(attrs={"class": "form-select"}),
             "status_tse": forms.Select(attrs={"class": "form-select"}),
             "prazo_tse": forms.DateInput(format="%Y-%m-%d",attrs={"class": "form-control", "type": "date"}),
+            "codigo_amostra": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: AM-2025-001"}),
 
             "resistencia_corrosao": forms.Select(attrs={"class": "form-select"}),
             "prazo_resistencia": forms.DateInput(format="%Y-%m-%d",attrs={"class": "form-control", "type": "date"}),
