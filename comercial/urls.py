@@ -9,6 +9,7 @@ from comercial.utils.email_cotacao_utils import (
     responder_cotacao_servico_lote,
 )
 from comercial.views import ordem_desenvolvimento_views
+from comercial.views import indicadores_views
 
 urlpatterns = [
     # Dashboard
@@ -98,6 +99,11 @@ urlpatterns = [
     path("viabilidades/visualizar/<int:pk>/", viabilidade_views.visualizar_viabilidade, name="visualizar_viabilidade"),
     path("viabilidades/excluir/<int:pk>/", viabilidade_views.excluir_viabilidade, name="excluir_viabilidade"),
 
+    # Indicadores
+    path("indicadores/4.1-prazo-cotacao/", indicadores_views.indicador_prazo_cotacao, name="indicador_prazo_cotacao"),
+    path("indicadores/4.2-itens-novos/", indicadores_views.indicador_itens_novos, name="indicador_itens_novos"),
+    path("indicadores/4.3-cotacoes-funcionario/", indicadores_views.indicador_cotacoes_funcionario, name="indicador_cotacoes_funcionario"),
+    path("indicadores/4.4-taxa-aprovacao/", indicadores_views.indicador_taxa_aprovacao, name="indicador_taxa_aprovacao"),
 
 
 ]

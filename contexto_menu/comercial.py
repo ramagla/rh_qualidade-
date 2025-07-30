@@ -73,6 +73,35 @@ def menu_comercial(user):
             "icon": "fas fa-shield-alt",
         })
 
+    if user.has_perm("comercial.view_cotacao"):  # ou outra permissão adequada
+        submenu_indicadores = [
+            {
+                "name": "4.1 - Atendimento do Prazo de Cotação",
+                "url": "indicador_prazo_cotacao",
+                "icon": "fas fa-clock",
+            },
+            {
+                "name": "4.2 - Nº de Itens Novos Vendidos",
+                "url": "indicador_itens_novos",
+                "icon": "fas fa-cubes",
+            },
+            {
+                "name": "4.3 - Nº de Cotações por Funcionário",
+                "url": "indicador_cotacoes_funcionario",
+                "icon": "fas fa-user-friends",
+            },
+            {
+                "name": "4.4 - Taxa de Orçamentos Aprovados",
+                "url": "indicador_taxa_aprovacao",
+                "icon": "fas fa-percentage",
+            },
+        ]
+
+        menu.append({
+            "name": "Indicadores",
+            "icon": "fas fa-chart-line",
+            "submenu": submenu_indicadores,
+        })
 
 
     return menu

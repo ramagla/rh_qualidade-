@@ -307,7 +307,10 @@ def divmod_horas(total_minutos):
 
 @register.filter
 def get_item(dictionary, key):
-    return dictionary.get(key, 0)
+    try:
+        return dictionary.get(key)
+    except (AttributeError, TypeError):
+        return ""
 
 
 @register.filter
@@ -508,3 +511,11 @@ def multiply(value, arg):
         return Decimal(value) * Decimal(arg)
     except:
         return None
+
+@register.filter
+def sum(valores):
+    return sum(valores.values()) if isinstance(valores, dict) else 0
+
+@register.filter(name="soma_valores_dict")
+def soma_valores_dict(valores):
+    return sum(valores.values()) if isinstance(valores, dict) else 0
