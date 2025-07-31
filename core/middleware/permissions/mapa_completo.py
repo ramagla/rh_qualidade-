@@ -15,7 +15,6 @@ permission_map = dict(ChainMap(
     qualidade_permissions,
     portaria_permissions,  # ✅ novo
     comercial_permissions,  # ✅ novo
-
     portaria_permissions, 
     recibos_permissions,  
     tecnico_permissions,

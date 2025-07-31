@@ -132,7 +132,7 @@
         {{ form.avaliacao_global_avaliado|safe }}
               </div>
 
-      {% include 'partials/global/_campo_anexo.html' %}
+{% include 'partials/global/_campo_anexo.html' with form=form campo="anexo" %}
 
     </div>
   </div>

@@ -13,7 +13,10 @@ def redirecionar_para_modulo_permitido(user):
         return redirect("metrologia_home")
     elif user.has_perm("Funcionario.acesso_rh"):
         return redirect("home")
+    elif user.has_perm("tecnico.acesso_tecnico"):  # ✅ Adicionado
+        return redirect("tecnico:tecnico_home")     # ✅ Nome da view do módulo técnico
     return redirect("acesso_negado")
+
 
 
 class PermissionMiddleware:
