@@ -56,14 +56,7 @@
       </div>
     {% endif %}
 
-    <!-- Mensagens do sistema -->
-    {% if messages %}
-      <div class="mb-3">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
+
 
     <!-- Formulário de resposta -->
     <form method="post" class="mt-4">

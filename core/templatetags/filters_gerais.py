@@ -419,24 +419,33 @@ from django.utils.timezone import now
 @register.filter
 def esta_valida(cotacao):
     """
-    Retorna True se a cotação ainda estiver dentro da validade.
+    Retorna True se a cotação ainda estiver dentro da validade,
+    com base na data de envio da proposta quando disponível.
     """
-    if not cotacao.data_abertura or not cotacao.validade_proposta:
+    if not cotacao.validade_proposta:
         return None
-    data_limite = cotacao.data_abertura + timedelta(days=cotacao.validade_proposta)
-    return now().date() <= data_limite.date()
+    if cotacao.data_envio_proposta:
+        data_base = cotacao.data_envio_proposta
+    else:
+        data_base = cotacao.data_abertura.date()
+    data_limite = data_base + timedelta(days=cotacao.validade_proposta)
+    return now().date() <= data_limite
 
 
 @register.filter
 def dias_restantes(cotacao):
     """
-    Retorna a quantidade de dias restantes até o vencimento da cotação.
+    Retorna a quantidade de dias restantes até o vencimento da cotação,
+    com base na data de envio da proposta quando disponível.
     """
-    if not cotacao.data_abertura or not cotacao.validade_proposta:
+    if not cotacao.validade_proposta:
         return None
-
-    data_limite = cotacao.data_abertura + timedelta(days=cotacao.validade_proposta)
-    return (data_limite.date() - now().date()).days
+    if cotacao.data_envio_proposta:
+        data_base = cotacao.data_envio_proposta
+    else:
+        data_base = cotacao.data_abertura.date()
+    data_limite = data_base + timedelta(days=cotacao.validade_proposta)
+    return (data_limite - now().date()).days
 
 
 @register.filter

@@ -28,44 +28,67 @@ from django.shortcuts import redirect
 
 from django.db.models import Max, Count, Q
 
+from datetime import datetime
+from django.utils.timezone import now
+
 @login_required
 @permission_required("tecnico.view_roteiroproducao", raise_exception=True)
 def lista_roteiros(request):
-    item_nome = request.GET.get("item", "")
-    setor_id  = request.GET.get("setor", "")
+    # 1) Captura filtros
+    codigo_item    = request.GET.get("codigo_item", "")
+    status_filtro  = request.GET.get("status")
+    if not status_filtro:
+        status_filtro = "ativo"
+    criado_inicio  = request.GET.get("criado_inicio", "")
+    criado_fim     = request.GET.get("criado_fim", "")
+    setor_id       = request.GET.get("setor", "")
+
+    # 2) Queryset base
     qs = RoteiroProducao.objects.select_related("item").all()
-    if item_nome:
-        qs = qs.filter(item__descricao__icontains=item_nome)
+
+    # 3) Aplica filtros
+    if codigo_item:
+        qs = qs.filter(item__codigo__icontains=codigo_item)
+    if status_filtro:
+         qs = qs.filter(status=status_filtro)
+    if criado_inicio:
+        qs = qs.filter(criado_em__date__gte=criado_inicio)
+    if criado_fim:
+        qs = qs.filter(criado_em__date__lte=criado_fim)
     if setor_id:
         qs = qs.filter(etapas__setor_id=setor_id)
+
     qs = qs.distinct().order_by("-criado_em")
 
+    # 4) Métricas e paginação (mantém como antes)
     total_roteiros      = qs.count()
     mes_atual           = datetime.now().month
     atualizadas_mes     = qs.filter(atualizado_em__month=mes_atual).count()
     subtitle_atualizadas = f"Atualizadas em {datetime.now():%m/%Y}"
-
-    total_aprovados = qs.filter(aprovado=True).count()
+    total_aprovados     = qs.filter(aprovado=True).count()
     total_revisao_acima_3 = qs.filter(revisao__gt=3).count()
-    ultima_data = qs.aggregate(max_data=Max("atualizado_em"))["max_data"]
+    ultima_data         = qs.aggregate(max_data=Max("atualizado_em"))["max_data"]
 
     paginator    = Paginator(qs, 20)
     page_obj     = paginator.get_page(request.GET.get("page"))
-    roteiros = RoteiroProducao.objects.select_related("item").all().order_by("item__codigo")
-    roteiros_pendentes = RoteiroProducao.objects.select_related("item").filter(aprovado=False).order_by("item__codigo")
+
+    # 5) Dados para os filtros do template
+    itens = Item.objects.order_by("codigo").values_list("codigo", "codigo")
+    status_choices = RoteiroProducao.STATUS_CHOICES
 
     return render(request, "roteiros/lista_roteiros.html", {
         "page_obj": page_obj,
-        "roteiros": roteiros,
-        "roteiros_pendentes": roteiros_pendentes,
         "total_roteiros": total_roteiros,
         "atualizadas_mes": atualizadas_mes,
         "subtitle_atualizadas": subtitle_atualizadas,
         "total_aprovados": total_aprovados,
         "total_revisao_acima_3": total_revisao_acima_3,
         "ultima_data": ultima_data,
+        "itens": itens,
+        "status_choices": status_choices,
         "request": request,
     })
+
 
 from django.utils.timezone import now
 
@@ -87,7 +110,7 @@ def aprovar_roteiros_lote(request):
 
 
 @login_required
-@permission_required("tecnico.change_roteiroproducao", raise_exception=True)
+@permission_required("tecnico.aprovar_roteiro", raise_exception=True)
 def aprovar_roteiro(request, pk):
     roteiro = get_object_or_404(RoteiroProducao, pk=pk)
     if request.method == "POST":
@@ -334,7 +357,7 @@ from pprint import pprint
 
 
 @login_required
-@permission_required("tecnico.change_roteiroproducao", raise_exception=True)
+@permission_required("tecnico.aprovar_roteiro", raise_exception=True)
 def editar_roteiro(request, pk):
     roteiro = get_object_or_404(RoteiroProducao, pk=pk)
     form = RoteiroProducaoForm(request.POST or None, instance=roteiro)
@@ -514,7 +537,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 
 @login_required
-@permission_required("tecnico.add_roteiroproducao", raise_exception=True)
+@permission_required("tecnico.clonar_roteiro", raise_exception=True)
 def clonar_roteiro(request, pk):
     original = get_object_or_404(RoteiroProducao, pk=pk)
 
@@ -589,7 +612,7 @@ from comercial.models import Item, CentroDeCusto, Ferramenta
 import pandas as pd
 
 @login_required
-@permission_required("tecnico.add_roteiroproducao", raise_exception=True)
+@permission_required("tecnico.importar_roteiro", raise_exception=True)
 def importar_roteiros_excel(request):
     if request.method == "POST" and request.FILES.get("arquivo"):
         excel = request.FILES["arquivo"]

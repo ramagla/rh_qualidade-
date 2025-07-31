@@ -62,15 +62,7 @@
   </div>
 {% endif %}
 
-
-
-    {% if messages %}
-      <div class="mb-3">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
+  
 
     <form method="post" class="mt-4">
       {% csrf_token %}

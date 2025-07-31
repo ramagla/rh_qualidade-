@@ -1,9 +1,15 @@
 from django import forms
-from tecnico.models.maquina import Maquina
-
 from tecnico.models.maquina import Maquina, ServicoRealizado
 
 class MaquinaForm(forms.ModelForm):
+    turma_choices = [(k, v) for k, v in Maquina.FAMILIA_PRODUTO_LABELS.items()]
+
+    grupo_de_maquinas = forms.ChoiceField(
+        choices=turma_choices,
+        widget=forms.Select(attrs={"class": "form-select"}),
+        label="Grupo de Máquinas"
+    )
+
     servicos_realizados = forms.ModelMultipleChoiceField(
         queryset=ServicoRealizado.objects.all(),
         widget=forms.SelectMultiple(attrs={"class": "form-select select2"}),
@@ -13,7 +19,11 @@ class MaquinaForm(forms.ModelForm):
 
     class Meta:
         model = Maquina
-        fields = ["codigo", "nome", "servicos_realizados", "velocidade", "valor_hora", "consumo_kwh"]
+        fields = [
+            "codigo", "nome", "grupo_de_maquinas",
+            "servicos_realizados", "velocidade",
+            "valor_hora", "consumo_kwh"
+        ]
         widgets = {
             "codigo": forms.TextInput(attrs={"placeholder": "Código da máquina"}),
             "nome": forms.TextInput(attrs={"placeholder": "Nome da máquina"}),

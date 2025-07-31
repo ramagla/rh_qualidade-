@@ -121,6 +121,10 @@ CUSTOM_PERMISSOES = [
     ("metrologia", "relatorio", "gerar_f062", "Pode gerar a Solicitação de Orçamento para Calibração (F062)"),
     ("metrologia", "controleentradasaida", "view_controleentradasaida", "Pode visualizar movimentações de dispositivo"),
 
-
+     ("tecnico", "roteiroproducao", "acesso_tecnico", "Pode acessar o módulo Técnico"),
+    ("tecnico", "indicadortecnico", "view_indicador_tecnico", "Pode visualizar Indicadores Técnicos"),
+    ("tecnico", "roteiroproducao", "importar_roteiro", "Pode importar roteiros via Excel"),
+    ("tecnico", "roteiroproducao", "clonar_roteiro", "Pode clonar roteiros"),
+    ("tecnico", "roteiroproducao", "aprovar_roteiro", "Pode aprovar roteiros"),
 
 ]

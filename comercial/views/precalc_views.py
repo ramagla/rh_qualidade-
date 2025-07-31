@@ -1016,13 +1016,12 @@ def gerar_proposta_view(request, cotacao_id):
 
     if request.method == "POST":
         ids = request.POST.getlist("precalculos_selecionados")
-
         precalculos = (
             PreCalculo.objects
             .filter(id__in=ids)
             .select_related("analise_comercial_item__item")
             .prefetch_related(
-                "materiais",          # ✅ só prefetch direto
+                "materiais",
                 "servicos",
                 "ferramentas_item__ferramenta"
             )
@@ -1035,10 +1034,19 @@ def gerar_proposta_view(request, cotacao_id):
                 for f in precalc.ferramentas_item.all()
             )
 
-        return render(request, "cotacoes/proposta_preview.html", {
-            "cotacao": cotacao,
-            "precalculos": precalculos
-        })
+            # ① data de geração para exibição
+            data_geracao = timezone.localtime().date()
+
+            # ② persista na cotação
+            cotacao.data_envio_proposta = data_geracao
+            cotacao.save(update_fields=["data_envio_proposta"])
+
+            return render(request, "cotacoes/proposta_preview.html", {
+                "cotacao": cotacao,
+                "precalculos": precalculos,
+                "data_geracao": data_geracao,
+            })
+
 
 
 @login_required

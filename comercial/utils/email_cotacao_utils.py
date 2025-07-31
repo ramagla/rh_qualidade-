@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -43,10 +43,19 @@ def disparar_email_cotacao_material(request, material):
     )
 
 
+from decimal import Decimal
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, render, redirect
+from qualidade_fornecimento.models import FornecedorQualificado
+from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
+from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExterno
+
 def responder_cotacao_materia_prima(request, pk):
     """
     View pública para que fornecedores preencham os dados de cotação da matéria-prima.
+    Quando todos os preços já estiverem preenchidos, exibe a página de cotação finalizada.
     """
+    # Busca o material e todas as “cópias” dele no mesmo pré-cálculo
     material = get_object_or_404(PreCalculoMaterial, pk=pk)
     codigo = material.codigo
     materiais = PreCalculoMaterial.objects.filter(
@@ -54,8 +63,15 @@ def responder_cotacao_materia_prima(request, pk):
         codigo=codigo
     ).order_by("pk")
 
+    # Se não houver nenhum preço em branco, renderiza página finalizada
+    if not materiais.filter(preco_kg__isnull=True).exists():
+        return render(request,
+                      "cotacoes/cotacao_material_finalizada.html",
+                      {"material": material})
+
+    # Dados de apoio para o formulário
     fornecedores = FornecedorQualificado.objects.filter(
-        produto_servico__in=["Fita de Aço/Inox", "Arame de Aço", "Arame de inox"],
+        produto_servico__in=["Fita de Aço/Inox", "Arame de Aço", "Arame de Inox"],
         ativo="Ativo"
     ).order_by("nome")
 
@@ -69,6 +85,7 @@ def responder_cotacao_materia_prima(request, pk):
     observacoes_gerais = material.precalculo.observacoes_materiais if material.precalculo else ""
 
     if request.method == "POST":
+        # Percorre cada instância e salva os valores vindos do form
         for i, mat in enumerate(materiais):
             if mat.status == "ok":
                 continue
@@ -77,27 +94,34 @@ def responder_cotacao_materia_prima(request, pk):
             mat.icms = request.POST.get(f"icms_{i}") or None
             mat.lote_minimo = request.POST.get(f"lote_minimo_{i}") or None
             mat.entrega_dias = request.POST.get(f"entrega_dias_{i}") or None
+
             preco_raw = request.POST.get(f"preco_kg_{i}") or None
             if preco_raw:
                 preco_raw = preco_raw.replace(",", ".")
                 try:
                     mat.preco_kg = Decimal(preco_raw)
-                except:
+                except (InvalidOperation, ValueError):
                     mat.preco_kg = None
+
             mat.save()
 
         messages.success(request, "Cotações salvas com sucesso.")
+        # Redireciona para a mesma URL, disparando um novo GET
         return redirect(request.path)
 
-    return render(request, "cotacoes/responder_cotacao_material.html", {
-        "materiais": materiais,
-        "fornecedores": fornecedores,
-        "cotacao_numero": cotacao_numero,
-        "precalculo_numero": precalculo_numero,
-        "materia_prima": materia_prima,
-        "observacoes_gerais": observacoes_gerais,
-        "codigo": codigo,
-    })
+    # Renderiza o formulário de cotação
+    return render(request,
+                  "cotacoes/responder_cotacao_material.html",
+                  {
+                      "materiais": materiais,
+                      "fornecedores": fornecedores,
+                      "cotacao_numero": cotacao_numero,
+                      "precalculo_numero": precalculo_numero,
+                      "materia_prima": materia_prima,
+                      "observacoes_gerais": observacoes_gerais,
+                      "codigo": codigo,
+                  })
+
 
 
 from django.urls import reverse
@@ -148,7 +172,19 @@ def disparar_emails_cotacao_servicos(request, precalc):
         )
 
 
+from decimal import Decimal, InvalidOperation
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, render, redirect
+from qualidade_fornecimento.models import FornecedorQualificado
+from comercial.models.precalculo import PreCalculoServicoExterno
+from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
+
 def responder_cotacao_servico_lote(request, pk):
+    """
+    View pública para que fornecedores preencham os dados de cotação de serviços em lote.
+    Quando todos os preços já estiverem preenchidos, exibe a página de cotação finalizada.
+    """
+    # Busca o serviço e todos os serviços do mesmo insumo (mesmo código de MP)
     servico = get_object_or_404(PreCalculoServicoExterno, pk=pk)
     codigo = servico.insumo.materia_prima.codigo
 
@@ -157,6 +193,15 @@ def responder_cotacao_servico_lote(request, pk):
         insumo__materia_prima__codigo=codigo
     ).select_related("insumo", "insumo__materia_prima").order_by("pk")
 
+    # Se não houver nenhum preço em branco, renderiza página finalizada
+    if not servicos.filter(preco_kg__isnull=True).exists():
+        return render(
+            request,
+            "cotacoes/cotacao_servico_lote_finalizada.html",
+            {"servico": servico}
+        )
+
+    # Dados de apoio para o formulário
     fornecedores = FornecedorQualificado.objects.filter(
         produto_servico__icontains="Trat",
         status__in=["Qualificado", "Qualificado Condicional"]
@@ -164,38 +209,45 @@ def responder_cotacao_servico_lote(request, pk):
 
     try:
         materia_prima = servico.insumo.materia_prima
-    except Exception:
+    except MateriaPrimaCatalogo.DoesNotExist:
         materia_prima = None
 
-    cotacao_numero = servico.precalculo.cotacao.numero if servico.precalculo else None
-    precalculo_numero = servico.precalculo.numero if servico.precalculo else None
+    cotacao_numero     = servico.precalculo.cotacao.numero if servico.precalculo else None
+    precalculo_numero  = servico.precalculo.numero if servico.precalculo else None
     observacoes_gerais = servico.precalculo.observacoes_servicos if servico.precalculo else ""
 
     if request.method == "POST":
         for i, sev in enumerate(servicos):
             sev.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
-            sev.icms          = request.POST.get(f"icms_{i}") or None  # ← campo ICMS
+            sev.icms          = request.POST.get(f"icms_{i}") or None
             sev.lote_minimo   = request.POST.get(f"lote_minimo_{i}") or None
             sev.entrega_dias  = request.POST.get(f"entrega_dias_{i}") or None
+
             preco_raw = request.POST.get(f"preco_kg_{i}") or None
             if preco_raw:
                 preco_raw = preco_raw.replace(",", ".")
                 try:
                     sev.preco_kg = Decimal(preco_raw)
-                except:
+                except (InvalidOperation, ValueError):
                     sev.preco_kg = None
+
             sev.save()
 
-
         messages.success(request, "Cotações salvas com sucesso.")
+        # Redireciona para forçar novo GET e cair na condição de finalização quando completo
         return redirect(request.path)
 
-    return render(request, "cotacoes/responder_cotacao_servico_lote.html", {
-        "servicos": servicos,
-        "fornecedores": fornecedores,
-        "cotacao_numero": cotacao_numero,
-        "precalculo_numero": precalculo_numero,
-        "materia_prima": materia_prima,
-        "observacoes_gerais": observacoes_gerais,
-        "codigo": codigo,
-    })
+    return render(
+        request,
+        "cotacoes/responder_cotacao_servico_lote.html",
+        {
+            "servicos": servicos,
+            "fornecedores": fornecedores,
+            "cotacao_numero": cotacao_numero,
+            "precalculo_numero": precalculo_numero,
+            "materia_prima": materia_prima,
+            "observacoes_gerais": observacoes_gerais,
+            "codigo": codigo,
+        }
+    )
+

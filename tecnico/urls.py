@@ -1,6 +1,6 @@
 from django.urls import path
 from tecnico.views.home import home_tecnico
-from tecnico.views import maquina_views
+from tecnico.views import indicadores_views, maquina_views
 from tecnico.views import roteiros_views
 
 app_name = "tecnico"  # ✅ ESSA LINHA É FUNDAMENTAL
@@ -25,5 +25,7 @@ urlpatterns = [
     path("servicos/adicionar/", maquina_views.ajax_adicionar_servico, name="ajax_adicionar_servico"),
     path("roteiros/clonar/<int:pk>/", roteiros_views.clonar_roteiro, name="clonar_roteiro"),
     path("roteiros/importar/", roteiros_views.importar_roteiros_excel, name="importar_roteiros_excel"),
+    path("indicadores/5.1-prazo-desenvolvimento/",indicadores_views.indicador_51_prazo_desenvolvimento, name="indicador_51_prazo_desenvolvimento",
+),
 
 ]

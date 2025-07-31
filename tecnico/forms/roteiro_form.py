@@ -6,16 +6,19 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 class RoteiroProducaoForm(forms.ModelForm):
     class Meta:
         model = RoteiroProducao
-        fields = ["item", "tipo_roteiro", "peso_unitario_gramas", "revisao", "observacoes_gerais"]
+        fields = ["item", "tipo_roteiro", "status", "peso_unitario_gramas", "revisao", "observacoes_gerais"]
         widgets = {
             "item": forms.Select(attrs={"class": "form-select select2"}),
-            "massa_mil_pecas": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "tipo_roteiro": forms.Select(attrs={"class": "form-select"}),
+            "status": forms.Select(attrs={"class": "form-select"}),
+            "peso_unitario_gramas": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
             "observacoes_gerais": CKEditor5Widget(config_name="default"),
         }
         labels = {
-            "massa_mil_pecas": "Massa por 1.000 peças (kg)",
+            "status": "Status",
             "observacoes_gerais": "Observações Gerais",
         }
+
 
     def clean(self):
         cleaned = super().clean()

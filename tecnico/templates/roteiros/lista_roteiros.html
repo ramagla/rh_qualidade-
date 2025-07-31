@@ -63,9 +63,15 @@
         </div>
         <div class="modal-body">
           <label for="selectRoteiroClonar" class="form-label">Selecione o roteiro a clonar:</label>
-          <select class="form-select" id="selectRoteiroClonar" name="roteiro_id" required>
-          {% for r in roteiros %}
-<option value="{{ r.pk }}">#{{ r.item.codigo }} – Tipo {{ r.tipo_roteiro }} – {{ r.item.descricao }}</option>
+          <select
+            class="form-select select2"
+            id="selectRoteiroClonar"
+            name="roteiro_id"
+            style="width: 100%;" 
+            required
+          >
+            {% for r in roteiros %}
+              <option value="{{ r.pk }}">#{{ r.item.codigo }} – {{ r.tipo_roteiro }}</option>
             {% endfor %}
           </select>
         </div>
@@ -79,7 +85,19 @@
   </div>
 </div>
 
+
 <script>
+  // Quando a modal abrir, inicializa o Select2
+  $('#modalClonarRoteiro').on('shown.bs.modal', function () {
+    $('#selectRoteiroClonar').select2({
+      dropdownParent: $('#modalClonarRoteiro'),
+      width: '100%',
+      placeholder: 'Selecione um roteiro...',
+      allowClear: false
+    });
+  });
+
+  // Submissão permanece inalterada
   document.getElementById("formClonarRoteiro").addEventListener("submit", function (e) {
     e.preventDefault();
     const id = document.getElementById("selectRoteiroClonar").value;
@@ -87,6 +105,7 @@
     window.location.href = url;
   });
 </script>
+
 
   <!-- Modal de Aprovação -->
   <div class="modal fade" id="modalAprovarRoteiros" tabindex="-1" aria-labelledby="modalAprovarRoteirosLabel" aria-hidden="true">
@@ -125,28 +144,119 @@
   </div>
 
 
-  <!-- Offcanvas de Filtros -->
-  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <!-- Offcanvas de Filtros -->
+  <div
+    class="offcanvas offcanvas-end"
+    tabindex="-1"
+    id="filtrosOffcanvas"
+    aria-labelledby="filtrosOffcanvasLabel"
+  >
     <div class="offcanvas-header">
-      <h5 class="offcanvas-title"><i class="bi bi-funnel-fill me-2"></i>Filtros de Roteiros</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-1"></i> Filtros
+      </h5>
+      <button
+        type="button"
+        class="btn-close text-reset"
+        data-bs-dismiss="offcanvas"
+        aria-label="Fechar"
+      ></button>
     </div>
     <div class="offcanvas-body">
       <form method="get" class="row g-3">
+        <!-- Código do Item (Select2) -->
         <div class="col-12 filtro-wrapper">
-          <label for="codigo_item" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código do Item</label>
-          <input type="text" class="form-control" id="codigo_item" name="codigo_item" value="{{ request.GET.codigo_item }}">
+          <label for="codigo_item" class="form-label">
+            <i class="bi bi-upc-scan me-1"></i> Código do Item
+          </label>
+          <select
+            id="codigo_item"
+            name="codigo_item"
+            class="form-select select2"
+            style="width: 100%;"
+          >
+            <option value="">Todos</option>
+            {% for codigo, _ in itens %}
+              <option value="{{ codigo }}" {% if request.GET.codigo_item == codigo %}selected{% endif %}>
+                {{ codigo }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
+
+        <!-- Status -->
         <div class="col-12 filtro-wrapper">
-          <label for="descricao_item" class="form-label"><i class="bi bi-tag me-1"></i> Descrição do Item</label>
-          <input type="text" class="form-control" id="descricao_item" name="descricao_item" value="{{ request.GET.descricao_item }}">
+          <label for="status" class="form-label">
+            <i class="bi bi-toggle-on me-1"></i> Status
+          </label>
+          <select id="status" name="status" class="form-select">
+  <!-- Mantém Todos, mas raramente usado pois default é 'ativo' -->
+  <option value="" {% if request.GET.status == "" and request.GET.status is not None %}selected{% endif %}>
+    Todos
+  </option>
+  {% for valor, label in status_choices %}
+   <option
+  value="{{ valor }}"
+  {% if request.GET.status == valor or request.GET.status == "" and valor == "ativo" %}
+    selected
+  {% endif %}
+>
+  {{ label }}
+</option>
+
+  {% endfor %}
+</select>
+
         </div>
+
+        <!-- Data de Criação -->
+        <div class="col-6 filtro-wrapper">
+          <label for="criado_inicio" class="form-label">
+            <i class="bi bi-calendar-plus me-1"></i> De (Data Criação)
+          </label>
+          <input
+            type="date"
+            id="criado_inicio"
+            name="criado_inicio"
+            class="form-control"
+            value="{{ request.GET.criado_inicio }}"
+          />
+        </div>
+        <div class="col-6 filtro-wrapper">
+          <label for="criado_fim" class="form-label">
+            <i class="bi bi-calendar-minus me-1"></i> Até (Data Criação)
+          </label>
+          <input
+            type="date"
+            id="criado_fim"
+            name="criado_fim"
+            class="form-control"
+            value="{{ request.GET.criado_fim }}"
+          />
+        </div>
+
+        <!-- Botão Filtrar -->
         <div class="col-12 mt-3">
           {% include "partials/global/_botao_filtrar.html" %}
         </div>
       </form>
     </div>
   </div>
+
+  <!-- Inicialização do Select2 (ao final do template) -->
+  <script>
+    // Gatilho no momento em que o offcanvas é aberto
+    var filtrosOffcanvas = document.getElementById('filtrosOffcanvas');
+    filtrosOffcanvas.addEventListener('shown.bs.offcanvas', function () {
+      $('#codigo_item').select2({
+        dropdownParent: $('#filtrosOffcanvas'),
+        placeholder: 'Selecione um código...',
+        allowClear: true,
+        width: '100%'
+      });
+    });
+  </script>
+
 
 <!-- Indicadores -->
 <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">

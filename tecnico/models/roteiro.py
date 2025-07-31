@@ -11,11 +11,21 @@ from django.db import models
 from comercial.models.item import Item
 
 class RoteiroProducao(models.Model):
+    STATUS_CHOICES = [
+        ("ativo", "Ativo"),
+        ("inativo", "Inativo"),
+    ]
     item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
         related_name="roteiros",
         verbose_name="Item"
+    )
+    status = models.CharField(
+        "Status",
+        max_length=8,
+        choices=STATUS_CHOICES,
+        default="ativo"
     )
 
     tipo_roteiro = models.CharField(

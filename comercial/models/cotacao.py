@@ -44,6 +44,7 @@ class Cotacao(AuditModel):
         max_length=12,
         choices=TIPO_CHOICES
     )
+    
     responsavel = models.ForeignKey(
         User, on_delete=models.PROTECT,
         related_name="cotacoes", verbose_name="Responsável"
@@ -80,7 +81,11 @@ class Cotacao(AuditModel):
         help_text="Número de dias de validade da proposta a partir da data de abertura."
     )
 
-
+    data_envio_proposta = models.DateField(
+            "Data de Envio da Proposta",
+            null=True, blank=True,
+            help_text="Data em que a proposta foi efetivamente gerada/enviada."
+        )
 
     class Meta:
         verbose_name = "Cotação"

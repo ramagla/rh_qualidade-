@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from comercial.models import PreCalculo, Item, Cotacao, Cliente
 from comercial.models.cotacao import AuditModel
 from django_ckeditor_5.fields import CKEditor5Field
+from tecnico.models.maquina import Maquina
 
 User = get_user_model()
 
@@ -46,11 +47,16 @@ class OrdemDesenvolvimento(AuditModel):
 
     # ————————— Campos técnicos —————————
     FAMILIA_PRODUTO = [
-        (x, x) for x in ["MCGC", "MTORGC", "HGD", "AGD", "MCGD", "MTORGX", "HGM", "AGE",
-                         "MTRAGC", "MTORGD", "HGE", "PGC", "MTRAGX", "PEGE", "HGC",
-                         "PGE", "MTRAGD", "PEGP", "AGC"]
+        (k, v)
+        for k, v in Maquina.FAMILIA_PRODUTO_LABELS.items()
     ]
-    familia_produto = models.CharField("Família de Produto", max_length=20, choices=FAMILIA_PRODUTO, blank=True, null=True)
+    familia_produto = models.CharField(
+        "Família de Produto",
+        max_length=6,
+        choices=FAMILIA_PRODUTO,
+        blank=True,
+        null=True
+    )
 
     USUAL_NOVO = [("usual", "Usual"), ("novo", "Novo")]
     SIM_NAO = [("sim", "Sim"), ("nao", "Não")]
