@@ -1,5 +1,6 @@
 from django.db import models
 from django_ckeditor_5.fields import CKEditor5Field
+from rh_qualidade.utils import formatar_nome_atividade_com_siglas  # ajuste o caminho se necessário
 
 class Cliente(models.Model):
     STATUS_CHOICES = [
@@ -47,7 +48,7 @@ class Cliente(models.Model):
     # Campos opcionais
     ie = models.CharField(max_length=50, blank=True, null=True)
     complemento = models.CharField(max_length=100, blank=True, null=True)
-    telefone = models.CharField(max_length=20, blank=True, null=True)
+    telefone = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     logotipo = models.ImageField(upload_to='logos_clientes/', blank=True, null=True)
     coleta = models.BooleanField(default=False, verbose_name="Coleta")
@@ -55,7 +56,7 @@ class Cliente(models.Model):
     # Contato
     nome_contato = models.CharField(max_length=100, blank=True, null=True)
     email_contato = models.EmailField(blank=True, null=True)
-    telefone_contato = models.CharField(max_length=20, blank=True, null=True)
+    telefone_contato = models.CharField(max_length=100, blank=True, null=True)
     cargo_contato = models.CharField(max_length=100, blank=True, null=True)
     departamento_contato = models.CharField(max_length=100, blank=True, null=True)  # NOVO
 
@@ -85,6 +86,22 @@ class Cliente(models.Model):
 
     atualizado_em = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
 
+    def save(self, *args, **kwargs):
+            # Padronização específica
+            if self.nome_contato:
+                self.nome_contato = formatar_nome_atividade_com_siglas(self.nome_contato)
+
+            if self.cargo_contato:
+                self.cargo_contato = formatar_nome_atividade_com_siglas(self.cargo_contato)
+
+            if self.departamento_contato:
+                self.departamento_contato = formatar_nome_atividade_com_siglas(self.departamento_contato)
+
+            if self.cod_bm:
+                self.cod_bm = self.cod_bm.upper()
+
+            super().save(*args, **kwargs)
+            
     def __str__(self):
         return self.razao_social
 

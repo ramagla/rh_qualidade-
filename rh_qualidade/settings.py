@@ -16,6 +16,10 @@ import dj_database_url
 # Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+ # settings.py
+BRASMOL_API_KEY = "78b04f986519f7300a7b96ed0990f7fd8d7399c3"  # sua chave fixa por ora
+BRASMOL_BASE_URL = "https://app.cargamaquina.com.br/webservice/brasmol"
+
 
 # URLs de redirecionamento
 LOGIN_URL = "/login/"

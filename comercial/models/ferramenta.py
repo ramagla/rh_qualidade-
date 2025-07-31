@@ -3,10 +3,16 @@ from comercial.models import Cliente
 import uuid
 from decimal import Decimal
 from django.core.validators import MinValueValidator
+from rh_qualidade.utils import formatar_nome_atividade_com_siglas  # ajuste o import conforme sua estrutura
 
 class BlocoFerramenta(models.Model):
     numero = models.CharField("Bloco", max_length=50)
 
+    def save(self, *args, **kwargs):
+            if self.numero:
+                self.numero = formatar_nome_atividade_com_siglas(self.numero)
+            super().save(*args, **kwargs)
+            
     @property
     def peso_total(self) -> Decimal:
         # soma peso_total de cada item; use Decimal para evitar float impreciso
@@ -64,7 +70,14 @@ class Ferramenta(models.Model):
     peso_vnd_kg = models.DecimalField("Peso VND (Kg)", max_digits=10, decimal_places=3, null=True, blank=True)
     valor_unitario_vnd = models.DecimalField("Valor Unitário VND (R$/Kg)", max_digits=10, decimal_places=2, null=True, blank=True)
 
+    def save(self, *args, **kwargs):
+            if self.descricao:
+                self.descricao = formatar_nome_atividade_com_siglas(self.descricao)
 
+            if self.codigo:
+                self.codigo = self.codigo.upper()
+
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.codigo} - {self.descricao}" if self.codigo else "Ferramenta sem código"

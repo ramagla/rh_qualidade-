@@ -54,6 +54,21 @@ class Item(models.Model):
     class Meta:
         ordering = ['cliente', 'codigo']  # ⬅️ remove o unique_together
 
+    def save(self, *args, **kwargs):
+        if self.codigo_desenho:
+            self.codigo_desenho = self.codigo_desenho.upper()
+
+        if self.codigo_amostra:
+            self.codigo_amostra = self.codigo_amostra.upper()
+
+        if self.revisao:
+            self.revisao = self.revisao.upper()
+
+        if self.codigo:
+            self.codigo = self.codigo.upper()  # ✅ CORREÇÃO AQUI
+
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"{self.codigo}"

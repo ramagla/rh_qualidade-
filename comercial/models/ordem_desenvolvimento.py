@@ -127,6 +127,7 @@ class OrdemDesenvolvimento(AuditModel):
 
 
     def save(self, *args, **kwargs):
+        # 🔢 Geração automática do número
         if not self.numero:
             ano_atual = timezone.now().year
             ultimo = (
@@ -135,7 +136,16 @@ class OrdemDesenvolvimento(AuditModel):
                 .aggregate(models.Max("numero"))["numero__max"]
             )
             self.numero = (ultimo or 99) + 1  # começa em 100
+
+        # 🔠 Padronização de campos em maiúsculo
+        if self.codigo_brasmol:
+            self.codigo_brasmol = self.codigo_brasmol.upper()
+
+        if self.codigo_amostra:
+            self.codigo_amostra = self.codigo_amostra.upper()
+
         super().save(*args, **kwargs)
+
 
 
     def __str__(self):

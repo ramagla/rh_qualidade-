@@ -1,8 +1,14 @@
 from django.db import models
+from rh_qualidade.utils import formatar_nome_atividade_com_siglas  # ajuste conforme o caminho real
 
 class ServicoRealizado(models.Model):
     nome = models.CharField("Serviço", max_length=200, unique=True)
 
+    def save(self, *args, **kwargs):
+            if self.nome:
+                self.nome = formatar_nome_atividade_com_siglas(self.nome)
+            super().save(*args, **kwargs)
+            
     def __str__(self):
         return self.nome
     
@@ -39,6 +45,16 @@ class Maquina(models.Model):
     velocidade = models.DecimalField(max_digits=10, decimal_places=2, help_text="Unidade do produto por hora")
     valor_hora = models.DecimalField(max_digits=10, decimal_places=2)
     consumo_kwh = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def save(self, *args, **kwargs):
+            if self.codigo:
+                self.codigo = self.codigo.upper()
+
+            if self.nome:
+                self.nome = formatar_nome_atividade_com_siglas(self.nome)
+
+            super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"{self.codigo} - {self.nome}"

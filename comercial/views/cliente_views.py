@@ -215,8 +215,17 @@ def excluir_cliente(request, pk):
 # cliente_views.py
 def verificar_cnpj_existente(request):
     cnpj = request.GET.get("cnpj")
-    existe = Cliente.objects.filter(cnpj=cnpj).exists()
-    return JsonResponse({"existe": existe})
+    cliente_id = request.GET.get("cliente_id")
+
+    if not cnpj:
+        return JsonResponse({"existe": False})
+
+    qs = Cliente.objects.filter(cnpj=cnpj)
+    if cliente_id:
+        qs = qs.exclude(id=cliente_id)
+
+    return JsonResponse({"existe": qs.exists()})
+
 
 @login_required
 @permission_required("comercial.importar_excel_clientes", raise_exception=True)

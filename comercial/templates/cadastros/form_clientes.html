@@ -531,63 +531,63 @@
 
     // === BUSCAR DADOS CNPJ ===
     window.buscarCNPJ = function () {
-      const input = document.getElementById("id_cnpj");
-      const cnpj = input.value.replace(/\D/g, "");
-      const alerta = document.getElementById("cnpjExistenteAlerta");
-      const text = document.getElementById("messageText");
+  const input = document.getElementById("id_cnpj");
+  const cnpj = input.value.replace(/\D/g, "");
+  const alerta = document.getElementById("cnpjExistenteAlerta");
+  const clienteId = "{{ cliente.id|default:0 }}";
 
-      alerta.style.display = "none";
-      showMessage(""); // limpa mensagem
+  alerta.style.display = "none";
+  showMessage(""); // limpa mensagem
 
-      if (cnpj.length !== 14) {
-        showMessage("CNPJ inválido! Por favor, insira 14 dígitos.");
-        return;
+  if (cnpj.length !== 14) {
+    showMessage("CNPJ inválido! Por favor, insira 14 dígitos.");
+    return;
+  }
+
+  // Verifica duplicidade
+  fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}&cliente_id=${clienteId}`)
+    .then(resp => resp.json())
+    .then(data => {
+      if (data.existe) {
+        alerta.style.display = "block";
+        input.dataset.cadastrado = "true";
+      } else {
+        alerta.style.display = "none";
+        input.dataset.cadastrado = "false";
       }
+    });
 
-      // Verifica duplicidade
-      fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}`)
-        .then(resp => resp.json())
-        .then(data => {
-          if (data.existe) {
-            alerta.style.display = "block";
-            input.dataset.cadastrado = "true";
-          } else {
-            alerta.style.display = "none";
-            input.dataset.cadastrado = "false";
-          }
+  // Requisição à BrasilAPI...
+  fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
         });
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.razao_social) {
+        document.getElementById("id_razao_social").value = data.razao_social || "";
+        document.getElementById("id_endereco").value = (data.descricao_tipo_de_logradouro || "") + " " + (data.logradouro || "");
+        document.getElementById("id_numero").value = data.numero || "";
+        document.getElementById("id_complemento").value = data.complemento || "";
+        document.getElementById("id_bairro").value = data.bairro || "";
+        document.getElementById("id_cidade").value = data.municipio || "";
+        document.getElementById("id_cep").value = data.cep || "";
+        document.getElementById("id_uf").value = data.uf || "";
+        document.getElementById("id_ie").value = data.inscricoes_estaduais?.[0]?.numero || "";
+      } else {
+        showMessage("CNPJ não encontrado ou inválido.");
+      }
+    })
+    .catch(error => {
+      console.error("Erro ao buscar CNPJ:", error);
+      showMessage(`Erro ao buscar CNPJ: ${error.message}`);
+    });
+};
 
-      // BrasilAPI
-      fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
-        .then(response => {
-          if (!response.ok) {
-            return response.json().then(errorData => {
-              throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
-            });
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.razao_social) {
-            document.getElementById("id_razao_social").value = data.razao_social || "";
-            document.getElementById("id_endereco").value =
-              (data.descricao_tipo_de_logradouro || "") + " " + (data.logradouro || "");
-            document.getElementById("id_numero").value = data.numero || "";
-            document.getElementById("id_complemento").value = data.complemento || "";
-            document.getElementById("id_bairro").value = data.bairro || "";
-            document.getElementById("id_cidade").value = data.municipio || "";
-            document.getElementById("id_cep").value = data.cep || "";
-            document.getElementById("id_uf").value = data.uf || "";
-            document.getElementById("id_ie").value = data.inscricoes_estaduais?.[0]?.numero || "";
-          } else {
-            showMessage("CNPJ não encontrado ou inválido.");
-          }
-        })
-        .catch(error => {
-          console.error("Erro ao buscar CNPJ:", error);
-          showMessage(`Erro ao buscar CNPJ: ${error.message}`);
-        });
-    };
 
     // === VERIFICAR CNPJ AO SAIR DO CAMPO ===
     const inputCNPJ = document.getElementById("id_cnpj");
@@ -595,28 +595,32 @@
     const form = document.getElementById("clienteForm");
 
     inputCNPJ.addEventListener("blur", () => {
-      const cnpj = inputCNPJ.value.replace(/\D/g, "");
-      if (cnpj.length === 14) {
-        fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}`)
-          .then(resp => resp.json())
-          .then(data => {
-            if (data.existe) {
-              alerta.style.display = "block";
-              inputCNPJ.dataset.cadastrado = "true";
-            } else {
-              alerta.style.display = "none";
-              inputCNPJ.dataset.cadastrado = "false";
-            }
-          });
-      }
-    });
+  const cnpj = inputCNPJ.value.replace(/\D/g, "");
+  const clienteId = "{{ cliente.id|default:0 }}";
+
+  if (cnpj.length === 14) {
+    fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}&cliente_id=${clienteId}`)
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.existe) {
+          alerta.style.display = "block";
+          inputCNPJ.dataset.cadastrado = "true";
+        } else {
+          alerta.style.display = "none";
+          inputCNPJ.dataset.cadastrado = "false";
+        }
+      });
+  }
+});
+
 
     form.addEventListener("submit", (e) => {
-      if (inputCNPJ.dataset.cadastrado === "true") {
-        e.preventDefault();
-        alerta.scrollIntoView({ behavior: "smooth" });
-      }
-    });
+  if (inputCNPJ.dataset.cadastrado === "true") {
+    e.preventDefault();
+    alerta.scrollIntoView({ behavior: "smooth" });
+  }
+});
+
 
     // === ADIÇÃO DINÂMICA DE DOCUMENTOS ===
     const container = document.getElementById("formset-documentos");

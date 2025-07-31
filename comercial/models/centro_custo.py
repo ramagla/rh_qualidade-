@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django_ckeditor_5.fields import CKEditor5Field
 from datetime import datetime
+from rh_qualidade.utils import formatar_nome_atividade_com_siglas  # ajuste o import conforme necessário
 
 class CentroDeCusto(models.Model):
     nome = models.CharField("Centro de Custo", max_length=100)
@@ -30,6 +31,11 @@ class CentroDeCusto(models.Model):
             return None  # ou 0, se preferir exibir zero
 
     def save(self, *args, **kwargs):
+        # Padroniza o nome do centro
+        if self.nome:
+            self.nome = formatar_nome_atividade_com_siglas(self.nome)
+
+        # Mantém histórico de custo, se necessário
         if self.pk:
             original = CentroDeCusto.objects.get(pk=self.pk)
             if original.custo_atual != self.custo_atual:
@@ -39,8 +45,8 @@ class CentroDeCusto(models.Model):
                     novo_custo=self.custo_atual,
                     alterado_em=timezone.now()
                 )
-        super().save(*args, **kwargs)
 
+        super().save(*args, **kwargs)
 
 class HistoricoCustoCentroDeCusto(models.Model):
     centro = models.ForeignKey(CentroDeCusto, on_delete=models.CASCADE, related_name="historico_custos")
