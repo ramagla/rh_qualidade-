@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}Análise Crítica Nº {{ analise.id|stringformat:"03d" }}{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+{% include 'partials/global/_styles_componentes.html' %}
+
+<div class="container pdf-container mt-4">
+
+  <!-- Cabeçalho -->
+  <div class="table-responsive mb-4">
+    <table class="table table-bordered text-center align-middle">
+      <tr>
+        <td style="width:20%;"><img src="{% static 'img/logo.png' %}" alt="Logo" class="img-fluid" style="max-height:70px;"></td>
+        <td style="width:60%;">
+          <h5 class="mb-0 text-uppercase fw-bold"><i class="bi bi-search me-2 text-primary"></i>Análise Crítica </h5>
+          <small class="text-muted fst-italic">Equipamento de Medição não Conforme</small>
+        </td>
+        <td style="width:20%;"><span class="fw-bold text-danger">Nº {{ analise.id|stringformat:"03d" }}-{{ analise.assinado_em.year }}</span></td>
+      </tr>
+    </table>
+  </div>
+
+ <!-- Dados do Equipamento -->
+<h5 class="mb-2 text-primary"><i class="bi bi-tools me-1"></i>Dados do Equipamento</h5>
+<div class="table-responsive mb-4">
+  <table class="table table-bordered small">
+    <tr>
+  <th style="text-align: right;">
+    <i class="bi bi-tag me-1"></i> Tipo:
+  </th>
+  <td>
+    {% if analise.equipamento_instrumento %}
+      <i class="bi bi-tools me-1"></i> Instrumento
+    {% elif analise.equipamento_dispositivo %}
+      <i class="bi bi-cpu me-1"></i> Dispositivo
+    {% else %}
+      —
+    {% endif %}
+  </td>
+
+  <th style="text-align: right;">
+    <i class="bi bi-upc-scan me-1"></i> Código:
+  </th>
+  <td>
+    {% if analise.equipamento_instrumento %}
+      {{ analise.equipamento_instrumento.codigo }}
+    {% elif analise.equipamento_dispositivo %}
+      {{ analise.equipamento_dispositivo.codigo }}
+    {% else %}
+      —
+    {% endif %}
+  </td>
+</tr>
+
+<tr>
+  <th style="text-align: right;">
+    <i class="bi bi-card-text me-1"></i> Descrição:
+  </th>
+  <td>{{ analise.descricao_equipamento|default:"—" }}</td>
+
+  <th style="text-align: right;">
+    <i class="bi bi-calendar-check me-1"></i> Última Calibração:
+  </th>
+  <td>{{ analise.data_ultima_calibracao|date:"d/m/Y"|default:"—" }}</td>
+</tr>
+
+{% if analise.equipamento_instrumento %}
+<tr id="row_modelo">
+  <th style="text-align: right;">
+    <i class="bi bi-box me-1"></i> Modelo:
+  </th>
+  <td>
+    {% if analise.modelo == "N/A" %}
+      Não aplicável
+    {% else %}
+      {{ analise.modelo|default:"—" }}
+    {% endif %}
+  </td>
+
+  <th style="text-align: right;">
+    <i class="bi bi-speedometer2 me-1"></i> Capacidade / Resolução:
+  </th>
+  <td>{{ analise.capacidade_medicao|default:"—" }}</td>
+</tr>
+
+    {% endif %}
+  </table>
+</div>
+
+
+
+
+<h5 class="mb-2 text-primary"><i class="bi bi-clipboard-data me-1"></i>Análise Crítica</h5>
+
+<!-- Não Conformidade Detectada (sempre visível) -->
+<div class="table-responsive mb-4">
+  <table class="table table-bordered small">
+    <tr>
+      <th class="text-start">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        Não Conformidade Detectada
+      </th>
+    </tr>
+    <tr>
+      <td colspan="2" class="align-top py-4">
+    <div class="estilo-ckeditor" style="min-height:5em;">
+          {{ analise.nao_conformidade_detectada|safe }}
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- Compromete Qualidade? -->
+<div class="table-responsive mb-4">
+  <table class="table table-bordered small">
+    <tr>
+      <th style="text-align: right; width:35%;">
+        <i class="bi bi-shield-exclamation me-1"></i>A não Conformidade do Equipamento Compromete Qualidade dos Produtos?
+      </th>
+      <td class="align-middle">
+        {% if analise.compromete_qualidade %}
+          <i class="bi bi-check-circle-fill text-danger me-1"></i>Sim
+        {% else %}
+          <i class="bi bi-x-circle-fill text-muted me-1"></i>Não
+        {% endif %}
+      </td>
+    </tr>
+    {% if analise.compromete_qualidade %}
+    <tr>
+      <td colspan="2" class="align-top py-4">
+        <div class="estilo-ckeditor" style="min-height:5em;">
+          {{ analise.observacoes_qualidade|safe }}
+        </div>
+      </td>
+    </tr>
+    {% endif %}
+  </table>
+</div>
+
+<!-- Verificar Peças / Estoque? -->
+<div class="table-responsive mb-4">
+  <table class="table table-bordered small">
+    <tr>
+      <th style="text-align: right; width:35%;">
+        <i class="bi bi-box-seam me-1"></i>Há Necessidade de Verificar as Peças em Processo e Estoque?
+      </th>
+      <td class="align-middle">
+        {% if analise.verificar_pecas_processo %}
+          <i class="bi bi-check-circle-fill text-warning me-1"></i>Sim
+        {% else %}
+          <i class="bi bi-x-circle-fill text-muted me-1"></i>Não
+        {% endif %}
+      </td>
+    </tr>
+    {% if analise.verificar_pecas_processo %}
+    <tr>
+      <td colspan="2" class="align-top py-4">
+        <div class="estilo-ckeditor" style="min-height:5em;">
+          {{ analise.observacoes_pecas|safe }}
+        </div>
+      </td>
+    </tr>
+    {% endif %}
+  </table>
+</div>
+
+<!-- Comunicar Cliente? -->
+<div class="table-responsive mb-4">
+  <table class="table table-bordered small">
+    <tr>
+      <th style="text-align: right; width:35%;">
+        <i class="bi bi-envelope-send me-1"></i>Há Necessidade de Comunicar os Clientes?
+      </th>
+      <td class="align-middle">
+        {% if analise.comunicar_cliente %}
+          <i class="bi bi-check-circle-fill text-success me-1"></i>Sim
+        {% else %}
+          <i class="bi bi-x-circle-fill text-muted me-1"></i>Não
+        {% endif %}
+      </td>
+    </tr>
+    {% if analise.comunicar_cliente %}
+    <tr>
+      <td colspan="2" class="align-top py-4">
+        <div class="estilo-ckeditor" style="min-height:5em;">
+          {{ analise.observacoes_cliente|safe }}
+        </div>
+      </td>
+    </tr>
+    {% endif %}
+  </table>
+</div>
+
+
+<style>
+  .estilo-ckeditor p,
+  .estilo-ckeditor ul,
+  .estilo-ckeditor ol,
+  .estilo-ckeditor li {
+    text-align: left !important;
+    white-space: pre-wrap;
+    font-family: Arial, sans-serif;
+  }
+
+  .estilo-ckeditor img {
+    max-width: 100%;
+    height: auto;
+    max-height: 300px; /* ou 200px, conforme desejar */
+    display: block;
+    margin: 10px auto;
+  }
+</style>
+  <!-- Assinatura -->
+<!-- Assinatura -->
+{# … demais blocos do template … #}
+
+<!-- Assinatura -->
+{% if assinatura_qr %} {% include "partials/global/_assinatura_com_qrcode.html" with dados=assinatura_qr titulo="Assinatura" %}
+{% else %}
+  <div class="alert alert-warning small">
+    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+    Assinatura ainda não registrada.
+  </div>
+{% endif %}
+
+{# … rodapé, etc. … #}
+
+
+  {% include 'partials/global/_formulario_rodape.html' with numero_formulario="F079 Rev.01" %}
+
+</div>
+
+<style>
+  @media print {
+    .pdf-container { font-size:12px!important; }
+    .table th, .table td { padding:4px!important; }
+  }
+</style>
+{% endblock %}

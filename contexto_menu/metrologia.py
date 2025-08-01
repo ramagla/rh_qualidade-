@@ -104,4 +104,12 @@ def menu_metrologia(user):
             "submenu": relatorios,
         })
 
+    if user.has_perm("metrologia.view_análisecrítica"):
+        menu.append({
+            "name": "Análise Crítica",
+            "url": "lista_analise_critica",
+            "icon": "fas fa-search-plus",
+        })
+
+
     return menu

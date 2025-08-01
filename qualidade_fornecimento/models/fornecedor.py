@@ -98,6 +98,21 @@ class FornecedorQualificado(models.Model):
 
     def save(self, *args, **kwargs):
         # Condição para "Calibração" com certificação "NBR-ISO 17025 RBC"
+        # Regra para Material do Cliente → força status como Qualificado
+        if self.produto_servico == "Material do Cliente":
+            self.status = "Qualificado"
+            self.risco = "N/A"
+            self.data_avaliacao_risco = None
+            self.proxima_avaliacao_risco = None
+            self.tipo_formulario = ""
+            self.data_auditoria = None
+            self.proxima_auditoria = None
+            self.nota_auditoria = None
+            self.classe_frequencia = ""
+            self.especialista_nome = ""
+            self.especialista_contato = ""
+        else:
+            nota = self.nota_auditoria or 0
         if (
             self.produto_servico == "Calibração"
             and self.tipo_certificacao == "NBR-ISO 17025 RBC"

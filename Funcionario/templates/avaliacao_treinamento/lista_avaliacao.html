@@ -106,6 +106,8 @@
           <th><i class="bi bi-person"></i> Colaborador</th>
           <th><i class="bi bi-journal-check"></i> Treinamento</th>
           <th><i class="bi bi-calendar"></i> Data da Avaliação</th>
+              <th><i class="bi bi-calendar-check"></i> Data de Conclusão</th>
+
           <th><i class="bi bi-bar-chart-line"></i> Avaliação</th>
           <th><i class="bi bi-clock-history"></i> Prazo</th>
           <th><i class="bi bi-gear"></i> Ações</th>
@@ -117,6 +119,13 @@
             <td>{{ avaliacao.funcionario.nome }}</td>
             <td>{{ avaliacao.treinamento.nome_curso|default:"—" }}</td>
             <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+             <td>
+                {% if avaliacao.data_conclusao %}
+                  {{ avaliacao.data_conclusao|date:"d/m/Y" }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
             <td>
               {% if avaliacao.avaliacao_geral is None %}
                 <span class="badge bg-secondary"><i class="bi bi-hourglass-split"></i> Aguardando Avaliação</span>

@@ -167,6 +167,7 @@
 
 
   <!-- Análise de Dados -->
+<!-- Análise de Dados -->
 <div class="analise-dados mt-4">
   <h5 class="text-center mb-3 text-primary d-flex justify-content-center align-items-center gap-2">
     <i class="bi bi-bar-chart-steps fs-5"></i> Análise de Dados
@@ -176,7 +177,6 @@
     <thead class="table-light">
       <tr>
         <th><i class="bi bi-calendar-range me-1"></i> Trimestre</th>
-        <th><i class="bi bi-check2-circle me-1"></i> Status</th>
         <th><i class="bi bi-chat-left-text me-1"></i> Mensagem</th>
       </tr>
     </thead>
@@ -184,19 +184,18 @@
       {% for trimestre, dados in analise_dados.items %}
       <tr>
         <td>{{ trimestre }}º</td>
-        <td class="{% if dados.status == 'Ok' %}text-success{% else %}text-danger{% endif %}">
-          <strong>{{ dados.status }}</strong>
-        </td>
         <td class="text-start">{{ dados.mensagem }}</td>
       </tr>
-      {% empty %}
-      <tr>
-        <td colspan="3" class="text-muted fst-italic">Nenhum dado disponível.</td>
-      </tr>
       {% endfor %}
+      {% if analise_dados|length == 0 %}
+      <tr>
+        <td colspan="2" class="text-muted fst-italic">Nenhuma análise disponível.</td>
+      </tr>
+      {% endif %}
     </tbody>
   </table>
 </div>
+
 
 
   <!-- Plano de Ação -->

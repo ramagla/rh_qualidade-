@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 @permission_required("metrologia.view_calibracao", raise_exception=True)
 def lista_calibracoes(request):
     # Query inicial para pegar os equipamentos com calibração associada
-    calibracoes = Calibracao.objects.select_related("codigo").all()
+    calibracoes = Calibracao.objects.select_related("codigo").filter(codigo__status="ativo")
 
     # Filtros
     filtro_codigo = request.GET.get("codigo")

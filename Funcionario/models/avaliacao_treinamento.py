@@ -62,7 +62,11 @@ class AvaliacaoTreinamento(models.Model):
         blank=True,
         verbose_name="Comprovante/Anexo"
     )
-
+    data_conclusao = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Data de Conclusão da Avaliação"
+    )
     responsavel_1 = models.ForeignKey(
         Funcionario,
         on_delete=models.SET_NULL,
@@ -130,7 +134,9 @@ class AvaliacaoTreinamento(models.Model):
         Retorna o status de prazo da avaliação com base na data e período.
         """
         data_limite = self.data_avaliacao + timedelta(days=self.periodo_avaliacao)
-        return "Dentro do Prazo" if timezone.now().date() <= data_limite else "Em Atraso"
+        data_base = self.data_conclusao or timezone.now().date()
+        return "Dentro do Prazo" if data_base <= data_limite else "Em Atraso"
+
 
     def __str__(self):
         return f"Avaliação de {self.funcionario.nome} - {self.treinamento.titulo}"

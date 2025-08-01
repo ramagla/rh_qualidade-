@@ -190,8 +190,10 @@
                 {{ fornecedor.risco }}
               {% endif %}
             </td>
-            <td>
-  {% if fornecedor.status == "Reprovado" %}
+           <td>
+  {% if fornecedor.produto_servico == "Material do Cliente" %}
+    <span class="badge bg-success">Qualificado</span>
+  {% elif fornecedor.status == "Reprovado" %}
     <span class="badge bg-danger">Reprovado</span>
   {% elif fornecedor.status == "Qualificado Condicional" %}
     <span class="badge bg-warning text-dark">Qualificado Condicional</span>
@@ -201,6 +203,7 @@
     <span class="badge bg-secondary">{{ fornecedor.status }}</span>
   {% endif %}
 </td>
+
 
            <td>
   <div class="d-inline-flex flex-wrap justify-content-center gap-2">

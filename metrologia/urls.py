@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
 
+from metrologia.views import api_views
 from . import views
 from .views import calibracoes_views, configuracoes_views, relatorios_views
 from .views.calibracoes_dispositivos_views import (
@@ -49,6 +50,7 @@ from .views.tabelatecnica_views import (
     lista_tabelatecnica,
     visualizar_tabelatecnica,
 )
+from .views import analise_critica_views 
 
 urlpatterns = [
     path("", home, name="metrologia_home"),  # ✅ Alinha com seu menu
@@ -197,7 +199,13 @@ urlpatterns = [
 
     path("relatorios/solicitacao-orcamento-calibracao/", equipamentos_para_calibracao, name="equipamentos_para_calibracao"),
     path("relatorios/gerar-f062/", gerar_f062, name="gerar_f062"),
-    
+    path("analise-critica/", analise_critica_views.lista_analise_critica, name="lista_analise_critica"),
+    path("analise-critica/cadastrar/", analise_critica_views.cadastrar_analise_critica, name="cadastrar_analise_critica"),
+    path("analise-critica/<int:id>/editar/", analise_critica_views.editar_analise_critica, name="editar_analise_critica"),
+    path("analise-critica/<int:id>/", analise_critica_views.visualizar_analise_critica, name="visualizar_analise_critica"),
+    path("analise-critica/<int:id>/excluir/", analise_critica_views.excluir_analise_critica, name="excluir_analise_critica"),
+    path("api/equipamento/<int:id>/", api_views.get_equipamento_info, name="get_equipamento_info"),
+    path("api/dispositivo/<int:id>/", api_views.get_dispositivo_info, name="get_dispositivo_info"),
 
 ]
 

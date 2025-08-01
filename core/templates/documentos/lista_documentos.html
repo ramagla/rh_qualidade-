@@ -125,11 +125,14 @@
                 {% endif %}
               </td>
               <td>
-                {% if documento.revisoes.last %}
-                  {{ documento.revisoes.last.numero_revisao }}
-                {% else %}
-                  <span class="text-muted">Sem revisão</span>
-                {% endif %}
+                {% with documento.revisoes.all|first as ultima_revisao %}
+  {% if ultima_revisao %}
+    {{ ultima_revisao.numero_revisao }}
+  {% else %}
+    <span class="text-muted">Sem revisão</span>
+  {% endif %}
+{% endwith %}
+
               </td>
               <td>
                 {% if documento.revisoes.last %}

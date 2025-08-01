@@ -41,9 +41,11 @@ from Funcionario.utils.relatorios_utils import (
 
 
 class RelatorioPlanilhaTreinamentosView(TemplateView):
-    template_name = "relatorios/indicador.html"  # <- esse é o template usado na URL
+    template_name = "relatorios/indicador.html"
 
     def get_context_data(self, **kwargs):
+        from Funcionario.models.indicadores import FechamentoIndicadorTreinamento
+
         context = super().get_context_data(**kwargs)
         ano = int(self.request.GET.get("ano", datetime.now().year))
         trimestre_atual = ((datetime.now().month - 1) // 3) + 1
@@ -52,61 +54,81 @@ class RelatorioPlanilhaTreinamentosView(TemplateView):
         total_horas_por_trimestre = {t: 0.0 for t in trimestres}
         total_horas_treinamento = 0.0
 
-        # Verifica se há fechamento para este ano
-        fechamento = FechamentoIndicadorTreinamento.objects.filter(ano=ano).first()
+        # Tenta buscar os 4 registros de fechamento individualmente
+        fechamentos = {
+            t: FechamentoIndicadorTreinamento.objects.filter(ano=ano, trimestre=t).first()
+            for t in range(1, 5)
+        }
 
-        if fechamento:
-            # Dados já fechados, usa os valores salvos
+        if all(fechamentos.values()):
+            # Todos os trimestres têm fechamento — usa os dados salvos
             media = {
-                1: fechamento.valor_t1,
-                2: fechamento.valor_t2,
-                3: fechamento.valor_t3,
-                4: fechamento.valor_t4,
+                1: fechamentos[1].valor_t1 or 0,
+                2: fechamentos[2].valor_t2 or 0,
+                3: fechamentos[3].valor_t3 or 0,
+                4: fechamentos[4].valor_t4 or 0,
             }
-            media_geral = fechamento.media
+            media_geral = round(sum(media.values()) / 4, 2)
+
         else:
-            # Cálculo normal pois não foi fechado ainda
-            for trimestre, (mes_inicio, mes_fim) in trimestres.items():
+            # Recalcula os dados com base nos treinamentos
+            for t, (mes_inicio, mes_fim) in trimestres.items():
                 treinamentos = Treinamento.objects.filter(
                     data_inicio__year=ano,
                     data_inicio__month__gte=mes_inicio,
                     data_inicio__month__lte=mes_fim,
                     status="concluido"
                 )
-                for treinamento in treinamentos:
-                    carga = float(treinamento.carga_horaria.replace("h", "").strip() or 0)
+
+                for tmt in treinamentos:
+                    carga = float(tmt.carga_horaria.replace("h", "").strip() or 0)
                     participantes = Funcionario.objects.filter(
-                        treinamentos__nome_curso=treinamento.nome_curso,
-                        treinamentos__data_inicio=treinamento.data_inicio
+                        treinamentos__nome_curso=tmt.nome_curso,
+                        treinamentos__data_inicio=tmt.data_inicio
                     ).distinct().count()
+
                     total = carga * participantes
                     total_horas_treinamento += total
 
-                    por_trimestre = dividir_horas_por_trimestre(
-                        treinamento.data_inicio, treinamento.data_fim, total
-                    )
-                    for t, horas in por_trimestre.items():
-                        total_horas_por_trimestre[t] += horas
+                    distribuicao = dividir_horas_por_trimestre(tmt.data_inicio, tmt.data_fim, total)
+                    for trimestre, horas in distribuicao.items():
+                        total_horas_por_trimestre[trimestre] += horas
 
             total_funcionarios = Funcionario.objects.filter(status="Ativo").count() or 1
             media = {t: round(h / total_funcionarios, 2) for t, h in total_horas_por_trimestre.items()}
             media_geral = round(sum(media.values()) / 4, 2)
 
-            # Salvar os valores como fechamento
-            FechamentoIndicadorTreinamento.objects.update_or_create(
-                ano=ano,
-                trimestre=trimestre,  # ✅ Adicione isso
-                defaults={
-                    'valor_t1': media.get(1),
-                    'valor_t2': media.get(2),
-                    'valor_t3': media.get(3),
-                    'valor_t4': media.get(4),
-                    'media': media_geral
-                }
-            )
+            # Salva corretamente 1 registro por trimestre
+            for t in range(1, 5):
+                FechamentoIndicadorTreinamento.objects.update_or_create(
+                    ano=ano,
+                    trimestre=t,
+                    defaults={
+                        f"valor_t{t}": media.get(t),
+                        "media": media_geral
+                    }
+                )
 
+        # Geração do gráfico
         grafico = generate_training_hours_chart_styled(media, ano)
+        # Análise de Dados automática com base na meta de 4h por funcionário
+        analise_dados = {}
+        meta = 4.0
 
+        for t in range(1, 5):
+            valor = media.get(t, 0)
+            if valor == 0:
+                continue  # ignora trimestres sem dados
+            elif valor >= meta:
+                icone = "✅"
+                mensagem = f"{icone} A média de {valor:.2f}h no {t}º trimestre está dentro da meta de {meta}h por funcionário."
+            else:
+                icone = "⚠️"
+                mensagem = f"{icone} A média de {valor:.2f}h no {t}º trimestre está abaixo da meta de {meta}h por funcionário."
+
+            analise_dados[t] = {"mensagem": mensagem}
+
+       
         context.update({
             "ano": ano,
             "valores": media,
@@ -122,8 +144,10 @@ class RelatorioPlanilhaTreinamentosView(TemplateView):
                 3: "3º Trimestre",
                 4: "4º Trimestre",
             },
+            "analise_dados": analise_dados,
         })
         return context
+
 
 
 

@@ -50,4 +50,7 @@ metrologia_permissions = {
     # Informações via API / AJAX
     "obter_exatidao_requerida": "metrologia.view_tabelatecnica",
     "get_dispositivo_info": "metrologia.view_dispositivo",
+
+    "lista_analise_critica": "metrologia.view_análisecrítica",
+
 }

@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="{{ icone }} me-2"></i>{{ titulo }}
+  </h2>
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <strong>Erros no formulário:</strong>
+        <ul class="mt-2 mb-0">
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li><strong>Erro geral:</strong> {{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="accordion" id="accordionAnalise">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingEquipamento">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEquipamento" aria-expanded="true" aria-controls="collapseEquipamento">
+            <i class="bi bi-tools me-2"></i> Dados do Equipamento
+          </button>
+        </h2>
+        <div id="collapseEquipamento" class="accordion-collapse collapse show" aria-labelledby="headingEquipamento" data-bs-parent="#accordionAnalise">
+          <div class="accordion-body row g-3">
+
+            <div class="col-md-6">
+              <label class="form-label">Tipo</label>
+              {{ form.tipo|add_class:"form-select"|attr:"id:tipo_equipamento" }}
+            </div>
+
+
+            <div class="col-md-6" id="box_instrumento" style="display: none;">
+              <label class="form-label">Equipamento (Instrumento)</label>
+              {{ form.equipamento_instrumento|add_class:"form-select select2" }}
+            </div>
+
+            <div class="col-md-6" id="box_dispositivo" style="display: none;">
+              <label class="form-label">Equipamento (Dispositivo)</label>
+              {{ form.equipamento_dispositivo|add_class:"form-select select2" }}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Descrição</label>
+              {{ form.descricao_equipamento|add_class:"form-control"|attr:"readonly:readonly" }}
+            </div>
+
+            <div class="col-md-6" id="box_modelo">
+  <label class="form-label">Modelo</label>
+  {{ form.modelo|add_class:"form-control"|attr:"readonly:readonly" }}
+</div>
+
+            <div class="col-md-6" id="box_capacidade">
+              <label class="form-label">Capacidade / Resolução</label>
+              {{ form.capacidade_medicao|add_class:"form-control"|attr:"readonly:readonly" }}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Data Última Calibração</label>
+              {{ form.data_ultima_calibracao|add_class:"form-control"|attr:"readonly:readonly" }}
+            </div>
+
+          </div>
+        </div>
+      </div>
+<script>
+  document.querySelector("form").addEventListener("submit", function () {
+    document.getElementById("id_data_ultima_calibracao").value = data.data_calibracao || "";
+
+    document.getElementById("id_data_ultima_calibracao").removeAttribute("readonly");
+  });
+</script>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingAnalise">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnalise" aria-expanded="false" aria-controls="collapseAnalise">
+            <i class="bi bi-clipboard-data me-2"></i> Análise Crítica
+          </button>
+        </h2>
+        <div id="collapseAnalise" class="accordion-collapse collapse" aria-labelledby="headingAnalise" data-bs-parent="#accordionAnalise">
+          <div class="accordion-body row g-3">
+
+            <div class="col-12">
+              <label class="form-label">Não Conformidade Detectada</label>
+              {{ form.nao_conformidade_detectada }}
+            </div>
+
+            <div class="col-md-12">
+              <div class="form-check form-switch">
+                {{ form.compromete_qualidade|add_class:"form-check-input" }}
+                <label class="form-check-label">Compromete a qualidade dos produtos?</label>
+              </div>
+              <div id="obs_qualidade_box" style="display: none;">
+                <label class="form-label mt-2">Observações (Qualidade)</label>
+                {{ form.observacoes_qualidade }}
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <div class="form-check form-switch">
+                {{ form.verificar_pecas_processo|add_class:"form-check-input" }}
+                <label class="form-check-label">Há necessidade de verificar as peças em processo e estoque?</label>
+              </div>
+              <div id="obs_pecas_box" style="display: none;">
+                <label class="form-label mt-2">Observações (Peças/Estoque)</label>
+                {{ form.observacoes_pecas }}
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <div class="form-check form-switch">
+                {{ form.comunicar_cliente|add_class:"form-check-input" }}
+                <label class="form-check-label">Há necessidade de comunicar o cliente?</label>
+              </div>
+              <div id="obs_cliente_box" style="display: none;">
+                <label class="form-label mt-2">Observações (Cliente)</label>
+                {{ form.observacoes_cliente }}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="col-12 text-center mt-4">
+      {% include 'partials/global/_botoes_salvar_cancelar.html' with url_voltar='lista_analise_critica' %}
+    </div>
+
+  </form>
+</div>
+
+<script>
+  function toggleObservacao(idCheckbox, boxId) {
+    const checkbox = document.getElementById(idCheckbox);
+    const box = document.getElementById(boxId);
+    box.style.display = checkbox.checked ? 'block' : 'none';
+  }
+
+  function toggleEquipamentoTipo() {
+    const tipo = document.getElementById('tipo_equipamento').value;
+    document.getElementById('box_instrumento').style.display = tipo === 'instrumento' ? 'block' : 'none';
+    document.getElementById('box_dispositivo').style.display = tipo === 'dispositivo' ? 'block' : 'none';
+    document.getElementById('box_modelo').style.display = tipo === 'instrumento' ? 'block' : 'none';
+    document.getElementById('box_capacidade').style.display = tipo === 'instrumento' ? 'block' : 'none';
+    }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    toggleObservacao('id_compromete_qualidade', 'obs_qualidade_box');
+    toggleObservacao('id_verificar_pecas_processo', 'obs_pecas_box');
+    toggleObservacao('id_comunicar_cliente', 'obs_cliente_box');
+    toggleEquipamentoTipo();
+
+    document.getElementById('id_compromete_qualidade').addEventListener('change', function() {
+      toggleObservacao('id_compromete_qualidade', 'obs_qualidade_box');
+    });
+    document.getElementById('id_verificar_pecas_processo').addEventListener('change', function() {
+      toggleObservacao('id_verificar_pecas_processo', 'obs_pecas_box');
+    });
+    document.getElementById('id_comunicar_cliente').addEventListener('change', function() {
+      toggleObservacao('id_comunicar_cliente', 'obs_cliente_box');
+    });
+
+    document.getElementById('tipo_equipamento').addEventListener('change', toggleEquipamentoTipo);
+  });
+</script>
+<script>
+  // Preenche os campos com os dados vindos da API
+  function carregarDadosEquipamento(tipo) {
+    // endpoint correto
+    const endpoint = tipo === 'instrumento'
+      ? 'equipamento'
+      : 'dispositivo';
+
+    const selectId = tipo === 'instrumento'
+      ? 'id_equipamento_instrumento'
+      : 'id_equipamento_dispositivo';
+
+    const id = document.getElementById(selectId).value;
+    if (!id) return;
+
+    fetch(`/metrologia/api/${endpoint}/${id}/`)
+      .then(resp => resp.json())
+      .then(data => {
+        document.getElementById("id_descricao_equipamento").value = data.descricao || "";
+        document.getElementById("id_modelo").value = data.modelo || "";
+        document.getElementById("id_capacidade_medicao").value = data.capacidade || "";
+        document.getElementById("id_data_ultima_calibracao").value = data.data_calibracao || "";
+      })
+      .catch(err => console.error("Erro ao buscar dados:", err));
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    // 1) Quando o usuário mudar o tipo (Instrumento / Dispositivo) mostramos o select correspondente
+    const tipoSel = document.getElementById('tipo_equipamento');
+    tipoSel.addEventListener('change', () => {
+      const tipo = tipoSel.value;
+      document.getElementById('box_instrumento').style.display = tipo === 'instrumento' ? 'block' : 'none';
+      document.getElementById('box_dispositivo').style.display = tipo === 'dispositivo' ? 'block' : 'none';
+      document.getElementById('box_capacidade').style.display = tipo === 'instrumento' ? 'block' : 'none';
+    });
+
+    // 2) Escutar mudança nos selects — tanto o change padrão quanto o event do Select2
+    const instrSel = $('#id_equipamento_instrumento');
+    instrSel.on('change select2:select', () => {
+      if (tipoSel.value === 'instrumento') {
+        carregarDadosEquipamento('instrumento');
+      }
+    });
+
+    const dispSel = $('#id_equipamento_dispositivo');
+    dispSel.on('change select2:select', () => {
+      if (tipoSel.value === 'dispositivo') {
+        carregarDadosEquipamento('dispositivo');
+      }
+    });
+  });
+</script>
+
+
+{% endblock %}

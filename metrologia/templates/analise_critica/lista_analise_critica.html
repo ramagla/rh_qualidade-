@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Análises Críticas{% endblock %}
+
+{% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Análises Críticas" icone="bi bi-search" emoji="🔍" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões de Ação -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"metrologia.add_análisecríticametrologia" %}
+    <a href="{% url 'cadastrar_analise_critica' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2"></i> Nova Análise
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Filtros Offcanvas -->
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Análise
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12 filtro-wrapper">
+          <label for="equipamento" class="form-label">
+            <i class="bi bi-upc me-1"></i> Código do Equipamento
+          </label>
+          <input type="text" name="equipamento" class="form-control" placeholder="Digite o código">
+        </div>
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Cards Indicadores -->
+  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Total de Análises" valor=total_analises subtitulo="Registros efetuados." icone="bi-clipboard-check" %}
+    {% include "partials/global/_card_indicador.html" with cor="danger" titulo="Com NC Crítica" valor=total_nc_critica subtitulo="Compromete qualidade." icone="bi-shield-exclamation" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Cliente Notificado" valor=total_cliente_notificado subtitulo="Comunicados emitidos." icone="bi-envelope-open" %}
+  </div>
+
+  <!-- Tabela -->
+  <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📊 Lista de Análises Críticas</h5>
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <thead class="table-light">
+  <tr class="text-center">
+    <th>
+      <i class="bi bi-upc-scan d-block text-secondary"></i>
+      Código
+    </th>
+    <th>
+      <i class="bi bi-tag d-block text-secondary"></i>
+      Tipo
+    </th>
+    <th>
+      <i class="bi bi-card-text d-block text-secondary"></i>
+      Descrição
+    </th>
+    <th>
+      <i class="bi bi-calendar-check d-block text-secondary"></i>
+      Data Calibração
+    </th>
+    <th>
+      <i class="bi bi-shield-exclamation d-block text-secondary"></i>
+      Compromete Qualidade?
+    </th>
+    <th>
+      <i class="bi bi-envelope-exclamation d-block text-secondary"></i>
+      Cliente Notificado?
+    </th>
+    <th>
+      <i class="bi bi-gear d-block text-secondary"></i>
+      Ações
+    </th>
+  </tr>
+</thead>
+
+      <tbody>
+        {% for analise in page_obj %}
+        <tr>
+          <td>
+            {% if analise.equipamento_instrumento %}
+              {{ analise.equipamento_instrumento.codigo }}
+            {% elif analise.equipamento_dispositivo %}
+              {{ analise.equipamento_dispositivo.codigo }}
+            {% else %}-{% endif %}
+          </td>
+          <td>
+            {% if analise.equipamento_instrumento %}Instrumento
+            {% elif analise.equipamento_dispositivo %}Dispositivo
+            {% else %}–{% endif %}
+          </td>
+          <td>{{ analise.descricao_equipamento }}</td>
+          <td>{{ analise.data_ultima_calibracao|date:'d/m/Y' }}</td>
+          <td>
+            {% if analise.compromete_qualidade %}
+              <i class="bi bi-check-circle-fill text-danger"></i>
+            {% else %}<i class="bi bi-dash text-muted"></i>
+            {% endif %}
+          </td>
+          <td>
+            {% if analise.comunicar_cliente %}
+              <i class="bi bi-check-circle-fill text-warning"></i>
+            {% else %}<i class="bi bi-dash text-muted"></i>
+            {% endif %}
+          </td>
+          <td>
+            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+              {% include "partials/global/_botao_visualizar.html" with objeto=analise url_visualizar="visualizar_analise_critica" label="análise" %}
+              {% include "partials/global/_botao_editar.html" with objeto=analise url_editar="editar_analise_critica" label="análise" %}
+              {% include "partials/global/_botao_excluir.html" with objeto=analise url_excluir="excluir_analise_critica" label="análise" %}
+              {% include "partials/global/_modal_exclusao.html" with objeto=analise url_excluir="excluir_analise_critica" %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        {% include "partials/global/_sem_resultados.html" with colspan=7 mensagem="Nenhuma análise registrada." %}
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+
+</div>
+{% endblock %}

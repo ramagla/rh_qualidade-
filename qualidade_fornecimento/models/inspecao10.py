@@ -7,15 +7,22 @@ from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 from qualidade_fornecimento.models.controle_servico_externo import ControleServicoExterno
 from django.db.models import Sum
+from django.db import transaction
 
-
+from Funcionario.models.departamentos import Departamentos
 
 class Inspecao10(models.Model):  
     DISPOSICAO_CHOICES = [
         ("Sucatear", "Sucatear"),
         ("Devolver", "Devolver"),
     ]
-
+    setor = models.ForeignKey(
+            Departamentos,
+            on_delete=models.SET_NULL,
+            null=True,
+            blank=True,
+            verbose_name="Setor"
+        )
     numero_op = models.CharField("Nº OP", max_length=20, default="000000")
     codigo_brasmol = models.ForeignKey(
         MateriaPrimaCatalogo,
@@ -47,6 +54,10 @@ class Inspecao10(models.Model):
 
   
 
+    from django.db import transaction
+
+# ...
+
     def save(self, *args, **kwargs):
         if self.hora_inicio and self.hora_fim:
             inicio = datetime.combine(self.data, self.hora_inicio)
@@ -54,47 +65,46 @@ class Inspecao10(models.Model):
             self.tempo_gasto = fim - inicio if fim > inicio else timedelta()
 
         self.status = "FALHA DE BANHO" if self.quantidade_nok > 0 else "OK"
+
+        # Salva inspeção antes de gerar devolução
         super().save(*args, **kwargs)
 
         if self.disposicao == "Devolver" and self.quantidade_nok > 0:
-            devolucao_existente = DevolucaoServicoExterno.objects.filter(
-                inspecao__numero_op=self.numero_op,
-                inspecao__codigo_brasmol=self.codigo_brasmol,
-                inspecao__fornecedor=self.fornecedor
-            ).first()
+            with transaction.atomic():
+                devolucao_existente = DevolucaoServicoExterno.objects.filter(inspecao=self).first()
 
-            if devolucao_existente:
-                servico = devolucao_existente.servico
-                servico.quantidade_enviada = (
-                    DevolucaoServicoExterno.objects
-                    .filter(servico=servico)
-                    .aggregate(total=Sum("quantidade"))["total"] or 0
-                ) + self.quantidade_nok
-                servico.save()
+                if devolucao_existente:
+                    servico = devolucao_existente.servico
+                    servico.quantidade_enviada = (
+                        DevolucaoServicoExterno.objects
+                        .filter(servico=servico)
+                        .aggregate(total=Sum("quantidade"))["total"] or 0
+                    ) + self.quantidade_nok
+                    servico.save()
 
-                DevolucaoServicoExterno.objects.create(
-                    inspecao=self,
-                    servico=servico,
-                    quantidade=self.quantidade_nok
-                )
+                    # Atualiza a devolução existente, não recria
+                    devolucao_existente.quantidade = self.quantidade_nok
+                    devolucao_existente.save()
 
-            else:
-                servico = ControleServicoExterno.objects.create(
-                    pedido=f"DEV-{self.numero_op}",
-                    op=int(self.numero_op.replace("OP", "").strip()) if self.numero_op.isdigit() else 0,
-                    nota_fiscal="DEVOLUÇÃO AUTOMÁTICA",
-                    fornecedor=self.fornecedor,
-                    codigo_bm=self.codigo_brasmol,
-                    quantidade_enviada=self.quantidade_nok,
-                    data_envio=None,  # <<< NÃO preenche data_envio
-                    observacao=f"Devolução iniciada via F223 - OP {self.numero_op}",
-                    status2="Aguardando Envio"
-                )
-                DevolucaoServicoExterno.objects.create(
-                    inspecao=self,
-                    servico=servico,
-                    quantidade=self.quantidade_nok
-                )
+                else:
+                    servico = ControleServicoExterno.objects.create(
+                        pedido=f"DEV-{self.numero_op}",
+                        op=int(self.numero_op.replace("OP", "").strip()) if self.numero_op.isdigit() else 0,
+                        nota_fiscal="DEVOLUÇÃO AUTOMÁTICA",
+                        fornecedor=self.fornecedor,
+                        codigo_bm=self.codigo_brasmol,
+                        quantidade_enviada=self.quantidade_nok,
+                        data_envio=None,
+                        observacao=f"Devolução iniciada via F223 - OP {self.numero_op}",
+                        status2="Aguardando Envio"
+                    )
+
+                    DevolucaoServicoExterno.objects.create(
+                        inspecao=self,
+                        servico=servico,
+                        quantidade=self.quantidade_nok
+                    )
+
 
 
 

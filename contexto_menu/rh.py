@@ -94,13 +94,7 @@ def menu_rh(user):
         })
 
     # Relatórios
-    submenu_relatorios = []
-    if user.has_perm("Funcionario.relatorio_indicador"):
-        submenu_relatorios.append({
-            "name": "Indicador de Treinamentos",
-            "url": "relatorio_indicador",
-            "icon": "fas fa-chart-bar"
-        })
+    submenu_relatorios = []   
     if user.has_perm("Funcionario.cronograma_treinamentos"):
         submenu_relatorios.append({
             "name": "Cronograma de Treinamentos",
@@ -113,12 +107,7 @@ def menu_rh(user):
             "url": "cronograma_avaliacao_eficacia",
             "icon": "fas fa-chart-line"
         })
-    if user.has_perm("Funcionario.relatorio_indicador_anual"):
-        submenu_relatorios.append({
-            "name": "Indicador Anual",
-            "url": "relatorio_indicador_anual",
-            "icon": "fas fa-chart-pie"
-        })
+   
     if user.has_perm("Funcionario.relatorio_aniversariantes"):
         submenu_relatorios.append({
             "name": "Aniversariantes do Mês",
@@ -146,7 +135,7 @@ def menu_rh(user):
         submenu_formularios.append({
             "name": "Carta de Competência",
             "url": "filtro_funcionario_generico",
-            "params": "?next_view=formulario_carta_competencia&texto_botao=Gerar+Carta&titulo=Selecionar+Funcionário+para+Carta&icone=bi bi-envelope-paper-fill&emoji=✉️",
+            "params": "?next_view=carta_avaliacao_capacitacao&texto_botao=Gerar+Carta&titulo=Selecionar+Funcionário+para+Carta&icone=bi bi-envelope-paper-fill&emoji=✉️",
             "icon": "fas fa-envelope"
         })
 
@@ -161,7 +150,7 @@ def menu_rh(user):
         submenu_formularios.append({
             "name": "Avaliação de Capacitação Prática",
             "url": "filtro_funcionario_generico",
-            "params": "?next_view=carta_avaliacao_capacitacao&texto_botao=Gerar+Avaliação&titulo=Avaliação+de+Capacitação+Prática&icone=bi bi-person-check&emoji=🧰",
+            "params": "?next_view=formulario_carta_competencia&texto_botao=Gerar+Avaliação&titulo=Avaliação+de+Capacitação+Prática&icone=bi bi-person-check&emoji=🧰",
             "icon": "fas fa-tools"
         })
 
@@ -197,6 +186,26 @@ def menu_rh(user):
             "icon": "fas fa-calendar-week"
         })
 
+    # Indicadores
+    submenu_indicadores = []
+    if user.has_perm("Funcionario.relatorio_indicador"):
+        submenu_indicadores.append({
+            "name": "2.3 - Treinamentos por Colaborador",
+            "url": "relatorio_indicador",
+            "icon": "fas fa-user-graduate"
+        })
+    if user.has_perm("Funcionario.relatorio_indicador_anual"):
+        submenu_indicadores.append({
+            "name": "2.1 - Desempenho dos Colaboradores",
+            "url": "relatorio_indicador_anual",
+            "icon": "fas fa-chart-bar"
+        })
+    if submenu_indicadores:
+        menu.append({
+            "name": "Indicadores",
+            "icon": "fas fa-chart-line",
+            "submenu": submenu_indicadores,
+        })
 
     if submenu_formularios:
         menu.append({
