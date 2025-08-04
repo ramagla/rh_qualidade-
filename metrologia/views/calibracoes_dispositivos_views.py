@@ -200,7 +200,7 @@ def excluir_calibracao_dispositivo(request, id):
     )
 
 @login_required
-@permission_required("metrologia.view_calibracaodispositivo", raise_exception=True)
+@permission_required("metrologia.imprimir_calibracao_dispositivo", raise_exception=True)
 def imprimir_calibracao_dispositivo(request, dispositivo_id):
     calibracoes = CalibracaoDispositivo.objects.filter(
         codigo_dispositivo_id=dispositivo_id

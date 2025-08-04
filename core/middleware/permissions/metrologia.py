@@ -1,6 +1,6 @@
 metrologia_permissions = {
     # Dashboard e Home
-    "home_metrologia": "metrologia.view_tabelatecnica",
+    "home_metrologia": "metrologia.acesso_metrologia",
     "dashboard_qualidade_view": "metrologia.view_tabelatecnica",
 
     # Tabela Técnica
@@ -9,20 +9,34 @@ metrologia_permissions = {
     "editar_tabelatecnica": "metrologia.change_tabelatecnica",
     "visualizar_tabelatecnica": "metrologia.view_tabelatecnica",
     "excluir_tabelatecnica": "metrologia.delete_tabelatecnica",
-    "imprimir_tabelatecnica": "metrologia.view_tabelatecnica",
+    "imprimir_tabelatecnica": "metrologia.imprimir_tabelatecnica",
 
-    # Dispositivos
+
+    # Calibração de Instrumentos
+    "lista_calibracoes": "metrologia.view_calibracao",
+    "metrologia_calibracoes": "metrologia.view_calibracao",  # redundante, mas pode manter
+    "cadastrar_calibracao": "metrologia.add_calibracao",
+    "editar_calibracao": "metrologia.change_calibracao",
+    "excluir_calibracao": "metrologia.delete_calibracao",
+
+    # API / AJAX
+    "obter_exatidao_requerida": "metrologia.view_tabelatecnica",
+
+
+   # Dispositivos
     "lista_dispositivos": "metrologia.view_dispositivo",
     "cadastrar_dispositivo": "metrologia.add_dispositivo",
     "editar_dispositivo": "metrologia.change_dispositivo",
     "visualizar_dispositivo": "metrologia.view_dispositivo",
     "excluir_dispositivo": "metrologia.delete_dispositivo",
-    "imprimir_dispositivo": "metrologia.view_dispositivo",
+    "imprimir_calibracao_dispositivo": "metrologia.imprimir_calibracao_dispositivo",
+    "imprimir_dispositivo": "metrologia.relatorio_equipamentos_calibrar",  # Permissão customizada já existente
 
     # Movimentações de Dispositivos
     "historico_movimentacoes": "metrologia.view_controleentradasaida",
     "cadastrar_movimentacao": "metrologia.add_controleentradasaida",
     "excluir_movimentacao": "metrologia.delete_controleentradasaida",
+
 
     # Calibração de Dispositivos
     "lista_calibracoes_dispositivos": "metrologia.view_calibracaodispositivo",
@@ -30,6 +44,8 @@ metrologia_permissions = {
     "editar_calibracao_dispositivo": "metrologia.change_calibracaodispositivo",
     "excluir_calibracao_dispositivo": "metrologia.delete_calibracaodispositivo",
     "imprimir_calibracao_dispositivo": "metrologia.view_calibracaodispositivo",
+    "get_dispositivo_info": "metrologia.view_dispositivo",
+
 
     # Calibração de Instrumentos
     "lista_calibracoes": "metrologia.view_calibracao",
@@ -38,19 +54,31 @@ metrologia_permissions = {
     "editar_calibracao": "metrologia.change_calibracao",
     "excluir_calibracao": "metrologia.delete_calibracao",
 
-    # Cronogramas
-    "cronograma_equipamentos": "metrologia.view_tabelatecnica",
-    "cronograma_dispositivos": "metrologia.view_dispositivo",
+   # Cronogramas
+    "cronograma_equipamentos": "metrologia.cronograma_calibracao_equipamentos",
+    "cronograma_dispositivos": "metrologia.cronograma_calibracao_dispositivos",
+
 
     # Relatórios
-    "lista_equipamentos_a_calibrar": "metrologia.view_tabelatecnica",
-    "listar_equipamentos_funcionario": "metrologia.view_tabelatecnica",
-    "equipamentos_por_funcionario": "metrologia.view_tabelatecnica",
+    "lista_equipamentos_a_calibrar": "metrologia.relatorio_equipamentos_calibrar",
+    "listar_equipamentos_funcionario": "metrologia.relatorio_equipamentos_por_funcionario",
+    "listar_funcionarios_ativos": "metrologia.relatorio_equipamentos_por_funcionario",
+    "equipamentos_por_funcionario": "metrologia.relatorio_equipamentos_por_funcionario",
+    "equipamentos_para_calibracao": "metrologia.relatorio_f062",
+    "gerar_f062": "metrologia.gerar_f062",
 
     # Informações via API / AJAX
-    "obter_exatidao_requerida": "metrologia.view_tabelatecnica",
     "get_dispositivo_info": "metrologia.view_dispositivo",
 
     "lista_analise_critica": "metrologia.view_análisecrítica",
+
+
+    # Análise Crítica de Metrologia
+    "lista_analise_critica": "metrologia.view_análisecríticametrologia",
+    "cadastrar_analise_critica": "metrologia.add_análisecríticametrologia",
+    "editar_analise_critica": "metrologia.change_análisecríticametrologia",
+    "visualizar_analise_critica": "metrologia.view_análisecríticametrologia",
+    "excluir_analise_critica": "metrologia.delete_análisecríticametrologia",
+
 
 }

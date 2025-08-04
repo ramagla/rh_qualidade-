@@ -126,5 +126,6 @@ CUSTOM_PERMISSOES = [
     ("tecnico", "roteiroproducao", "importar_roteiro", "Pode importar roteiros via Excel"),
     ("tecnico", "roteiroproducao", "clonar_roteiro", "Pode clonar roteiros"),
     ("tecnico", "roteiroproducao", "aprovar_roteiro", "Pode aprovar roteiros"),
+    ("metrologia", "calibracaodispositivo", "imprimir_calibracao_dispositivo", "Pode imprimir calibração de dispositivo"),
 
 ]

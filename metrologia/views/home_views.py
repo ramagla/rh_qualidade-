@@ -11,7 +11,7 @@ from metrologia.models.models_tabelatecnica import TabelaTecnica
 
 
 @login_required
-@permission_required("comercial.acesso_comercial", raise_exception=True)
+@permission_required("metrologia.acesso_metrologia", raise_exception=True)
 def home(request):
     today = now().date()
 
