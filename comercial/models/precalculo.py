@@ -90,7 +90,7 @@ class PreCalculo(models.Model):
         if not regras:
             return []
 
-        # Componentes de custo
+        # 🧮 Componentes de custo
         custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
 
         mat = self.materiais.filter(selecionado=True).first()
@@ -103,16 +103,23 @@ class PreCalculo(models.Model):
 
         base = (custos_diretos + materiais + servicos).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
-        # Impostos sobre lucro (IR, CSLL, DF, DV)
-        percentual_total = (
+        # 📉 Impostos totais (todos)
+        percentual_total_impostos = (
+            Decimal(regras.icms or 0) +
+            Decimal(regras.pis or 0) +
+            Decimal(regras.confins or 0) +
             Decimal(regras.ir or 0) +
             Decimal(regras.csll or 0) +
             Decimal(regras.df or 0) +
             Decimal(regras.dv or 0)
         )
 
-        # CORREÇÃO: aplicar markup direto com os tributos embutidos
-        bruto = (base / (1 - percentual_total / 100)).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+        # 🚫 Apenas impostos indiretos de venda a serem subtraídos
+        percentual_impostos_venda = (
+            Decimal(regras.icms or 0) +
+            Decimal(regras.pis or 0) +
+            Decimal(regras.confins or 0)
+        )
 
         qtde = Decimal(getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1)
 
@@ -120,17 +127,27 @@ class PreCalculo(models.Model):
         valores = []
 
         for margem in margens:
-            if margem >= 100:
+            percentual_sobre_base = Decimal(100) - percentual_total_impostos - Decimal(margem)
+            if percentual_sobre_base <= 0:
                 continue
-            total = (bruto / (1 - Decimal(margem) / 100)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            unitario = (total / qtde).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
+            fator_com_impostos = (Decimal(100) / percentual_sobre_base).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            preco_com_impostos = (base * fator_com_impostos).quantize(Decimal("0.0000001"), rounding=ROUND_HALF_UP)
+
+            # 🔁 Remoção dos impostos de venda
+            fator_reducao = (Decimal(100) - percentual_impostos_venda) / Decimal(100)
+            preco_sem_impostos = (preco_com_impostos * fator_reducao).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+            unitario = (preco_sem_impostos / qtde).quantize(Decimal("0.0000001"), rounding=ROUND_HALF_UP)
+
             valores.append({
                 "percentual": margem,
-                "total": total,
+                "total": preco_sem_impostos,
                 "unitario": unitario,
             })
 
         return valores
+
 
 
 
@@ -141,7 +158,7 @@ class PreCalculo(models.Model):
         if not regras:
             return []
 
-        # Componentes de custo
+        # 🧮 Componentes de custo
         custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
 
         mat = self.materiais.filter(selecionado=True).first()
@@ -154,8 +171,8 @@ class PreCalculo(models.Model):
 
         base = (custos_diretos + materiais + servicos).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
-        # Todos os tributos incidentes no custo (inclusive ICMS/PIS/COFINS)
-        percentual_total = (
+        # 📊 Percentual total de impostos (ICMS, PIS, COFINS, IR, CSLL, DF, DV)
+        percentual_impostos = (
             Decimal(regras.icms or 0) +
             Decimal(regras.pis or 0) +
             Decimal(regras.confins or 0) +
@@ -165,19 +182,25 @@ class PreCalculo(models.Model):
             Decimal(regras.dv or 0)
         )
 
-        # ✅ Corrigido: aplicar markup direto com os tributos embutidos
-        bruto = (base / (1 - percentual_total / 100)).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
-
+        # 📦 Quantidade estimada
         qtde = Decimal(getattr(self.analise_comercial_item, "qtde_estimada", 1) or 1)
 
+        # 📈 Margens em %
         margens = [0, 5, 10, 15, 20, 25, 30, 35, 40]
         valores = []
 
         for margem in margens:
-            if margem >= 100:
-                continue
-            total = (bruto / (1 - Decimal(margem) / 100)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            # 🧠 Índice de repasse = 100 - impostos - margem
+            percentual_sobre_base = Decimal(100) - percentual_impostos - Decimal(margem)
+
+            if percentual_sobre_base <= 0:
+                continue  # evita divisão por zero ou negativa
+
+            fator_repasse = (Decimal(100) / percentual_sobre_base).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
+            total = (base * fator_repasse).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             unitario = (total / qtde).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
             valores.append({
                 "percentual": margem,
                 "total": total,
@@ -185,6 +208,7 @@ class PreCalculo(models.Model):
             })
 
         return valores
+
 
 
 

@@ -134,6 +134,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.permission_middleware.PermissionMiddleware",
+    "core.middleware.csp_middleware.ContentSecurityPolicyMiddleware",
+
 ]
 
 # Configuração de URLs e WSGI

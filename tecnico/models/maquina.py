@@ -33,6 +33,7 @@ class Maquina(models.Model):
         "AGE": "Anel Grupo E",
         "PGC": "Pino Grupo C",
         "PGE": "Pino Grupo E",
+        "BAL": "Balanças",
     }
     codigo = models.CharField(max_length=20, unique=True)
     nome = models.CharField(max_length=100)

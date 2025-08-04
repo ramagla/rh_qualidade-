@@ -31,3 +31,10 @@ class MaquinaForm(forms.ModelForm):
             "valor_hora": forms.NumberInput(attrs={"step": "0.01", "placeholder": "R$/hora"}),
             "consumo_kwh": forms.NumberInput(attrs={"step": "0.01", "placeholder": "kWh"}),
         }
+
+
+class ImportarExcelForm(forms.Form):
+    arquivo = forms.FileField(
+        label="Arquivo Excel",
+        widget=forms.ClearableFileInput(attrs={"class": "form-control"})
+    )

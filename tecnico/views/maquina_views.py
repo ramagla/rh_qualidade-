@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from tecnico.models.maquina import Maquina
-from tecnico.forms.maquina_form import MaquinaForm
+from tecnico.forms.maquina_form import ImportarExcelForm, MaquinaForm
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
@@ -14,20 +14,32 @@ from tecnico.models.maquina import Maquina
 def lista_maquinas(request):
     # 🔎 Filtros
     codigo = request.GET.get("codigo", "").strip()
-    nome   = request.GET.get("nome", "").strip()
+    grupo = request.GET.get("grupo", "").strip()
 
     qs = Maquina.objects.all()
 
     if codigo:
         qs = qs.filter(codigo__icontains=codigo)
 
-    if nome:
-        qs = qs.filter(nome__icontains=nome)
+    if grupo:
+        qs = qs.filter(grupo_de_maquinas=grupo)
 
     # 📊 Indicadores
-    total_maquinas     = qs.count()
-    velocidade_media   = qs.aggregate(Avg("velocidade"))["velocidade__avg"] or 0
-    valor_hora_medio   = qs.aggregate(Avg("valor_hora"))["valor_hora__avg"] or 0
+    total_maquinas = qs.count()
+    velocidade_media = qs.aggregate(Avg("velocidade"))["velocidade__avg"] or 0
+    valor_hora_medio = qs.aggregate(Avg("valor_hora"))["valor_hora__avg"] or 0
+
+    # 📄 Códigos únicos para filtro
+    codigos_disponiveis = (
+        Maquina.objects.exclude(codigo__isnull=True)
+        .exclude(codigo="")
+        .order_by("codigo")
+        .values_list("codigo", flat=True)
+        .distinct()
+    )
+
+    # 📄 Grupos disponíveis
+    grupos_disponiveis = dict(Maquina.FAMILIA_PRODUTO_LABELS)
 
     # 📄 Paginação
     paginator = Paginator(qs.order_by("nome"), 20)  # 20 por página
@@ -39,6 +51,8 @@ def lista_maquinas(request):
         "total_maquinas": total_maquinas,
         "velocidade_media": f"{velocidade_media:.2f}",
         "valor_hora_medio": f"{valor_hora_medio:.2f}",
+        "codigos_disponiveis": codigos_disponiveis,
+        "grupos_disponiveis": grupos_disponiveis,
     }
 
     return render(request, "maquinas/lista_maquinas.html", context)
@@ -128,3 +142,91 @@ def ajax_excluir_servico(request, pk):
     if request.method == "POST":
         ServicoRealizado.objects.filter(pk=pk).delete()
         return JsonResponse({"success": True})
+
+import pandas as pd
+from tecnico.models.maquina import Maquina, ServicoRealizado
+from django.contrib import messages
+
+@login_required
+@permission_required("tecnico.add_maquina", raise_exception=True)
+def importar_maquinas_view(request):
+    if request.method == "POST":
+        form = ImportarExcelForm(request.POST, request.FILES)
+        if form.is_valid():
+            arquivo = form.cleaned_data["arquivo"]
+            df = pd.read_excel(arquivo)
+
+            # 🔧 Normaliza os nomes das colunas
+            df.columns = (
+                df.columns
+                .str.strip()
+                .str.lower()
+                .str.normalize("NFKD")
+                .str.encode("ascii", errors="ignore")
+                .str.decode("utf-8")
+                .str.replace(" ", "_")
+            )
+
+            print("🔎 Colunas normalizadas:", df.columns.tolist())
+            print("📄 Preview da planilha:")
+            print(df.head())
+
+            total_criadas = 0
+            total_atualizadas = 0
+            erros = []
+
+            for i, row in df.iterrows():
+                try:
+                    print(f"\n➡️ Processando linha {i + 2}...")
+                    print(row)
+
+                    codigo = str(row.get("codigo")).strip()
+                    print(f"🔧 Código extraído: '{codigo}' (tipo: {type(codigo)})")
+
+                    if not codigo or codigo.lower() == "nan":
+                        raise ValueError("Campo 'codigo' está vazio ou ausente.")
+
+                    maquina, created = Maquina.objects.update_or_create(
+                        codigo=codigo,
+                        defaults={
+                            "nome": row.get("nome"),
+                            "grupo_de_maquinas": row.get("grupo_de_maquinas"),
+                            "velocidade": row.get("velocidade") or 0,
+                            "valor_hora": row.get("valor_hora") or 0,
+                            "consumo_kwh": row.get("consumo_kwh") or 0,
+                        }
+                    )
+
+                    if created:
+                        total_criadas += 1
+                    else:
+                        total_atualizadas += 1
+
+                    # ⛓️ Relaciona os serviços
+                    servicos_str = str(row.get("servicos") or "").strip()
+                    if servicos_str:
+                        nomes_servicos = [s.strip() for s in servicos_str.split(";") if s.strip()]
+                        servicos_objs = []
+                        for nome in nomes_servicos:
+                            servico, _ = ServicoRealizado.objects.get_or_create(nome=nome)
+                            servicos_objs.append(servico)
+                        maquina.servicos_realizados.set(servicos_objs)
+
+                except Exception as e:
+                    print(f"❌ Erro na linha {i + 2}: {e}")
+                    erros.append(f"Linha {i + 2}: {e}")
+
+            if total_criadas or total_atualizadas:
+                messages.success(
+                    request,
+                    f"{total_criadas} máquinas criadas, {total_atualizadas} atualizadas com sucesso."
+                )
+            if erros:
+                messages.error(request, "Ocorreram erros:\n" + "\n".join(erros))
+
+            return redirect("tecnico:tecnico_maquinas")
+
+    else:
+        form = ImportarExcelForm()
+
+    return render(request, "maquinas/importar_maquinas.html", {"form": form})

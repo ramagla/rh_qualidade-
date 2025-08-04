@@ -25,6 +25,12 @@
         data-bs-target="#modalServicos">
   <i class="bi bi-wrench-adjustable-circle me-1"></i> Cadastrar Serviços
 </button>
+{% if request.user|has_permission:"tecnico.importar_excel_maquinas" %}
+  <a href="{% url 'tecnico:tecnico_importar_maquinas_excel' %}" class="btn btn-importar-personalizado d-inline-flex align-items-center">
+    <i class="bi bi-upload me-2"></i> Importar Excel
+  </a>
+{% endif %}
+
 <div class="modal fade" id="modalServicos" tabindex="-1" aria-labelledby="modalServicosLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
@@ -59,29 +65,46 @@
   </div>
 
   <!-- Offcanvas Filtros Máquinas -->
-  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
-        <i class="bi bi-funnel-fill me-2"></i>Filtros de Máquinas
-      </h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-    </div>
-    <div class="offcanvas-body">
-      <form method="get" class="row g-3">
-        <div class="col-12 filtro-wrapper">
-          <label class="form-label"><i class="bi bi-upc me-1"></i> Código</label>
-          <input type="text" name="codigo" class="form-control" value="{{ request.GET.codigo }}">
-        </div>
-        <div class="col-12 filtro-wrapper">
-          <label class="form-label"><i class="bi bi-type me-1"></i> Nome</label>
-          <input type="text" name="nome" class="form-control" value="{{ request.GET.nome }}">
-        </div>
-        <div class="col-12 mt-3">
-          {% include "partials/global/_botao_filtrar.html" %}
-        </div>
-      </form>
-    </div>
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Máquinas
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+
+      <!-- Código -->
+      <div class="col-12 filtro-wrapper">
+        <label class="form-label"><i class="bi bi-upc me-1"></i> Código</label>
+        <select name="codigo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for cod in codigos_disponiveis %}
+            <option value="{{ cod }}" {% if request.GET.codigo == cod %}selected{% endif %}>{{ cod }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Grupo de Máquinas -->
+      <div class="col-12 filtro-wrapper">
+        <label class="form-label"><i class="bi bi-diagram-3 me-1"></i> Grupo de Máquinas</label>
+        <select name="grupo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for k, v in grupos_disponiveis.items %}
+            <option value="{{ k }}" {% if request.GET.grupo == k %}selected{% endif %}>{{ v }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Botão -->
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+    </form>
+  </div>
+</div>
+
 
   <!-- Indicadores -->
   <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
@@ -150,7 +173,13 @@
         <tr>
           <td>{{ m.codigo }}</td>
           <td class="text-start">{{ m.nome }}</td>
-          <td>{{ m.servico_realizado }}</td>
+<td>
+  {% for s in m.servicos_realizados.all %}
+    <span class="badge bg-secondary">{{ s.nome }}</span>{% if not forloop.last %}, {% endif %}
+  {% empty %}
+    <small class="text-muted">Nenhum</small>
+  {% endfor %}
+</td>
           <td>{{ m.velocidade }}</td>
           <td>R$ {{ m.valor_hora }}</td>
           <td>{{ m.consumo_kwh }}</td>

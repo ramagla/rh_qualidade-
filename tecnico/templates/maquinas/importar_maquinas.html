@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Importar Máquinas via Excel{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    {% include "partials/global/_estilos_botoes_acoes.html" %}
+    {% include "partials/global/_toast_mensagens.html" %}
+
+    <!-- Título -->
+    <div class="text-center border-bottom pb-3 mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-upload text-primary me-2"></i>
+            Importar Máquinas via Excel
+        </h2>
+        <p class="text-muted fs-6">Faça upload de uma planilha conforme o modelo para cadastrar máquinas em lote.</p>
+    </div>
+
+    <!-- Formulário -->
+    <form method="post" enctype="multipart/form-data" class="row g-3 mb-4">
+        {% csrf_token %}
+        
+        <!-- Campo de upload -->
+        <div class="col-md-6">
+            <label for="arquivo" class="form-label">
+                <i class="bi bi-file-earmark-excel me-1 text-success"></i>Selecione o arquivo Excel:
+            </label>
+            <input type="file" name="arquivo" id="arquivo" accept=".xls,.xlsx" required class="form-control">
+        </div>
+
+        <div class="col-md-6"></div>
+
+        <!-- Botão -->
+        <div class="col-12 text-start">
+            <button type="submit" class="btn btn-cadastrar-personalizado">
+                <i class="bi bi-upload me-2"></i> Importar Arquivo
+            </button>
+        </div>
+    </form>
+
+    <!-- Tabela de Exemplo -->
+    <div class="mt-5">
+        <h5 class="mb-2">
+            <i class="bi bi-table me-2 text-info"></i>
+            Exemplo de Estrutura do Excel
+        </h5>
+        <p class="text-muted">A planilha deve conter as colunas abaixo com os nomes exatamente iguais:</p>
+
+        <div class="table-responsive mt-3">
+            <table class="table table-bordered table-striped align-middle text-center table-sm">
+                <thead class="table-light text-primary align-middle">
+                    <tr>
+                        <th><i class="bi bi-upc-scan"></i><br>Código</th>
+                        <th><i class="bi bi-gear"></i><br>Nome</th>
+                        <th><i class="bi bi-diagram-3"></i><br>Grupo de Máquinas</th>
+                        <th><i class="bi bi-speedometer"></i><br>Velocidade</th>
+                        <th><i class="bi bi-currency-dollar"></i><br>Valor Hora</th>
+                        <th><i class="bi bi-lightning-charge"></i><br>Consumo kWh</th>
+                        <th><i class="bi bi-tools"></i><br>Serviços</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>MAQ001</td>
+                        <td>Prensa Hidráulica 30T</td>
+                        <td>PEGE</td>
+                        <td>500</td>
+                        <td>75.50</td>
+                        <td>3.2</td>
+                        <td>Corte, Estampagem</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Botão de download do modelo -->
+        <div class="mt-4">
+            <a href="{% static 'arquivos/modelo_importacao_maquinas.xlsx' %}" 
+               class="btn btn-importar-personalizado" 
+               download>
+                <i class="bi bi-download me-2"></i> Baixar Modelo de Importação (.xlsx)
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
