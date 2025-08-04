@@ -476,14 +476,15 @@
             <td>
               <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
                 {% if request.user|has_permission:"comercial.view_cotacao" %}
-                  {% if request.user|has_permission:"comercial.view_precaculo" %}
-                    <a href="{% url 'itens_precaculo' cot.id %}"
-                       class="btn btn-outline-info btn-sm mt-1"
-                       title="Ver Pré-Cálculo">
-                      <i class="bi bi-calculator"></i>
-                    </a>
-                  {% endif %}
-                {% endif %}
+  {% if request.user|has_permission:"comercial.view_precalculo" %}
+    <a href="{% url 'itens_precaculo' cot.id %}"
+       class="btn btn-outline-info btn-sm mt-1"
+       title="Ver Pré-Cálculo">
+      <i class="bi bi-calculator"></i>
+    </a>
+  {% endif %}
+{% endif %}
+
                 {% if request.user|has_permission:"comercial.change_cotacao" %}
                   {% include "partials/global/_botao_editar.html" with objeto=cot url_editar="editar_cotacao" label="cotacao" %}
                 {% endif %}
