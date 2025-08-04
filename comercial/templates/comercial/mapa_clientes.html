@@ -164,4 +164,36 @@
 </script>
 
 </div>
+</div>
+
+<div class="container mt-4">
+  <h5>Resumo por Estado</h5>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>UF</th>
+        <th class="text-end">Total</th>
+        <th class="text-end">% de Representatividade</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in dados_estados %}
+      <tr>
+        <td>{{ e.uf }}</td>
+        <td class="text-end">{{ e.total }}</td>
+        <td class="text-end">{{ e.percent }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot class="fw-bold">
+      <tr>
+        <td>Total Geral</td>
+        <td class="text-end">{{ total_geral }}</td>
+        <td class="text-end">100%</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+
 {% endblock %}

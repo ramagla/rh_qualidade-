@@ -358,34 +358,55 @@ from django.db.models import Count
 from django.shortcuts import render
 from comercial.models import Cliente
 
+from collections import defaultdict
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.shortcuts import render
+from comercial.models import Cliente
+
 @login_required
 def mapa_clientes_por_regiao(request):
-    from comercial.models import Cliente
-    from collections import defaultdict
+    # 1) Agrupa clientes por cidade/UF, coletando a razão social de cada um
+    clientes = Cliente.objects.filter(status__in=["Ativo", "Reativado"]) \
+        .values("cidade", "uf", "razao_social")
 
-    # Filtra clientes válidos
-    clientes = Cliente.objects.filter(status__in=["Ativo", "Reativado"]).values("cidade", "uf", "razao_social")
-
-
-    # Agrupa por cidade/UF
     agrupado = defaultdict(list)
     for c in clientes:
         chave = (c["cidade"], c["uf"])
         agrupado[chave].append(c["razao_social"])
 
-
-    # Prepara a lista final
     dados_mapa = []
     for (cidade, uf), nomes in agrupado.items():
         dados_mapa.append({
             "cidade": cidade.title() if cidade else "",
             "uf": uf.upper() if uf else "",
             "total": len(nomes),
-            "clientes": nomes  # Pode limitar: nomes[:5] se quiser
+            "clientes": nomes
         })
 
+    # 2) Calcula total geral de clientes (para %)
+    total_geral = sum(item["total"] for item in dados_mapa)
+
+    # 3) Agrupa por estado (UF), calculando total e % de representatividade
+    estados_raw = Cliente.objects.filter(status__in=["Ativo", "Reativado"]) \
+        .values("uf") \
+        .annotate(total=Count("id")) \
+        .order_by("-total")
+
+    dados_estados = []
+    for e in estados_raw:
+        percent = round(e["total"] / total_geral * 100, 1) if total_geral else 0
+        dados_estados.append({
+            "uf": e["uf"],
+            "total": e["total"],
+            "percent": percent
+        })
+
+    # 4) Renderiza a página, passando mapa e tabela de estados
     return render(request, "comercial/mapa_clientes.html", {
-        "dados_mapa": dados_mapa
+        "dados_mapa": dados_mapa,
+        "total_geral": total_geral,
+        "dados_estados": dados_estados
     })
 
 
