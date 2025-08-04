@@ -76,7 +76,6 @@
           <th><i class="bi bi-diagram-3-fill"></i> Desenho</th>
           <th><i class="bi bi-box-seam"></i> Matéria-Prima</th>
           <th><i class="bi bi-droplet-half"></i> Tratamento superficial</th>
-          <th><i class="bi bi-tools"></i> Ferramental</th>
           <th><i class="bi bi-stack"></i> Lote</th>
           <th><i class="bi bi-currency-dollar"></i> Preço unit.</th>
         </tr>
@@ -93,23 +92,62 @@
           <td class="align-middle ">
             {{ precalc.servicos.first.descricao_materia_prima|default:"—" }}
           </td>
-          <td class="align-middle">
-            {{ precalc.valor_ferramental|formatar_reais }}
-        </td>
+          
           <td class="align-middle">
             {{ precalc.analise_comercial_item.qtde_estimada|intcomma|default:"—" }}
         </td>
         <td class="align-middle">
           R$ {{ precalc.preco_manual|default:precalc.preco_selecionado|floatformat:4 }}
-        </td>
-        
+        </td>        
         </tr>
+         {% if precalc.desenvolvimento_item and precalc.desenvolvimento_item.consideracoes %}
+    <tr>
+      <td colspan="5" class="small text-start">
+        <strong>Observações de Desenvolvimento:</strong><br>
+        {{ precalc.desenvolvimento_item.consideracoes|safe }}
+      </td>
+    </tr>
+  {% endif %}
         {% endfor %}
       </tbody>
     </table>
   </div>
 
-  
+  {# –– Seção Ferramental como tabela –– #}
+{% for precalc in precalculos %}
+  {% if precalc.ferramentas_item.exists %}
+    <div class="table-responsive mt-4">
+      <table class="table table-bordered align-middle text-center small" style="table-layout: fixed;">
+        <thead style="background-color: #000099; color: white;">
+          <tr>
+            <th><i class="bi bi-tools"></i> Ferramental</th>
+            <th><i class="bi bi-card-text"></i> Observações</th>
+            <th><i class="bi bi-currency-dollar"></i> Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ft in precalc.ferramentas_item.all %}
+            <tr>
+              <td class="text-start">
+                {{ ft.ferramenta.codigo }} – {{ ft.ferramenta.descricao }}
+              </td>
+              <td class="text-start small">
+                {{ ft.observacoes|safe|default:"—" }}
+              </td>
+              <td>
+                {{ ft.ferramenta.valor_total|formatar_reais }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endfor %}
+
+
+
+
     <!-- Rodapé da proposta comercial no final do conteúdo, respeitando altura real -->
 <div class="footer-proposta-print mt-5" style="page-break-inside: avoid;">
     <hr>
