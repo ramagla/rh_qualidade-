@@ -66,7 +66,7 @@ def menu_comercial(user):
         })
 
 
-    if user.has_perm("comercial.view_viabilidade"):
+    if user.has_perm("comercial.view_viabilidadeanaliserisco"):
         menu.append({
             "name": "Viabilidade / Análise de Risco",
             "url": "lista_viabilidades",
