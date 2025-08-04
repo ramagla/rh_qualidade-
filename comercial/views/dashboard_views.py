@@ -360,33 +360,68 @@ from comercial.models import Cliente
 
 @login_required
 def mapa_clientes_por_regiao(request):
-    from django.db.models import Count
     from comercial.models import Cliente
+    from collections import defaultdict
 
-    dados = (
-        Cliente.objects
-        .filter(status__in=["Ativo", "Reativado"])
-        .values("cidade", "uf")
-        .annotate(total=Count("id"))
-        .order_by("-total")
-    )
+    # Filtra clientes válidos
+    clientes = Cliente.objects.filter(status__in=["Ativo", "Reativado"]).values("cidade", "uf", "razao_social")
+
+
+    # Agrupa por cidade/UF
+    agrupado = defaultdict(list)
+    for c in clientes:
+        chave = (c["cidade"], c["uf"])
+        agrupado[chave].append(c["razao_social"])
+
+
+    # Prepara a lista final
+    dados_mapa = []
+    for (cidade, uf), nomes in agrupado.items():
+        dados_mapa.append({
+            "cidade": cidade.title() if cidade else "",
+            "uf": uf.upper() if uf else "",
+            "total": len(nomes),
+            "clientes": nomes  # Pode limitar: nomes[:5] se quiser
+        })
 
     return render(request, "comercial/mapa_clientes.html", {
-        "dados_mapa": list(dados)
+        "dados_mapa": dados_mapa
     })
 
+
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from comercial.models import Cliente
+
+from django.db.models import Count
+from django.http import JsonResponse
+from comercial.models import Cliente
+from django.contrib.auth.decorators import login_required
 
 @login_required
 def listar_cidades_clientes(request):
-    from comercial.models import Cliente
-    from django.db.models import Count
-
-    cidades = (
+    cidades_raw = (
         Cliente.objects
         .filter(status__in=["Ativo", "Reativado"])
         .values("cidade", "uf")
         .annotate(total=Count("id"))
         .order_by("-total")
     )
-    return JsonResponse(list(cidades), safe=False)
+
+    cidades_dict = {
+        f"{c['cidade'].upper()}-{c['uf']}": {
+            "cidade": c["cidade"],
+            "uf": c["uf"],
+            "total": c["total"],
+            "clientes": []
+        }
+        for c in cidades_raw
+    }
+
+    # corrige aqui também:
+    for cli in Cliente.objects.filter(status__in=["Ativo", "Reativado"]):
+        chave = f"{cli.cidade.upper()}-{cli.uf}"
+        if chave in cidades_dict:
+            cidades_dict[chave]["clientes"].append(cli.razao_social)
+
+    return JsonResponse(list(cidades_dict.values()), safe=False)

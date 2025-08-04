@@ -1,7 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}Mapa de Clientes por Região{% endblock %}
 {% load static %}
-
+{% block head %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-pM0IFlP3sWC3z7S3tI4O6jtpN/iyw1EnGEBfHtd3PjM="
+          crossorigin=""></script>
+{% endblock %}
 {% block content %}
 <div class="container py-4">
   <h4 class="mb-4 text-primary"><i class="bi bi-geo-alt-fill me-2"></i>Clientes por Região</h4>
@@ -12,7 +17,29 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <script>
-  const cidades = {{ dados_mapa|safe }};
+  fetch("{% url 'listar_cidades_clientes' %}")
+    .then(response => response.json())
+    .then(cidades => {
+      cidades.forEach(c => {
+        const chave = `${c.cidade.toUpperCase()}-${c.uf}`;
+        if (coordenadas[chave]) {
+          L.circleMarker(coordenadas[chave], {
+            radius: 6,
+            color: "#007bff",
+            fillColor: "#3f93f3",
+            fillOpacity: 0.8
+          })
+          .addTo(mapa)
+          .bindPopup(`
+            <strong>${c.cidade} - ${c.uf}</strong><br>
+            Clientes: ${c.total}<br>
+            <ul style="padding-left: 18px; margin-bottom: 0;">
+              ${c.clientes.map(nome => `<li>${nome}</li>`).join("")}
+            </ul>
+          `);
+        }
+      });
+    });
 
   const coordenadas = {
   "SAO PAULO-SP": [-23.5505, -46.6333],
@@ -125,7 +152,13 @@
   fillColor: "#3f93f3",
   fillOpacity: 0.8
 })
-.addTo(mapa).bindPopup(`<strong>${c.cidade} - ${c.uf}</strong><br>Clientes: ${c.total}`);
+.addTo(mapa).bindPopup(`
+  <strong>${c.cidade} - ${c.uf}</strong><br>
+  Clientes: ${c.total}<br>
+  <ul style="padding-left: 18px; margin-bottom: 0;">
+    ${c.clientes.map(nome => `<li>${nome}</li>`).join("")}
+  </ul>
+`);
     }
   });
 </script>
