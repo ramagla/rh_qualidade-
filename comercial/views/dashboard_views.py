@@ -349,3 +349,44 @@ def dashboard_comercial(request):
     }
 
     return render(request, "comercial/dashboard_comercial.html", context)
+
+
+
+# dashboard_views.py
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.shortcuts import render
+from comercial.models import Cliente
+
+@login_required
+def mapa_clientes_por_regiao(request):
+    from django.db.models import Count
+    from comercial.models import Cliente
+
+    dados = (
+        Cliente.objects
+        .filter(status__in=["Ativo", "Reativado"])
+        .values("cidade", "uf")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+
+    return render(request, "comercial/mapa_clientes.html", {
+        "dados_mapa": list(dados)
+    })
+
+from django.http import JsonResponse
+
+@login_required
+def listar_cidades_clientes(request):
+    from comercial.models import Cliente
+    from django.db.models import Count
+
+    cidades = (
+        Cliente.objects
+        .filter(status__in=["Ativo", "Reativado"])
+        .values("cidade", "uf")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+    return JsonResponse(list(cidades), safe=False)

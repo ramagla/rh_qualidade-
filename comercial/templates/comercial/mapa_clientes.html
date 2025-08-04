@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}Mapa de Clientes por Região{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <h4 class="mb-4 text-primary"><i class="bi bi-geo-alt-fill me-2"></i>Clientes por Região</h4>
+
+  <div id="map-clientes" style="height: 600px; border-radius: 8px;"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <script>
+  const cidades = {{ dados_mapa|safe }};
+
+  const coordenadas = {
+  "SAO PAULO-SP": [-23.5505, -46.6333],
+  "ITAQUAQUECETUBA-SP": [-23.4861, -46.3487],
+  "GUARULHOS-SP": [-23.4545, -46.5333],
+  "DIADEMA-SP": [-23.6814, -46.6200],
+  "SAO BERNARDO DO CAMPO-SP": [-23.6914, -46.5646],
+  "MOGI DAS CRUZES-SP": [-23.5208, -46.1854],
+  "LIMEIRA-SP": [-22.5648, -47.4015],
+  "MAUA-SP": [-23.6678, -46.4613],
+  "RIBEIRAO PRETO-SP": [-21.1783, -47.8064],
+  "BARUERI-SP": [-23.5057, -46.8797],
+  "CAMPINAS-SP": [-22.9099, -47.0626],
+  "SOROCABA-SP": [-23.4969, -47.4451],
+  "PIRACICABA-SP": [-22.7338, -47.6476],
+  "POA-SP": null,
+  "RIO DE JANEIRO-RJ": [-22.9068, -43.1729],
+  "CONTAGEM-MG": [-19.9317, -44.0533],
+  "SUZANO-SP": [-23.5446, -46.3108],
+  "CURITIBA-PR": [-25.4284, -49.2733],
+  "ITU-SP": [-23.2649, -47.2994],
+  "OSASCO-SP": [-23.5320, -46.7916],
+  "FORMIGA-MG": [-20.4635, -45.4266],
+  "SANTA BARBARA D'OESTE-SP": [-22.7553, -47.4135],
+  "FERRAZ DE VASCONCELOS-SP": [-23.5411, -46.3702],
+  "BRUSQUE-SC": [-27.0977, -48.9109],
+  "CARAPICUIBA-SP": [-23.5226, -46.8353],
+  "ARUJA-SP": [-23.3964, -46.3205],
+  "GOIANA-PE": [-7.5606, -35.0085],
+  "COTIA-SP": [-23.6022, -46.9187],
+  "GRAVATAI-RS": [-29.9412, -50.9919],
+  "SANTO ANDRE-SP": [-23.6639, -46.5383],
+  "BELO HORIZONTE-MG": [-19.9167, -43.9345],
+  "JARDINOPOLIS-SP": [-21.0193, -47.7601],
+  "ATIBAIA-SP": [-23.1171, -46.5560],
+  "PINDAMONHANGABA-SP": [-22.9246, -45.4613],
+  "CALDAS NOVAS-GO": [-17.7441, -48.6242],
+  "LAURENTINO-SC": [-27.2185, -49.7339],
+  "RIBEIRAO PIRES-SP": [-23.7078, -46.4134],
+  "EUSEBIO-CE": [-3.8914, -38.4557],
+  "PARAIBUNA-SP": [-23.3863, -45.6623],
+  "SAO CAETANO DO SUL-SP": [-23.6229, -46.5548],
+  "FRANCO DA ROCHA-SP": [-23.3229, -46.7269],
+  "VARZEA PAULISTA-SP": [-23.2115, -46.8284],
+  "HORTOLANDIA-SP": [-22.8529, -47.2143],
+  "TIMBO-SC": [-26.8246, -49.2719],
+  "VOTUPORANGA-SP": [-20.4236, -49.9780],
+  "LONDRINA-PR": [-23.3045, -51.1696],
+  "LAGES-SC": [-27.8150, -50.3259],
+  "CAMBUI-MG": [-22.6121, -46.0575],
+  "SANTA RITA DO SAPUCAI-MG": [-22.2529, -45.7037],
+  "MANAUS-AM": [-3.1190, -60.0217],
+  "VALINHOS-SP": [-22.9698, -46.9972],
+  "JANDIRA-SP": [-23.5275, -46.9023],
+  "CAJAMAR-SP": [-23.3554, -46.8782],
+  "BLUMENAU-SC": [-26.9155, -49.0709],
+  "VINHEDO-SP": [-23.0307, -46.9834],
+  "ITAIOPOLIS-SC": [-26.3397, -49.9094],
+  "BRASILIA-DF": [-15.7797, -47.9297],
+  "PORTO VELHO-RO": [-8.7612, -63.9039],
+  "SETE LAGOAS-MG": [-19.4564, -44.2414],
+  "ORLANDIA-SP": [-20.7169, -47.8852],
+  "GOIANIA-GO": [-16.6864, -49.2643],
+  "PINHALZINHO-SC": [-26.8547, -52.9918],
+  "PARAISOPOLIS-MG": [-22.5539, -45.7803],
+  "PENAPOLIS-SP": [-21.4192, -50.0773],
+  "JAGUARIUNA-SP": [-22.7056, -46.9854],
+  "PETROPOLIS-RJ": [-22.5190, -43.1926],
+  "TIETE-SP": [-23.1039, -47.7149],
+  "POMPEIA-SP": [-22.1076, -50.1760],
+  "ITAPOLIS-SP": [-21.5941, -48.8140],
+  "EMBU-GUACU-SP": [-23.8299, -46.8132],
+  "POMERODE-SC": [-26.7384, -49.1766],
+  "TAUBATE-SP": [-23.0264, -45.5550],
+  "SALTO-SP": [-23.1996, -47.2932],
+  "UBERABA-MG": [-19.7472, -47.9381],
+  "QUATRO PONTES-PR": [-24.5754, -53.9753],
+  "FLORIANOPOLIS-SC": [-27.5954, -48.5480],
+  "BRAGANCA PAULISTA-SP": [-22.9527, -46.5449],
+  "RIO CLARO-SP": [-22.3959, -47.5616],
+  "MATEUS LEME-MG": [-19.9792, -44.4318],
+  "JARAGUA DO SUL-SC": [-26.4851, -49.0716],
+  "ARACATUBA-SP": [-21.2080, -50.4324],
+  "ITUPEVA-SP": [-23.1531, -47.0579],
+  "AMERICANA-SP": [-22.7370, -47.3336],
+  "EXTREMA-MG": [-22.8543, -46.3173],
+  "JUIZ DE FORA-MG": [-21.7595, -43.3397],
+  "JAMBEIRO-SP": [-23.2517, -45.6925],
+  "SAO JOSE DO RIO PRETO-SP": [-20.8110, -49.3762],
+  "GARIBALDI-RS": [-29.2594, -51.5337],
+  "PAULISTA-PE": [-7.9408, -34.8733],
+  "ITAUNA-MG": [-20.0811, -44.5801],
+  "SUMARE-SP": [-22.8218, -47.2737],
+  "CORUPA-SC": [-26.4246, -49.2454],
+  "MAIRIPORA-SP": [-23.3171, -46.5903]
+};
+
+
+  const mapa = L.map("map-clientes").setView([-15.7797, -47.9297], 4.5);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap contributors"
+  }).addTo(mapa);
+
+  cidades.forEach(c => {
+    const chave = `${c.cidade.toUpperCase()}-${c.uf}`;
+    if (coordenadas[chave]) {
+      L.circleMarker(coordenadas[chave], {
+  radius: 6,
+  color: "#007bff",
+  fillColor: "#3f93f3",
+  fillOpacity: 0.8
+})
+.addTo(mapa).bindPopup(`<strong>${c.cidade} - ${c.uf}</strong><br>Clientes: ${c.total}`);
+    }
+  });
+</script>
+
+</div>
+{% endblock %}

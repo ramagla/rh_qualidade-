@@ -43,6 +43,7 @@ comercial_permissions = {
     "visualizar_item": "comercial.view_item",
     "excluir_item": "comercial.delete_item",
 
+    "lista_precalculos": "comercial.view_precalculo",
     "itens_precaculo": "comercial.view_precalculo",
     "criar_precaculo": "comercial.add_precalculomaterial",
     "editar_precalculo": "comercial.change_precalculo",
