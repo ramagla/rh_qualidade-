@@ -50,14 +50,15 @@ def lista_clientes(request):
         qs = qs.filter(tipo_cliente=tipo_cliente)
 
     # Indicadores
-    clientes_ativos = clientes_all.filter(status='Ativo')
-    total_clientes = clientes_ativos.count()  # apenas ativos
-    total_automotivo = clientes_ativos.filter(tipo_cliente='Automotivo').count()
-    total_nao_automotivo = clientes_ativos.filter(tipo_cliente='Não Automotivo').count()
-    total_reposicao = clientes_ativos.filter(tipo_cliente='Reposição').count()
+    clientes_indicadores = qs.filter(tipo_cadastro="Cliente", status__in=["Ativo", "Reativado"])
+    total_clientes = clientes_indicadores.count()
+    total_automotivo = clientes_indicadores.filter(tipo_cliente='Automotivo').count()
+    total_nao_automotivo = clientes_indicadores.filter(tipo_cliente='Não Automotivo').count()
+    total_reposicao = clientes_indicadores.filter(tipo_cliente='Reposição').count()
 
     mes_atual = timezone.now().month
-    atualizadas_mes = clientes_ativos.filter(atualizado_em__month=mes_atual).count()
+    atualizadas_mes = clientes_indicadores.filter(atualizado_em__month=mes_atual).count()
+
     mes_ano = timezone.now().strftime('%m/%Y')
 
     ultimo = clientes_all.order_by('-atualizado_em').first()

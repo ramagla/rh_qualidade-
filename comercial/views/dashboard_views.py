@@ -367,7 +367,7 @@ from comercial.models import Cliente
 @login_required
 def mapa_clientes_por_regiao(request):
     # 1) Agrupa clientes por cidade/UF, coletando a razão social de cada um
-    clientes = Cliente.objects.filter(status__in=["Ativo", "Reativado"]) \
+    clientes = Cliente.objects.filter(status__in=["Ativo", "Reativado"], tipo_cadastro="Cliente") \
         .values("cidade", "uf", "razao_social")
 
     agrupado = defaultdict(list)
@@ -388,7 +388,7 @@ def mapa_clientes_por_regiao(request):
     total_geral = sum(item["total"] for item in dados_mapa)
 
     # 3) Agrupa por estado (UF), calculando total e % de representatividade
-    estados_raw = Cliente.objects.filter(status__in=["Ativo", "Reativado"]) \
+    estados_raw = Cliente.objects.filter(status__in=["Ativo", "Reativado"], tipo_cadastro="Cliente") \
         .values("uf") \
         .annotate(total=Count("id")) \
         .order_by("-total")
@@ -423,7 +423,7 @@ from django.contrib.auth.decorators import login_required
 def listar_cidades_clientes(request):
     cidades_raw = (
         Cliente.objects
-        .filter(status__in=["Ativo", "Reativado"])
+        .filter(status__in=["Ativo", "Reativado"], tipo_cadastro="Cliente")
         .values("cidade", "uf")
         .annotate(total=Count("id"))
         .order_by("-total")
@@ -440,7 +440,7 @@ def listar_cidades_clientes(request):
     }
 
     # corrige aqui também:
-    for cli in Cliente.objects.filter(status__in=["Ativo", "Reativado"]):
+    for cli in Cliente.objects.filter(status__in=["Ativo", "Reativado"], tipo_cadastro="Cliente"):
         chave = f"{cli.cidade.upper()}-{cli.uf}"
         if chave in cidades_dict:
             cidades_dict[chave]["clientes"].append(cli.razao_social)
