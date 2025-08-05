@@ -1,6 +1,4 @@
-# metrologia/views.py
 from datetime import timedelta
-
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import DateField, ExpressionWrapper, F
 from django.shortcuts import render
@@ -15,12 +13,13 @@ from metrologia.models.models_tabelatecnica import TabelaTecnica
 def home(request):
     today = now().date()
 
-    # Equipamentos com calibração vencida ou próxima do vencimento
+    # 📌 Apenas equipamentos ATIVOS com calibração vencida ou próxima
     alertas_calibracao = (
-        TabelaTecnica.objects.annotate(
+        TabelaTecnica.objects.filter(status="ativo")
+        .annotate(
             proxima_calibracao=ExpressionWrapper(
-                F("data_ultima_calibracao")
-                + timedelta(days=30) * F("frequencia_calibracao"),
+                F("data_ultima_calibracao") +
+                timedelta(days=30) * F("frequencia_calibracao"),
                 output_field=DateField(),
             )
         )
@@ -28,10 +27,10 @@ def home(request):
         .order_by("proxima_calibracao")[:10]
     )
 
-    # Equipamentos recentemente alterados
+    # 🕒 Equipamentos recentemente alterados (ativos apenas, se desejar)
     equipamentos_recente = TabelaTecnica.objects.order_by("-updated_at")[:5]
 
-    # Dispositivos recentemente alterados
+    # 🛠 Dispositivos recentemente alterados
     dispositivos_recente = Dispositivo.objects.order_by("-updated_at")[:5]
 
     context = {
