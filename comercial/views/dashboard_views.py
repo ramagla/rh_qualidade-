@@ -446,3 +446,21 @@ def listar_cidades_clientes(request):
             cidades_dict[chave]["clientes"].append(cli.razao_social)
 
     return JsonResponse(list(cidades_dict.values()), safe=False)
+
+
+@login_required
+def listar_cidades_nomes(request):
+    cidades_raw = (
+        Cliente.objects
+        .filter(status__in=["Ativo", "Reativado"], tipo_cadastro="Cliente")
+        .values("cidade", "uf")
+        .distinct()
+    )
+
+    cidades_lista = [
+        f"{c['cidade'].upper()}-{c['uf'].upper()}"
+        for c in cidades_raw
+        if c["cidade"] and c["uf"]
+    ]
+
+    return JsonResponse(cidades_lista, safe=False)

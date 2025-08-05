@@ -107,6 +107,7 @@ urlpatterns = [
     path("indicadores/4.4-taxa-aprovacao/", indicadores_views.indicador_taxa_aprovacao, name="indicador_taxa_aprovacao"),
     path("dashboard/mapa-clientes/", dashboard_views.mapa_clientes_por_regiao, name="mapa_clientes"),
     path("dashboard/cidades-clientes/", dashboard_views.listar_cidades_clientes, name="listar_cidades_clientes"),
+    path("dashboard/cidades-nomes/", dashboard_views.listar_cidades_nomes, name="listar_cidades_nomes"),
 
 
 ]
