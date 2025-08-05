@@ -76,6 +76,9 @@ def lista_roteiros(request):
     itens = Item.objects.order_by("codigo").values_list("codigo", "codigo")
     status_choices = RoteiroProducao.STATUS_CHOICES
 
+    roteiros_pendentes = qs.filter(aprovado=False)[:50]  # ou conforme desejar
+    roteiros_clonaveis = qs.order_by("item__codigo", "tipo_roteiro")[:100]
+
     return render(request, "roteiros/lista_roteiros.html", {
         "page_obj": page_obj,
         "total_roteiros": total_roteiros,
@@ -86,6 +89,8 @@ def lista_roteiros(request):
         "ultima_data": ultima_data,
         "itens": itens,
         "status_choices": status_choices,
+        "roteiros_pendentes": roteiros_pendentes,
+        "roteiros": roteiros_clonaveis,
         "request": request,
     })
 
