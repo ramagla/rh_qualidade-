@@ -10,7 +10,7 @@ class BlocoFerramenta(models.Model):
 
     def save(self, *args, **kwargs):
             if self.numero:
-                self.numero = formatar_nome_atividade_com_siglas(self.numero)
+                self.numero = formatar_nome_atividade_com_siglas(self.numero).upper()
             super().save(*args, **kwargs)
             
     @property
