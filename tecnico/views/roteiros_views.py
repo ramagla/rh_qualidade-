@@ -272,7 +272,19 @@ import json
 @login_required
 @permission_required("tecnico.add_roteiroproducao", raise_exception=True)
 def cadastrar_roteiro(request):
-    form = RoteiroProducaoForm(request.POST or None)
+    item_id = request.POST.get("item") or None
+    initial_data = {"item": item_id} if item_id else {}
+
+    # 🔄 Se item foi informado e não é POST de submissão, busca fontes do item
+    if item_id and not request.POST.get("fontes_homologadas"):
+        try:
+            item = Item.objects.get(id=item_id)
+            initial_data["fontes_homologadas"] = item.fontes_homologadas.all()
+        except Item.DoesNotExist:
+            pass
+
+    form = RoteiroProducaoForm(request.POST or None, initial=initial_data)
+
 
     # Dados para o JS
     insumos_data = list(
@@ -372,8 +384,31 @@ def cadastrar_roteiro(request):
 
     })
 
- 
-from pprint import pprint
+
+from django.http import JsonResponse
+from comercial.models import Item
+
+from django.http import JsonResponse
+from comercial.models.item import Item
+
+# tecnico/views/ajax_views.py
+from django.http import JsonResponse
+from comercial.models import Item
+
+def ajax_fontes_homologadas_por_item(request):
+    item_id = request.GET.get("item_id")
+    if not item_id:
+        return JsonResponse({"error": "ID do item não fornecido"}, status=400)
+
+    try:
+        item = Item.objects.get(id=item_id)
+        fontes = item.fontes_homologadas.all()
+        data = [{"id": f.id, "text": str(f)} for f in fontes]
+        return JsonResponse({"results": data})
+    except Item.DoesNotExist:
+        return JsonResponse({"results": []})
+
+
 
 
 @login_required

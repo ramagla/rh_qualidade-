@@ -72,6 +72,18 @@
             {{ form.revisao|add_class:"form-control text-center" }}
           </div>
         </div>
+<div class="row g-3 mt-3">
+  <div class="col-12">
+  <label class="form-label">
+    <i class="bi bi-people-fill me-1"></i> Fontes Homologadas
+  </label>
+{{ form.fontes_homologadas|add_class:"form-select select2" }}
+</div>
+<div class="alert alert-info d-flex align-items-center gap-2 py-2 small mb-0" role="alert">
+  <i class="bi bi-exclamation-circle-fill me-1"></i>
+  As fontes homologadas são definidas no <strong>cadastro do item</strong>. Para alterá-las, acesse a tela de edição do item correspondente.
+</div>
+</div>
 
         <div class="row g-3 mt-3">
           <div class="col-12">
@@ -134,6 +146,8 @@ if (!window.roteiroScriptRegistrado) {
         roteiroData = {};
       }
     }
+
+    
 
     let etapaIndex = 0;
     const container = document.getElementById("etapas-container");
@@ -400,6 +414,33 @@ if (!window.roteiroScriptRegistrado) {
 }
 </script>
 
+<script>
+  $(document).ready(function () {
+    $("#id_item").on("change", function () {
+      const itemId = $(this).val();
+
+      if (itemId) {
+        $.ajax({
+          url: "{% url 'tecnico:ajax_fontes_homologadas' %}",
+          data: { item_id: itemId },
+          success: function (data) {
+            const $select = $("#id_fontes_homologadas");
+            $select.empty();
+
+            if (data.results.length > 0) {
+              data.results.forEach(function (fonte) {
+                const option = new Option(fonte.text, fonte.id, true, true);
+                $select.append(option);
+              });
+            }
+
+            $select.trigger("change");
+          },
+        });
+      }
+    });
+  });
+</script>
 
 
 

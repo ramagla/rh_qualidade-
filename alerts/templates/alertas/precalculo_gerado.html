@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Novo Pré-Cálculo</title>
+</head>
+<body>
+  <h2>[Sistema Bras-Mol] Pré-Cálculo {{ precalculo.numero }} criado</h2>
+  <p>Olá {{ usuario.get_full_name }},</p>
+  <p>Um novo Pré-Cálculo foi gerado para a <strong>Cotação nº {{ cotacao.numero }}</strong>.</p>
+  <ul>
+    <li><strong>Pré-Cálculo:</strong> {{ precalculo.numero }}</li>
+    <li><strong>Gerado por:</strong> {{ usuario.get_full_name }}</li>
+  </ul>
+  <p>
+    <a href="{{ link }}" target="_blank">
+      ▶ Clique aqui para acessar o Pré-Cálculo
+    </a>
+  </p>
+  <hr>
+  <small>Este é um e-mail automático do SIB (Sistema Integrado Bras-Mol)</small>
+</body>
+</html>

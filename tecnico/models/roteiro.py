@@ -6,6 +6,7 @@ from tecnico.models.maquina import Maquina
 from django.contrib.auth import get_user_model 
 from django_ckeditor_5.fields import CKEditor5Field
 from comercial.models.ferramenta import Ferramenta  # no topo, se ainda não tiver
+from qualidade_fornecimento.models.fornecedor import FornecedorQualificado  # já está carregado se necessário
 
 from django.db import models
 from comercial.models.item import Item
@@ -50,7 +51,8 @@ class RoteiroProducao(models.Model):
             blank=True,
             null=True
         )
-    
+    fontes_homologadas = models.ManyToManyField(FornecedorQualificado, blank=True, verbose_name="Fontes Homologadas")
+
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     aprovado = models.BooleanField(

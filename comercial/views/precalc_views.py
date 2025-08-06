@@ -9,6 +9,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 
+from alerts.models import AlertaConfigurado, AlertaUsuario
 from comercial.models import Cotacao
 from comercial.models.precalculo import (
     AnaliseComercial,
@@ -471,8 +472,11 @@ def editar_precaculo(request, pk):
 from comercial.models.item import Item  # certifique-se de importar
 # ...
 
+from django.utils.http import urlencode
 
 from datetime import datetime
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
 
 @login_required
 @permission_required('comercial.add_precalculomaterial', raise_exception=True)
@@ -510,6 +514,11 @@ def criar_precaculo(request, pk):
             item_seguranca=bool(request.POST.get("novo_item_seguranca")),
             status="Ativo",
         )
+
+        # ✅ Após criar, adicionar as fontes_homologadas
+        ids_fontes = request.POST.getlist("novo_fontes_homologadas")
+        if ids_fontes:
+            novo_item_instancia.fontes_homologadas.set(ids_fontes)
         mutable = request.POST._mutable
         request.POST._mutable = True
         request.POST["item"] = str(novo_item_instancia.pk)
@@ -560,10 +569,13 @@ def criar_precaculo(request, pk):
         print("🛠 Erros do form_analise:", form_analise.errors)
 
         if aba == "analise" and form_analise.is_valid():
-            # Só aqui criamos o pré-cálculo
+            print("✅ Criando Pré-Cálculo pela aba Análise")
             ultimo = PreCalculo.objects.filter(cotacao=cot).order_by("-numero").first()
             proximo_numero = (ultimo.numero + 1) if ultimo else 1
             novo = PreCalculo.objects.create(cotacao=cot, numero=proximo_numero, criado_por=request.user)
+
+            analise = form_analise.save(commit=False)
+            analise.item = item_instancia
 
             def preencher_assinatura(obj):
                 obj.precalculo = novo
@@ -573,12 +585,10 @@ def criar_precaculo(request, pk):
                 obj.data_assinatura = timezone.now()
                 obj.save()
 
-            analise = form_analise.save(commit=False)
-            analise.item = item_instancia
             preencher_assinatura(analise)
 
         elif aba == "regras" and form_regras.is_valid():
-            # Também só criamos o pré-cálculo aqui
+            print("✅ Criando Pré-Cálculo pela aba Regras")
             ultimo = PreCalculo.objects.filter(cotacao=cot).order_by("-numero").first()
             proximo_numero = (ultimo.numero + 1) if ultimo else 1
             novo = PreCalculo.objects.create(cotacao=cot, numero=proximo_numero, criado_por=request.user)
@@ -597,8 +607,69 @@ def criar_precaculo(request, pk):
             messages.error(request, "Erro ao validar o formulário da aba.")
             return redirect(request.path)
 
+        # 🔔 Disparo do alerta e envio de e-mail para ambos os casos
+        print("📨 Iniciando alerta e envio de e-mail...")
+        config = AlertaConfigurado.objects.filter(tipo='PRECALCULO_GERADO', ativo=True).first()
+        print("🔎 Configuração encontrada:", config)
+
+        emails = []
+        usuarios_in_app = set()
+
+        if config:
+            for u in config.usuarios.all():
+                print("📧 Usuário:", u.username, "-", u.email)
+                if u.email:
+                    emails.append(u.email)
+                usuarios_in_app.add(u)
+            for g in config.grupos.all():
+                print("👥 Grupo:", g.name)
+                for u in g.user_set.all():
+                    print("📧 (Grupo) Usuário:", u.username, "-", u.email)
+                    if u.email:
+                        emails.append(u.email)
+                    usuarios_in_app.add(u)
+
+        link_destino = reverse('itens_precaculo', args=[cot.pk])
+        login_com_next = f"{reverse('login')}?{urlencode({'next': link_destino})}"
+        link = request.build_absolute_uri(login_com_next)
+
+        context = {
+            'usuario': request.user,
+            'cotacao': cot,
+            'precalculo': novo,
+            'link': link
+        }
+
+        subject = render_to_string('alertas/precalculo_gerado_assunto.txt', context).strip()
+        text_body = render_to_string('alertas/precalculo_gerado.txt', context)
+        html_body = render_to_string('alertas/precalculo_gerado.html', context)
+
+        if emails:
+            print("📨 Enviando e-mail para:", emails)
+            msg = EmailMultiAlternatives(
+                subject,
+                text_body,
+                settings.DEFAULT_FROM_EMAIL,
+                emails
+            )
+            msg.attach_alternative(html_body, "text/html")
+            msg.send(fail_silently=False)
+        else:
+            print("⚠️ Nenhum e-mail encontrado nos destinatários.")
+
+        for u in usuarios_in_app:
+            print("🔔 Criando alerta para:", u.username)
+            AlertaUsuario.objects.create(
+                usuario=u,
+                titulo=subject,
+                mensagem=text_body,
+                referencia_id=novo.id,
+                url_destino=link
+            )
+
         messages.success(request, "Pré-cálculo salvo com sucesso.")
         return redirect("itens_precaculo", pk=cot.pk)
+
 
 
 
@@ -638,6 +709,8 @@ def criar_precaculo(request, pk):
         "campos_obs": campos_obs,
         "edicao": False,
         "campos_obs_tecnica": campos_obs_tecnica,
+        "fornecedores": FornecedorQualificado.objects.all().order_by("nome"),
+
         
     })
 

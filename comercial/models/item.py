@@ -1,5 +1,6 @@
 
 from django.db import models
+from qualidade_fornecimento.models.fornecedor import FornecedorQualificado  # já deve estar importado
 
 class Item(models.Model):
     STATUS_CHOICES = [
@@ -47,7 +48,12 @@ class Item(models.Model):
     desenho = models.FileField("Desenho", upload_to="itens/desenhos/", blank=True, null=True)
     revisao = models.CharField("Revisão", max_length=10, blank=True, null=True)
     data_revisao = models.DateField("Data da Revisão", blank=True, null=True)
-
+    fontes_homologadas = models.ManyToManyField(
+        FornecedorQualificado,
+        verbose_name="Fontes Homologadas",
+        blank=True,
+        related_name="itens_homologados"
+    )
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 

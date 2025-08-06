@@ -239,3 +239,6 @@ def atualizar_item_com_codigos_da_od(sender, instance, **kwargs):
             logger.info(f"✅ Item #{item.pk} atualizado com sucesso com base na OD #{instance.pk}")
     except Exception as e:
         logger.error(f"❌ Erro ao atualizar o item via OD #{instance.pk}: {e}")
+
+
+

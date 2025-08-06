@@ -1,0 +1,9 @@
+Olá {{ usuario.get_full_name }},
+
+Foi gerado um novo Pré-Cálculo:
+
+- Cotação: {{ cotacao.numero }}
+- Pré-Cálculo: {{ precalculo.numero }}
+
+Para visualizar, acesse:
+{{ link }}

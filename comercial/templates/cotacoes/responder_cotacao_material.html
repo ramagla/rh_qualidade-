@@ -22,7 +22,7 @@
 </p>
 
 
-   <!-- Alerta com orientação -->
+  <!-- Alerta com orientação -->
 <div class="alert alert-info small">
   <div class="d-flex align-items-center gap-2 mb-1">
     <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
@@ -33,6 +33,24 @@
     O prazo de entrega deve ser informado em <strong>dias corridos</strong>.
   </div>
 </div>
+
+{% if materiais.0.precalculo.analise_comercial_item.roteiro_selecionado.fontes_homologadas.exists %}
+<!-- Fontes Homologadas -->
+<div class="alert alert-warning border border-dark-subtle shadow-sm">
+  <div class="d-flex align-items-center mb-2">
+    <i class="bi bi-building-check fs-5 text-dark me-2"></i>
+    <strong class="text-dark fs-6">Fontes Homologadas para este material:</strong>
+  </div>
+  <ul class="mb-0 ps-3">
+    {% for fonte in materiais.0.precalculo.analise_comercial_item.roteiro_selecionado.fontes_homologadas.all %}
+      <li class="fw-semibold text-dark">
+        <i class="bi bi-chevron-right text-primary me-1"></i> {{ fonte.nome }}
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
 
 
 

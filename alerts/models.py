@@ -53,6 +53,8 @@ class AlertaConfigurado(models.Model):
         ("AVALIACAO_RISCO_PROXIMA", "Avaliação de Risco Próxima"),
         ("AUDITORIA_PROXIMA", "Auditoria Próxima"),
         ("CERTIFICACAO_PROXIMA", "Certificação Próxima"),
+        ("PRECALCULO_GERADO", "📄 Pré-Cálculo Gerado"),
+
     ]
 
     tipo = models.CharField(max_length=30, choices=TIPO_ALERTA_CHOICES, unique=True)
@@ -68,5 +70,7 @@ class AlertaConfigurado(models.Model):
             "AVALIACAO_RISCO_PROXIMA": "🛡️ Avaliação de Risco do Fornecedor Próxima",
             "AUDITORIA_PROXIMA": "📋 Auditoria de Fornecedor Próxima",
             "CERTIFICACAO_PROXIMA": "📜 Certificação de Fornecedor Próxima do Vencimento",
+            "PRECALCULO_GERADO": "📄 Pré-Cálculo Gerado",
+
         }
         return nomes_exibicao.get(self.tipo, self.tipo)

@@ -36,4 +36,7 @@ urlpatterns = [
         indicadores_views.indicador_51_prazo_desenvolvimento,
         name="indicador_51_prazo_desenvolvimento"
     ),
+    path("ajax/fontes-homologadas/", roteiros_views.ajax_fontes_homologadas_por_item, name="ajax_fontes_homologadas"),
+
+    
 ]

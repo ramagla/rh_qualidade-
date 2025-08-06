@@ -51,7 +51,8 @@ def login_view(request):
         user = authenticate(request, username=request.POST.get("username"), password=request.POST.get("password"))
         if user:
             login(request, user)
-            return redirect("home_geral")
+            next_url = request.GET.get("next")
+            return redirect(next_url or "home_geral")
         return render(request, "login.html", {
             "settings": settings,
             "ano_atual": datetime.now().year,

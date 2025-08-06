@@ -26,11 +26,21 @@ def disparar_email_cotacao_material(request, material):
     except MateriaPrimaCatalogo.DoesNotExist:
         descricao = "---"
 
+    # Acesso correto ao roteiro selecionado via análise comercial
+    analise = getattr(material.precalculo, "analise_comercial_item", None)
+    roteiro = getattr(analise, "roteiro_selecionado", None)
+    fontes = roteiro.fontes_homologadas.all() if roteiro else []
+
+    fontes_texto = "\n".join(f"• {f.nome}" for f in fontes) if fontes else "— Nenhuma fonte homologada definida —"
+
     corpo = f"""
 🧪 Solicitação de Cotação - Matéria-Prima
 
 📦 Código: {material.codigo}
 📝 Descrição: {descricao}
+
+🏭 Fontes Homologadas:
+{fontes_texto}
 
 🔗 Responder: {link}
 """
@@ -155,9 +165,16 @@ def disparar_emails_cotacao_servicos(request, precalc):
             codigo = "sem código"
             descricao = "---"
 
+        
+         # ✅ Correto acesso ao roteiro via análise comercial
+        analise = getattr(servico.precalculo, "analise_comercial_item", None)
+        roteiro = getattr(analise, "roteiro_selecionado", None)
+        fontes = roteiro.fontes_homologadas.all() if roteiro else []
+        fontes_texto = "\n".join(f"• {f.nome}" for f in fontes) if fontes else "— Nenhuma fonte homologada definida —"
+        
         link = request.build_absolute_uri(
-            reverse("responder_cotacao_servico_lote", args=[pk_primeiro])
-        )
+                    reverse("responder_cotacao_servico_lote", args=[pk_primeiro])
+                )
 
         corpo = f"""
 🔧 Cotação de Serviço Externo – Tratamento
@@ -165,6 +182,8 @@ def disparar_emails_cotacao_servicos(request, precalc):
 📦 Código: {codigo}
 📝 Descrição: {descricao}
 
+🏭 Fontes Homologadas:
+{fontes_texto}
 🔗 Link para resposta: {link}
         """
 
