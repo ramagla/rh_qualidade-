@@ -40,7 +40,7 @@ class RoteiroProducao(models.Model):
     peso_unitario_gramas = models.DecimalField(
         "Peso Unitário (g)",
         max_digits=10,
-        decimal_places=2,
+        decimal_places=7,
         blank=True,
         null=True
     )
@@ -116,12 +116,22 @@ class PropriedadesEtapa(models.Model):
 
 
 class InsumoEtapa(models.Model):
-    etapa = models.ForeignKey(EtapaRoteiro, related_name="insumos", on_delete=models.CASCADE)
+    etapa = models.ForeignKey('EtapaRoteiro', related_name="insumos", on_delete=models.CASCADE)
     materia_prima = models.ForeignKey("qualidade_fornecimento.MateriaPrimaCatalogo", on_delete=models.PROTECT)
-    quantidade = models.DecimalField(max_digits=12, decimal_places=6)
-    tipo_insumo = models.CharField(max_length=20, choices=[("matéria_prima", "Matéria-Prima"), ("componente", "Componente"),("insumos", "Insumos"), ("outros", "Outros")])
+    tipo_insumo = models.CharField(
+        max_length=20,
+        choices=[
+            ("matéria_prima", "Matéria-Prima"),
+            ("componente", "Componente"),
+            ("insumos", "Insumos"),
+            ("outros", "Outros"),
+        ]
+    )
     obrigatorio = models.BooleanField(default=False)
 
+    desenvolvido = models.DecimalField("Desenvolvido em (mm)", max_digits=10, decimal_places=7, null=True, blank=True)
+    peso_liquido = models.DecimalField("Peso Líquido (kg)", max_digits=10, decimal_places=7, null=True, blank=True)
+    peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=10, decimal_places=7, null=True, blank=True)
 
     def __str__(self):
         return f"{self.materia_prima.codigo} ({'obrigatório' if self.obrigatorio else 'opcional'})"

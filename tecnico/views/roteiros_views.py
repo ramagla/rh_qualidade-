@@ -30,6 +30,14 @@ from django.db.models import Max, Count, Q
 
 from datetime import datetime
 from django.utils.timezone import now
+from decimal import Decimal, InvalidOperation
+
+
+def limpar_decimal(valor, padrao="0"):
+    try:
+        return Decimal(str(valor).replace(",", "."))
+    except (InvalidOperation, TypeError, ValueError):
+        return Decimal(padrao)
 
 @login_required
 @permission_required("tecnico.view_roteiroproducao", raise_exception=True)
@@ -149,45 +157,49 @@ def visualizar_roteiro(request, pk):
     etapas_detalhadas = []
     for etapa in etapas:
         props = getattr(etapa, "propriedades", None)
+
+        # monta um dict completo com todas as propriedades
+        propriedades_info = {
+            "nome_acao": props.nome_acao if props else "",
+            "descricao_detalhada": props.descricao_detalhada if props else "",
+            "maquinas": [m.nome for m in (props.maquinas.all() if props else [])],
+            "ferramenta": (
+                f"{props.ferramenta.codigo} – {props.ferramenta.descricao}"
+                if props and props.ferramenta else ""
+            ),
+            "seguranca": {
+                "MP": props.seguranca_mp if props else False,
+                "TS": props.seguranca_ts if props else False,
+                "M1": props.seguranca_m1 if props else False,
+                "L1": props.seguranca_l1 if props else False,
+                "L2": props.seguranca_l2 if props else False,
+            },
+        }
+
         etapas_detalhadas.append({
             "numero": etapa.etapa,
-            "descricao": props.nome_acao if props else "",
+            "descricao": propriedades_info["nome_acao"],
             "equipamento_codigos": [
                 m.codigo for m in (props.maquinas.all() if props else [])
             ],
-            "ferramenta": (
-                f"{props.ferramenta.codigo} – {props.ferramenta.descricao}"
-                if props and props.ferramenta else "-"
-            ),
-            "dispositivo": "-",  
+            "ferramenta": propriedades_info["ferramenta"] or "-",
+            "dispositivo": "-",
             "tempo_regulagem": (
                 etapa.setup_minutos / 60
                 if etapa.setup_minutos is not None else "-"
             ),
             "producao": etapa.pph,
-            "alivio_tensao": (
-                props.descricao_detalhada
-                if props and props.descricao_detalhada else "-"
-            ),
-
-            # Flags de segurança (opcional, se ainda precisar usar)
-            "seguranca_mp": props.seguranca_mp if props else False,
-            "seguranca_ts": props.seguranca_ts if props else False,
-            "seguranca_m1": props.seguranca_m1 if props else False,
-            "seguranca_l1": props.seguranca_l1 if props else False,
-            "seguranca_l2": props.seguranca_l2 if props else False,
-
-            # Lista de imagens de simbologia conforme switches marcados
+            "alivio_tensao": propriedades_info["descricao_detalhada"] or "-",
+            "propriedades": propriedades_info,
             "simbolos_seguranca": [
-                roteiro.item.simbolo_mp.url if props and props.seguranca_mp and roteiro.item.simbolo_mp else None,
-                roteiro.item.simbolo_ts.url if props and props.seguranca_ts and roteiro.item.simbolo_ts else None,
-                roteiro.item.simbolo_m1.url if props and props.seguranca_m1 and roteiro.item.simbolo_m1 else None,
-                roteiro.item.simbolo_l1.url if props and props.seguranca_l1 and roteiro.item.simbolo_l1 else None,
-                roteiro.item.simbolo_l2.url if props and props.seguranca_l2 and roteiro.item.simbolo_l2 else None,
-            ]
-
-
+                roteiro.item.simbolo_mp.url   if props and props.seguranca_mp and roteiro.item.simbolo_mp else None,
+                roteiro.item.simbolo_ts.url   if props and props.seguranca_ts and roteiro.item.simbolo_ts else None,
+                roteiro.item.simbolo_m1.url   if props and props.seguranca_m1 and roteiro.item.simbolo_m1 else None,
+                roteiro.item.simbolo_l1.url   if props and props.seguranca_l1 and roteiro.item.simbolo_l1 else None,
+                roteiro.item.simbolo_l2.url   if props and props.seguranca_l2 and roteiro.item.simbolo_l2 else None,
+            ],
         })
+
 
 
 
@@ -304,10 +316,13 @@ def cadastrar_roteiro(request):
                     InsumoEtapa.objects.create(
                         etapa=etapa,
                         materia_prima_id=ins["materia_prima_id"],
-                        quantidade=ins["quantidade"],
                         tipo_insumo=ins["tipo_insumo"],
                         obrigatorio=ins["obrigatorio"],
+                        desenvolvido=limpar_decimal(ins.get("desenvolvido")),
+                        peso_liquido=limpar_decimal(ins.get("peso_liquido")),
+                        peso_bruto=limpar_decimal(ins.get("peso_bruto")),
                     )
+
 
                 # Propriedades
                 props = et.get("propriedades") or {}
@@ -391,12 +406,15 @@ def editar_roteiro(request, pk):
         insumos_list = [
             {
                 "materia_prima_id": ins.materia_prima_id,
-                "quantidade": float(ins.quantidade),
                 "tipo_insumo": ins.tipo_insumo,
                 "obrigatorio": ins.obrigatorio,
+                "desenvolvido": float(ins.desenvolvido) if ins.desenvolvido is not None else 0,
+                "peso_liquido": float(ins.peso_liquido) if ins.peso_liquido else 0,
+                "peso_bruto": float(ins.peso_bruto) if ins.peso_bruto else 0,
             }
             for ins in etapa.insumos.all()
         ]
+
 
         try:
             p = etapa.propriedades
@@ -473,13 +491,14 @@ def editar_roteiro(request, pk):
                     print(f"      • EtapaRoteiro criado id={etapa_obj.id}")
 
                     for ins in et.get("insumos", []):
-                        print(f"      • criando InsumoEtapa: {ins}")
                         InsumoEtapa.objects.create(
                             etapa=etapa_obj,
                             materia_prima_id=ins["materia_prima_id"],
-                            quantidade=ins["quantidade"],
-                            tipo_insumo=ins["tipo_insumo"],
-                            obrigatorio=ins["obrigatorio"],
+                            tipo_insumo=ins.get("tipo_insumo", "matéria_prima"),
+                            obrigatorio=ins.get("obrigatorio", False),
+                            desenvolvido=limpar_decimal(ins.get("desenvolvido")),
+                            peso_liquido=limpar_decimal(ins.get("peso_liquido")),
+                            peso_bruto=limpar_decimal(ins.get("peso_bruto")),
                         )
 
                     props = et.get("propriedades") or {}
@@ -580,10 +599,14 @@ def clonar_roteiro(request, pk):
                 InsumoEtapa.objects.create(
                     etapa=nova_etapa,
                     materia_prima=insumo.materia_prima,
-                    quantidade=insumo.quantidade,
                     tipo_insumo=insumo.tipo_insumo,
                     obrigatorio=insumo.obrigatorio,
+                    desenvolvido=insumo.desenvolvido or Decimal("0.0"),
+                    peso_liquido=insumo.peso_liquido or Decimal("0.0"),
+                    peso_bruto=insumo.peso_bruto or Decimal("0.0"),
                 )
+
+
 
             if hasattr(etapa, "propriedades"):
                 prop = etapa.propriedades

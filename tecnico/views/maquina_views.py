@@ -124,9 +124,23 @@ def ajax_listar_servicos(request):
 @login_required
 def ajax_adicionar_servico(request):
     if request.method == "POST":
-        data = json.loads(request.body)
-        ServicoRealizado.objects.get_or_create(nome=data.get("nome"))
-        return JsonResponse({"success": True})
+        try:
+            data = json.loads(request.body)
+            nome = data.get("nome", "").strip()
+
+            if not nome:
+                return JsonResponse({"error": "Nome não pode ser vazio."}, status=400)
+
+            servico, _ = ServicoRealizado.objects.get_or_create(nome=nome)
+
+            return JsonResponse({
+                "id": servico.id,
+                "nome": servico.nome
+            })
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Método não permitido"}, status=405)
 
 @csrf_exempt
 @login_required

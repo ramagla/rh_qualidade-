@@ -281,45 +281,45 @@
               <td>{{ servico.data_envio|date:"d/m/Y" }}</td>
               <td>{{ servico.data_retorno|date:"d/m/Y" }}</td>
               <td>
-                <div class="d-flex flex-wrap justify-content-center gap-1">
-                  {% if request.user|has_permission:'qualidade_fornecimento.view_controleservicoexterno' %}
-    {% include "partials/global/_botao_visualizar.html" with objeto=servico url_visualizar='visualizar_controle_servico_externo' %}
-{% endif %}
+  <div class="d-flex flex-wrap justify-content-center gap-1">
 
-{% if request.user|has_permission:'qualidade_fornecimento.change_controleservicoexterno' %}
-    {% include "partials/global/_botao_editar.html" with objeto=servico url_editar='editar_controle_servico_externo' %}
-{% endif %}
+    {% if request.user|has_permission:'qualidade_fornecimento.view_controleservicoexterno' %}
+      {% include "partials/global/_botao_visualizar.html" with objeto=servico url_visualizar='visualizar_controle_servico_externo' %}
+    {% endif %}
 
-{% if servico.inspecao and servico.inspecao.status_geral == "Aprovado" %}
-<a href="{% url 'visualizar_inspecao_servico_externo' servico.inspecao.id %}"
-   class="btn btn-sm btn-outline-primary mt-1"
-   title="Visualizar inspeção"
-   aria-label="Visualizar inspeção"
-   target="_blank">
-  <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
-</a>
+    {% if request.user|has_permission:'qualidade_fornecimento.change_controleservicoexterno' %}
+      {% include "partials/global/_botao_editar.html" with objeto=servico url_editar='editar_controle_servico_externo' %}
+    {% endif %}
 
+    {% if servico.inspecao and servico.inspecao.status_geral == "Aprovado" %}
+      <a href="{% url 'visualizar_inspecao_servico_externo' servico.inspecao.id %}"
+         class="btn btn-sm btn-outline-primary mt-1"
+         title="Visualizar Inspeção (PDF)"
+         data-bs-toggle="tooltip"
+         data-bs-placement="top"
+         target="_blank">
+        <i class="bi bi-file-earmark-pdf"></i>
+      </a>
+    {% endif %}
 
-{% endif %}
+    {% if servico.inspecao and servico.inspecao.certificado_anexo %}
+      <a href="{{ servico.inspecao.certificado_anexo.url }}"
+         class="btn btn-sm btn-outline-success mt-1"
+         title="Anexo do Certificado (PDF)"
+         data-bs-toggle="tooltip"
+         data-bs-placement="top"
+         target="_blank">
+        <i class="bi bi-paperclip"></i>
+      </a>
+    {% endif %}
 
+    {% if request.user|has_permission:'qualidade_fornecimento.delete_controleservicoexterno' %}
+      {% include "partials/global/_botao_excluir.html" with objeto=servico url_excluir='excluir_controle_servico_externo' %}
+    {% endif %}
 
-{% if servico.inspecao and servico.inspecao.certificado_anexo %}
-<a href="{{ servico.inspecao.certificado_anexo.url }}"
-class="btn btn-sm btn-outline-success mt-1"
-title="Anexo do Certificado"
-aria-label="Anexo do Certificado"
-target="_blank">
-<i class="bi bi-paperclip" aria-hidden="true"></i>
-</a>
+  </div>
+</td>
 
-{% endif %}
-
-{% if request.user|has_permission:'qualidade_fornecimento.delete_controleservicoexterno' %}
-    {% include "partials/global/_botao_excluir.html" with objeto=servico url_excluir='excluir_controle_servico_externo' %}
-{% endif %}
-
-                </div>
-              </td>
             </tr>
           {% endfor %}
         </tbody>

@@ -148,8 +148,8 @@
       <div class="card bg-white">
         <div class="card-body">
           <h5 class="card-title text-success"><i class="bi bi-wrench-adjustable-circle"></i> Última Atualização do Sistema</h5>
-          {% if ultima_atualizacao %}
-            <p><strong>Versão:</strong> {{ ultima_atualizacao.versao }}</p>
+          {% if ultima_atualizacao_concluida %}
+            <p><strong>Versão:</strong> {{ ultima_atualizacao_concluida.versao }}</p>
             <p><strong>Concluída em:</strong> {{ data_atualizacao_formatada }}</p>
             <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalAtualizacao">
               <i class="bi bi-eye"></i> Visualizar
@@ -157,6 +157,7 @@
           {% else %}
             <p class="text-muted">Nenhuma atualização registrada.</p>
           {% endif %}
+
         </div>
       </div>
     </div>
@@ -289,16 +290,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
-        <p><strong>Versão:</strong> {{ ultima_atualizacao.versao }}</p>
-        <p><strong>Data:</strong> {{ data_atualizacao_formatada }}</p>
-        <p><strong>Descrição:</strong></p>
-        <div>{{ ultima_atualizacao.previa_versao|safe }}</div>
-      
-        {% if ultima_atualizacao.arquivo_pdf %}
-          <a href="{{ ultima_atualizacao.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-primary mt-3">
-            <i class="bi bi-file-earmark-pdf"></i> Ver Documentação Completa (PDF)
-          </a>
-        {% endif %}
+        <p><strong>Versão:</strong> {{ ultima_atualizacao_concluida.versao }}</p>
+          <p><strong>Data:</strong> {{ data_atualizacao_formatada }}</p>
+          <div>{{ ultima_atualizacao_concluida.previa_versao|safe }}</div>
+
+          {% if ultima_atualizacao_concluida.arquivo_pdf %}
+            <a href="{{ ultima_atualizacao_concluida.arquivo_pdf.url }}" ...>...</a>
+          {% endif %}
+
       </div>
       
       

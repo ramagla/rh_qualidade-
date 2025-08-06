@@ -1,59 +1,79 @@
 <!-- Modal de Insumos -->
 <div class="modal fade" id="modalInsumo" tabindex="-1" aria-labelledby="modalInsumoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="modalInsumoLabel">
-            <i class="bi bi-box me-2"></i> Adicionar Insumo à Etapa
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" onclick="$('.modal-backdrop').remove();"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-3">
-           <div class="col-md-8">
-<label class="form-label">
-  <i class="bi bi-box-seam me-1 text-muted"></i> Insumo (Matéria-prima):
-</label>
-  <select class="form-select select2" name="insumo" data-dropdown-parent="#modalInsumo">
-    {% for insumo in insumos %}
-      <option value="{{ insumo.id }}">{{ insumo.codigo }} – {{ insumo.descricao }}</option>
-    {% endfor %}
-  </select>
-</div>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalInsumoLabel">
+          <i class="bi bi-box me-2"></i> Adicionar Insumo à Etapa
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" onclick="$('.modal-backdrop').remove();"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
 
-            <div class="col-md-4">
-<label class="form-label">
-  <i class="bi bi-123 me-1 text-muted"></i> Peso unitário (g):
-</label>
-              <input type="number" step="0.000001" min="0" class="form-control" name="quantidade">
+          <div class="col-md-8">
+            <label class="form-label">
+              <i class="bi bi-box-seam me-1 text-muted"></i> Insumo (Matéria-prima):
+            </label>
+            <select class="form-select select2" name="insumo" data-dropdown-parent="#modalInsumo">
+              {% for insumo in insumos %}
+                <option value="{{ insumo.id }}">{{ insumo.codigo }} – {{ insumo.descricao }}</option>
+              {% endfor %}
+            </select>
+          </div>
+  <div class="col-md-4">
+              <label class="form-label" for="desenvolvidoInsumo">
+                <i class="bi bi-hammer me-1 text-muted"></i> Desenvolvido em (mm):
+              </label>
+              <input type="number" step="0.0000001" min="0" class="form-control" name="desenvolvido" id="desenvolvidoInsumo">
             </div>
-            <div class="col-md-6">
-<label class="form-label">
-  <i class="bi bi-tags me-1 text-muted"></i> Tipo de Insumo:
-</label>
-              <select class="form-select" name="tipo_insumo">
-                <option value="matéria_prima">Matéria-Prima</option>
-                <option value="componente">Componente</option>
-                <option value="outros">Insumos</option>
-                <option value="outros">Outros</option>
-              </select>
-            </div>
-            <div class="col-md-6 d-flex align-items-end">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="obrigatorio" id="obrigatorioInsumo">
-<label class="form-check-label" for="obrigatorioInsumo">
-  <i class="bi bi-check-circle me-1 text-muted"></i> Obrigatório
-</label>              </div>
+          <div class="col-md-4">
+            <label class="form-label">
+              <i class="bi bi-box2-heart me-1 text-muted"></i> Peso Líquido (kg):
+            </label>
+            <input type="number" step="0.001" min="0" class="form-control" name="peso_liquido">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">
+              <i class="bi bi-box2-fill me-1 text-muted"></i> Peso Bruto (kg):
+            </label>
+            <input type="number" step="0.001" min="0" class="form-control" name="peso_bruto">
+          </div>
+
+         
+
+          <div class="col-md-6">
+            <label class="form-label">
+              <i class="bi bi-tags me-1 text-muted"></i> Tipo de Insumo:
+            </label>
+            <select class="form-select" name="tipo_insumo">
+              <option value="matéria_prima">Matéria-Prima</option>
+              <option value="componente">Componente</option>
+              <option value="insumos">Insumos</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+
+          <div class="col-md-6 d-flex align-items-end">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="obrigatorio" id="obrigatorioInsumo">
+              <label class="form-check-label" for="obrigatorioInsumo">
+                <i class="bi bi-check-circle me-1 text-muted"></i> Obrigatório
+              </label>
             </div>
           </div>
+
         </div>
-        <div class="modal-footer justify-content-between">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-primary" id="btnSalvarInsumo">Salvar Insumo</button>
-        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnSalvarInsumo">Salvar Insumo</button>
       </div>
     </div>
   </div>
+</div>
+
   
   <!-- Modal de Propriedades -->
   <div class="modal fade" id="modalPropriedades" tabindex="-1" aria-labelledby="modalPropriedadesLabel" aria-hidden="true">
@@ -139,31 +159,104 @@ if (!window._roteiroModaisRegistrado) {
   document.addEventListener("DOMContentLoaded", function () {
     // Salvar Insumo
     document.getElementById("btnSalvarInsumo")?.addEventListener("click", () => {
-      const m = document.getElementById("modalInsumo");
-      const sel = m.querySelector('select[name="insumo"]');
-      const qtd = m.querySelector('input[name="quantidade"]').value;
-      const tp = m.querySelector('select[name="tipo_insumo"]').value;
-      const ob = m.querySelector('input[name="obrigatorio"]').checked;
-      const txt = sel.options[sel.selectedIndex]?.text || "";
-      const id = sel.value;
+    const m = document.getElementById("modalInsumo");
+    const sel = m.querySelector('select[name="insumo"]');
+    const peso_liquido = m.querySelector('input[name="peso_liquido"]').value;
+    const peso_bruto = m.querySelector('input[name="peso_bruto"]').value;
+    const desenvolvido = m.querySelector('input[name="desenvolvido"]').value;
+    const tp = m.querySelector('select[name="tipo_insumo"]').value;
+    const ob = m.querySelector('input[name="obrigatorio"]').checked;
+    const txt = sel.options[sel.selectedIndex]?.text || "";
+    const id = sel.value;
 
-      const div = window.etapaAtiva;
-      const data = JSON.parse(div.querySelector(".dados-etapa").value);
-      data.insumos.push({ materia_prima_id: id, quantidade: +qtd, tipo_insumo: tp, obrigatorio: ob });
-      div.querySelector(".dados-etapa").value = JSON.stringify(data);
+    const div = window.etapaAtiva;
+    const data = JSON.parse(div.querySelector(".dados-etapa").value);
+    const index = parseInt(m.dataset.index);
+    const isEdicao = !isNaN(index) && index >= 0;
+    const novoInsumo = {
+      materia_prima_id: id,
+      tipo_insumo: tp,
+      obrigatorio: ob,
+      desenvolvido: parseFloat(desenvolvido || 0),
+      peso_liquido: parseFloat(peso_liquido || 0),
+      peso_bruto: parseFloat(peso_bruto || 0)
+    };
 
-      div.querySelector(".lista-insumos").insertAdjacentHTML("beforeend", `
-        <li class="list-group-item d-flex justify-content-between align-items-center small">
-          <span><strong>${txt}</strong> — ${qtd} / ${tp} / ${ob ? "Obrigatório" : "Opcional"}</span>
-          <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
-            <i class="bi bi-x-circle"></i>
-          </button>
-        </li>
-      `);
+  if (isEdicao && index < data.insumos.length) {
+  data.insumos.splice(index, 1, novoInsumo);
+} else {
+  data.insumos.push(novoInsumo);
+}
 
-      bootstrap.Modal.getInstance(m)?.hide();
-      document.querySelectorAll(".modal-backdrop").forEach(e => e.remove());
-    });
+    delete m.dataset.index; // limpa após uso
+
+    div.querySelector(".dados-etapa").value = JSON.stringify(data);
+
+    const ul = div.querySelector(".lista-insumos");
+if (index !== undefined && ul.children[index]) {
+  // Se for edição, substitui o conteúdo da linha
+  ul.children[index].outerHTML = `
+    <li class="list-group-item d-flex justify-content-between align-items-center small">
+      <span><strong>${txt}</strong> — ${tp} / ${ob ? "Obrigatório" : "Opcional"} / Desenvolvido: ${desenvolvido} mm / Líq: ${peso_liquido} kg / Bruto: ${peso_bruto} kg</span>
+      <div>
+        <button type="button" class="btn btn-sm btn-outline-primary editar-insumo" data-index="${index}">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+          <i class="bi bi-x-circle"></i>
+        </button>
+      </div>
+    </li>
+  `;
+} else {
+  // Se for novo, adiciona no final
+  ul.insertAdjacentHTML("beforeend", `
+    <li class="list-group-item d-flex justify-content-between align-items-center small">
+      <span><strong>${txt}</strong> — ${tp} / ${ob ? "Obrigatório" : "Opcional"} / Desenvolvido: ${desenvolvido} mm / Líq: ${peso_liquido} kg / Bruto: ${peso_bruto} kg</span>
+      <div>
+        <button type="button" class="btn btn-sm btn-outline-primary editar-insumo" data-index="${data.insumos.length - 1}">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+          <i class="bi bi-x-circle"></i>
+        </button>
+      </div>
+    </li>
+  `);
+}
+
+
+
+    bootstrap.Modal.getInstance(m)?.hide();
+    document.querySelectorAll(".modal-backdrop").forEach(e => e.remove());
+  });
+
+document.querySelectorAll(".lista-insumos").forEach(lista => {
+  lista.addEventListener("click", function (e) {
+    const btn = e.target.closest(".editar-insumo");
+    if (!btn) return;
+
+    const index = Array.from(btn.closest("ul").children).indexOf(btn.closest("li"));
+    const div = window.etapaAtiva;
+    const data = JSON.parse(div.querySelector(".dados-etapa").value);
+    const insumo = data.insumos[index];
+    if (!insumo) return;
+
+    const m = document.getElementById("modalInsumo");
+    const selectInsumo = m.querySelector('select[name="insumo"]');
+    selectInsumo.value = insumo.materia_prima_id;
+    $(selectInsumo).trigger('change');  // para atualizar select2 visualmente
+    m.querySelector('input[name="peso_liquido"]').value = insumo.peso_liquido || "";
+    m.querySelector('input[name="peso_bruto"]').value = insumo.peso_bruto || "";
+    m.querySelector('input[name="desenvolvido"]').value = insumo.desenvolvido || "";
+    m.querySelector('select[name="tipo_insumo"]').value = insumo.tipo_insumo || "matéria_prima";
+    m.querySelector('input[name="obrigatorio"]').checked = !!insumo.obrigatorio;
+
+    m.dataset.index = index; // marcar que é edição
+
+    new bootstrap.Modal(m).show();
+  });
+});
 
     // Salvar Propriedades
     document.getElementById("btnSalvarPropriedades")?.addEventListener("click", () => {

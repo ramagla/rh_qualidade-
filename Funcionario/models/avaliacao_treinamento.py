@@ -62,11 +62,7 @@ class AvaliacaoTreinamento(models.Model):
         blank=True,
         verbose_name="Comprovante/Anexo"
     )
-    data_conclusao = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="Data de Conclusão da Avaliação"
-    )
+   
     responsavel_1 = models.ForeignKey(
         Funcionario,
         on_delete=models.SET_NULL,
@@ -131,11 +127,16 @@ class AvaliacaoTreinamento(models.Model):
 
     def get_status_prazo(self):
         """
-        Retorna o status de prazo da avaliação com base na data e período.
+        Verifica se a avaliação foi realizada dentro do prazo, comparando com a data de avaliação.
         """
-        data_limite = self.data_avaliacao + timedelta(days=self.periodo_avaliacao)
-        data_base = self.data_conclusao or timezone.now().date()
-        return "Dentro do Prazo" if data_base <= data_limite else "Em Atraso"
+        if self.treinamento and self.treinamento.data_fim and self.data_avaliacao:
+            data_limite = self.treinamento.data_fim + timedelta(days=self.periodo_avaliacao)
+            return "Dentro do Prazo" if self.data_avaliacao <= data_limite else "Em Atraso"
+        return "Data inválida"
+
+
+
+
 
 
     def __str__(self):
@@ -144,3 +145,9 @@ class AvaliacaoTreinamento(models.Model):
     class Meta:
         ordering = ['-data_avaliacao']
         verbose_name_plural = "Avaliações de Treinamento"
+
+    @property
+    def data_limite(self):
+        if self.treinamento and self.treinamento.data_fim:
+            return self.treinamento.data_fim + timedelta(days=self.periodo_avaliacao)
+        return None

@@ -151,8 +151,9 @@
             <td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm" }}</td>
             <td class="bg-lightyellow">{{ form.peso_bruto|add_class:"form-control form-control-sm" }}</td>
             <td class="bg-lightyellow">
-              {{ form.peso_bruto_total|add_class:"form-control form-control-sm text-end peso-bruto-total"|attr:"readonly:readonly" }}
-            </td>
+  {{ form.peso_liquido_total|add_class:"form-control form-control-sm text-end peso-liquido-total"|attr:"readonly:readonly" }}
+</td>
+
             <td class="text-center">
               {% if form.instance.pk and form.instance.preco_kg %}
                 <span class="badge bg-success">OK</span>
@@ -202,134 +203,33 @@
   }
 </style>
 
-<!-- Preenchimento automático de código -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const dataDiv = document.querySelector("#precalculo-data");
-    const itemId = dataDiv?.dataset.itemId;
-    const codigoInputs = document.querySelectorAll(".codigo-input");
-
-    if (itemId) {
-      fetch(`/comercial/ajax/codigo-materia-prima/?item_id=${itemId}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.sucesso && data.codigo) {
-            codigoInputs.forEach(input => {
-              if (!input.value) input.value = data.codigo;
-            });
-          }
-        });
-    }
-  });
-</script>
-
-<!-- Cálculo automático do Peso Bruto Total -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const valorQtde = "{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".");
-    const qtdeEstimada = parseFloat(valorQtde) || 0;
-    const linhas = document.querySelectorAll("tbody tr");
-
-    linhas.forEach(row => {
-      const pesoBrutoInput = row.querySelector("input[name$='-peso_bruto']");
-      const pesoBrutoTotalInput = row.querySelector("input[name$='-peso_bruto_total']");
-
-      if (pesoBrutoInput && pesoBrutoTotalInput) {
-        const atualizarPesoBrutoTotal = () => {
-          const pesoBruto = parseFloat(pesoBrutoInput.value.replace(",", ".")) || 0;
-          const resultado = pesoBruto * qtdeEstimada;
-          pesoBrutoTotalInput.value = resultado.toFixed(3).replace(".", ",");
-        };
-
-        atualizarPesoBrutoTotal();
-        pesoBrutoInput.addEventListener("input", atualizarPesoBrutoTotal);
-      }
-    });
-  });
-</script>
-
-<!-- Cópia de campos técnicos para todas as linhas -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const qtdeEstimada = parseFloat("{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".")) || 0;
-    const linhas = document.querySelectorAll("tbody tr");
-
-    if (linhas.length === 0) return;
-
-    const primeira = linhas[0];
-    const campoDesenv = primeira.querySelector("input[name$='-desenvolvido_mm']");
-    const campoPesoLiq = primeira.querySelector("input[name$='-peso_liquido']");
-    const campoPesoBruto = primeira.querySelector("input[name$='-peso_bruto']");
-
-    function copiarCamposParaOutrasLinhas() {
-      const valDesenv = campoDesenv?.value || "";
-      const valPesoLiq = campoPesoLiq?.value || "";
-      const valPesoBruto = campoPesoBruto?.value || "";
-
-      const bruto = parseFloat(valPesoBruto.replace(",", ".")) || 0;
-      const totalCalculado = (bruto * qtdeEstimada).toFixed(3).replace(".", ",");
-
-      linhas.forEach((linha, idx) => {
-        if (idx === 0) return;
-
-        const d = linha.querySelector("input[name$='-desenvolvido_mm']");
-        const l = linha.querySelector("input[name$='-peso_liquido']");
-        const b = linha.querySelector("input[name$='-peso_bruto']");
-        const t = linha.querySelector("input[name$='-peso_bruto_total']");
-
-        if (d && !d.value) d.value = valDesenv;
-        if (l && !l.value) l.value = valPesoLiq;
-        if (b && !b.value) b.value = valPesoBruto;
-
-        if (t) {
-          t.removeAttribute("readonly");
-          t.value = totalCalculado;
-          t.setAttribute("readonly", "readonly");
-        }
-      });
-    }
-
-    // Executa uma vez ao carregar a página:
-    copiarCamposParaOutrasLinhas();
-
-    // E depois nos eventos:
-    [campoDesenv, campoPesoLiq, campoPesoBruto].forEach(campo => {
-      if (campo) {
-        campo.addEventListener("input", copiarCamposParaOutrasLinhas);
-        campo.addEventListener("change", copiarCamposParaOutrasLinhas);
-        campo.addEventListener("blur", copiarCamposParaOutrasLinhas);
-      }
-    });
-  });
-</script>
 
 
-
-
-
-
+<!-- Cálculo dinâmico do Peso Líquido Total ao alterar individualmente -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const qtdeEstimada = parseFloat("{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".")) || 0;
 
     document.querySelectorAll("tbody tr").forEach(row => {
-      const brutoInput = row.querySelector("input[name$='-peso_bruto']");
-      const totalInput = row.querySelector("input[name$='-peso_bruto_total']");
+      const liquidoInput = row.querySelector("input[name$='-peso_liquido']");
+      const totalInput = row.querySelector("input[name$='-peso_liquido_total']");
 
-      if (brutoInput && totalInput) {
+      if (liquidoInput && totalInput) {
         const atualizar = () => {
-          const bruto = parseFloat(brutoInput.value.replace(",", ".")) || 0;
-          const resultado = bruto * qtdeEstimada;
-          totalInput.removeAttribute("readonly"); // ⚠ necessário!
+          const liquido = parseFloat(liquidoInput.value.replace(",", ".")) || 0;
+          const resultado = liquido * qtdeEstimada;
+          totalInput.removeAttribute("readonly");
           totalInput.value = resultado.toFixed(3).replace(".", ",");
           totalInput.setAttribute("readonly", "readonly");
         };
 
-        brutoInput.addEventListener("input", atualizar);
+        liquidoInput.addEventListener("input", atualizar);
         atualizar();  // inicial
       }
     });
   });
 </script>
+
+
 
 

@@ -11,7 +11,7 @@ class RoteiroProducaoForm(forms.ModelForm):
             "item": forms.Select(attrs={"class": "form-select select2"}),
             "tipo_roteiro": forms.Select(attrs={"class": "form-select"}),
             "status": forms.Select(attrs={"class": "form-select"}),
-            "peso_unitario_gramas": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "peso_unitario_gramas": forms.NumberInput(attrs={"class": "form-control", "step": "0.0000001"}),
             "observacoes_gerais": CKEditor5Widget(config_name="default"),
         }
         labels = {

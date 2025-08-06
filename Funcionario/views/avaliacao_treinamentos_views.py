@@ -72,7 +72,11 @@ def cadastrar_avaliacao(request):
     if status is True:
         messages.success(request, "Avaliação cadastrada com sucesso!")
         return redirect("lista_avaliacoes")
-
+    data_fim = (
+        form.instance.treinamento.data_fim.strftime("%Y-%m-%d")
+        if form.instance.treinamento and form.instance.treinamento.data_fim
+        else ""
+    )
     return render(
         request,
         "avaliacao_treinamento/form_avaliacao.html",
@@ -80,6 +84,8 @@ def cadastrar_avaliacao(request):
             "form": form,
             "funcionarios": funcionarios,
             "listas_presenca": listas_presenca,
+                    "data_fim_treinamento": data_fim,
+
             **get_opcoes_avaliacao(),
         },
     )
@@ -98,6 +104,11 @@ def editar_avaliacao(request, id):
         return redirect("lista_avaliacoes")
 
     treinamentos = Treinamento.objects.filter(funcionarios=avaliacao.funcionario)
+    data_fim = (
+        form.instance.treinamento.data_fim.strftime("%Y-%m-%d")
+        if form.instance.treinamento and form.instance.treinamento.data_fim
+        else ""
+    )
 
     return render(
         request,
@@ -108,6 +119,7 @@ def editar_avaliacao(request, id):
             "funcionarios": funcionarios,
             "treinamentos": treinamentos,
             "listas_presenca": listas_presenca,
+            "data_fim_treinamento": data_fim,
             **get_opcoes_avaliacao(),
         },
     )

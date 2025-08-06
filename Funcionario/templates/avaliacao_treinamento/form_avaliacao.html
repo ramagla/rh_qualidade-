@@ -39,11 +39,7 @@
 <label for="periodo_avaliacao" class="form-label"><i class="bi bi-hourglass-split me-2"></i>Período da Avaliação (em dias):</label>
               <input type="number" class="form-control" id="periodo_avaliacao" name="periodo_avaliacao" value="{{ form.instance.periodo_avaliacao|default_if_none:'60' }}" required>
             </div>
-            <div class="col-md-6">
-              <label for="data_conclusao" class="form-label"><i class="bi bi-calendar-check me-2"></i>Data de Conclusão:</label>
-              <input type="date" class="form-control" id="data_conclusao" name="data_conclusao"
-                    value="{{ form.instance.data_conclusao|date:'Y-m-d' }}">
-            </div>
+            
 
             <div class="col-12 mt-3">
 <label class="form-label"><i class="bi bi-clock-history me-2"></i>Status do Prazo:</label>
@@ -198,9 +194,11 @@
     {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=form.instance.pk url_voltar='lista_avaliacoes' %}
   </form>
 </div>
+<input type="hidden" id="data_fim_treinamento" value="{{ data_fim_treinamento }}">
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+
     function calcularAvaliacaoGeral() {
       let total = 0;
       let poucoEficaz = false;
@@ -255,33 +253,33 @@
     }
 
     function verificarPrazo() {
-  const dataAvaliacao = document.getElementById("data_avaliacao").value;
-  const dataConclusao = document.getElementById("data_conclusao")?.value;
-  const periodoAvaliacao = parseInt(document.getElementById("periodo_avaliacao").value);
+  const dataFimTreinamentoStr = document.getElementById("data_fim_treinamento")?.value;
+  const periodoAvaliacao = parseInt(document.getElementById("periodo_avaliacao")?.value);
+  const dataAvaliacaoStr = document.getElementById("data_avaliacao")?.value;
   const statusPrazoDiv = document.getElementById("status_prazo");
 
-  if (dataAvaliacao && !isNaN(periodoAvaliacao)) {
-    const dataAvaliacaoDate = new Date(dataAvaliacao);
-    const dataLimite = new Date(dataAvaliacaoDate);
+  if (dataFimTreinamentoStr && !isNaN(periodoAvaliacao) && dataAvaliacaoStr) {
+    const dataFim = new Date(dataFimTreinamentoStr);
+    const dataLimite = new Date(dataFim);
     dataLimite.setDate(dataLimite.getDate() + periodoAvaliacao);
 
-    let dataComparacao;
-    if (dataConclusao) {
-      dataComparacao = new Date(dataConclusao);
-    } else {
-      dataComparacao = new Date();
-    }
+    const dataAvaliacao = new Date(dataAvaliacaoStr);
+    dataAvaliacao.setHours(0, 0, 0, 0);
+    dataLimite.setHours(0, 0, 0, 0);
 
-    let status = dataComparacao <= dataLimite ? "Dentro do Prazo 😃" : "Fora do Prazo 😔";
-    let cor = dataComparacao <= dataLimite ? "alert-success" : "alert-danger";
+    const status = dataAvaliacao <= dataLimite ? "Dentro do Prazo 😃" : "Fora do Prazo 😔";
+    const cor = dataAvaliacao <= dataLimite ? "alert-success" : "alert-danger";
 
     statusPrazoDiv.className = `alert ${cor}`;
-    statusPrazoDiv.textContent = status;
+    statusPrazoDiv.textContent = `${status} (Limite: ${dataLimite.toLocaleDateString("pt-BR")})`;
   } else {
     statusPrazoDiv.className = "alert alert-secondary";
-    statusPrazoDiv.textContent = "Defina a data de avaliação e o período.";
+    statusPrazoDiv.textContent = "Defina a data de avaliação, o período e o treinamento.";
   }
 }
+
+
+
 
 
     document.getElementById("data_avaliacao").addEventListener("change", verificarPrazo);
@@ -295,5 +293,6 @@
     calcularAvaliacaoGeral();
   });
 </script>
+
 
 {% endblock %}

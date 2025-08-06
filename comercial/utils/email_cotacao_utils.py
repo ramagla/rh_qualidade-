@@ -9,6 +9,7 @@ from django.contrib import messages
 from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExterno
+from Funcionario.models import Settings as SistemaSettings
 
 
 def disparar_email_cotacao_material(request, material):
@@ -132,21 +133,25 @@ def disparar_emails_cotacao_servicos(request, precalc):
     """
     Dispara e-mails de cotação de serviços externos agrupados por insumo.
     """
+    print("🔧 Iniciando disparo de e-mails de cotação de serviços")
     grupos = {}
     for servico in precalc.servicos.all():
+        print(f"➡️ Servico ID {servico.pk} | Insumo: {servico.insumo}")
         insumo = servico.insumo
         if insumo not in grupos:
             grupos[insumo] = []
         grupos[insumo].append(servico)
 
     for insumo, lista in grupos.items():
-        pk_primeiro = lista[0].pk  # usado no link de resposta
+        print(f"📤 Disparando para insumo: {insumo}")
+        pk_primeiro = lista[0].pk
 
         try:
             mp = insumo.materia_prima
             codigo = mp.codigo
             descricao = mp.descricao
-        except Exception:
+        except Exception as e:
+            print(f"⚠️ Erro ao buscar matéria-prima: {e}")
             codigo = "sem código"
             descricao = "---"
 
@@ -170,6 +175,7 @@ def disparar_emails_cotacao_servicos(request, precalc):
             recipient_list=["rafael.almeida@brasmol.com.br"],
             fail_silently=False,
         )
+        print("✅ E-mail disparado com sucesso.")
 
 
 from decimal import Decimal, InvalidOperation
@@ -184,7 +190,7 @@ def responder_cotacao_servico_lote(request, pk):
     View pública para que fornecedores preencham os dados de cotação de serviços em lote.
     Quando todos os preços já estiverem preenchidos, exibe a página de cotação finalizada.
     """
-    # Busca o serviço e todos os serviços do mesmo insumo (mesmo código de MP)
+    # Busca o serviço principal e todos os do mesmo insumo (mesmo código)
     servico = get_object_or_404(PreCalculoServicoExterno, pk=pk)
     codigo = servico.insumo.materia_prima.codigo
 
@@ -193,7 +199,7 @@ def responder_cotacao_servico_lote(request, pk):
         insumo__materia_prima__codigo=codigo
     ).select_related("insumo", "insumo__materia_prima").order_by("pk")
 
-    # Se não houver nenhum preço em branco, renderiza página finalizada
+    # Verifica se já foi respondido
     if not servicos.filter(preco_kg__isnull=True).exists():
         return render(
             request,
@@ -201,7 +207,7 @@ def responder_cotacao_servico_lote(request, pk):
             {"servico": servico}
         )
 
-    # Dados de apoio para o formulário
+    # Dados para o formulário
     fornecedores = FornecedorQualificado.objects.filter(
         produto_servico__icontains="Trat",
         status__in=["Qualificado", "Qualificado Condicional"]
@@ -209,15 +215,25 @@ def responder_cotacao_servico_lote(request, pk):
 
     try:
         materia_prima = servico.insumo.materia_prima
-    except MateriaPrimaCatalogo.DoesNotExist:
+    except:
         materia_prima = None
 
     cotacao_numero     = servico.precalculo.cotacao.numero if servico.precalculo else None
     precalculo_numero  = servico.precalculo.numero if servico.precalculo else None
     observacoes_gerais = servico.precalculo.observacoes_servicos if servico.precalculo else ""
 
+    # POST: salvar dados da resposta
     if request.method == "POST":
-        for i, sev in enumerate(servicos):
+        for i in range(len(servicos)):
+            sev_id = request.POST.get(f"id_{i}")
+            if not sev_id:
+                continue
+
+            try:
+                sev = PreCalculoServicoExterno.objects.get(id=sev_id)
+            except PreCalculoServicoExterno.DoesNotExist:
+                continue
+
             sev.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
             sev.icms          = request.POST.get(f"icms_{i}") or None
             sev.lote_minimo   = request.POST.get(f"lote_minimo_{i}") or None
@@ -231,10 +247,10 @@ def responder_cotacao_servico_lote(request, pk):
                 except (InvalidOperation, ValueError):
                     sev.preco_kg = None
 
+            sev.status = "ok"
             sev.save()
 
         messages.success(request, "Cotações salvas com sucesso.")
-        # Redireciona para forçar novo GET e cair na condição de finalização quando completo
         return redirect(request.path)
 
     return render(

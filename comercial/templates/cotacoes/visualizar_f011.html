@@ -59,137 +59,147 @@
   </div>
   
   
-  <!-- Tabela com dados do cliente e item com ícones -->
+ <!-- Tabela com dados do cliente e item com ícones -->
 <div class="table-responsive">
-    <table class="table table-bordered align-middle small">
-      <tr>
-        <th style="text-align: right;"><i class="bi bi-person-badge"></i> Cliente:</th>
-        <td colspan="3">{{ precalc.analise_comercial_item.item.cliente }}</td>
-        <th style="text-align: right;"><i class="bi bi-check2-square"></i> Requisito específico?</th>
-<td class="text-center" style="min-width: 180px;">
-          <div class="form-check form-check-inline mb-0">
-            <input class="form-check-input" type="checkbox" 
-                   {% if precalc.analise_comercial_item.item.requisito_especifico == True %}checked{% endif %}>
-            <label class="form-check-label">Sim</label>
-          </div>
-          <div class="form-check form-check-inline mb-0">
-            <input class="form-check-input" type="checkbox" 
-                   {% if precalc.analise_comercial_item.item.requisito_especifico == False %}checked{% endif %}>
-            <label class="form-check-label">Não</label>
-          </div>
-        </td>
-        
-      </tr>
-      <tr>
-        <th style="text-align: right;"><i class="bi bi-car-front"></i> Automotivo OEM?</th>
-        <td class="text-center">
-          {% with oem=precalc.analise_comercial_item.item.automotivo_oem|default_if_none:False %}
-          <div class="form-check form-check-inline mb-0">
-              <input class="form-check-input" type="checkbox"
-                     {% if oem %}checked{% endif %}>
-              <label class="form-check-label">Sim</label>
-            </div>
-            <div class="form-check form-check-inline mb-0">
-              <input class="form-check-input" type="checkbox"
-                     {% if not oem %}checked{% endif %}>
-              <label class="form-check-label">Não</label>
-            </div>
-          {% endwith %}
-        </td>
-        
-        <th style="text-align: right;"><i class="bi bi-shield-check"></i> Item de segurança?</th>
-        <td class="text-center">
-          {% with valor=precalc.analise_comercial_item.item.item_seguranca|default_if_none:False %}
-            <div class="form-check form-check-inline mb-0">
-              <input class="form-check-input" type="checkbox"  {% if valor %}checked{% endif %}>
-              <label class="form-check-label">Sim</label>
-            </div>
-            <div class="form-check form-check-inline mb-0">
-              <input class="form-check-input" type="checkbox"  {% if not valor %}checked{% endif %}>
-              <label class="form-check-label">Não</label>
-            </div>
-          {% endwith %}
-        </td>
-        
-       <th style="text-align: right;"><i class="bi bi-file-earmark"></i> Desenho:</th>
-<td>
-  {% if precalc.analise_comercial_item.item.codigo_desenho %}
-    {% if precalc.analise_comercial_item.item.desenho %}
-      <a href="{{ precalc.analise_comercial_item.item.desenho.url }}" target="_blank">
-        {{ precalc.analise_comercial_item.item.codigo_desenho }}
-      </a>
-    {% else %}
-      {{ precalc.analise_comercial_item.item.codigo_desenho }}
-    {% endif %}
-  {% else %}
-    <span class="text-muted fst-italic">—</span>
-  {% endif %}
-</td>
+  <table class="table table-bordered align-middle small text-center">
+    <tr>
+      <th style="text-align: right; width: 15%;" class="text-nowrap">
+        <i class="bi bi-person-badge"></i> Cliente:
+      </th>
+      <td colspan="5" class="text-start">{{ precalc.analise_comercial_item.item.cliente }}</td>
+    </tr>
 
+    <tr>
+      <th style="text-align: right;"><i class="bi bi-check2-square"></i> Requisito específico?</th>
+      <td>
+        <div class="form-check form-check-inline mb-0">
+          <input class="form-check-input" type="checkbox" 
+                 {% if precalc.analise_comercial_item.item.requisito_especifico == True %}checked{% endif %}>
+          <label class="form-check-label">Sim</label>
+        </div>
+        <div class="form-check form-check-inline mb-0">
+          <input class="form-check-input" type="checkbox" 
+                 {% if precalc.analise_comercial_item.item.requisito_especifico == False %}checked{% endif %}>
+          <label class="form-check-label">Não</label>
+        </div>
+      </td>
 
-      </tr>
-      <tr>
-        <th style="text-align: right;"><i class="bi bi-list-ol"></i> Revisão:</th>
-<td>
-  {% if precalc.analise_comercial_item.item.revisao %}
-    {{ precalc.analise_comercial_item.item.revisao }}
-  {% else %}
-    <span class="text-muted fst-italic">Não informada</span>
-  {% endif %}
-</td>
-        <th style="text-align: right;"><i class="bi bi-calendar-date"></i> Data:</th>
-        <td colspan="3">{{ precalc.analise_comercial_item.item.data_revisao|date:"d/m/Y"|default:"---" }}</td>
-      </tr>
-      <tr>
-        <th style="text-align: right;"><i class="bi bi-hash"></i> Nº da peça:</th>
-<td colspan="2">
-  {% if precalc.analise_comercial_item.item.descricao %}
-    {{ precalc.analise_comercial_item.item.descricao }}
-  {% else %}
-    <span class="text-muted fst-italic">Não informado</span>
-  {% endif %}
-</td>
-       <th style="text-align: right;"><i class="bi bi-tag"></i> Código Bras-Mol:</th>
-<td colspan="2">
-  {% if precalc.analise_comercial_item.item.tipo_item == "Corrente" %}
-    {{ precalc.analise_comercial_item.item.codigo|default:"—" }}
-  {% else %}
-    <span class="text-muted fst-italic">Ainda não definido</span>
-  {% endif %}
-</td>
+      <th style="text-align: right;"><i class="bi bi-car-front"></i> Automotivo OEM?</th>
+      <td>
+        {% with oem=precalc.analise_comercial_item.item.automotivo_oem|default_if_none:False %}
+        <div class="form-check form-check-inline mb-0">
+          <input class="form-check-input" type="checkbox" {% if oem %}checked{% endif %}>
+          <label class="form-check-label">Sim</label>
+        </div>
+        <div class="form-check form-check-inline mb-0">
+          <input class="form-check-input" type="checkbox" {% if not oem %}checked{% endif %}>
+          <label class="form-check-label">Não</label>
+        </div>
+        {% endwith %}
+      </td>
 
-      </tr>
-      <tr>
-        <th style="text-align: right;"><i class="bi bi-bar-chart"></i> Consumo estimado:</th>
-        <td>{{ precalc.analise_comercial_item.qtde_estimada|intcomma|default:"---" }}</td>
-        <th style="text-align: right;"><i class="bi bi-clock-history"></i> Frequência:</th>
-        <td>{{ precalc.analise_comercial_item.periodo|default:"---" }}</td>
-        <th style="text-align: right;"><i class="bi bi-gear"></i> Capacidade produtiva?</th>
-        <td class="text-center">
-          {% with valor=precalc.analise_comercial_item.capacidade_produtiva|default_if_none:False %}
-            <div class="form-check form-check-inline mb-0">
-              <input class="form-check-input" type="checkbox"  {% if valor %}checked{% endif %}>
-              <label class="form-check-label">Sim</label>
-            </div>
-            <div class="form-check form-check-inline mb-0">
-              <input class="form-check-input" type="checkbox"  {% if not valor %}checked{% endif %}>
-              <label class="form-check-label">Não</label>
-            </div>
-          {% endwith %}
-        </td>
-        
-      </tr>
-     <tr>
-  <td colspan="6" class="px-2 py-1">
-<p class="mb-0"><strong>Departamento Comercial</strong> — assinatura disponível na última página</p>
-  </td>
-</tr>
+      <th style="text-align: right;"><i class="bi bi-shield-check"></i> Item de segurança?</th>
+      <td>
+        {% with valor=precalc.analise_comercial_item.item.item_seguranca|default_if_none:False %}
+        <div class="form-check form-check-inline mb-0">
+          <input class="form-check-input" type="checkbox"  {% if valor %}checked{% endif %}>
+          <label class="form-check-label">Sim</label>
+        </div>
+        <div class="form-check form-check-inline mb-0">
+          <input class="form-check-input" type="checkbox"  {% if not valor %}checked{% endif %}>
+          <label class="form-check-label">Não</label>
+        </div>
+        {% endwith %}
+      </td>
+    </tr>
 
-    </table>
-  </div>
+    <tr>
+      <th style="text-align: right;"><i class="bi bi-file-earmark"></i> Desenho:</th>
+      <td class="text-start">
+        {% if precalc.analise_comercial_item.item.codigo_desenho %}
+          {% if precalc.analise_comercial_item.item.desenho %}
+            <a href="{{ precalc.analise_comercial_item.item.desenho.url }}" target="_blank">
+              {{ precalc.analise_comercial_item.item.codigo_desenho }}
+            </a>
+          {% else %}
+            {{ precalc.analise_comercial_item.item.codigo_desenho }}
+          {% endif %}
+        {% else %}
+          <span class="text-muted fst-italic">—</span>
+        {% endif %}
+      </td>
+
+      <th style="text-align: right;"><i class="bi bi-list-ol"></i> Revisão:</th>
+      <td class="text-start">
+        {% if precalc.analise_comercial_item.item.revisao %}
+          {{ precalc.analise_comercial_item.item.revisao }}
+        {% else %}
+          <span class="text-muted fst-italic">Não informada</span>
+        {% endif %}
+      </td>
+
+      <th style="text-align: right;"><i class="bi bi-calendar-date"></i> Data:</th>
+      <td class="text-start">
+        {{ precalc.analise_comercial_item.item.data_revisao|date:"d/m/Y"|default:"---" }}
+      </td>
+    </tr>
+
+    <tr>
+      <th style="text-align: right;"><i class="bi bi-hash"></i> Nº da peça:</th>
+      <td colspan="2" class="text-start">
+        {% if precalc.analise_comercial_item.item.descricao %}
+          {{ precalc.analise_comercial_item.item.descricao }}
+        {% else %}
+          <span class="text-muted fst-italic">Não informado</span>
+        {% endif %}
+      </td>
+
+      <th style="text-align: right;"><i class="bi bi-tag"></i> Código Bras-Mol:</th>
+      <td colspan="2" class="text-start">
+        {% if precalc.analise_comercial_item.item.tipo_item == "Corrente" %}
+          {{ precalc.analise_comercial_item.item.codigo|default:"—" }}
+        {% else %}
+          <span class="text-muted fst-italic">Ainda não definido</span>
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <th style="text-align: right;"><i class="bi bi-bar-chart"></i> Consumo estimado:</th>
+      <td class="text-start">
+        {{ precalc.analise_comercial_item.qtde_estimada|intcomma|default:"---" }}
+      </td>
+
+      <th style="text-align: right;"><i class="bi bi-clock-history"></i> Frequência:</th>
+      <td class="text-start">
+        {{ precalc.analise_comercial_item.periodo|default:"---" }}
+      </td>
+
+      <th style="text-align: right;"><i class="bi bi-gear"></i> Capacidade produtiva?</th>
+      <td>
+        {% with valor=precalc.analise_comercial_item.capacidade_produtiva|default_if_none:False %}
+        <div class="form-check form-check-inline mb-0">
+          <input class="form-check-input" type="checkbox"  {% if valor %}checked{% endif %}>
+          <label class="form-check-label">Sim</label>
+        </div>
+        <div class="form-check form-check-inline mb-0">
+          <input class="form-check-input" type="checkbox"  {% if not valor %}checked{% endif %}>
+          <label class="form-check-label">Não</label>
+        </div>
+        {% endwith %}
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="6" class="px-2 py-1 text-start">
+        <strong>Departamento Comercial</strong> — assinatura disponível na última página
+      </td>
+    </tr>
+  </table>
+</div>
+
   
   
-
   {% for material in precalc.materiais.all %}
   {% if material.codigo and forloop.first %}
     <div class="table-responsive">
@@ -350,13 +360,12 @@
 {% for f in ferramentas_info %}
   <table class="table table-bordered text-center align-middle" style="width: 100%;">
     <thead class="table-light">
-     <tr>
-  <th colspan="6" style="background-color: #d9d9d9; font-weight: bold;">
-    <i class="bi bi-tools me-1 text-muted"></i>
-    Ferramenta / Dispositivo
-  </th>
-</tr>
-
+      <tr>
+        <th colspan="6" style="background-color: #d9d9d9; font-weight: bold;">
+          <i class="bi bi-tools me-1 text-muted"></i>
+          Ferramenta / Dispositivo
+        </th>
+      </tr>
       <tr>
         <th colspan="2">
           <i class="bi bi-easel-fill me-1 text-primary"></i> Projeto
@@ -368,57 +377,52 @@
           <i class="bi bi-ui-checks-grid me-1 text-info"></i> Tipo
         </th>
       </tr>
-      
     </thead>
     <tbody>
       <tr>
         <td colspan="2">{{ f.horas_projeto|floatformat:"2" }} h</td>
         <td colspan="2">{{ f.horas_ferramentaria|floatformat:"2" }} h</td>
         <td colspan="2">
-<div class="d-flex justify-content-center align-items-center gap-3 flex-wrap text-start" style="min-height: 30px;">
-  <label class="d-flex align-items-center gap-1 m-0">
-    <input type="checkbox" {% if f.tipo == "Nova" %}checked{% endif %}> Ferramenta nova
-  </label>
-  <label class="d-flex align-items-center gap-1 m-0">
-    <input type="checkbox" {% if f.tipo == "Adpt" %}checked{% endif %}> Adaptação
-  </label>
-  <label class="d-flex align-items-center gap-1 m-0">
-    <input type="checkbox" {% if f.tipo == "Disp" %}checked{% endif %}> Dispositivo
-  </label>
-  <label class="d-flex align-items-center gap-1 m-0">
-    <input type="checkbox" {% if f.tipo == "Outro" %}checked{% endif %}> Outros
-  </label>
-</div>
-
+          <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap text-start" style="min-height: 30px;">
+            <label class="d-flex align-items-center gap-1 m-0">
+              <input type="checkbox" {% if f.tipo == "Nova" %}checked{% endif %}> Ferramenta nova
+            </label>
+            <label class="d-flex align-items-center gap-1 m-0">
+              <input type="checkbox" {% if f.tipo == "Adpt" %}checked{% endif %}> Adaptação
+            </label>
+            <label class="d-flex align-items-center gap-1 m-0">
+              <input type="checkbox" {% if f.tipo == "Disp" %}checked{% endif %}> Dispositivo
+            </label>
+            <label class="d-flex align-items-center gap-1 m-0">
+              <input type="checkbox" {% if f.tipo == "Outro" %}checked{% endif %}> Outros
+            </label>
+          </div>
         </td>
       </tr>
-      
+
       {% if f.observacoes|conteudo_real %}
-  <tr>
-    <td colspan="6" class="text-start pt-2 pb-2" style="padding-left: 12px; padding-right: 12px;">
-      <strong>Observações:</strong><br>
-      <div class="mt-1">{{ f.observacoes|safe }}</div>
-    </td>
-  </tr>
-  
-{% endif %}
+      <tr>
+        <td colspan="6" class="text-start pt-2 pb-2 px-3">
+          <strong>Observações:</strong><br>
+          <div class="mt-1">{{ f.observacoes|safe }}</div>
+        </td>
+      </tr>
+      {% endif %}
 
       <tr>
-  <td colspan="6" class="text-start px-2 py-1">
-    <em><strong>Engenharia / Ferramentaria</strong> — assinatura disponível na última página</em>
-  </td>
-</tr>
-
-
-
-
-      
-
+        <td colspan="6" class="text-start px-2 py-1">
+          <em><strong>Engenharia / Ferramentaria</strong> — assinatura disponível na última página</em>
+        </td>
+      </tr>
     </tbody>
-
   </table>
-
+{% empty %}
+  <div class="border rounded p-3 bg-light text-center mb-3">
+    <i class="bi bi-tools me-1 text-muted"></i>
+    <em>Nenhuma ferramenta ou dispositivo está vinculado a este pré-cálculo no momento.</em>
+  </div>
 {% endfor %}
+
 
 <div class="page-break"></div>
 

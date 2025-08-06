@@ -113,7 +113,8 @@
 {{ roteiro_data|default_if_none:"{}"|json_script:"roteiro-data" }}
 
 {# Inclui os dois modais apenas uma vez, fora do template JS #}
-{% include "roteiros/_modais_roteiro.html" with insumos=insumos_data maquinas=maquinas_data %}
+{% include "roteiros/_modal_insumo.html" with insumos=insumos_data %}
+{% include "roteiros/_modal_propriedades.html" with maquinas=maquinas_data ferramentas=ferramentas_data servicos=servicos segurancas=segurancas %}
 
 <script>
 if (!window.roteiroScriptRegistrado) {
@@ -136,7 +137,6 @@ if (!window.roteiroScriptRegistrado) {
 
     let etapaIndex = 0;
     const container = document.getElementById("etapas-container");
-
 
     function criarEtapa(index, data = null) {
       const div = document.createElement("div");
@@ -180,10 +180,10 @@ if (!window.roteiroScriptRegistrado) {
             <input type="number" step="0.01" min="0" class="form-control" name="etapas[${index}][setup_minutos]">
           </div>
           <div class="col-md-2 d-flex align-items-end justify-content-between gap-1">
-            <button type="button" class="btn btn-sm btn-info w-100 btn-add-insumo" data-bs-toggle="modal" data-bs-target="#modalInsumo" title="Adicionar Insumo">
+            <button type="button" class="btn btn-sm btn-info w-100 btn-add-insumo" title="Adicionar Insumo">
               <i class="bi bi-box-seam"></i>
             </button>
-            <button type="button" class="btn btn-sm btn-secondary w-100 btn-add-propriedades" data-bs-toggle="modal" data-bs-target="#modalPropriedades" title="Adicionar Propriedades">
+            <button type="button" class="btn btn-sm btn-secondary w-100 btn-add-propriedades" title="Adicionar Propriedades">
               <i class="bi bi-gear"></i>
             </button>
           </div>
@@ -216,15 +216,35 @@ if (!window.roteiroScriptRegistrado) {
 
         const ulI = div.querySelector(".lista-insumos");
         data.insumos.forEach(ins => {
+          // encontra dados do insumo
           const mat = insumosData.find(i => i.id == ins.materia_prima_id);
-          const txt = mat ? `${mat.codigo} – ${mat.descricao}` : ins.materia_prima_id;
+          const txt = mat
+            ? `${mat.codigo} – ${mat.descricao}`
+            : ins.materia_prima_id;
+
+          // normaliza e formata valores numéricos
+          const dev = parseFloat(ins.desenvolvido) || 0;
+          const liq = parseFloat(ins.peso_liquido)  || 0;
+          const bru = parseFloat(ins.peso_bruto)    || 0;
+
           ulI.insertAdjacentHTML("beforeend", `
             <li class="list-group-item d-flex justify-content-between align-items-center small">
-              <span><strong>${txt}</strong> — ${ins.quantidade} / ${ins.tipo_insumo} / ${ins.obrigatorio ? "Obrigatório" : "Opcional"}</span>
-              <button type="button" class="btn btn-sm btn-outline-danger remover-insumo"><i class="bi bi-x-circle"></i></button>
+              <span>
+                <strong>${txt}</strong> — 
+                ${ins.tipo_insumo} / 
+                ${ins.obrigatorio ? "Obrigatório" : "Opcional"} / 
+                Desenvolvido: ${dev.toFixed(3)} mm / 
+                Líq: ${liq.toFixed(3)} kg / 
+                Bruto: ${bru.toFixed(3)} kg
+              </span>
+              <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+                <i class="bi bi-x-circle"></i>
+              </button>
             </li>
           `);
-        });
+
+        }); // fecha apenas o forEach
+
 
         const ulP = div.querySelector(".lista-propriedades");
         if (data.propriedades?.nome_acao) {
@@ -246,8 +266,6 @@ if (!window.roteiroScriptRegistrado) {
       return div;
     }
 
-  
-
     function adicionarEtapa() {
       container.appendChild(criarEtapa(etapaIndex));
       etapaIndex++;
@@ -268,39 +286,83 @@ if (!window.roteiroScriptRegistrado) {
       const etapaDiv = e.target.closest(".etapa-form");
       if (!etapaDiv) return;
 
+      // Remover etapa
       if (e.target.closest(".remover-etapa")) {
         etapaDiv.classList.add("etapa-removida");
         etapaDiv.style.display = "none";
         return;
       }
 
+      // Adicionar/Editar Insumo
       if (e.target.closest(".btn-add-insumo")) {
         window.etapaAtiva = etapaDiv;
+        const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
+        const insumos = data.insumos || [];
+        const modalInsumo = document.getElementById("modalInsumo");
+
+        if (insumos.length > 0) {
+          const lastIndex = insumos.length - 1;
+          const insumo = insumos[lastIndex];
+          modalInsumo.querySelector('select[name="insumo"]').value = insumo.materia_prima_id;
+          $(modalInsumo.querySelector('select[name="insumo"]')).trigger('change');
+          modalInsumo.querySelector('input[name="peso_liquido"]').value   = insumo.peso_liquido || "";
+          modalInsumo.querySelector('input[name="peso_bruto"]').value     = insumo.peso_bruto   || "";
+          modalInsumo.querySelector('input[name="desenvolvido"]').value   = insumo.desenvolvido  || "";
+          modalInsumo.querySelector('select[name="tipo_insumo"]').value   = insumo.tipo_insumo   || "matéria_prima";
+          modalInsumo.querySelector('input[name="obrigatorio"]').checked  = !!insumo.obrigatorio;
+          modalInsumo.dataset.index = lastIndex;
+        } else {
+          modalInsumo.querySelector('select[name="insumo"]').value = "";
+          $(modalInsumo.querySelector('select[name="insumo"]')).trigger('change');
+          modalInsumo.querySelector('input[name="peso_liquido"]').value   = "";
+          modalInsumo.querySelector('input[name="peso_bruto"]').value     = "";
+          modalInsumo.querySelector('input[name="desenvolvido"]').value   = "";
+          modalInsumo.querySelector('select[name="tipo_insumo"]').value   = "matéria_prima";
+          modalInsumo.querySelector('input[name="obrigatorio"]').checked  = false;
+          delete modalInsumo.dataset.index;
+        }
+
+        new bootstrap.Modal(modalInsumo).show();
+        return;
       }
 
+      // Adicionar/Editar Propriedades
       if (e.target.closest(".btn-add-propriedades")) {
         window.etapaAtiva = etapaDiv;
         const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
         const props = data.propriedades || {};
-        const modal = document.getElementById("modalPropriedades");
+        const modalP = document.getElementById("modalPropriedades");
 
-        modal.querySelector('select[name="nome_acao"]').value = props.nome_acao_id || "";
-        const maquinasSel = modal.querySelector('select[name="maquinas"]');
-        if (props.maquinas?.length) {
-          Array.from(maquinasSel.options).forEach(opt => {
-            opt.selected = props.maquinas.some(m => m.id == opt.value);
-          });
-        } else {
-          maquinasSel.value = null;
-        }
-        modal.querySelector('select[name="ferramenta"]').value = props.ferramenta?.id || "";
+        // Nome da Ação
+        const selectAcao = modalP.querySelector('select[name="nome_acao"]');
+        selectAcao.value = props.nome_acao_id || "";
+        $(selectAcao).trigger("change");
+
+        // Descrição Detalhada
+        modalP.querySelector('textarea[name="descricao_detalhada"]').value = props.descricao_detalhada || "";
+
+        // Máquinas
+        const selectMaquinas = modalP.querySelector('select[name="maquinas"]');
+        const maquinasSelecionadas = (props.maquinas || []).map(m => m.id);
+        $(selectMaquinas).val(maquinasSelecionadas).trigger("change");
+
+        // Ferramenta
+        const selectFerramenta = modalP.querySelector('select[name="ferramenta"]');
+        selectFerramenta.value = props.ferramenta?.id || "";
+        $(selectFerramenta).trigger("change");
+
+        // Segurança
         ["mp", "ts", "m1", "l1", "l2"].forEach(sigla => {
-          modal.querySelector(`input[name="seguranca_${sigla}"]`).checked = !!props[`seguranca_${sigla}`];
+          const input = modalP.querySelector(`input[name="seguranca_${sigla}"]`);
+          if (input) input.checked = !!props[`seguranca_${sigla}`];
         });
-        modal.querySelector('textarea[name="descricao_detalhada"]').value = props.descricao_detalhada || "";
-        $(modal).find("select.select2").trigger("change");
+
+        new bootstrap.Modal(modalP).show();
+        return;
       }
 
+
+      // Remover Insumo
       if (e.target.closest(".remover-insumo")) {
         const li = e.target.closest("li");
         const idx = Array.from(li.parentNode.children).indexOf(li);
@@ -313,20 +375,20 @@ if (!window.roteiroScriptRegistrado) {
 
     document.getElementById("roteiroForm").addEventListener("submit", function (e) {
       e.preventDefault();
-
       const form = this;
       const payload = {
         item: document.querySelector('[name="item"]').value,
         etapas: []
       };
 
-      const etapaDivs = Array.from(container.querySelectorAll(".etapa-form")).filter(div => !div.classList.contains("etapa-removida"));
+      const etapaDivs = Array.from(container.querySelectorAll(".etapa-form"))
+        .filter(div => !div.classList.contains("etapa-removida"));
 
-      etapaDivs.forEach((div) => {
+      etapaDivs.forEach(div => {
         const data = JSON.parse(div.querySelector(".dados-etapa").value);
         data.etapa = div.querySelector('input[name^="etapas"][name$="[etapa]"]').value;
         data.setor = div.querySelector('select[name^="etapas"][name$="[setor]"]').value;
-        data.pph = div.querySelector('input[name^="etapas"][name$="[pph]"]').value;
+        data.pph   = div.querySelector('input[name^="etapas"][name$="[pph]"]').value;
         data.setup_minutos = div.querySelector('input[name^="etapas"][name$="[setup_minutos]"]').value.replace(",", ".");
         payload.etapas.push(data);
       });
@@ -337,6 +399,7 @@ if (!window.roteiroScriptRegistrado) {
   });
 }
 </script>
+
 
 
 

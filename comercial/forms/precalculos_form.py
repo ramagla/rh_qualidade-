@@ -163,7 +163,8 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
         
         campos = [
             'lote_minimo', 'entrega_dias', 'fornecedor', 'icms', 'preco_kg',
-            'desenvolvido_mm', 'peso_liquido', 'peso_bruto', 'peso_bruto_total'
+            'desenvolvido_mm', 'peso_liquido', 'peso_bruto', 'peso_liquido_total'
+
         ]
         for campo in campos:
             if campo in self.fields:
@@ -176,10 +177,10 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
                 self.fields[campo].widget.attrs.update({'class': css_class})
                 self.fields[campo].required = False
 
-        if 'peso_bruto_total' in self.fields:
-            self.fields['peso_bruto_total'].widget = TextInput(
+        if 'peso_liquido_total' in self.fields:
+            self.fields['peso_liquido_total'].widget = TextInput(
                 attrs={
-                    'class': 'form-control form-control-sm text-end peso-bruto-total',
+                    'class': 'form-control form-control-sm text-end peso-liquido-total',
                     'readonly': 'readonly',
                 }
             )
@@ -191,16 +192,21 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
                 }
             )
 
-        if self.instance and self.instance.pk:
-            for campo in ['peso_liquido', 'peso_bruto', 'peso_bruto_total', 'desenvolvido_mm']:
-                valor = getattr(self.instance, campo, None)
-                if isinstance(valor, Decimal):
-                    self.initial[campo] = f"{valor:.3f}"
+        print(f"[DEBUG] Form init - PK: {self.instance.pk}, Bound: {self.is_bound}")
+        for campo in ['peso_liquido', 'peso_bruto', 'desenvolvido_mm', 'peso_liquido_total']:
+            if campo in self.fields:
+                self.fields[campo].widget = TextInput(attrs={
+                    'class': 'form-control form-control-sm',
+                    'placeholder': '0,0000000'
+                })
+
+
+
 
     def has_changed(self):
         changed = super().has_changed()
-        peso_bruto_total_str = self.data.get(self.add_prefix("peso_bruto_total"), "").strip()
-        if not changed and peso_bruto_total_str and peso_bruto_total_str != "0,000":
+        peso_liquido_total_str = self.data.get(self.add_prefix("peso_liquido_total"), "").strip()
+        if not changed and peso_liquido_total_str and peso_liquido_total_str != "0,00000":
             return True
         return changed
 
@@ -209,8 +215,9 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
 
         campos_decimal = [
             'lote_minimo', 'entrega_dias', 'icms', 'preco_kg',
-            'peso_liquido', 'peso_bruto', 'peso_bruto_total', 'desenvolvido_mm'
+            'peso_liquido', 'peso_bruto', 'peso_liquido_total', 'desenvolvido_mm'
         ]
+
 
         for campo in campos_decimal:
             valor = cleaned_data.get(campo)

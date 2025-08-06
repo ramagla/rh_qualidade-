@@ -1,0 +1,100 @@
+<!-- Modal de Cadastro de Serviços -->
+<div class="modal fade" id="modalCadastroServicos" tabindex="-1" aria-labelledby="modalCadastroServicosLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="modalCadastroServicosLabel">
+          <i class="bi bi-list-task me-2"></i> Cadastro de Serviços
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-bordered table-sm align-middle text-center">
+          <thead class="table-light">
+            <tr>
+              <th>Nome</th>
+              <th style="width: 160px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="lista-servicos">
+            {% for s in servicos %}
+            <tr>
+              <td><input type="text" class="form-control form-control-sm" value="{{ s.nome }}"></td>
+              <td>
+                <button class="btn btn-sm btn-primary btn-editar-servico" data-id="{{ s.id }}"><i class="bi bi-pencil-square"></i></button>
+                <button class="btn btn-sm btn-danger btn-excluir-servico" data-id="{{ s.id }}"><i class="bi bi-trash3"></i></button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="2" class="text-center text-muted">Nenhum serviço cadastrado.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="text-end">
+          <button class="btn btn-outline-success btn-sm" id="btnAdicionarServico">
+            <i class="bi bi-plus-circle"></i> Adicionar Serviço
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const botaoAdicionar = document.getElementById("btnAdicionarServico");
+  const tabelaServicos = document.getElementById("lista-servicos");
+  const selectNomeAcao = document.querySelector('select[name="nome_acao"]');
+
+  if (botaoAdicionar) {
+    botaoAdicionar.addEventListener("click", function () {
+      const nomeServico = prompt("Digite o nome do novo serviço:");
+      if (!nomeServico || nomeServico.trim() === "") return;
+
+      fetch("{% url 'tecnico:ajax_adicionar_servico' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+        },
+        body: JSON.stringify({ nome: nomeServico.trim() })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Erro ao adicionar serviço");
+        return res.json();
+      })
+      .then(data => {
+        // ✅ Adiciona na tabela
+        const novaLinha = document.createElement("tr");
+        novaLinha.innerHTML = `
+          <td><input type="text" class="form-control form-control-sm" value="${data.nome}"></td>
+          <td>
+            <button class="btn btn-sm btn-primary btn-editar-servico" data-id="${data.id}">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-sm btn-danger btn-excluir-servico" data-id="${data.id}">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </td>
+        `;
+        tabelaServicos.appendChild(novaLinha);
+
+        // ✅ Adiciona no select da modal de propriedades
+        if (selectNomeAcao) {
+          const option = new Option(data.nome, data.id, false, true);
+          selectNomeAcao.add(option);
+          $(selectNomeAcao).trigger("change");  // Se estiver usando Select2
+        }
+
+        // ✅ Feedback
+        alert("Serviço cadastrado com sucesso!");
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Erro ao cadastrar serviço.");
+      });
+    });
+  }
+});
+</script>

@@ -158,7 +158,7 @@
         <div><i class="bi bi-clock-history me-1 text-secondary"></i><strong>Entrega:</strong> {{ mat.entrega_dias|default:"—" }} dias</div>
         <div><i class="bi bi-boxes me-1 text-secondary"></i><strong>Lote mín.:</strong> {{ mat.lote_minimo|default:"—" }}</div>
         <div><i class="bi bi-droplet-half me-1 text-secondary"></i><strong>Peso líquido unitário (Kg):</strong> {{ mat.peso_liquido|floatformat:"6" }}</div>
-<div><i class="bi bi-droplet-fill me-1 text-secondary"></i><strong>Peso líquido total (Kg):</strong> {{ mat.peso_liquido_total|floatformat:"6" }}</div>
+        <div><i class="bi bi-droplet-fill me-1 text-secondary"></i><strong>Peso líquido total (Kg):</strong> {{ mat.peso_liquido_total|floatformat:"6" }}</div>
       </div>
   
       <!-- 💰 Valores -->
@@ -227,11 +227,17 @@
                   {% with preco_sem_icms=preco_kg|subtrair_percentual:icms %}
                     <tr>
                       <td>{{ s.nome_insumo|default:"—" }}</td>
-                      <td>{{ s.fornecedor|default:"—" }}</td>
+                      <td>
+                        {% if s.fornecedor %}
+                          {{ s.fornecedor }}
+                        {% else %}
+                          <span class="text-muted fst-italic">Bras-Mol (interno)</span>
+                        {% endif %}
+                      </td>
                       <td>{{ s.entrega_dias|default:"—" }}</td>
                       <td>{{ s.icms|default:"0"|floatformat:0 }}</td>
                       <td>{{ s.peso_liquido|floatformat:7 }}</td>
-                      <td>{{ s.peso_bruto_total|floatformat:2 }}</td>
+                      <td>{{ s.peso_liquido_total|floatformat:2 }}</td>
                       <td>R$ {{ preco_kg|floatformat:4 }}</td>
                       <td>R$ {{ preco_kg|mul:peso|floatformat:2 }}</td>
                       <td>R$ {{ preco_sem_icms|mul:peso|floatformat:2 }}</td>
@@ -284,7 +290,13 @@
             {% for linha in roteiro_calculado %}
               <tr>
                 <td>{{ linha.etapa.etapa }}</td>
-                <td>{{ linha.etapa.maquinas_roteiro|default:"—" }}</td>
+                <td>
+                  {% if linha.etapa.maquinas_roteiro %}
+                    {{ linha.etapa.maquinas_roteiro }}
+                  {% else %}
+                    <span class="text-muted fst-italic">Operação manual</span>
+                  {% endif %}
+                </td>
                 <td>{{ linha.etapa.nome_acao|default:"—" }}</td>
                 <td>R$ {{ linha.etapa.custo_hora|floatformat:4 }}</td>
                 <td>{{ linha.etapa.setup_minutos }}</td>

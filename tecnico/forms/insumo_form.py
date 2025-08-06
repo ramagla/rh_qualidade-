@@ -5,12 +5,12 @@ from django.forms import Select, NumberInput, CheckboxInput
 class InsumoForm(forms.ModelForm):
     class Meta:
         model = InsumoEtapa
-        fields = ['materia_prima', 'quantidade', 'tipo_insumo', 'obrigatorio']
+        fields = ['materia_prima', 'tipo_insumo', 'obrigatorio', 'desenvolvido', 'peso_liquido', 'peso_bruto']
         widgets = {
-            'insumo': Select(attrs={'class': 'form-select select2'}),
-            'quantidade': NumberInput(attrs={'class': 'form-control', 'step': '0.000001'}),
+            'materia_prima': Select(attrs={'class': 'form-select select2'}),
             'tipo_insumo': Select(attrs={'class': 'form-select'}),
             'obrigatorio': CheckboxInput(attrs={'class': 'form-check-input'}),
-            'materia_prima': Select(attrs={'class': 'form-select select2'}),
-
+            'desenvolvido': NumberInput(attrs={'class': 'form-control', 'step': '0.0000001'}),
+            'peso_liquido': NumberInput(attrs={'class': 'form-control', 'step': '0.0000001'}),
+            'peso_bruto': NumberInput(attrs={'class': 'form-control', 'step': '0.0000001'}),
         }

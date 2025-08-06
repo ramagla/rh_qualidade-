@@ -47,10 +47,11 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
                                 nome_materia_prima=mp.codigo,
                                 descricao=getattr(mp, 'descricao', ''),
                                 tipo_material=getattr(mp, 'tipo_material', ''),
-                                desenvolvido_mm=Decimal("0.0000000"),
-                                peso_liquido=Decimal("0.0000000"),
-                                peso_bruto=Decimal("0.0000000"),
+                                desenvolvido_mm=insumo.desenvolvido or Decimal("0.0000000"),
+                                peso_liquido=insumo.peso_liquido or Decimal("0.0000000"),
+                                peso_bruto=insumo.peso_bruto or Decimal("0.0000000"),
                             )
+
                 precalc.refresh_from_db()
 
         except Exception as e:

@@ -856,6 +856,11 @@ def precificacao_produto(request, pk):
             preco_total = preco_kg * peso_total
             preco_total_sem_icms = preco_sem_icms * peso_total
             preco_total_lote_minimo = preco_sem_icms * lote_minimo
+
+            # 🟢 Calcular o peso líquido total dinamicamente
+            qtde = Decimal(getattr(precalc.analise_comercial_item, "qtde_estimada", 1) or 1)
+            material.peso_liquido_total = Decimal(material.peso_liquido or 0) * qtde
+
         except (InvalidOperation, TypeError):
             pass
 
@@ -864,7 +869,7 @@ def precificacao_produto(request, pk):
         try:
             preco_kg = Decimal(servico.preco_kg or 0)
             icms = Decimal(servico.icms or 0)
-            peso_total = Decimal(servico.peso_bruto_total or 0)
+            peso_total = Decimal(servico.peso_liquido or 0)
             lote_minimo = Decimal(servico.lote_minimo or 0)
 
             preco_sem_icms = preco_kg * (Decimal("1") - icms / 100)
@@ -930,7 +935,7 @@ def precificacao_produto(request, pk):
 
     # ——— Serviços
     total_servico = sum(
-        Decimal((s.peso_bruto_total or 0)) * Decimal((s.preco_kg or 0))
+    Decimal((s.peso_liquido_total or 0)) * Decimal((s.preco_kg or 0))
         for s in precalc.servicos.all()
     )
     unit_servico = total_servico / qtde if qtde else Decimal(0)

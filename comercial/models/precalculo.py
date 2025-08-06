@@ -97,7 +97,7 @@ class PreCalculo(models.Model):
         materiais = Decimal(mat.peso_bruto_total or 0) * Decimal(mat.preco_kg or 0) if mat else Decimal(0)
 
         servicos = sum(
-            Decimal(s.peso_bruto or 0) * Decimal(s.preco_kg or 0)
+            Decimal(s.peso_liquido or 0) * Decimal(s.preco_kg or 0)
             for s in self.servicos.filter(selecionado=True)
         )
 
@@ -165,7 +165,7 @@ class PreCalculo(models.Model):
         materiais = Decimal(mat.peso_bruto_total or 0) * Decimal(mat.preco_kg or 0) if mat else Decimal(0)
 
         servicos = sum(
-            Decimal(s.peso_bruto_total or 0) * Decimal(s.preco_kg or 0)
+            Decimal(s.peso_liquido_total or 0) * Decimal(s.preco_kg or 0)
             for s in self.servicos.filter(selecionado=True)
         )
 
@@ -243,7 +243,7 @@ class PreCalculo(models.Model):
 
     def custo_unitario_servicos_externos(self):
         total = sum(
-            Decimal((s.peso_bruto_total or 0)) * Decimal((s.preco_kg or 0))
+            Decimal((s.peso_liquido_total or 0)) * Decimal((s.preco_kg or 0))
             for s in self.servicos.filter(selecionado=True)
         )
         return total / self.qtde_estimada  # ✅ Sem parênteses
@@ -474,7 +474,7 @@ class PreCalculoServicoExterno(AuditModel):
     peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=20, decimal_places=7)
     preco_kg = models.DecimalField("Preço /kg", max_digits=12, decimal_places=4, null=True, blank=True)
     selecionado = models.BooleanField(default=False)
-    peso_bruto_total = models.DecimalField("Peso Bruto Total (kg)", max_digits=20, decimal_places=7, null=True, blank=True)
+    peso_liquido_total = models.DecimalField("Peso Líquido Total (kg)", max_digits=20, decimal_places=7, null=True, blank=True)
 
     status = models.CharField("Status da Cotação", max_length=20, choices=STATUS_CHOICES, default='aguardando')
 

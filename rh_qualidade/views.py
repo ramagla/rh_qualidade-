@@ -309,17 +309,17 @@ def home_geral(request):
     comunicados = Comunicado.objects.order_by("-data")[:4]
 
     # ⚙️ Última atualização
-    ultima_atualizacao = AtualizacaoSistema.objects.filter(status="concluido").order_by("-data_termino").first()
+    ultima_atualizacao_concluida = AtualizacaoSistema.objects.filter(status="concluido").order_by("-data_termino").first()
 
-    ultima_atualizacao_concluida = ultima_atualizacao
     proximas_atualizacoes = AtualizacaoSistema.objects.filter(status="em_andamento").order_by("previsao")
+
     historico_versoes = AtualizacaoSistema.objects.filter(status="concluido").exclude(
-        id=ultima_atualizacao.id if ultima_atualizacao else None
+        id=ultima_atualizacao_concluida.id if ultima_atualizacao_concluida else None
     ).order_by("-data_termino")
 
     data_atualizacao_formatada = None
-    if ultima_atualizacao and ultima_atualizacao.data_termino:
-        data = ultima_atualizacao.data_termino
+    if ultima_atualizacao_concluida and ultima_atualizacao_concluida.data_termino:
+        data = ultima_atualizacao_concluida.data_termino
         data_atualizacao_formatada = data.strftime("%d/%m/%Y %H:%M") if isinstance(data, datetime) else data.strftime("%d/%m/%Y")
 
     # 📨 Recados
@@ -400,7 +400,6 @@ def home_geral(request):
         "comunicados": comunicados,
         "recados_usuario": recados_usuario,
         "alertas_usuario": alertas_usuario,
-        "ultima_atualizacao": ultima_atualizacao,
         "ultima_atualizacao_concluida": ultima_atualizacao_concluida,
         "proximas_atualizacoes": proximas_atualizacoes,
         "historico_versoes": historico_versoes,

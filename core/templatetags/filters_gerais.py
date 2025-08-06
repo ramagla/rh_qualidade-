@@ -535,3 +535,22 @@ def getitem(obj, key):
         return obj[key]
     except (KeyError, AttributeError, TypeError):
         return None
+
+
+@register.filter(name="formatar_decimal")
+def formatar_decimal(valor, casas=4):
+    """
+    Formata um número decimal com separador de milhar e casas decimais definidas.
+    Exemplo: 12345.6789 → 12.345,6789 (com casas=4)
+    """
+    try:
+        casas = int(casas)
+        if valor is None or valor == "":
+            return "-"
+        valor = Decimal(valor)
+        partes = f"{valor:,.{casas}f}".split(".")
+        inteiro = partes[0].replace(",", ".")  # separador milhar vira ponto
+        decimal = partes[1]
+        return f"{inteiro},{decimal}"
+    except Exception:
+        return "-"

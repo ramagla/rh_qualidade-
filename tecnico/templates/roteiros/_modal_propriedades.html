@@ -1,0 +1,152 @@
+<!-- Modal de Propriedades -->
+  <div class="modal fade" id="modalPropriedades" tabindex="-1" aria-labelledby="modalPropriedadesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalPropriedadesLabel">
+            <i class="bi bi-gear-fill me-2"></i> Propriedades da Etapa
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" onclick="$('.modal-backdrop').remove();"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+  <label class="form-label">
+    <i class="bi bi-pencil-fill me-1 text-muted"></i> Nome da Ação:
+  </label>
+  <select class="form-select select2" name="nome_acao" data-dropdown-parent="#modalPropriedades">
+    <option value="">– Selecione –</option>
+    {% for servico in servicos %}
+      <option value="{{ servico.id }}">{{ servico.nome }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+            <div class="col-md-6">
+<label class="form-label">
+  <i class="bi bi-cpu-fill me-1 text-muted"></i> Máquinas Permitidas:
+</label>
+              <select class="form-select select2" multiple name="maquinas" data-dropdown-parent="#modalPropriedades">
+                {% for maquina in maquinas %}
+                  <option value="{{ maquina.id }}">{{ maquina.codigo }} – {{ maquina.nome }}</option>
+                {% endfor %}
+              </select>             
+              
+            </div>
+            <div class="col-md-6">
+<label class="form-label">
+  <i class="bi bi-tools me-1 text-muted"></i> Ferramenta:
+</label>
+              <select class="form-select select2" name="ferramenta" data-dropdown-parent="#modalPropriedades">
+                <option value="">– Selecione –</option>
+                {% for ferramenta in ferramentas %}
+                  <option value="{{ ferramenta.id }}">{{ ferramenta.codigo }} – {{ ferramenta.descricao }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-12 mt-3">
+  <label class="form-label fw-bold"><i class="bi bi-shield-lock me-1"></i> Características de Segurança:</label>
+</div>
+<div class="text-end mt-1">
+  <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalCadastroServicos">
+    <i class="bi bi-gear-fill me-1"></i> Gerenciar Serviços
+  </button>
+</div>
+
+{% for campo, label in segurancas %}
+  <div class="col-md-2">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" name="{{ campo }}">
+      <label class="form-check-label" for="{{ campo }}">{{ label }}</label>
+    </div>
+  </div>
+{% endfor %}
+
+
+
+            <div class="col-md-12">
+<label class="form-label">
+  <i class="bi bi-card-text me-1 text-muted"></i> Descrição Detalhada:
+</label>
+              <textarea class="form-control" rows="4" name="descricao_detalhada"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btnSalvarPropriedades">Salvar Propriedades</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modalPropriedades = document.getElementById("modalPropriedades");
+
+  // Salvar Propriedades
+  document.getElementById("btnSalvarPropriedades")?.addEventListener("click", () => {
+    const m = modalPropriedades;
+
+    const selNome = m.querySelector('select[name="nome_acao"]');
+    const nome_id = selNome.value;
+    const nome = selNome.querySelector(`option[value="${nome_id}"]`)?.textContent.trim() || "";
+
+    const descricao = m.querySelector('textarea[name="descricao_detalhada"]').value;
+
+    const maquinas = Array.from(m.querySelector('select[name="maquinas"]').selectedOptions)
+      .map(opt => ({
+        id: opt.value,
+        nome: opt.textContent.trim()
+      }));
+
+    const selFerramenta = m.querySelector('select[name="ferramenta"]');
+    const ferramenta_id = selFerramenta.value;
+    const ferramenta_texto = selFerramenta.options[selFerramenta.selectedIndex]?.text || "";
+
+    const seguranca = {};
+    ["mp", "ts", "m1", "l1", "l2"].forEach(sigla => {
+      const input = m.querySelector(`input[name="seguranca_${sigla}"]`);
+      seguranca[`seguranca_${sigla}`] = input?.checked || false;
+    });
+
+    const div = window.etapaAtiva;
+    if (!div) {
+      console.warn("⚠️ Nenhuma etapa ativa encontrada ao tentar salvar propriedades.");
+      return;
+    }
+
+    const hiddenInput = div.querySelector(".dados-etapa");
+    const dados = JSON.parse(hiddenInput.value);
+
+    dados.propriedades = {
+      nome_acao: nome,
+      nome_acao_id: nome_id,
+      descricao_detalhada: descricao,
+      maquinas,
+      ferramenta: { id: ferramenta_id, texto: ferramenta_texto },
+      ...seguranca
+    };
+
+    hiddenInput.value = JSON.stringify(dados);
+
+    const lista = div.querySelector(".lista-propriedades");
+    const resumoSeguranca = Object.keys(seguranca)
+      .filter(k => seguranca[k])
+      .map(k => k.replace("seguranca_", "").toUpperCase())
+      .join(", ");
+
+    lista.innerHTML = `
+      <li class="list-group-item small"><strong>Ação:</strong> ${nome}</li>
+      <li class="list-group-item small"><strong>Máquinas:</strong> ${maquinas.map(m => m.nome).join(", ")}</li>
+      <li class="list-group-item small"><strong>Descrição:</strong> ${descricao}</li>
+      ${ferramenta_texto ? `<li class="list-group-item small"><strong>Ferramenta:</strong> ${ferramenta_texto}</li>` : ""}
+      ${resumoSeguranca ? `<li class="list-group-item small"><strong>Segurança:</strong> ${resumoSeguranca}</li>` : ""}
+    `;
+
+    bootstrap.Modal.getInstance(m)?.hide();
+    document.querySelectorAll(".modal-backdrop").forEach(e => e.remove());
+  });
+});
+</script>
+{% include "roteiros/_lista_servicos.html" %}

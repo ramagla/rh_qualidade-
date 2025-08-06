@@ -31,6 +31,10 @@ class Settings(models.Model):
         default="rh@brasmol.com.br",
         verbose_name="E-mail"
     )
+    email_comprador = models.EmailField(
+    default="compras@brasmol.com.br",
+    verbose_name="E-mail Comprador"
+)
     cnpj = models.CharField(
         max_length=20,
         default="61.296.901/0002-48",
