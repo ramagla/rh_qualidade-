@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load basename %}
 
 {% block title %}{% if cliente %}Editar{% else %}Cadastrar{% endif %} Cliente{% endblock %}
 
@@ -64,125 +65,157 @@
         <div class="accordion" id="accordionCliente">
 
            <!-- Documentação do Cliente -->
-<div class="accordion-item">
-  <h2 class="accordion-header" id="headingDocumentacao">
-    <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse"
-      data-bs-target="#collapseDocumentacao" aria-expanded="true" aria-controls="collapseDocumentacao">
-      <i class="bi bi-folder me-2"></i> Documentação
-    </button>
-  </h2>
-  <div id="collapseDocumentacao" class="accordion-collapse collapse show" aria-labelledby="headingDocumentacao"
-    data-bs-parent="#accordionCliente">
-    <div class="accordion-body row g-3">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingDocumentacao">
+      <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse"
+        data-bs-target="#collapseDocumentacao" aria-expanded="true" aria-controls="collapseDocumentacao">
+        <i class="bi bi-folder me-2"></i> Documentação
+      </button>
+    </h2>
+    <div id="collapseDocumentacao" class="accordion-collapse collapse show" aria-labelledby="headingDocumentacao"
+      data-bs-parent="#accordionCliente">
+      <div class="accordion-body row g-3">
 
-      <!-- Tipo de Cadastro -->
-      <div class="col-md-4">
-        <label for="{{ form.tipo_cadastro.id_for_label }}" class="form-label">
-          <i class="bi bi-diagram-3-fill me-1"></i> Tipo de Cadastro: <span class="text-danger">*</span>
-        </label>
-        {{ form.tipo_cadastro|add_class:"form-select"|attr:"id:id_tipo_cadastro" }}
-      </div>
-
-      <!-- Legenda -->
-      <div class="col-12 text-end">
-        <small class="text-muted"><i class="bi bi-asterisk text-danger small"></i> Campos obrigatórios</small>
-      </div>
-
-      <!-- Logotipo -->
-      <div class="col-md-6">
-        <label for="logotipo" class="form-label">
-          <i class="bi bi-image me-1"></i> Logotipo:
-        </label>
-        <div class="input-group mb-3">
-          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_logotipo').click();">
-            <i class="bi bi-image"></i>
-          </button>
-          <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="logotipo_filename" readonly>
+        <!-- Tipo de Cadastro -->
+        <div class="col-md-4">
+          <label for="{{ form.tipo_cadastro.id_for_label }}" class="form-label">
+            <i class="bi bi-diagram-3-fill me-1"></i> Tipo de Cadastro: <span class="text-danger">*</span>
+          </label>
+          {{ form.tipo_cadastro|add_class:"form-select"|attr:"id:id_tipo_cadastro" }}
         </div>
-        <input type="file" id="id_logotipo" name="logotipo" style="display: none;" onchange="document.getElementById('logotipo_filename').value = this.files[0].name;">
-        {% if cliente and cliente.logotipo %}
-          <div class="mt-2 text-center">
-            <img src="{{ cliente.logotipo.url }}" alt="Logotipo do Cliente" style="max-width: 200px; height: auto;">
+
+        <!-- Legenda -->
+        <div class="col-12 text-end">
+          <small class="text-muted"><i class="bi bi-asterisk text-danger small"></i> Campos obrigatórios</small>
+        </div>
+
+        <!-- Logotipo -->
+        <div class="col-md-6">
+          <label for="logotipo" class="form-label">
+            <i class="bi bi-image me-1"></i> Logotipo:
+          </label>
+          <div class="input-group mb-3">
+            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_logotipo').click();">
+              <i class="bi bi-image"></i>
+            </button>
+            <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="logotipo_filename" readonly>
           </div>
-        {% endif %}
-      </div>
+          <input type="file" id="id_logotipo" name="logotipo" style="display: none;" onchange="document.getElementById('logotipo_filename').value = this.files[0].name;">
+          {% if cliente and cliente.logotipo %}
+            <div class="mt-2 text-center">
+              <img src="{{ cliente.logotipo.url }}" alt="Logotipo do Cliente" style="max-width: 200px; height: auto;">
+            </div>
+          {% endif %}
+        </div>
 
-      <!-- Documentos (formset) -->
-      <div class="col-12">
-        <label class="form-label">
-          <i class="bi bi-files me-1"></i> Documentos:
-        </label>
 
-        {{ formset.management_form }}
-
-<div id="formset-documentos" class="row g-3">
-  {% for form_doc in formset %}
-    {{ form_doc.id }}  {# <-- ESSENCIAL #}
-    <div class="documento-form row g-3">
-      <div class="col-md-4">
-        <label class="form-label">Tipo:</label>
-        {{ form_doc.tipo|add_class:"form-select mb-2" }}
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Arquivo:</label>
-        {{ form_doc.arquivo|add_class:"form-control mb-2" }}
-      </div>
-      <div class="col-md-2 d-flex align-items-end">
-        {% if form_doc.instance.pk %}
-          <label class="form-check-label me-2">Excluir:</label>
-          {{ form_doc.DELETE }}
-        {% else %}
-          <button type="button" class="btn btn-danger btn-sm remover-documento">
-            <i class="bi bi-trash"></i>
-          </button>
-        {% endif %}
-      </div>
-      <hr class="my-2">
-    </div>
-  {% endfor %}
+<div class="alert alert-info d-flex flex-column gap-2 small mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-info-circle-fill"></i>
+    Formatos permitidos: PDF, JPEG, PNG, GIF. Tamanho máximo: 5 MB.
+  </div>
 </div>
 
 
+        <!-- Documentos (formset) -->
+        <div id="formset-documentos" class="row g-3">
+          {{ formset.management_form }}
+          {% for form_doc in formset %}
+            {{ form_doc.id }}
+            <div class="col-md-6 documento-form">
+              <div class="border rounded p-3 bg-light h-100 d-flex flex-column justify-content-between">
+                <div class="mb-2">
+                  <label class="form-label fw-semibold">
+                    <i class="bi bi-diagram-3 text-primary me-1"></i> Tipo:
+                  </label>
+                  {{ form_doc.tipo|add_class:"form-select" }}
+                </div>
+
+                <div>
+                  <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-paperclip text-primary"></i>
+                    Anexo do Documento (opcional)
+                  </label>
+
+                  {% if form_doc.instance and form_doc.instance.arquivo %}
+                    <div class="d-flex justify-content-between align-items-center bg-white border rounded px-3 py-2 mb-3">
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-text text-muted"></i>
+                        <a href="{{ form_doc.instance.arquivo.url }}" target="_blank" class="link-primary text-truncate" style="max-width: 300px;">
+                          {{ form_doc.instance.arquivo.name|basename }}
+                        </a>
+                      </div>
+                      <button type="button" class="btn btn-outline-danger btn-sm remover-documento">
+                        <i class="bi bi-trash"></i> Excluir
+                      </button>
+                      <input type="hidden" name="form-{{ forloop.counter0 }}-DELETE" class="form-delete-hidden" value="0">
+                    </div>
+                  {% endif %}
+
+                  {{ form_doc.arquivo|add_class:"form-control" }}
+                  <small class="text-muted d-block mt-1">Nenhum arquivo selecionado.</small>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
         <!-- Botão de adicionar documento -->
-        <div class="mt-2">
+        <div class="col-12 mt-2">
           <button type="button" class="btn btn-outline-primary btn-sm" id="adicionarDocumento">
             <i class="bi bi-plus-circle me-1"></i> Adicionar Documento
           </button>
         </div>
 
-        <!-- Template oculto para novos documentos -->
-<div id="template-documento" class="d-none">
-  <div class="documento-form row align-items-end g-3">
-    <div class="col-md-4">
-      <label class="form-label">Tipo:</label>
-      <select name="__prefix__-tipo" class="form-select mb-2">
-        {% for val, label in formset.empty_form.fields.tipo.choices %}
-          <option value="{{ val }}">{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col-md-6">
-      <label class="form-label">Arquivo:</label>
-      <input type="file" name="__prefix__-arquivo" class="form-control mb-2">
-    </div>
-    <div class="col-md-2 text-end">
-      <button type="button" class="btn btn-danger btn-sm mt-2 remover-documento">
-        <i class="bi bi-trash"></i>
-      </button>
-    </div>
-  </div>
-  <hr class="my-2">
-</div>
+        <!-- Template oculto -->
+        <div id="template-documento" class="d-none">
+          <div class="col-md-6 documento-form">
+            <div class="border rounded p-3 bg-light h-100 d-flex flex-column justify-content-between">
+              <div class="mb-2">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-diagram-3 text-primary me-1"></i> Tipo:
+                </label>
+                <select name="__prefix__-tipo" class="form-select">
+                  {% for val, label in formset.empty_form.fields.tipo.choices %}
+                    <option value="{{ val }}">{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
 
+              <div>
+                <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+                  <i class="bi bi-paperclip text-primary"></i>
+                  Anexo do Documento (opcional)
+                </label>
+                <input type="file" name="__prefix__-arquivo" class="form-control mb-1">
+                <small class="text-muted d-block mt-1">Nenhum arquivo selecionado.</small>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>
   </div>
-</div>
+      
 
-  
+    <script>
+    document.addEventListener("click", function (e) {
+      if (e.target.closest(".remover-documento")) {
+        const linha = e.target.closest(".documento-form");
+        const inputDelete = linha.querySelector("input[type='hidden'][name$='-DELETE']");
+        if (inputDelete) {
+          inputDelete.value = "on";
+          linha.style.display = "none";
+        } else {
+          linha.remove(); // linha recém-adicionada
+        }
+      }
+    });
+  </script>
 
-            <!-- Dados do Cliente -->
+
+<!-- Dados do Cliente -->
 <div class="accordion-item">
     <h2 class="accordion-header" id="headingDadosCliente">
         <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDadosCliente" aria-expanded="false" aria-controls="collapseDadosCliente">
@@ -342,20 +375,8 @@
       </div>
     </div>
   </div>
-  <script>
-    $(document).ready(function () {
-      $('#id_telefone_contato').mask('(00) 0000-00009');
-      $('#id_telefone_contato').blur(function () {
-        var phone = $(this).val().replace(/\D/g, '');
-        $(this).unmask();
-        if (phone.length > 10) {
-          $(this).mask('(00) 00000-0000');
-        } else {
-          $(this).mask('(00) 0000-00009');
-        }
-      });
-    });
-  </script>
+  
+
   
   
           <!-- Transportadora -->
@@ -470,57 +491,26 @@
     </form>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // === MÁSCARAS ===
+    // Máscaras
     $('#id_cnpj').mask('00.000.000/0000-00');
     $('#id_cep').mask('00000-000');
     $('#id_ie').mask('000.000.000.000');
-    $('#id_telefone, #id_telefone_contato').mask('(00) 0000-00009');
+    $('#id_telefone_contato').mask('(00) 0000-00009');
 
-    $('#id_telefone, #id_telefone_contato').on('blur', function () {
+    $('#id_telefone_contato').on('blur', function () {
       const phone = $(this).val().replace(/\D/g, '');
-      $(this).unmask().mask(phone.length > 10 ? '(00) 00000-0000' : '(00) 0000-00009');
+      $(this).unmask().mask(
+        phone.length > 10 ? '(00) 00000-0000' : '(00) 0000-00009'
+      );
     });
 
-    // === MOSTRAR/OCULTAR CAMPOS COM BASE NO TIPO DE CADASTRO ===
-    function toggleCamposPorTipoCadastro() {
-      const tipoCadastro = $('#id_tipo_cadastro').val();
-
-      // Exibir/esconder campo de coleta e transportadora
-      if (tipoCadastro === 'Transportadora') {
-        $('#headingTransportadora').closest('.accordion-item').hide();
-        $('#campo_coleta').show();
-      } else {
-        $('#headingTransportadora').closest('.accordion-item').show();
-        $('#campo_coleta').hide();
-        $('#id_coleta').prop('checked', false);
-      }
-
-      // Mostrar ou ocultar campos comerciais
-      if (tipoCadastro === 'Transportadora') {
-        document.querySelectorAll(".grupo-comercial").forEach(el => el.style.display = "none");
-      } else {
-        document.querySelectorAll(".grupo-comercial").forEach(el => el.style.display = "block");
-      }
-
-      // Título
-      const titulo = document.getElementById("dadosClienteTitulo");
-      titulo.innerText = tipoCadastro === "Transportadora"
-        ? "Dados da Transportadora"
-        : "Dados do Cliente";
-    }
-
-    toggleCamposPorTipoCadastro();
-    $('#id_tipo_cadastro').on('change', toggleCamposPorTipoCadastro);
-
-    // === ALERTA E MENSAGEM ===
+    // Função de mensagem
     function showMessage(message) {
       const box = document.getElementById("messageBox");
       const text = document.getElementById("messageText");
@@ -529,128 +519,98 @@
       setTimeout(() => box.classList.add("hidden"), 5000);
     }
 
-    // === BUSCAR DADOS CNPJ ===
+    // Buscar CNPJ
     window.buscarCNPJ = function () {
-  const input = document.getElementById("id_cnpj");
-  const cnpj = input.value.replace(/\D/g, "");
-  const alerta = document.getElementById("cnpjExistenteAlerta");
-  const clienteId = "{{ cliente.id|default:0 }}";
+      const input = document.getElementById("id_cnpj");
+      const cnpj = input.value.replace(/\D/g, "");
+      const alerta = document.getElementById("cnpjExistenteAlerta");
+      const clienteId = "{{ cliente.id|default:0 }}";
 
-  alerta.style.display = "none";
-  showMessage(""); // limpa mensagem
+      alerta.style.display = "none";
+      showMessage("");
 
-  if (cnpj.length !== 14) {
-    showMessage("CNPJ inválido! Por favor, insira 14 dígitos.");
-    return;
-  }
-
-  // Verifica duplicidade
-  fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}&cliente_id=${clienteId}`)
-    .then(resp => resp.json())
-    .then(data => {
-      if (data.existe) {
-        alerta.style.display = "block";
-        input.dataset.cadastrado = "true";
-      } else {
-        alerta.style.display = "none";
-        input.dataset.cadastrado = "false";
+      if (cnpj.length !== 14) {
+        showMessage("CNPJ inválido! Por favor, insira 14 dígitos.");
+        return;
       }
-    });
 
-  // Requisição à BrasilAPI...
-  fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
-    .then(response => {
-      if (!response.ok) {
-        return response.json().then(errorData => {
-          throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+      // Verifica duplicidade
+      fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}&cliente_id=${clienteId}`)
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.existe) {
+            alerta.style.display = "block";
+            input.dataset.cadastrado = "true";
+          } else {
+            alerta.style.display = "none";
+            input.dataset.cadastrado = "false";
+          }
         });
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (data.razao_social) {
-        document.getElementById("id_razao_social").value = data.razao_social || "";
-        document.getElementById("id_endereco").value = (data.descricao_tipo_de_logradouro || "") + " " + (data.logradouro || "");
-        document.getElementById("id_numero").value = data.numero || "";
-        document.getElementById("id_complemento").value = data.complemento || "";
-        document.getElementById("id_bairro").value = data.bairro || "";
-        document.getElementById("id_cidade").value = data.municipio || "";
-        document.getElementById("id_cep").value = data.cep || "";
-        document.getElementById("id_uf").value = data.uf || "";
-        document.getElementById("id_ie").value = data.inscricoes_estaduais?.[0]?.numero || "";
-      } else {
-        showMessage("CNPJ não encontrado ou inválido.");
-      }
-    })
-    .catch(error => {
-      console.error("Erro ao buscar CNPJ:", error);
-      showMessage(`Erro ao buscar CNPJ: ${error.message}`);
-    });
-};
 
+      // Consulta BrasilAPI
+      fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(err => {
+              throw new Error(err.message || `Erro HTTP: ${response.status}`);
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.razao_social) {
+            document.getElementById("id_razao_social").value = data.razao_social || "";
+            document.getElementById("id_endereco").value =
+              (data.descricao_tipo_de_logradouro || "") + " " + (data.logradouro || "");
+            document.getElementById("id_numero").value = data.numero || "";
+            document.getElementById("id_complemento").value = data.complemento || "";
+            document.getElementById("id_bairro").value = data.bairro || "";
+            document.getElementById("id_cidade").value = data.municipio || "";
+            document.getElementById("id_cep").value = data.cep || "";
+            document.getElementById("id_uf").value = data.uf || "";
+            document.getElementById("id_ie").value = data.inscricoes_estaduais?.[0]?.numero || "";
+          } else {
+            showMessage("CNPJ não encontrado ou inválido.");
+          }
+        })
+        .catch(error => {
+          console.error("Erro ao buscar CNPJ:", error);
+          showMessage(`Erro ao buscar CNPJ: ${error.message}`);
+        });
+    };
 
-    // === VERIFICAR CNPJ AO SAIR DO CAMPO ===
+    // Verificação ao sair do campo
     const inputCNPJ = document.getElementById("id_cnpj");
     const alerta = document.getElementById("cnpjExistenteAlerta");
     const form = document.getElementById("clienteForm");
 
     inputCNPJ.addEventListener("blur", () => {
-  const cnpj = inputCNPJ.value.replace(/\D/g, "");
-  const clienteId = "{{ cliente.id|default:0 }}";
-
-  if (cnpj.length === 14) {
-    fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}&cliente_id=${clienteId}`)
-      .then(resp => resp.json())
-      .then(data => {
-        if (data.existe) {
-          alerta.style.display = "block";
-          inputCNPJ.dataset.cadastrado = "true";
-        } else {
-          alerta.style.display = "none";
-          inputCNPJ.dataset.cadastrado = "false";
-        }
-      });
-  }
-});
-
-
-    form.addEventListener("submit", (e) => {
-  if (inputCNPJ.dataset.cadastrado === "true") {
-    e.preventDefault();
-    alerta.scrollIntoView({ behavior: "smooth" });
-  }
-});
-
-
-    // === ADIÇÃO DINÂMICA DE DOCUMENTOS ===
-    const container = document.getElementById("formset-documentos");
-    const btnAdd = document.getElementById("adicionarDocumento");
-    const template = document.getElementById("template-documento").innerHTML;
-
-    btnAdd.addEventListener("click", function () {
-      const totalForms = document.getElementById("id_form-TOTAL_FORMS");
-      const currentCount = parseInt(totalForms.value);
-      const newHtml = template.replace(/__prefix__/g, currentCount);
-      const wrapper = document.createElement("div");
-      wrapper.innerHTML = newHtml;
-
-      wrapper.querySelectorAll("[name]").forEach(el => {
-        const name = el.getAttribute("name");
-        el.setAttribute("name", `form-${currentCount}-${name}`);
-        el.setAttribute("id", `id_form-${currentCount}-${name}`);
-      });
-
-      container.appendChild(wrapper);
-      totalForms.value = currentCount + 1;
+      const cnpj = inputCNPJ.value.replace(/\D/g, "");
+      if (cnpj.length === 14) {
+        fetch(`/comercial/clientes/verificar-cnpj/?cnpj=${cnpj}&cliente_id=${clienteId}`)
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.existe) {
+              alerta.style.display = "block";
+              inputCNPJ.dataset.cadastrado = "true";
+            } else {
+              alerta.style.display = "none";
+              inputCNPJ.dataset.cadastrado = "false";
+            }
+          });
+      }
     });
 
-    container.addEventListener("click", function (e) {
-      if (e.target.closest(".remover-documento")) {
-        e.target.closest(".documento-form").remove();
+    // Impede submit se duplicado
+    form.addEventListener("submit", (e) => {
+      if (inputCNPJ.dataset.cadastrado === "true") {
+        e.preventDefault();
+        alerta.scrollIntoView({ behavior: "smooth" });
       }
     });
   });
 </script>
+
 
 <script>
   $(document).ready(function () {
@@ -670,7 +630,43 @@
   
   
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const btnAdicionar = document.getElementById("adicionarDocumento");
+    const formsetDiv = document.getElementById("formset-documentos");
+    const template = document.getElementById("template-documento").innerHTML;
+    const totalForms = document.querySelector("#id_form-TOTAL_FORMS");
 
+    btnAdicionar?.addEventListener("click", function () {
+      const index = parseInt(totalForms.value);
+      let novoHtml = template.replace(/__prefix__/g, `form-${index}`);
+
+      // Cria um wrapper temporário para transformar em elemento DOM
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = novoHtml;
+
+      // Adiciona ao formset
+      formsetDiv.appendChild(wrapper.firstElementChild);
+
+      // Atualiza contador de formulários
+      totalForms.value = index + 1;
+    });
+  });
+
+  // Script já existente para remover
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".remover-documento")) {
+      const linha = e.target.closest(".documento-form");
+      const inputDelete = linha.querySelector("input[type='hidden'][name$='-DELETE']");
+      if (inputDelete) {
+        inputDelete.value = "on";
+        linha.style.display = "none";
+      } else {
+        linha.remove(); // linha recém-adicionada
+      }
+    }
+  });
+</script>
   
     
 {% endblock %}

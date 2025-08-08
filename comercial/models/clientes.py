@@ -111,8 +111,11 @@ from .clientes import Cliente  # ajuste o import conforme sua estrutura se neces
 
 class ClienteDocumento(models.Model):
     TIPO_CHOICES = [
-        ('Cartao IPI', 'Cartão IPI'),
-        ('Alteracao de CNPJ', 'Alteração de CNPJ'),
+        ('Cartao CNPJ', 'Cartão CNPJ'),
+        ('Cartao de Inscrição Estadual/Municipal', 'Cartao de Inscrição Estadual/Municipal'),
+        ('Carta IPI', 'Carta IPI'),
+        ('Ficha Cadastral', 'Ficha Cadastral'),
+        ('Cartão Suframa', 'Cartão Suframa'),
         ('Outros', 'Outros'),
     ]
 

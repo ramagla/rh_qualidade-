@@ -411,7 +411,16 @@ def subtrair_percentual(valor, percentual):
     
 @register.filter
 def basename(value):
-    return os.path.basename(value)
+    # 1) Extrai só o nome do arquivo
+    base = os.path.basename(value)
+    name, ext = os.path.splitext(base)
+    # 2) Remove o sufixo após o último underscore
+    if "_" in name:
+        name = name.rsplit("_", 1)[0]
+    # 3) Opcional: substituir underlines por espaços e capitalizar
+    # name = " ".join(w.capitalize() for w in name.split("_"))
+    return f"{name}{ext}"
+
 
 
 from django.utils.timezone import now

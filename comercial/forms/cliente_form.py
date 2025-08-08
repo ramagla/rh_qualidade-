@@ -48,15 +48,54 @@ class ClienteForm(forms.ModelForm):
             raise forms.ValidationError("Apenas arquivos PDF são permitidos.")
         return file
 
+from django.core.files.uploadedfile import UploadedFile
     
 class ClienteDocumentoForm(forms.ModelForm):
     class Meta:
         model = ClienteDocumento
         fields = ['tipo', 'arquivo']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['tipo'].widget.attrs.update({'class': 'form-select'})
+        # agora usa FileInput simples, sem checkbox “Limpar”
+        self.fields['arquivo'].widget = forms.FileInput(
+            attrs={'class': 'form-control'}
+        )
+
+    def clean_arquivo(self):
+        file = self.cleaned_data.get('arquivo')
+        if not file:
+            return None
+
+        # Se for um FieldFile (arquivo já existente), pula validação de tipo/tamanho
+        if not isinstance(file, UploadedFile):
+            return file
+
+        # 1) Tipos permitidos (só para uploads novos)
+        content_type = file.content_type
+        allowed_types = [
+            'application/pdf',
+            'image/jpeg', 'image/png', 'image/gif',
+        ]
+        if content_type not in allowed_types:
+            raise forms.ValidationError(
+                "Formato inválido. Envie PDF ou imagem (JPEG, PNG, GIF)."
+            )
+
+        # 2) Tamanho máximo 5 MB
+        max_size = 5 * 1024 * 1024
+        if file.size > max_size:
+            raise forms.ValidationError(
+                "Arquivo muito grande. Tamanho máximo: 5 MB."
+            )
+
+        return file
+
+
 ClienteDocumentoFormSet = modelformset_factory(
     ClienteDocumento,
     form=ClienteDocumentoForm,
-    extra=2,
+    extra=0,
     can_delete=True
 )

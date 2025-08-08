@@ -133,7 +133,11 @@ def cadastrar_cliente(request):
         'url_voltar': 'lista_clientes'
     }
     return render(request, 'cadastros/form_clientes.html', context)
+import logging
 
+
+# Configura logger para debug
+logger = logging.getLogger(__name__)
 
 @login_required
 @permission_required('comercial.change_cliente', raise_exception=True)
@@ -141,10 +145,33 @@ def editar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
 
     if request.method == 'POST':
-        form = ClienteForm(request.POST, request.FILES, instance=cliente)
-        formset = ClienteDocumentoFormSet(request.POST, request.FILES, queryset=ClienteDocumento.objects.filter(cliente=cliente))
+        mgmt_keys = [
+            'form-TOTAL_FORMS', 'form-INITIAL_FORMS',
+            'form-MIN_NUM_FORMS', 'form-MAX_NUM_FORMS'
+        ]
+        mgmt = {k: request.POST.get(k) for k in mgmt_keys}
+        print("Management form data:", mgmt)
 
-        if form.is_valid() and formset.is_valid():
+        form = ClienteForm(request.POST, request.FILES, instance=cliente)
+        formset = ClienteDocumentoFormSet(
+            request.POST, request.FILES,
+            queryset=ClienteDocumento.objects.filter(cliente=cliente)
+        )
+
+        is_form_valid = form.is_valid()
+        is_formset_valid = formset.is_valid()
+        print("Form valid?:", is_form_valid)
+        print("Form errors:", form.errors)
+        print("Formset valid?:", is_formset_valid)
+        print("Formset errors:", formset.errors)
+
+        deleted_forms = [
+            f for f in formset.forms
+            if f.cleaned_data.get('DELETE')
+        ]
+        print("Forms marcados para deleção:", deleted_forms)
+
+        if is_form_valid and is_formset_valid:
             try:
                 cliente = form.save()
 
@@ -153,31 +180,43 @@ def editar_cliente(request, pk):
                     doc.cliente = cliente
                     doc.save()
 
-                for deleted_doc in formset.deleted_objects:
-                    deleted_doc.delete()
+                for f in deleted_forms:
+                    arquivo = f.cleaned_data.get('arquivo')
+                    if not arquivo:
+                        f.instance.delete()
 
                 messages.success(request, 'Cliente atualizado com sucesso.')
+                print("===== FIM editar_cliente (POST): SUCESSO =====")
                 return redirect('lista_clientes')
 
             except IntegrityError:
                 messages.error(request, 'Já existe outro cliente com esse CNPJ.')
+                print("===== FIM editar_cliente (POST): ERRO DE INTEGRIDADE =====")
 
         else:
             if form.errors:
                 messages.error(request, 'Erros no formulário. Verifique os campos obrigatórios.')
             if formset.errors:
                 messages.warning(request, 'Há erros nos documentos anexados.')
+            print("===== FIM editar_cliente (POST): VALIDAÇÃO FALHOU =====")
 
     else:
         form = ClienteForm(instance=cliente)
         formset = ClienteDocumentoFormSet(queryset=ClienteDocumento.objects.filter(cliente=cliente))
 
+    print("⚠️ Dados do cliente carregados para edição:")
+    print("CNPJ:", form.instance.cnpj)
+    print("Razão Social:", form.instance.razao_social)
+    print("Cidade:", form.instance.cidade)
+
     return render(request, 'cadastros/form_clientes.html', {
         'form': form,
         'formset': formset,
         'edicao': True,
+        'cliente': cliente,
         'url_voltar': 'lista_clientes',
     })
+
 
 
 

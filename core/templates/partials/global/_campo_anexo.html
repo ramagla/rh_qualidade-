@@ -15,7 +15,7 @@
             {% with arquivo=form.instance|attr:campo %}
   {% if arquivo %}
     <a href="{{ arquivo.url }}" target="_blank" class="link-primary text-truncate" style="max-width: 300px;">
-      {{ arquivo.name }}
+      {{ arquivo.name|basename  }}
     </a>
   {% endif %}
 {% endwith %}
