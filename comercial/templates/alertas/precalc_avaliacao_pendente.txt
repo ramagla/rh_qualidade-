@@ -1,0 +1,12 @@
+Olá,
+
+A Avaliação Técnica do Pré-Cálculo nº {{ precalculo.numero }} (Cotação nº {{ cotacao.numero }}) segue pendente.
+
+Tipo de peça: {{ tipo_de_peca }}
+Prazo: {{ prazo_dias }} dia(s)
+Data limite: {{ data_limite|date:"d/m/Y" }}
+Atraso: {{ dias_atraso }} dia{% if dias_atraso > 1 %}s{% endif %}
+
+Acesse para preencher: {{ link }}
+
+— SIB (Sistema Integrado Bras-Mol)

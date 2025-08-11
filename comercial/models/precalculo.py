@@ -366,6 +366,8 @@ class AnaliseComercial(models.Model):
 
     def __str__(self):
         return f"Análise Comercial – Cotação #{self.precalculo.cotacao.numero}"
+from datetime import timedelta
+from django.utils import timezone
 
 
 class PreCalculoMaterial(AuditModel):
@@ -399,6 +401,7 @@ class PreCalculoMaterial(AuditModel):
     preco_kg = models.DecimalField("Preço /kg", max_digits=12, decimal_places=4, null=True, blank=True)
 
     status = models.CharField("Status da Cotação", max_length=20, choices=STATUS_CHOICES, default='aguardando')
+    compras_solicitado_em = models.DateTimeField(null=True, blank=True)
 
     # 🔐 Metadados de Assinatura
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
@@ -428,6 +431,18 @@ class PreCalculoMaterial(AuditModel):
 
         super().save(*args, **kwargs)
 
+    @property
+    def compras_prazo_em(self):
+        if not self.compras_solicitado_em:
+            return None
+        t = (self.tipo_material or "").lower()
+        dias = 1 if ("mola" in t or "aram" in t) else (3 if "estamp" in t else 3)
+        return self.compras_solicitado_em + timedelta(days=dias)
+
+    @property
+    def compras_em_atraso(self):
+        prazo = self.compras_prazo_em
+        return bool(prazo and timezone.now() > prazo and self.status == "aguardando")
 
 
 class PreCalculoServicoExterno(AuditModel):
@@ -477,6 +492,7 @@ class PreCalculoServicoExterno(AuditModel):
     peso_liquido_total = models.DecimalField("Peso Líquido Total (kg)", max_digits=20, decimal_places=7, null=True, blank=True)
 
     status = models.CharField("Status da Cotação", max_length=20, choices=STATUS_CHOICES, default='aguardando')
+    compras_solicitado_em = models.DateTimeField(null=True, blank=True)
 
     # 🔐 Metadados de Assinatura
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
@@ -491,14 +507,33 @@ class PreCalculoServicoExterno(AuditModel):
 
     def save(self, *args, **kwargs):
         if self.insumo and self.insumo.materia_prima:
-            self.codigo = self.insumo.materia_prima.codigo
+            self.codigo_materia_prima = self.insumo.materia_prima.codigo
         super().save(*args, **kwargs)
+
 
     def __str__(self):
         try:
             return f"Serviço Externo - {self.insumo.materia_prima.codigo}"
         except Exception:
             return "Serviço Externo - sem código"
+        
+
+    @property
+    def compras_prazo_em(self):
+        if not self.compras_solicitado_em:
+            return None
+        tipo = ""
+        try:
+            tipo = (self.insumo.materia_prima.tipo_material or "").lower()
+        except Exception:
+            pass
+        dias = 1 if ("mola" in tipo or "aram" in tipo) else (3 if "estamp" in tipo else 3)
+        return self.compras_solicitado_em + timedelta(days=dias)
+
+    @property
+    def compras_em_atraso(self):
+        prazo = self.compras_prazo_em
+        return bool(prazo and timezone.now() > prazo and self.status == "aguardando")    
 
 class AvaliacaoTecnica(AuditModel):
     RESULTADO = [

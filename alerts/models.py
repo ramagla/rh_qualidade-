@@ -54,6 +54,7 @@ class AlertaConfigurado(models.Model):
         ("AUDITORIA_PROXIMA", "Auditoria Próxima"),
         ("CERTIFICACAO_PROXIMA", "Certificação Próxima"),
         ("PRECALCULO_GERADO", "📄 Pré-Cálculo Gerado"),
+        ("AVALIACAO_TECNICA_PENDENTE", "🛠 Avaliação Técnica Pendente"),
 
     ]
 
@@ -71,6 +72,7 @@ class AlertaConfigurado(models.Model):
             "AUDITORIA_PROXIMA": "📋 Auditoria de Fornecedor Próxima",
             "CERTIFICACAO_PROXIMA": "📜 Certificação de Fornecedor Próxima do Vencimento",
             "PRECALCULO_GERADO": "📄 Pré-Cálculo Gerado",
+            "AVALIACAO_TECNICA_PENDENTE": "🛠 Avaliação Técnica Pendente",
 
         }
         return nomes_exibicao.get(self.tipo, self.tipo)

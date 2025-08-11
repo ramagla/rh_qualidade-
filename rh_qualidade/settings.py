@@ -37,6 +37,9 @@ GEMINI_API_KEY = config('GEMINI_API_KEY')
 # Lista de hosts permitidos
 ALLOWED_HOSTS = ["*", "192.168.0.139", "127.0.0.1", "localhost"]
 
+# Link absoluto nos e-mails/alertas (usado pelas tasks do Celery)
+SITE_URL = config("SITE_URL", default="http://127.0.0.1:8000")
+
 # Definição de aplicativos instalados
 INSTALLED_APPS = [
     # Django apps (sempre primeiro)
@@ -71,12 +74,6 @@ INSTALLED_APPS = [
 
 
 DATE_FORMAT = "d 'de' F 'de' Y"
-
-# Configurações Celery
-CELERY_TASK_ALWAYS_EAGER = False
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
 
 
 # Configurações do CKEditor
@@ -157,6 +154,18 @@ TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
+
+
+# Configurações Celery
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+CELERY_TIMEZONE = TIME_ZONE          # usa America/Sao_Paulo
+CELERY_ENABLE_UTC = False            # executa no horário local
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
 
 # Configurações de arquivos estáticos e mídia
 STATIC_URL = "/static/"

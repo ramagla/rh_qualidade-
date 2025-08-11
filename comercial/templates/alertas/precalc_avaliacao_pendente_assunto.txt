@@ -1,0 +1,1 @@
+🛠 Avaliação Técnica pendente — Pré-Cálculo {{ precalculo.numero }} ({{ tipo_de_peca }}) — {{ dias_atraso }} dia{% if dias_atraso > 1 %}s{% endif %} em atraso

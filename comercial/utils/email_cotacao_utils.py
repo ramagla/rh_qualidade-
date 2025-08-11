@@ -10,6 +10,7 @@ from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExterno
 from Funcionario.models import Settings as SistemaSettings
+from django.utils import timezone
 
 
 def disparar_email_cotacao_material(request, material):
@@ -49,10 +50,19 @@ def disparar_email_cotacao_material(request, material):
         subject="📨 Cotação de Matéria-Prima",
         message=corpo.strip(),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["rafael.almeida@brasmol.com.br"],
+        recipient_list=["compras@brasmol.com.br"],
         fail_silently=False,
     )
-
+# ⬇️ Inicia SLA
+    if material.preco_kg is None and material.compras_solicitado_em is None:
+    # não rebaixa se já estiver "ok"
+        if material.status != "ok":
+            material.status = "aguardando"
+            material.compras_solicitado_em = timezone.now()
+            material.save(update_fields=["status", "compras_solicitado_em"])
+        else:
+            # já "ok": não altera nada
+            pass
 
 from decimal import Decimal
 from django.contrib import messages
@@ -191,10 +201,18 @@ def disparar_emails_cotacao_servicos(request, precalc):
             subject="📨 Cotação de Serviço Externo",
             message=corpo.strip(),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=["rafael.almeida@brasmol.com.br"],
+            recipient_list=["compras@brasmol.com.br"],
             fail_silently=False,
         )
         print("✅ E-mail disparado com sucesso.")
+
+        agora = timezone.now()
+        ids = [s.id for s in lista if s.preco_kg is None and s.compras_solicitado_em is None]
+        if ids:
+            PreCalculoServicoExterno.objects.filter(id__in=ids).update(
+                status="aguardando", compras_solicitado_em=agora
+            )
+
 
 
 from decimal import Decimal, InvalidOperation

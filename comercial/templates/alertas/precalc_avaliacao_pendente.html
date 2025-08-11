@@ -1,0 +1,16 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"></head>
+<body style="font-family:Arial,Helvetica,sans-serif">
+  <h2>🛠 Avaliação Técnica pendente</h2>
+  <p>
+    Pré-Cálculo <strong>#{{ precalculo.numero }}</strong> (Cotação <strong>#{{ cotacao.numero }}</strong>)<br>
+    Tipo de peça: <strong>{{ tipo_de_peca }}</strong><br>
+    Prazo: <strong>{{ prazo_dias }} dia(s)</strong><br>
+    Data limite: <strong>{{ data_limite|date:"d/m/Y" }}</strong><br>
+    Atraso: <strong>{{ dias_atraso }} dia{% if dias_atraso > 1 %}s{% endif %}</strong>
+  </p>
+  <p>
+    <a href="{{ link }}" target="_blank">👉 Clique aqui para preencher a Avaliação Técnica</a>
+  </p>
+  <hr>
+  <small>Este é um e-mail automático do SIB (Sistema Integrado Bras-Mol)</small>
+</body></html>
