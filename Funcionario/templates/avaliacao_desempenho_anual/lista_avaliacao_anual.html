@@ -103,37 +103,52 @@
   {# 📋 Tabela de listagem de avaliações #}
   <table class="table table-bordered table-striped text-center mt-4">
   <thead class="table-light align-middle">
-    <tr>
-      <th scope="col">
-        <i class="bi bi-person-fill me-1 text-secondary" aria-hidden="true"></i>
-        Colaborador
-      </th>
-      <th scope="col">
-        <i class="bi bi-calendar-event-fill me-1 text-secondary" aria-hidden="true"></i>
-        Data de Avaliação
-      </th>
-      <th scope="col">
-        <i class="bi bi-cash-coin me-1 text-secondary" aria-hidden="true"></i>
-        Centro de Custo
-      </th>
-      <th scope="col">
-        <i class="bi bi-diagram-3-fill me-1 text-secondary" aria-hidden="true"></i>
-        Departamento
-      </th>
-      <th scope="col">
-        <i class="bi bi-bar-chart-fill me-1 text-secondary" aria-hidden="true"></i>
-        Classificação
-      </th>
-      <th scope="col">
-        <i class="bi bi-percent me-1 text-secondary" aria-hidden="true"></i>
-        
-      </th>
-      <th scope="col">
-        <i class="bi bi-gear-fill me-1 text-secondary" aria-hidden="true"></i>
-        Ações
-      </th>
-    </tr>
-  </thead>
+  <tr>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-fill mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Colaborador</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event-fill mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Data de Avaliação</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-cash-coin mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Centro de Custo</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-diagram-3-fill mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Departamento</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-bar-chart-fill mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Classificação</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-percent mb-1 text-secondary" aria-hidden="true"></i>
+        <small><!-- Sem texto definido --></small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear-fill mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
 
         <tbody>
             {% for avaliacao in avaliacoes %}

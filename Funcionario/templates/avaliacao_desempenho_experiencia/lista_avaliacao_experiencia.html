@@ -88,15 +88,46 @@
   <div class="table-responsive">
     <table class="table table-bordered table-striped align-middle text-center">
       <thead class="table-light align-middle">
-        <tr>
-          <th><i class="bi bi-person"></i> Colaborador</th>
-          <th><i class="bi bi-calendar-event"></i> Data de Avaliação</th>
-          <th><i class="bi bi-building"></i> Gerência</th>
-          <th><i class="bi bi-person-bounding-box"></i> Responsável</th>
-          <th><i class="bi bi-flag"></i> Orientação</th>
-          <th><i class="bi bi-gear"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Colaborador</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Data de Avaliação</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Gerência</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-bounding-box mb-1"></i>
+        <small>Responsável</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-flag mb-1"></i>
+        <small>Orientação</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for avaliacao in avaliacoes %}
           <tr>

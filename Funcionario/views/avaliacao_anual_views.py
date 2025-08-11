@@ -85,15 +85,27 @@ def cadastrar_avaliacao_anual(request):
 def editar_avaliacao_anual(request, id):
     """Exibe e processa o formulário de edição de avaliação anual."""
     avaliacao = get_object_or_404(AvaliacaoAnual, id=id)
+
     if request.method == "POST":
         form = AvaliacaoAnualForm(request.POST, request.FILES, instance=avaliacao)
-        if request.POST.get("remover_anexo") == "1" and avaliacao.anexo:
-            avaliacao.anexo.delete(save=False)
-            avaliacao.anexo = None
+
+        # aceitar tanto o botão custom (remover_anexo=1) quanto o checkbox padrão (anexo-clear)
+        remove_flag = (
+            request.POST.get("remover_anexo") == "1"
+            or request.POST.get("anexo-clear") in ("on", "1", "true", "True")
+        )
+
         if form.is_valid():
+            # se pediu para remover, apaga o arquivo físico e zera o campo antes de salvar
+            if remove_flag:
+                if avaliacao.anexo:
+                    avaliacao.anexo.delete(save=False)
+                form.instance.anexo = None
+
             form.save()
             messages.success(request, "Avaliação anual atualizada com sucesso!")
             return redirect("lista_avaliacao_anual")
+
         messages.error(request, "Erro ao atualizar a avaliação. Verifique os campos.")
     else:
         form = AvaliacaoAnualForm(instance=avaliacao)
@@ -111,7 +123,6 @@ def editar_avaliacao_anual(request, id):
             "campos_avaliados": campos_avaliados,
         },
     )
-
 
 @login_required
 def excluir_avaliacao_anual(request, id):

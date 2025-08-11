@@ -5,6 +5,7 @@ from Funcionario.models.avaliacao_treinamento import AvaliacaoTreinamento
 from Funcionario.models.avaliacao_anual import AvaliacaoAnual
 from Funcionario.models.avaliacao_experiencia import AvaliacaoExperiencia
 from Funcionario.models import Funcionario
+from django.core.files.uploadedfile import UploadedFile
 
 from rh_qualidade.utils import title_case
 
@@ -148,8 +149,14 @@ class AvaliacaoAnualForm(forms.ModelForm):
         model = AvaliacaoAnual
         fields = "__all__"
         widgets = {
-            "data_avaliacao": forms.DateInput(attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"),
-            "anexo": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "data_avaliacao": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"
+            ),
+            # ⬇️ troque ClearableFileInput por FileInput
+            "anexo": forms.FileInput(attrs={
+                "class": "form-control",
+                "accept": ".pdf,.doc,.docx"
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -196,3 +203,9 @@ class AvaliacaoAnualForm(forms.ModelForm):
         if centro_custo:
             return title_case(centro_custo)
         return centro_custo
+    
+    def clean_anexo(self):
+        f = self.cleaned_data.get("anexo")
+        if isinstance(f, UploadedFile) and f.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("O arquivo excede 5 MB.")
+        return f

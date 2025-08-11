@@ -88,14 +88,17 @@ def cadastrar_jobrotation_evaluation(request):
 
 @login_required
 def editar_jobrotation_evaluation(request, id):
-    """Edita uma avaliação de Job Rotation existente."""
     evaluation = get_object_or_404(JobRotationEvaluation, id=id)
 
     if request.method == "POST":
         form = JobRotationEvaluationForm(request.POST, request.FILES, instance=evaluation)
 
-        # 🔴 Lógica de remoção de anexo
-        if request.POST.get("remover_anexo") == "1" and evaluation.anexo:
+        remove_flag = (
+            request.POST.get("remover_anexo") == "1"
+            or request.POST.get("anexo-clear") in ("on", "1", "true", "True")
+        )
+
+        if remove_flag and evaluation.anexo:
             evaluation.anexo.delete(save=False)
             evaluation.anexo = None
 
@@ -121,6 +124,7 @@ def editar_jobrotation_evaluation(request, id):
             "edicao": True,
         },
     )
+
 
 
 @login_required

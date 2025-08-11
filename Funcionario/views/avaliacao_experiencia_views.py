@@ -74,19 +74,23 @@ def cadastrar_avaliacao_experiencia(request):
 
 @login_required
 def editar_avaliacao_experiencia(request, id):
-    """
-    Edita uma avaliação de experiência existente.
-    """
     avaliacao = get_object_or_404(AvaliacaoExperiencia, id=id)
 
     if request.method == "POST":
         form = AvaliacaoExperienciaForm(request.POST, request.FILES, instance=avaliacao)
 
-        if request.POST.get("remover_anexo") == "1" and avaliacao.anexo:
+        # aceitar ambos os sinais de remoção
+        remove_flag = (
+            request.POST.get("remover_anexo") == "1"
+            or request.POST.get("anexo-clear") in ("on", "1", "true", "True")
+        )
+
+        if remove_flag and avaliacao.anexo:
             avaliacao.anexo.delete(save=False)
             avaliacao.anexo = None
 
         if form.is_valid():
+            # sua regra existente
             avaliacao.orientacao, avaliacao.status = calcular_orientacao(request.POST)
             form.save()
             messages.success(request, "Avaliação atualizada com sucesso!")
@@ -105,6 +109,7 @@ def editar_avaliacao_experiencia(request, id):
         "param_id": None,
     }
     return render(request, "avaliacao_desempenho_experiencia/form_avaliacao_experiencia.html", context)
+
 
 
 @login_required

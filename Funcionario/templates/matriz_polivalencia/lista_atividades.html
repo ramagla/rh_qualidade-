@@ -138,12 +138,28 @@
   <div class="table-responsive mt-4">
     <table class="table table-striped table-bordered text-center align-middle">
       <thead class="table-light">
-        <tr>
-          <th><i class="bi bi-card-text me-1"></i> Nome da Atividade</th>
-          <th><i class="bi bi-building me-1"></i> Departamento</th>
-          <th><i class="bi bi-gear me-1"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-card-text mb-1"></i>
+        <small>Nome da Atividade</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Departamento</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for atividade in page_obj %}
           <tr>

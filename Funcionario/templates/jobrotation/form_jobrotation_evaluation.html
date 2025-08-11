@@ -212,17 +212,8 @@
         
 <!-- Anexo -->
 <div class="accordion-item">
-  <h2 class="accordion-header" id="headingAnexo">
-    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnexo">
-      <i class="bi bi-paperclip me-2"></i> Anexo (Obrigatorio após a coleta de assinaturas)
-    </button>
-  </h2>
-  <div id="collapseAnexo" class="accordion-collapse collapse" data-bs-parent="#accordionJobRotation">
-    <div class="accordion-body">
-{% include "partials/global/_campo_anexo.html" with form=form campo="anexo" %}
-    </div>
-  </div>
-</div>
+  {% include "partials/global/_campo_anexo.html" with form=form campo="anexo" %}
+
 </div>
         <!-- Botões -->
         <div class="col-12 text-center mt-4">

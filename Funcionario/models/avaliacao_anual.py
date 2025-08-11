@@ -1,7 +1,32 @@
 from django.db import models
 from .funcionario import Funcionario
 
+import os
+from django.utils.text import slugify
+from django.core.exceptions import ValidationError
+from django.utils.deconstruct import deconstructible
+from django.core.files.uploadedfile import UploadedFile
 
+# mantém os imports existentes
+
+def renomear_anexo_avaliacao_anual(instance, filename):
+    nome, ext = os.path.splitext(filename)
+    funcionario = slugify(getattr(instance.funcionario, "nome", "") or "funcionario")
+    data = instance.data_avaliacao.strftime("%Y%m%d") if instance.data_avaliacao else "semdata"
+    return os.path.join("avaliacoes", "anual", f"avaliacao-anual-{funcionario}-{data}{ext}")
+
+@deconstructible
+class MaxFileSizeValidator:
+    def __init__(self, max_mb=5):
+        self.max_mb = max_mb
+    def __call__(self, arquivo):
+        if not arquivo or not isinstance(arquivo, UploadedFile):
+            return
+        if arquivo.size > self.max_mb * 1024 * 1024:
+            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+    def __eq__(self, other):
+        return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
+    
 class AvaliacaoAnual(models.Model):
     """
     Representa uma avaliação anual realizada para um funcionário com base em critérios de desempenho.
@@ -82,11 +107,13 @@ class AvaliacaoAnual(models.Model):
         verbose_name="Autoavaliação do Avaliado"
     )
     anexo = models.FileField(
-        upload_to='avaliacoes/anual/',
+        upload_to=renomear_anexo_avaliacao_anual,
         blank=True,
         null=True,
-        verbose_name="Anexo"
+        verbose_name="Anexo",
+        validators=[MaxFileSizeValidator(5)],
     )
+
 
     # Lista dos campos numéricos avaliados
     CAMPOS_AVALIADOS = [
@@ -138,6 +165,11 @@ class AvaliacaoAnual(models.Model):
 
     def __str__(self):
         return f"Avaliação de {self.funcionario.nome} em {self.data_avaliacao.strftime('%d/%m/%Y')}"
+    
+    def delete(self, *args, **kwargs):
+        if self.anexo:
+            self.anexo.delete(save=False)
+        super().delete(*args, **kwargs)
 
     class Meta:
         ordering = ['-data_avaliacao']

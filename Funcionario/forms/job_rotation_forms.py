@@ -5,6 +5,7 @@ from django.utils import timezone
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 from ..models import AvaliacaoAnual, JobRotationEvaluation
+from django.core.files.uploadedfile import UploadedFile
 
 
 class JobRotationEvaluationForm(forms.ModelForm):
@@ -27,7 +28,8 @@ class JobRotationEvaluationForm(forms.ModelForm):
     class Meta:
         model = JobRotationEvaluation
         fields = "__all__"
-
+        widgets = {"anexo": forms.FileInput(attrs={"class": "form-control","accept": ".pdf,.doc,.docx"}),}
+                    
     def clean_data_inicio(self):
         data_inicio = self.cleaned_data.get("data_inicio")
         limite_retroativo = timezone.now().date() - timedelta(days=365)
@@ -43,6 +45,12 @@ class JobRotationEvaluationForm(forms.ModelForm):
         if area_atual:
             return area_atual.title()
         return area_atual
+    
+    def clean_anexo(self):
+        f = self.cleaned_data.get("anexo")
+        if isinstance(f, UploadedFile) and f.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("O arquivo excede 5 MB.")
+        return f
 
     def save(self, commit=True):
         instance = super().save(commit=False)
