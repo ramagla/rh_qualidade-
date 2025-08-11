@@ -213,7 +213,7 @@ if (!window.roteiroScriptRegistrado) {
           <ul class="list-group lista-propriedades mb-2"></ul>
         </div>
 
-        <input type="hidden" class="dados-etapa" name="etapas[${index}][data]" value='{"insumos":[],"propriedades":{}}'>
+<input type="hidden" class="dados-etapa" name="etapas[${index}][data]" value='{"id":null,"insumos":[],"propriedades":{}}'>
       </div>
     </div>
   </div>
@@ -226,7 +226,11 @@ if (!window.roteiroScriptRegistrado) {
         div.querySelector(`[name="etapas[${index}][setor]"]`).value         = data.setor;
         div.querySelector(`[name="etapas[${index}][pph]"]`).value           = data.pph;
         div.querySelector(`[name="etapas[${index}][setup_minutos]"]`).value = data.setup_minutos;
-        div.querySelector(".dados-etapa").value = JSON.stringify({ insumos: data.insumos, propriedades: data.propriedades });
+        div.querySelector(".dados-etapa").value = JSON.stringify({
+          id: data.id || null,
+          insumos: Array.isArray(data.insumos) ? data.insumos : [],
+          propriedades: data.propriedades || {}
+        });
 
         const ulI = div.querySelector(".lista-insumos");
         data.insumos.forEach(ins => {
@@ -399,12 +403,22 @@ if (!window.roteiroScriptRegistrado) {
         .filter(div => !div.classList.contains("etapa-removida"));
 
       etapaDivs.forEach(div => {
-        const data = JSON.parse(div.querySelector(".dados-etapa").value);
-        data.etapa = div.querySelector('input[name^="etapas"][name$="[etapa]"]').value;
-        data.setor = div.querySelector('select[name^="etapas"][name$="[setor]"]').value;
-        data.pph   = div.querySelector('input[name^="etapas"][name$="[pph]"]').value;
-        data.setup_minutos = div.querySelector('input[name^="etapas"][name$="[setup_minutos]"]').value.replace(",", ".");
-        payload.etapas.push(data);
+        // form.roteiros.html — no submit do #roteiroForm, montagem do payload de cada etapa
+      const data = JSON.parse(div.querySelector(".dados-etapa").value);
+
+      // garante que o id (quando existir) siga para o payload
+      if (!("id" in data)) { data.id = null; }
+
+      // sobrescreve/atualiza os campos editáveis da etapa
+      data.etapa = div.querySelector('input[name^="etapas"][name$="[etapa]"]').value;
+      data.setor = div.querySelector('select[name^="etapas"][name$="[setor]"]').value;
+      data.pph   = div.querySelector('input[name^="etapas"][name$="[pph]"]').value;
+
+      // normaliza setup_minutos para número com ponto
+      const setupValor = div.querySelector('input[name^="etapas"][name$="[setup_minutos]"]').value;
+      data.setup_minutos = (setupValor || "").toString().replace(",", ".");
+
+      payload.etapas.push(data);
       });
 
       document.getElementById("dados_json").value = JSON.stringify(payload);
