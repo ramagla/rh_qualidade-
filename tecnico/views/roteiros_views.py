@@ -414,10 +414,19 @@ def ajax_fontes_homologadas_por_item(request):
 @login_required
 @permission_required("tecnico.aprovar_roteiro", raise_exception=True)
 def editar_roteiro(request, pk):
+    """
+    Edição de Roteiro com preservação de etapas existentes.
+    Estratégia:
+      - Envia para o template o JSON das etapas com o campo 'id'.
+      - No POST, faz upsert por 'id' (atualiza quando existe; cria quando não).
+      - Exclui apenas as etapas que foram removidas no front.
+      - Insumos são regravados por etapa (mais simples e consistente).
+      - Propriedades (OneToOne) usa get_or_create e set() para M2M de máquinas.
+    """
     roteiro = get_object_or_404(RoteiroProducao, pk=pk)
     form = RoteiroProducaoForm(request.POST or None, instance=roteiro)
 
-    # Dados para o template
+    # Dados auxiliares para selects/autocomplete do template
     insumos_data = list(
         MateriaPrimaCatalogo.objects.order_by("descricao")
         .values("id", "codigo", "descricao")
@@ -435,7 +444,7 @@ def editar_roteiro(request, pk):
         .values("id", "codigo", "descricao")
     )
 
-    # Monta o JSON inicial para o template
+    # Monta o JSON inicial para o template (inclui o id da etapa)
     roteiro_data = {"item": roteiro.item_id, "etapas": []}
     for etapa in roteiro.etapas.all().order_by("etapa"):
         insumos_list = [
@@ -444,12 +453,11 @@ def editar_roteiro(request, pk):
                 "tipo_insumo": ins.tipo_insumo,
                 "obrigatorio": ins.obrigatorio,
                 "desenvolvido": float(ins.desenvolvido) if ins.desenvolvido is not None else 0,
-                "peso_liquido": float(ins.peso_liquido) if ins.peso_liquido else 0,
-                "peso_bruto": float(ins.peso_bruto) if ins.peso_bruto else 0,
+                "peso_liquido": float(ins.peso_liquido) if ins.peso_liquido is not None else 0,
+                "peso_bruto": float(ins.peso_bruto) if ins.peso_bruto is not None else 0,
             }
             for ins in etapa.insumos.all()
         ]
-
 
         try:
             p = etapa.propriedades
@@ -470,61 +478,70 @@ def editar_roteiro(request, pk):
         except PropriedadesEtapa.DoesNotExist:
             props = {}
 
-        segurancas = [
-            ("seguranca_mp", "MP"),
-            ("seguranca_ts", "TS"),
-            ("seguranca_m1", "M1"),
-            ("seguranca_l1", "L1"),
-            ("seguranca_l2", "L2"),
-        ]
-
         roteiro_data["etapas"].append({
+            "id": etapa.id,  # ✅ essencial para o upsert
             "etapa": etapa.etapa,
             "setor": etapa.setor_id,
             "pph": float(etapa.pph or 0),
             "setup_minutos": etapa.setup_minutos or 0,
             "insumos": insumos_list,
             "propriedades": props,
-            "segurancas": segurancas,
+            # Mantido se o template espera essa estrutura:
+            "segurancas": [
+                ("seguranca_mp", "MP"),
+                ("seguranca_ts", "TS"),
+                ("seguranca_m1", "M1"),
+                ("seguranca_l1", "L1"),
+                ("seguranca_l2", "L2"),
+            ],
         })
 
     if request.method == "POST":
         dados_json = request.POST.get("dados_json", "")
-        print("🚨 RECEBEU POST em editar_roteiro")
-        print("   request.POST keys:", list(request.POST.keys()))
-        print("   dados_json raw:", dados_json)
-        print("   form.errors antes de is_valid():", form.errors)
 
         if form.is_valid():
-            print("✅ form.is_valid() == True")
             with transaction.atomic():
                 roteiro = form.save()
-                print(f"   • form.save() → roteiro.id = {roteiro.id}")
                 roteiro.revisao = (roteiro.revisao or 1) + 1
                 roteiro.save(update_fields=["revisao"])
-                print(f"   • revisao agora = {roteiro.revisao}")
-                roteiro.etapas.all().delete()
-                print("   • etapas antigas excluídas")
 
+                # Carrega payload com segurança
                 try:
-                    payload = json.loads(dados_json)
-                    print("   • JSON carregado:")
-                    pprint(payload)
-                except Exception as e:
-                    print("   ❌ erro ao json.loads:", e)
+                    payload = json.loads(dados_json or "{}")
+                except Exception:
                     payload = {"etapas": []}
 
-                for idx, et in enumerate(payload.get("etapas", []), start=1):
-                    print(f"\n   ➡️ Etapa {idx}: {et}")
-                    etapa_obj = EtapaRoteiro.objects.create(
-                        roteiro=roteiro,
-                        etapa=et["etapa"],
-                        setor_id=et["setor"],
-                        pph=et.get("pph") or None,
-                        setup_minutos=et.get("setup_minutos") or None,
-                    )
-                    print(f"      • EtapaRoteiro criado id={etapa_obj.id}")
+                manter_ids = []
 
+                for et in payload.get("etapas", []):
+                    etapa_id = et.get("id")
+                    etapa_obj = None
+
+                    if etapa_id:
+                        etapa_obj = EtapaRoteiro.objects.filter(
+                            pk=etapa_id, roteiro=roteiro
+                        ).first()
+
+                    # UPDATE ou CREATE
+                    if etapa_obj:
+                        etapa_obj.etapa = et["etapa"]
+                        etapa_obj.setor_id = et["setor"]
+                        etapa_obj.pph = et.get("pph") or None
+                        etapa_obj.setup_minutos = et.get("setup_minutos") or None
+                        etapa_obj.save()
+                    else:
+                        etapa_obj = EtapaRoteiro.objects.create(
+                            roteiro=roteiro,
+                            etapa=et["etapa"],
+                            setor_id=et["setor"],
+                            pph=et.get("pph") or None,
+                            setup_minutos=et.get("setup_minutos") or None,
+                        )
+
+                    manter_ids.append(etapa_obj.id)
+
+                    # INSUMOS: recria para garantir consistência
+                    etapa_obj.insumos.all().delete()
                     for ins in et.get("insumos", []):
                         InsumoEtapa.objects.create(
                             etapa=etapa_obj,
@@ -536,32 +553,32 @@ def editar_roteiro(request, pk):
                             peso_bruto=limpar_decimal(ins.get("peso_bruto")),
                         )
 
+                    # PROPRIEDADES: upsert OneToOne e set() em M2M
                     props = et.get("propriedades") or {}
-                    print("      • propriedades recebidas:", props)
-
                     if props.get("nome_acao"):
-                        prop_obj = PropriedadesEtapa.objects.create(
-                            etapa=etapa_obj,
-                            nome_acao=props.get("nome_acao", ""),
-                            descricao_detalhada=props.get("descricao_detalhada", ""),
-                            ferramenta_id=props.get("ferramenta", {}).get("id") or None,
-                            seguranca_mp=props.get("seguranca_mp", False),
-                            seguranca_ts=props.get("seguranca_ts", False),
-                            seguranca_m1=props.get("seguranca_m1", False),
-                            seguranca_l1=props.get("seguranca_l1", False),
-                            seguranca_l2=props.get("seguranca_l2", False),
-                        )
-                        print(f"      • PropriedadesEtapa criado id={prop_obj.id}")
-                        maquinas_ids = [m["id"] for m in props.get("maquinas", [])]
+                        prop_obj, _ = PropriedadesEtapa.objects.get_or_create(etapa=etapa_obj)
+                        prop_obj.nome_acao = props.get("nome_acao", "")
+                        prop_obj.descricao_detalhada = props.get("descricao_detalhada", "")
+                        prop_obj.ferramenta_id = (props.get("ferramenta") or {}).get("id") or None
+                        prop_obj.seguranca_mp = props.get("seguranca_mp", False)
+                        prop_obj.seguranca_ts = props.get("seguranca_ts", False)
+                        prop_obj.seguranca_m1 = props.get("seguranca_m1", False)
+                        prop_obj.seguranca_l1 = props.get("seguranca_l1", False)
+                        prop_obj.seguranca_l2 = props.get("seguranca_l2", False)
+                        prop_obj.save()
+
+                        maquinas_ids = [m["id"] for m in props.get("maquinas", []) if m.get("id")]
                         prop_obj.maquinas.set(maquinas_ids)
-                        print(f"      • máquinas vinculadas: {maquinas_ids}")
+                    else:
+                        # Se não há propriedades válidas, remove o registro existente
+                        PropriedadesEtapa.objects.filter(etapa=etapa_obj).delete()
+
+                # Remove apenas as etapas que sumiram do payload
+                roteiro.etapas.exclude(id__in=manter_ids).delete()
 
             messages.success(request, "Roteiro atualizado com sucesso.")
             return redirect("tecnico:tecnico_roteiros")
-
         else:
-            print("❌ form.is_valid() == False")
-            print("   form.errors após is_valid():", form.errors)
             messages.error(request, "Corrija os erros abaixo.")
 
     return render(request, "roteiros/form.roteiros.html", {
@@ -570,7 +587,7 @@ def editar_roteiro(request, pk):
         "insumos_data": insumos_data,
         "maquinas_data": maquinas_data,
         "setores_data": setores_data,
-        "roteiro_data": roteiro_data,
+        "roteiro_data": roteiro_data,  # contém 'id' nas etapas
         "ferramentas": ferramentas_data,
         "segurancas": [
             ("seguranca_mp", "MP"),
@@ -581,6 +598,7 @@ def editar_roteiro(request, pk):
         ],
         "servicos": list(ServicoRealizado.objects.order_by("nome").values("id", "nome")),
     })
+
 
 
 
