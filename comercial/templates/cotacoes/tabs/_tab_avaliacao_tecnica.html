@@ -21,6 +21,35 @@
         </ul>
       </div>
     {% endif %}
+{% if precalc.analise_comercial_item.item.desenho %}
+<style>
+  .btn-abrir-desenho {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    letter-spacing: .2px;
+    border-radius: 999px;            /* pill */
+    padding: .75rem 1.25rem;         /* mais “encorpado” */
+    box-shadow: 0 .25rem .75rem rgba(0,0,0,.06);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-abrir-desenho:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.10);
+    text-decoration: none;
+  }
+</style>
+
+<div class="my-3 d-flex justify-content-center">
+  <a href="{{ precalc.analise_comercial_item.item.desenho.url }}"
+     target="_blank"
+     rel="noopener"
+     class="btn btn-primary btn-abrir-desenho">
+    <i class="bi bi-file-earmark-text"></i>
+    <span>Abrir Desenho do Item</span>
+  </a>
+</div>
+{% endif %}
 
     <!-- Bloco principal -->
 <div class="col-12">
