@@ -14,6 +14,13 @@ class Item(models.Model):
     ("Corrente", "Corrente"),
 ]
 
+    TIPO_DE_PECA_CHOICES = [
+    ("Mola", "Mola"),
+    ("Estampado", "Estampado"),
+    ("Aramado", "Aramado"),
+]
+
+    tipo_de_peca = models.CharField("Tipo de Peça", max_length=20,choices=TIPO_DE_PECA_CHOICES, default="Mola")
     tipo_item = models.CharField("Tipo de Item", max_length=20, choices=TIPO_ITEM_CHOICES, default="Cotacao")
     cliente = models.ForeignKey("comercial.Cliente", on_delete=models.CASCADE, related_name="itens")
     codigo = models.CharField("Código Interno", max_length=50, unique=True)  # ⬅️ unique=True

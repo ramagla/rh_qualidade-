@@ -468,7 +468,12 @@ def editar_precaculo(request, pk):
 
 })
 
-
+# imports no topo do arquivo (adicione se ainda não tiver)
+from django.urls import reverse, NoReverseMatch
+from django.utils.http import urlencode
+# ...
+# ajuste o import conforme seu app onde está o modelo ClienteDocumento
+from comercial.models.clientes import ClienteDocumento
 from comercial.models.item import Item  # certifique-se de importar
 # ...
 
@@ -500,8 +505,9 @@ def criar_precaculo(request, pk):
     if request.method == "POST" and aba == "analise" and request.POST.get("item") == "__novo__":
         novo_item_instancia = Item.objects.create(
             cliente=cot.cliente,
-            tipo_item="Cotacao",
-            codigo=codigo_desenho,            
+            tipo_item="Cotacao",  # mantém a natureza do item criado via cotação
+            tipo_de_peca=request.POST.get("novo_tipo_de_peca") or "Mola",
+            codigo=codigo_desenho,
             descricao=request.POST.get("novo_descricao") or "",
             ncm=request.POST.get("novo_ncm") or "",
             lote_minimo=request.POST.get("novo_lote_minimo") or 1,
@@ -513,6 +519,7 @@ def criar_precaculo(request, pk):
             requisito_especifico=bool(request.POST.get("novo_requisito_especifico")),
             item_seguranca=bool(request.POST.get("novo_item_seguranca")),
             status="Ativo",
+            desenho=request.FILES.get("novo_desenho")  # ⬅️ anexo do documento
         )
 
         # ✅ Após criar, adicionar as fontes_homologadas
@@ -633,11 +640,39 @@ def criar_precaculo(request, pk):
         login_com_next = f"{reverse('login')}?{urlencode({'next': link_destino})}"
         link = request.build_absolute_uri(login_com_next)
 
+        # ▶ Normas do cliente (se existirem)
+        link_normas_abs = None
+        qtd_normas = 0
+        try:
+            normas_qs = ClienteDocumento.objects.filter(
+                cliente=cot.cliente,
+                tipo__in=["Norma", "Normas"]
+            ).order_by("-data_upload")
+            qtd_normas = normas_qs.count()
+
+            if qtd_normas > 0:
+                try:
+                    # tente usar uma rota de listagem (ajuste o nome se sua URL for diferente)
+                    normas_path = reverse("cliente_documentos", args=[cot.cliente.pk]) + "?tipo=Norma"
+                    normas_next = f"{reverse('login')}?{urlencode({'next': normas_path})}"
+                    link_normas_abs = request.build_absolute_uri(normas_next)
+                except NoReverseMatch:
+                    # fallback: aponta direto para o primeiro arquivo de Norma
+                    primeiro_arquivo = normas_qs.first().arquivo.url
+                    link_normas_abs = request.build_absolute_uri(primeiro_arquivo)
+        except Exception:
+            # não bloqueia o envio do e-mail caso algo dê errado
+            link_normas_abs = None
+            qtd_normas = 0
+
         context = {
             'usuario': request.user,
             'cotacao': cot,
             'precalculo': novo,
-            'link': link
+            'link': link,
+            # novos campos
+            'link_normas': link_normas_abs,
+            'qtd_normas': qtd_normas,
         }
 
         subject = render_to_string('alertas/precalculo_gerado_assunto.txt', context).strip()

@@ -8,64 +8,70 @@
   {% csrf_token %}
   {{ fs_ferr.management_form }}
 
-
-  <div class="border p-4 rounded shadow-sm bg-white">
+  <!-- adicionada classe para escopo de estilos -->
+  <div class="border p-4 rounded shadow-sm bg-white tab-ferramentas">
     <h5 class="mb-4">
       <i class="bi bi-tools text-danger me-2"></i> Ferramentas Utilizadas
     </h5>
 
     <div class="table-responsive">
       <table class="table table-bordered align-middle text-center">
-       <thead class="table-light align-middle text-center">
-  <tr>
-    <th style="width: 30%">
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-hammer mb-1 text-muted"></i>
-        <small>Ferramenta</small>
-      </div>
-    </th>
-    <th style="width: 20%">
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-currency-dollar mb-1 text-muted"></i>
-        <small>Valor Total (R$)</small>
-      </div>
-    </th>
-    <th>
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-chat-left-text mb-1 text-muted"></i>
-        <small>Observações</small>
-      </div>
-    </th>
-  </tr>
-</thead>
+        <thead class="table-light align-middle text-center">
+          <tr>
+            <th style="width: 30%">
+              <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-hammer mb-1 text-muted"></i>
+                <small>Ferramenta</small>
+              </div>
+            </th>
+
+            <!-- AUMENTADO de 20% para 30% -->
+            <th style="width: 30%">
+              <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-currency-dollar mb-1 text-muted"></i>
+                <small>Valor para esta cotação (R$)</small>
+              </div>
+            </th>
+
+            <!-- DIMINUÍDO: largura explícita menor -->
+            <th style="width: 22%">
+              <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-chat-left-text mb-1 text-muted"></i>
+                <small>Observações</small>
+              </div>
+            </th>
+          </tr>
+        </thead>
 
         <tbody>
           {% for form in fs_ferr.forms %}
           <tr>
-            {{ form.id }}  {# ← CAMPO OBRIGATÓRIO PARA FUNCIONAMENTO DO FORMSET #}
+            {{ form.id }}
+
             <td>
-              {{ form.ferramenta|add_class:"form-select select2 form-select-sm" }}
+              {{ form.ferramenta|add_class:"form-select select2 form-select-sm ferramenta-select" }}
             </td>
-            <td class="text-center align-middle valor-ferramenta">
-              {% if form.instance.ferramenta %}
-                {{ form.instance.ferramenta.valor_total|formatar_reais }}
-              {% else %}
-                —
-              {% endif %}
+
+            <td class="p-2 text-center">
+              {{ form.valor_utilizado|add_class:"form-control form-control-sm text-end valor-utilizado" }}
+              <div class="mt-1">
+                {% if form.instance.ferramenta %}
+                  <small class="text-muted">
+                    Valor do cadastro: {{ form.instance.ferramenta.valor_total|formatar_reais }}
+                  </small>
+                {% else %}
+                  <small class="text-muted">Selecione uma ferramenta para sugerir o valor.</small>
+                {% endif %}
+              </div>
             </td>
-<td class="p-0">
-  <div class="form-control form-control-sm" style="width: 100%; max-width: 800px;">
-    {{ form.observacoes }}
-  </div>
-</td>
 
-
-
-
-
-
+            <!-- observações com largura e altura menores -->
+            <td class="p-0">
+              <div class="form-control form-control-sm" style="width: 100%; max-width: 520px;">
+                {{ form.observacoes }}
+              </div>
+            </td>
           </tr>
-          
           {% endfor %}
         </tbody>
       </table>
@@ -79,34 +85,45 @@
   </div>
 </form>
 
-<!-- Script Select2 + Atualização de valores -->
 <script>
+  // Inicialização do Select2
   $(document).ready(function () {
-    $(".select2").select2({
-      width: 'resolve'
-    });
+    $(".select2").select2({ width: 'resolve' });
+  });
 
-    $(".select2").on("change", function () {
-      const select = $(this);
-      const row = select.closest("tr");
-      const id = select.val();
+  // Sugerir o valor do cadastro ao trocar a ferramenta
+  $(document).on("change", ".ferramenta-select", function () {
+    const row = $(this).closest("tr");
+    const id = $(this).val();
 
-      $.get("{% url 'ajax_valor_ferramenta' %}", { id: id }, function (data) {
-        const valorText = data.valor_total !== null
-          ? "R$ " + parseFloat(data.valor_total).toFixed(2).replace(".", ",")
-          : "—";
-        row.find(".valor-ferramenta").text(valorText);
-      });
+    if (!id) {
+      row.find(".valor-utilizado").val("");
+      row.find(".valor-utilizado").attr("placeholder", "0,00");
+      row.find(".valor-utilizado").closest("td").find("small.text-muted").text("Selecione uma ferramenta para sugerir o valor.");
+      return;
+    }
+
+    $.get("{% url 'ajax_valor_ferramenta' %}", { id: id }, function (data) {
+      const valor = (data && data.valor_total !== null) ? parseFloat(data.valor_total).toFixed(2) : "";
+      const $inp  = row.find(".valor-utilizado");
+      const $hint = row.find("small.text-muted");
+
+      if (!$inp.val()) {
+        $inp.val(valor);
+      }
+
+      if (valor) {
+        $hint.text("Valor do cadastro: R$ " + valor.replace(".", ","));
+      } else {
+        $hint.text("Sem valor cadastrado para esta ferramenta.");
+      }
     });
   });
-</script>
 
-<!-- Script para setar nome da aba ativa -->
-<script>
+  // Garantir que o submit marque a aba
   document.addEventListener("DOMContentLoaded", function () {
     const abaSubmetidaInput = document.getElementById("abaSubmetidaInput");
     const salvarBtn = document.querySelector("button[type='submit']");
-
     if (salvarBtn && abaSubmetidaInput) {
       salvarBtn.addEventListener("click", function () {
         abaSubmetidaInput.name = "form_ferramentas_submitted";
@@ -115,9 +132,18 @@
   });
 </script>
 
-<!-- Estilo CKEditor -->
 <style>
-  .ck-editor__editable {
-    min-height: 120px !important;
+  /* Altura menor do editor apenas nesta aba */
+  .tab-ferramentas .ck-editor__editable { min-height: 80px !important; }
+
+  /* Ajuste fino de largura das colunas em telas médias/grandes */
+  @media (min-width: 992px) {
+    .tab-ferramentas table tbody tr > td:nth-child(1) { width: 30%; }
+    .tab-ferramentas table tbody tr > td:nth-child(2) { width: 30%; } /* Valor maior */
+    .tab-ferramentas table tbody tr > td:nth-child(3) { width: 22%; } /* Observações menor */
   }
+
+  .select2-container--default .select2-selection--single { height: 31px; }
+  .select2-container .select2-selection--single .select2-selection__rendered { line-height: 31px; }
+  .select2-container .select2-selection--single .select2-selection__arrow { height: 31px; }
 </style>

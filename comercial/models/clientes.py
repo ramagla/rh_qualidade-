@@ -116,6 +116,7 @@ class ClienteDocumento(models.Model):
         ('Carta IPI', 'Carta IPI'),
         ('Ficha Cadastral', 'Ficha Cadastral'),
         ('Cartão Suframa', 'Cartão Suframa'),
+        ('Norma', 'Normas'),
         ('Outros', 'Outros'),
     ]
 

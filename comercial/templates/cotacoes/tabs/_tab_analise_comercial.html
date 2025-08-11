@@ -1,7 +1,7 @@
 {% load widget_tweaks %}
 {% load comercial_formatos %}
 
-<form method="post" novalidate>
+<form method="post" enctype="multipart/form-data" novalidate>
   <input type="hidden" name="aba" value="analise">
   <input type="hidden" name="form_analise_submitted" value="1">
   {% csrf_token %}

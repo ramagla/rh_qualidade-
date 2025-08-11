@@ -612,6 +612,7 @@ class CotacaoFerramenta(AuditModel):
         Ferramenta, on_delete=models.PROTECT
     )
     observacoes  = CKEditor5Field("Observações da Ferramenta", config_name="default", blank=True, null=True)
+    valor_utilizado = models.DecimalField("Valor utilizado na cotação (R$)", max_digits=12, decimal_places=2,null=True, blank=True)
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
     assinado_em = models.DateTimeField(auto_now_add=True)
     data_assinatura = models.DateTimeField("Data da assinatura", null=True, blank=True)
@@ -622,7 +623,14 @@ class CotacaoFerramenta(AuditModel):
         verbose_name = "Ferramenta na Cotação"
         verbose_name_plural = "Ferramentas na Cotação"
 
-
+    @property
+    def valor_aplicado(self) -> Decimal:
+            """
+            Preferir o valor informado na cotação; se vazio, usar o valor do cadastro da Ferramenta.
+            """
+            base = self.ferramenta.valor_total or Decimal("0.00")
+            return Decimal(self.valor_utilizado) if self.valor_utilizado not in [None, ""] else Decimal(base)
+    
 class RegrasCalculo(AuditModel):
     """Impostos e encargos para o pré-cálculo."""
     precalculo = models.OneToOneField("PreCalculo", on_delete=models.CASCADE, related_name="regras_calculo_item",null=True, blank=True)

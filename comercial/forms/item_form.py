@@ -45,6 +45,7 @@ class ItemForm(forms.ModelForm):
             "simbolo_l2": FileInput(attrs={"class": "form-control"}),
             "codigo_amostra": TextInput(attrs={"class": "form-control", "placeholder": "Código de amostra"}),
             "tipo_item": Select(attrs={"class": "form-select"}),
+            "tipo_de_peca": Select(attrs={"class": "form-select select2"}),
             "fontes_homologadas": forms.SelectMultiple(attrs={"class": "form-select select2", "data-placeholder": "Selecione as fontes homologadas"}),
 
         }
@@ -78,9 +79,9 @@ class ItemForm(forms.ModelForm):
             "simbolo_l1": "Imagem L1",
             "simbolo_l2": "Imagem L2",
             "codigo_amostra": "Código de Amostra",
-
-                "tipo_item": "Tipo de Item",
-"fontes_homologadas": "Fontes Homologadas",
+            "tipo_de_peca": "Tipo de Peça",
+            "tipo_item": "Tipo de Item",
+            "fontes_homologadas": "Fontes Homologadas",
 
         }
 

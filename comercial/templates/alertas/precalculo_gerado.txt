@@ -7,3 +7,8 @@ Foi gerado um novo Pré-Cálculo:
 
 Para visualizar, acesse:
 {{ link }}
+
+{% if link_normas and qtd_normas|default:0 > 0 -%}
+Normas do Cliente ({{ qtd_normas }}):
+{{ link_normas }}
+{%- endif %}

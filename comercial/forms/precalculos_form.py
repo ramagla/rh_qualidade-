@@ -290,18 +290,74 @@ from django import forms
 from django_ckeditor_5.widgets import CKEditor5Widget
 from comercial.models.precalculo import CotacaoFerramenta
 
+from decimal import Decimal, InvalidOperation
+from django import forms
+from django.core.exceptions import ValidationError
+from comercial.models.precalculo import CotacaoFerramenta
+
 class CotacaoFerramentaForm(forms.ModelForm):
     class Meta:
         model = CotacaoFerramenta
-        fields = "__all__"
-       
+        # O inlineformset já injeta 'precalculo'; mantemos visíveis só os campos de edição
+        fields = ["ferramenta", "valor_utilizado", "observacoes"]
+        labels = {
+            "ferramenta": "Ferramenta",
+            "valor_utilizado": "Valor utilizado na cotação (R$)",
+            "observacoes": "Observações",
+        }
+        help_texts = {
+            # Deixe em branco para usar o valor do cadastro da ferramenta
+            "valor_utilizado": "Se vazio, será usado o valor atual cadastrado na Ferramenta.",
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['ferramenta'].widget.attrs.update({
+
+        # Select2 para a ferramenta
+        self.fields["ferramenta"].widget.attrs.update({
             "class": "form-select select2"
         })
-        self.fields['ferramenta'].label = "Ferramenta"
+
+        # Input numérico para o valor utilizado (editável só nesta cotação)
+        self.fields["valor_utilizado"].required = False
+        self.fields["valor_utilizado"].widget = forms.NumberInput(attrs={
+            "class": "form-control form-control-sm text-end",
+            "placeholder": "0,00",
+            "step": "0.01",
+            "min": "0"
+        })
+
+        # Observações (mantém CKEditor se o model usa; aqui só garantimos classe base)
+        if "observacoes" in self.fields:
+            self.fields["observacoes"].widget.attrs.update({
+                "class": (self.fields["observacoes"].widget.attrs.get("class", "") + " form-control form-control-sm").strip()
+            })
+
+        # Pré-preencher o valor com o do cadastro da ferramenta (apenas se o usuário ainda não digitou)
+        if not self.is_bound:
+            inst = self.instance
+            if getattr(inst, "pk", None) and not inst.valor_utilizado and getattr(inst, "ferramenta_id", None):
+                try:
+                    self.initial["valor_utilizado"] = inst.ferramenta.valor_total
+                except Exception:
+                    # Em caso de ferramenta sem valor_total, mantém vazio para cair no fallback
+                    pass
+
+    def clean_valor_utilizado(self):
+        """Normaliza vírgula/ponto, valida número e permite vazio (fallback para o cadastro)."""
+        valor = self.cleaned_data.get("valor_utilizado")
+        if valor in (None, ""):
+            return None  # manter vazio para usar o valor do cadastro da ferramenta
+
+        try:
+            valor_normalizado = Decimal(str(valor).replace(",", "."))
+            # Não permitir negativo
+            if valor_normalizado < 0:
+                raise ValidationError("O valor não pode ser negativo.")
+            # Duas casas
+            return valor_normalizado.quantize(Decimal("0.01"))
+        except (InvalidOperation, ValueError):
+            raise ValidationError("Informe um valor numérico válido (ex.: 1234,56).")
 
 
 

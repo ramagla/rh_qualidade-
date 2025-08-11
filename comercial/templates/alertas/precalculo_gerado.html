@@ -6,17 +6,30 @@
 </head>
 <body>
   <h2>[Sistema Bras-Mol] Pré-Cálculo {{ precalculo.numero }} criado</h2>
+
   <p>Olá {{ usuario.get_full_name }},</p>
+
   <p>Um novo Pré-Cálculo foi gerado para a <strong>Cotação nº {{ cotacao.numero }}</strong>.</p>
+
   <ul>
     <li><strong>Pré-Cálculo:</strong> {{ precalculo.numero }}</li>
     <li><strong>Gerado por:</strong> {{ usuario.get_full_name }}</li>
   </ul>
+
   <p>
     <a href="{{ link }}" target="_blank">
       ▶ Clique aqui para acessar o Pré-Cálculo
     </a>
   </p>
+
+  {% if link_normas and qtd_normas|default:0 > 0 %}
+    <p style="margin-top:12px">
+      <a href="{{ link_normas }}" target="_blank">
+        📚 Acessar Normas do Cliente ({{ qtd_normas }})
+      </a>
+    </p>
+  {% endif %}
+
   <hr>
   <small>Este é um e-mail automático do SIB (Sistema Integrado Bras-Mol)</small>
 </body>

@@ -66,17 +66,30 @@
         </select>
       </div>
 
-      <!-- Tipo de Item -->
-      <div class="col-12 filtro-wrapper">
-        <label for="tipo_item" class="form-label">
-          <i class="bi bi-tag me-1"></i> Tipo de Item
-        </label>
-        <select name="tipo_item" id="tipo_item" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
-          <option value="">Todos</option>
-          <option value="corrente" {% if request.GET.tipo_item == "corrente" %}selected{% endif %}>Corrente</option>
-          <option value="cotacao" {% if request.GET.tipo_item == "cotacao" %}selected{% endif %}>Cotação</option>
-        </select>
-      </div>
+     <!-- Tipo de Item -->
+<div class="col-12 filtro-wrapper">
+  <label for="tipo_item" class="form-label">
+    <i class="bi bi-tag me-1"></i> Tipo de Item
+  </label>
+  <select name="tipo_item" id="tipo_item" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+    <option value="">Todos</option>
+    <option value="Corrente" {% if request.GET.tipo_item == "Corrente" %}selected{% endif %}>Corrente</option>
+    <option value="Cotacao" {% if request.GET.tipo_item == "Cotacao" %}selected{% endif %}>Cotação</option>
+  </select>
+</div>
+
+<!-- Tipo de Peça -->
+<div class="col-12 filtro-wrapper">
+  <label for="tipo_de_peca" class="form-label">
+    <i class="bi bi-box-seam me-1"></i> Tipo de Peça
+  </label>
+  <select name="tipo_de_peca" id="tipo_de_peca" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+    <option value="">Todos</option>
+    <option value="Mola" {% if request.GET.tipo_de_peca == "Mola" %}selected{% endif %}>Mola</option>
+    <option value="Estampado" {% if request.GET.tipo_de_peca == "Estampado" %}selected{% endif %}>Estampado</option>
+    <option value="Aramado" {% if request.GET.tipo_de_peca == "Aramado" %}selected{% endif %}>Aramado</option>
+  </select>
+</div>
 
       <!-- Botão de Filtrar -->
       <div class="col-12 mt-3">

@@ -16,9 +16,10 @@ def lista_itens(request):
     # 🔍 Filtros
     itens_qs = Item.objects.all().order_by('descricao')
 
-    codigo = request.GET.get('codigo')
-    status = request.GET.get('status')
-    tipo_item = request.GET.get('tipo_item')
+    codigo       = request.GET.get('codigo')
+    status       = request.GET.get('status')
+    tipo_item    = request.GET.get('tipo_item')      # filtro 1 (já existente)
+    tipo_de_peca = request.GET.get('tipo_de_peca')   # filtro 2 (novo)
 
     if codigo:
         itens_qs = itens_qs.filter(codigo=codigo)
@@ -28,6 +29,9 @@ def lista_itens(request):
 
     if tipo_item:
         itens_qs = itens_qs.filter(tipo_item=tipo_item)
+
+    if tipo_de_peca:
+        itens_qs = itens_qs.filter(tipo_de_peca=tipo_de_peca)
 
     # 📊 Indicadores
     total_itens = itens_qs.count()
@@ -56,10 +60,18 @@ def lista_itens(request):
         'total_automotivo': total_automotivo,
         'total_item_seguranca': total_item_seguranca,
         'total_com_desenho': total_com_desenho,
-        'codigos_disponiveis': codigos_disponiveis,  # ✅ para o select
+        'codigos_disponiveis': codigos_disponiveis,
+        # ✅ devolve seleções atuais para pré-selecionar no template
+        'filtros': {
+            'codigo': codigo or '',
+            'status': status or '',
+            'tipo_item': tipo_item or '',
+            'tipo_de_peca': tipo_de_peca or '',
+        },
     }
 
     return render(request, 'cadastros/itens_lista.html', context)
+
 
 
 
@@ -177,6 +189,7 @@ def importar_itens_excel(request):
                     descricao_cliente=row.get("Descrição no Cliente", ""),
                     ipi=row.get("IPI (%)", None),
                     tipo_item=row.get("Tipo de Item", "Cotacao"),
+                    tipo_de_peca=row.get("Tipo de Peça", "Mola"),
                     status=row.get("Status", "Ativo"),
                     automotivo_oem=bool(row.get("Automotivo OEM", False)),
                     requisito_especifico=bool(row.get("Requisito Específico Cliente?", False)),
