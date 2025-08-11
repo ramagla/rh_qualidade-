@@ -66,7 +66,6 @@ def cadastrar_cargo(request):
 
 @login_required
 def editar_cargo(request, cargo_id):
-    """Edita um cargo existente."""
     cargo = get_object_or_404(Cargo, pk=cargo_id)
     form = CargoForm(
         request.POST or None,
@@ -75,10 +74,16 @@ def editar_cargo(request, cargo_id):
         initial=preencher_datas_formulario(cargo)
     )
     if request.method == "POST" and form.is_valid():
+        # Remoção solicitada pelo partial (_campo_anexo.html)
+        if request.POST.get("remover_descricao_arquivo") == "1" and cargo.descricao_arquivo:
+            cargo.descricao_arquivo.delete(save=False)
+            cargo.descricao_arquivo = None
+
         form.save()
         return redirect("lista_cargos")
 
     return render(request, "cargos/form_cargo.html", {"form": form, "cargo": cargo})
+
 
 @login_required
 def excluir_cargo(request, cargo_id):

@@ -3,7 +3,32 @@ from django_ckeditor_5.fields import CKEditor5Field
 
 from .funcionario import Funcionario
 
+import os
+from django.core.exceptions import ValidationError
+from django.utils.deconstruct import deconstructible
+from django.core.files.uploadedfile import UploadedFile
+from django.utils.text import slugify
 
+def renomear_anexo_lista_presenca(instance, filename):
+    nome, ext = os.path.splitext(filename)
+    assunto = slugify(instance.assunto or "lista-presenca")
+    data = (instance.data_fim or instance.data_inicio).strftime("%Y%m%d")
+    return os.path.join("listas_presenca", f"lista-{assunto}-{data}{ext}")
+
+@deconstructible
+class MaxFileSizeValidator:
+    def __init__(self, max_mb=5):
+        self.max_mb = max_mb
+    def __call__(self, arquivo):
+        if not arquivo:
+            return
+        if not isinstance(arquivo, UploadedFile):
+            return
+        if arquivo.size > self.max_mb * 1024 * 1024:
+            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+    def __eq__(self, other):
+        return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
+    
 class ListaPresenca(models.Model):
     """
     Representa uma lista de presença para treinamentos, cursos ou eventos internos,
@@ -63,10 +88,11 @@ class ListaPresenca(models.Model):
         verbose_name="Necessita Avaliação?"
     )
     lista_presenca = models.FileField(
-        upload_to="listas_presenca/",
-        null=True,
+        upload_to=renomear_anexo_lista_presenca,
         blank=True,
-        verbose_name="Arquivo da Lista de Presença"
+        null=True,
+        verbose_name="Arquivo da Lista de Presença",
+        validators=[MaxFileSizeValidator(5)],
     )
     participantes = models.ManyToManyField(
         Funcionario,
@@ -109,6 +135,11 @@ class ListaPresenca(models.Model):
             minutes = total_minutes % 60
             return f"{hours}h {minutes}m"
         return ""
+    
+    def delete(self, *args, **kwargs):
+        if self.lista_presenca:
+            self.lista_presenca.delete(save=False)
+        super().delete(*args, **kwargs)
 
     class Meta:
         ordering = ["-data_inicio"]

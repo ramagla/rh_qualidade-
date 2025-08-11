@@ -96,12 +96,8 @@
 
         <!-- Novo campo para anexar lista de assinaturas -->
         <div class="col-md-12">
-            <label for="lista_assinaturas" class="form-label">
-  <i class="bi bi-pen me-1" aria-hidden="true"></i> Lista de Assinaturas:
-</label>
-{{ form.lista_assinaturas }}
-<div class="form-text">
-  Anexe a lista de assinaturas em PDF ou imagem (JPG/PNG).
+          {% include "partials/global/_campo_anexo.html" with campo="lista_assinaturas" %}
+
 </div>
 
 

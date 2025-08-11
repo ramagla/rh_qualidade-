@@ -78,24 +78,45 @@ def cadastrar_treinamento(request):
         "funcionarios": funcionarios_ativos,
     })
 
+from django.contrib import messages
 
 @login_required
 def editar_treinamento(request, id):
+    """
+    Edita um treinamento existente.
+    - Mantém validações do form
+    - Trata remoção do anexo (remover_anexo=1)
+    - Recalcula/atualiza a avaliação associada conforme a regra atual
+    """
     treinamento = get_object_or_404(Treinamento, id=id)
 
     if request.method == "POST":
         form = TreinamentoForm(request.POST, request.FILES, instance=treinamento)
+
+        # Sinalizador de remoção do anexo
+        remover = request.POST.get("remover_anexo") == "1" or request.POST.get("anexo-clear") in ("on", "1", "true", "True")
+
         if form.is_valid():
+            if remover and treinamento.anexo:
+                treinamento.anexo.delete(save=False)
+                treinamento.anexo = None
+
             treinamento = form.save()
             criar_ou_atualizar_avaliacao(treinamento)
+
+            messages.success(request, "Treinamento atualizado com sucesso!")
             return redirect("lista_treinamentos")
     else:
         form = TreinamentoForm(instance=treinamento)
 
-    return render(request, "treinamentos/form_treinamento.html", {
-        "form": form,
-        "funcionarios": Funcionario.objects.filter(status="Ativo").order_by("nome"),
-    })
+    return render(
+        request,
+        "treinamentos/form_treinamento.html",
+        {
+            "form": form,
+            "funcionarios": Funcionario.objects.filter(status="Ativo").order_by("nome"),
+        },
+    )
 
 
 @login_required

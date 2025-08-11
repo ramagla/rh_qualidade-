@@ -113,6 +113,11 @@ def editar_comunicado(request, id):
     if request.method == "POST":
         form = ComunicadoForm(request.POST, request.FILES, instance=comunicado)
         if form.is_valid():
+            # ✅ remover arquivo se marcado no partial (_campo_anexo.html)
+            if request.POST.get("remover_lista_assinaturas") == "1" and comunicado.lista_assinaturas:
+                comunicado.lista_assinaturas.delete(save=False)
+                comunicado.lista_assinaturas = None
+
             form.save()
             return redirect("lista_comunicados")
     else:
@@ -123,6 +128,7 @@ def editar_comunicado(request, id):
         "comunicados/form_comunicado.html",
         {"form": form, "comunicado": comunicado},
     )
+
 
 
 @login_required

@@ -23,6 +23,7 @@ class ComunicadoForm(forms.ModelForm):
     lista_assinaturas = forms.FileField(
         required=False,
         widget=forms.FileInput(attrs={"class": "form-control"}),
+        label="Lista de Assinaturas"
     )
 
     class Meta:
@@ -50,6 +51,12 @@ class ComunicadoForm(forms.ModelForm):
         """
         assunto = self.cleaned_data.get("assunto", "")
         return title_case(assunto) if assunto else assunto
+    
+    def clean_lista_assinaturas(self):
+        f = self.cleaned_data.get("lista_assinaturas")
+        if f and f.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("O arquivo excede 5 MB.")
+        return f
 
     def clean_departamento_responsavel(self):
         """

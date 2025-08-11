@@ -1,6 +1,31 @@
+import os
+
 from django.db import models
 from django.utils import timezone
+from django.utils.text import slugify
+from django.utils.deconstruct import deconstructible
+from django.core.exceptions import ValidationError
 
+@deconstructible
+class MaxFileSizeValidator:
+    def __init__(self, max_mb=5):
+        self.max_mb = max_mb
+
+    def __call__(self, arquivo):
+        if arquivo and arquivo.size > self.max_mb * 1024 * 1024:
+            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+
+    def __eq__(self, other):
+        return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
+
+
+def renomear_lista_assinaturas(instance, filename):
+    nome, extensao = os.path.splitext(filename)
+    tipo_slug = slugify(instance.tipo or "comunicado")
+    return os.path.join(
+        "comunicados",
+        f"comunicado-{tipo_slug}-{instance.id or 'novo'}-{instance.data.strftime('%Y%m%d')}{extensao}"
+    )
 
 class Comunicado(models.Model):
     """
@@ -38,14 +63,20 @@ class Comunicado(models.Model):
         verbose_name="Departamento Responsável"
     )
     lista_assinaturas = models.FileField(
-        upload_to="assinaturas/",
-        null=True,
+        upload_to=renomear_lista_assinaturas,
         blank=True,
-        verbose_name="Lista de Assinaturas"
+        null=True,
+        verbose_name="Lista de Assinaturas",
+        validators=[MaxFileSizeValidator(5)],
     )
 
     def __str__(self):
         return f"Comunicado {self.id} - {self.assunto}"
+    
+    def delete(self, *args, **kwargs):
+        if self.lista_assinaturas and os.path.isfile(self.lista_assinaturas.path):
+            os.remove(self.lista_assinaturas.path)
+        super().delete(*args, **kwargs)
 
     class Meta:
         ordering = ['-data']

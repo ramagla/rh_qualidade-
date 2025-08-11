@@ -52,11 +52,9 @@
               {{ form.nivel }}
             </div>
             <div class="col-md-6">
-              <label for="descricao_arquivo" class="form-label">
-                <i class="bi bi-upload me-1" aria-hidden="true"></i> Descrição do Cargo Assinada:
-              </label>
-              {{ form.descricao_arquivo }}
-            </div>
+  {% include "partials/global/_campo_anexo.html" with campo="descricao_arquivo" %}
+</div>
+
           </div>
         </div>
       </div>

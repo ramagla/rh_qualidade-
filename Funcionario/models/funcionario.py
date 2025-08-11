@@ -3,9 +3,21 @@ from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.utils.deconstruct import deconstructible
 
 from .cargo import Cargo
 from .departamentos import Departamentos
+
+@deconstructible
+class MaxFileSizeValidator:
+    def __init__(self, max_mb=5):
+        self.max_mb = max_mb
+    def __call__(self, arquivo):
+        if arquivo and arquivo.size > self.max_mb * 1024 * 1024:
+            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+    def __eq__(self, other):
+        return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
 
 
 def renomear_curriculo(instance, filename):
@@ -13,12 +25,22 @@ def renomear_curriculo(instance, filename):
     novo_nome = f"{slugify(instance.nome)}-{instance.numero_registro}{extensao}"
     return os.path.join("curriculos_funcionarios", novo_nome)
 
+def renomear_certificado_ensino_medio(instance, filename):
+    nome, extensao = os.path.splitext(filename)
+    novo_nome = f"certificado-ensino-medio-{slugify(instance.nome)}-{instance.numero_registro}{extensao}"
+    return os.path.join("certificados_ensino_medio", novo_nome)
+
 
 def renomear_assinatura(instance, filename):
     nome, extensao = os.path.splitext(filename)
     novo_nome = f"assinatura-{slugify(instance.nome)}{extensao}"
     return os.path.join("assinaturas_funcionarios", novo_nome)
 
+
+def renomear_foto(instance, filename):
+    nome, extensao = os.path.splitext(filename)
+    novo_nome = f"foto-{slugify(instance.nome)}-{instance.numero_registro}{extensao}"
+    return os.path.join("fotos_funcionarios", novo_nome)
 
 class Funcionario(models.Model):
     """
@@ -55,11 +77,11 @@ class Funcionario(models.Model):
     genero = models.CharField(max_length=20, choices=GENERO_CHOICES, default="Não Informado", verbose_name="Gênero")
     experiencia_profissional = models.CharField(max_length=3, choices=EXPERIENCIA_CHOICES, default="Sim", verbose_name="Experiência Profissional")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
-    foto = models.ImageField(upload_to="fotos_funcionarios/", blank=True, null=True, verbose_name="Foto")
+    foto = models.ImageField(upload_to=renomear_foto, blank=True,null=True,verbose_name="Foto",validators=[MaxFileSizeValidator(5)],)
     assinatura_eletronica = models.ImageField(upload_to=renomear_assinatura, blank=True, null=True, verbose_name="Assinatura Eletrônica")
-    curriculo = models.FileField(upload_to=renomear_curriculo, blank=True, null=True, verbose_name="Currículo")
+    curriculo = models.FileField(upload_to=renomear_curriculo, blank=True, null=True, verbose_name="Currículo",validators=[MaxFileSizeValidator(5)],)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Ativo", verbose_name="Status")
-    formulario_f146 = models.FileField(upload_to="certificado_ensino/", blank=True, null=True, verbose_name="Formulário F146")
+    formulario_f146 = models.FileField(upload_to=renomear_certificado_ensino_medio,blank=True, null=True,verbose_name="Certificado de Conclusão do Ensino Médio",validators=[MaxFileSizeValidator(5)],)
     data_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     camisa = models.CharField(max_length=3, choices=TAMANHO_CAMISA_CHOICES, blank=True, null=True, verbose_name="Tamanho da Camisa")
     calcado = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name="Número do Calçado")

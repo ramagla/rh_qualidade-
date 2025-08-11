@@ -112,19 +112,65 @@
 
 <!-- Tabela -->
 <table class="table table-bordered table-striped text-center mt-3 align-middle">
-  <thead class="table-light align-middle">
-    <tr>
-      <th scope="col"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Assunto</th>
-      <th scope="col"><i class="bi bi-calendar-event" aria-hidden="true"></i> Data Início</th>
-      <th scope="col"><i class="bi bi-calendar-check" aria-hidden="true"></i> Data Fim</th>
-      <th scope="col"><i class="bi bi-clock-history" aria-hidden="true"></i> Duração</th>
-      <th scope="col"><i class="bi bi-people" aria-hidden="true"></i> Participantes</th>
-      <th scope="col"><i class="bi bi-patch-question" aria-hidden="true"></i> Avaliação</th>
-      <th scope="col"><i class="bi bi-info-circle" aria-hidden="true"></i> Situação</th>
-      <th scope="col"><i class="bi bi-paperclip" aria-hidden="true"></i> Anexo</th>
-      <th scope="col"><i class="bi bi-gear" aria-hidden="true"></i> Ações</th>
-    </tr>
-  </thead>
+ <thead class="table-light align-middle">
+  <tr>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-chat-left-text mb-1" aria-hidden="true"></i>
+        <small>Assunto</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1" aria-hidden="true"></i>
+        <small>Data Início</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-check mb-1" aria-hidden="true"></i>
+        <small>Data Fim</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clock-history mb-1" aria-hidden="true"></i>
+        <small>Duração</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-people mb-1" aria-hidden="true"></i>
+        <small>Participantes</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-patch-question mb-1" aria-hidden="true"></i>
+        <small>Avaliação</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-info-circle mb-1" aria-hidden="true"></i>
+        <small>Situação</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-paperclip mb-1" aria-hidden="true"></i>
+        <small>Anexo</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1" aria-hidden="true"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
 
     <tbody>
       {% for lista in listas_presenca %}

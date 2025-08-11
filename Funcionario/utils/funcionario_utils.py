@@ -1,8 +1,19 @@
 from collections import defaultdict
 from copy import deepcopy
-from datetime import timedelta, timezone
+from datetime import timedelta
+from django.utils import timezone  # ✅ use o timezone do Django
 from django.db.models import Q, Count
-from Funcionario.models import Funcionario, Departamentos, AvaliacaoAnual, AvaliacaoExperiencia, Treinamento, AvaliacaoTreinamento, JobRotationEvaluation, ListaPresenca, IntegracaoFuncionario
+from Funcionario.models import (
+    Funcionario,
+    Departamentos,
+    AvaliacaoAnual,
+    AvaliacaoExperiencia,
+    Treinamento,
+    AvaliacaoTreinamento,
+    JobRotationEvaluation,
+    ListaPresenca,
+    IntegracaoFuncionario,
+)
 from metrologia.models import TabelaTecnica
 
 
@@ -54,24 +65,22 @@ def obter_contexto_funcionario(funcionarios, status, page_obj):
 
 
 def montar_estrutura_organograma(funcionario):
-    today = timezone.now().date()
+    # ✅ data “aware” de acordo com TIME_ZONE do Django
+    today = timezone.localdate()
 
     def calcular_prazo(lista, dias):
         for a in lista:
-            data_limite = a.data_avaliacao + timedelta(days=dias)
-            a.get_status_prazo = "Dentro do Prazo" if data_limite >= today else "Em Atraso"
+            if getattr(a, "data_avaliacao", None):
+                data_limite = a.data_avaliacao + timedelta(days=dias)
+                a.get_status_prazo = "Dentro do Prazo" if data_limite >= today else "Em Atraso"
 
     return {
         "funcionario": funcionario,
         "treinamentos": Treinamento.objects.filter(funcionarios=funcionario),
         "listas_presenca": ListaPresenca.objects.filter(participantes=funcionario),
         "avaliacoes_treinamento": AvaliacaoTreinamento.objects.filter(funcionario=funcionario),
-        "avaliacoes_experiencia": list(
-            a for a in AvaliacaoExperiencia.objects.filter(funcionario=funcionario)
-        ),
-        "avaliacoes_anual": list(
-            a for a in AvaliacaoAnual.objects.filter(funcionario=funcionario)
-        ),
+        "avaliacoes_experiencia": list(AvaliacaoExperiencia.objects.filter(funcionario=funcionario)),
+        "avaliacoes_anual": list(AvaliacaoAnual.objects.filter(funcionario=funcionario)),
         "job_rotations": JobRotationEvaluation.objects.filter(funcionario=funcionario),
         "equipamentos": TabelaTecnica.objects.filter(responsavel=funcionario),
         "integracao": IntegracaoFuncionario.objects.filter(funcionario=funcionario).last(),
@@ -114,6 +123,8 @@ Um e-mail para redefinição de senha será enviado para: {email} ✉️
 2️⃣ Conheça os Módulos Disponíveis no Sistema:
 👉 {video_modulo}
 """
+
+
 def gerar_organograma_dict(funcionario):
     subordinados = Funcionario.objects.filter(responsavel_id=funcionario.id, status="Ativo")
     estrutura = []

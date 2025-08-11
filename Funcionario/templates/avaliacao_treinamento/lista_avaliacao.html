@@ -102,15 +102,46 @@
   <div class="table-responsive">
     <table class="table table-bordered table-striped text-center align-middle">
       <thead class="table-light align-middle">
-        <tr>
-          <th><i class="bi bi-person"></i> Colaborador</th>
-          <th><i class="bi bi-journal-check"></i> Treinamento</th>
-          <th><i class="bi bi-calendar"></i> Data da Avaliação</th>
-          <th><i class="bi bi-bar-chart-line"></i> Avaliação</th>
-          <th><i class="bi bi-clock-history"></i> Prazo</th>
-          <th><i class="bi bi-gear"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Colaborador</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-journal-check mb-1"></i>
+        <small>Treinamento</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar mb-1"></i>
+        <small>Data da Avaliação</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-bar-chart-line mb-1"></i>
+        <small>Avaliação</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clock-history mb-1"></i>
+        <small>Prazo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for avaliacao in avaliacoes_treinamento %}
           <tr>

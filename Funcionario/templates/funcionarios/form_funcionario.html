@@ -75,25 +75,8 @@
                             {% endif %}
                         </div>
                         
-                        <!-- Currículo -->
-                        <div class="col-md-6">
-                            <label for="curriculo" class="form-label">
-                                <i class="bi bi-file-earmark-pdf me-1"></i> Currículo:
-                            </label>
-                            <div class="input-group mb-3">
-                                <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_curriculo').click();">
-                                    <i class="bi bi-file-earmark-pdf"></i>
-                                </button>
-                                <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="curriculo_filename" readonly>
-                            </div>
-                            <input type="file" id="id_curriculo" name="curriculo" style="display: none;" onchange="document.getElementById('curriculo_filename').value = this.files[0].name;">
-                            {% if funcionario.curriculo %}
-                                <div class="mt-2">
-                                    <a href="{{ funcionario.curriculo.url }}" class="btn btn-info">Baixar Currículo</a>
-                                    <p>Atualmente: {{ funcionario.curriculo.name }}</p>
-                                </div>
-                            {% endif %}
-                        </div>
+                        {% include "partials/global/_campo_anexo.html" with campo="curriculo" %}
+
                     </div>
                 </div>
             </div>
@@ -249,14 +232,8 @@
                 </h2>
                 <div id="collapseCertificados" class="accordion-collapse collapse" aria-labelledby="headingCertificados" data-bs-parent="#accordionColaborador">
                     <div class="accordion-body row g-3">
-                        <div class="col-md-6">
-                            <label for="formulario_f146" class="form-label">Certificado de Conclusão de Ensino Médio:</label>
-                            <div class="input-group mb-3">
-                                <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_formulario_f146').click();">Selecionar Arquivo</button>
-                                <input type="text" class="form-control" placeholder="Nenhum arquivo selecionado" id="formulario_f146_filename" readonly>
-                            </div>
-                            <input type="file" id="id_formulario_f146" name="formulario_f146" style="display: none;" onchange="document.getElementById('formulario_f146_filename').value = this.files[0].name;">
-                        </div>
+                       {% include "partials/global/_campo_anexo.html" with campo="formulario_f146" %}
+
                     </div>
                 </div>
             </div>
@@ -511,5 +488,7 @@ function mascaraData(input) {
       toggleCamposBrigada();  // Inicial
     });
   </script>
-  
+
+
+
 {% endblock %}

@@ -84,8 +84,11 @@ class FuncionarioForm(forms.ModelForm):
 
     foto = forms.ImageField(required=False, label="Foto")
     assinatura_eletronica = forms.ImageField(required=False, label="Assinatura Eletrônica")
-    curriculo = forms.FileField(required=False, label="Currículo")
-
+    curriculo = forms.FileField(
+            required=False, label="Currículo",
+            widget=forms.FileInput(attrs={"class": "form-control"})
+        )
+    
     user = forms.ModelChoiceField(
         queryset=User.objects.filter(funcionario__isnull=True).order_by("username"),
         required=False,
@@ -98,8 +101,10 @@ class FuncionarioForm(forms.ModelForm):
         label="Status",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
-    formulario_f146 = forms.FileField(required=False, label="Formulário F146")
-
+    formulario_f146 = forms.FileField(
+            required=False, label="Certificado de Conclusão do Ensino Médio",
+            widget=forms.FileInput(attrs={"class": "form-control"})
+        )
     experiencia_profissional = forms.ChoiceField(
         choices=Funcionario.EXPERIENCIA_CHOICES,
         label="Experiência Profissional",

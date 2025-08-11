@@ -98,11 +98,14 @@ def editar_lista_presenca(request, id):
     if request.method == "POST":
         form = ListaPresencaForm(request.POST, request.FILES, instance=lista)
         if form.is_valid():
-            with transaction.atomic():
-                lista = form.save()
-                lista.participantes.set(request.POST.getlist("participantes"))
-                processar_lista_presenca(lista)
-                return redirect("lista_presenca")
+            if request.POST.get("remover_lista_presenca") == "1" and lista.lista_presenca:
+                lista.lista_presenca.delete(save=False)
+                lista.lista_presenca = None
+            lista = form.save()
+            lista.participantes.set(request.POST.getlist("participantes"))
+            processar_lista_presenca(lista)
+            return redirect("lista_presenca")
+
     else:
         form = ListaPresencaForm(instance=lista)
 

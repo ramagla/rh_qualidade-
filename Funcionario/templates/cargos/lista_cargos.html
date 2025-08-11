@@ -89,15 +89,46 @@
   <table class="table table-bordered table-striped table-hover text-center mt-4">
     <caption class="visually-hidden">Tabela de cargos cadastrados</caption>
     <thead class="table-light">
-      <tr class="align-middle">
-        <th><i class="bi bi-person-workspace"></i> Nome do Cargo</th>
-        <th><i class="bi bi-file-earmark-text"></i> Nº DC</th>
-        <th><i class="bi bi-building"></i> Departamento</th>
-        <th><i class="bi bi-clipboard-check"></i> Última Revisão</th>
-        <th><i class="bi bi-calendar-check"></i> Última Atualização</th>
-        <th><i class="bi bi-gear"></i> Ações</th>
-      </tr>
-    </thead>
+  <tr class="align-middle">
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-workspace mb-1"></i>
+        <small>Nome do Cargo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-file-earmark-text mb-1"></i>
+        <small>Nº DC</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Departamento</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clipboard-check mb-1"></i>
+        <small>Última Revisão</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-check mb-1"></i>
+        <small>Última Atualização</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
     <tbody>
       {% for cargo in cargos %}
       <tr class="align-middle">

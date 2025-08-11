@@ -3,6 +3,7 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 
 from rh_qualidade.utils import title_case
 from ..models import Treinamento
+from django.core.files.uploadedfile import UploadedFile
 
 class TreinamentoForm(forms.ModelForm):
     """
@@ -31,14 +32,17 @@ class TreinamentoForm(forms.ModelForm):
             "status": forms.Select(
                 choices=Treinamento.STATUS_CHOICES, attrs={"class": "form-select"}
             ),
-            "data_inicio": forms.DateInput(
+           "data_inicio": forms.DateInput(
+                format="%Y-%m-%d",
                 attrs={"type": "date", "class": "form-control"}
             ),
             "data_fim": forms.DateInput(
+                format="%Y-%m-%d",
                 attrs={"type": "date", "class": "form-control"}
             ),
+
             "carga_horaria": forms.TextInput(attrs={"class": "form-control"}),
-            "anexo": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "anexo": forms.FileInput(attrs={"class": "form-control"}),
             "situacao": forms.Select(
                 choices=Treinamento.SITUACAO_CHOICES, attrs={"class": "form-select"}
             ),
@@ -72,3 +76,8 @@ class TreinamentoForm(forms.ModelForm):
         if isinstance(valor, str):
             return valor == "True"
         return bool(valor)
+    def clean_anexo(self):
+        f = self.cleaned_data.get("anexo")
+        if isinstance(f, UploadedFile) and f.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("O arquivo excede 5 MB.")
+        return f

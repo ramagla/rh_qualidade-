@@ -9,35 +9,103 @@
       </label>
 
       {% if form.instance and form.instance|attr:campo %}
-        <div class="d-flex justify-content-between align-items-center bg-white border rounded px-3 py-2 mb-3">
+        <div id="bloco_atual_{{ campo }}" class="d-flex justify-content-between align-items-center bg-white border rounded px-3 py-2 mb-3">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-file-earmark-text text-muted"></i>
             {% with arquivo=form.instance|attr:campo %}
-  {% if arquivo %}
-    <a href="{{ arquivo.url }}" target="_blank" class="link-primary text-truncate" style="max-width: 300px;">
-      {{ arquivo.name|basename  }}
-    </a>
-  {% endif %}
-{% endwith %}
-
+              {% if arquivo %}
+                <a href="{{ arquivo.url }}" target="_blank" class="link-primary text-truncate" style="max-width: 300px;">
+                  {{ arquivo.name|basename }}
+                </a>
+              {% endif %}
+            {% endwith %}
           </div>
-          <button type="button" class="btn btn-outline-danger btn-sm" onclick="removerAnexo('{{ campo }}')">
+          <button type="button" class="btn btn-outline-danger btn-sm" onclick="removerAnexoPartial('{{ campo }}')">
             <i class="bi bi-trash"></i> Excluir
           </button>
         </div>
-        <input type="hidden" name="remover_{{ campo }}" id="remover_{{ campo }}" value="0">
       {% endif %}
+
+      <!-- hidden SEMPRE presente para permitir marcação -->
+      <input type="hidden" name="remover_{{ campo }}" id="remover_{{ campo }}" value="0">
 
       {% with field=form|getitem:campo %}
         {{ field|add_class:"form-control" }}
       {% endwith %}
 
-      <small class="text-muted d-block mt-1">Nenhum arquivo selecionado.</small>
+      <small id="label_{{ campo }}_status" class="text-muted d-block mt-1">Nenhum arquivo selecionado.</small>
     </div>
   </div>
+
+  <script>
+    // Define apenas uma vez, mesmo com múltiplos includes
+    window.removerAnexoPartial = window.removerAnexoPartial || function(campo) {
+      try {
+        var hidden = document.getElementById('remover_' + campo);
+        if (hidden) hidden.value = '1';
+
+        var inputFile = document.getElementById('id_' + campo);
+        if (inputFile) {
+          try { inputFile.value = ''; }
+          catch(e) {
+            var clone = inputFile.cloneNode(true);
+            clone.value = '';
+            inputFile.parentNode.replaceChild(clone, inputFile);
+          }
+        }
+
+        var bloco = document.getElementById('bloco_atual_' + campo);
+        if (bloco) bloco.classList.add('d-none');
+
+        var label = document.getElementById('label_' + campo + '_status');
+        if (label) {
+          label.textContent = 'Arquivo será removido ao salvar.';
+          label.classList.remove('text-muted');
+        }
+      } catch (err) {
+        console.error('Falha ao remover anexo:', err);
+      }
+      return false;
+    };
+  </script>
 {% else %}
   <div class="alert alert-danger mt-2">
     <i class="bi bi-exclamation-triangle-fill me-1"></i>
     O parâmetro <code>campo</code> não foi informado no include deste partial.
   </div>
 {% endif %}
+<script>
+  if (typeof window.removerAnexo !== "function") {
+    window.removerAnexo = function (campo) {
+      try {
+        var hidden = document.getElementById('remover_' + campo);
+        if (!hidden) {
+          var form = document.querySelector('form');
+          if (form) {
+            hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'remover_' + campo;
+            hidden.id   = 'remover_' + campo;
+            hidden.value = '1';
+            form.appendChild(hidden);
+          }
+        } else {
+          hidden.value = '1';
+        }
+
+        var inputFile = document.getElementById('id_' + campo);
+        if (inputFile) {
+          try { inputFile.value = ''; }
+          catch(e) {
+            var clone = inputFile.cloneNode(true);
+            clone.value = '';
+            inputFile.parentNode.replaceChild(clone, inputFile);
+          }
+        }
+      } catch (err) {
+        console.error('Falha ao remover anexo:', err);
+      }
+      return false;
+    };
+  }
+</script>

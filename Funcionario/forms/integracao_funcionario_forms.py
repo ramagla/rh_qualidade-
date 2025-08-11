@@ -49,7 +49,9 @@ class IntegracaoFuncionarioForm(forms.ModelForm):
             "data_integracao": forms.DateInput(
                 attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"
             ),
+            "pdf_integracao": forms.FileInput(attrs={"class": "form-control"}),  # ✅ remove “Atualmente/Modificar/Limpar”
         }
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

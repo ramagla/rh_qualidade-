@@ -2,6 +2,7 @@ from django import forms
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 from Funcionario.models import Funcionario, Treinamento, AvaliacaoTreinamento
+from django.core.files.uploadedfile import UploadedFile
 
 
 class AvaliacaoTreinamentoForm(forms.ModelForm):
@@ -78,6 +79,12 @@ class AvaliacaoTreinamentoForm(forms.ModelForm):
         self.fields["responsavel_3"].queryset = ativos
         self.fields["responsavel_3"].required = False
         self.fields["responsavel_3"].label = "Terceiro Responsável (opcional)"
+
+    def clean_anexo(self):
+        f = self.cleaned_data.get("anexo")
+        if isinstance(f, UploadedFile) and f.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("O arquivo excede 5 MB.")
+        return f
 
     def clean(self):
         """

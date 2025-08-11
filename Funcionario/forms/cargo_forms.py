@@ -125,6 +125,11 @@ class CargoForm(forms.ModelForm):
         numero_dc = self.cleaned_data.get("numero_dc", "")
         return numero_dc.strip()
 
+    def clean_descricao_arquivo(self):
+        f = self.cleaned_data.get("descricao_arquivo")
+        if f and f.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("O arquivo excede 5 MB.")
+        return f
 
 class RevisaoForm(forms.ModelForm):
     """

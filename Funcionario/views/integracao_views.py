@@ -52,15 +52,29 @@ def cadastrar_integracao(request):
 def editar_integracao(request, integracao_id):
     """Edita os dados de uma integração existente."""
     integracao = get_object_or_404(IntegracaoFuncionario, id=integracao_id)
-    if request.method == "POST":
-        form = IntegracaoFuncionarioForm(request.POST, request.FILES, instance=integracao)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Integração atualizada com sucesso.")
-            return redirect(reverse("lista_integracoes"))
-    else:
-        form = IntegracaoFuncionarioForm(instance=integracao)
-    return render(request, "integracao/form_integracao.html", {"form": form, "integracao": integracao})
+    form = IntegracaoFuncionarioForm(
+        request.POST or None,
+        request.FILES or None,
+        instance=integracao
+    )
+
+    if request.method == "POST" and form.is_valid():
+        # Remove o PDF se marcado no partial (_campo_anexo.html)
+        if request.POST.get("remover_pdf_integracao") == "1" and integracao.pdf_integracao:
+            integracao.pdf_integracao.delete(save=False)
+            integracao.pdf_integracao = None
+
+        form.save()
+        messages.success(request, "Integração atualizada com sucesso.")
+        return redirect(reverse("lista_integracoes"))
+
+    return render(
+        request,
+        "integracao/form_integracao.html",
+        {"form": form, "integracao": integracao}
+    )
+
+
 
 
 @login_required

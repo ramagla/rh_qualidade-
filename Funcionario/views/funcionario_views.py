@@ -62,6 +62,19 @@ def editar_funcionario(request, funcionario_id):
     form = FuncionarioForm(request.POST or None, request.FILES or None, instance=funcionario)
 
     if request.method == "POST" and form.is_valid():
+        # ✅ remover CURRÍCULO se marcado
+        print("remover_curriculo:", request.POST.get("remover_curriculo"))
+        print("remover_formulario_f146:", request.POST.get("remover_formulario_f146"))
+        if request.POST.get("remover_curriculo") == "1" and funcionario.curriculo:
+            funcionario.curriculo.delete(save=False)  # apaga do storage
+            funcionario.curriculo = None              # zera o campo no model
+
+        # ✅ remover CERTIFICADO se marcado
+        if request.POST.get("remover_formulario_f146") == "1" and funcionario.formulario_f146:
+            funcionario.formulario_f146.delete(save=False)
+            funcionario.formulario_f146 = None
+
+        # ✅ agora aplica demais alterações do form
         form.save()
         messages.success(request, "Funcionário editado com sucesso!")
         return redirect("lista_funcionarios")
@@ -72,6 +85,8 @@ def editar_funcionario(request, funcionario_id):
         "funcionarios/form_funcionario.html",
         {"form": form, "funcionario": funcionario, "responsaveis": responsaveis},
     )
+
+
 
 
 @login_required

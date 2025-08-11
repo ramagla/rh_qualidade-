@@ -1,7 +1,27 @@
 from django.db import models
 from django.utils import timezone
 from Funcionario.models.departamentos import Departamentos
+from django.utils.text import slugify
+from django.core.exceptions import ValidationError
+from django.utils.deconstruct import deconstructible
+import os
 
+@deconstructible
+class MaxFileSizeValidator:
+    def __init__(self, max_mb=5):
+        self.max_mb = max_mb
+    def __call__(self, arquivo):
+        if arquivo and arquivo.size > self.max_mb * 1024 * 1024:
+            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+    def __eq__(self, other):
+        return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
+
+def renomear_descricao_cargo(instance, filename):
+    nome, ext = os.path.splitext(filename)
+    return os.path.join(
+        "cargos",
+        f"descricao-cargo-{slugify(instance.nome)}-dc-{instance.numero_dc}{ext}"
+    )
 
 NIVEIS_HIERARQUIA = [
     (1, "Alta Direção / Conselho"),
@@ -32,10 +52,11 @@ class Cargo(models.Model):
         verbose_name="Número DC"
     )
     descricao_arquivo = models.FileField(
-        upload_to="cargos/",
+        upload_to=renomear_descricao_cargo,
         blank=True,
         null=True,
-        verbose_name="Arquivo Descritivo"
+        verbose_name="Arquivo Descritivo",
+        validators=[MaxFileSizeValidator(5)],
     )
     departamento = models.ForeignKey(
         Departamentos,

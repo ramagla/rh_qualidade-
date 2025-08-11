@@ -7,6 +7,39 @@ from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 
 from .funcionario import Funcionario
+import os
+from django.core.exceptions import ValidationError
+from django.utils.deconstruct import deconstructible
+from django.utils.text import slugify
+from django.core.files.uploadedfile import UploadedFile
+
+def renomear_anexo_treinamento(instance, filename):
+    nome, ext = os.path.splitext(filename)
+    curso = slugify(instance.nome_curso or "curso")
+    data = (instance.data_fim or instance.data_inicio).strftime("%Y%m%d")
+    return os.path.join("certificados", f"treinamento-{curso}-{data}{ext}")
+
+@deconstructible
+class MaxFileSizeValidator:
+    def __init__(self, max_mb=5):
+        self.max_mb = max_mb
+    def __call__(self, arquivo):
+        if not arquivo:
+            return
+        if not isinstance(arquivo, UploadedFile):
+            return
+        if arquivo.size > self.max_mb * 1024 * 1024:
+            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+    def __eq__(self, other):
+        return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
+
+anexo = models.FileField(
+    upload_to=renomear_anexo_treinamento,
+    blank=True,
+    null=True,
+    verbose_name="Anexo",
+    validators=[MaxFileSizeValidator(5)],
+)
 
 
 class Treinamento(models.Model):
@@ -82,10 +115,11 @@ class Treinamento(models.Model):
     data_fim = models.DateField(verbose_name="Data de Término")
     carga_horaria = models.CharField(max_length=50, verbose_name="Carga Horária")
     anexo = models.FileField(
-        upload_to="certificados/",
+        upload_to=renomear_anexo_treinamento,
         blank=True,
         null=True,
-        verbose_name="Anexo"
+        verbose_name="Anexo",
+        validators=[MaxFileSizeValidator(5)],
     )
     descricao = CKEditor5Field(
         config_name="default",
@@ -138,12 +172,10 @@ class Treinamento(models.Model):
                 funcionario.atualizar_escolaridade()
 
     def delete(self, *args, **kwargs):
-        """
-        Sobrescreve o método delete para excluir o arquivo anexo associado ao treinamento.
-        """
-        if self.anexo and os.path.isfile(self.anexo.path):
-            os.remove(self.anexo.path)
+        if self.anexo:
+            self.anexo.delete(save=False)
         super().delete(*args, **kwargs)
+
 
     @property
     def meses_agendados(self):

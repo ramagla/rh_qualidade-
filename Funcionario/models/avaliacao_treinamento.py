@@ -6,7 +6,29 @@ from django.utils import timezone
 from .funcionario import Funcionario
 from .treinamento import Treinamento
 
+import os
+from django.utils.text import slugify
+from django.utils.deconstruct import deconstructible
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
 
+def renomear_anexo_avaliacao(instance, filename):
+    nome, ext = os.path.splitext(filename)
+    funcionario = slugify(instance.funcionario.nome if instance.funcionario else "funcionario")
+    treinamento = slugify(instance.treinamento.nome_curso if instance.treinamento else "treinamento")
+    data = instance.data_avaliacao.strftime("%Y%m%d") if instance.data_avaliacao else "semdata"
+    return os.path.join("avaliacoes_treinamento", f"avaliacao-{funcionario}-{treinamento}-{data}{ext}")
+
+@deconstructible
+class MaxFileSizeValidator:
+    def __init__(self, max_mb=5):
+        self.max_mb = max_mb
+    def __call__(self, arquivo):
+        if arquivo and isinstance(arquivo, UploadedFile) and arquivo.size > self.max_mb * 1024 * 1024:
+            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+    def __eq__(self, other):
+        return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
+    
 class AvaliacaoTreinamento(models.Model):
     """
     Representa a avaliação de um treinamento realizada após determinado período,
@@ -57,10 +79,11 @@ class AvaliacaoTreinamento(models.Model):
         verbose_name="Período da Avaliação (dias)"
     )
     anexo = models.FileField(
-        upload_to="avaliacoes_treinamento/",
+        upload_to=renomear_anexo_avaliacao,
         null=True,
         blank=True,
-        verbose_name="Comprovante/Anexo"
+        verbose_name="Comprovante/Anexo",
+        validators=[MaxFileSizeValidator(5)]
     )
    
     responsavel_1 = models.ForeignKey(

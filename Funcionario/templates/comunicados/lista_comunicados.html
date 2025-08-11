@@ -204,16 +204,52 @@
 <div class="table-responsive">
   <table class="table table-bordered zebra-tabela table-hover text-center align-middle">
     <thead class="table-light">
-      <tr>
-        <th class="align-middle"><i class="bi bi-hash me-1" aria-hidden="true"></i> ID</th>
-        <th class="align-middle"><i class="bi bi-calendar3 me-1" aria-hidden="true"></i> Data</th>
-        <th class="align-middle"><i class="bi bi-chat-left-text me-1" aria-hidden="true"></i> Assunto</th>
-        <th class="align-middle"><i class="bi bi-tag me-1" aria-hidden="true"></i> Tipo</th>
-        <th class="align-middle"><i class="bi bi-building me-1" aria-hidden="true"></i> Departamento</th>
-        <th class="align-middle"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> Anexos</th>
-        <th class="align-middle"><i class="bi bi-gear me-1" aria-hidden="true"></i> Ações</th>
-      </tr>
-    </thead>
+  <tr>
+    <th class="align-middle text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hash mb-1" aria-hidden="true"></i>
+        <small>ID</small>
+      </div>
+    </th>
+    <th class="align-middle text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar3 mb-1" aria-hidden="true"></i>
+        <small>Data</small>
+      </div>
+    </th>
+    <th class="align-middle text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-chat-left-text mb-1" aria-hidden="true"></i>
+        <small>Assunto</small>
+      </div>
+    </th>
+    <th class="align-middle text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-tag mb-1" aria-hidden="true"></i>
+        <small>Tipo</small>
+      </div>
+    </th>
+    <th class="align-middle text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1" aria-hidden="true"></i>
+        <small>Departamento</small>
+      </div>
+    </th>
+    <th class="align-middle text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-file-earmark-pdf mb-1" aria-hidden="true"></i>
+        <small>Anexos</small>
+      </div>
+    </th>
+    <th class="align-middle text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1" aria-hidden="true"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
     <tbody>
       {% for comunicado in comunicados %}
         <tr>

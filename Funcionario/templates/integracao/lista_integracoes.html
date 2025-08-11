@@ -101,17 +101,53 @@
     <!-- Tabela -->
 <table class="table table-bordered table-striped table-hover text-center mt-4">
         <caption class="visually-hidden">Tabela de integrações realizadas por colaboradores</caption>
-        <thead>
-            <tr>
-                <th class="align-middle"><i class="bi bi-person-fill"></i> Colaborador</th>
-                <th class="align-middle"><i class="bi bi-calendar-event"></i> Data</th>
-                <th class="align-middle"><i class="bi bi-building"></i> Departamento</th class="align-middle">
-                <th class="align-middle"><i class="bi bi bi-whatsapp"></i> Grupo WhatsApp</th class="align-middle">
-                <th class="align-middle"><i class="bi bi-journal"></i> Requer Treinamento</th class="align-middle">
-                <th class="align-middle"><i class="bi bi-file-earmark-pdf"></i> PDF</th class="align-middle">
-                <th class="align-middle"><i class="bi bi-gear"></i> Ações</th>
-            </tr>
-        </thead>
+      <thead>
+    <tr>
+        <th class="align-middle text-center">
+            <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-person-fill mb-1"></i>
+                <small>Colaborador</small>
+            </div>
+        </th>
+        <th class="align-middle text-center">
+            <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-calendar-event mb-1"></i>
+                <small>Data</small>
+            </div>
+        </th>
+        <th class="align-middle text-center">
+            <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-building mb-1"></i>
+                <small>Departamento</small>
+            </div>
+        </th>
+        <th class="align-middle text-center">
+            <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-whatsapp mb-1"></i>
+                <small>Grupo WhatsApp</small>
+            </div>
+        </th>
+        <th class="align-middle text-center">
+            <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-journal mb-1"></i>
+                <small>Requer Treinamento</small>
+            </div>
+        </th>
+        <th class="align-middle text-center">
+            <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-file-earmark-pdf mb-1"></i>
+                <small>PDF</small>
+            </div>
+        </th>
+        <th class="align-middle text-center">
+            <div class="d-flex flex-column align-items-center">
+                <i class="bi bi-gear mb-1"></i>
+                <small>Ações</small>
+            </div>
+        </th>
+    </tr>
+</thead>
+
         <tbody>
         {% for integracao in integracoes %}
             <tr>
