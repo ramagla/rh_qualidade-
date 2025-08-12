@@ -164,7 +164,6 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
         campos = [
             'lote_minimo', 'entrega_dias', 'fornecedor', 'icms', 'preco_kg',
             'desenvolvido_mm', 'peso_liquido', 'peso_bruto', 'peso_liquido_total'
-
         ]
         for campo in campos:
             if campo in self.fields:
@@ -174,7 +173,16 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
                     if isinstance(widget, forms.Select)
                     else 'form-control form-control-sm'
                 )
-                self.fields[campo].widget.attrs.update({'class': css_class})
+                # ➜ lote_minimo como número decimal (duas casas), alinhado à direita
+                if campo == 'lote_minimo':
+                    self.fields[campo].widget = forms.NumberInput(attrs={
+                        'class': 'form-control form-control-sm text-end',
+                        'placeholder': '0,00',
+                        'step': '0.01',
+                        'min': '0'
+                    })
+                else:
+                    self.fields[campo].widget.attrs.update({'class': css_class})
                 self.fields[campo].required = False
 
         if 'peso_liquido_total' in self.fields:
@@ -193,12 +201,15 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
             )
 
         print(f"[DEBUG] Form init - PK: {self.instance.pk}, Bound: {self.is_bound}")
+        # ainda em PreCalculoServicoExternoForm.__init__
         for campo in ['peso_liquido', 'peso_bruto', 'desenvolvido_mm', 'peso_liquido_total']:
             if campo in self.fields:
                 self.fields[campo].widget = TextInput(attrs={
                     'class': 'form-control form-control-sm',
                     'placeholder': '0,0000000'
                 })
+        # (sem alterar a lista acima; apenas garantimos que 'lote_minimo' já foi tratado separadamente)
+
 
 
 
@@ -636,6 +647,5 @@ class PrecoFinalForm(forms.ModelForm):
             return valor
         except (InvalidOperation, ValueError):
             raise forms.ValidationError("Preço selecionado inválido.")
-
 
 

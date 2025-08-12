@@ -86,7 +86,7 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
         print(f"[SERVICOS][POST][PC={precalc.id}] default_status='{default_status}'")
 
         for i in range(total):
-            for fld in ("desenvolvido_mm", "peso_liquido", "peso_bruto", "preco_kg", "icms", "peso_liquido_total"):
+            for fld in ("lote_minimo", "desenvolvido_mm", "peso_liquido", "peso_bruto", "preco_kg", "icms", "peso_liquido_total"):
                 key = f"sev-{i}-{fld}"
                 val = data.get(key)
                 if val:

@@ -474,7 +474,7 @@ class PreCalculoServicoExterno(AuditModel):
     unidade = models.CharField("Unidade MP", max_length=20, blank=True, null=True)
 
 
-    lote_minimo = models.PositiveIntegerField("Lote Mínimo", null=True, blank=True)
+    lote_minimo = models.DecimalField("Lote Mínimo", max_digits=12, decimal_places=2, null=True,blank=True)    
     entrega_dias = models.PositiveIntegerField("Entrega (dias)", null=True, blank=True)
     fornecedor = models.ForeignKey(
         FornecedorQualificado, on_delete=models.PROTECT,

@@ -142,14 +142,21 @@
         <input type="number" step="0.01" name="icms_{{ forloop.counter0 }}" value="{{ sev.icms|default:'0.00' }}" class="form-control" placeholder="Ex: 18.00" />
       </td>
       <td>
-        <input type="number" name="lote_minimo_{{ forloop.counter0 }}" value="{{ sev.lote_minimo }}" class="form-control" placeholder="Ex: 250" />
+     <input type="number" name="lote_minimo_{{ forloop.counter0 }}"
+       value="{{ sev.lote_minimo|floatformat:2 }}"
+       class="form-control text-end"
+       step="0.01" min="0" lang="pt-BR" inputmode="decimal"
+       placeholder="Ex: 115,90" />
       </td>
       <td>
         <input type="number" name="entrega_dias_{{ forloop.counter0 }}" value="{{ sev.entrega_dias }}" class="form-control" placeholder="Ex: 30" />
       </td>
       <td>
-        <input type="number" step="0.01" name="preco_kg_{{ forloop.counter0 }}" value="{{ sev.preco_kg }}" class="form-control" placeholder="Ex: 14.90" />
-      </td>
+<input type="number" name="preco_kg_{{ forloop.counter0 }}"
+       value="{{ sev.preco_kg|floatformat:4 }}"
+       class="form-control text-end"
+       step="0.0001" min="0" lang="pt-BR" inputmode="decimal"
+       placeholder="Ex: 14,5000" />      </td>
     </tr>
   {% endfor %}
 </tbody>

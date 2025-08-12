@@ -989,7 +989,7 @@ def precificacao_produto(request, pk):
         try:
             preco_kg = Decimal(servico.preco_kg or 0)
             icms = Decimal(servico.icms or 0)
-            peso_total = Decimal(servico.peso_liquido or 0)
+            peso_total = Decimal(servico.peso_liquido_total or 0)            
             lote_minimo = Decimal(servico.lote_minimo or 0)
 
             preco_sem_icms = preco_kg * (Decimal("1") - icms / 100)
@@ -1055,8 +1055,8 @@ def precificacao_produto(request, pk):
 
     # ——— Serviços
     total_servico = sum(
-    Decimal((s.peso_liquido_total or 0)) * Decimal((s.preco_kg or 0))
-        for s in precalc.servicos.all()
+        Decimal((s.peso_liquido_total or 0)) * Decimal((s.preco_kg or 0))
+        for s in precalc.servicos.filter(selecionado=True)
     )
     unit_servico = total_servico / qtde if qtde else Decimal(0)
 

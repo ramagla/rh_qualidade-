@@ -48,11 +48,20 @@
     <strong class="text-warning">Técnico:</strong>
     Preenche os campos <code>Desenv. (mm)</code>, <code>Peso Líquido</code> e <code>Peso Bruto</code>.
   </div>
-   <div>
+
+  <div>
     <i class="bi bi-clock text-muted me-1"></i>
     O prazo de <strong>entrega</strong> informado é contado em <strong>dias corridos</strong>.
   </div>
+
+  <div>
+    <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>
+    <strong class="text-danger">Atenção:</strong>
+    Caso o <strong>Peso Bruto Total</strong> seja <u>menor</u> que o <strong>Lote Mínimo</strong>, 
+    a linha será destacada em vermelho para revisão.
+  </div>
 </div>
+
 
 
         {% if fs_mat.non_form_errors %}
@@ -333,5 +342,40 @@
   });
 </script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    function verificarLotes() {
+      document.querySelectorAll("tbody tr").forEach(row => {
+        const loteMinInput = row.querySelector("input[name$='-lote_minimo']");
+        const pesoTotalInput = row.querySelector("input[name$='-peso_bruto_total']");
+
+        if (loteMinInput && pesoTotalInput) {
+          const loteMin = parseFloat(loteMinInput.value.replace(",", ".")) || 0;
+          const pesoTotal = parseFloat(pesoTotalInput.value.replace(",", ".")) || 0;
+
+          // Remove alerta anterior
+          row.classList.remove("table-danger");
+          loteMinInput.title = "";
+          pesoTotalInput.title = "";
+
+          if (pesoTotal > 0 && loteMin > 0 && pesoTotal < loteMin) {
+            row.classList.add("table-danger");
+            const msg = `⚠ Peso Total (${pesoTotal}) menor que Lote Mínimo (${loteMin})`;
+            loteMinInput.title = msg;
+            pesoTotalInput.title = msg;
+          }
+        }
+      });
+    }
+
+    // Rodar ao carregar
+    verificarLotes();
+
+    // Rodar ao alterar lote mínimo ou peso total
+    document.querySelectorAll("input[name$='-lote_minimo'], input[name$='-peso_bruto_total']").forEach(input => {
+      input.addEventListener("input", verificarLotes);
+    });
+  });
+</script>
 
 

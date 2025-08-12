@@ -64,7 +64,7 @@ def disparar_email_cotacao_material(request, material):
         subject="📨 Cotação de Matéria-Prima",
         message=corpo.strip(),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["comprasbrasmol.com.br"],
+        recipient_list=["compras@brasmol.com.br"],
         fail_silently=False,
     )
 
@@ -408,17 +408,37 @@ def responder_cotacao_servico_lote(request, pk):
                 continue
 
             sev.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
-            sev.icms          = request.POST.get(f"icms_{i}") or None
-            sev.lote_minimo   = request.POST.get(f"lote_minimo_{i}") or None
-            sev.entrega_dias  = request.POST.get(f"entrega_dias_{i}") or None
 
-            preco_raw = request.POST.get(f"preco_kg_{i}") or None
-            if preco_raw:
-                preco_raw = preco_raw.replace(",", ".")
+            # normalizador local pt-BR → Decimal
+            def _dec(v, casas="0.01"):
+                if v in (None, ""):
+                    return None
+                s = str(v).strip().replace(" ", "")
                 try:
-                    sev.preco_kg = Decimal(preco_raw)
+                    if "," in s and "." in s:
+                        # pt-BR: 1.234,56 → remove milhares "." e troca "," por "."
+                        if s.rfind(",") > s.rfind("."):
+                            s = s.replace(".", "").replace(",", ".")
+                        else:
+                            # en-US com milhar por vírgula: 1,234.56 → remove as vírgulas de milhar
+                            s = s.replace(",", "")
+                    elif "," in s:
+                        # apenas vírgula → vírgula decimal
+                        s = s.replace(",", ".")
+                    # se só tem ponto, mantém como decimal
+                    return Decimal(s).quantize(Decimal(casas))
                 except (InvalidOperation, ValueError):
-                    sev.preco_kg = None
+                    return None
+
+
+            sev.icms         = _dec(request.POST.get(f"icms_{i}"), "0.01")
+            sev.lote_minimo  = _dec(request.POST.get(f"lote_minimo_{i}"), "0.01")
+
+            entrega_raw      = request.POST.get(f"entrega_dias_{i}")
+            sev.entrega_dias = int(entrega_raw) if (entrega_raw and entrega_raw.isdigit()) else None
+
+            sev.preco_kg     = _dec(request.POST.get(f"preco_kg_{i}"), "0.0001")
+
 
             # Marca como OK apenas se houver preço informado
             if sev.preco_kg:
@@ -512,6 +532,5 @@ def responder_cotacao_servico_lote(request, pk):
             "codigo": codigo,
         }
     )
-
 
 
