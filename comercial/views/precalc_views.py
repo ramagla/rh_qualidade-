@@ -989,8 +989,13 @@ def precificacao_produto(request, pk):
         try:
             preco_kg = Decimal(servico.preco_kg or 0)
             icms = Decimal(servico.icms or 0)
-            peso_total = Decimal(servico.peso_liquido_total or 0)            
             lote_minimo = Decimal(servico.lote_minimo or 0)
+
+            # Se não houver peso_total calculado, derive pelo lote (qtde estimada)
+            qtde_tmp = Decimal(getattr(precalc.analise_comercial_item, "qtde_estimada", 1) or 1)
+            peso_total = Decimal(servico.peso_liquido_total or 0)
+            if not peso_total and servico.peso_liquido:
+                peso_total = Decimal(servico.peso_liquido or 0) * qtde_tmp
 
             preco_sem_icms = preco_kg * (Decimal("1") - icms / 100)
             preco_total_servico = preco_kg * peso_total
@@ -1054,10 +1059,18 @@ def precificacao_produto(request, pk):
     unit_materia = total_materia / qtde if qtde else Decimal(0)
 
     # ——— Serviços
-    total_servico = sum(
-        Decimal((s.peso_liquido_total or 0)) * Decimal((s.preco_kg or 0))
-        for s in precalc.servicos.filter(selecionado=True)
-    )
+    total_servico = Decimal("0.00")
+    for s in precalc.servicos.filter(selecionado=True):
+        preco_kg = Decimal(s.preco_kg or 0)
+        peso_total = Decimal(s.peso_liquido_total or 0)
+        lote_minimo = Decimal(s.lote_minimo or 0)
+
+        valor_calculado = preco_kg * peso_total
+        if lote_minimo > 0 and valor_calculado < lote_minimo:
+            total_servico += lote_minimo
+        else:
+            total_servico += valor_calculado
+
     unit_servico = total_servico / qtde if qtde else Decimal(0)
 
     # ——— Roteiro
