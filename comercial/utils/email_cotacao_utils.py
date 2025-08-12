@@ -64,7 +64,7 @@ def disparar_email_cotacao_material(request, material):
         subject="📨 Cotação de Matéria-Prima",
         message=corpo.strip(),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["compras@brasmol.com.br"],
+        recipient_list=["comprasbrasmol.com.br"],
         fail_silently=False,
     )
 
