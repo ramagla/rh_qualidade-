@@ -379,9 +379,8 @@ def cadastrar_roteiro(request):
         "maquinas_data": maquinas_data,
         "setores_data": setores_data,
         "ferramentas": ferramentas_data,
-        "segurancas": segurancas,  # ✅ Adicione aqui
+        "segurancas": segurancas,
         "servicos": list(ServicoRealizado.objects.order_by("nome").values("id", "nome")),
-
     })
 
 
@@ -587,7 +586,7 @@ def editar_roteiro(request, pk):
         "insumos_data": insumos_data,
         "maquinas_data": maquinas_data,
         "setores_data": setores_data,
-        "roteiro_data": roteiro_data,  # contém 'id' nas etapas
+        "roteiro_data": roteiro_data,
         "ferramentas": ferramentas_data,
         "segurancas": [
             ("seguranca_mp", "MP"),

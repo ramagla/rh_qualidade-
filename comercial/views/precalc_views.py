@@ -228,20 +228,25 @@ def editar_precaculo(request, pk):
             salvo, _, fs_mat = processar_aba_materiais(request, precalc, materiais_respondidos, form_precalculo)
 
 
+        # precalc_views.py (trecho do POST/aba="servicos")
         elif aba == "servicos" and (
             "form_servicos_submitted" in request.POST or
             any(k.startswith("sev-") for k in request.POST)
         ):
+            total_serv = precalc.servicos.count()
             faltam = precalc.servicos.filter(
                 Q(preco_kg__isnull=True) | Q(preco_kg=0)
             ).exists()
-            servicos_respondidos = not faltam
+            # Considera NÃO respondido quando não há serviços OU quando ainda faltam preços
+            servicos_respondidos = (total_serv > 0) and (not faltam)
+
             salvo, _, fs_sev = processar_aba_servicos(
                 request,
                 precalc,
                 servicos_respondidos=servicos_respondidos,
                 form_precalculo=form_precalculo,
             )
+
 
 
 
@@ -346,20 +351,24 @@ def editar_precaculo(request, pk):
     )
 
 
+    # precalc_views.py (trecho do GET/fallback que carrega os formsets)
     if not fs_sev and (
         request.method == "GET" or
         any(k.startswith("sev-") for k in request.POST)
     ):
+        total_serv = precalc.servicos.count()
         faltam = precalc.servicos.filter(
             Q(preco_kg__isnull=True) | Q(preco_kg=0)
         ).exists()
-        servicos_respondidos = not faltam
+        servicos_respondidos = (total_serv > 0) and (not faltam)
+
         _, form_precalculo, fs_sev = processar_aba_servicos(
             request,
             precalc,
             servicos_respondidos=servicos_respondidos,
             form_precalculo=form_precalculo,
         )
+
 
 
 
@@ -1162,15 +1171,45 @@ def gerar_proposta_view(request, cotacao_id):
 
 
 
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
+from django.contrib import messages
+
+from comercial.models.precalculo import (
+    PreCalculo,
+    PreCalculoMaterial,
+    PreCalculoServicoExterno,
+)
+from tecnico.models.roteiro import RoteiroProducao
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
+from django.contrib import messages
+
+from comercial.models.precalculo import (
+    PreCalculo,
+    PreCalculoMaterial,
+    PreCalculoServicoExterno,
+)
+from tecnico.models.roteiro import RoteiroProducao
+
 @login_required
 @permission_required("comercial.duplicar_precalculo", raise_exception=True)
 def duplicar_precaculo(request, pk):
-    original = get_object_or_404(PreCalculo, pk=pk)
-    cotacao = original.cotacao
+    print("\n[DEBUG] === INÍCIO duplicar_precaculo ===")
+    print(f"[DEBUG] PK original: {pk}")
+    print(f"[DEBUG] Querystring recebida: {request.GET.dict()}")
 
-    # Novo número sequencial
+    original = get_object_or_404(PreCalculo, pk=pk)
+    cotacao  = original.cotacao
+    print(f"[DEBUG] Cotação ID: {cotacao.id} | Número: {cotacao.numero}")
+    print(f"[DEBUG] Materiais originais: {original.materiais.count()} | Serviços originais: {original.servicos.count()} | Etapas originais: {original.roteiro_item.count()}")
+
     ultimo = PreCalculo.objects.filter(cotacao=cotacao).order_by("-numero").first()
     proximo_numero = (ultimo.numero + 1) if ultimo else 1
+    print(f"[DEBUG] Próximo número para o clone: {proximo_numero}")
 
     clone = PreCalculo.objects.create(
         cotacao=cotacao,
@@ -1180,47 +1219,129 @@ def duplicar_precaculo(request, pk):
         observacoes_servicos=original.observacoes_servicos,
         observacoes_roteiro=original.observacoes_roteiro,
     )
+    print(f"[DEBUG] Clone criado -> ID: {clone.id} | Número: {clone.numero}")
 
-    # Clona os relacionamentos (analise, regras, etc.)
-    for relacao in ['analise_comercial_item', 'avaliacao_tecnica_item', 'regras_calculo_item', 'desenvolvimento_item']:
-        item = getattr(original, relacao, None)
-        if item:
-            item.pk = None  # força cópia
-            item.precalculo = clone
-            item.usuario = request.user
-            item.assinatura_nome = request.user.get_full_name() or request.user.username
-            item.assinatura_cn = request.user.email
-            item.data_assinatura = timezone.now()
+    roteiro_id = request.GET.get("roteiro_id")
+    roteiro_escolhido = None
+    if roteiro_id:
+        print(f"[DEBUG] roteiro_id recebido: {roteiro_id}")
+        try:
+            roteiro_escolhido = RoteiroProducao.objects.get(pk=roteiro_id)
+            print(f"[DEBUG] Roteiro encontrado: ID={roteiro_escolhido.id} | Tipo={roteiro_escolhido.get_tipo_roteiro_display()} | Revisão={roteiro_escolhido.revisao}")
+        except RoteiroProducao.DoesNotExist:
+            print("[DEBUG] Roteiro informado NÃO encontrado!")
+            messages.warning(request, "Roteiro informado não encontrado; prosseguindo sem troca de roteiro.")
 
-            # Força status "andamento" na análise comercial
-            if relacao == "analise_comercial_item":
-                item.status = "andamento"
+    for relacao in ["analise_comercial_item", "avaliacao_tecnica_item", "regras_calculo_item", "desenvolvimento_item"]:
+        obj = getattr(original, relacao, None)
+        if not obj:
+            print(f"[DEBUG] {relacao} não existe no original.")
+            continue
 
-            item.save()
+        obj.pk = None
+        obj.precalculo = clone
+        obj.usuario = request.user
+        obj.assinatura_nome = request.user.get_full_name() or request.user.username
+        obj.assinatura_cn = request.user.email
+        obj.data_assinatura = timezone.now()
 
-    # Clonar materiais
-    for mat in original.materiais.all():
-        mat.pk = None
-        mat.precalculo = clone
-        mat.save()
+        if relacao == "analise_comercial_item":
+            obj.status = "andamento"
+            if roteiro_escolhido and hasattr(obj, "roteiro_selecionado"):
+                obj.roteiro_selecionado = roteiro_escolhido
+                print(f"[DEBUG] roteiro_selecionado setado no clone (analise_comercial_item)")
 
-    # Clonar serviços
-    for sev in original.servicos.all():
-        sev.pk = None
-        sev.precalculo = clone
-        sev.save()
+        obj.save()
+        print(f"[DEBUG] {relacao} clonado.")
 
-    # Clonar etapas do roteiro
-    for rot in original.roteiro_item.all():
-        rot.pk = None
-        rot.precalculo = clone
-        rot.save()
+    if not roteiro_escolhido:
+        print("[DEBUG] Nenhum roteiro escolhido → clonando materiais, serviços e etapas.")
+        mat_count = 0
+        for mat in original.materiais.all():
+            mat.pk = None
+            mat.precalculo = clone
+            mat.save()
+            mat_count += 1
+        print(f"[DEBUG] Materiais clonados: {mat_count}")
 
-    # Clonar ferramentas
+        sev_count = 0
+        for sev in original.servicos.all():
+            sev.pk = None
+            sev.precalculo = clone
+            sev.save()
+            sev_count += 1
+        print(f"[DEBUG] Serviços clonados: {sev_count}")
+
+        rot_count = 0
+        for rot in original.roteiro_item.all():
+            rot.pk = None
+            rot.precalculo = clone
+            rot.save()
+            rot_count += 1
+        print(f"[DEBUG] Etapas clonadas: {rot_count}")
+
+    else:
+        print("[DEBUG] Roteiro escolhido → limpando linhas existentes no clone.")
+        removed_mat = PreCalculoMaterial.objects.filter(precalculo=clone).delete()
+        removed_sev = PreCalculoServicoExterno.objects.filter(precalculo=clone).delete()
+        removed_rot = clone.roteiro_item.all().delete()
+        print(f"[DEBUG] Linhas removidas -> Materiais: {removed_mat} | Serviços: {removed_sev} | Etapas: {removed_rot}")
+
+    ferr_count = 0
     for ferr in original.ferramentas_item.all():
         ferr.pk = None
         ferr.precalculo = clone
         ferr.save()
+        ferr_count += 1
+    print(f"[DEBUG] Ferramentas clonadas: {ferr_count}")
 
-    messages.success(request, "Pré-cálculo duplicado com sucesso.")
+    print("[DEBUG] Estado final do clone:")
+    print(f"    Materiais: {clone.materiais.count()}")
+    print(f"    Serviços: {clone.servicos.count()}")
+    print(f"    Etapas: {clone.roteiro_item.count()}")
+
+    print("[DEBUG] === FIM duplicar_precaculo ===\n")
+
+    messages.success(
+        request,
+        f"Pré-Cálculo {clone.numero} criado. Linhas serão carregadas do roteiro selecionado ao abrir as abas."
+        if roteiro_escolhido else
+        f"Pré-Cálculo {clone.numero} duplicado com todas as linhas."
+    )
     return redirect("itens_precaculo", pk=cotacao.pk)
+
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+
+@login_required
+@permission_required("comercial.duplicar_precalculo", raise_exception=True)
+@require_GET
+def opcoes_roteiro_precalculo(request, pk):
+    """
+    Retorna os roteiros disponíveis para o item do Pré-Cálculo informado.
+    Estrutura: {"roteiros": [{"id": 1, "label": "Estampagem - Rev. A"}, ...]}
+    """
+    precalc = get_object_or_404(PreCalculo, pk=pk)
+    item = getattr(getattr(precalc, "analise_comercial_item", None), "item", None)
+
+    # Critério principal: roteiros do próprio item
+    qs = RoteiroProducao.objects.none()
+    if item and hasattr(RoteiroProducao, "item_id"):
+        qs = RoteiroProducao.objects.filter(item=item).order_by("tipo_roteiro", "revisao")
+    else:
+        # Fallback: mesma família/tipo (se aplicável no seu modelo)
+        tipo = getattr(item, "tipo_item", None)
+        if tipo and hasattr(RoteiroProducao, "tipo_roteiro"):
+            qs = RoteiroProducao.objects.filter(tipo_roteiro=tipo).order_by("tipo_roteiro", "revisao")
+
+    data = [
+        {
+            "id": r.id,
+            "label": f"{r.get_tipo_roteiro_display()} - Rev. {getattr(r, 'revisao', '')}".strip()
+        }
+        for r in qs
+    ]
+    return JsonResponse({"roteiros": data})

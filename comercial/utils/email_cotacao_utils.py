@@ -5,20 +5,32 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.contrib import messages
+from django.http import HttpResponseForbidden
+from django.core import signing
+from django.utils import timezone
 
 from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExterno
 from Funcionario.models import Settings as SistemaSettings
-from django.utils import timezone
 
+
+def gerar_link_publico(request, viewname: str, pk: int, tipo: str, dias_validade: int = 15) -> str:
+    payload = {"id": int(pk), "tipo": tipo}
+    token = signing.dumps(payload, salt="cotacao-publica")
+    url = reverse(viewname, args=[pk])
+    return request.build_absolute_uri(f"{url}?t={token}")
 
 def disparar_email_cotacao_material(request, material):
     """
     Envia e-mail para solicitar resposta de cotação da matéria-prima.
     """
-    link = request.build_absolute_uri(
-        reverse("responder_cotacao_materia_prima", args=[material.pk])
+    link = gerar_link_publico(
+        request,
+        viewname="responder_cotacao_materia_prima",
+        pk=material.pk,
+        tipo="mp",
+        dias_validade=15
     )
 
     try:
@@ -27,11 +39,9 @@ def disparar_email_cotacao_material(request, material):
     except MateriaPrimaCatalogo.DoesNotExist:
         descricao = "---"
 
-    # Acesso correto ao roteiro selecionado via análise comercial
     analise = getattr(material.precalculo, "analise_comercial_item", None)
     roteiro = getattr(analise, "roteiro_selecionado", None)
     fontes = roteiro.fontes_homologadas.all() if roteiro else []
-
     fontes_texto = "\n".join(f"• {f.nome}" for f in fontes) if fontes else "— Nenhuma fonte homologada definida —"
 
     corpo = f"""
@@ -50,16 +60,16 @@ def disparar_email_cotacao_material(request, material):
         subject="📨 Cotação de Matéria-Prima",
         message=corpo.strip(),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["compras@brasmol.com.br"],
+        recipient_list=["rafael.almeida@brasmol.com.br"],
         fail_silently=False,
     )
-# ⬇️ Inicia SLA
+
     if material.preco_kg is None and material.compras_solicitado_em is None:
-    # não rebaixa se já estiver "ok"
         if material.status != "ok":
             material.status = "aguardando"
             material.compras_solicitado_em = timezone.now()
             material.save(update_fields=["status", "compras_solicitado_em"])
+
         else:
             # já "ok": não altera nada
             pass
@@ -74,9 +84,21 @@ from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExt
 def responder_cotacao_materia_prima(request, pk):
     """
     View pública para que fornecedores preencham os dados de cotação da matéria-prima.
-    Quando todos os preços já estiverem preenchidos, exibe a página de cotação finalizada.
+    Para usuários anônimos, exige validação do token (link assinado).
     """
-    # Busca o material e todas as “cópias” dele no mesmo pré-cálculo
+    if not request.user.is_authenticated:
+        token = request.GET.get("t")
+        if not token:
+            return HttpResponseForbidden("Acesso negado: link sem token.")
+        try:
+            data = signing.loads(token, salt="cotacao-publica", max_age=60 * 60 * 24 * 15)
+            if int(data.get("id", 0)) != int(pk) or data.get("tipo") != "mp":
+                return HttpResponseForbidden("Link inválido.")
+        except signing.SignatureExpired:
+            return HttpResponseForbidden("Link expirado.")
+        except signing.BadSignature:
+            return HttpResponseForbidden("Link inválido.")
+
     material = get_object_or_404(PreCalculoMaterial, pk=pk)
     codigo = material.codigo
     materiais = PreCalculoMaterial.objects.filter(
@@ -84,13 +106,13 @@ def responder_cotacao_materia_prima(request, pk):
         codigo=codigo
     ).order_by("pk")
 
-    # Se não houver nenhum preço em branco, renderiza página finalizada
     if not materiais.filter(preco_kg__isnull=True).exists():
-        return render(request,
-                      "cotacoes/cotacao_material_finalizada.html",
-                      {"material": material})
+        return render(
+            request,
+            "cotacoes/cotacao_material_finalizada.html",
+            {"material": material}
+        )
 
-    # Dados de apoio para o formulário
     fornecedores = FornecedorQualificado.objects.filter(
         produto_servico__in=["Fita de Aço/Inox", "Arame de Aço", "Arame de Inox"],
         ativo="Ativo"
@@ -106,7 +128,6 @@ def responder_cotacao_materia_prima(request, pk):
     observacoes_gerais = material.precalculo.observacoes_materiais if material.precalculo else ""
 
     if request.method == "POST":
-        # Percorre cada instância e salva os valores vindos do form
         for i, mat in enumerate(materiais):
             if mat.status == "ok":
                 continue
@@ -127,23 +148,25 @@ def responder_cotacao_materia_prima(request, pk):
             mat.save()
 
         messages.success(request, "Cotações salvas com sucesso.")
-        # Redireciona para a mesma URL, disparando um novo GET
         return redirect(request.path)
 
-    # Renderiza o formulário de cotação
-    return render(request,
-                  "cotacoes/responder_cotacao_material.html",
-                  {
-                      "materiais": materiais,
-                      "fornecedores": fornecedores,
-                      "cotacao_numero": cotacao_numero,
-                      "precalculo_numero": precalculo_numero,
-                      "materia_prima": materia_prima,
-                      "observacoes_gerais": observacoes_gerais,
-                      "codigo": codigo,
-                  })
+    return render(
+        request,
+        "cotacoes/responder_cotacao_material.html",
+        {
+            "materiais": materiais,
+            "fornecedores": fornecedores,
+            "cotacao_numero": cotacao_numero,
+            "precalculo_numero": precalculo_numero,
+            "materia_prima": materia_prima,
+            "observacoes_gerais": observacoes_gerais,
+            "codigo": codigo,
+        }
+    )
 
 
+
+from django.db.models import Q
 
 from django.urls import reverse
 from django.core.mail import send_mail
@@ -151,67 +174,91 @@ from django.conf import settings
 
 def disparar_emails_cotacao_servicos(request, precalc):
     """
-    Dispara e-mails de cotação de serviços externos agrupados por insumo.
+    Dispara e-mails de cotação de serviços externos com a MESMA sistemática da MP:
+    - Destinatário único e fixo (lista com 1 e-mail)
+    - Um e-mail por INSUMO que tenha serviços pendentes (preco_kg NULL ou 0)
+    - Carimba status/compras_solicitado_em APENAS nos pendentes efetivamente enviados
     """
-    print("🔧 Iniciando disparo de e-mails de cotação de serviços")
+    # 1) Seleciona SOMENTE serviços pendentes para evitar reenvio desnecessário
+    pendentes = (
+        precalc.servicos
+        .select_related("insumo", "insumo__materia_prima")
+        .filter(Q(preco_kg__isnull=True) | Q(preco_kg=0))
+    )
+    print("[SERVICOS][EMAIL] pendentes_count=", pendentes.count())
+    print("[SERVICOS][EMAIL] pendentes_ids=", list(pendentes.values_list("id", flat=True))[:20])
+    
+    if not pendentes.exists():
+        print("[SERVICOS][EMAIL] Nenhum serviço pendente de cotação.")
+        return 0  # compatível com o uso simples (sem métricas)
+
+    # 2) Agrupa por insumo_id (estável/“hashable”)
     grupos = {}
-    for servico in precalc.servicos.all():
-        print(f"➡️ Servico ID {servico.pk} | Insumo: {servico.insumo}")
-        insumo = servico.insumo
-        if insumo not in grupos:
-            grupos[insumo] = []
-        grupos[insumo].append(servico)
+    for s in pendentes:
+        grupos.setdefault(s.insumo_id, []).append(s)
 
-    for insumo, lista in grupos.items():
-        print(f"📤 Disparando para insumo: {insumo}")
-        pk_primeiro = lista[0].pk
+    enviados = 0
 
-        try:
-            mp = insumo.materia_prima
-            codigo = mp.codigo
-            descricao = mp.descricao
-        except Exception as e:
-            print(f"⚠️ Erro ao buscar matéria-prima: {e}")
-            codigo = "sem código"
-            descricao = "---"
+    for insumo_id, lista in grupos.items():
+        s0 = lista[0]
+        insumo = s0.insumo
 
-        
-         # ✅ Correto acesso ao roteiro via análise comercial
-        analise = getattr(servico.precalculo, "analise_comercial_item", None)
+        mp = getattr(insumo, "materia_prima", None)
+        codigo = getattr(mp, "codigo", "sem código")
+        descricao = getattr(mp, "descricao", "---")
+
+        analise = getattr(s0.precalculo, "analise_comercial_item", None)
         roteiro = getattr(analise, "roteiro_selecionado", None)
         fontes = roteiro.fontes_homologadas.all() if roteiro else []
         fontes_texto = "\n".join(f"• {f.nome}" for f in fontes) if fontes else "— Nenhuma fonte homologada definida —"
-        
-        link = request.build_absolute_uri(
-                    reverse("responder_cotacao_servico_lote", args=[pk_primeiro])
-                )
 
+        # 3) Link público (como na MP, só muda a view e o tipo)
+        link = gerar_link_publico(
+            request,
+            viewname="responder_cotacao_servico_lote",
+            pk=s0.pk,
+            tipo="sev",
+            dias_validade=15,
+        )
+
+        # 4) Corpo/assunto idênticos em estilo à MP
         corpo = f"""
-🔧 Cotação de Serviço Externo – Tratamento
+🧪 Solicitação de Cotação - Serviço Externo
 
 📦 Código: {codigo}
 📝 Descrição: {descricao}
 
 🏭 Fontes Homologadas:
 {fontes_texto}
-🔗 Link para resposta: {link}
-        """
+
+🔗 Responder: {link}
+""".strip()
 
         send_mail(
             subject="📨 Cotação de Serviço Externo",
-            message=corpo.strip(),
+            message=corpo,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=["compras@brasmol.com.br"],
+            recipient_list=["rafael.almeida@brasmol.com.br"],  # ✅ destinatário fixo, igual MP
             fail_silently=False,
         )
-        print("✅ E-mail disparado com sucesso.")
 
+        # 5) Carimbo APENAS nos pendentes enviados agora
         agora = timezone.now()
-        ids = [s.id for s in lista if s.preco_kg is None and s.compras_solicitado_em is None]
-        if ids:
-            PreCalculoServicoExterno.objects.filter(id__in=ids).update(
-                status="aguardando", compras_solicitado_em=agora
+        ids_pendentes = [
+            s.id for s in lista
+            if (s.preco_kg is None or s.preco_kg == 0) and s.compras_solicitado_em is None
+        ]
+        if ids_pendentes:
+            PreCalculoServicoExterno.objects.filter(id__in=ids_pendentes).update(
+                status="aguardando",
+                compras_solicitado_em=agora
             )
+
+        enviados += 1
+
+    print(f"[SERVICOS][EMAIL] e-mails enviados (por insumo): {enviados}")
+    return enviados
+
 
 
 
@@ -225,9 +272,21 @@ from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCata
 def responder_cotacao_servico_lote(request, pk):
     """
     View pública para que fornecedores preencham os dados de cotação de serviços em lote.
-    Quando todos os preços já estiverem preenchidos, exibe a página de cotação finalizada.
+    Para usuários anônimos, exige validação do token (link assinado).
     """
-    # Busca o serviço principal e todos os do mesmo insumo (mesmo código)
+    if not request.user.is_authenticated:
+        token = request.GET.get("t")
+        if not token:
+            return HttpResponseForbidden("Acesso negado: link sem token.")
+        try:
+            data = signing.loads(token, salt="cotacao-publica", max_age=60 * 60 * 24 * 15)
+            if int(data.get("id", 0)) != int(pk) or data.get("tipo") != "sev":
+                return HttpResponseForbidden("Link inválido.")
+        except signing.SignatureExpired:
+            return HttpResponseForbidden("Link expirado.")
+        except signing.BadSignature:
+            return HttpResponseForbidden("Link inválido.")
+
     servico = get_object_or_404(PreCalculoServicoExterno, pk=pk)
     codigo = servico.insumo.materia_prima.codigo
 
@@ -236,7 +295,6 @@ def responder_cotacao_servico_lote(request, pk):
         insumo__materia_prima__codigo=codigo
     ).select_related("insumo", "insumo__materia_prima").order_by("pk")
 
-    # Verifica se já foi respondido
     if not servicos.filter(preco_kg__isnull=True).exists():
         return render(
             request,
@@ -244,7 +302,6 @@ def responder_cotacao_servico_lote(request, pk):
             {"servico": servico}
         )
 
-    # Dados para o formulário
     fornecedores = FornecedorQualificado.objects.filter(
         produto_servico__icontains="Trat",
         status__in=["Qualificado", "Qualificado Condicional"]
@@ -252,14 +309,13 @@ def responder_cotacao_servico_lote(request, pk):
 
     try:
         materia_prima = servico.insumo.materia_prima
-    except:
+    except Exception:
         materia_prima = None
 
     cotacao_numero     = servico.precalculo.cotacao.numero if servico.precalculo else None
     precalculo_numero  = servico.precalculo.numero if servico.precalculo else None
     observacoes_gerais = servico.precalculo.observacoes_servicos if servico.precalculo else ""
 
-    # POST: salvar dados da resposta
     if request.method == "POST":
         for i in range(len(servicos)):
             sev_id = request.POST.get(f"id_{i}")
@@ -303,4 +359,5 @@ def responder_cotacao_servico_lote(request, pk):
             "codigo": codigo,
         }
     )
+
 
