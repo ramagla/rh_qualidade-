@@ -126,7 +126,7 @@
 
 {# Inclui os dois modais apenas uma vez, fora do template JS #}
 {% include "roteiros/_modal_insumo.html" with insumos=insumos_data %}
-{% include "roteiros/_modal_propriedades.html" with maquinas=maquinas_data ferramentas=ferramentas_data servicos=servicos segurancas=segurancas %}
+{% include "roteiros/_modal_propriedades.html" with maquinas=maquinas_data ferramentas=ferramentas servicos=servicos segurancas=segurancas %}
 
 <script>
 if (!window.roteiroScriptRegistrado) {

@@ -223,7 +223,7 @@
           <tbody>
             {% for s in precalc.servicos.all %}
               {% if s.selecionado %}
-                {% with preco_kg=s.preco_kg|default_if_none:0 icms=s.icms|default_if_none:0 peso=s.peso_bruto_total|default_if_none:0 lote=s.lote_minimo|default_if_none:0 %}
+              {% with preco_kg=s.preco_kg|default_if_none:0 icms=s.icms|default_if_none:0 peso=s.peso_liquido_total|default_if_none:0 lote=s.lote_minimo|default_if_none:0 %}
                   {% with preco_sem_icms=preco_kg|subtrair_percentual:icms %}
                     <tr>
                       <td>{{ s.nome_insumo|default:"—" }}</td>

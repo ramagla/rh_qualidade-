@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-br">
+  <body style="font-family: Arial, Helvetica, sans-serif; background:#f7f7f7; padding:16px;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:720px;margin:0 auto;background:#ffffff;border:1px solid #eee;border-radius:8px;">
+      <tr>
+        <td style="padding:20px 24px;">
+          <h2 style="margin:0 0 8px 0; font-size:18px;">🧵 Roteiro atualizado — Definir Preço Final</h2>
+          <p style="margin:0;color:#666;">Pré-Cálculo <strong>#{{ precalculo.numero }}</strong> • Cotação <strong>#{{ cotacao.numero }}</strong></p>
+          <hr style="margin:16px 0;border:none;border-top:1px solid #eee;">
+          <p>O roteiro foi atualizado e o item já está disponível para a definição do <strong>Preço Final</strong>.</p>
+          <p style="margin:16px 0;">
+            <a href="{{ link }}" style="display:inline-block;padding:10px 16px;background:#0d6efd;color:#fff;text-decoration:none;border-radius:6px;">
+              Abrir na aba “Preço Final”
+            </a>
+          </p>
+          {% if link_normas and qtd_normas|default:0 > 0 %}
+          <p style="font-size:13px;color:#555;">
+            Normas do Cliente ({{ qtd_normas }}): <a href="{{ link_normas }}">acessar</a>
+          </p>
+          {% endif %}
+          <p style="margin-top:20px;color:#888;font-size:12px;">Mensagem automática do Sistema Bras-Mol.</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

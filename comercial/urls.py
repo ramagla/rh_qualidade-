@@ -82,6 +82,7 @@ urlpatterns = [
     path("cotacoes/precalculo/<int:pk>/precificacao/", precalc_views.precificacao_produto, name="precificacao_produto"),
     path("cotacao/<int:cotacao_id>/gerar_proposta/", precalc_views.gerar_proposta_view, name="gerar_proposta"),
     path("cotacoes/precalculo/<int:pk>/duplicar/", precalc_views.duplicar_precaculo, name="duplicar_precalculo"),
+    path("comercial/precalculo/<int:pk>/roteiros/", precalc_views.opcoes_roteiro_precalculo, name="opcoes_roteiro_precalculo"),
 
     path("clientes/importar/", cliente_views.importar_clientes_excel, name="importar_clientes_excel"),
     path("itens/importar/", item_views.importar_itens_excel, name="importar_itens_excel"),
@@ -108,6 +109,5 @@ urlpatterns = [
     path("dashboard/mapa-clientes/", dashboard_views.mapa_clientes_por_regiao, name="mapa_clientes"),
     path("dashboard/cidades-clientes/", dashboard_views.listar_cidades_clientes, name="listar_cidades_clientes"),
     path("dashboard/cidades-nomes/", dashboard_views.listar_cidades_nomes, name="listar_cidades_nomes"),
-
 
 ]

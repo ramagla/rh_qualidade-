@@ -8,62 +8,77 @@ from tecnico.models.roteiro import InsumoEtapa
 
 def processar_aba_materiais(request, precalc, materiais_respondidos, form_precalculo=None):
     salvo = False
-    insumos_materia_prima = []
 
     # GET: apenas se não houver materiais, cria com base no roteiro
     if request.method == "GET" and hasattr(precalc, "analise_comercial_item") and not precalc.materiais.exists():
         try:
             roteiro = getattr(precalc.analise_comercial_item, "roteiro_selecionado", None)
             if roteiro:
+                MP_ALIASES = {"materia_prima", "matéria_prima", "mp", "MP", "MATERIA_PRIMA"}
+                SE_ALIASES = {
+                    "insumos", "servico_externo", "serviço_externo", "servico", "serviço",
+                    "se", "SE", "SERVICO_EXTERNO", "SERVIÇO_EXTERNO", "INSUMOS"
+                }
+
+                print(f"[MP][PC={precalc.id}] Repovoamento — Roteiro={getattr(roteiro, 'id', None)}")
+                tipos_all = list(
+                    InsumoEtapa.objects.filter(etapa__roteiro=roteiro)
+                    .values_list("tipo_insumo", flat=True).distinct()
+                )
+                print(f"[MP][PC={precalc.id}] Tipos no roteiro: {tipos_all}")
+
+                # Apenas MPs reais (com vínculo e NÃO pertencentes aos aliases de serviço)
                 insumos_materia_prima = (
-                    InsumoEtapa.objects.filter(
-                        etapa__roteiro=roteiro,
-                        tipo_insumo="matéria_prima"
-                    )
+                    InsumoEtapa.objects
+                    .filter(etapa__roteiro=roteiro)
+                    .filter(tipo_insumo__in=MP_ALIASES)
+                    .exclude(tipo_insumo__in=SE_ALIASES)
+                    .filter(materia_prima__isnull=False)
                     .select_related("materia_prima", "etapa")
                 )
+                print(f"[MP][PC={precalc.id}] Selecionados como MP: {insumos_materia_prima.count()}")
 
-                # 🔥 Remove todos os materiais herdados (inclusive os duplicados da cópia)
+                # Remove todos os materiais se forem diferentes do roteiro
                 materiais_atuais = list(precalc.materiais.values_list("codigo", flat=True))
                 codigos_do_roteiro = [i.materia_prima.codigo for i in insumos_materia_prima if i.materia_prima]
-
-                # Se os materiais atuais forem diferentes dos do roteiro, substitui todos
                 if set(materiais_atuais) != set(codigos_do_roteiro):
-                    PreCalculoMaterial.objects.filter(precalculo=precalc).delete()
-                    
-                # Cria novos registros (3 cópias por insumo)
-                novos_insumos = [
-                    i for i in insumos_materia_prima
-                    if not PreCalculoMaterial.objects.filter(precalculo=precalc, codigo=i.materia_prima.codigo).exists()
-                ]
-                for insumo in novos_insumos:
+                    removed = PreCalculoMaterial.objects.filter(precalculo=precalc).delete()
+                    print(f"[MP][PC={precalc.id}] Materiais limpos: {removed}")
+
+                # Cria 3 cópias por insumo (sem duplicar código)
+                criados = 0
+                for insumo in insumos_materia_prima:
                     mp = insumo.materia_prima
-                    if mp:
-                        for _ in range(3):
-                            PreCalculoMaterial.objects.create(
-                                precalculo=precalc,
-                                roteiro=roteiro,
-                                codigo=mp.codigo,
-                                nome_materia_prima=mp.codigo,
-                                descricao=getattr(mp, 'descricao', ''),
-                                tipo_material=getattr(mp, 'tipo_material', ''),
-                                desenvolvido_mm=insumo.desenvolvido or Decimal("0.0000000"),
-                                peso_liquido=insumo.peso_liquido or Decimal("0.0000000"),
-                                peso_bruto=insumo.peso_bruto or Decimal("0.0000000"),
-                            )
+                    if not mp:
+                        continue
+                    if PreCalculoMaterial.objects.filter(precalculo=precalc, codigo=mp.codigo).exists():
+                        continue
+                    for _ in range(3):
+                        PreCalculoMaterial.objects.create(
+                            precalculo=precalc,
+                            roteiro=roteiro,
+                            codigo=mp.codigo,
+                            nome_materia_prima=mp.codigo,
+                            descricao=getattr(mp, "descricao", ""),
+                            tipo_material=getattr(mp, "tipo_material", ""),
+                            desenvolvido_mm=insumo.desenvolvido or Decimal("0"),
+                            peso_liquido=insumo.peso_liquido or Decimal("0"),
+                            peso_bruto=insumo.peso_bruto or Decimal("0"),
+                        )
+                        criados += 1
+                        print(f"[MP][PC={precalc.id}] Criado material para insumo {insumo.id} (cod={mp.codigo})")
 
                 precalc.refresh_from_db()
+                print(f"[MP][PC={precalc.id}] Criados: {criados} | Total agora: {precalc.materiais.count()}")
 
         except Exception as e:
-            print("⚠️ Erro ao processar insumos de matéria-prima:", e)
-
+            print(f"⚠️ [MP][PC={precalc.id}] Erro: {e}")
 
     # Normaliza os dados para POST
     data = None
     if request.method == "POST":
         data = request.POST.copy()
         total = int(data.get("mat-TOTAL_FORMS", 0))
-
         for i in range(total):
             key = f"mat-{i}-peso_bruto_total"
             val = data.get(key)
@@ -95,7 +110,6 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
                 setattr(precalc, campo_obs, valor)
                 precalc.save(update_fields=[campo_obs])
 
-
             # Marca apenas o selecionado
             for mat in precalc.materiais.all():
                 mat.selecionado = False
@@ -112,7 +126,6 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
 
             fs_mat.save()
 
-            # E-mail de cotação
             enviados = set()
             if not materiais_respondidos:
                 for mat in precalc.materiais.all():

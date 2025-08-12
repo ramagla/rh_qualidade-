@@ -55,6 +55,9 @@ class AlertaConfigurado(models.Model):
         ("CERTIFICACAO_PROXIMA", "Certificação Próxima"),
         ("PRECALCULO_GERADO", "📄 Pré-Cálculo Gerado"),
         ("AVALIACAO_TECNICA_PENDENTE", "🛠 Avaliação Técnica Pendente"),
+        ("RESPOSTA_COTACAO_MATERIAL", "📦 Resposta de Cotação de Material"),
+        ("RESPOSTA_COTACAO_SERVICO", "🛠 Resposta de Cotação de Serviço"),
+        ("ROTEIRO_ATUALIZADO", "🧵 Roteiro Atualizado — Definir Preço Final"),  # ⬅️ NOVO
 
     ]
 
@@ -73,6 +76,10 @@ class AlertaConfigurado(models.Model):
             "CERTIFICACAO_PROXIMA": "📜 Certificação de Fornecedor Próxima do Vencimento",
             "PRECALCULO_GERADO": "📄 Pré-Cálculo Gerado",
             "AVALIACAO_TECNICA_PENDENTE": "🛠 Avaliação Técnica Pendente",
+            "RESPOSTA_COTACAO_MATERIAL": "📦 Resposta de Cotação de Material",
+            "RESPOSTA_COTACAO_SERVICO": "🛠 Resposta de Cotação de Serviço",
+            "ROTEIRO_ATUALIZADO": "🧵 Roteiro Atualizado — Definir Preço Final",  # Novo tipo
+
 
         }
         return nomes_exibicao.get(self.tipo, self.tipo)

@@ -133,16 +133,30 @@
           <h5 class="modal-title" id="modalDuplicarLabel">Duplicar Item de Pré-Cálculo</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
+
         <div class="modal-body">
-          <label for="selectPrecalc" class="form-label">Selecione o item a duplicar:</label>
-          <select class="form-select" id="selectPrecalc" name="precalc_id" required>
-            {% for precalc in precalculos %}
-              <option value="{{ precalc.id }}">
-                Nº {{ precalc.numero }} - {{ precalc.analise_comercial_item.item.codigo }}
-              </option>
-            {% endfor %}
-          </select>
+          <div class="mb-3">
+            <label for="selectPrecalc" class="form-label">Selecione o Pré-Cálculo de origem</label>
+            <select class="form-select" id="selectPrecalc" name="precalc_id" required>
+              {% for precalc in precalculos %}
+                <option value="{{ precalc.id }}">
+                  Nº {{ precalc.numero }} - {{ precalc.analise_comercial_item.item.codigo }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="selectRoteiro" class="form-label">
+              Selecione o Roteiro para o novo Pré-Cálculo
+              <small class="text-muted d-block">Ao escolher um roteiro aqui, materiais/serviços/etapas do original não serão clonados.</small>
+            </label>
+            <select class="form-select" id="selectRoteiro" name="roteiro_id" disabled>
+              <option value="">— Selecione primeiro o Pré-Cálculo —</option>
+            </select>
+          </div>
         </div>
+
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary">
             <i class="bi bi-copy me-1"></i> Duplicar
@@ -154,13 +168,56 @@
 </div>
 
 <script>
-  document.getElementById("formDuplicarPrecalc").addEventListener("submit", function (e) {
+  const precalcSelect  = document.getElementById("selectPrecalc");
+  const roteiroSelect  = document.getElementById("selectRoteiro");
+  const formDuplicar   = document.getElementById("formDuplicarPrecalc");
+
+  async function carregarRoteiros(precalcId) {
+    roteiroSelect.innerHTML = '<option value="">Carregando...</option>';
+    roteiroSelect.disabled = true;
+    try {
+      const resp = await fetch(`{% url 'opcoes_roteiro_precalculo' 0 %}`.replace('/0/', `/${precalcId}/`), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await resp.json();
+      roteiroSelect.innerHTML = '<option value="">— (opcional) Selecione o roteiro —</option>';
+      if (Array.isArray(data.roteiros)) {
+        data.roteiros.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = r.label;
+          roteiroSelect.appendChild(opt);
+        });
+      }
+      roteiroSelect.disabled = false;
+    } catch(e) {
+      roteiroSelect.innerHTML = '<option value="">Falha ao carregar roteiros</option>';
+    }
+  }
+
+  precalcSelect.addEventListener("change", function () {
+    const id = this.value;
+    if (id) carregarRoteiros(id);
+  });
+
+  document.addEventListener('DOMContentLoaded', function(){
+    if (precalcSelect.value) carregarRoteiros(precalcSelect.value);
+  });
+
+  formDuplicar.addEventListener("submit", function (e) {
     e.preventDefault();
-    const id = document.getElementById("selectPrecalc").value;
-    const url = `{% url 'duplicar_precalculo' 9999 %}`.replace("9999", id);
+    const precalcId = precalcSelect.value;
+    const roteiroId = roteiroSelect.value || "";
+    let url = `{% url 'duplicar_precalculo' 9999 %}`.replace("9999", precalcId);
+    if (roteiroId) {
+      const sep = url.includes('?') ? '&' : '?';
+      url = `${url}${sep}roteiro_id=${encodeURIComponent(roteiroId)}`;
+    }
     window.location.href = url;
   });
 </script>
+
+
 
 
 
@@ -272,7 +329,7 @@
       <tbody>
         {% for item in page_obj %}
           <tr>
-            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+<td>{{ item.numero }}</td>
             <td>{{ item.analise_comercial_item.item.codigo }}</td>
             
 <td>
