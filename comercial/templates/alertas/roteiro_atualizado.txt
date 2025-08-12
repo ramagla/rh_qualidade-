@@ -1,0 +1,12 @@
+Olá {{ usuario.get_full_name }},
+
+O roteiro do Pré-Cálculo {{ precalculo.numero }} (Cotação {{ cotacao.numero }}) foi atualizado
+e já está disponível para a definição do Preço Final.
+
+Acesse pelo link:
+{{ link }}
+
+{% if link_normas and qtd_normas|default:0 > 0 %}
+Normas do Cliente ({{ qtd_normas }}):
+{{ link_normas }}
+{% endif %}

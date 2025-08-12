@@ -14,26 +14,37 @@
 
 
   <!-- Bloco informativo -->
-  <div class="alert alert-info small">
-    <div class="d-flex align-items-center mb-2">
-      <i class="bi bi-info-circle-fill me-2 text-primary"></i>
-      <strong>Informações sobre os cálculos:</strong>
+<div class="alert alert-info small">
+  
+  <!-- Aviso de disparo de e-mail -->
+  <div class="text-center mb-3">
+    <i class="bi bi-exclamation-circle-fill text-warning" style="font-size: 2rem;"></i>
+    <div class="mt-1 fw-bold text-warning">
+      Ao salvar o Roteiro será enviado um e-mail de notificação para a Definição do Preço Final
     </div>
-    <ul class="mb-2 ps-3">
-      <li>
-        Os campos <strong>Valor Total</strong> são calculados automaticamente com base nas fórmulas:
-        <ul class="mt-1">
-          <li><code>Setup (min) ÷ 60 × Custo Hora</code></li>
-          <li><code>Qtde Estimada ÷ Peças/hora × Custo Hora</code></li>
-        </ul>
-      </li>
-      <li>O valor final é a soma dos dois totais quando aplicável.</li>
-      <li>
-        A <strong>Média de Custo Hora</strong> no rodapé considera apenas os setores com valor de custo maior que zero.
-      </li>
-      <li>Os valores são recalculados automaticamente ao alterar qualquer campo da tabela.</li>
-    </ul>
   </div>
+
+  <!-- Informações de cálculo -->
+  <div class="d-flex align-items-center mb-2">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+    <strong>Informações sobre os cálculos:</strong>
+  </div>
+  <ul class="mb-2 ps-3">
+    <li>
+      Os campos <strong>Valor Total</strong> são calculados automaticamente com base nas fórmulas:
+      <ul class="mt-1">
+        <li><code>Setup (min) ÷ 60 × Custo Hora</code></li>
+        <li><code>Qtde Estimada ÷ Peças/hora × Custo Hora</code></li>
+      </ul>
+    </li>
+    <li>O valor final é a soma dos dois totais quando aplicável.</li>
+    <li>
+      A <strong>Média de Custo Hora</strong> no rodapé considera apenas os setores com valor de custo maior que zero.
+    </li>
+    <li>Os valores são recalculados automaticamente ao alterar qualquer campo da tabela.</li>
+  </ul>
+</div>
+
 
   <div class="table-responsive mt-3">
     <table class="table table-bordered align-middle text-center table-sm"

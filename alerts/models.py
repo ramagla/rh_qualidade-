@@ -57,6 +57,8 @@ class AlertaConfigurado(models.Model):
         ("AVALIACAO_TECNICA_PENDENTE", "🛠 Avaliação Técnica Pendente"),
         ("RESPOSTA_COTACAO_MATERIAL", "📦 Resposta de Cotação de Material"),
         ("RESPOSTA_COTACAO_SERVICO", "🛠 Resposta de Cotação de Serviço"),
+        ("ROTEIRO_ATUALIZADO", "🧵 Roteiro Atualizado — Definir Preço Final"),  # ⬅️ NOVO
+
     ]
 
     tipo = models.CharField(max_length=30, choices=TIPO_ALERTA_CHOICES, unique=True)
@@ -76,6 +78,8 @@ class AlertaConfigurado(models.Model):
             "AVALIACAO_TECNICA_PENDENTE": "🛠 Avaliação Técnica Pendente",
             "RESPOSTA_COTACAO_MATERIAL": "📦 Resposta de Cotação de Material",
             "RESPOSTA_COTACAO_SERVICO": "🛠 Resposta de Cotação de Serviço",
+            "ROTEIRO_ATUALIZADO": "🧵 Roteiro Atualizado — Definir Preço Final",  # Novo tipo
+
 
         }
         return nomes_exibicao.get(self.tipo, self.tipo)

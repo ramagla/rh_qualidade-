@@ -252,6 +252,9 @@ def editar_precaculo(request, pk):
 
         elif aba == "roteiro" and "form_roteiro_submitted" in request.POST:
             salvo, fs_rot = processar_aba_roteiro(request, precalc, form_precalculo)
+            if salvo:
+                from comercial.views.handlers.roteiro_handler import notificar_roteiro_atualizado
+                notificar_roteiro_atualizado(request, precalc)  
 
 
 
