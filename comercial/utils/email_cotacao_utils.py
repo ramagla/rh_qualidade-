@@ -60,7 +60,7 @@ def disparar_email_cotacao_material(request, material):
         subject="📨 Cotação de Matéria-Prima",
         message=corpo.strip(),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["rafael.almeida@brasmol.com.br"],
+        recipient_list=["compras@brasmol.com.br"],
         fail_silently=False,
     )
 
@@ -167,32 +167,33 @@ def responder_cotacao_materia_prima(request, pk):
 
 
 from django.db.models import Q
+from django.urls import NoReverseMatch
 
 from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
 
+from django.db.models import Q
+from django.urls import NoReverseMatch
+from django.utils import timezone
+from django.conf import settings
+from django.core.mail import send_mail
+
 def disparar_emails_cotacao_servicos(request, precalc):
-    """
-    Dispara e-mails de cotação de serviços externos com a MESMA sistemática da MP:
-    - Destinatário único e fixo (lista com 1 e-mail)
-    - Um e-mail por INSUMO que tenha serviços pendentes (preco_kg NULL ou 0)
-    - Carimba status/compras_solicitado_em APENAS nos pendentes efetivamente enviados
-    """
-    # 1) Seleciona SOMENTE serviços pendentes para evitar reenvio desnecessário
+    print(f"[SE-UTIL][INI][PC={precalc.id}]")
     pendentes = (
         precalc.servicos
         .select_related("insumo", "insumo__materia_prima")
         .filter(Q(preco_kg__isnull=True) | Q(preco_kg=0))
     )
-    print("[SERVICOS][EMAIL] pendentes_count=", pendentes.count())
-    print("[SERVICOS][EMAIL] pendentes_ids=", list(pendentes.values_list("id", flat=True))[:20])
-    
-    if not pendentes.exists():
-        print("[SERVICOS][EMAIL] Nenhum serviço pendente de cotação.")
-        return 0  # compatível com o uso simples (sem métricas)
+    count = pendentes.count()
+    ids = list(pendentes.values_list("id", flat=True))
+    print(f"[SE-UTIL][PEND][PC={precalc.id}] count={count} ids={ids}")
 
-    # 2) Agrupa por insumo_id (estável/“hashable”)
+    if count == 0:
+        print(f"[SE-UTIL][PEND][PC={precalc.id}] vazio")
+        return 0
+
     grupos = {}
     for s in pendentes:
         grupos.setdefault(s.insumo_id, []).append(s)
@@ -202,61 +203,55 @@ def disparar_emails_cotacao_servicos(request, precalc):
     for insumo_id, lista in grupos.items():
         s0 = lista[0]
         insumo = s0.insumo
-
         mp = getattr(insumo, "materia_prima", None)
-        codigo = getattr(mp, "codigo", "sem código")
-        descricao = getattr(mp, "descricao", "---")
+        codigo = getattr(mp, "codigo", "sem_codigo")
+        descricao = getattr(mp, "descricao", "-")
 
-        analise = getattr(s0.precalculo, "analise_comercial_item", None)
-        roteiro = getattr(analise, "roteiro_selecionado", None)
-        fontes = roteiro.fontes_homologadas.all() if roteiro else []
-        fontes_texto = "\n".join(f"• {f.nome}" for f in fontes) if fontes else "— Nenhuma fonte homologada definida —"
+        try:
+            link = gerar_link_publico(
+                request,
+                viewname="responder_cotacao_servico_lote",
+                pk=s0.pk,
+                tipo="sev",
+                dias_validade=15
+            )
+        except NoReverseMatch as e:
+            print(f"[SE-UTIL][URL][PC={precalc.id}] NoReverseMatch='{e}'")
+            link = "(rota indisponível)"
 
-        # 3) Link público (como na MP, só muda a view e o tipo)
-        link = gerar_link_publico(
-            request,
-            viewname="responder_cotacao_servico_lote",
-            pk=s0.pk,
-            tipo="sev",
-            dias_validade=15,
-        )
-
-        # 4) Corpo/assunto idênticos em estilo à MP
         corpo = f"""
 🧪 Solicitação de Cotação - Serviço Externo
 
 📦 Código: {codigo}
 📝 Descrição: {descricao}
 
-🏭 Fontes Homologadas:
-{fontes_texto}
-
 🔗 Responder: {link}
 """.strip()
 
+        print(f"[SE-UTIL][MAIL][PC={precalc.id}] insumo_id={insumo_id} codigo={codigo} link={link}")
         send_mail(
             subject="📨 Cotação de Serviço Externo",
             message=corpo,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=["rafael.almeida@brasmol.com.br"],  # ✅ destinatário fixo, igual MP
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+            recipient_list=["compras@brasmol.com.br"],
             fail_silently=False,
         )
 
-        # 5) Carimbo APENAS nos pendentes enviados agora
         agora = timezone.now()
-        ids_pendentes = [
+        ids_pend = [
             s.id for s in lista
             if (s.preco_kg is None or s.preco_kg == 0) and s.compras_solicitado_em is None
         ]
-        if ids_pendentes:
-            PreCalculoServicoExterno.objects.filter(id__in=ids_pendentes).update(
+        if ids_pend:
+            updated = PreCalculoServicoExterno.objects.filter(id__in=ids_pend).update(
                 status="aguardando",
                 compras_solicitado_em=agora
             )
+            print(f"[SE-UTIL][UPD][PC={precalc.id}] carimbados={updated} ids={ids_pend}")
 
         enviados += 1
 
-    print(f"[SERVICOS][EMAIL] e-mails enviados (por insumo): {enviados}")
+    print(f"[SE-UTIL][END][PC={precalc.id}] enviados_por_insumo={enviados}")
     return enviados
 
 

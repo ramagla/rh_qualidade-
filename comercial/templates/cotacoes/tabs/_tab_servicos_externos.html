@@ -141,7 +141,11 @@
                      class="form-check-input mt-1"
                      {% if form.instance.selecionado %}checked{% endif %}>
             </td>
-            <td>{{ form.codigo_materia_prima|add_class:"form-control form-control-sm codigo-input"|attr:"readonly:readonly" }}{{ form.insumo }}</td>
+            <td>
+  {{ form.codigo_materia_prima|add_class:"form-control form-control-sm codigo-input"|attr:"readonly:readonly" }}
+  {{ form.insumo }} 
+</td>
+
             <td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
             <td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
             <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
