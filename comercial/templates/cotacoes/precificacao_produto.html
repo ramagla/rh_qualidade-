@@ -194,81 +194,94 @@
 
 
   <!-- 🔧 Bloco: Serviços Externos (compacto) -->
-   {% if tem_servicos_selecionados %}
-
+{% if tem_servicos_selecionados %}
 <div class="border rounded mb-3 shadow-sm" style="font-size: 9px;">
-    <div class="bg-primary text-white p-1 fw-bold">
-      <i class="bi bi-tools me-1"></i> Custo Serviços Externos
-    </div>
-  
-    <div class="p-2">
-      <div class="table-responsive">
-        <table class="table table-bordered table-sm text-center align-middle mb-0" style="font-size: 9px;">
-            <thead class="table-light">
-                <tr>
-                  <th><i class="bi bi-wrench-adjustable-circle text-primary"></i><br><small>Serviço</small></th>
-                  <th><i class="bi bi-person-lines-fill text-primary"></i><br><small>Fornecedor</small></th>
-                  <th><i class="bi bi-truck text-primary"></i><br><small>Entrega</small></th>
-                  <th><i class="bi bi-percent text-primary"></i><br><small>ICMS</small></th>
-                  <th><i class="bi bi-box2-heart text-primary"></i><br><small>Peso L.</small></th>
-                  <th><i class="bi bi-archive-fill text-primary"></i><br><small>Peso T.</small></th>
-                  <th><i class="bi bi-currency-dollar text-primary"></i><br><small>R$/Kg</small></th>
-                  <th><i class="bi bi-cash-stack text-primary"></i><br><small>Total</small></th>
-                  <th><i class="bi bi-cash-coin text-primary"></i><br><small>s/ICMS</small></th>
-                  <th><i class="bi bi-boxes text-primary"></i><br><small>Lote Mín.</small></th>
-                  <th><i class="bi bi-wallet2 text-primary"></i><br><small>Tot. Lote</small></th>
-                </tr>
-              </thead>
-              
-          <tbody>
-            {% for s in precalc.servicos.all %}
-              {% if s.selecionado %}
+  <div class="bg-primary text-white p-1 fw-bold">
+    <i class="bi bi-tools me-1"></i> Custo Serviços Externos
+  </div>
+
+  <div class="p-2">
+    <div class="table-responsive">
+      <table class="table table-bordered table-sm text-center align-middle mb-0" style="font-size: 9px;">
+        <thead class="table-light">
+          <tr>
+            <th><i class="bi bi-wrench-adjustable-circle text-primary"></i><br><small>Serviço</small></th>
+            <th><i class="bi bi-person-lines-fill text-primary"></i><br><small>Fornecedor</small></th>
+            <th><i class="bi bi-truck text-primary"></i><br><small>Entrega</small></th>
+            <th><i class="bi bi-percent text-primary"></i><br><small>ICMS</small></th>
+            <th><i class="bi bi-box2-heart text-primary"></i><br><small>Peso L.</small></th>
+            <th><i class="bi bi-archive-fill text-primary"></i><br><small>Peso T.</small></th>
+            <th><i class="bi bi-currency-dollar text-primary"></i><br><small>R$/Kg</small></th>
+            <th><i class="bi bi-cash-stack text-primary"></i><br><small>Total</small></th>
+            <th><i class="bi bi-cash-coin text-primary"></i><br><small>s/ICMS</small></th>
+            <th><i class="bi bi-boxes text-primary"></i><br><small>Lote Mín.</small></th>
+            <th><i class="bi bi-wallet2 text-primary"></i><br><small>Tot. Lote</small></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for s in precalc.servicos.all %}
+            {% if s.selecionado %}
               {% with preco_kg=s.preco_kg|default_if_none:0 icms=s.icms|default_if_none:0 peso=s.peso_liquido_total|default_if_none:0 lote=s.lote_minimo|default_if_none:0 %}
-                  {% with preco_sem_icms=preco_kg|subtrair_percentual:icms %}
-                    <tr>
-                        <td>{{ s.codigo_materia_prima|default:"—" }}</td>
-                      <td>
-                        {% if s.fornecedor %}
-                          {{ s.fornecedor }}
+                {% with preco_sem_icms=preco_kg|subtrair_percentual:icms %}
+                  <tr>
+                    <td>{{ s.codigo_materia_prima|default:"—" }}</td>
+                    <td>
+                      {% if s.fornecedor %}
+                        {{ s.fornecedor }}
+                      {% else %}
+                        <span class="text-muted fst-italic">Bras-Mol (interno)</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ s.entrega_dias|default:"—" }}</td>
+                    <td>{{ s.icms|default:"0"|floatformat:0 }}</td>
+                    <td>{{ s.peso_liquido|floatformat:7 }}</td>
+                    <td>{{ s.peso_liquido_total|floatformat:2 }}</td>
+                    <td>R$ {{ preco_kg|floatformat:4 }}</td>
+                    <td>R$ {{ preco_kg|mul:peso|floatformat:2 }}</td>
+                    <td>R$ {{ preco_sem_icms|mul:peso|floatformat:2 }}</td>
+                    <td>R$ {{ lote|floatformat:2 }}</td>
+                    {# Tot. Lote = max(preco_kg * peso_total, lote_minimo) — SEM retirar ICMS #}
+                    {% with total=preco_kg|mul:peso %}
+                      <td>R$
+                        {% if total < lote %}
+                          {{ lote|floatformat:2 }}
                         {% else %}
-                          <span class="text-muted fst-italic">Bras-Mol (interno)</span>
+                          {{ total|floatformat:2 }}
                         {% endif %}
                       </td>
-                      <td>{{ s.entrega_dias|default:"—" }}</td>
-                      <td>{{ s.icms|default:"0"|floatformat:0 }}</td>
-                      <td>{{ s.peso_liquido|floatformat:7 }}</td>
-                      <td>{{ s.peso_liquido_total|floatformat:2 }}</td>
-                      <td>R$ {{ preco_kg|floatformat:4 }}</td>
-                      <td>R$ {{ preco_kg|mul:peso|floatformat:2 }}</td>
-                      <td>R$ {{ preco_sem_icms|mul:peso|floatformat:2 }}</td>
-                      <td>R$ {{ lote|floatformat:2 }}</td>
-                      {# Tot. Lote = max(preco_kg * peso_total, lote_minimo) — SEM retirar ICMS #}
-                      {% with total=preco_kg|mul:peso %}
-                        <td>R$
-                          {% if total < lote %}
-                            {{ lote|floatformat:2 }}
-                          {% else %}
-                            {{ total|floatformat:2 }}
-                          {% endif %}
-                        </td>
-                      {% endwith %}
-                    </tr>
-                  {% endwith %}
+                    {% endwith %}
+                  </tr>
                 {% endwith %}
-              {% endif %}
-            {% empty %}
-              <tr>
-                <td colspan="11" class="text-muted">Nenhum serviço externo selecionado.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+              {% endwith %}
+            {% endif %}
+          {% empty %}
+            <tr>
+              <td colspan="11" class="text-muted">Nenhum serviço externo selecionado.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+
+         <tfoot>
+        <tr>
+          <td colspan="11" class="text-start">
+            <div class="px-2 py-1 small">
+              <strong class="me-1">Descrição do(s) serviço(s):</strong>
+              {% for s in precalc.servicos.all %}
+                {% if s.selecionado %}
+                  <div class="ms-1">– {{ s.descricao_materia_prima|default:"—" }}</div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </td>
+        </tr>
+      </tfoot>
+      </table>
     </div>
-  
-   
   </div>
-  {% endif %}
+</div>
+{% endif %}
+
 
 
 <!-- 🧭 Bloco: Roteiro de Produção (compacto) -->

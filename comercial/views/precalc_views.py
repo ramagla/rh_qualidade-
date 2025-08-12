@@ -953,6 +953,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from comercial.models.precalculo import PreCalculo
 from decimal import Decimal, ROUND_HALF_UP
+from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 
 @login_required
 @permission_required("comercial.ver_precificacao", raise_exception=True)
@@ -960,7 +961,25 @@ def precificacao_produto(request, pk):
     precalc = get_object_or_404(PreCalculo, pk=pk)
     material = precalc.materiais.filter(selecionado=True).first()
     servico = precalc.servicos.filter(selecionado=True).first()
-
+# 🔎 Descrição da Matéria-Prima vinda do Catálogo
+    descricao_mp_catalogo = None
+    try:
+        if material:
+            # 1) Se existir FK direta para o catálogo
+            if hasattr(material, "materia_prima") and getattr(material, "materia_prima_id", None):
+                descricao_mp_catalogo = material.materia_prima.descricao
+            elif hasattr(material, "catalogo") and getattr(material, "catalogo_id", None):
+                descricao_mp_catalogo = material.catalogo.descricao
+            # 2) Fallback por código do material
+            elif getattr(material, "codigo", None):
+                descricao_mp_catalogo = (
+                    MateriaPrimaCatalogo.objects
+                    .filter(codigo=material.codigo)
+                    .values_list("descricao", flat=True)
+                    .first()
+                )
+    except Exception:
+        pass
     preco_total = preco_total_sem_icms = preco_total_lote_minimo = None
     preco_total_servico = preco_total_servico_lote = preco_total_servico_sem_icms = None
 
@@ -1145,6 +1164,8 @@ def precificacao_produto(request, pk):
         "analise": analise,
     "item": item,
     "tem_servicos_selecionados": tem_servicos_selecionados,  # ✅ variável de controle
+            "descricao_mp_catalogo": descricao_mp_catalogo,
+
 
     })
 
