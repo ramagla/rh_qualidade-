@@ -21,18 +21,29 @@
         </h5>
 
         <div class="alert alert-info d-flex flex-column gap-2 small">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-info-circle-fill"></i>
-            O campo <strong>Peso Bruto</strong> é calculado automaticamente como: 
-            <code>Peso Líquido × Qtde Estimada</code>.
-          </div>
-          <div>
-            <strong class="text-primary">Compras:</strong> Preenchem os campos <code>Lote Mínimo</code>, <code>Entrega (dias)</code>, <code>Fornecedor</code>, <code>ICMS (%)</code> e <code>Preço/kg</code>.
-          </div>
-          <div>
-            <strong class="text-warning">Técnico:</strong> Preenche os campos <code>Desenv. (mm)</code>, <code>Peso Líquido</code> e <code>Peso Bruto</code>.
-          </div>
-        </div>
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-info-circle-fill"></i>
+    O campo <strong>Peso Bruto</strong> é calculado automaticamente como: 
+    <code>Peso Líquido × Qtde Estimada</code>.
+  </div>
+
+  <div class="d-flex align-items-start gap-2">
+    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+    <div>
+      <strong>Regra de Lote Mínimo:</strong>
+      Se <code>Peso Total × Preço/kg</code> for menor que <code>Lote Mínimo</code>, o valor do serviço considerado será o <u>Lote Mínimo</u>.
+      Ex.: se <code>2,245 kg × 3,40</code> resultar em <code>7,63</code> e o <code>Lote Mínimo</code> for <code>110,00</code>, será utilizado <code>110,00</code>.
+    </div>
+  </div>
+
+  <div>
+    <strong class="text-primary">Compras:</strong> Preenchem os campos <code>Lote Mínimo</code>, <code>Entrega (dias)</code>, <code>Fornecedor</code>, <code>ICMS (%)</code> e <code>Preço/kg</code>.
+  </div>
+  <div>
+    <strong class="text-warning">Técnico:</strong> Preenche os campos <code>Desenv. (mm)</code>, <code>Peso Líquido</code> e <code>Peso Bruto</code>.
+  </div>
+</div>
+
 
         {% if fs_sev.non_form_errors %}
           <div class="alert alert-danger">

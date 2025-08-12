@@ -242,11 +242,19 @@ class PreCalculo(models.Model):
         return total / self.qtde_estimada  # ✅ Sem parênteses
 
     def custo_unitario_servicos_externos(self):
-        total = sum(
-            Decimal((s.peso_liquido_total or 0)) * Decimal((s.preco_kg or 0))
-            for s in self.servicos.filter(selecionado=True)
-        )
-        return total / self.qtde_estimada  # ✅ Sem parênteses
+        total = Decimal("0.00")
+        for s in self.servicos.filter(selecionado=True):
+            valor_calculado = Decimal(s.peso_liquido_total or 0) * Decimal(s.preco_kg or 0)
+            lote_minimo = Decimal(s.lote_minimo or 0)
+
+            # Se o lote mínimo for informado e maior que o valor calculado, usa o lote mínimo
+            if lote_minimo > 0 and valor_calculado < lote_minimo:
+                total += lote_minimo
+            else:
+                total += valor_calculado
+
+        return total / self.qtde_estimada
+
 
     def custo_unitario_roteiro(self):
         total = sum(rot.custo_total for rot in self.roteiro_item.all())
