@@ -953,6 +953,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from comercial.models.precalculo import PreCalculo
 from decimal import Decimal, ROUND_HALF_UP
+from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 
 @login_required
 @permission_required("comercial.ver_precificacao", raise_exception=True)
@@ -960,7 +961,25 @@ def precificacao_produto(request, pk):
     precalc = get_object_or_404(PreCalculo, pk=pk)
     material = precalc.materiais.filter(selecionado=True).first()
     servico = precalc.servicos.filter(selecionado=True).first()
-
+# 🔎 Descrição da Matéria-Prima vinda do Catálogo
+    descricao_mp_catalogo = None
+    try:
+        if material:
+            # 1) Se existir FK direta para o catálogo
+            if hasattr(material, "materia_prima") and getattr(material, "materia_prima_id", None):
+                descricao_mp_catalogo = material.materia_prima.descricao
+            elif hasattr(material, "catalogo") and getattr(material, "catalogo_id", None):
+                descricao_mp_catalogo = material.catalogo.descricao
+            # 2) Fallback por código do material
+            elif getattr(material, "codigo", None):
+                descricao_mp_catalogo = (
+                    MateriaPrimaCatalogo.objects
+                    .filter(codigo=material.codigo)
+                    .values_list("descricao", flat=True)
+                    .first()
+                )
+    except Exception:
+        pass
     preco_total = preco_total_sem_icms = preco_total_lote_minimo = None
     preco_total_servico = preco_total_servico_lote = preco_total_servico_sem_icms = None
 
@@ -989,13 +1008,18 @@ def precificacao_produto(request, pk):
         try:
             preco_kg = Decimal(servico.preco_kg or 0)
             icms = Decimal(servico.icms or 0)
-            peso_total = Decimal(servico.peso_liquido_total or 0)            
             lote_minimo = Decimal(servico.lote_minimo or 0)
+
+            # Se não houver peso_total calculado, derive pelo lote (qtde estimada)
+            qtde_tmp = Decimal(getattr(precalc.analise_comercial_item, "qtde_estimada", 1) or 1)
+            peso_total = Decimal(servico.peso_liquido_total or 0)
+            if not peso_total and servico.peso_liquido:
+                peso_total = Decimal(servico.peso_liquido or 0) * qtde_tmp
 
             preco_sem_icms = preco_kg * (Decimal("1") - icms / 100)
             preco_total_servico = preco_kg * peso_total
             preco_total_servico_sem_icms = preco_sem_icms * peso_total
-            preco_total_servico_lote = preco_sem_icms * lote_minimo
+            preco_total_servico_lote = lote_minimo
         except (InvalidOperation, TypeError):
             pass
 
@@ -1054,10 +1078,20 @@ def precificacao_produto(request, pk):
     unit_materia = total_materia / qtde if qtde else Decimal(0)
 
     # ——— Serviços
-    total_servico = sum(
-        Decimal((s.peso_liquido_total or 0)) * Decimal((s.preco_kg or 0))
-        for s in precalc.servicos.filter(selecionado=True)
-    )
+    total_servico = Decimal("0.00")
+    for s in precalc.servicos.filter(selecionado=True):
+        preco_kg = Decimal(s.preco_kg or 0)
+        lote_minimo = Decimal(s.lote_minimo or 0)  # ← em R$
+        peso_total = Decimal(s.peso_liquido_total or 0)
+
+        if not peso_total and s.peso_liquido:
+            qtde_tmp = Decimal(getattr(precalc.analise_comercial_item, "qtde_estimada", 1) or 1)
+            peso_total = Decimal(s.peso_liquido or 0) * qtde_tmp
+
+        valor_calculado = preco_kg * peso_total      # comparação COM ICMS
+        total_servico += max(valor_calculado, lote_minimo)
+
+
     unit_servico = total_servico / qtde if qtde else Decimal(0)
 
     # ——— Roteiro
@@ -1130,6 +1164,8 @@ def precificacao_produto(request, pk):
         "analise": analise,
     "item": item,
     "tem_servicos_selecionados": tem_servicos_selecionados,  # ✅ variável de controle
+            "descricao_mp_catalogo": descricao_mp_catalogo,
+
 
     })
 
