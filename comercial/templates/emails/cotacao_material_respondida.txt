@@ -1,0 +1,19 @@
+Olá {% if usuario %}{{ usuario.get_full_name }}{% else %}Equipe{% endif %},
+
+Recebemos a resposta de cotação da matéria-prima.
+
+{% if cotacao %}
+- Cotação: {{ cotacao.numero }}
+{% else %}
+- Cotação: -
+{% endif %}
+- Pré-Cálculo: {{ precalculo.numero }}
+
+
+Acesse o Pré-Cálculo:
+{{ link }}
+
+{% if link_normas and qtd_normas|default:0 > 0 %}
+Normas do Cliente ({{ qtd_normas }}):
+{{ link_normas }}
+{% endif %}

@@ -55,7 +55,8 @@ class AlertaConfigurado(models.Model):
         ("CERTIFICACAO_PROXIMA", "Certificação Próxima"),
         ("PRECALCULO_GERADO", "📄 Pré-Cálculo Gerado"),
         ("AVALIACAO_TECNICA_PENDENTE", "🛠 Avaliação Técnica Pendente"),
-
+        ("RESPOSTA_COTACAO_MATERIAL", "📦 Resposta de Cotação de Material"),
+        ("RESPOSTA_COTACAO_SERVICO", "🛠 Resposta de Cotação de Serviço"),
     ]
 
     tipo = models.CharField(max_length=30, choices=TIPO_ALERTA_CHOICES, unique=True)
@@ -73,6 +74,8 @@ class AlertaConfigurado(models.Model):
             "CERTIFICACAO_PROXIMA": "📜 Certificação de Fornecedor Próxima do Vencimento",
             "PRECALCULO_GERADO": "📄 Pré-Cálculo Gerado",
             "AVALIACAO_TECNICA_PENDENTE": "🛠 Avaliação Técnica Pendente",
+            "RESPOSTA_COTACAO_MATERIAL": "📦 Resposta de Cotação de Material",
+            "RESPOSTA_COTACAO_SERVICO": "🛠 Resposta de Cotação de Serviço",
 
         }
         return nomes_exibicao.get(self.tipo, self.tipo)

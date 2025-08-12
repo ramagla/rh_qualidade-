@@ -2,6 +2,9 @@ from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.urls import reverse, NoReverseMatch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.contrib import messages
@@ -13,6 +16,7 @@ from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExterno
 from Funcionario.models import Settings as SistemaSettings
+from alerts.models import AlertaConfigurado, AlertaUsuario
 
 
 def gerar_link_publico(request, viewname: str, pk: int, tipo: str, dias_validade: int = 15) -> str:
@@ -101,22 +105,25 @@ def responder_cotacao_materia_prima(request, pk):
 
     material = get_object_or_404(PreCalculoMaterial, pk=pk)
     codigo = material.codigo
-    materiais = PreCalculoMaterial.objects.filter(
-        precalculo=material.precalculo,
-        codigo=codigo
-    ).order_by("pk")
 
+    materiais = (
+        PreCalculoMaterial.objects
+        .filter(precalculo=material.precalculo, codigo=codigo)
+        .order_by("pk")
+    )
+
+    # Se todos já possuem preço, mostra a tela de finalizado
     if not materiais.filter(preco_kg__isnull=True).exists():
-        return render(
-            request,
-            "cotacoes/cotacao_material_finalizada.html",
-            {"material": material}
-        )
+        return render(request, "cotacoes/cotacao_material_finalizada.html", {"material": material})
 
-    fornecedores = FornecedorQualificado.objects.filter(
-        produto_servico__in=["Fita de Aço/Inox", "Arame de Aço", "Arame de Inox"],
-        ativo="Ativo"
-    ).order_by("nome")
+    fornecedores = (
+        FornecedorQualificado.objects
+        .filter(
+            Q(ativo="Ativo"),
+            Q(produto_servico__iregex=r"(arame\s+de\s+inox)|(arame\s+de\s+aço)|(fita\s+de\s+(aço|inox))")
+        )
+        .order_by("nome")
+    )
 
     try:
         materia_prima = MateriaPrimaCatalogo.objects.get(codigo=codigo)
@@ -128,14 +135,17 @@ def responder_cotacao_materia_prima(request, pk):
     observacoes_gerais = material.precalculo.observacoes_materiais if material.precalculo else ""
 
     if request.method == "POST":
+        houve_alteracao = False
+
         for i, mat in enumerate(materiais):
+            # Se já está OK, não altera
             if mat.status == "ok":
                 continue
 
             mat.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
-            mat.icms = request.POST.get(f"icms_{i}") or None
-            mat.lote_minimo = request.POST.get(f"lote_minimo_{i}") or None
-            mat.entrega_dias = request.POST.get(f"entrega_dias_{i}") or None
+            mat.icms          = request.POST.get(f"icms_{i}") or None
+            mat.lote_minimo   = request.POST.get(f"lote_minimo_{i}") or None
+            mat.entrega_dias  = request.POST.get(f"entrega_dias_{i}") or None
 
             preco_raw = request.POST.get(f"preco_kg_{i}") or None
             if preco_raw:
@@ -145,11 +155,81 @@ def responder_cotacao_materia_prima(request, pk):
                 except (InvalidOperation, ValueError):
                     mat.preco_kg = None
 
-            mat.save()
+            # Opcional: marca como OK se recebeu preço
+            if mat.preco_kg:
+                mat.status = "ok"
 
-        messages.success(request, "Cotações salvas com sucesso.")
+            mat.save()
+            houve_alteracao = True
+
+        if houve_alteracao:
+            # Alerta + e-mail apenas uma vez após processar todas as linhas
+            try:
+                config = AlertaConfigurado.objects.get(tipo="RESPOSTA_COTACAO_MATERIAL", ativo=True)
+                destinatarios = set(config.usuarios.all())
+                for g in config.grupos.all():
+                    destinatarios.update(g.user_set.all())
+
+                for user in destinatarios:
+                    AlertaUsuario.objects.create(
+                        usuario=user,
+                        titulo=f"📦 Cotação de Material Respondida ({material.codigo})",
+                        mensagem=f"O fornecedor respondeu à cotação do material {material.codigo} – {materia_prima.descricao if materia_prima else ''}.",
+                        tipo="RESPOSTA_COTACAO_MATERIAL",
+                        referencia_id=material.id,
+                        url_destino=request.path,
+                    )
+
+                emails = [u.email for u in destinatarios if getattr(u, "email", None)]
+                if emails:
+                    precalc = material.precalculo
+                    # Tenta gerar link interno pro pré-cálculo
+                    try:
+                        if getattr(precalc, "cotacao_id", None):
+                            link = request.build_absolute_uri(
+                                reverse("itens_precaculo", args=[precalc.cotacao_id])
+                            )
+                        else:
+                            link = request.build_absolute_uri(
+                                reverse("visualizar_precalculo", args=[precalc.id])
+                            )
+                    except NoReverseMatch:
+                        link = request.build_absolute_uri("/")
+
+
+                    context = {
+                        "usuario": request.user if request.user.is_authenticated else None,
+                        "cotacao": getattr(precalc, "cotacao", None),
+                        "precalculo": precalc,
+                        "link": link,
+                        # opcionais para manter padrão do seu modelo
+                        "link_normas": None,
+                        "qtd_normas": 0,
+                    }
+
+                    subject = f"[Sistema Bras-Mol] Cotação de Matéria-Prima respondida • PC {precalc.numero} • Cot {precalc.cotacao.numero if precalc and precalc.cotacao else '-'}"
+                    html_body = render_to_string("emails/cotacao_material_respondida.html", context)
+                    text_body = render_to_string("emails/cotacao_material_respondida.txt", context)
+
+                    msg = EmailMultiAlternatives(
+                        subject=subject,
+                        body=text_body,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=emails,
+                    )
+                    msg.attach_alternative(html_body, "text/html")
+                    msg.send(fail_silently=True)
+
+            except AlertaConfigurado.DoesNotExist:
+                pass
+
+            messages.success(request, "Cotações salvas com sucesso.")
+            return render(request, "cotacoes/cotacao_material_finalizada.html", {"material": material})
+
+        messages.info(request, "Nenhuma alteração foi enviada.")
         return redirect(request.path)
 
+    # GET
     return render(
         request,
         "cotacoes/responder_cotacao_material.html",
@@ -166,18 +246,17 @@ def responder_cotacao_materia_prima(request, pk):
 
 
 
+
 from django.db.models import Q
 from django.urls import NoReverseMatch
 
 from django.urls import reverse
-from django.core.mail import send_mail
 from django.conf import settings
 
 from django.db.models import Q
 from django.urls import NoReverseMatch
 from django.utils import timezone
 from django.conf import settings
-from django.core.mail import send_mail
 
 def disparar_emails_cotacao_servicos(request, precalc):
     print(f"[SE-UTIL][INI][PC={precalc.id}]")
@@ -285,22 +364,25 @@ def responder_cotacao_servico_lote(request, pk):
     servico = get_object_or_404(PreCalculoServicoExterno, pk=pk)
     codigo = servico.insumo.materia_prima.codigo
 
-    servicos = PreCalculoServicoExterno.objects.filter(
-        precalculo=servico.precalculo,
-        insumo__materia_prima__codigo=codigo
-    ).select_related("insumo", "insumo__materia_prima").order_by("pk")
+    servicos = (
+        PreCalculoServicoExterno.objects
+        .filter(precalculo=servico.precalculo, insumo__materia_prima__codigo=codigo)
+        .select_related("insumo", "insumo__materia_prima")
+        .order_by("pk")
+    )
 
+    # Se todos já possuem preço, mostra a tela de finalizado
     if not servicos.filter(preco_kg__isnull=True).exists():
-        return render(
-            request,
-            "cotacoes/cotacao_servico_lote_finalizada.html",
-            {"servico": servico}
-        )
+        return render(request, "cotacoes/cotacao_servico_lote_finalizada.html", {"servico": servico})
 
-    fornecedores = FornecedorQualificado.objects.filter(
-        produto_servico__icontains="Trat",
-        status__in=["Qualificado", "Qualificado Condicional"]
-    ).order_by("nome")
+    fornecedores = (
+        FornecedorQualificado.objects
+        .filter(
+            Q(status__in=["Qualificado", "Qualificado Condicional"]),
+            Q(produto_servico__iregex=r"(trat)")
+        )
+        .order_by("nome")
+    )
 
     try:
         materia_prima = servico.insumo.materia_prima
@@ -312,7 +394,10 @@ def responder_cotacao_servico_lote(request, pk):
     observacoes_gerais = servico.precalculo.observacoes_servicos if servico.precalculo else ""
 
     if request.method == "POST":
-        for i in range(len(servicos)):
+        houve_alteracao = False
+
+        # Importante: o template deve enviar <input type="hidden" name="id_{{ forloop.counter0 }}" value="{{ sev.id }}">
+        for i, _ in enumerate(servicos):
             sev_id = request.POST.get(f"id_{i}")
             if not sev_id:
                 continue
@@ -335,12 +420,85 @@ def responder_cotacao_servico_lote(request, pk):
                 except (InvalidOperation, ValueError):
                     sev.preco_kg = None
 
-            sev.status = "ok"
-            sev.save()
+            # Marca como OK apenas se houver preço informado
+            if sev.preco_kg:
+                sev.status = "ok"
 
-        messages.success(request, "Cotações salvas com sucesso.")
+            sev.save()
+            houve_alteracao = True
+
+        if houve_alteracao:
+            # Alerta + e-mail enviados uma única vez após processar todas as linhas
+            try:
+                config = AlertaConfigurado.objects.get(tipo="RESPOSTA_COTACAO_SERVICO", ativo=True)
+                destinatarios = set(config.usuarios.all())
+                for g in config.grupos.all():
+                    destinatarios.update(g.user_set.all())
+
+                mp = getattr(servico.insumo, "materia_prima", None)
+                codigo_mp = getattr(mp, "codigo", "")
+                desc_mp   = getattr(mp, "descricao", "")
+
+                for user in destinatarios:
+                    AlertaUsuario.objects.create(
+                        usuario=user,
+                        titulo=f"🛠 Cotação de Serviço Respondida ({codigo_mp})",
+                        mensagem=f"O fornecedor respondeu à cotação do serviço referente ao material {codigo_mp} – {desc_mp}.",
+                        tipo="RESPOSTA_COTACAO_SERVICO",
+                        referencia_id=servico.id,
+                        url_destino=request.path,
+                    )
+
+                emails = [u.email for u in destinatarios if getattr(u, "email", None)]
+                if emails:
+                    precalc = servico.precalculo
+                    try:
+                        if getattr(precalc, "cotacao_id", None):
+                            link = request.build_absolute_uri(
+                                reverse("itens_precaculo", args=[precalc.cotacao_id])
+                            )
+                        else:
+                            link = request.build_absolute_uri(
+                                reverse("visualizar_precalculo", args=[precalc.id])
+                            )
+                    except NoReverseMatch:
+                        link = request.build_absolute_uri("/")
+
+
+                    context = {
+                        "usuario": request.user if request.user.is_authenticated else None,
+                        "cotacao": getattr(precalc, "cotacao", None),
+                        "precalculo": precalc,
+                        "link": link,
+                        "codigo_mp": codigo_mp,
+                        "desc_mp": desc_mp,
+                        "link_normas": None,
+                        "qtd_normas": 0,
+                    }
+
+                    subject = f"[Sistema Bras-Mol] Cotação de Serviço respondida • PC {precalc.numero} • Cot {precalc.cotacao.numero if precalc and precalc.cotacao else '-'}"
+                    html_body = render_to_string("emails/cotacao_servico_respondida.html", context)
+                    text_body = render_to_string("emails/cotacao_servico_respondida.txt", context)
+
+                    msg = EmailMultiAlternatives(
+                        subject=subject,
+                        body=text_body,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=emails,
+                    )
+                    msg.attach_alternative(html_body, "text/html")
+                    msg.send(fail_silently=True)
+
+            except AlertaConfigurado.DoesNotExist:
+                pass
+
+            messages.success(request, "Cotações salvas com sucesso.")
+            return render(request, "cotacoes/cotacao_servico_lote_finalizada.html", {"servico": servico})
+
+        messages.info(request, "Nenhuma alteração foi enviada.")
         return redirect(request.path)
 
+    # GET
     return render(
         request,
         "cotacoes/responder_cotacao_servico_lote.html",
@@ -354,5 +512,6 @@ def responder_cotacao_servico_lote(request, pk):
             "codigo": codigo,
         }
     )
+
 
 

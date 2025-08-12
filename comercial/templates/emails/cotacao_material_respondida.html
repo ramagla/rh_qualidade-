@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Cotação de Matéria-Prima Respondida</title>
+</head>
+<body>
+  <h2>[SIB] Cotação de Matéria-Prima respondida</h2>
+
+  <p>Olá {% if usuario %}{{ usuario.get_full_name }}{% else %}Equipe{% endif %},</p>
+
+  <p>Recebemos a resposta de cotação da matéria-prima.</p>
+
+<ul>
+  {% if cotacao %}
+    <li><strong>Cotação:</strong> {{ cotacao.numero }}</li>
+  {% else %}
+    <li><strong>Cotação:</strong> -</li>
+  {% endif %}
+  <li><strong>Pré-Cálculo:</strong> {{ precalculo.numero }}</li>
+</ul>
+
+
+  <p>
+    <a href="{{ link }}" target="_blank">▶ Abrir Pré-Cálculo</a>
+  </p>
+
+  {% if link_normas and qtd_normas|default:0 > 0 %}
+  <p style="margin-top:12px">
+    <a href="{{ link_normas }}" target="_blank">
+      📚 Acessar Normas do Cliente ({{ qtd_normas }})
+    </a>
+  </p>
+  {% endif %}
+
+  <hr>
+  <small>Este é um e-mail automático do SIB (Sistema Integrado Bras-Mol).</small>
+</body>
+</html>
