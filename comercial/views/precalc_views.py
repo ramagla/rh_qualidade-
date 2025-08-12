@@ -1000,7 +1000,7 @@ def precificacao_produto(request, pk):
             preco_sem_icms = preco_kg * (Decimal("1") - icms / 100)
             preco_total_servico = preco_kg * peso_total
             preco_total_servico_sem_icms = preco_sem_icms * peso_total
-            preco_total_servico_lote = preco_sem_icms * lote_minimo
+            preco_total_servico_lote = lote_minimo
         except (InvalidOperation, TypeError):
             pass
 
@@ -1062,14 +1062,16 @@ def precificacao_produto(request, pk):
     total_servico = Decimal("0.00")
     for s in precalc.servicos.filter(selecionado=True):
         preco_kg = Decimal(s.preco_kg or 0)
+        lote_minimo = Decimal(s.lote_minimo or 0)  # ← em R$
         peso_total = Decimal(s.peso_liquido_total or 0)
-        lote_minimo = Decimal(s.lote_minimo or 0)
 
-        valor_calculado = preco_kg * peso_total
-        if lote_minimo > 0 and valor_calculado < lote_minimo:
-            total_servico += lote_minimo
-        else:
-            total_servico += valor_calculado
+        if not peso_total and s.peso_liquido:
+            qtde_tmp = Decimal(getattr(precalc.analise_comercial_item, "qtde_estimada", 1) or 1)
+            peso_total = Decimal(s.peso_liquido or 0) * qtde_tmp
+
+        valor_calculado = preco_kg * peso_total      # comparação COM ICMS
+        total_servico += max(valor_calculado, lote_minimo)
+
 
     unit_servico = total_servico / qtde if qtde else Decimal(0)
 
