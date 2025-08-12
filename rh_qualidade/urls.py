@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from assinatura_eletronica.views import validar_assinatura
 from rh_qualidade.recibos_views import importar_zip_recibos, recibos_pagamento
+from django.views.generic import TemplateView  # ✅ novo
 
 from .views import (
     acesso_negado,
@@ -28,7 +29,8 @@ from rh_qualidade.views import usuarios_ativos
 urlpatterns = [
     # Admin
     path("admin/", admin.site.urls),
-
+    path("manifest.webmanifest",TemplateView.as_view(template_name="manifest.webmanifest",content_type="application/manifest+json",), name="pwa_manifest",),
+    path("service-worker.js", TemplateView.as_view(template_name="service-worker.js",content_type="application/javascript", ), name="pwa_sw",),
     # Home geral
     path("", home_geral, name="home_geral"),
 

@@ -100,17 +100,58 @@
   <table class="table table-bordered text-center align-middle small-text-table">
     <caption class="visually-hidden">Tabela de dispositivos cadastrados</caption>
     <thead class="table-light align-middle">
-      <tr>
-        <th scope="col"><i class="bi bi-upc-scan"></i> Código</th>
-        <th scope="col"><i class="bi bi-stack"></i> Quantidade</th>
-        <th scope="col"><i class="bi bi-person"></i> Cliente</th>
-        <th scope="col"><i class="bi bi-file-text"></i> Descrição</th>
-        <th scope="col"><i class="bi bi-geo-alt-fill"></i> Local</th>
-        <th scope="col"><i class="bi bi-calendar-check"></i> Última Calibração</th>
-        <th scope="col"><i class="bi bi-calendar-event"></i> Próxima Calibração</th>
-        <th scope="col"><i class="bi bi-gear"></i> Ações</th>
-      </tr>
-    </thead>
+  <tr>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-stack mb-1"></i>
+        <small>Quantidade</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Cliente</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-file-text mb-1"></i>
+        <small>Descrição</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-geo-alt-fill mb-1"></i>
+        <small>Local</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-check mb-1"></i>
+        <small>Última Calibração</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Próxima Calibração</small>
+      </div>
+    </th>
+    <th scope="col" class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
     <tbody>
       {% for dispositivo in page_obj %}
       <tr class="align-middle">

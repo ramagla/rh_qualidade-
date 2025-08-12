@@ -130,19 +130,70 @@
   <!-- Tabela -->
   <table class="table table-bordered table-striped align-middle text-center">
     <thead class="table-light align-middle">
-      <tr>
-        <th><i class="bi bi-upc me-1"></i> Código</th>
-        <th><i class="bi bi-building me-1"></i> Laboratório</th>
-        <th><i class="bi bi-arrow-down-up me-1"></i> Erro (E)</th>
-        <th><i class="bi bi-exclude me-1"></i> Incerteza (I)</th>
-        <th><i class="bi bi-plus-square me-1"></i> L = (E+I)</th>
-        <th><i class="bi bi-check2-circle me-1"></i> Exatidão Req.</th>
-        <th><i class="bi bi-clipboard2-check me-1"></i> Status</th>
-        <th><i class="bi bi-ui-checks-grid me-1"></i> Tipo</th>
-        <th><i class="bi bi-calendar me-1"></i> Data</th>
-        <th><i class="bi bi-gear-fill me-1"></i> Ações</th>
-      </tr>
-    </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc mb-1"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Laboratório</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-arrow-down-up mb-1"></i>
+        <small>Erro (E)</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-exclude mb-1"></i>
+        <small>Incerteza (I)</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-plus-square mb-1"></i>
+        <small>L = (E+I)</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-check2-circle mb-1"></i>
+        <small>Exatidão Req.</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clipboard2-check mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-ui-checks-grid mb-1"></i>
+        <small>Tipo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar mb-1"></i>
+        <small>Data</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear-fill mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
     <tbody>
       {% for calibracao in page_obj %}
         <tr>

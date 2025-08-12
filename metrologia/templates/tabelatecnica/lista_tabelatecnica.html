@@ -129,18 +129,64 @@
   <table class="table table-bordered table-striped text-center mt-4">
     <caption class="visually-hidden">Lista de equipamentos cadastrados</caption>
     <thead class="table-light align-middle">
-      <tr>
-        <th><i class="bi bi-upc-scan me-1 text-secondary" aria-hidden="true"></i> Código</th>
-        <th><i class="bi bi-gear-wide-connected me-1 text-secondary" aria-hidden="true"></i> Nome do Equipamento</th>
-        <th><i class="bi bi-tools me-1 text-secondary" aria-hidden="true"></i> Fabricante</th>
-        <th><i class="bi bi-123 me-1 text-secondary" aria-hidden="true"></i> Nº de Série</th>
-        <th><i class="bi bi-person-badge me-1 text-secondary" aria-hidden="true"></i> Responsável</th>
-        <th><i class="bi bi-geo-alt-fill me-1 text-secondary" aria-hidden="true"></i> Localização</th>
-        <th><i class="bi bi-calendar-check me-1 text-secondary" aria-hidden="true"></i> Última Calibração</th>
-        <th><i class="bi bi-calendar-event me-1 text-secondary" aria-hidden="true"></i> Próx. Calibração</th>
-        <th><i class="bi bi-three-dots me-1 text-secondary" aria-hidden="true"></i> Ações</th>
-      </tr>
-    </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear-wide-connected mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Nome do Equipamento</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-tools mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Fabricante</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-123 mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Nº de Série</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-badge mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Responsável</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-geo-alt-fill mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Localização</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-check mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Última Calibração</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Próx. Calibração</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-three-dots mb-1 text-secondary" aria-hidden="true"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
     <tbody>
       {% for tabela in page_obj %}
         <tr class="align-middle">  

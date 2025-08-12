@@ -98,14 +98,40 @@
 <div class="table-responsive zebra-tabela">
     <table class="table table-bordered table-striped align-middle text-center">
       <thead class="table-light">
-        <tr>
-          <th><i class="bi bi-calendar-event"></i> Data</th>
-          <th><i class="bi bi-person-circle"></i> Colaborador</th>
-          <th><i class="bi bi-hourglass-split"></i> Total</th>
-          <th><i class="bi bi-card-text"></i> Observação</th>
-          <th><i class="bi bi-gear"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Data</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-circle mb-1"></i>
+        <small>Colaborador</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hourglass-split mb-1"></i>
+        <small>Total</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-card-text mb-1"></i>
+        <small>Observação</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for registro in page_obj %}
           <tr>

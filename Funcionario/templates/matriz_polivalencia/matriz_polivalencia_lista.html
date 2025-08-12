@@ -93,15 +93,46 @@
   <div class="table-responsive">
     <table class="table table-bordered table-striped table-hover align-middle text-center">
       <thead class="table-light align-middle">
-        <tr>
-          <th><i class="bi bi-building"></i> Departamento</th>
-          <th><i class="bi bi-person-plus-fill"></i> Elaboração</th>
-          <th><i class="bi bi-people-fill"></i> Coordenação</th>
-          <th><i class="bi bi-shield-check"></i> Validação</th>
-          <th><i class="bi bi-clock-history"></i> Última Atualização</th>
-          <th><i class="bi bi-gear"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Departamento</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-plus-fill mb-1"></i>
+        <small>Elaboração</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-people-fill mb-1"></i>
+        <small>Coordenação</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-shield-check mb-1"></i>
+        <small>Validação</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clock-history mb-1"></i>
+        <small>Última Atualização</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for matriz in matrizes %}
         <tr>
