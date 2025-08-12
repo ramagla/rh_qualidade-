@@ -226,7 +226,7 @@
               {% with preco_kg=s.preco_kg|default_if_none:0 icms=s.icms|default_if_none:0 peso=s.peso_liquido_total|default_if_none:0 lote=s.lote_minimo|default_if_none:0 %}
                   {% with preco_sem_icms=preco_kg|subtrair_percentual:icms %}
                     <tr>
-                      <td>{{ s.nome_insumo|default:"—" }}</td>
+                        <td>{{ s.codigo_materia_prima|default:"—" }}</td>
                       <td>
                         {% if s.fornecedor %}
                           {{ s.fornecedor }}
@@ -241,8 +241,17 @@
                       <td>R$ {{ preco_kg|floatformat:4 }}</td>
                       <td>R$ {{ preco_kg|mul:peso|floatformat:2 }}</td>
                       <td>R$ {{ preco_sem_icms|mul:peso|floatformat:2 }}</td>
-                      <td>{{ lote|default:"—" }}</td>
-                      <td>R$ {{ preco_sem_icms|mul:lote|floatformat:2 }}</td>
+                      <td>R$ {{ lote|floatformat:2 }}</td>
+                      {# Tot. Lote = max(preco_kg * peso_total, lote_minimo) — SEM retirar ICMS #}
+                      {% with total=preco_kg|mul:peso %}
+                        <td>R$
+                          {% if total < lote %}
+                            {{ lote|floatformat:2 }}
+                          {% else %}
+                            {{ total|floatformat:2 }}
+                          {% endif %}
+                        </td>
+                      {% endwith %}
                     </tr>
                   {% endwith %}
                 {% endwith %}
