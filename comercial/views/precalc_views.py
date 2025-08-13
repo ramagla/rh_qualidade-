@@ -1,4 +1,4 @@
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from django.conf import settings
 from django.contrib import messages
@@ -1073,26 +1073,43 @@ def precificacao_produto(request, pk):
     qtde = Decimal(getattr(precalc.analise_comercial_item, "qtde_estimada", 1) or 1)
 
     # ——— Materiais
+    # ——— Materiais (usar preço/kg líquido de ICMS)
     mat = precalc.materiais.filter(selecionado=True).first()
-    total_materia = Decimal((mat.peso_bruto_total or 0)) * Decimal((mat.preco_kg or 0)) if mat else Decimal(0)
-    unit_materia = total_materia / qtde if qtde else Decimal(0)
+    if mat:
+        preco_kg = Decimal(mat.preco_kg or 0)
+        icms_mat = Decimal(mat.icms or 0)
+        fator_icms = (Decimal(100) - icms_mat) / Decimal(100)
+        preco_kg_liq = (preco_kg * fator_icms).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
+        peso_total = Decimal(mat.peso_bruto_total or 0)
+        total_materia = (peso_total * preco_kg_liq).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    else:
+        total_materia = Decimal(0)
+
+    unit_materia = (total_materia / qtde).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) if qtde else Decimal(0)
+
 
     # ——— Serviços
+    # ——— Serviços (usar preço/kg líquido de ICMS)
     total_servico = Decimal("0.00")
     for s in precalc.servicos.filter(selecionado=True):
         preco_kg = Decimal(s.preco_kg or 0)
-        lote_minimo = Decimal(s.lote_minimo or 0)  # ← em R$
+        icms_srv = Decimal(s.icms or 0)
+        fator_icms = (Decimal(100) - icms_srv) / Decimal(100)
+        preco_kg_liq = (preco_kg * fator_icms).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
+        lote_minimo = Decimal(s.lote_minimo or 0)  # em R$
         peso_total = Decimal(s.peso_liquido_total or 0)
 
         if not peso_total and s.peso_liquido:
             qtde_tmp = Decimal(getattr(precalc.analise_comercial_item, "qtde_estimada", 1) or 1)
             peso_total = Decimal(s.peso_liquido or 0) * qtde_tmp
 
-        valor_calculado = preco_kg * peso_total      # comparação COM ICMS
+        valor_calculado = (preco_kg_liq * peso_total).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         total_servico += max(valor_calculado, lote_minimo)
 
+    unit_servico = (total_servico / qtde).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) if qtde else Decimal(0)
 
-    unit_servico = total_servico / qtde if qtde else Decimal(0)
 
     # ——— Roteiro
     total_roteiro = sum(

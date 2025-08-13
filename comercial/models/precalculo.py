@@ -94,12 +94,25 @@ class PreCalculo(models.Model):
         custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
 
         mat = self.materiais.filter(selecionado=True).first()
-        materiais = Decimal(mat.peso_bruto_total or 0) * Decimal(mat.preco_kg or 0) if mat else Decimal(0)
+        if mat:
+            preco_kg = Decimal(mat.preco_kg or 0)
+            icms_mat = Decimal(mat.icms or 0)
+            fator_icms = (Decimal(100) - icms_mat) / Decimal(100)
+            preco_kg_liq = (preco_kg * fator_icms).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            materiais = Decimal(mat.peso_bruto_total or 0) * preco_kg_liq
+        else:
+            materiais = Decimal(0)
 
-        servicos = sum(
-            Decimal(s.peso_liquido or 0) * Decimal(s.preco_kg or 0)
-            for s in self.servicos.filter(selecionado=True)
-        )
+        servicos = Decimal("0.00")
+        for s in self.servicos.filter(selecionado=True):
+            preco_kg = Decimal(s.preco_kg or 0)
+            icms_srv = Decimal(s.icms or 0)
+            fator_icms = (Decimal(100) - icms_srv) / Decimal(100)
+            preco_kg_liq = (preco_kg * fator_icms).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
+            peso = Decimal(s.peso_liquido or 0)  # sem impostos, manter o campo já usado na função
+            servicos += preco_kg_liq * peso
+
 
         base = (custos_diretos + materiais + servicos).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
@@ -162,12 +175,26 @@ class PreCalculo(models.Model):
         custos_diretos = sum(rot.custo_total for rot in self.roteiro_item.all())
 
         mat = self.materiais.filter(selecionado=True).first()
-        materiais = Decimal(mat.peso_bruto_total or 0) * Decimal(mat.preco_kg or 0) if mat else Decimal(0)
+        if mat:
+            preco_kg = Decimal(mat.preco_kg or 0)
+            icms_mat = Decimal(mat.icms or 0)
+            fator_icms = (Decimal(100) - icms_mat) / Decimal(100)
+            preco_kg_liq = (preco_kg * fator_icms).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            materiais = Decimal(mat.peso_bruto_total or 0) * preco_kg_liq
+        else:
+            materiais = Decimal(0)
 
-        servicos = sum(
-            Decimal(s.peso_liquido_total or 0) * Decimal(s.preco_kg or 0)
-            for s in self.servicos.filter(selecionado=True)
-        )
+
+        servicos = Decimal("0.00")
+        for s in self.servicos.filter(selecionado=True):
+            preco_kg = Decimal(s.preco_kg or 0)
+            icms_srv = Decimal(s.icms or 0)
+            fator_icms = (Decimal(100) - icms_srv) / Decimal(100)
+            preco_kg_liq = (preco_kg * fator_icms).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
+            peso_total = Decimal(s.peso_liquido_total or 0)  # com impostos, manter o campo já usado na função
+            servicos += preco_kg_liq * peso_total
+
 
         base = (custos_diretos + materiais + servicos).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
@@ -238,22 +265,33 @@ class PreCalculo(models.Model):
 
     def custo_unitario_materia_prima(self):
         mat = self.materiais.filter(selecionado=True).first()
-        total = Decimal((mat.peso_bruto_total or 0)) * Decimal((mat.preco_kg or 0)) if mat else Decimal(0)
-        return total / self.qtde_estimada  # ✅ Sem parênteses
+        if mat:
+            preco_kg = Decimal(mat.preco_kg or 0)
+            icms_mat = Decimal(mat.icms or 0)
+            fator_icms = (Decimal(100) - icms_mat) / Decimal(100)
+            preco_kg_liq = (preco_kg * fator_icms).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            total = Decimal(mat.peso_bruto_total or 0) * preco_kg_liq
+        else:
+            total = Decimal(0)
+        return total / self.qtde_estimada
+
 
     def custo_unitario_servicos_externos(self):
         total = Decimal("0.00")
         for s in self.servicos.filter(selecionado=True):
-            valor_calculado = Decimal(s.peso_liquido_total or 0) * Decimal(s.preco_kg or 0)
-            lote_minimo = Decimal(s.lote_minimo or 0)
+            preco_kg = Decimal(s.preco_kg or 0)
+            icms_srv = Decimal(s.icms or 0)
+            fator_icms = (Decimal(100) - icms_srv) / Decimal(100)
+            preco_kg_liq = (preco_kg * fator_icms).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
-            # Se o lote mínimo for informado e maior que o valor calculado, usa o lote mínimo
-            if lote_minimo > 0 and valor_calculado < lote_minimo:
-                total += lote_minimo
-            else:
-                total += valor_calculado
+            peso_total = Decimal(s.peso_liquido_total or 0)
+            valor_calculado = preco_kg_liq * peso_total
+
+            lote_minimo = Decimal(s.lote_minimo or 0)  # em R$
+            total += lote_minimo if (lote_minimo > 0 and valor_calculado < lote_minimo) else valor_calculado
 
         return total / self.qtde_estimada
+
 
 
     def custo_unitario_roteiro(self):
