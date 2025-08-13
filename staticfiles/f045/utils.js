@@ -1,7 +1,7 @@
 const fatorConversao = 0.10197;
 
 function formatarValor(valor) {
-  return valor.toFixed(2).replace(".", ",");
+  return valor.toFixed(4).replace(".", ",");
 }
 
 function arredondar(valor) {

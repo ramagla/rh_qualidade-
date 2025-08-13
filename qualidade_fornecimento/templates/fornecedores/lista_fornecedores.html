@@ -149,17 +149,53 @@
   </h5>
   <div class="table-responsive">
     <table class="table table-striped zebra-tabela table-hover table-bordered text-center align-middle">
-      <thead class="table-light align-middle">
+     <thead class="table-light align-middle">
   <tr>
-    <th class="py-2"><i class="bi bi-person me-1"></i> Nome</th>
-    <th class="py-2"><i class="bi bi-box-seam me-1"></i> Produto</th>
-    <th class="py-2"><i class="bi bi-patch-check me-1"></i> Certificação</th>
-    <th class="py-2"><i class="bi bi-calendar-event me-1"></i> Vencimento</th>
-    <th class="py-2"><i class="bi bi-activity me-1"></i> Risco</th>
-    <th class="py-2"><i class="bi bi-shield-check me-1"></i> Status</th>
-    <th class="py-2"><i class="bi bi-gear-fill me-1"></i> Ações</th>
+    <th class="text-center py-2">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Nome</small>
+      </div>
+    </th>
+    <th class="text-center py-2">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-box-seam mb-1"></i>
+        <small>Produto</small>
+      </div>
+    </th>
+    <th class="text-center py-2">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-patch-check mb-1"></i>
+        <small>Certificação</small>
+      </div>
+    </th>
+    <th class="text-center py-2">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Vencimento</small>
+      </div>
+    </th>
+    <th class="text-center py-2">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-activity mb-1"></i>
+        <small>Risco</small>
+      </div>
+    </th>
+    <th class="text-center py-2">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-shield-check mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th class="text-center py-2">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear-fill mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
   </tr>
 </thead>
+
 
       <tbody>
         {% for fornecedor in fornecedores_paginados %}

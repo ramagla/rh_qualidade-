@@ -439,3 +439,16 @@ def usuarios_ativos(request):
     usuarios = User.objects.filter(id__in=user_ids).order_by('username')
 
     return render(request, 'configuracoes/usuarios_ativos.html', {'usuarios': usuarios})
+
+
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+
+def pwa_manifest(request):
+    content = render_to_string("manifest.webmanifest", {})
+    return HttpResponse(content, content_type="application/manifest+json")
+
+def pwa_service_worker(request):
+    content = render_to_string("service-worker.js", {})
+    return HttpResponse(content, content_type="application/javascript")
+

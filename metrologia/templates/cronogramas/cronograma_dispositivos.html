@@ -90,22 +90,83 @@
 <!-- Tabela com scroll inferior sincronizado -->
 <div class="table-responsive table-scroll-bottom overflow-auto">
   <table class="custom-table table table-bordered table-striped table-hover text-center align-middle">
-    <thead class="table-primary align-middle">
-      <tr>
-        <th><i class="bi bi-upc-scan me-1"></i> Código</th>
-        <th><i class="bi bi-hash me-1"></i> Qtde</th>
-        <th><i class="bi bi-person me-1"></i> Cliente</th>
-        <th><i class="bi bi-info-circle me-1"></i> Descrição</th>
-        <th><i class="bi bi-clipboard2-check me-1"></i> Estudo</th>
-        <th><i class="bi bi-calendar-check me-1"></i> Última Calibração</th>
-        <th><i class="bi bi-calendar-event me-1"></i> Próxima</th>
-        <th><i class="bi bi-box-arrow-right me-1"></i> Última Saída</th>
-        <th><i class="bi bi-box-arrow-in-left me-1"></i> Retorno</th>
-        <th><i class="bi bi-diagram-3 me-1"></i> Setor</th>
-        <th><i class="bi bi-activity me-1"></i> Situação</th>
-        <th><i class="bi bi-building me-1"></i> Armazenagem</th>
-      </tr>
-    </thead>
+   <thead class="table-primary align-middle">
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hash mb-1"></i>
+        <small>Qtde</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Cliente</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-info-circle mb-1"></i>
+        <small>Descrição</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clipboard2-check mb-1"></i>
+        <small>Estudo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-check mb-1"></i>
+        <small>Última Calibração</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Próxima</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-box-arrow-right mb-1"></i>
+        <small>Última Saída</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-box-arrow-in-left mb-1"></i>
+        <small>Retorno</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-diagram-3 mb-1"></i>
+        <small>Setor</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-activity mb-1"></i>
+        <small>Situação</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Armazenagem</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
     <tbody>
       {% for dispositivo in dispositivos %}
         <tr>

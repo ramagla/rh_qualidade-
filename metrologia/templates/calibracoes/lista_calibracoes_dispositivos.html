@@ -144,17 +144,53 @@
 
   <!-- Tabela -->
   <table class="table table-striped table-bordered align-middle text-center">
-    <thead class="table-light text-center">
-      <tr>
-        <th><i class="bi bi-upc-scan me-1"></i> Código</th>
-        <th><i class="bi bi-hammer me-1"></i> Instrumento</th>
-        <th><i class="bi bi-clipboard-check me-1"></i> Status</th>
-        <th><i class="bi bi-calendar-event me-1"></i> Data</th>
-        <th><i class="bi bi-person-badge me-1"></i> Responsável</th>
-        <th><i class="bi bi-rulers me-1"></i> Aferições</th>
-        <th><i class="bi bi-gear me-1"></i> Ações</th>
-      </tr>
-    </thead>
+   <thead class="table-light text-center">
+  <tr>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hammer mb-1"></i>
+        <small>Instrumento</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clipboard-check mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Data</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-badge mb-1"></i>
+        <small>Responsável</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-rulers mb-1"></i>
+        <small>Aferições</small>
+      </div>
+    </th>
+    <th>
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
     <tbody>
       {% for calibracao in page_obj %}
         <tr>

@@ -97,26 +97,104 @@
 <!-- Scroll principal com tabela -->
 <div class="table-responsive table-scroll-bottom overflow-auto">
   <table class="custom-table table table-bordered table-striped table-hover text-center align-middle">
-    <thead class="table-primary">
-      <tr>
-        <th><i class="bi bi-upc-scan me-1"></i> Código</th>
-        <th><i class="bi bi-hammer me-1"></i> Equipamento</th>
-        <th><i class="bi bi-building me-1"></i> Fabricante</th>
-        <th><i class="bi bi-arrows-expand me-1"></i> Capacidade</th>
-        <th><i class="bi bi-grid-1x2 me-1"></i> Resolução</th>
-        <th><i class="bi bi-person-badge me-1"></i> Responsável</th>
-        <th><i class="bi bi-calendar-check me-1"></i> Última Calibração</th>
-        <th><i class="bi bi-calendar-event me-1"></i> Próxima Calibração</th>
-        <th><i class="bi bi-clock-history me-1"></i> Frequência</th>
-        <th><i class="bi bi-hospital me-1"></i> Laboratório</th>
-        <th><i class="bi bi-file-earmark-text me-1"></i> Nº Certificado</th>
-        <th>(E) Erro</th>
-        <th>(I) Incerteza</th>
-        <th>L = (E + I)</th>
-        <th><i class="bi bi-bullseye me-1"></i> Exatidão</th>
-        <th><i class="bi bi-activity me-1"></i> Status</th>
-      </tr>
-    </thead>
+   <thead class="table-primary">
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hammer mb-1"></i>
+        <small>Equipamento</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Fabricante</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-arrows-expand mb-1"></i>
+        <small>Capacidade</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-grid-1x2 mb-1"></i>
+        <small>Resolução</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-badge mb-1"></i>
+        <small>Responsável</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-check mb-1"></i>
+        <small>Última Calibração</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Próxima Calibração</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clock-history mb-1"></i>
+        <small>Frequência</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hospital mb-1"></i>
+        <small>Laboratório</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-file-earmark-text mb-1"></i>
+        <small>Nº Certificado</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <small>(E) Erro</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <small>(I) Incerteza</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <small>L = (E + I)</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-bullseye mb-1"></i>
+        <small>Exatidão</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-activity mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
     <tbody>
       {% for equipamento in equipamentos %}
         <tr>

@@ -31,13 +31,24 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="/static/pwa/icons/icon-192.png">
     <link rel="apple-touch-icon" sizes="512x512" href="/static/pwa/icons/icon-512.png">
-    <script defer src="{% static 'pwa/pwa.js' %}"></script>
+<!-- captura o evento o mais cedo possível -->
+<script>
+  window._deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window._deferredPrompt = e;
+    console.log('[PWA] beforeinstallprompt capturado');  // << você verá isso no Console
+    // Se NÃO quiser o botão sempre visível, poderia exibir aqui.
+  });
+</script>
+<script src="{% static 'pwa/pwa.js' %}" async></script>
+
     
     <style>
         body {
             font-family: Arial, sans-serif;
         }
-         #btnInstallPWA { display: none; }
+  #btnInstallPWA { display: inline-block; }
         .sidebar {
             height: 100vh;
             overflow-y: auto; /* permite scroll interno */

@@ -194,18 +194,64 @@
   <div class="table-responsive">
     <table class="table table-bordered table-hover table-striped zebra-tabela text-center align-middle">
       <thead class="table-light align-middle">
-        <tr>
-          <th><i class="bi bi-file-earmark-text me-1 text-muted"></i> Relatório</th>
-          <th><i class="bi bi-calendar-date me-1 text-muted"></i> Data Entrada</th>
-          <th><i class="bi bi-truck me-1 text-muted"></i> Fornecedor</th>
-          <th><i class="bi bi-boxes me-1 text-muted"></i> Matéria-Prima</th>
-          <th><i class="bi bi-award me-1 text-muted"></i> Nº Certificado</th>
-          <th><i class="bi bi-info-circle me-1 text-muted"></i> Status</th>
-          <th><i class="bi bi-clock-history me-1 text-muted"></i> Atraso (dias)</th>
-          <th><i class="bi bi-upc me-1 text-muted"></i> Rolos</th>
-          <th><i class="bi bi-gear-fill me-1 text-muted"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-file-earmark-text mb-1 text-muted"></i>
+        <small>Relatório</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-date mb-1 text-muted"></i>
+        <small>Data Entrada</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-truck mb-1 text-muted"></i>
+        <small>Fornecedor</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-boxes mb-1 text-muted"></i>
+        <small>Matéria-Prima</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-award mb-1 text-muted"></i>
+        <small>Nº Certificado</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-info-circle mb-1 text-muted"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clock-history mb-1 text-muted"></i>
+        <small>Atraso (dias)</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc mb-1 text-muted"></i>
+        <small>Rolos</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear-fill mb-1 text-muted"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for item in materias_primas_paginadas %}
           <tr>
