@@ -57,114 +57,134 @@
 {% endif %}
 
 
-  <form method="post" enctype="multipart/form-data" class="row g-3">
-    {% csrf_token %}
+<form method="post" enctype="multipart/form-data" class="row g-3">
+  {% csrf_token %}
 
- <!-- Campos Automáticos -->
- <div id="campos-extras-fornecedor"> 
-<div class="accordion-item">
-  <h2 class="accordion-header" id="headingCamposAuto">
-    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCamposAuto" aria-expanded="false" aria-controls="collapseCamposAuto" aria-label="Expandir Campos Automáticos">
-  <i class="bi bi-gear-fill me-2" aria-hidden="true"></i> Campos Automáticos
-</button>
-  </h2>
-  <div id="collapseCamposAuto" class="accordion-collapse collapse" aria-labelledby="headingCamposAuto" data-bs-parent="#accordionFornecedor">
-    <div class="accordion-body row g-3">
+  <!-- WRAPPER ÚNICO DO BOOTSTRAP ACCORDION -->
+  <div class="accordion" id="accordionFornecedor">
 
-      <!-- Próxima Avaliação de Risco -->
-      <div class="col-md-6">
-        <label for="id_proxima_avaliacao_risco" class="form-label fw-bold">
-          <i class="bi bi-shield-check me-1"></i> Próxima Avaliação de Risco:
-        </label>
-        <div class="input-group">
-          <input type="text"
-                 id="id_proxima_avaliacao_risco"
-                 class="form-control bg-light text-muted"
-                 value="{{ form.instance.proxima_avaliacao_risco }}"
-                 readonly
-                 title="Preenchimento automático">
-<span class="input-group-text bg-light text-muted" title="Preenchimento automático" aria-label="Campo preenchido automaticamente com bloqueio">🔒</span>
+    <!-- Campos Automáticos -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingCamposAuto">
+        <button class="accordion-button fw-bold collapsed" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseCamposAuto"
+                aria-expanded="false"
+                aria-controls="collapseCamposAuto"
+                aria-label="Expandir Campos Automáticos">
+          <i class="bi bi-gear-fill me-2" aria-hidden="true"></i> Campos Automáticos
+        </button>
+      </h2>
+      <div id="collapseCamposAuto"
+           class="accordion-collapse collapse"
+           aria-labelledby="headingCamposAuto"
+           data-bs-parent="#accordionFornecedor">
+        <div class="accordion-body row g-3">
+
+          <!-- Próxima Avaliação de Risco -->
+          <div class="col-md-6">
+            <label for="id_proxima_avaliacao_risco" class="form-label fw-bold">
+              <i class="bi bi-shield-check me-1"></i> Próxima Avaliação de Risco:
+            </label>
+            <div class="input-group">
+              <input type="text"
+                     id="id_proxima_avaliacao_risco"
+                     class="form-control bg-light text-muted"
+                     value="{{ form.instance.proxima_avaliacao_risco }}"
+                     readonly
+                     title="Preenchimento automático">
+              <span class="input-group-text bg-light text-muted"
+                    title="Preenchimento automático"
+                    aria-label="Campo preenchido automaticamente com bloqueio">🔒</span>
+            </div>
+          </div>
+
+          <!-- Próxima Auditoria -->
+          <div class="col-md-6">
+            <label for="id_proxima_auditoria" class="form-label fw-bold">
+              <i class="bi bi-calendar-check me-1"></i> Próxima Auditoria:
+            </label>
+            <div class="input-group">
+              <input type="text"
+                     id="id_proxima_auditoria"
+                     class="form-control bg-light text-muted"
+                     value="{{ form.instance.proxima_auditoria }}"
+                     readonly
+                     title="Preenchimento automático">
+              <span class="input-group-text bg-light text-muted"
+                    title="Preenchimento automático">🔒</span>
+            </div>
+          </div>
+
+          <!-- Classe / Frequência -->
+          <div class="col-md-4">
+            <label for="classe_frequencia" class="form-label fw-bold">
+              <i class="bi bi-list-task me-1"></i> Classe / Frequência:
+            </label>
+            <div class="input-group">
+              <input type="text"
+                     id="classe_frequencia"
+                     class="form-control bg-light text-muted"
+                     value="{{ form.instance.classe_frequencia }}"
+                     readonly
+                     title="Preenchimento automático">
+              <span class="input-group-text bg-light text-muted"
+                    title="Preenchimento automático">🔒</span>
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="col-md-4">
+            <label for="status" class="form-label fw-bold">
+              <i class="bi bi-info-circle me-1"></i> Status:
+            </label>
+            <div class="input-group">
+              <input type="text"
+                     id="status"
+                     class="form-control bg-light text-muted"
+                     value="{{ form.instance.status }}"
+                     readonly
+                     title="Preenchimento automático">
+              <span class="input-group-text bg-light text-muted"
+                    title="Preenchimento automático">🔒</span>
+            </div>
+          </div>
+
+          <!-- Score -->
+          <div class="col-md-4">
+            <label for="score" class="form-label fw-bold">
+              <i class="bi bi-speedometer2 me-1"></i> Score:
+            </label>
+            <div class="input-group">
+              <input type="text"
+                     id="score"
+                     class="form-control bg-light text-muted"
+                     value="{{ form.instance.score }}"
+                     readonly
+                     title="Preenchimento automático">
+              <span class="input-group-text bg-light text-muted"
+                    title="Preenchimento automático">🔒</span>
+            </div>
+          </div>
+
         </div>
       </div>
-
-      <!-- Próxima Auditoria -->
-      <div class="col-md-6">
-        <label for="id_proxima_auditoria" class="form-label fw-bold">
-          <i class="bi bi-calendar-check me-1"></i> Próxima Auditoria:
-        </label>
-        <div class="input-group">
-          <input type="text"
-                 id="id_proxima_auditoria"
-                 class="form-control bg-light text-muted"
-                 value="{{ form.instance.proxima_auditoria }}"
-                 readonly
-                 title="Preenchimento automático">
-          <span class="input-group-text bg-light text-muted" title="Preenchimento automático">🔒</span>
-        </div>
-      </div>
-
-      <!-- Classe / Frequência -->
-      <div class="col-md-4">
-        <label for="classe_frequencia" class="form-label fw-bold">
-          <i class="bi bi-list-task me-1"></i> Classe / Frequência:
-        </label>
-        <div class="input-group">
-          <input type="text"
-                 id="classe_frequencia"
-                 class="form-control bg-light text-muted"
-                 value="{{ form.instance.classe_frequencia }}"
-                 readonly
-                 title="Preenchimento automático">
-          <span class="input-group-text bg-light text-muted" title="Preenchimento automático">🔒</span>
-        </div>
-      </div>
-
-      <!-- Status -->
-      <div class="col-md-4">
-        <label for="status" class="form-label fw-bold">
-          <i class="bi bi-info-circle me-1"></i> Status:
-        </label>
-        <div class="input-group">
-          <input type="text"
-                 id="status"
-                 class="form-control bg-light text-muted"
-                 value="{{ form.instance.status }}"
-                 readonly
-                 title="Preenchimento automático">
-          <span class="input-group-text bg-light text-muted" title="Preenchimento automático">🔒</span>
-        </div>
-      </div>
-
-      <!-- Score -->
-      <div class="col-md-4">
-        <label for="score" class="form-label fw-bold">
-          <i class="bi bi-speedometer2 me-1"></i> Score:
-        </label>
-        <div class="input-group">
-          <input type="text"
-                 id="score"
-                 class="form-control bg-light text-muted"
-                 value="{{ form.instance.score }}"
-                 readonly
-                 title="Preenchimento automático">
-          <span class="input-group-text bg-light text-muted" title="Preenchimento automático">🔒</span>
-        </div>
-      </div>
-
     </div>
-  </div>
-</div>
-</div>
-
-
-<!-- Dados Gerais -->
+<!-- Dados Gerais (dentro do #accordionFornecedor) -->
 <div class="accordion-item">
   <h2 class="accordion-header" id="headingDadosGerais">
-    <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDadosGerais" aria-expanded="false" aria-controls="collapseDadosGerais">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseDadosGerais"
+            aria-expanded="false"
+            aria-controls="collapseDadosGerais">
       <i class="bi bi-journal-text me-2"></i> Dados Gerais
     </button>
   </h2>
-  <div id="collapseDadosGerais" class="accordion-collapse collapse" aria-labelledby="headingDadosGerais" data-bs-parent="#accordionFornecedor">
+  <div id="collapseDadosGerais"
+       class="accordion-collapse collapse"
+       aria-labelledby="headingDadosGerais"
+       data-bs-parent="#accordionFornecedor">
     <div class="accordion-body row g-3">
 
       <!-- Nome do Fornecedor -->
@@ -224,13 +244,12 @@
   </div>
 </div>
 
-<!-- Alerta Condicional -->
-<div id="alert-calibracao-nbr" class="alert alert-info small d-none">
+<!-- Alerta Condicional (fora do accordion para não interferir no layout) -->
+<div id="alert-calibracao-nbr" class="alert alert-info small d-none mt-2">
   <i class="bi bi-info-circle me-1"></i>
-  Alguns campos e seções foram ocultados devido à seleção de <strong>Calibração + NBR-ISO 17025 RBC</strong> ou <strong>Material do Cliente</strong>.
+  Alguns campos e seções foram ocultados devido à seleção de
+  <strong>Calibração + NBR-ISO 17025 RBC</strong> ou <strong>Material do Cliente</strong>.
 </div>
-
-
 
 <!-- Auditoria -->
 <div id="acordeon-condicional-material">
@@ -297,7 +316,6 @@
 </div>
 
 <!-- Especialista -->
-
 <div class="accordion-item">
   <h2 class="accordion-header" id="headingEspecialista">
     <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEspecialista" aria-expanded="false" aria-controls="collapseEspecialista">
@@ -337,7 +355,6 @@
 </div>
 
 <!-- Anexos -->
-<!-- Anexos -->
 
 <div class="accordion-item">
   <h2 class="accordion-header" id="headingAnexos">
@@ -350,45 +367,26 @@
 
       <!-- Certificado Anexo -->
       <div class="col-md-12">
-        <label for="id_certificado_anexo" class="form-label fw-bold">
-          <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Certificado Anexo
-        </label>
-
-        <div class="input-group mb-2">
-          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('id_certificado_anexo').click();" aria-label="Selecionar certificado para upload">
-            Selecionar Arquivo
-          </button>
-
-          <input type="text" class="form-control text-muted" placeholder="Nenhum arquivo selecionado" id="certificado_filename" readonly>
-        </div>
-      </div>
-
-
-        <!-- Campo real oculto manualmente -->
-        <input type="file" name="certificado_anexo" id="id_certificado_anexo" class="d-none">
-
-        <!-- Exibição se já existir arquivo -->
-        {% if form.instance.certificado_anexo %}
-          <div class="alert alert-secondary p-2 d-flex align-items-center justify-content-between small">
-            <div>
-              📎 <strong>
-                <a href="{{ form.instance.certificado_anexo.url }}" target="_blank">
-                  {{ form.instance.certificado_anexo.name|cut:'certificados/fornecedores/' }}
-                </a>
-              </strong>
-            </div>
-            <div>
-              <input type="checkbox" name="certificado_anexo-clear" id="id_certificado_anexo-clear">
-              <label for="id_certificado_anexo-clear" class="text-muted">Limpar</label>
-            </div>
-          </div>
-        {% endif %}
-      </div>
+        {% include "partials/global/_campo_anexo.html" with campo="certificado_anexo" %}
+      </div>        
 
     </div>
   </div>
 </div>
 </div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
 
 
 

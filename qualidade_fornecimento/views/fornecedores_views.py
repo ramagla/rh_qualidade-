@@ -131,15 +131,35 @@ def cadastrar_fornecedor(request):
 
 
 @login_required
+@permission_required('qualidade_fornecimento.change_fornecedorqualificado', raise_exception=True)
 def editar_fornecedor(request, id):
     fornecedor = get_object_or_404(FornecedorQualificado, id=id)
+
     if request.method == "POST":
         form = FornecedorForm(request.POST, request.FILES, instance=fornecedor)
         if form.is_valid():
             try:
-                form.save()
+                # Salva sem confirmar no DB para permitir tratar o arquivo antes
+                obj = form.save(commit=False)
+
+                # Suporte a dois jeitos de pedir remoção do arquivo:
+                # 1) Nosso checkbox custom: remover_certificado=1
+                # 2) Checkbox padrão do Django ClearableFileInput: certificado_anexo-clear=on
+                remove_custom = request.POST.get("remover_certificado") == "1"
+                remove_default = request.POST.get("certificado_anexo-clear") == "on"
+                if (remove_custom or remove_default) and fornecedor.certificado_anexo:
+                    # Apaga o arquivo físico e limpa o campo
+                    fornecedor.certificado_anexo.delete(save=False)
+                    obj.certificado_anexo = None
+
+                # Obs: se veio um novo arquivo em request.FILES, o form já atualizou em obj
+
+                obj.save()
+                # (não há M2M nesse form; se houvesse, chamaríamos form.save_m2m())
+
                 messages.success(request, "Fornecedor atualizado com sucesso!")
                 return redirect("lista_fornecedores")
+
             except Exception as e:
                 logger.error("Erro ao salvar o fornecedor: %s", e, exc_info=True)
                 messages.error(request, f"Erro ao salvar o fornecedor: {e}")
@@ -148,13 +168,16 @@ def editar_fornecedor(request, id):
             for field, errors in form.errors.items():
                 error_messages.append(f"{field}: {', '.join(errors)}")
             messages.error(
-                request, "Erro ao atualizar o fornecedor. " + " | ".join(error_messages)
+                request,
+                "Erro ao atualizar o fornecedor. " + " | ".join(error_messages),
             )
     else:
         form = FornecedorForm(instance=fornecedor)
 
     return render(
-        request, "fornecedores/form_fornecedor.html", {"form": form, "modo": "Edição"}
+        request,
+        "fornecedores/form_fornecedor.html",
+        {"form": form, "modo": "Edição"},
     )
 
 

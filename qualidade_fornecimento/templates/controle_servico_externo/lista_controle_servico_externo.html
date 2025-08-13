@@ -163,21 +163,82 @@
     <div class="table-responsive">
       <table class="table table-hover table-bordered text-center align-middle zebra-tabela">
         <thead class="table-light">
-          <tr>
-            <th><i class="bi bi-receipt me-1"></i> Pedido</th>
-            <th><i class="bi bi-upc-scan me-1"></i> Código BM</th>
-            <th><i class="bi bi-people-fill me-1"></i> Fornecedor</th>
-            <th><i class="bi bi-truck me-1"></i> Entrega</th>
-            <th><i class="bi bi-calculator-fill me-1"></i> Saldo</th>
-            <th><i class="bi bi-check-circle-fill me-1"></i> Status</th>
-            <th><i class="bi bi-clipboard-check me-1"></i> Status Inspeção</th>
-            <th><i class="bi bi-alarm me-1"></i> Atraso</th>
-            <th><i class="bi bi-bar-chart-line me-1"></i> IP</th>
-            <th><i class="bi bi-calendar-plus me-1"></i> Envio</th>
-            <th><i class="bi bi-calendar-minus me-1"></i> Retorno</th>
-            <th><i class="bi bi-gear-fill me-1"></i> Ações</th>
-          </tr>
-        </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-receipt mb-1"></i>
+        <small>Pedido</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc-scan mb-1"></i>
+        <small>Código BM</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-people-fill mb-1"></i>
+        <small>Fornecedor</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-truck mb-1"></i>
+        <small>Entrega</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calculator-fill mb-1"></i>
+        <small>Saldo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-check-circle-fill mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clipboard-check mb-1"></i>
+        <small>Status Inspeção</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-alarm mb-1"></i>
+        <small>Atraso</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-bar-chart-line mb-1"></i>
+        <small>IP</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-plus mb-1"></i>
+        <small>Envio</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-minus mb-1"></i>
+        <small>Retorno</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear-fill mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
         <tbody>
           {% for servico in servicos_paginados %}
             <tr>

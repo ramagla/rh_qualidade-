@@ -2,6 +2,8 @@ from django import forms
 
 from qualidade_fornecimento.models import FornecedorQualificado
 
+from django.core.files.uploadedfile import UploadedFile
+from django.forms import FileInput
 
 class FornecedorQualificadoForm(forms.ModelForm):
     class Meta:
@@ -27,6 +29,14 @@ class FornecedorQualificadoForm(forms.ModelForm):
             "ativo",
         ]
         widgets = {
+            "certificado_anexo": FileInput(
+                attrs={
+                    "id": "id_certificado_anexo",
+                    "class": "d-none",              # input real escondido
+                    "accept": ".pdf,.png,.jpg,.jpeg"  # opcional
+                }
+            ),
+        
             "produto_servico": forms.Select(attrs={"class": "form-select"}),
             "tipo_certificacao": forms.Select(attrs={"class": "form-select"}),
             "risco": forms.Select(attrs={"class": "form-select"}),
@@ -130,3 +140,9 @@ class FornecedorQualificadoForm(forms.ModelForm):
             self.cleaned_data["nota_auditoria"] = nota
             return nota
         return None
+    
+    def clean_certificado_anexo(self):
+        f = self.cleaned_data.get("certificado_anexo")
+        if isinstance(f, UploadedFile) and f.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("O arquivo excede 5 MB.")
+        return f

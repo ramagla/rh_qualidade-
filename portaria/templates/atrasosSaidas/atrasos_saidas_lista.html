@@ -93,17 +93,59 @@
   <div class="table-responsive mt-5">
     <table class="table table-bordered table-striped text-center align-middle">
       <thead class="table-light">
-        <tr>
-          <th>Foto</th>
-          <th><i class="bi bi-person"></i> Funcionário</th>
-          <th><i class="bi bi-briefcase"></i> Cargo</th>
-          <th><i class="bi bi-calendar-day"></i> Data</th>
-          <th><i class="bi bi-clock"></i> Horário</th>
-          <th><i class="bi bi-info-circle"></i> Tipo</th>
-          <th><i class="bi bi-eye-fill"></i> Justificativa</th>
-          <th><i class="bi bi-gear"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+  <div class="d-flex flex-column align-items-center">
+    <i class="bi bi-image mb-1"></i>
+    <small>Foto</small>
+  </div>
+</th>
+
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Funcionário</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-briefcase mb-1"></i>
+        <small>Cargo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-day mb-1"></i>
+        <small>Data</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clock mb-1"></i>
+        <small>Horário</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-info-circle mb-1"></i>
+        <small>Tipo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-eye-fill mb-1"></i>
+        <small>Justificativa</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for evento in eventos %}
         <tr>

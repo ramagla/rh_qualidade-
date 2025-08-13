@@ -97,17 +97,53 @@
   <!-- Tabela de pessoas -->
   <div class="table-responsive">
     <table class="table table-bordered table-striped text-center align-middle">
-      <thead class="table-light">
-        <tr>
-          <th><i class="bi bi-image"></i> Foto</th>
-          <th><i class="bi bi-person"></i> Nome</th>
-          <th><i class="bi bi-person-badge"></i> Tipo</th>
-          <th><i class="bi bi-card-text"></i> Documento</th>
-          <th><i class="bi bi-building"></i> Empresa</th>
-          <th><i class="bi bi-truck"></i> Veículos</th>
-          <th><i class="bi bi-gear"></i> Ações</th> <!-- NOVO -->
-        </tr>
-      </thead>
+     <thead class="table-light">
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-image mb-1"></i>
+        <small>Foto</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Nome</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-badge mb-1"></i>
+        <small>Tipo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-card-text mb-1"></i>
+        <small>Documento</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Empresa</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-truck mb-1"></i>
+        <small>Veículos</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for pessoa in pessoas %}
           <tr>

@@ -92,19 +92,25 @@ def salvar_calibracao(request, pk=None):
 
     if request.method == "POST":
         form = CalibracaoForm(request.POST, request.FILES, instance=calibracao)
+
+        # aceita tanto o botão do partial (remover_anexo=1) quanto o checkbox padrão (anexo-clear)
+        remove_flag = (
+            request.POST.get("remover_anexo") == "1"
+            or request.POST.get("certificado_anexo-clear") in ("on","1","true","True")
+        )
+        if remove_flag and calibracao and calibracao.certificado_anexo:
+            calibracao.certificado_anexo.delete(save=False)
+            calibracao.certificado_anexo = None
+
         if form.is_valid():
             form.save()
             return redirect("calibracoes_instrumentos")
     else:
         form = CalibracaoForm(instance=calibracao)
 
-    contexto = {
-        "form": form,
-        "edicao": edicao,
-        "param_id": pk,
-        "url_voltar": "calibracoes_instrumentos"
-    }
+    contexto = {"form": form, "edicao": edicao, "param_id": pk, "url_voltar": "calibracoes_instrumentos"}
     return render(request, "calibracoes/form_calibracao.html", contexto)
+
 
 @login_required
 @permission_required("metrologia.view_calibracao", raise_exception=True)

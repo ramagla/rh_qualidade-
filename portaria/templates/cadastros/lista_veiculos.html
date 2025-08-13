@@ -98,13 +98,34 @@
   <div class="table-responsive">
     <table class="table table-bordered table-striped text-center align-middle">
       <thead class="table-light">
-        <tr>
-          <th><i class="bi bi-card-text"></i> Placa</th>
-          <th><i class="bi bi-car-front"></i> Tipo</th>        
-          <th><i class="bi bi-person"></i> Pessoa Vinculada</th>
-          <th><i class="bi bi-gear"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-card-text mb-1"></i>
+        <small>Placa</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-car-front mb-1"></i>
+        <small>Tipo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Pessoa Vinculada</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for veiculo in veiculos %}
           <tr>

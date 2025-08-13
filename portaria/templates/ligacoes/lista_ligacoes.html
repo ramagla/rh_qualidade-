@@ -93,18 +93,64 @@
   <div class="table-responsive">
     <table class="table table-striped table-hover align-middle text-center">
       <thead class="table-light align-middle">
-        <tr>
-          <th><i class="bi bi-calendar-event"></i> Data</th>
-          <th><i class="bi bi-clock"></i> Horário</th>
-          <th><i class="bi bi-person"></i> Quem Ligou</th>
-          <th><i class="bi bi-building"></i> Empresa</th>
-          <th><i class="bi bi-telephone"></i> Telefone</th>
-          <th><i class="bi bi-person-rolodex"></i> Falar com</th>
-          <th><i class="bi bi-envelope-check"></i> Recado Enviado</th>
-          <th><i class="bi bi-chat-dots"></i> Recado</th>
-          <th><i class="bi bi-gear"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Data</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clock mb-1"></i>
+        <small>Horário</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Quem Ligou</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Empresa</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-telephone mb-1"></i>
+        <small>Telefone</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-rolodex mb-1"></i>
+        <small>Falar com</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-envelope-check mb-1"></i>
+        <small>Recado Enviado</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-chat-dots mb-1"></i>
+        <small>Recado</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for ligacao in ligacoes %}
           <tr>

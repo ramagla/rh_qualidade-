@@ -88,21 +88,77 @@
   <!-- Tabela -->
   <div class="table-responsive">
     <table class="table table-bordered table-striped text-center align-middle">
-      <thead class="table-light align-middle">
-        <tr>
-          <th><i class="bi bi-image"></i> Foto</th>
-          <th><i class="bi bi-person"></i> Visitante</th>
-          <th><i class="bi bi-building"></i> Empresa</th>
-          <th><i class="bi bi-truck"></i> Veículo</th>
-          <th><i class="bi bi-calendar-day"></i> Data</th>
-          <th><i class="bi bi-clock-history"></i> Entrada</th>
-          <th><i class="bi bi-door-closed"></i> Saída</th>
-          <th><i class="bi bi-hourglass-split"></i> Permanência</th>
-          <th><i class="bi bi-person-lines-fill"></i> Falar com</th>
-          <th><i class="bi bi-chat-left-text"></i> Motivo</th>
-          <th><i class="bi bi-gear"></i> Ações</th>
-        </tr>
-      </thead>
+     <thead class="table-light align-middle">
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-image mb-1"></i>
+        <small>Foto</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person mb-1"></i>
+        <small>Visitante</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-building mb-1"></i>
+        <small>Empresa</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-truck mb-1"></i>
+        <small>Veículo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-day mb-1"></i>
+        <small>Data</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clock-history mb-1"></i>
+        <small>Entrada</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-door-closed mb-1"></i>
+        <small>Saída</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hourglass-split mb-1"></i>
+        <small>Permanência</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-lines-fill mb-1"></i>
+        <small>Falar com</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-chat-left-text mb-1"></i>
+        <small>Motivo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for visita in visitas %}
         <tr>

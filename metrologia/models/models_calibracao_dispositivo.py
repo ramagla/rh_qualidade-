@@ -3,6 +3,28 @@ from django.db import models
 from django.apps import apps  # <-- Importa o apps para uso dinâmico
 from Funcionario.models import Funcionario
 
+import os
+from django.utils.text import slugify
+from django.utils.deconstruct import deconstructible
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
+
+def renomear_anexo_calibracao(instance, filename):
+    nome, ext = os.path.splitext(filename)
+    dispositivo = slugify(getattr(instance.codigo_dispositivo, "codigo", "") or "dispositivo")
+    data = instance.data_afericao.strftime("%Y%m%d") if instance.data_afericao else "semdata"
+    return os.path.join("metrologia", "calibracoes", f"calibracao-{dispositivo}-{data}{ext}")
+
+@deconstructible
+class MaxFileSizeValidator:
+    def __init__(self, max_mb=5):
+        self.max_mb = max_mb
+    def __call__(self, arquivo):
+        if arquivo and isinstance(arquivo, UploadedFile) and arquivo.size > self.max_mb * 1024 * 1024:
+            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+    def __eq__(self, other):
+        return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
+
 class CalibracaoDispositivo(models.Model):
     STATUS_CHOICES = [
         ("Aprovado", "Aprovado"),
@@ -38,7 +60,19 @@ class CalibracaoDispositivo(models.Model):
         verbose_name="Nome do Responsável",
     )
     observacoes = models.TextField(blank=True, verbose_name="Observações")
-
+    anexo = models.FileField(
+            upload_to=renomear_anexo_calibracao,
+            null=True,
+            blank=True,
+            verbose_name="Anexo",
+            validators=[MaxFileSizeValidator(5)]
+        )
+    
+    def delete(self, *args, **kwargs):
+        if self.anexo:
+            self.anexo.delete(save=False)
+        super().delete(*args, **kwargs)
+        
     def save(self, *args, **kwargs):
         # Atualiza a data_ultima_calibracao do Dispositivo associado
         if self.data_afericao:

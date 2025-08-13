@@ -70,12 +70,9 @@
               {{ form.data_calibracao|add_class:"form-control" }}
             </div>
 
-            <div class="col-md-6">
-              <label for="certificado_anexo" class="form-label">
-                <i class="bi bi-paperclip me-1"></i> Anexar Certificado:
-              </label>
-              {{ form.certificado_anexo|add_class:"form-control" }}
-            </div>
+             <div class="col-md-12">
+        {% include "partials/global/_campo_anexo.html" with form=form campo="certificado_anexo" %}
+      </div>
 
           </div>
         </div>

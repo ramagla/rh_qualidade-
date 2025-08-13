@@ -80,15 +80,46 @@
   <div class="table-responsive">
     <table class="table table-bordered table-striped table-hover text-center align-middle">
         <thead class="table-light">
-        <tr>
-          <th><i class="bi bi-calendar-date me-1"></i> Data</th>
-          <th><i class="bi bi-speedometer2 me-1"></i> Leitura Inicial</th>
-          <th><i class="bi bi-speedometer me-1"></i> Leitura Final</th>
-          <th><i class="bi bi-graph-up me-1"></i> Consumo (m³)</th>
-          <th><i class="bi bi-card-text me-1"></i> Observação</th>
-          <th><i class="bi bi-gear me-1"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-date mb-1"></i>
+        <small>Data</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-speedometer2 mb-1"></i>
+        <small>Leitura Inicial</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-speedometer mb-1"></i>
+        <small>Leitura Final</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-graph-up mb-1"></i>
+        <small>Consumo (m³)</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-card-text mb-1"></i>
+        <small>Observação</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for registro in registros %}
         <tr>

@@ -92,17 +92,58 @@
   <div class="table-responsive">
     <table class="table table-bordered zebra-tabela table-hover text-center align-middle">
       <thead class="table-light">
-        <tr>
-          <th><i class="bi bi-exclamation-circle me-1"></i> Tipo</th>
-          <th><i class="bi bi-geo-alt me-1"></i> Local</th>
-          <th><i class="bi bi-calendar me-1"></i> Data</th>
-          <th><i class="bi bi-clock me-1"></i> Hora</th>
-          <th><i class="bi bi-hourglass-split me-1"></i> Duração</th>
-          <th><i class="bi bi-flag me-1"></i> Status</th>
-          <th><i class="bi bi-person-badge me-1"></i> Responsável</th>
-          <th><i class="bi bi-gear me-1"></i> Ações</th>
-        </tr>
-      </thead>
+  <tr>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-exclamation-circle mb-1"></i>
+        <small>Tipo</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-geo-alt mb-1"></i>
+        <small>Local</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar mb-1"></i>
+        <small>Data</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-clock mb-1"></i>
+        <small>Hora</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-hourglass-split mb-1"></i>
+        <small>Duração</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-flag mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-badge mb-1"></i>
+        <small>Responsável</small>
+      </div>
+    </th>
+    <th class="text-center">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
       <tbody>
         {% for ocorrencia in ocorrencias %}
         <tr>

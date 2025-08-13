@@ -1,7 +1,35 @@
 from datetime import timedelta
 
 from django.db import models
+import os
+from django.core.exceptions import ValidationError
+from django.utils.deconstruct import deconstructible
+from django.utils.text import slugify
+from django.core.files.uploadedfile import UploadedFile
+from datetime import datetime
 
+# 📌 Função para renomear certificado
+def renomear_certificado_fornecedor(instance, filename):
+    nome, ext = os.path.splitext(filename)
+    fornecedor_nome = slugify(instance.nome or "fornecedor")
+    data_atual = datetime.now().strftime("%Y%m%d")  # formato AAAAMMDD
+    return os.path.join(
+        "certificados/fornecedores",
+        f"{fornecedor_nome}-{data_atual}{ext}"
+    )
+
+@deconstructible
+class MaxFileSizeValidator:
+    def __init__(self, max_mb=5):
+        self.max_mb = max_mb
+    def __call__(self, arquivo):
+        if not arquivo or not isinstance(arquivo, UploadedFile):
+            return
+        if arquivo.size > self.max_mb * 1024 * 1024:
+            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+    def __eq__(self, other):
+        return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
+    
 TIPO_PRODUTO = [
     ("Fita de Aço/Inox", "Fita de Aço/Inox"),
     ("Arame de Aço", "Arame de Aço"),
@@ -88,7 +116,11 @@ class FornecedorQualificado(models.Model):
 
     # Certificados
     certificado_anexo = models.FileField(
-        upload_to="certificados/fornecedores/", blank=True, null=True
+        upload_to=renomear_certificado_fornecedor,
+        blank=True,
+        null=True,
+        verbose_name="Certificado Anexo",
+        validators=[MaxFileSizeValidator(5)],
     )
     lead_time = models.PositiveIntegerField(
         blank=True, null=True, verbose_name="Lead Time (dias)"

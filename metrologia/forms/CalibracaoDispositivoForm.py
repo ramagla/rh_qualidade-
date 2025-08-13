@@ -5,6 +5,7 @@ from django_select2.forms import Select2Widget
 
 from Funcionario.models import Funcionario
 from metrologia.models import Afericao, CalibracaoDispositivo, TabelaTecnica
+from django.core.files.uploadedfile import UploadedFile
 
 
 class CalibracaoDispositivoForm(forms.ModelForm):
@@ -20,6 +21,8 @@ class CalibracaoDispositivoForm(forms.ModelForm):
                 attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"
             ),
             "observacoes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            "anexo": forms.FileInput(attrs={"class": "form-control", "accept": ".pdf,.doc,.docx"}),
+
         }
 
     def __init__(self, *args, **kwargs):
@@ -42,7 +45,12 @@ class CalibracaoDispositivoForm(forms.ModelForm):
             empty_label="Selecione um responsável",
             label="Nome do Responsável",
         )
-
+    def clean_anexo(self):
+            f = self.cleaned_data.get("anexo")
+            if isinstance(f, UploadedFile) and f.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("O arquivo excede 5 MB.")
+            return f
+    
     def clean_data_afericao(self):
         data = self.cleaned_data.get("data_afericao")
         if isinstance(data, str):

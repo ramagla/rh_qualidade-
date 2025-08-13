@@ -1,6 +1,7 @@
 from django import forms
 
 from metrologia.models.models_calibracao import Calibracao
+from django.core.files.uploadedfile import UploadedFile
 
 
 class CalibracaoForm(forms.ModelForm):
@@ -33,7 +34,12 @@ class CalibracaoForm(forms.ModelForm):
             "data_calibracao",
             "certificado_anexo",
         ]
-
+        widgets = {
+                    "certificado_anexo": forms.FileInput(
+                        attrs={"class": "form-control", "accept": ".pdf,.doc,.docx"}
+                    ),
+            }
+        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -63,3 +69,9 @@ class CalibracaoForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             if not isinstance(field.widget, forms.widgets.Select):
                 field.widget.attrs.update({"class": "form-control"})
+
+    def clean_certificado_anexo(self):
+            f = self.cleaned_data.get("certificado_anexo")
+            if isinstance(f, UploadedFile) and f.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("O arquivo excede 5 MB.")
+            return f

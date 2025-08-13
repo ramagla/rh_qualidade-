@@ -7,7 +7,7 @@
 {% include 'partials/global/_header_titulo.html' with titulo=edicao|yesno:'Editar Calibração de Dispositivo,Cadastrar Calibração de Dispositivo' icone="bi bi-tools" emoji="🔧" %}
 
 <div class="container mt-4">
-  <form method="POST" action="">
+<form method="POST" action="" enctype="multipart/form-data">
     {% csrf_token %}
     {% include 'partials/global/_form_errors.html' %}
 
@@ -117,6 +117,21 @@
         </div>
       </div>
     </div>
+
+    <div class="accordion-item">
+    <h2 class="accordion-header" id="headingComplementares">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseComplementares">
+            <i class="bi bi-paperclip me-2"></i> Anexos
+        </button>
+    </h2>
+    <div id="collapseComplementares" class="accordion-collapse collapse" aria-labelledby="headingComplementares">
+        <div class="accordion-body">
+            {% include 'partials/global/_campo_anexo.html' with form=form campo="anexo" %}
+        </div>
+    </div>
+</div>
+
+
 
     {% include 'partials/global/_botoes_salvar_cancelar.html' with edicao=False url_voltar='lista_calibracoes_dispositivos' %}
   </form>

@@ -86,7 +86,15 @@ def salvar_calibracao_dispositivo(request, pk=None):
         edicao = False
 
     if request.method == "POST":
-        form = CalibracaoDispositivoForm(request.POST, instance=calibracao)
+        form = CalibracaoDispositivoForm(request.POST, request.FILES, instance=calibracao)
+        # Remoção de anexo
+        remove_flag = (
+            request.POST.get("remover_anexo") == "1"
+            or request.POST.get("anexo-clear") in ("on", "1", "true", "True")
+        )
+        if remove_flag and calibracao and calibracao.anexo:
+            calibracao.anexo.delete(save=False)
+            calibracao.anexo = None
 
         if form.is_valid():
             try:
