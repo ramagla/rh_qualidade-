@@ -241,16 +241,17 @@
                     <td>R$ {{ preco_kg|mul:peso|floatformat:2 }}</td>
                     <td>R$ {{ preco_sem_icms|mul:peso|floatformat:2 }}</td>
                     <td>R$ {{ lote|floatformat:2 }}</td>
-                    {# Tot. Lote = max(preco_kg * peso_total, lote_minimo) — SEM retirar ICMS #}
-                    {% with total=preco_kg|mul:peso %}
-                      <td>R$
-                        {% if total < lote %}
-                          {{ lote|floatformat:2 }}
-                        {% else %}
-                          {{ total|floatformat:2 }}
-                        {% endif %}
-                      </td>
-                    {% endwith %}
+                    {# Tot. Lote = max(preco_sem_icms * peso_total, lote_minimo) — LÍQUIDO (s/ ICMS) #}
+{% with total_liq=preco_sem_icms|mul:peso %}
+  <td>R$
+    {% if total_liq < lote %}
+      {{ lote|floatformat:2 }}
+    {% else %}
+      {{ total_liq|floatformat:2 }}
+    {% endif %}
+  </td>
+{% endwith %}
+
                   </tr>
                 {% endwith %}
               {% endwith %}
