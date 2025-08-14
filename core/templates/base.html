@@ -15,7 +15,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@latest/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-treeview/1.5/jquery.treeview.min.css">
-    {% load static %}
     {% load permissoes_tags %}
 
     {% if form %}
@@ -24,34 +23,13 @@
 
     {% block extra_head %}{% endblock %}
 
-    <!-- ✅ PWA -->
-    <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#0d6efd">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="/static/pwa/icons/icon-192.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="/static/pwa/icons/icon-512.png">
-<!-- captura o evento o mais cedo possível -->
-<script>
-  window._deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    window._deferredPrompt = e;
-    console.log('[PWA] beforeinstallprompt capturado');  // << você verá isso no Console
-    // Se NÃO quiser o botão sempre visível, poderia exibir aqui.
-  });
-</script>
-<script src="{% static 'pwa/pwa.js' %}" async></script>
-
-    
     <style>
         body {
             font-family: Arial, sans-serif;
         }
-  #btnInstallPWA { display: none; }
         .sidebar {
             height: 100vh;
-            overflow-y: auto; /* permite scroll interno */
+            overflow-y: auto;
             background-color: #2b2b2b;
             width: 220px;
             position: fixed;
@@ -62,7 +40,7 @@
             justify-content: space-between;
             color: #fff;
             transition: width 0.3s;
-            z-index: 1030; /* fica acima do conteúdo */
+            z-index: 1030;
         }
         .sidebar.collapsed {
             width: 60px;
@@ -72,15 +50,15 @@
         }
 
         .sidebar a.active {
-            background-color: #3c3c3c; /* leve contraste */
-            border-left: 4px solid #0d6efd; /* azul padrão Bootstrap */
+            background-color: #3c3c3c;
+            border-left: 4px solid #0d6efd;
             color: #fff;
             font-weight: bold;
-            }
-            .sidebar.collapsed a.active {
+        }
+        .sidebar.collapsed a.active {
             border-left: none;
             background-color: #3c3c3c;
-            }
+        }
 
         .sidebar.collapsed .logo-container img {
             max-width: 40px;
@@ -108,13 +86,13 @@
             font-size: 1em;
         }
         .content {
-                margin-left: 220px;
-                padding: 20px;
-                }
-                .content.collapsed {
-                margin-left: 60px;
-                }
-                        .navbar-brand {
+            margin-left: 220px;
+            padding: 20px;
+        }
+        .content.collapsed {
+            margin-left: 60px;
+        }
+        .navbar-brand {
             color: white;
         }
         .logo-container {
@@ -139,36 +117,33 @@
             align-items: center;
             justify-content: space-between;
         }
-.sidebar .sidebar-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: inline-block;
-  max-width: 150px; /* ajustável conforme largura do menu expandido */
-  vertical-align: middle;
-}
-.sidebar.collapsed .sidebar-text {
-  display: none;
-}
+        .sidebar .sidebar-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            max-width: 150px;
+            vertical-align: middle;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
 
         /* ============================
            Ajustes para o Select2
            ============================ */
-        /* Garante que o campo ocupe toda a largura do container */
         .select2-container {
             width: 100% !important;
         }
         .select2-container--default .select2-selection--single  {
-            /* Para conseguirmos posicionar o X e a seta */
             position: relative;
             height: 38px;
-            padding: 6px 12px; /* Ajuste se precisar mais ou menos espaço */
-            display: flex;     /* Para alinhar o texto verticalmente */
+            padding: 6px 12px;
+            display: flex;
             align-items: center;
-            border: 1px solid #ced4da; /* Borda padrão do Bootstrap */
-            border-radius: 0.25rem;    /* Raio padrão do Bootstrap */
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
         }
-        /* Move o X (clear) para a esquerda */
         .select2-container--default .select2-selection--single .select2-selection__clear {
             position: absolute;
             left: 0.75rem;
@@ -178,18 +153,16 @@
             cursor: pointer;
             z-index: 99;
         }
-        /* Centraliza o texto horizontalmente + espaçamento p/ X e seta */
         .select2-container--default .select2-selection--single .select2-selection__rendered {
-            margin-left: 2rem;  /* espaço para o X */
-            margin-right: 2rem; /* espaço para a seta */
-            text-align: center; 
+            margin-left: 2rem;
+            margin-right: 2rem;
+            text-align: center;
             line-height: normal;
-            width: calc(100% - 4rem); /* garante que texto não fique sob X ou seta */
+            width: calc(100% - 4rem);
             overflow: hidden;
             white-space: nowrap;
-            text-overflow: ellipsis; /* caso o texto seja muito grande */
+            text-overflow: ellipsis;
         }
-        /* Mantém a seta no canto direito */
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             position: absolute;
             right: 0.75rem;
@@ -199,173 +172,131 @@
         }
 
         /* Chatbot */
-#chat-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    z-index: 1000;
-}
-#chatbox-container {
-    display: none;
-    position: fixed;
-    bottom: 90px;
-    right: 20px;
-    width: 350px;
-    max-height: 500px;
-    z-index: 1000;
-}
-#alerta-flutuante {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    z-index: 1050;
-  }
-  
-  #alerta-flutuante .btn {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
-    font-size: 1.25rem;
-  }
+        #chat-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            z-index: 1000;
+        }
+        #chatbox-container {
+            display: none;
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            max-height: 500px;
+            z-index: 1000;
+        }
+        #alerta-flutuante {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1050;
+        }
+        #alerta-flutuante .btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+            font-size: 1.25rem;
+        }
+        #sidebarMobile.offcanvas.show {
+            visibility: visible !important;
+            transform: translateX(0%) !important;
+            opacity: 1 !important;
+            z-index: 1060 !important;
+        }
+        details[open] summary {
+            background-color: #1f1f1f;
+        }
+        #menuMobileSidebar .menu-mobile-summary {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            font-weight: 500;
+            color: #fff;
+            cursor: pointer;
+            background-color: transparent;
+            list-style: none;
+        }
+        #menuMobileSidebar .menu-mobile-summary::-webkit-details-marker {
+            display: none;
+        }
+        #menuMobileSidebar details[open] > .menu-mobile-summary {
+            background-color: #1f1f1f;
+        }
+        #menuMobileSidebar ul {
+            padding-left: 1.5rem;
+        }
+        #menuMobileSidebar li {
+            padding: 4px 0;
+        }
 
-  #sidebarMobile.offcanvas.show {
-    visibility: visible !important;
-    transform: translateX(0%) !important;
-    opacity: 1 !important;
-    z-index: 1060 !important;
-  }
-
-  
-  
-  details[open] summary {
-    background-color: #1f1f1f;
-  }
-  /* 🔒 Estilos exclusivos para o menu lateral mobile customizado */
-#menuMobileSidebar .menu-mobile-summary {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  font-weight: 500;
-  color: #fff;
-  cursor: pointer;
-  background-color: transparent;
-  list-style: none;
-}
-
-#menuMobileSidebar .menu-mobile-summary::-webkit-details-marker {
-  display: none;
-}
-
-#menuMobileSidebar details[open] > .menu-mobile-summary {
-  background-color: #1f1f1f;
-}
-
-#menuMobileSidebar ul {
-  padding-left: 1.5rem;
-}
-
-#menuMobileSidebar li {
-  padding: 4px 0;
-}
-
-@media (max-width: 768px) and (not print) {
-  .sidebar {
-    display: none !important;
-    background-color: red !important; /* teste visual */
-    width: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-  }
-
-  .content {
-    margin-left: 0 !important;
-    width: 100% !important;
-    padding: 1rem !important;
-    background-color: #f8f9fa !important; /* ajuda a identificar área visível */
-  }
-}
-
-  
-
-
-  
-  
-  
-    
-  
+        @media (max-width: 768px) and (not print) {
+            .sidebar {
+                display: none !important;
+                background-color: red !important;
+                width: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+            }
+            .content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 1rem !important;
+                background-color: #f8f9fa !important;
+            }
+        }
     </style>
-   
 </head>
 <body>
 
-    <!-- 🔘 Barra superior mobile com botões de menu -->
     <div class="d-md-none d-flex justify-content-between align-items-center bg-dark px-3 py-2">
-      <!-- Botão de menu -->
-       <button class="btn btn-dark rounded-circle shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuMobileSidebar">
+      <button class="btn btn-dark rounded-circle shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuMobileSidebar">
         <i class="bi bi-list fs-4"></i>
       </button>
-      
-      
-
-        
-      
-        <!-- Botão de módulos -->
-        <button class="btn btn-dark" data-bs-toggle="offcanvas" data-bs-target="#moduloMobile">
-          <i class="bi bi-grid fs-4"></i>
-        </button>
-      
-        <!-- Botão de configurações -->
-        <div class="dropdown">
-          <a class="btn btn-dark dropdown-toggle" href="#" id="configDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-gear fs-4"></i>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="configDropdownMobile">
-            {% if perms.Funcionario.view_alerta %}
-              <li><a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}"><i class="bi bi-bell"></i> Alertas</a></li>
-            {% endif %}
-            {% if perms.Funcionario.view_feriados %}
-              <li><a class="dropdown-item" href="{% url 'feriados' %}"><i class="bi bi-calendar-event"></i> Feriados</a></li>
-            {% endif %}
-            <li>
-              <a class="dropdown-item" href="{% url 'usuarios_ativos' %}">
-                  <i class="bi bi-people-fill"></i> Usuários Ativos
-              </a>
+      <button class="btn btn-dark" data-bs-toggle="offcanvas" data-bs-target="#moduloMobile">
+        <i class="bi bi-grid fs-4"></i>
+      </button>
+      <div class="dropdown">
+        <a class="btn btn-dark dropdown-toggle" href="#" id="configDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-gear fs-4"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="configDropdownMobile">
+          {% if perms.Funcionario.view_alerta %}
+            <li><a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}"><i class="bi bi-bell"></i> Alertas</a></li>
+          {% endif %}
+          {% if perms.Funcionario.view_feriados %}
+            <li><a class="dropdown-item" href="{% url 'feriados' %}"><i class="bi bi-calendar-event"></i> Feriados</a></li>
+          {% endif %}
+          <li>
+            <a class="dropdown-item" href="{% url 'usuarios_ativos' %}">
+              <i class="bi bi-people-fill"></i> Usuários Ativos
+            </a>
           </li>
-          
-            <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear"></i> Configurações</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <form method="POST" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-power"></i> Sair</button>
-              </form>
-            </li>
-          </ul>
-        </div>
+          <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear"></i> Configurações</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form method="POST" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="dropdown-item text-danger"><i class="bi bi-power"></i> Sair</button>
+            </form>
+          </li>
+        </ul>
       </div>
-      
-  
-    <!-- ✅ Botão para instalar o app (opcional, controlado via pwa.js) -->
-    <div class="position-fixed" style="right: 20px; bottom: 20px; z-index: 1100;">
-        <button id="btnInstallPWA" class="btn btn-primary btn-sm shadow">
-            <i class="bi bi-download me-1"></i> Instalar aplicativo
-        </button>
     </div>
-  <!-- 🔄 Includes dos menus laterais -->
+
   {% include "partials/responsividade/_menu_sidebar_mobile.html" %}
   
-   
     <div class="d-flex">      
 
-<!-- Sidebar -->
 <div class="sidebar d-none d-md-flex flex-column" id="sidebar">
   <div>
         <div class="logo-container" onclick="toggleSidebar()">
@@ -376,7 +307,6 @@
             {% endif %}
         </div>
 
-       <!-- Renderizar os itens do menu com permissão -->
 {% for item in menu %}
 {% if not item.perm or request.user|tem_permissao:item.perm %}
     {% if item.submenu %}
@@ -393,14 +323,11 @@
                                 <a class="dropdown-item text-white" href="#" data-bs-toggle="modal" data-bs-target="#{{ subitem.modal }}">
                                     <i class="{{ subitem.icon }}"></i> {{ subitem.name }}
                                 </a>
-                                {% elif subitem.url %}
-                                <a class="dropdown-item text-white"
-                                href="{% url subitem.url %}{% if subitem.params %}{{ subitem.params }}{% endif %}">
-                                 <i class="{{ subitem.icon }}"></i>
-                                 <span class="sidebar-text" title="{{ subitem.name }}">{{ subitem.name }}</span>
-                             </a>
-                             
-                          
+                            {% elif subitem.url %}
+                                <a class="dropdown-item text-white" href="{% url subitem.url %}{% if subitem.params %}{{ subitem.params }}{% endif %}">
+                                    <i class="{{ subitem.icon }}"></i>
+                                    <span class="sidebar-text" title="{{ subitem.name }}">{{ subitem.name }}</span>
+                                </a>
                             {% else %}
                                 <span class="dropdown-item text-muted">
                                     <i class="{{ subitem.icon }}"></i> {{ subitem.name }}
@@ -413,17 +340,12 @@
         </div>
     {% else %}
         {% if item.modal %}
-            <a href="#"
-               data-bs-toggle="modal"
-               data-bs-target="#{{ item.modal }}"
-               class="text-white">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#{{ item.modal }}" class="text-white">
                 <i class="{{ item.icon }}" aria-hidden="true"></i>
                 <span class="sidebar-text" title="{{ item.name }}">{{ item.name }}</span>
             </a>
         {% elif item.url %}
-            <a href="{% url item.url %}"
-               class="{% if request.resolver_match.url_name == item.url %}active{% endif %}"
-               {% if request.resolver_match.url_name == item.url %}aria-current="page"{% endif %}>
+            <a href="{% url item.url %}" class="{% if request.resolver_match.url_name == item.url %}active{% endif %}" {% if request.resolver_match.url_name == item.url %}aria-current="page"{% endif %}>
                 <i class="{{ item.icon }}" aria-hidden="true"></i>
                 <span class="sidebar-text" title="{{ item.name }}">{{ item.name }}</span>
             </a>
@@ -438,8 +360,6 @@
 {% endfor %}
 </div>
 
-
-            <!-- Footer do Sidebar fixado na parte inferior -->
             <div class="sidebar-footer">
                 <a href="{% url 'calendario' %}" class="calendar-button">
                     <i class="fas fa-calendar-alt"></i> <span class="sidebar-text">Calendário</span>
@@ -453,240 +373,206 @@
                     <i class="fas fa-info-circle"></i> <span class="sidebar-text">&copy; – versão não registrada</span>
                 </span>
                 {% endif %}
-
             </div>
         </div>
 
-        <!-- Conteúdo Principal -->
         <div class="content flex-grow-1 w-100 ps-0 pe-0">
-          <!-- Navbar -->
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <div class="container-xl">
+          <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-xl">
 
-    <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-none d-md-flex">
-      <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="moduleDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                              {% if request.resolver_match.url_name == 'home_geral' %}
-                              <i class="fas fa-th"></i> Selecione o módulo desejado
-                          {% elif modulo_ativo %}
-                              <i class="{{ modulo_ativo.icon }}"></i> {{ modulo_ativo.name }}
-                          {% else %}
-                              <i class="fas fa-th"></i> Trocar Módulo
-                          {% endif %}
-                          
-</a>
+              <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-none d-md-flex">
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="moduleDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if request.resolver_match.url_name == 'home_geral' %}
+                    <i class="fas fa-th"></i> Selecione o módulo desejado
+                    {% elif modulo_ativo %}
+                    <i class="{{ modulo_ativo.icon }}"></i> {{ modulo_ativo.name }}
+                    {% else %}
+                    <i class="fas fa-th"></i> Trocar Módulo
+                    {% endif %}
+                  </a>
 
-                            <ul class="dropdown-menu" aria-labelledby="moduleDropdown">
-                                {% for modulo in modulos_disponiveis %}
-                                {% if request.user|tem_permissao:modulo.permissao %}
-                                  <li><a class="dropdown-item" href="{% url modulo.url %}">
-                                    <i class="{{ modulo.icon }}"></i> {{ modulo.name }}
-                                  </a></li>
-                                {% endif %}
-                              {% endfor %}
-                              
-                            </ul>
-                        </li>
-                    </ul>
+                  <ul class="dropdown-menu" aria-labelledby="moduleDropdown">
+                    {% for modulo in modulos_disponiveis %}
+                    {% if request.user|tem_permissao:modulo.permissao %}
+                      <li><a class="dropdown-item" href="{% url modulo.url %}">
+                        <i class="{{ modulo.icon }}"></i> {{ modulo.name }}
+                      </a></li>
+                    {% endif %}
+                    {% endfor %}
+                  </ul>
+                </li>
+              </ul>
 
-                    <div class="d-none d-md-flex align-items-center">
-                      <span class="me-3 d-flex align-items-center">
-                        <a href="{% url 'home_geral' %}" class="me-2 text-decoration-none text-dark" title="Ir para o início">
-                          <i class="bi bi-house-door-fill fs-5"></i>
+              <div class="d-none d-md-flex align-items-center">
+                <span class="me-3 d-flex align-items-center">
+                  <a href="{% url 'home_geral' %}" class="me-2 text-decoration-none text-dark" title="Ir para o início">
+                    <i class="bi bi-house-door-fill fs-5"></i>
+                  </a>
+                  {{ user.username }}
+                </span>
+                <form method="POST" action="{% url 'logout' %}" class="d-inline me-2">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-power-off"></i>
+                  </button>
+                </form>
+                <div class="dropdown">
+                  <a class="btn btn-outline-secondary btn-sm dropdown-toggle" href="#" id="configDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-cog"></i>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="configDropdown">
+                    {% if perms.Funcionario.view_permissoes %}
+                      <li>
+                        <a class="dropdown-item" href="{% url 'permissoes_acesso_lista' %}?usuario_id={{ request.user.id }}">
+                          <i class="bi bi-shield-lock"></i> Permissões de Acesso
                         </a>
-                        
-                        {{ user.username }}
-                      </span>
-                                              <form method="POST" action="{% url 'logout' %}" class="d-inline me-2">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-power-off"></i>
-                            </button>
-                        </form>
-                        <div class="dropdown">
-                            <a class="btn btn-outline-secondary btn-sm dropdown-toggle" href="#" id="configDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-cog"></i>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="configDropdown">
-                              {% if perms.Funcionario.view_permissoes %}
-                                  <li>
-                                      <a class="dropdown-item" href="{% url 'permissoes_acesso_lista' %}?usuario_id={{ request.user.id }}">
-                                          <i class="bi bi-shield-lock"></i> Permissões de Acesso
-                                      </a>
-                                  </li>
-                              {% endif %}
-                              {% if perms.Funcionario.view_logs %}
-                                  <li>
-                                      <a class="dropdown-item" href="{% url 'logs' %}">
-                                          <i class="bi bi-clipboard-data"></i> Logs
-                                      </a>
-                                  </li>
-                              {% endif %}
-                              {% if perms.Funcionario.view_atualizacaosistema %}
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'lista_atualizacoes' %}">
-                                        <i class="bi bi-arrow-repeat"></i> Atualizações do Sistema
-                                    </a>
-                                </li>
-                              {% endif %}
-                              {% if perms.Funcionario.view_alerta %}
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}">
-                                        <i class="bi bi-bell"></i> Alertas
-                                    </a>
-                                </li>
-                              {% endif %}
-                              {% if perms.Funcionario.view_feriados %}
-                                  <li>
-                                      <a class="dropdown-item" href="{% url 'feriados' %}">
-                                          <i class="bi bi-calendar-event"></i> Feriados
-                                      </a>
-                                  </li>
-                              {% endif %}
-                          
-                              <!-- 🚀 Adiciona aqui "Usuários Ativos" -->
-                              <li>
-                                  <a class="dropdown-item" href="{% url 'usuarios_ativos' %}">
-                                      <i class="bi bi-people-fill"></i> Usuários Ativos
-                                  </a>
-                              </li>
-                          
-                              <li>
-                                  <a class="dropdown-item" href="{% url 'admin:index' %}">
-                                      <i class="bi bi-gear"></i> Configurações
-                                  </a>
-                              </li>
-                          </ul>
-                          
-                        </div>
-                    </div>
+                      </li>
+                    {% endif %}
+                    {% if perms.Funcionario.view_logs %}
+                      <li>
+                        <a class="dropdown-item" href="{% url 'logs' %}">
+                          <i class="bi bi-clipboard-data"></i> Logs
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% if perms.Funcionario.view_atualizacaosistema %}
+                      <li>
+                        <a class="dropdown-item" href="{% url 'lista_atualizacoes' %}">
+                          <i class="bi bi-arrow-repeat"></i> Atualizações do Sistema
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% if perms.Funcionario.view_alerta %}
+                      <li>
+                        <a class="dropdown-item" href="{% url 'alerts:gerenciar_alertas' %}">
+                          <i class="bi bi-bell"></i> Alertas
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% if perms.Funcionario.view_feriados %}
+                      <li>
+                        <a class="dropdown-item" href="{% url 'feriados' %}">
+                          <i class="bi bi-calendar-event"></i> Feriados
+                        </a>
+                      </li>
+                    {% endif %}
+                    <li>
+                      <a class="dropdown-item" href="{% url 'usuarios_ativos' %}">
+                        <i class="bi bi-people-fill"></i> Usuários Ativos
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="{% url 'admin:index' %}">
+                        <i class="bi bi-gear"></i> Configurações
+                      </a>
+                    </li>
+                  </ul>
                 </div>
-            </nav>
-
-            <!-- Conteúdo da Página -->
-<div class="container-xl mt-4">
-                {% block content %}
-                <!-- Conteúdo será inserido aqui -->
-                {% endblock %}
+              </div>
             </div>
+          </nav>
+
+          <div class="container-xl mt-4">
+            {% block content %}
+            {% endblock %}
+          </div>
         </div>
-        <!-- Botão de Chat -->
-
-
-
-
-
-        
     </div>
 
-  <!-- Modal de Informações da Versão -->
-<div class="modal fade" id="versaoModal" tabindex="-1" aria-labelledby="versaoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="versaoModalLabel">Informações da Versão</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-        <div class="modal-body">
-  
-          <!-- Próximas versões -->
-          {% if proximas_atualizacoes %}
-            <h6 class="text-info mb-3">
-              <i class="bi bi-hourglass-split me-1"></i> Próximas Versões (Em andamento)
-            </h6>
-            <div class="accordion accordion-flush mb-4" id="accordionProximasVersoes">
-              {% for versao in proximas_atualizacoes %}
-                <div class="accordion-item">
-                  <h2 class="accordion-header" id="headingProx{{ forloop.counter }}">
-                    <button class="accordion-button collapsed text-info" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseProx{{ forloop.counter }}" aria-expanded="false"
-                            aria-controls="collapseProx{{ forloop.counter }}">
-                      <strong>{{ versao.versao }}</strong> – Previsto para {{ versao.previsao|date:"d/m/Y" }}
-                    </button>
-                  </h2>
-                  <div id="collapseProx{{ forloop.counter }}" class="accordion-collapse collapse"
-                       aria-labelledby="headingProx{{ forloop.counter }}"
-                       data-bs-parent="#accordionProximasVersoes">
-                       <div class="accordion-body small">
+    <div class="modal fade" id="versaoModal" tabindex="-1" aria-labelledby="versaoModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="versaoModalLabel">Informações da Versão</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            {% if proximas_atualizacoes %}
+              <h6 class="text-info mb-3">
+                <i class="bi bi-hourglass-split me-1"></i> Próximas Versões (Em andamento)
+              </h6>
+              <div class="accordion accordion-flush mb-4" id="accordionProximasVersoes">
+                {% for versao in proximas_atualizacoes %}
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingProx{{ forloop.counter }}">
+                      <button class="accordion-button collapsed text-info" type="button" data-bs-toggle="collapse"
+                              data-bs-target="#collapseProx{{ forloop.counter }}" aria-expanded="false"
+                              aria-controls="collapseProx{{ forloop.counter }}">
+                        <strong>{{ versao.versao }}</strong> – Previsto para {{ versao.previsao|date:"d/m/Y" }}
+                      </button>
+                    </h2>
+                    <div id="collapseProx{{ forloop.counter }}" class="accordion-collapse collapse"
+                         aria-labelledby="headingProx{{ forloop.counter }}"
+                         data-bs-parent="#accordionProximasVersoes">
+                      <div class="accordion-body small">
                         {{ versao.previa_versao|safe }}
-                      
                         {% if versao.arquivo_pdf %}
                           <a href="{{ versao.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
                             <i class="bi bi-file-earmark-pdf"></i> Ver Documentação Completa (PDF)
                           </a>
                         {% endif %}
                       </div>
-                      
+                    </div>
                   </div>
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-  
-          <!-- Versão atual -->
-{% if ultima_atualizacao_concluida %}
-<div class="mb-4">
-  <h6 class="text-primary">
-    <i class="bi bi-star-fill me-1"></i>
-    Versão Atual: <strong>{{ ultima_atualizacao_concluida.versao }}</strong>
-  </h6>
-  <p>{{ ultima_atualizacao_concluida.previa_versao|safe }}</p>
-  <p class="text-muted">Entregue em: {{ ultima_atualizacao_concluida.data_termino|date:"d/m/Y" }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
 
-  {% if ultima_atualizacao_concluida.arquivo_pdf %}
-    <a href="{{ ultima_atualizacao_concluida.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-primary mt-2">
-      <i class="bi bi-file-earmark-pdf"></i> Ver Documentação Completa (PDF)
-    </a>
-  {% endif %}
-  
-</div>
-{% endif %}
+            {% if ultima_atualizacao_concluida %}
+              <div class="mb-4">
+                <h6 class="text-primary">
+                  <i class="bi bi-star-fill me-1"></i>
+                  Versão Atual: <strong>{{ ultima_atualizacao_concluida.versao }}</strong>
+                </h6>
+                <p>{{ ultima_atualizacao_concluida.previa_versao|safe }}</p>
+                <p class="text-muted">Entregue em: {{ ultima_atualizacao_concluida.data_termino|date:"d/m/Y" }}</p>
+                {% if ultima_atualizacao_concluida.arquivo_pdf %}
+                  <a href="{{ ultima_atualizacao_concluida.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-primary mt-2">
+                    <i class="bi bi-file-earmark-pdf"></i> Ver Documentação Completa (PDF)
+                  </a>
+                {% endif %}
+              </div>
+            {% endif %}
 
-  
-          <!-- Histórico -->
-          {% if historico_versoes %}
-            <hr>
-            <h6><i class="bi bi-clock-history me-1"></i> Versões Anteriores</h6>
-            <div class="accordion accordion-flush mt-3" id="accordionHistoricoVersoes">
-              {% for versao in historico_versoes %}
-                <div class="accordion-item">
-                  <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false"
-                            aria-controls="collapse{{ forloop.counter }}">
-                      <strong>{{ versao.versao }}</strong> – {{ versao.data_termino|date:"d/m/Y" }}
-                    </button>
-                  </h2>
-                  <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
-                       aria-labelledby="heading{{ forloop.counter }}"
-                       data-bs-parent="#accordionHistoricoVersoes">
-                       <div class="accordion-body small">
+            {% if historico_versoes %}
+              <hr>
+              <h6><i class="bi bi-clock-history me-1"></i> Versões Anteriores</h6>
+              <div class="accordion accordion-flush mt-3" id="accordionHistoricoVersoes">
+                {% for versao in historico_versoes %}
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                              data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false"
+                              aria-controls="collapse{{ forloop.counter }}">
+                        <strong>{{ versao.versao }}</strong> – {{ versao.data_termino|date:"d/m/Y" }}
+                      </button>
+                    </h2>
+                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
+                         aria-labelledby="heading{{ forloop.counter }}"
+                         data-bs-parent="#accordionHistoricoVersoes">
+                      <div class="accordion-body small">
                         {{ versao.previa_versao|safe }}
-                      
                         {% if versao.arquivo_pdf %}
                           <a href="{{ versao.arquivo_pdf.url }}" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
                             <i class="bi bi-file-earmark-pdf"></i> Ver Documentação Completa (PDF)
                           </a>
                         {% endif %}
                       </div>
-                      
-                      
+                    </div>
                   </div>
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-  
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  
-  {% include "partials/global/_modal_nova_versao.html" %}
 
+    {% include "partials/global/_modal_nova_versao.html" %}
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -694,8 +580,6 @@
     <!-- Select2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/i18n/pt-BR.min.js"></script>
-
-    
 
     <!-- jQuery Treeview -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-treeview/1.5/jquery.treeview.min.js"></script>
@@ -708,97 +592,80 @@
             sidebar.classList.toggle('collapsed');
             content.classList.toggle('collapsed');
         }
-    }
+      }
 
-        // Aguarda o carregamento total do DOM e do jQuery
-        document.addEventListener("DOMContentLoaded", function () {
-            // Verifica se jQuery está disponível
-            if (typeof jQuery !== "undefined") {
-                // Inicializa Select2
-                jQuery(document).ready(function () {
-                    jQuery('.select2').select2({
-                        placeholder: "Selecione uma opção",
-                        allowClear: true
-                    });
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof jQuery !== "undefined") {
+          jQuery(document).ready(function () {
+            jQuery('.select2').select2({
+              placeholder: "Selecione uma opção",
+              allowClear: true
+            });
 
-            // Garante que os select2 dentro do offcanvas sejam reativados corretamente ao abrir
-              const filtrosOffcanvas = document.getElementById("filtrosOffcanvas");
-              if (filtrosOffcanvas) {
-                filtrosOffcanvas.addEventListener("shown.bs.offcanvas", function () {
-                  $('#filtrosOffcanvas .select2').select2({
-                    placeholder: "Selecione uma opção",
-                    allowClear: true,
-                    width: '100%',
-                    language: "pt-BR"
-                  });
+            const filtrosOffcanvas = document.getElementById("filtrosOffcanvas");
+            if (filtrosOffcanvas) {
+              filtrosOffcanvas.addEventListener("shown.bs.offcanvas", function () {
+                $('#filtrosOffcanvas .select2').select2({
+                  placeholder: "Selecione uma opção",
+                  allowClear: true,
+                  width: '100%',
+                  language: "pt-BR"
                 });
-              }
-
-                });
-            } else {
-                console.error('jQuery não está definido. Verifique o carregamento do script.');
+              });
             }
-
-           
-        });
+          });
+        } else {
+          console.error('jQuery não está definido. Verifique o carregamento do script.');
+        }
+      });
     </script>
-    <!-- Botão flutuante de alertas -->
+
     {% if alertas_nao_lidos > 0 %}
-<div class="dropdown" id="alerta-flutuante">
-    <a class="btn btn-warning rounded-circle" href="#" id="botaoAlertas" data-bs-toggle="dropdown" aria-expanded="false" title="Alertas de Qualidade">
-      <i class="bi bi-envelope-fill fs-4"></i>
-      {% if alertas_nao_lidos > 0 %}
+    <div class="dropdown" id="alerta-flutuante">
+      <a class="btn btn-warning rounded-circle" href="#" id="botaoAlertas" data-bs-toggle="dropdown" aria-expanded="false" title="Alertas de Qualidade">
+        <i class="bi bi-envelope-fill fs-4"></i>
+        {% if alertas_nao_lidos > 0 %}
         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
           {{ alertas_nao_lidos }}
-          <span class="visually-hidden">alertas não lidos</span>
+          <span class="visualmente-oculto">alertas não lidos</span>
         </span>
-      {% endif %}
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="botaoAlertas" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+        {% endif %}
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="botaoAlertas" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
         {% for alerta in ultimos_alertas %}
         <li class="dropdown-item small d-flex justify-content-between align-items-start" id="alerta-{{ alerta.id }}">
-            <div class="me-2">
-              <strong>{{ alerta.titulo }}</strong><br>
-              <p class="text-muted small mb-0" style="white-space: pre-wrap; word-break: break-word;">
-                {{ alerta.mensagem }}
-              </p>
-                          </div>
-            <div class="form-check form-switch ms-2">
-                <input class="form-check-input" type="checkbox"
-                        id="switch-alerta-{{ alerta.id }}"
-                        onchange="marcarComoLido(this, {{ alerta.id }})">
-              </div>
-              
-          </li>
-          
+          <div class="me-2">
+            <strong>{{ alerta.titulo }}</strong><br>
+            <p class="text-muted small mb-0" style="white-space: pre-wrap; word-break: break-word;">
+              {{ alerta.mensagem }}
+            </p>
+          </div>
+          <div class="form-check form-switch ms-2">
+            <input class="form-check-input" type="checkbox" id="switch-alerta-{{ alerta.id }}" onchange="marcarComoLido(this, {{ alerta.id }})">
+          </div>
+        </li>
         {% empty %}
-          <li class="dropdown-item text-muted">Nenhum alerta novo.</li>
+        <li class="dropdown-item text-muted">Nenhum alerta novo.</li>
         {% endfor %}
       </ul>
-      
-  </div>
-  {% endif %}
+    </div>
+    {% endif %}
 
-  <!-- Token CSRF oculto para requisições AJAX -->
-<form id="csrf-token-form" style="display: none;">
-    {% csrf_token %}
-  </form>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      // ✅ Marcar como lido com switch
-      window.marcarComoLido = function (checkbox, alertaId) {
-        // Só envia se estiver marcado (classifica como lido)
-        if (!checkbox.checked) return;
-  
-        const csrfToken = document.querySelector('#csrf-token-form input[name=csrfmiddlewaretoken]')?.value;
-  
-        fetch(`{% url 'alerts:excluir_alerta_usuario' 0 %}`.replace("/0/", `/${alertaId}/`), {
+    <form id="csrf-token-form" style="display: none;">
+      {% csrf_token %}
+    </form>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        window.marcarComoLido = function (checkbox, alertaId) {
+          if (!checkbox.checked) return;
+          const csrfToken = document.querySelector('#csrf-token-form input[name=csrfmiddlewaretoken]')?.value;
+          fetch(`{% url 'alerts:excluir_alerta_usuario' 0 %}`.replace("/0/", `/${alertaId}/`), {
             method: "POST",
-          headers: {
-            "X-CSRFToken": csrfToken,
-            "Content-Type": "application/json",
-          },
-        })
+            headers: {
+              "X-CSRFToken": csrfToken,
+              "Content-Type": "application/json"
+            }
+          })
           .then(response => response.json())
           .then(data => {
             if (data?.status === "ok") {
@@ -808,7 +675,6 @@
                 item.style.opacity = 0;
                 setTimeout(() => item.remove(), 300);
               }
-  
               const restantes = document.querySelectorAll('[id^="alerta-"]').length - 1;
               const badge = document.querySelector("#botaoAlertas .badge");
               if (badge && restantes <= 0) {
@@ -827,54 +693,38 @@
             alert("Erro de conexão ao tentar marcar como lido.");
             checkbox.checked = false;
           });
-      };
-    });
-  </script>
-  
- 
-  
-  
-  
-  
-  
-  {% include "documentos/_modal_nova_revisao.html" %}
+        };
+      });
+    </script>
 
-  {% include 'partials/qualidade_fornecimento/_modal_tabela_correlacao.html' %}
+    {% include "documentos/_modal_nova_revisao.html" %}
+    {% include 'partials/qualidade_fornecimento/_modal_tabela_correlacao.html' %}
 
-  
-  {% block extra_css %}
-  <style>
-  /* CSS do menu com "..." */
-  .sidebar-menu li > a > span {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block;
-      max-width: 180px;
-  }
-  
-  .sidebar-menu .submenu li > a > span {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block;
-      max-width: 160px;
-  }
-
-  
-  </style>
-  
-  {% endblock %}
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        console.log("Largura atual:", window.innerWidth);
+    {% block extra_css %}
+    <style>
+      .sidebar-menu li > a > span {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: block;
+          max-width: 180px;
+      }
+      .sidebar-menu .submenu li > a > span {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: block;
+          max-width: 160px;
+      }
+    </style>
+    {% endblock %}
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
         const sidebar = document.querySelector('.sidebar');
         if (window.innerWidth <= 768) {
-            console.log("Aplicando regra de HIDE para sidebar");
-            sidebar.style.display = "none";
+          sidebar.style.display = "none";
         }
-    });
+      });
     </script>
-    
 </body>
 </html>
