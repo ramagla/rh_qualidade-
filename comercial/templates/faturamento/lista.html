@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Faturamento{% endblock %}
+
+{% block content %}
+{% load static %}
+{% load humanize %}
+{% load custom_filters %}
+{% load filters_gerais %}
+
+{# Estilos e toasts globais #}
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_toast_mensagens.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<div class="container-fluid mt-5">
+
+  {# Cabeçalho da página #}
+  {% include "partials/global/_header_titulo.html"  with titulo="Faturamento" icone="bi bi-file-earmark-text" emoji="📄" %}
+
+  {# Barra de ações: Filtros + Novo + Sync #}
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
+    {% if request.user|has_permission:"comercial.add_faturamentoregistro" %}
+      <a href="{% url 'criar_faturamento' %}"
+         class="btn btn-success d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i>
+        Novo Registro
+      </a>
+    {% endif %}
+
+    <a href="{% url 'relatorio_faturamento' %}?{{ request.GET.urlencode }}"
+       class="btn btn-warning d-inline-flex align-items-center" target="_blank">
+        <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> Gerar Relatório
+    </a>
+
+    <button class="btn btn-primary d-inline-flex align-items-center"
+            type="button" data-bs-toggle="collapse" data-bs-target="#syncCollapse"
+            aria-expanded="false" aria-controls="syncCollapse">
+      <i class="bi bi-arrow-repeat me-2"></i> Sincronizar (API)
+    </button>
+</div>
+
+
+  {# Collapse: Form de Sync #}
+  <div class="collapse" id="syncCollapse">
+    <div class="card card-body border-primary-subtle">
+      <form method="post" action="{% url 'sync_faturamento' %}" class="row g-3 align-items-end">
+        {% csrf_token %}
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-calendar-date me-1"></i>Data Início</label>
+          <input type="date" name="data_inicio" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-calendar-date-fill me-1"></i>Data Fim</label>
+          <input type="date" name="data_fim" class="form-control" required>
+        </div>
+        <div class="col-md-4 form-check mt-4">
+          <input class="form-check-input" type="checkbox" id="sobrescrever" name="sobrescrever" value="1">
+          <label class="form-check-label" for="sobrescrever">
+            Sobrescrever existentes (exceto congelados)
+          </label>
+          <div class="form-text">Marque um registro como <b>congelado</b> no Admin para protegê-lo de atualizações.</div>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-cloud-arrow-down"></i> Executar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# Offcanvas Filtros #}
+<div class="offcanvas offcanvas-end offcanvas-modern"
+     tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Faturamento
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+
+      <div class="col-md-6">
+        <label for="data_de" class="form-label fw-semibold">
+          <i class="bi bi-calendar-event me-1"></i> De (Ocorrência)
+        </label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+          <input type="date" name="de" id="data_de" class="form-control" value="{{ filtros.de }}">
+        </div>
+        <div class="form-text">Filtra pela <b>data da ocorrência</b>.</div>
+      </div>
+
+      <div class="col-md-6">
+        <label for="data_ate" class="form-label fw-semibold">
+          <i class="bi bi-calendar-event me-1"></i> Até (Ocorrência)
+        </label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+          <input type="date" name="ate" id="data_ate" class="form-control" value="{{ filtros.ate }}">
+        </div>
+      </div>
+
+      <div class="col-12">
+  <label class="form-label fw-semibold" for="cliente">
+    <i class="bi bi-building me-1"></i> Cliente (texto)
+  </label>
+<select name="cliente" id="cliente" class="form-select" data-placeholder="Selecione um cliente">
+  <option value=""></option>
+  {% for nome in clientes_texto_options %}
+    <option value="{{ nome }}" {% if filtros.cliente == nome %}selected{% endif %}>{{ nome }}</option>
+  {% endfor %}
+</select>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.jQuery && $("#cliente").select2) {
+      $("#cliente").select2({
+        theme: "bootstrap-5",
+        width: "100%",
+        placeholder: $("#cliente").data("placeholder") || "Selecione",
+        allowClear: true
+      });
+    }
+  });
+</script>
+
+
+      <div class="col-12">
+        <label class="form-label fw-semibold" for="nfe">
+          <i class="bi bi-upc-scan me-1"></i> NF-e
+        </label>
+        <input type="text" name="nfe" id="nfe" class="form-control" value="{{ filtros.nfe }}">
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-semibold" for="item">
+          <i class="bi bi-box me-1"></i> Cód. Item
+        </label>
+        <input type="text" name="item" id="item" class="form-control" value="{{ filtros.item }}">
+      </div>
+
+      <div class="col-12 d-flex align-items-center">
+        <div class="form-check mt-1">
+          <input class="form-check-input" type="checkbox" id="apenas_congelados"
+                 name="apenas_congelados" value="1"
+                 {% if filtros.apenas_congelados == '1' %}checked{% endif %}>
+          <label class="form-check-label" for="apenas_congelados">
+            Mostrar apenas registros congelados
+          </label>
+        </div>
+      </div>
+
+      <div class="col-12 mt-2 d-flex gap-2">
+        {% include "partials/global/_botao_filtrar.html" %}
+        <a href="{% url 'lista_faturamento' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-eraser"></i> Limpar Filtros
+        </a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+  {# Indicadores (exemplo de variáveis: total_registros, total_frete, total_itens, atualizados_mes) #}
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="info"    titulo="Total de Registros" valor=total_registros|default:0 subtitulo="Quantidade" icone="bi-list-check" %}
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Total Frete"       valor=total_frete|default:0 subtitulo="Soma (R$)" icone="bi-truck" %}
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Total Itens"       valor=total_itens|default:0 subtitulo="Soma de quantidades" icone="bi-123" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Atualizados Mês"   valor=atualizados_mes|default:0 subtitulo="no mês atual" icone="bi-calendar-event" %}
+  </div>
+
+  {# Título + legenda opcional #}
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted"></i>📑 Registros de Faturamento
+  </h5>
+
+  {# Tabela #}
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visually-hidden">Tabela de faturamento</caption>
+      <thead class="table-light">
+  <tr>
+    <th class="text-center align-middle"><i class="bi bi-upc-scan"></i><br><small>NF-e</small></th>
+    <th class="text-center align-middle"><i class="bi bi-tag"></i><br><small>Tipo</small></th>
+
+    <th class="text-center align-middle"><i class="bi bi-calendar2-week"></i><br><small>Ocorrência</small></th>
+    <th class="text-center align-middle"><i class="bi bi-building"></i><br><small>Cliente</small></th>
+    <th class="text-center align-middle"><i class="bi bi-link-45deg"></i><br><small>Vínculo</small></th>
+
+    <!-- Frete removido -->
+    <th class="text-center align-middle"><i class="bi bi-box"></i><br><small>Código</small></th>
+    <th class="text-center align-middle"><i class="bi bi-123"></i><br><small>Qtde</small></th>
+    <th class="text-center align-middle"><i class="bi bi-currency-dollar"></i><br><small>Vlr Unit.</small></th>
+    <th class="text-center align-middle"><i class="bi bi-cash-stack"></i><br><small>Vlr Total s/ IPI</small></th>
+    <th class="text-center align-middle"><i class="bi bi-percent"></i><br><small>IPI (%)</small></th>
+    <th class="text-center align-middle"><i class="bi bi-snow"></i><br><small>Congelado?</small></th>
+    <th class="text-center align-middle"><i class="bi bi-gear"></i><br><small>Ações</small></th>
+  </tr>
+</thead>
+<tbody>
+{% for r in page_obj %}
+  <tr>
+    <!-- NF-e nula => 'Vale' -->
+    <td>{{ r.nfe|default:"Vale" }}</td>
+    <td>
+      {% if r.tipo == "Venda" %}
+        <span class="badge bg-success d-inline-flex align-items-center gap-1">
+          <i class="bi bi-arrow-up-circle"></i> Venda
+        </span>
+      {% elif r.tipo == "Devolução" %}
+        <span class="badge bg-danger d-inline-flex align-items-center gap-1">
+          <i class="bi bi-arrow-down-circle"></i> Devolução
+        </span>
+      {% else %}
+        <span class="badge bg-secondary">—</span>
+      {% endif %}
+    </td>
+    <!-- Ocorrência dd/mm/yyyy -->
+    <td>{{ r.ocorrencia|default_if_none:""|data_br|default:"—" }}</td>
+
+    <td class="text-start">{{ r.cliente|default:"—" }}</td>
+<td>
+  {% if r.cliente_vinculado %}
+    <span class="badge bg-success">Sim</span>
+  {% else %}
+    <span class="badge bg-danger">Não</span>
+  {% endif %}
+</td>
+    <!-- Frete removido -->
+
+    <td class="text-start">{{ r.item_codigo|default:"—" }}</td>
+
+    <!-- Qtde: 2 casas + linha auxiliar no padrão BR (milhar com ponto) -->
+   <td class="text-end">
+  {{ r.item_quantidade|default_if_none:0|milhar_ptbr }}
+</td>
+
+<td class="text-end">
+  {{ r.item_valor_unitario|default_if_none:0|formatar_reais }}
+</td>
+    <!-- Novo: Valor Total sem IPI -->
+<td class="text-end">
+  {{ r.valor_total|default_if_none:0|formatar_reais }}
+</td>
+
+    <td>{{ r.item_ipi|default_if_none:"0.00"|floatformat:2 }}</td>
+
+    <td>
+      {% if r.congelado %}
+        <span class="text-info d-inline-flex align-items-center gap-1">
+          <i class="bi bi-snow2"></i> Sim
+        </span>
+      {% else %}
+        <span class="text-muted">Não</span>
+      {% endif %}
+    </td>
+
+    <td>
+      <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+        {% if request.user|has_permission:"comercial.change_faturamentoregistro" %}
+          {% include "partials/global/_botao_editar.html" with objeto=r url_editar="editar_faturamento" label="registro" %}
+        {% endif %}
+        {% if request.user|has_permission:"comercial.delete_faturamentoregistro" %}
+          {% include "partials/global/_botao_excluir.html" with objeto=r url_excluir="excluir_faturamento" label="registro" %}
+          {% include "partials/global/_modal_exclusao.html"   with objeto=r url_excluir="excluir_faturamento" %}
+        {% endif %}
+      </div>
+    </td>
+  </tr>
+{% empty %}
+  {% include "partials/global/_sem_resultados.html" with colspan=10 mensagem="Nenhum registro encontrado." %}
+{% endfor %}
+</tbody>
+
+    </table>
+
+    {# Paginação #}
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+</div>
+{% endblock %}

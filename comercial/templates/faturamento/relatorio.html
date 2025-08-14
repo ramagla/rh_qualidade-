@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load time_extras %}
+{% load conversores %}
+{% load humanize %}
+
+{% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_toast_mensagens.html' %}
+{% include 'partials/global/_estilos_impressao.html' %}
+{% include 'header.html' %}
+
+<div class="print-container container mt-5">
+  {% include 'partials/global/_botao_impressao.html' %}
+
+  <!-- Filtros (não imprime) -->
+  <form method="GET" class="mb-4 row g-2 d-print-none">
+    <div class="col-md-3">
+      <label for="data_inicio" class="form-label">Data Início:</label>
+      <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ data_inicio }}">
+    </div>
+    <div class="col-md-3">
+      <label for="data_fim" class="form-label">Data Fim:</label>
+      <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ data_fim }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="bi bi-funnel"></i> Filtrar
+      </button>
+    </div>
+  </form>
+
+  {% include 'partials/global/_header_titulo.html' with titulo="Relatório de Faturamento" icone="bi bi-file-earmark-text" emoji="📄" %}
+
+  <!-- Filtros Aplicados -->
+  <div class="mt-3 mb-4 text-start ps-2">
+    <strong class="d-block">Filtros Aplicados</strong>
+    {% if data_inicio or data_fim %}
+      <span>
+        Período:
+        {% if data_inicio %}{{ data_inicio|date:"d/m/Y" }}{% else %}Início indefinido{% endif %}
+        até
+        {% if data_fim %}{{ data_fim|date:"d/m/Y" }}{% else %}Fim indefinido{% endif %}
+      </span>
+    {% endif %}
+  </div>
+
+  <!-- Tabela 1: Vendas (NF-e válidas) -->
+  <h5 class="mt-3">📈 Vendas – NF-e válidas</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped custom-table align-middle text-center">
+      <thead>
+        <tr>
+          <th>Dia</th>
+          <th>Valor total c/ IPI</th>
+          <th>Valor do ICMS</th>
+          <th>Valor do IPI</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if tabela_vendas_por_dia %}
+          {% for linha in tabela_vendas_por_dia %}
+          <tr>
+            <td>{{ linha.dia }}</td>
+            <td>{{ linha.valor_c_ipi|floatformat:2|intcomma }}</td>
+            <td>{{ linha.valor_icms|floatformat:2|intcomma }}</td>
+            <td>{{ linha.valor_ipi|floatformat:2|intcomma }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="table-secondary fw-bold">
+            <td>Total</td>
+            <td>{{ totais_vendas.valor_c_ipi|floatformat:2|intcomma }}</td>
+            <td>{{ totais_vendas.valor_icms|floatformat:2|intcomma }}</td>
+            <td>{{ totais_vendas.valor_ipi|floatformat:2|intcomma }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">Sem dados no período.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tabela 2: Vendas – NF-e “Vale/Null” -->
+  <h5 class="mt-4">🧾 Vendas – NF-e “Vale/Null”</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped custom-table align-middle text-center">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Data</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if tabela_vales %}
+          {% for r in tabela_vales %}
+          <tr>
+            <td class="text-start">{{ r.cliente }}</td>
+            <td>{{ r.data }}</td>
+            <td>{{ r.valor|floatformat:2|intcomma }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="table-secondary fw-bold">
+            <td colspan="2">Total</td>
+            <td>{{ total_vales|floatformat:2|intcomma }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="3">Sem lançamentos “Vale/Null” no período.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tabela 3: Devoluções -->
+  <h5 class="mt-4">↩️ Devoluções</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped custom-table align-middle text-center">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>NF-e</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if tabela_devolucoes %}
+          {% for r in tabela_devolucoes %}
+          <tr>
+            <td class="text-start">{{ r.cliente }}</td>
+            <td>{{ r.nfe }}</td>
+            <td>{{ r.valor|floatformat:2|intcomma }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="table-secondary fw-bold">
+            <td colspan="2">Total</td>
+            <td>{{ total_devolucoes|floatformat:2|intcomma }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="3">Sem devoluções no período.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <p class="mt-3 small text-muted">
+    Obs.: o ICMS é calculado pela alíquota do cliente vinculado sobre a base sem IPI.
+  </p>
+</div>
+
+<style>
+  .custom-table th { background-color: #f0f0f0; }
+  @media print {
+    .d-print-none { display: none !important; }
+    .print-container { padding: 30px; max-width: 900px; }
+    .custom-table th, .custom-table td { font-size: 10px; }
+  }
+</style>
+{% endblock %}

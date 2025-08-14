@@ -96,7 +96,13 @@ def menu_comercial(user):
                 "icon": "fas fa-percentage",
             },
         ]
-
+    # Faturamento
+        if user.has_perm("comercial.view_faturamento"):  # ajuste a permissão ao seu model real
+            menu.append({
+                "name": "Faturamento",
+                "url": "lista_faturamento",
+                "icon": "fas fa-file-invoice-dollar",  # ícone sugestão
+            })
         menu.append({
             "name": "Indicadores",
             "icon": "fas fa-chart-line",

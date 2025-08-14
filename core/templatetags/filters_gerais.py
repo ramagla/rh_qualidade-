@@ -563,3 +563,39 @@ def formatar_decimal(valor, casas=4):
         return f"{inteiro},{decimal}"
     except Exception:
         return "-"
+
+
+@register.filter
+def data_br(value):
+    """
+    Converte 'YYYY-MM-DD' ou 'YYYYMMDD' para 'dd/mm/yyyy'.
+    Se já vier em 'dd/mm/yyyy', mantém. Em falha, retorna valor original.
+    """
+    if not value:
+        return ""
+    s = str(value).strip()
+    try:
+        if "-" in s and len(s) >= 10:   # 2025-08-13
+            return datetime.strptime(s[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
+        if s.isdigit() and len(s) == 8: # 20250813
+            return datetime.strptime(s, "%Y%m%d").strftime("%d/%m/%Y")
+        if "/" in s:                    # já está no padrão
+            datetime.strptime(s, "%d/%m/%Y")
+            return s
+    except Exception:
+        return s
+    return s
+
+@register.filter
+def milhar_ptbr(value):
+    """
+    Formata número inteiro/decimal exibindo milhar com ponto.
+    Ex.: 263250 -> '263.250'
+    """
+    try:
+        n = float(value)
+        inteiro = int(round(n))
+        txt = f"{inteiro:,}"        # '263,250'
+        return txt.replace(",", ".")
+    except Exception:
+        return value

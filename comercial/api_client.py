@@ -23,3 +23,17 @@ class BrasmolClient:
     def fetch_products(self):
         # Exemplo: rota GET /getProdutos
         return self._get("/getProdutos")
+
+    def fetch_vendas(self, params: dict):
+        """
+        Encaminha os parâmetros exatamente como a API externa espera:
+        dataInicio, dataFim, tipo, pagina, registros.
+        """
+        return self._get("/GetVendas", params=params)
+
+    def fetch_notas_fiscais(self, params: dict):
+            """
+            Encaminha os parâmetros exatamente como a API externa espera:
+            dataInicio, dataFim, tipo, pagina, registros.
+            """
+            return self._get("/GetNotasFiscais", params=params)

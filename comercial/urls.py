@@ -10,6 +10,8 @@ from comercial.utils.email_cotacao_utils import (
 )
 from comercial.views import ordem_desenvolvimento_views
 from comercial.views import indicadores_views
+from comercial.views import api_views
+from comercial.views import faturamento_views
 
 urlpatterns = [
     # Dashboard
@@ -109,5 +111,13 @@ urlpatterns = [
     path("dashboard/mapa-clientes/", dashboard_views.mapa_clientes_por_regiao, name="mapa_clientes"),
     path("dashboard/cidades-clientes/", dashboard_views.listar_cidades_clientes, name="listar_cidades_clientes"),
     path("dashboard/cidades-nomes/", dashboard_views.listar_cidades_nomes, name="listar_cidades_nomes"),
+    path("api/getVendas", api_views.get_vendas, name="api_get_vendas"),
+    path("api/getNotasFiscais", api_views.get_notas_fiscais, name="api_get_notas_fiscais"),
+    path("faturamento/", faturamento_views.lista_faturamento, name="lista_faturamento"),
+    path("faturamento/sync/", faturamento_views.sync_faturamento, name="sync_faturamento"),
+    path("faturamento/novo/", faturamento_views.criar_faturamento, name="criar_faturamento"),
+    path("faturamento/<int:pk>/editar/", faturamento_views.editar_faturamento, name="editar_faturamento"),
+    path("faturamento/<int:pk>/excluir/", faturamento_views.excluir_faturamento, name="excluir_faturamento"),
+    path("faturamento/relatorio/", faturamento_views.relatorio_faturamento, name="relatorio_faturamento"),
 
 ]

@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load filters_gerais %}
+
+{% block title %}{% if modo == 'editar' %}Editar{% else %}Cadastrar{% endif %} Faturamento{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">
+    <i class="bi bi-file-earmark-text me-2"></i>
+    {% if modo == 'editar' %}Editar{% else %}Cadastrar{% endif %} Faturamento
+  </h2>
+
+  <form method="post" id="faturamentoForm" novalidate>
+    {% csrf_token %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          {% for err in form.non_field_errors %}
+            <li>{{ err }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="accordion" id="accFaturamento">
+
+      <!-- DADOS DO FATURAMENTO -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="accHeaderDados">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#accDados" aria-expanded="true" aria-controls="accDados">
+            <i class="bi bi-card-list me-2"></i> Dados do Faturamento
+          </button>
+        </h2>
+        <div id="accDados" class="accordion-collapse collapse show" aria-labelledby="accHeaderDados" data-bs-parent="#accFaturamento">
+          <div class="accordion-body">
+            <div class="row g-3">
+
+              <div class="col-md-3">
+                <label for="{{ form.nfe.id_for_label }}" class="form-label">NF-e</label>
+                {{ form.nfe|add_attrs:"placeholder=Vale"|add_class:"form-control" }}
+                {% if form.nfe.errors %}<div class="text-danger small mt-1">{{ form.nfe.errors|join:', ' }}</div>{% endif %}
+              </div>
+              <div class="col-md-6">
+                  <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo</label>
+                  {{ form.tipo }}
+              </div>
+              <div class="col-md-3">
+                <label for="{{ form.ocorrencia.id_for_label }}" class="form-label">Ocorrência (dd/mm/yyyy)</label>
+                {{ form.ocorrencia|add_attrs:"placeholder=dd/mm/yyyy"|add_class:"form-control" }}
+                {% if form.ocorrencia.errors %}<div class="text-danger small mt-1">{{ form.ocorrencia.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.cliente_codigo.id_for_label }}" class="form-label">Código do Cliente</label>
+                {{ form.cliente_codigo|add_class:"form-control" }}
+                {% if form.cliente_codigo.errors %}<div class="text-danger small mt-1">{{ form.cliente_codigo.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.cliente.id_for_label }}" class="form-label">Cliente</label>
+                {{ form.cliente|add_class:"form-control" }}
+                {% if form.cliente.errors %}<div class="text-danger small mt-1">{{ form.cliente.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+         <div class="col-md-6">
+  <label for="{{ form.cliente_vinculado.id_for_label }}" class="form-label">Cliente Vinculado</label>
+{% load widget_tweaks %}
+{% render_field form.cliente_vinculado class+="form-select select2" data-placeholder="Selecione o cliente" style="width:100%" %}
+  <div class="form-text">
+    Selecione o cliente (código). Na importação/salvamento, o sistema também tenta vincular automaticamente pelo <strong>cliente_codigo</strong> ↔ <strong>cod_bm</strong>.
+  </div>
+</div>
+
+
+
+              <div class="col-md-3">
+                <label for="{{ form.valor_frete.id_for_label }}" class="form-label">Valor Frete (R$)</label>
+                {{ form.valor_frete|add_class:"form-control" }}
+                {% if form.valor_frete.errors %}<div class="text-danger small mt-1">{{ form.valor_frete.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check form-switch">
+                  {{ form.congelado|add_class:"form-check-input" }}
+                  <label class="form-check-label ms-2" for="{{ form.congelado.id_for_label }}">
+                    Congelado (não atualizar via sync)
+                  </label>
+                </div>
+                {% if form.congelado.errors %}<div class="text-danger small mt-1">{{ form.congelado.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ITEM E VALORES -->
+      <div class="accordion-item mt-3">
+        <h2 class="accordion-header" id="accHeaderItens">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accItens" aria-expanded="false" aria-controls="accItens">
+            <i class="bi bi-box-seam me-2"></i> Item e Valores
+          </button>
+        </h2>
+        <div id="accItens" class="accordion-collapse collapse" aria-labelledby="accHeaderItens" data-bs-parent="#accFaturamento">
+          <div class="accordion-body">
+            <div class="row g-3">
+
+              <div class="col-md-4">
+                <label for="{{ form.item_codigo.id_for_label }}" class="form-label">Código do Item</label>
+                {{ form.item_codigo|add_class:"form-control" }}
+                {% if form.item_codigo.errors %}<div class="text-danger small mt-1">{{ form.item_codigo.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-2">
+                <label for="{{ form.item_quantidade.id_for_label }}" class="form-label">Quantidade (inteira)</label>
+                {{ form.item_quantidade|add_class:"form-control" }}
+                {% if form.item_quantidade.errors %}<div class="text-danger small mt-1">{{ form.item_quantidade.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.item_valor_unitario.id_for_label }}" class="form-label">Valor Unitário (R$)</label>
+                {{ form.item_valor_unitario|add_class:"form-control" }}
+                {% if form.item_valor_unitario.errors %}<div class="text-danger small mt-1">{{ form.item_valor_unitario.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.item_ipi.id_for_label }}" class="form-label">IPI (%)</label>
+                {{ form.item_ipi|add_class:"form-control" }}
+                {% if form.item_ipi.errors %}<div class="text-danger small mt-1">{{ form.item_ipi.errors|join:', ' }}</div>{% endif %}
+              </div>
+  <!-- NOVO CAMPO: ICMS (%) vindo da NF -->
+              <div class="col-md-3">
+                <label for="{{ form.perc_icms.id_for_label }}" class="form-label">ICMS (%) (NF)</label>
+                {{ form.perc_icms|add_class:"form-control" }}
+                {% if form.perc_icms.errors %}<div class="text-danger small mt-1">{{ form.perc_icms.errors|join:', ' }}</div>{% endif %}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Valor Total (R$)</label>
+                <input type="text" id="valor_total_calc" class="form-control" value="{{ obj.valor_total|default_if_none:'0,00' }}" readonly>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Valor Total c/ IPI (R$)</label>
+                <input type="text" id="valor_total_c_ipi_calc" class="form-control" value="{{ obj.valor_total_com_ipi|default_if_none:'0,00' }}" readonly>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-success me-2">
+        <i class="bi bi-save me-1"></i>{% if modo == 'editar' %}Atualizar{% else %}Salvar{% endif %}
+      </button>
+      <a href="{% url 'lista_faturamento' %}" class="btn btn-secondary">
+        <i class="bi bi-x-circle me-1"></i>Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+(function () {
+  // Converte string numérica em número (aceita "1.234,56", "1234,56" e "1234.56")
+  function parseNumberBR(v) {
+    if (v === null || v === undefined) return 0;
+    v = ('' + v).trim();
+
+    // "1.234,56" -> remove milhar, vírgula => ponto
+    if (v.indexOf('.') > -1 && v.indexOf(',') > -1) {
+      v = v.replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(v);
+      return isNaN(n) ? 0 : n;
+    }
+
+    // "1234,56" -> vírgula => ponto
+    if (v.indexOf(',') > -1) {
+      v = v.replace(',', '.');
+      const n = parseFloat(v);
+      return isNaN(n) ? 0 : n;
+    }
+
+    // "1234.56" -> já está US
+    const n = parseFloat(v);
+    return isNaN(n) ? 0 : n;
+  }
+
+  // Quantidade inteira (remove tudo que não é dígito)
+  function parseIntBR(v) {
+    if (v === null || v === undefined) return 0;
+    const n = parseInt(('' + v).replace(/\D/g, ''), 10);
+    return isNaN(n) ? 0 : n;
+  }
+
+  // Formata em pt-BR com 2 casas
+  function fmtBR2(v) {
+    try {
+      return new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(v);
+    } catch (e) {
+      return (Math.round(v * 100) / 100).toFixed(2).replace('.', ',');
+    }
+  }
+
+  // Normaliza data ISO (YYYY-MM-DD) para BR (dd/mm/yyyy) no campo Ocorrência
+  function isoToBRDateIfNeeded(inputEl) {
+    if (!inputEl) return;
+    const val = (inputEl.value || '').trim();
+    if (val && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+      const [y, m, d] = val.split('-');
+      inputEl.value = `${d}/${m}/${y}`;
+    }
+  }
+
+  function recalc() {
+    const elQ   = document.getElementById('{{ form.item_quantidade.id_for_label }}');
+    const elVU  = document.getElementById('{{ form.item_valor_unitario.id_for_label }}');
+    const elIPI = document.getElementById('{{ form.item_ipi.id_for_label }}');
+
+    const q   = parseIntBR(elQ ? elQ.value : 0);
+    const vu  = parseNumberBR(elVU ? elVU.value : 0);
+    const ipi = parseNumberBR(elIPI ? elIPI.value : 0);
+
+    const total = q * vu;
+    const total_c_ipi = total * (1 + (ipi / 100));
+
+    const outTotal = document.getElementById('valor_total_calc');
+    const outTotalIpi = document.getElementById('valor_total_c_ipi_calc');
+    if (outTotal) outTotal.value = fmtBR2(total);
+    if (outTotalIpi) outTotalIpi.value = fmtBR2(total_c_ipi);
+  }
+
+  // Listeners
+  const ids = [
+    '{{ form.item_quantidade.id_for_label }}',
+    '{{ form.item_valor_unitario.id_for_label }}',
+    '{{ form.item_ipi.id_for_label }}'
+  ];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', recalc);
+      el.addEventListener('change', recalc);
+    }
+  });
+
+  // Ajusta placeholder/valor visual
+  const elNfe = document.getElementById('{{ form.nfe.id_for_label }}');
+  if (elNfe && !elNfe.value) elNfe.placeholder = 'Vale';
+
+  const elOc = document.getElementById('{{ form.ocorrencia.id_for_label }}');
+  isoToBRDateIfNeeded(elOc);
+
+  // Recalcula no carregamento
+  recalc();
+})();
+</script>
+
+{% endblock %}
