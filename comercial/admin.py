@@ -26,3 +26,14 @@ class FaturamentoRegistroAdmin(admin.ModelAdmin):
     @admin.action(description="Desmarcar congelado")
     def desmarcar_congelado(self, request, queryset):
         queryset.update(congelado=False)
+
+
+from django.contrib import admin
+from comercial.models.indicadores import MetaFaturamento
+
+@admin.register(MetaFaturamento)
+class MetaFaturamentoAdmin(admin.ModelAdmin):
+    list_display = ("ano", "mes", "valor")
+    list_filter = ("ano", "mes")
+    search_fields = ("ano",)
+    ordering = ("-ano", "mes")

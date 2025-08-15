@@ -3,16 +3,17 @@ from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 from comercial.models.clientes import Cliente  # ajuste conforme o path real
 
-TIPO_CHOICES = [
+
+class FaturamentoRegistro(models.Model):
+    TIPO_CHOICES = [
     ("Venda", "Venda"),
     ("Devolução", "Devolução"),
 ]
 
-class FaturamentoRegistro(models.Model):
     nfe = models.CharField("NF-e", max_length=50, null=True, blank=True)
 
     # Padrão brasileiro dd/mm/yyyy (armazenado como string)
-    ocorrencia = models.CharField("Ocorrência (dd/mm/yyyy)", max_length=10, null=True, blank=True)
+    ocorrencia = models.DateField(blank=True, null=True)    
     cliente_codigo = models.CharField("Código do Cliente", max_length=50, null=True, blank=True)
  
     cliente = models.CharField("Cliente", max_length=200, null=True, blank=True)

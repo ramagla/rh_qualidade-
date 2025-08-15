@@ -1,0 +1,186 @@
+{% load filters_gerais %}
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <strong>Top 10 Itens por Representatividade</strong>
+      </div>
+      <div class="card-body"><canvas id="chart_top_itens" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <strong>Comparativo de Faturamento — {{ ano_ref }} × {{ ano_ant }}</strong>
+      </div>
+      <div class="card-body"><canvas id="chart_yoy" height="220"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- NOVO: Curva ABC por Cliente -->
+<div class="row g-3 mt-1">
+  <div class="col-12">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <strong>Curva ABC por Cliente (Período Selecionado)</strong>
+      </div>
+     <div class="card-body" style="height:320px">
+  <canvas id="chart_abc"></canvas>
+  <div class="small mt-2">
+    <span class="badge bg-success me-2">Classe A &gt; 7%</span>
+    <span class="badge bg-warning text-dark me-2">Classe B 2%–7%</span>
+    <span class="badge bg-danger">Classe C &lt; 2%</span>
+  </div>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Dados em JSON (gerados na view)
+const TOP_ITENS = JSON.parse('{{ top_itens_json|escapejs }}');
+const LB_YOY    = JSON.parse('{{ labels_yoy_json|escapejs }}');
+const SER_AT    = JSON.parse('{{ serie_atual_json|escapejs }}');
+const SER_AN    = JSON.parse('{{ serie_ant_json|escapejs }}');
+
+// NOVO: dados da Curva ABC (por Cliente)
+const ABC_LB    = JSON.parse('{{ abc_labels_json|escapejs }}');   // clientes
+const ABC_VAL   = JSON.parse('{{ abc_values_json|escapejs }}');   // valores R$
+const ABC_CUM   = JSON.parse('{{ abc_cumperc_json|escapejs }}');  // % acumulado
+
+// Função para criar os gráficos somente quando a aba estiver visível
+function initChartsVendas() {
+  if (window.__vendasChartsInit) {
+    // Se já existem, apenas force o resize
+    if (window.__chartTopItens)  window.__chartTopItens.resize();
+    if (window.__chartYoY)       window.__chartYoY.resize();
+    if (window.__chartABC)       window.__chartABC.resize();   // NOVO
+    return;
+  }
+
+  const LB_TOP = TOP_ITENS.map(x => x.item_codigo ?? '—');
+  const VL_TOP = TOP_ITENS.map(x => Number(x.total ?? 0));
+  const PC_TOP = TOP_ITENS.map(x => Number(x.percent ?? 0));
+
+  const ctx1 = document.getElementById('chart_top_itens');
+  const ctx2 = document.getElementById('chart_yoy');
+  const ctx3 = document.getElementById('chart_abc'); // NOVO
+
+  window.__chartTopItens = new Chart(ctx1, {
+    type: 'bar',
+    data: { labels: LB_TOP, datasets: [{ label: 'Valor (R$)', data: VL_TOP }] },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        datalabels: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const val = Number(ctx.parsed.x || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              const pc  = Number(PC_TOP[ctx.dataIndex] || 0).toFixed(2);
+              return `R$ ${val} (${pc}%)`;
+            }
+          }
+        }
+      },
+      scales: { x: { beginAtZero: true } }
+    }
+  });
+
+  window.__chartYoY = new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels: LB_YOY,
+      datasets: [
+        { label: '{{ ano_ref }}', data: SER_AT, fill: false, tension: 0.3 },
+        { label: '{{ ano_ant }}', data: SER_AN, fill: false, tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        datalabels: { display: false },
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = Number(ctx.parsed.y || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              return `R$ ${v}`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Curva ABC por Cliente (barras coloridas por classe e linha = % acumulado)
+const ABC_TOTAL = ABC_VAL.reduce((a, b) => a + Number(b || 0), 0);
+const ABC_SHARE = ABC_VAL.map(v => ABC_TOTAL ? (Number(v || 0) / ABC_TOTAL * 100) : 0);
+const ABC_CLASS = ABC_SHARE.map(p => (p > 7 ? 'A' : (p >= 2 ? 'B' : 'C')));
+
+// Cores por classe
+const BAR_BG = ABC_CLASS.map(c =>
+  c === 'A' ? 'rgba(25,135,84,0.85)' : (c === 'B' ? 'rgba(255,193,7,0.85)' : 'rgba(220,53,69,0.85)'));
+const BAR_BORDER = ABC_CLASS.map(c =>
+  c === 'A' ? 'rgba(25,135,84,1)' : (c === 'B' ? 'rgba(255,193,7,1)' : 'rgba(220,53,69,1)'));
+
+window.__chartABC = new Chart(ctx3, {
+  data: {
+    labels: ABC_LB,
+    datasets: [
+      {
+        type: 'bar',
+        label: 'Valor (R$)',
+        yAxisID: 'y',
+        data: ABC_VAL,
+        backgroundColor: BAR_BG,
+        borderColor: BAR_BORDER,
+        borderWidth: 1
+      },
+      { type: 'line', label: '% Acumulado', yAxisID: 'y1', data: ABC_CUM, tension: 0.3 }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      datalabels: { display: false },
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            if (ctx.dataset.yAxisID === 'y1') {
+              const p = Number(ctx.parsed.y || 0).toFixed(2);
+              return `% Acumulado: ${p}%`;
+            }
+            const idx = ctx.dataIndex;
+            const v = Number(ctx.parsed.y || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const p = ABC_SHARE[idx]?.toFixed(2) ?? '0.00';
+            const cls = ABC_CLASS[idx] || 'C';
+            return `Valor: R$ ${v} | Part.: ${p}% | Classe ${cls}`;
+          }
+        }
+      }
+    },
+    scales: {
+      y:  { beginAtZero: true, ticks: { callback: v => Number(v).toLocaleString('pt-BR') } },
+      y1: { position: 'right', beginAtZero: true, min: 0, max: 100, grid: { drawOnChartArea: false }, ticks: { callback: v => `${v}%` } }
+    }
+  }
+});
+
+
+  window.__vendasChartsInit = true;
+}
+
+// Exponha a função para ser chamada pelo template pai
+window.__initChartsVendas = initChartsVendas;
+</script>

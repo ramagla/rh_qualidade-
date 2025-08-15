@@ -18,11 +18,19 @@ class BRDecimalField(forms.DecimalField):
 
 class FaturamentoRegistroForm(forms.ModelForm):
     # Campo de data armazenado como string no model, validado/mostrado em dd/mm/yyyy
-    ocorrencia = forms.CharField(
+    ocorrencia = forms.DateField(
         label="Ocorrência (dd/mm/yyyy)",
         required=False,
-        widget=forms.TextInput(attrs={"placeholder": "dd/mm/yyyy"})
+        widget=forms.DateInput(
+            attrs={"class": "form-control", "type": "date"},
+            format="%Y-%m-%d",
+        ),
+        input_formats=["%Y-%m-%d", "%d/%m/%Y"],
     )
+    # não formate manualmente no __init__; deixe o ModelForm cuidar
+
+
+    
 
     # Código usado para vincular ao Cliente.cod_bm (sync/save fazem o match)
     cliente_codigo = forms.CharField(
@@ -124,8 +132,9 @@ class FaturamentoRegistroForm(forms.ModelForm):
             oc = (getattr(inst, "ocorrencia", "") or "").strip()
             if "-" in oc and len(oc) >= 10:
                 self.fields["ocorrencia"].initial = datetime.strptime(
-                    oc[:10], "%Y-%m-%d"
-                ).strftime("%d/%m/%Y")
+                        oc[:10], "%Y-%m-%d"
+                    ).strftime("%Y-%m-%d")
+
         except Exception:
             pass
 
@@ -133,17 +142,6 @@ class FaturamentoRegistroForm(forms.ModelForm):
     def clean_cliente_codigo(self):
         v = (self.cleaned_data.get("cliente_codigo") or "").strip()
         return v.upper()
-
-    # Validações numéricas
-    def clean_ocorrencia(self):
-        v = (self.cleaned_data.get("ocorrencia") or "").strip()
-        if not v:
-            return v
-        try:
-            dt = datetime.strptime(v, "%d/%m/%Y")
-            return dt.strftime("%d/%m/%Y")
-        except ValueError:
-            raise forms.ValidationError("Use o formato dd/mm/yyyy.")
 
     def clean_item_valor_unitario(self):
         v = self.cleaned_data.get("item_valor_unitario")

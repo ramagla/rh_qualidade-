@@ -599,3 +599,66 @@ def milhar_ptbr(value):
         return txt.replace(",", ".")
     except Exception:
         return value
+
+@register.filter
+def moeda_br(value):
+    """
+    Formata número para moeda pt-BR sem símbolo (1.234.567,89).
+    Aceita Decimal, int, float ou string com '.' ou ',' como separador decimal.
+    """
+    if value is None or value == "":
+        return "0,00"
+    try:
+        if isinstance(value, str):
+            # normaliza strings que já venham com máscara
+            value = value.replace(".", "").replace(",", ".")
+        q = Decimal(value)
+    except (InvalidOperation, ValueError, TypeError):
+        return "0,00"
+
+    q = q.quantize(Decimal("0.01"))
+    s = f"{q:,.2f}"                  # 1,234,567.89
+    return s.replace(",", "X").replace(".", ",").replace("X", ".")  # 1.234.567,89
+
+
+@register.filter
+def formatar_meta_extenso(valor):
+    """
+    Regras:
+      - Múltiplos de 1.000 e < 1.000.000  -> 'X mil'        (800.000 -> '800 mil')
+      - Múltiplos de 1.000.000           -> 'X milhão/ões' (1.000.000 -> '1 milhão', 2.000.000 -> '2 milhões')
+      - Outros valores                   -> número com ponto como milhar (ex.: 875.500)
+    """
+    try:
+        n = int(round(float(valor)))
+    except (TypeError, ValueError):
+        return "0"
+
+    # milhões exatos
+    if n >= 1_000_000 and n % 1_000_000 == 0:
+        q = n // 1_000_000
+        return f"{q} milhão" if q == 1 else f"{q} milhões"
+
+    # milhares exatos
+    if n >= 1_000 and n % 1_000 == 0:
+        q = n // 1_000
+        return f"{q} mil"
+
+    # demais casos (mantém separador de milhar)
+    return f"{n:,}".replace(",", ".")
+
+
+@register.filter
+def reais_sem_centavos(valor):
+    """
+    Formata valor monetário em reais no padrão brasileiro,
+    com ponto como separador de milhar e sem casas decimais.
+    Exemplo:
+    950526.70 -> R$ 950.526
+    1000 -> R$ 1.000
+    """
+    try:
+        valor = int(float(valor))  # Remove decimais sem arredondar para cima
+        return f"R$ {valor:,}".replace(",", ".")
+    except (ValueError, TypeError):
+        return "R$ 0"

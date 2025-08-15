@@ -79,4 +79,23 @@ comercial_permissions = {
     "visualizar_viabilidade": "comercial.view_viabilidadeanaliserisco",
     "excluir_viabilidade": "comercial.delete_viabilidadeanaliserisco",
 
+    # Faturamento (Model: FaturamentoRegistro)
+    "lista_faturamento": "comercial.view_faturamentoregistro",
+    "criar_faturamento": "comercial.add_faturamentoregistro",
+    "editar_faturamento": "comercial.change_faturamentoregistro",
+    "excluir_faturamento": "comercial.delete_faturamentoregistro",
+    "relatorio_faturamento": "comercial.view_faturamentoregistro",
+    "sync_faturamento": "comercial.view_faturamentoregistro",
+
+    # Dashboard de Faturamento
+    "dashboard_faturamento": "comercial.view_dashboard_faturamento",
+
+    # Indicadores Comercial
+    "indicador_faturamento": "comercial.view_indicador_faturamento",
+    "indicador_prazo_cotacao": "comercial.view_indicador_prazo_cotacao",
+    "indicador_itens_novos": "comercial.view_indicador_itens_novos",
+    "indicador_cotacoes_funcionario": "comercial.view_indicador_cotacoes_funcionario",
+    "indicador_taxa_aprovacao": "comercial.view_indicador_taxa_aprovacao",
+
+
 }

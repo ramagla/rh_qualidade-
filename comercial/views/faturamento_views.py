@@ -26,19 +26,14 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from comercial.models.faturamento import FaturamentoRegistro
 from datetime import datetime
-from django.db.models import F, Sum, Value, DateField, Func, Case, When
-from django.db.models.functions import Trim, Substr  
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from comercial.models.faturamento import FaturamentoRegistro
-from django.db.models import F, Sum, Value, DateField, Func, Case, When
+from django.db.models import F, Sum, Value
 
-class ToDate(Func):
-    function = "to_date"
-    arity = 2
-    output_field = DateField()
+
 
 
 def _parse_iso_date_or_none(s: str):
@@ -51,12 +46,13 @@ def _parse_iso_date_or_none(s: str):
         return None
 
 @login_required
-@permission_required("comercial.view_faturamento", raise_exception=True)
+@permission_required("comercial.view_faturamentoregistro", raise_exception=True)
 def lista_faturamento(request):
     # -------- Filtros (GET) --------
     de  = request.GET.get("de") or ""
     ate = request.GET.get("ate") or ""
     cliente = request.GET.get("cliente") or ""   # Cliente (texto)
+    tipo = request.GET.get("tipo") or ""         # Novo: Tipo (Venda ou Devolução)
     nfe = request.GET.get("nfe") or ""
     item = request.GET.get("item") or ""
     apenas_congelados = request.GET.get("apenas_congelados") == "1"
@@ -64,9 +60,9 @@ def lista_faturamento(request):
     dt_de  = _parse_iso_date_or_none(de)
     dt_ate = _parse_iso_date_or_none(ate)
 
-    qs = (FaturamentoRegistro.objects
-          .select_related("cliente_vinculado")
-          .all())
+    qs_base = FaturamentoRegistro.objects.select_related("cliente_vinculado").all()
+    qs = qs_base
+
 
     # Cliente (texto), NF-e, Cód. Item, Congelado
     if cliente:
@@ -78,66 +74,81 @@ def lista_faturamento(request):
     if apenas_congelados:
         qs = qs.filter(congelado=True)
 
-    # -------- Filtro por OCORRÊNCIA (string dd/mm/yyyy) no banco --------
-    # Converte 'ocorrencia' (texto) em date usando PostgreSQL to_date('DD/MM/YYYY')
-    if dt_de or dt_ate:
-        PADRAO_BR = Value("DD/MM/YYYY")
-        PADRAO_ISO = Value("YYYY-MM-DD")
+    if tipo:
+        qs = qs.filter(tipo=tipo)
 
-        # Normaliza a string (trim) e limita a 10 chars antes do to_date,
-        # aceitando 'YYYY-MM-DD' e 'DD/MM/YYYY' mesmo que venha com hora.
-        qs = qs.annotate(
-            oc_txt=Trim(F("ocorrencia")),
-        ).annotate(
-            oc_dt=Case(
-                # BR: 01/07/2025... ou "01/07/2025 00:00:00"
-                When(
-                    oc_txt__regex=r"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}",
-                    then=ToDate(Substr(F("oc_txt"), 1, 10), PADRAO_BR),
-                ),
-                # ISO: 2025-07-01... ou "2025-07-01 00:00:00"
-                When(
-                    oc_txt__regex=r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])",
-                    then=ToDate(Substr(F("oc_txt"), 1, 10), PADRAO_ISO),
-                ),
-                default=None,
-                output_field=DateField(),
-            )
-        ).filter(oc_dt__isnull=False)
+    # -------- Filtro por OCORRÊNCIA (DateField) --------
+    if dt_de:
+        qs = qs.filter(ocorrencia__gte=dt_de)
+    if dt_ate:
+        qs = qs.filter(ocorrencia__lte=dt_ate)
 
-        if dt_de:
-            qs = qs.filter(oc_dt__gte=dt_de)
-        if dt_ate:
-            qs = qs.filter(oc_dt__lte=dt_ate)
 
     qs = qs.order_by("-id")
 
-    # -------- Indicadores (sobre o conjunto filtrado) --------
-    total_registros = qs.count()
-    total_valor = qs.aggregate(total=Sum(F("item_quantidade") * F("item_valor_unitario")))["total"] or 0
-    total_frete = qs.aggregate(total=Sum("valor_frete"))["total"] or 0
-    total_clientes = qs.values("cliente").distinct().count()  # por nome textual
+    # -------- Indicadores (RESPEITANDO TODOS OS FILTROS APLICADOS EM qs) --------
+    qs_indicadores = (
+        qs
+        .exclude(valor_total__isnull=True)
+        .exclude(valor_total_com_ipi__isnull=True)
+        .select_related("cliente_vinculado")
+    )
+
+    total_sem_ipi = Decimal("0.00")
+    total_ipi = Decimal("0.00")
+    total_icms = Decimal("0.00")
+
+    for r in qs_indicadores.only(
+        "valor_total",
+        "valor_total_com_ipi",
+        "perc_icms",
+        "cliente_vinculado__icms"
+    ):
+        base = r.valor_total or Decimal("0.00")
+        com_ipi = r.valor_total_com_ipi or base
+        ipi = (com_ipi - base).quantize(Decimal("0.01"))
+
+        # ICMS: prioridade do registro; senão, do cliente; fallback 0
+        try:
+            if r.perc_icms is not None:
+                perc_icms = Decimal(str(r.perc_icms))
+            elif r.cliente_vinculado and r.cliente_vinculado.icms is not None:
+                perc_icms = Decimal(str(r.cliente_vinculado.icms))
+            else:
+                perc_icms = Decimal("0.00")
+        except Exception:
+            perc_icms = Decimal("0.00")
+
+        icms = (base * perc_icms / Decimal("100")).quantize(Decimal("0.01"))
+
+        total_sem_ipi += base
+        total_ipi += ipi
+        total_icms += icms
 
     indicadores = {
-        "total_registros": total_registros,
-        "total_valor": total_valor,
-        "total_frete": total_frete,
-        "total_clientes": total_clientes,
+        "total_sem_ipi": total_sem_ipi,
+        "total_ipi": total_ipi,
+        "total_icms": total_icms,
+        # agora contam conforme os MESMOS filtros da tabela
+        "total_registros": qs.count(),
+        "total_clientes": qs.values("cliente").distinct().count(),
     }
+
 
     # -------- Paginação --------
     paginator = Paginator(qs, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # -------- Opções para Select2 (Cliente texto) --------
+   # -------- Clientes do select (sem filtro por congelado) --------
     clientes_texto_options = (
-        qs.exclude(cliente__isnull=True)
-          .exclude(cliente__exact="")
-          .values_list("cliente", flat=True)
-          .distinct()
-          .order_by("cliente")
+        qs_base.exclude(cliente__isnull=True)
+            .exclude(cliente__exact="")
+            .values_list("cliente", flat=True)
+            .distinct()
+            .order_by("cliente")
     )
+
 
     context = {
         "registros": page_obj,
@@ -148,16 +159,19 @@ def lista_faturamento(request):
             "de": de,
             "ate": ate,
             "cliente": cliente,
+            "tipo": tipo,
             "nfe": nfe,
             "item": item,
             "apenas_congelados": "1" if apenas_congelados else "0",
         },
+
         "clientes_texto_options": clientes_texto_options,
+        "tipo_choices": FaturamentoRegistro.TIPO_CHOICES,
     }
     return render(request, "faturamento/lista.html", context)
 
 @login_required
-@permission_required("comercial.view_faturamento", raise_exception=True)
+@permission_required("comercial.view_faturamentoregistro", raise_exception=True)
 def sync_faturamento(request):
     if request.method != "POST":
         messages.error(request, "Método inválido.")
@@ -208,7 +222,10 @@ def editar_faturamento(request, pk: int):
             return redirect("lista_faturamento")
     else:
         form = FaturamentoRegistroForm(instance=obj)
+    if form.errors:
+        messages.error(request, "Erros encontrados. Verifique os campos destacados.")
     return render(request, "faturamento/form.html", {"form": form, "modo": "editar", "obj": obj})
+
 
 
 
@@ -278,68 +295,96 @@ def _parse_any_date(s: str):
             continue
     raise ValueError(f"invalid date: {s}")
 
+from decimal import Decimal
+from collections import defaultdict
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+
+# Se o _parse_any_date já existir em outro módulo seu, remova este import e use o existente.
+# A view abaixo assume que _parse_any_date(data_str) aceita "dd/mm/yyyy" e "yyyy-mm-dd" e retorna date.
+
+
 @login_required
 @permission_required("comercial.view_faturamentoregistro", raise_exception=True)
 def relatorio_faturamento(request):
     data_inicio = (request.GET.get("data_inicio") or "").strip()
     data_fim    = (request.GET.get("data_fim") or "").strip()
 
+    # --- Defaults seguros (evitam UnboundLocalError quando não há período) ---
+    tabela_vendas_por_dia = []
+    totais_vendas = {
+        "valor_c_ipi": Decimal("0.00"),
+        "valor_icms":  Decimal("0.00"),
+        "valor_ipi":   Decimal("0.00"),
+    }
+    tabela_vales      = []
+    total_vales       = Decimal("0.00")
+    tabela_devolucoes = []
+    total_devolucoes  = Decimal("0.00")
+
+    # Sem período: renderiza com mensagem e totalizador 0.00
     if not data_inicio or not data_fim:
         messages.info(request, "Selecione Data Início e Data Fim para visualizar.")
         return render(request, "faturamento/relatorio.html", {
             "data_inicio": data_inicio,
             "data_fim": data_fim,
-            "tabela_vendas_por_dia": [],
-            "totais_vendas": {"valor_c_ipi": Decimal("0.00"), "valor_icms": Decimal("0.00"), "valor_ipi": Decimal("0.00")},
-            "tabela_vales": [],
-            "total_vales": Decimal("0.00"),
-            "tabela_devolucoes": [],
-            "total_devolucoes": Decimal("0.00"),
+            "tabela_vendas_por_dia": tabela_vendas_por_dia,
+            "totais_vendas": totais_vendas,
+            "tabela_vales": tabela_vales,
+            "total_vales": total_vales,
+            "tabela_devolucoes": tabela_devolucoes,
+            "total_devolucoes": total_devolucoes,
+            "totalizador": Decimal("0.00"),
         })
 
+    # --- Validação/parse de datas do filtro ---
     try:
-        dt_ini = _parse_any_date(data_inicio)  # yyyy-mm-dd
-        dt_fim = _parse_any_date(data_fim)     # yyyy-mm-dd
-    except ValueError:
+        dt_ini = _parse_any_date(data_inicio)  # yyyy-mm-dd ou dd/mm/yyyy
+        dt_fim = _parse_any_date(data_fim)
+    except Exception:
         messages.error(request, "Datas inválidas. Use o seletor de data.")
         return redirect(request.path)
 
+    # --- Base: filtra registros com ocorrência preenchida no período ---
     qs = (FaturamentoRegistro.objects
-          .select_related("cliente_vinculado")
-          .exclude(ocorrencia__isnull=True)
-          .exclude(ocorrencia__exact="")
-          .order_by("ocorrencia", "id"))
+      .select_related("cliente_vinculado")
+      .filter(ocorrencia__isnull=False)
+      .filter(ocorrencia__gte=dt_ini, ocorrencia__lte=dt_fim)
+      .only("ocorrencia", "nfe", "tipo", "valor_total", "valor_total_com_ipi",
+            "item_ipi", "cliente", "cliente_vinculado_id", "perc_icms")
+      .order_by("ocorrencia", "id"))
 
     registros_periodo = []
-    for r in qs.only("ocorrencia", "nfe", "tipo", "valor_total", "valor_total_com_ipi",
-                     "item_ipi", "cliente", "cliente_vinculado_id", "perc_icms"):
+    for r in qs:
+        r._data_obj = r.ocorrencia  # já é date
+        registros_periodo.append(r)
 
-        try:
-            d = _parse_any_date(r.ocorrencia)  # aceita dd/mm/yyyy (origem) e yyyy-mm-dd (se mudar no futuro)
-        except Exception:
-            continue
-        if dt_ini <= d <= dt_fim:
-            r._data_obj = d
-            registros_periodo.append(r)
 
-    # --- TABELA 1: vendas com NF-e válida (≠ 'Vale' e não vazia) ---
-    vendas_validas = [r for r in registros_periodo
-                      if (r.tipo or "Venda") == "Venda" and (r.nfe or "").strip().lower() not in ("", "vale")]
+    # -----------------------------------------------------------
+    # TABELA 1: Vendas com NF-e válida (≠ 'Vale' e não vazia)
+    # -----------------------------------------------------------
+    vendas_validas = [
+        r for r in registros_periodo
+        if (r.tipo or "Venda") == "Venda" and (r.nfe or "").strip().lower() not in ("", "vale")
+    ]
 
-    from collections import defaultdict
-    agrupado = defaultdict(lambda: {"valor_c_ipi": Decimal("0.00"),
-                                    "valor_icms": Decimal("0.00"),
-                                    "valor_ipi": Decimal("0.00")})
+    agrupado = defaultdict(lambda: {
+        "valor_c_ipi": Decimal("0.00"),
+        "valor_icms":  Decimal("0.00"),
+        "valor_ipi":   Decimal("0.00"),
+    })
 
     total_c_ipi = Decimal("0.00")
-    total_icms = Decimal("0.00")
-    total_ipi = Decimal("0.00")
+    total_icms  = Decimal("0.00")
+    total_ipi   = Decimal("0.00")
 
     for r in vendas_validas:
         base_sem_ipi = (r.valor_total or Decimal("0.00"))
-        valor_c_ipi = (r.valor_total_com_ipi or base_sem_ipi)
-        valor_ipi = (valor_c_ipi - base_sem_ipi).quantize(Decimal("0.01"))
-        # Prioriza ICMS da NF (perc_icms); fallback para ICMS do cliente
+        valor_c_ipi  = (r.valor_total_com_ipi or base_sem_ipi)
+        valor_ipi    = (valor_c_ipi - base_sem_ipi).quantize(Decimal("0.01"))
+
+        # ICMS: prioriza perc_icms do registro; senão, ICMS do cliente; fallback 0
         try:
             if getattr(r, "perc_icms", None) is not None:
                 perc_icms = Decimal(str(r.perc_icms))
@@ -354,35 +399,47 @@ def relatorio_faturamento(request):
 
         dia = r._data_obj.strftime("%d/%m/%Y")
         agrupado[dia]["valor_c_ipi"] += valor_c_ipi
-        agrupado[dia]["valor_icms"] += valor_icms
-        agrupado[dia]["valor_ipi"] += valor_ipi
+        agrupado[dia]["valor_icms"]  += valor_icms
+        agrupado[dia]["valor_ipi"]   += valor_ipi
 
         total_c_ipi += valor_c_ipi
-        total_icms += valor_icms
-        total_ipi += valor_ipi
+        total_icms  += valor_icms
+        total_ipi   += valor_ipi
 
     tabela_vendas_por_dia = [
         {"dia": dia, **valores}
         for dia, valores in sorted(agrupado.items(), key=lambda x: _parse_any_date(x[0]))
     ]
-    totais_vendas = {"valor_c_ipi": total_c_ipi, "valor_icms": total_icms, "valor_ipi": total_ipi}
+    totais_vendas = {
+        "valor_c_ipi": total_c_ipi,
+        "valor_icms":  total_icms,
+        "valor_ipi":   total_ipi,
+    }
 
-    # --- TABELA 2: vendas Vale/Null ---
-    vendas_vale = [r for r in registros_periodo
-                   if (r.tipo or "Venda") == "Venda" and (r.nfe is None or (r.nfe or "").strip().lower() in ("", "vale"))]
+    # -----------------------------------------------------------
+    # TABELA 2: Vendas – NF-e “Vale/Null”
+    # (nfe vazio ou "vale", mantendo tipo "Venda")
+    # -----------------------------------------------------------
+    vendas_vale = [
+        r for r in registros_periodo
+        if (r.tipo or "Venda") == "Venda" and (r.nfe is None or (r.nfe or "").strip().lower() in ("", "vale"))
+    ]
 
-    tabela_vales = []
-    total_vales = Decimal("0.00")
+    agrupados_vales = defaultdict(lambda: Decimal("0.00"))
     for r in vendas_vale:
+        cliente_nome = getattr(r.cliente_vinculado, "razao_social", None) or (r.cliente or "—")
         valor = (r.valor_total_com_ipi or r.valor_total or Decimal("0.00")).quantize(Decimal("0.01"))
-        tabela_vales.append({
-            "cliente": getattr(r.cliente_vinculado, "razao_social", None) or (r.cliente or "—"),
-            "data": r._data_obj.strftime("%d/%m/%Y"),
-            "valor": valor,
-        })
-        total_vales += valor
+        agrupados_vales[cliente_nome] += valor
 
-    # --- TABELA 3: devoluções ---
+    tabela_vales = [
+        {"cliente": cliente, "valor": valor}
+        for cliente, valor in sorted(agrupados_vales.items())
+    ]
+    total_vales = sum(agrupados_vales.values(), Decimal("0.00"))
+
+    # -----------------------------------------------------------
+    # TABELA 3: Devoluções
+    # -----------------------------------------------------------
     devolucoes = [r for r in registros_periodo if (r.tipo or "") == "Devolução"]
 
     tabela_devolucoes = []
@@ -396,6 +453,14 @@ def relatorio_faturamento(request):
         })
         total_devolucoes += valor
 
+    # -----------------------------------------------------------
+    # TOTALIZADOR FINAL (Vendas NF + Vales − Devoluções)
+    # -----------------------------------------------------------
+    totalizador = (totais_vendas["valor_c_ipi"] or Decimal("0.00")) \
+                  + (total_vales or Decimal("0.00")) \
+                  - (total_devolucoes or Decimal("0.00"))
+
+    # Render
     return render(request, "faturamento/relatorio.html", {
         "data_inicio": data_inicio,
         "data_fim": data_fim,
@@ -405,4 +470,5 @@ def relatorio_faturamento(request):
         "total_vales": total_vales,
         "tabela_devolucoes": tabela_devolucoes,
         "total_devolucoes": total_devolucoes,
+        "totalizador": totalizador,
     })
