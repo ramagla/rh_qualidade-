@@ -4,7 +4,7 @@ from portaria.models import EntradaVisitante
 from datetime import datetime
 
 @login_required
-@permission_required("portaria.view_entradavisitante", raise_exception=True)
+@permission_required("portaria.relatorio_visitantes", raise_exception=True)
 def relatorio_visitantes(request):
     entradas = EntradaVisitante.objects.select_related("pessoa").order_by("-data", "-hora_entrada")
 
@@ -95,7 +95,7 @@ from django.shortcuts import render
 from collections import defaultdict
 
 @login_required
-@permission_required("portaria.view_funcionario", raise_exception=True)
+@permission_required("portaria.relatorio_atrasos_saidas", raise_exception=True)
 def relatorio_atrasos_saidas(request):
     nome = request.GET.get("nome")
     data_filtro = request.GET.get("data")
@@ -178,7 +178,7 @@ def relatorio_atrasos_saidas(request):
 from portaria.models import LigacaoPortaria
 
 @login_required
-@permission_required("portaria.view_ligacaoportaria", raise_exception=True)
+@permission_required("portaria.relatorio_ligacoes_recebidas", raise_exception=True)
 def relatorio_ligacoes_recebidas(request):
     ligacoes = LigacaoPortaria.objects.select_related("falar_com").order_by("-data", "-horario")
 
@@ -215,7 +215,7 @@ def relatorio_ligacoes_recebidas(request):
 from portaria.models import OcorrenciaPortaria
 
 @login_required
-@permission_required("portaria.view_ocorrenciaportaria", raise_exception=True)
+@permission_required("portaria.relatorio_ocorrencias", raise_exception=True)
 def relatorio_ocorrencias(request):
     # ❌ NÃO usar select_related para campos não relacionais
     ocorrencias = OcorrenciaPortaria.objects.prefetch_related("pessoas_envolvidas").order_by("-data_inicio")
@@ -256,7 +256,7 @@ from datetime import datetime
 from django.db.models import Sum
 
 @login_required
-@permission_required("portaria.view_consumoagua", raise_exception=True)
+@permission_required("portaria.relatorio_consumo_agua", raise_exception=True)
 def relatorio_consumo_agua(request):
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
@@ -296,7 +296,7 @@ from datetime import date
 from portaria.models import AtrasoSaida
 
 @login_required
-@permission_required("portaria.view_atrasosaida", raise_exception=True)
+@permission_required("portaria.relatorio_horas_extras", raise_exception=True)
 def relatorio_horas_extras(request):
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
