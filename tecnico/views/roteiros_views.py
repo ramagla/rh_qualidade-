@@ -25,9 +25,11 @@ from tecnico.models.roteiro import (
 
 import re
 
-LIMITE_ABS_INTEIRO = Decimal("1000")   # 10^3 para max_digits=10, decimal_places=7
+# tecnico/views/roteiros_views.py
+LIMITE_ABS_INTEIRO = Decimal("100000")  # exemplo de novo limite
 DEC_PLACES = 7
-QUANT_7 = Decimal("1").scaleb(-DEC_PLACES)  # = Decimal('0.0000001')
+QUANT_7 = Decimal("1").scaleb(-DEC_PLACES)
+
 
 def limpar_decimal(valor, padrao=None):
     """
