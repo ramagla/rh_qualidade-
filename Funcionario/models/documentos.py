@@ -41,7 +41,7 @@ class Documento(models.Model):
     ]
 
     nome = models.CharField(max_length=100, verbose_name="Nome do Documento")
-    codigo = models.CharField(max_length=4, verbose_name="Código")
+    codigo = models.CharField(max_length=6, verbose_name="Código")
     arquivo = models.FileField(upload_to="documentos/", blank=True, null=True, verbose_name="Arquivo")
     responsavel_recuperacao = models.ForeignKey(
         Cargo,

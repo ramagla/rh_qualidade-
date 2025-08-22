@@ -36,7 +36,8 @@ class RoteiroProducao(models.Model):
         default="A"
     )
     revisao = models.PositiveIntegerField(
-            "Revisão do Roteiro", default=1
+            "Revisão do Roteiro", blank=True,
+        null=True
         )
     peso_unitario_gramas = models.DecimalField(
         "Peso Unitário (g)",
@@ -137,3 +138,32 @@ class InsumoEtapa(models.Model):
 
     def __str__(self):
         return f"{self.materia_prima.codigo} ({'obrigatório' if self.obrigatorio else 'opcional'})"
+    
+
+# tecnico/models/roteiro.py  (adicione abaixo das classes existentes)
+from django.utils import timezone
+from django.contrib.auth import get_user_model
+
+class RoteiroRevisao(models.Model):
+    STATUS_CHOICES = [
+        ("ativo", "Ativo"),
+        ("inativo", "Inativo"),
+    ]
+
+    roteiro = models.ForeignKey(
+        RoteiroProducao,
+        related_name="revisoes",
+        on_delete=models.CASCADE,
+        verbose_name="Roteiro"
+    )
+    numero_revisao = models.CharField("Número da Revisão", max_length=20)
+    data_revisao = models.DateField("Data da Revisão", default=timezone.now)
+    descricao_mudanca = models.TextField("Descrição da Mudança", blank=True, null=True)
+    status = models.CharField("Status da Revisão", max_length=10, choices=STATUS_CHOICES, default="ativo")
+    criado_por = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ["-data_revisao", "-id"]
+
+    def __str__(self):
+        return f"Rev. {self.numero_revisao} — {self.roteiro}"

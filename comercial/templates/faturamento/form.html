@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load filters_gerais %}
+
+{% block title %}{% if modo == 'editar' %}Editar{% else %}Cadastrar{% endif %} Faturamento{% endblock %}
+
+{% block content %}
+<style>
+  /* Aparência moderna e consistente */
+  .page-header-icon {
+    width: 44px; height: 44px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 12px; background: var(--bs-light); box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
+    margin-right: .75rem;
+  }
+  .label-icon {
+    font-size: .95rem; font-weight: 600; display: inline-flex; align-items: center; gap: .4rem;
+  }
+  .help-hint { font-size: .8rem; color: var(--bs-secondary); }
+  .card-soft {
+    border: 1px solid rgba(0,0,0,.06);
+    box-shadow: 0 6px 18px rgba(0,0,0,.06);
+    border-radius: 14px;
+  }
+  /* As regras abaixo eram usadas para input com ícone embutido; mantidas apenas por compatibilidade */
+  .input-icon .input-group-text { border-right: 0; }
+  .input-icon .form-control, .input-icon .form-select { border-left: 0; }
+
+  .section-desc { color: var(--bs-secondary); font-size: .95rem; }
+  .sticky-actions { position: sticky; bottom: 0; background: #fff; padding: 1rem; border-top: 1px solid rgba(0,0,0,.08); }
+</style>
+
+<div class="container mt-5">
+
+  <!-- Cabeçalho -->
+  <div class="d-flex align-items-center mb-4">
+    <span class="page-header-icon">
+      <i class="bi bi-file-earmark-text"></i>
+    </span>
+    <div>
+      <h2 class="mb-0">{% if modo == 'editar' %}Editar{% else %}Cadastrar{% endif %} Faturamento</h2>
+      <div class="text-muted">Preencha os dados de faturamento e item com validação em tempo real.</div>
+    </div>
+    <div class="ms-auto">
+      <span class="badge rounded-pill {% if modo == 'editar' %}bg-warning-subtle text-warning-emphasis{% else %}bg-success-subtle text-success-emphasis{% endif %}">
+        <i class="bi {% if modo == 'editar' %}bi-pencil-square{% else %}bi-plus-circle{% endif %} me-1"></i>
+        {% if modo == 'editar' %}Edição{% else %}Novo Registro{% endif %}
+      </span>
+    </div>
+  </div>
+
+  <form method="post" id="faturamentoForm" novalidate class="needs-validation">
+    {% csrf_token %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          <i class="bi bi-info-circle me-1"></i>{{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        Foram encontrados erros no formulário:
+        <ul class="mb-0">
+          {% for err in form.non_field_errors %}
+            <li>{{ err }}</li>
+          {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+      </div>
+    {% endif %}
+
+    <div class="accordion" id="accFaturamento">
+
+      <!-- DADOS DO FATURAMENTO -->
+      <div class="accordion-item card-soft">
+        <h2 class="accordion-header" id="accHeaderDados">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#accDados" aria-expanded="true" aria-controls="accDados">
+            <i class="bi bi-card-list me-2"></i> Dados do Faturamento
+          </button>
+        </h2>
+        <div id="accDados" class="accordion-collapse collapse show" aria-labelledby="accHeaderDados" data-bs-parent="#accFaturamento">
+          <div class="accordion-body">
+            <p class="section-desc mb-3">
+              Informe a NF-e, data de ocorrência e vinculações do cliente. Campos com <span class="text-danger">*</span> são obrigatórios.
+            </p>
+
+            <div class="row g-3">
+
+              <div class="col-md-3">
+                <label for="{{ form.nfe.id_for_label }}" class="label-icon">
+                  <i class="bi bi-upc-scan"></i> NF-e
+                </label>
+{% render_field form.nfe type="text" class+="form-control" placeholder="Vale" %}
+                {% if form.nfe.errors %}
+                  <div class="text-danger small mt-1">{{ form.nfe.errors|join:', ' }}</div>
+                {% else %}
+                  <div class="help-hint">Ex.: 000000 ou “Vale”.</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <label for="{{ form.tipo.id_for_label }}" class="label-icon">
+                  <i class="bi bi-diagram-3"></i> Tipo
+                </label>
+                {{ form.tipo|add_class:"form-select" }}
+                {% if form.tipo.errors %}<div class="text-danger small mt-1">{{ form.tipo.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.ocorrencia.id_for_label }}" class="label-icon">
+                  <i class="bi bi-calendar-event"></i> Ocorrência (dd/mm/yyyy)
+                </label>
+{% render_field form.ocorrencia type="date" class+="form-control" %}
+                {% if form.ocorrencia.errors %}<div class="text-danger small mt-1">{{ form.ocorrencia.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.cliente_codigo.id_for_label }}" class="label-icon">
+                  <i class="bi bi-hash"></i> Código do Cliente
+                </label>
+                {{ form.cliente_codigo|add_class:"form-control" }}
+                {% if form.cliente_codigo.errors %}<div class="text-danger small mt-1">{{ form.cliente_codigo.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.cliente.id_for_label }}" class="label-icon">
+                  <i class="bi bi-building"></i> Cliente
+                </label>
+                {{ form.cliente|add_class:"form-select" }}
+                {% if form.cliente.errors %}<div class="text-danger small mt-1">{{ form.cliente.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <label for="{{ form.cliente_vinculado.id_for_label }}" class="label-icon">
+                  <i class="bi bi-link-45deg"></i> Cliente Vinculado
+                </label>
+                {% render_field form.cliente_vinculado class+="form-select select2" data-placeholder="Selecione o cliente" style="width:100%" %}
+                <div class="help-hint">
+                  O vínculo é sugerido automaticamente por <strong>cliente_codigo</strong> ↔ <strong>cod_bm</strong> no salvamento/sync.
+                </div>
+                {% if form.cliente_vinculado.errors %}<div class="text-danger small mt-1">{{ form.cliente_vinculado.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.valor_frete.id_for_label }}" class="label-icon">
+                  <i class="bi bi-truck"></i> Valor Frete (R$)
+                </label>
+<input
+  type="text"
+  name="{{ form.valor_frete.name }}"
+  id="{{ form.valor_frete.id_for_label }}"
+  class="form-control"
+  value="{{ form.initial.valor_frete|stringformat:".2f"|floatformat:"2"|default_if_none:'' }}"
+  placeholder="0,00"
+/>
+                {% if form.valor_frete.errors %}<div class="text-danger small mt-1">{{ form.valor_frete.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check form-switch">
+                  {{ form.congelado|add_class:"form-check-input" }}
+                  <label class="form-check-label ms-2" for="{{ form.congelado.id_for_label }}">
+                    <i class="bi bi-snow"></i> Congelado (não atualizar via sync)
+                  </label>
+                </div>
+                {% if form.congelado.errors %}<div class="text-danger small mt-1">{{ form.congelado.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ITEM E VALORES -->
+      <div class="accordion-item mt-3 card-soft">
+        <h2 class="accordion-header" id="accHeaderItens">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accItens" aria-expanded="false" aria-controls="accItens">
+            <i class="bi bi-box-seam me-2"></i> Item e Valores
+          </button>
+        </h2>
+        <div id="accItens" class="accordion-collapse collapse" aria-labelledby="accHeaderItens" data-bs-parent="#accFaturamento">
+          <div class="accordion-body">
+            <p class="section-desc mb-3">Defina o item, quantidade e impostos. Os totais são recalculados automaticamente.</p>
+
+            <div class="row g-3">
+
+              <div class="col-md-4">
+                <label for="{{ form.item_codigo.id_for_label }}" class="label-icon">
+                  <i class="bi bi-upc"></i> Código do Item
+                </label>
+                {{ form.item_codigo|add_class:"form-control" }}
+                {% if form.item_codigo.errors %}<div class="text-danger small mt-1">{{ form.item_codigo.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-2">
+                <label for="{{ form.item_quantidade.id_for_label }}" class="label-icon">
+                  <i class="bi bi-123"></i> Quantidade (inteira)
+                </label>
+                {{ form.item_quantidade|add_class:"form-control" }}
+                {% if form.item_quantidade.errors %}<div class="text-danger small mt-1">{{ form.item_quantidade.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.item_valor_unitario.id_for_label }}" class="label-icon">
+                  <i class="bi bi-currency-exchange"></i> Valor Unitário (R$)
+                </label>
+                  <input
+                    type="text"
+                    name="{{ form.item_valor_unitario.name }}"
+                    id="{{ form.item_valor_unitario.id_for_label }}"
+                    class="form-control"
+                    value="{{ form.initial.item_valor_unitario|stringformat:".4f"|floatformat:"4"|default_if_none:'' }}"
+                    placeholder="0,0000"
+                  />
+                {% if form.item_valor_unitario.errors %}<div class="text-danger small mt-1">{{ form.item_valor_unitario.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.item_ipi.id_for_label }}" class="label-icon">
+                  <i class="bi bi-percent"></i> IPI (%)
+                </label>
+<input
+  type="text"
+  name="{{ form.item_ipi.name }}"
+  id="{{ form.item_ipi.id_for_label }}"
+  class="form-control"
+  value="{{ form.initial.item_ipi|stringformat:".2f"|floatformat:"2"|default_if_none:'' }}"
+  placeholder="0,00"
+/>
+                {% if form.item_ipi.errors %}<div class="text-danger small mt-1">{{ form.item_ipi.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label for="{{ form.perc_icms.id_for_label }}" class="label-icon">
+                  <i class="bi bi-receipt-cutoff"></i> ICMS (%) (NF)
+                </label>
+<input
+  type="text"
+  name="{{ form.perc_icms.name }}"
+  id="{{ form.perc_icms.id_for_label }}"
+  class="form-control"
+  value="{{ form.initial.perc_icms|stringformat:".2f"|floatformat:"2"|default_if_none:'' }}"
+  placeholder="0,00"
+/>
+                {% if form.perc_icms.errors %}<div class="text-danger small mt-1">{{ form.perc_icms.errors|join:', ' }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label class="label-icon">
+                  <i class="bi bi-basket2"></i> Valor Total (R$)
+                </label>
+                <input type="text" id="valor_total_calc" class="form-control bg-light" value="{{ obj.valor_total|default_if_none:'0,00' }}" readonly>
+              </div>
+
+              <div class="col-md-3">
+                <label class="label-icon">
+                  <i class="bi bi-bag-check"></i> Valor Total c/ IPI (R$)
+                </label>
+                <input type="text" id="valor_total_c_ipi_calc" class="form-control bg-light" value="{{ obj.valor_total_com_ipi|default_if_none:'0,00' }}" readonly>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="sticky-actions text-center mt-4 rounded-3">
+      <button type="submit" class="btn btn-success me-2">
+        <i class="bi bi-save me-1"></i>{% if modo == 'editar' %}Atualizar{% else %}Salvar{% endif %}
+      </button>
+      <a href="{% url 'lista_faturamento' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-circle me-1"></i>Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+(function () {
+  // Tooltips Bootstrap
+  if (window.bootstrap) {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+      new bootstrap.Tooltip(el);
+    });
+  }
+
+  // Converte string numérica em número (aceita "1.234,56", "1234,56" e "1234.56")
+  function parseNumberBR(v) {
+    if (v === null || v === undefined) return 0;
+    v = ('' + v).trim();
+
+    if (v.indexOf('.') > -1 && v.indexOf(',') > -1) {
+      v = v.replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(v);
+      return isNaN(n) ? 0 : n;
+    }
+    if (v.indexOf(',') > -1) {
+      v = v.replace(',', '.');
+      const n = parseFloat(v);
+      return isNaN(n) ? 0 : n;
+    }
+    const n = parseFloat(v);
+    return isNaN(n) ? 0 : n;
+  }
+
+  // Quantidade inteira (remove tudo que não é dígito)
+  function parseIntBR(v) {
+    if (v === null || v === undefined) return 0;
+    const n = parseInt(('' + v).replace(/\D/g, ''), 10);
+    return isNaN(n) ? 0 : n;
+  }
+
+  // Formata em pt-BR com 2 casas
+  function fmtBR2(v) {
+    try {
+      return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+    } catch (e) {
+      return (Math.round(v * 100) / 100).toFixed(2).replace('.', ',');
+    }
+  }
+
+  
+
+  function recalc() {
+    const elQ   = document.getElementById('{{ form.item_quantidade.id_for_label }}');
+    const elVU  = document.getElementById('{{ form.item_valor_unitario.id_for_label }}');
+    const elIPI = document.getElementById('{{ form.item_ipi.id_for_label }}');
+
+    const q   = parseIntBR(elQ ? elQ.value : 0);
+    const vu  = parseNumberBR(elVU ? elVU.value : 0);
+    const ipi = parseNumberBR(elIPI ? elIPI.value : 0);
+
+    const total = q * vu;
+    const total_c_ipi = total * (1 + (ipi / 100));
+
+    const outTotal = document.getElementById('valor_total_calc');
+    const outTotalIpi = document.getElementById('valor_total_c_ipi_calc');
+    if (outTotal) outTotal.value = fmtBR2(total);
+    if (outTotalIpi) outTotalIpi.value = fmtBR2(total_c_ipi);
+  }
+
+  // Listeners para recálculo
+  ['{{ form.item_quantidade.id_for_label }}','{{ form.item_valor_unitario.id_for_label }}','{{ form.item_ipi.id_for_label }}']
+    .forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', recalc);
+        el.addEventListener('change', recalc);
+      }
+    });
+
+  // Placeholders e data
+  var elNfe = document.getElementById('{{ form.nfe.id_for_label }}');
+  if (elNfe && !elNfe.value) elNfe.placeholder = 'Vale';
+  var elOc = document.getElementById('{{ form.ocorrencia.id_for_label }}');
+  isoToBRDateIfNeeded(elOc);
+
+  // Select2 (proteção caso a lib não esteja carregada)
+  if (window.jQuery && jQuery().select2) {
+    jQuery('.select2').each(function(){
+      var $el = jQuery(this);
+      var placeholder = $el.data('placeholder') || 'Selecione...';
+      $el.select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: placeholder,
+        allowClear: true
+      });
+    });
+  }
+
+  // Recalcula ao carregar
+  recalc();
+})();
+</script>
+{% endblock %}

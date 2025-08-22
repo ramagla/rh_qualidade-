@@ -52,32 +52,55 @@
     </div>
     <div class="card-body">
       <form method="get" class="row g-3 align-items-end">
-        <div class="col-md-3">
-          <label for="ano" class="form-label">
-            <i class="bi bi-calendar2 me-1"></i> Ano:
-          </label>
-          <select id="ano" name="ano" class="form-select" aria-label="Filtrar por ano">
-            <option value="">Todos</option>
-            {% for ano in anos_disponiveis %}
-              <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
-            {% endfor %}
-          </select>
-        </div>
+  <div class="col-md-3">
+    <label for="ano" class="form-label">
+      <i class="bi bi-calendar2 me-1"></i> Ano:
+    </label>
+    <select id="ano" name="ano" class="form-select" aria-label="Filtrar por ano">
+      <option value="">Todos</option>
+      {% for ano in anos_disponiveis %}
+        <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
+      {% endfor %}
+    </select>
+  </div>
 
-        <div class="col-md-3">
-          <label for="cliente" class="form-label">
-            <i class="bi bi-person-badge me-1"></i> Cliente:
-          </label>
-          <select id="cliente" name="cliente" class="form-select" aria-label="Filtrar por cliente">
-            <option value="">Todos</option>
-            {% for cliente in clientes_disponiveis %}
-              <option value="{{ cliente }}" {% if cliente == request.GET.cliente %}selected{% endif %}>{{ cliente }}</option>
-            {% endfor %}
-          </select>
-        </div>
+  <div class="col-md-3">
+    <label for="cliente" class="form-label">
+      <i class="bi bi-person-badge me-1"></i> Cliente:
+    </label>
+    <select id="cliente" name="cliente" class="form-select" aria-label="Filtrar por cliente">
+      <option value="">Todos</option>
+      {% for cliente in clientes_disponiveis %}
+        <option value="{{ cliente }}" {% if cliente == request.GET.cliente %}selected{% endif %}>{{ cliente }}</option>
+      {% endfor %}
+    </select>
+  </div>
 
-        {% include 'partials/global/_botao_filtrar.html' %}
-      </form>
+  <div class="col-md-3">
+    <label for="codigo" class="form-label">
+      <i class="bi bi-upc-scan me-1"></i> Código:
+    </label>
+    <input type="text" id="codigo" name="codigo" class="form-control"
+           value="{{ request.GET.codigo }}" placeholder="Digite o código">
+  </div>
+
+  <div class="col-md-3">
+    <label for="estudo" class="form-label">
+      <i class="bi bi-clipboard2-check me-1"></i> Estudo:
+    </label>
+    <select id="estudo" name="estudo" class="form-select" aria-label="Filtrar por estudo">
+      <option value="">Todos</option>
+      {% for e in estudos_disponiveis %}
+        <option value="{{ e }}" {% if e == request.GET.estudo %}selected{% endif %}>{{ e }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-12 d-flex justify-content-center">
+    {% include 'partials/global/_botao_filtrar.html' %}
+  </div>
+</form>
+
     </div>
   </div>
 
@@ -158,6 +181,7 @@
         <small>Situação</small>
       </div>
     </th>
+    
     <th class="text-center">
       <div class="d-flex flex-column align-items-center">
         <i class="bi bi-building mb-1"></i>

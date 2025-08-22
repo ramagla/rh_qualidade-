@@ -21,7 +21,6 @@
   </div>
 {% endif %}
 
-{# agora percorre cada campo e exibe seus erros #}
 {% for field in form %}
   {% if field.errors %}
     <div class="alert alert-danger mt-2">
@@ -449,65 +448,298 @@
 
 
 <div class="accordion mt-4" id="accordionF045">
-
   <!-- Outras Características Identificadas no Certificado do Fornecedor -->
   <div class="accordion-item">
     <h2 class="accordion-header" id="headingOutrasCaracteristicas">
-      <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutrasCaracteristicas" aria-expanded="false" aria-controls="collapseOutrasCaracteristicas">
+      <button class="accordion-button collapsed fw-bold" type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseOutrasCaracteristicas"
+              aria-expanded="false"
+              aria-controls="collapseOutrasCaracteristicas">
         📄 Outras Características Identificadas no Certificado do Fornecedor
       </button>
     </h2>
-    <div id="collapseOutrasCaracteristicas" class="accordion-collapse collapse" aria-labelledby="headingOutrasCaracteristicas" data-bs-parent="#accordionF045">
+
+    <div id="collapseOutrasCaracteristicas" class="accordion-collapse collapse"
+         aria-labelledby="headingOutrasCaracteristicas" data-bs-parent="#accordionF045">
       <div class="accordion-body">
-        <div class="row g-2">
-          <div class="col-md-2">
-            <label for="{{ form.resistencia_tracao.id_for_label }}" class="form-label">
-              <i class="bi bi-bar-chart-line" title="Resistência à Tração"></i> {{ form.resistencia_tracao.label }}
+        <!-- ⭐ AQUI está o ajuste: envolver as colunas em uma .row -->
+        <div class="row g-3 align-items-end">
+
+          <div class="col-6 col-md-2">
+            <label for="id_resistencia_tracao" class="form-label mb-1">
+              <i class="bi bi-bar-chart-line" title="Resistência à Tração"></i>
+              {{ form.resistencia_tracao.label }}
             </label>
-            {{ form.resistencia_tracao }}
+            <input
+              type="text"
+              name="resistencia_tracao"
+              id="id_resistencia_tracao"
+              class="form-control text-center"
+              value="{{ form.resistencia_tracao.value|default_if_none:'' }}"
+              placeholder="Ex: 250"
+              oninput="window.__f045_validarCertificado && window.__f045_validarCertificado()">
           </div>
 
-          <div class="col-md-2">
-            <label for="{{ form.escoamento.id_for_label }}" class="form-label">
+          <div class="col-6 col-md-2">
+            <label for="{{ form.escoamento.id_for_label }}" class="form-label mb-1">
               <i class="bi bi-clock-history" title="Escoamento"></i> {{ form.escoamento.label }}
             </label>
             {{ form.escoamento }}
           </div>
 
-          <div class="col-md-2">
-            <label for="{{ form.alongamento.id_for_label }}" class="form-label">
+          <div class="col-6 col-md-2">
+            <label for="{{ form.alongamento.id_for_label }}" class="form-label mb-1">
               <i class="bi bi-arrows-expand" title="Alongamento"></i> {{ form.alongamento.label }}
             </label>
             {{ form.alongamento }}
           </div>
 
-          <div class="col-md-2">
-            <label for="{{ form.estriccao.id_for_label }}" class="form-label">
+          <div class="col-6 col-md-2">
+            <label for="{{ form.estriccao.id_for_label }}" class="form-label mb-1">
               <i class="bi bi-shield-lock" title="Estrição"></i> {{ form.estriccao.label }}
             </label>
             {{ form.estriccao }}
           </div>
 
-          <div class="col-md-2">
-            <label for="{{ form.torcao_certificado.id_for_label }}" class="form-label">
+          <div class="col-6 col-md-2">
+            <label for="{{ form.torcao_certificado.id_for_label }}" class="form-label mb-1">
               <i class="bi bi-arrow-repeat" title="Torção Certificado"></i> {{ form.torcao_certificado.label }}
             </label>
             {{ form.torcao_certificado }}
           </div>
 
-          <div class="col-md-2">
-            <label for="{{ form.dureza_certificado.id_for_label }}" class="form-label">
-              <i class="bi bi-shield-lock" title="Dureza Certificado"></i> {{ form.dureza_certificado.label }}
+          <div class="col-6 col-md-2">
+            <label for="id_dureza_certificado" class="form-label mb-1">
+              <i class="bi bi-shield-lock" title="Dureza (certificado)"></i>
+              {{ form.dureza_certificado.label }}
             </label>
-            {{ form.dureza_certificado }}
+            <input
+              type="text"
+              name="dureza_certificado"
+              id="id_dureza_certificado"
+              class="form-control text-center"
+              value="{{ form.dureza_certificado.value|default_if_none:'' }}"
+              data-dureza-norma="{{ dureza_padrao|floatformat:2 }}"
+              placeholder="{{ dureza_padrao|floatformat:0 }}"
+              oninput="window.__f045_validarCertificado && window.__f045_validarCertificado()">
           </div>
-        </div>
+
+          <div class="col-12">
+            <label class="form-label mb-1">
+              <i class="bi bi-file-earmark-check"></i>
+              Laudo do Certificado (Tração/Dureza vs Norma)
+            </label>
+            <div id="laudo_certificado" class="form-control fw-bold text-center">—</div>
+          </div>
+
+        </div> <!-- /.row -->
       </div>
     </div>
   </div>
-
 </div>
 
+
+<script>
+(function () {
+  "use strict";
+
+  const TAG = "[F045/Cert-Standalone]";
+  const FATOR_CONVERSAO = 0.10197; // MPa -> Kgf/mm² (régua dos rolos é Kgf/mm²)
+
+  // ---------- Utils ----------
+  const $ = (id) => document.getElementById(id);
+  const log = (...a) => { try { console.log(TAG, ...a); } catch (_) {} };
+  const parseNum = (v) => {
+    if (v === undefined || v === null) return NaN;
+    return parseFloat(String(v).replace(",", ".").replace(/[^\d.-]/g, ""));
+  };
+
+  function emMpa() {
+    const sw = $("switchMpa");
+    const flag = !!(sw && sw.checked);
+    return flag;
+  }
+
+  // ---------- Captura de Limites (NORMA) ----------
+  function obterLimitesNorma() {
+    // Rmin/Rmax: pega a PRIMEIRA ocorrência válida na página
+    let rMin = NaN, rMax = NaN, durezaNorma = NaN;
+
+    const rminEl = Array.from(document.querySelectorAll('input[id^="rmin_valor_"]'))
+      .find(el => !isNaN(parseNum(el.value)));
+    const rmaxEl = Array.from(document.querySelectorAll('input[id^="rmax_valor_"]'))
+      .find(el => !isNaN(parseNum(el.value)));
+
+    if (rminEl) rMin = parseNum(rminEl.value);
+    if (rmaxEl) rMax = parseNum(rmaxEl.value);
+
+    // Dureza da norma preferencialmente vem do próprio campo do certificado (data-dureza-norma)
+    const certDureza = $("id_dureza_certificado");
+    const attrCert = certDureza?.dataset?.durezaNorma || certDureza?.getAttribute?.("data-dureza-norma");
+    if (attrCert) {
+      durezaNorma = parseNum(attrCert);
+    } else {
+      // fallback: procurar algum input de dureza interna com data-dureza-norma
+      const durezaInt = Array.from(document.querySelectorAll('input[id^="dureza_"]'))
+        .find(el => el.dataset && (el.dataset.durezaNorma || el.getAttribute("data-dureza-norma")));
+      if (durezaInt) {
+        durezaNorma = parseNum(durezaInt.dataset.durezaNorma || durezaInt.getAttribute("data-dureza-norma"));
+      }
+    }
+
+    log("Limites da norma:", { rMin, rMax, durezaNorma });
+    return { rMin, rMax, durezaNorma };
+  }
+
+  // ---------- Feedback Visual ----------
+  function setEstadoInput(input, ok, temValor) {
+    if (!input) return;
+    input.classList.remove("is-valid", "is-invalid");
+    if (!temValor) return; // neutro se vazio
+    input.classList.add(ok ? "is-valid" : "is-invalid");
+  }
+
+  function setLaudo(aprovado, neutro) {
+    const el = $("laudo_certificado");
+    if (!el) return;
+    el.className = "form-control fw-bold text-center " + (neutro ? "text-muted" : (aprovado ? "text-success" : "text-danger"));
+    el.textContent = neutro ? "—" : (aprovado ? "Aprovado" : "Reprovado");
+  }
+
+  // ---------- Validação principal ----------
+  function validarCertificadoStandalone() {
+    const inpTracao = $("id_resistencia_tracao");
+    const inpDureza = $("id_dureza_certificado");
+
+    if (!inpTracao && !inpDureza) {
+      log("⚠️ Campos do certificado não encontrados (id_resistencia_tracao / id_dureza_certificado).");
+      return;
+    }
+
+    const { rMin, rMax, durezaNorma } = obterLimitesNorma();
+
+    let tracaoLida = parseNum(inpTracao?.value);
+    const durezaLida = parseNum(inpDureza?.value);
+    const ambosVazios = (isNaN(tracaoLida) && isNaN(durezaLida));
+
+    // Converte para a base de comparação (Kgf/mm²)
+    if (!isNaN(tracaoLida) && emMpa()) {
+      log("Convertendo Tração MPa → Kgf/mm²:", tracaoLida, "→", (tracaoLida / FATOR_CONVERSAO).toFixed(2));
+      tracaoLida = tracaoLida / FATOR_CONVERSAO;
+    }
+
+    // Regras (iguais às internas)
+    let tracaoOk = true;
+    if (!isNaN(tracaoLida) && !isNaN(rMin) && !isNaN(rMax)) {
+      tracaoOk = tracaoLida >= rMin && tracaoLida <= rMax;
+    }
+
+    let durezaOk = true;
+    if (!isNaN(durezaNorma)) {
+      // reprova se exceder a dureza máxima da norma
+      durezaOk = !isNaN(durezaLida) && durezaLida <= durezaNorma;
+    }
+
+    const aprovado = tracaoOk && durezaOk;
+
+    log("Decisão:", {
+      tracaoBaseKgfmm2: tracaoLida,
+      rMin, rMax, tracaoOk,
+      durezaLida, durezaNorma, durezaOk,
+      aprovado
+    });
+
+    // Feedback visual dos inputs
+    setEstadoInput(inpTracao, tracaoOk, !isNaN(parseNum(inpTracao?.value)));
+    setEstadoInput(inpDureza, durezaOk, !isNaN(parseNum(inpDureza?.value)));
+
+    // Laudo
+    if (ambosVazios) setLaudo(true, /*neutro*/ true);
+    else setLaudo(aprovado, /*neutro*/ false);
+
+    // Integra com Status Geral se existir
+    if (typeof window.atualizarStatusGeral === "function") {
+      try { window.atualizarStatusGeral(); } catch (_) {}
+    }
+  }
+
+  // ---------- Binds ----------
+  function bind() {
+    const tr = $("id_resistencia_tracao");
+    const du = $("id_dureza_certificado");
+    const sw = $("switchMpa");
+
+    ["input", "change", "keyup"].forEach(evt => {
+      tr?.addEventListener(evt, validarCertificadoStandalone);
+      du?.addEventListener(evt, validarCertificadoStandalone);
+    });
+    sw?.addEventListener("change", validarCertificadoStandalone);
+
+    // Quando abrir o acordeão do certificado
+    document.getElementById("collapseOutrasCaracteristicas")
+      ?.addEventListener("shown.bs.collapse", validarCertificadoStandalone);
+
+    // Primeira avaliação
+    validarCertificadoStandalone();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bind);
+  } else {
+    bind();
+  }
+})();
+</script>
+
+<script>
+  // atualizar_status_geral.js — considera .laudo, laudos dos rolos e o laudo do certificado (div ou input), com logs
+function atualizarStatusGeral() {
+  const getTxt = (el) => {
+    if (!el) return "";
+    const tag = el.tagName?.toLowerCase();
+    return (tag === "input" || tag === "textarea") ? (el.value || "") : (el.textContent || "");
+  };
+
+  const laudosComposicao = [...document.querySelectorAll(".laudo")];
+  const laudosRolos = [...document.querySelectorAll('td[id^="laudo_"]')];
+
+  // Laudo do certificado pode ser <div> ou <input>
+  const laudoCert = document.getElementById("laudo_certificado");
+
+  const todos = laudoCert
+    ? [...laudosComposicao, ...laudosRolos, laudoCert]
+    : [...laudosComposicao, ...laudosRolos];
+
+  const todosAprovados = todos.every((cell) => {
+    const t = getTxt(cell);
+    return t.includes("Aprovado") && !t.includes("Condicionalmente");
+  });
+
+  console.log("[F045/Status] laudos considerados:", {
+    qtd: todos.length,
+    textos: todos.map(getTxt)
+  });
+
+  const geral = document.getElementById("status_geral");
+  const flagManual = document.getElementById("switchStatusManual");
+  const hiddenInput = document.getElementById("status_geral_hidden");
+
+  if (flagManual && flagManual.checked) {
+    geral.className = "form-control fw-bold text-center text-warning";
+    geral.innerHTML = "Aprovação Condicional ⚠️";
+    if (hiddenInput) hiddenInput.value = "Aprovação Condicional";
+  } else if (todosAprovados) {
+    geral.className = "form-control fw-bold text-center text-success";
+    geral.innerHTML = "Aprovado ✅";
+    if (hiddenInput) hiddenInput.value = "Aprovado";
+  } else {
+    geral.className = "form-control fw-bold text-center text-danger";
+    geral.innerHTML = "Reprovado ❌";
+    if (hiddenInput) hiddenInput.value = "Reprovado";
+  }
+}
+</script>
 
 <div class="accordion mt-4" id="accordionF045">
 
@@ -591,10 +823,8 @@
   </form>
 </div>
 
-  <script>
+ <script>
 document.addEventListener("DOMContentLoaded", function() {
-  
-  // Feedback botão SALVAR
   const form = document.querySelector("form");
   const botaoSalvar = document.getElementById("btn-salvar");
   const textoBotaoSalvar = document.getElementById("texto-botao-salvar");
@@ -606,7 +836,6 @@ document.addEventListener("DOMContentLoaded", function() {
     textoBotaoSalvar.textContent = "Salvando...";
   });
 
-  // Feedback botão GERAR PDF
   const btnGerarPDF = document.getElementById("btn-gerar-pdf");
   if (btnGerarPDF) {
     btnGerarPDF.addEventListener("click", function() {
@@ -621,20 +850,18 @@ document.addEventListener("DOMContentLoaded", function() {
         icon.className = "bi bi-file-earmark-pdf me-2";
         texto.textContent = "Gerar PDF";
         btnGerarPDF.disabled = false;
-      }, 1000); // ajuste conforme necessário
+      }, 1000);
     });
   }
-
-  
-
 });
 </script>
+
 
 
 <script src="{% static 'f045/utils.js' %}"></script>
 <script src="{% static 'f045/validar_bitola_tracao.js' %}"></script>
 <script src="{% static 'f045/toggle_unidade_tracao.js' %}"></script>
-<script src="{% static 'f045/atualizar_status_geral.js' %}"></script>
+{% comment %} <script src="{% static 'f045/atualizar_status_geral.js' %}"></script> {% endcomment %}
 <script src="{% static 'f045/toggle_status_manual.js' %}"></script>
 <script src="{% static 'f045/init_eventos_f045.js' %}"></script>
 

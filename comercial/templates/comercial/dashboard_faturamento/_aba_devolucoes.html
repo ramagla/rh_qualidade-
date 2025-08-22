@@ -1,0 +1,82 @@
+{% load filters_gerais %}
+
+<div class="row row-cols-1 row-cols-md-3 g-3 mb-3">
+  <div class="col">
+    <div class="card-resumo resumo-roxo text-center h-100">
+      <div class="resumo-valor">{{ valor_devolucoes|formatar_reais }}</div>
+      <div class="resumo-title">Devoluções</div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card-resumo resumo-azul text-center h-100">
+      <div class="resumo-valor">{{ qtde_devolucoes }}</div>
+      <div class="resumo-title">Qtde de Devoluções</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white"><strong>Devoluções por Cliente</strong></div>
+      <div class="card-body"><canvas id="chart_dev_cliente" height="220"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white"><strong>Devoluções por Item</strong></div>
+      <div class="card-body"><canvas id="chart_dev_item" height="220"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// JSON seguro vindo da view
+const DEV_CLI = JSON.parse('{{ dev_cliente_json|escapejs }}'); // [{label, total}, ...]
+const DEV_ITM = JSON.parse('{{ dev_item_json|escapejs }}');     // [{label, total}, ...]
+
+// Inicializa gráficos somente quando a aba for exibida
+function initChartsDevolucoes() {
+  if (window.__devChartsInit) {
+    if (window.__chartDevCli)  window.__chartDevCli.resize();
+    if (window.__chartDevItem) window.__chartDevItem.resize();
+    return;
+  }
+
+  const ctxC = document.getElementById('chart_dev_cliente');
+  const ctxI = document.getElementById('chart_dev_item');
+
+  window.__chartDevCli = new Chart(ctxC, {
+    type: 'bar',
+    data: {
+      labels: DEV_CLI.map(x => x.label ?? '—'),
+      datasets: [{ label: 'Valor (R$)', data: DEV_CLI.map(x => Number(x.total || 0)) }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { x: { beginAtZero: true } }
+    }
+  });
+
+  window.__chartDevItem = new Chart(ctxI, {
+    type: 'bar',
+    data: {
+      labels: DEV_ITM.map(x => x.label ?? '—'),
+      datasets: [{ label: 'Valor (R$)', data: DEV_ITM.map(x => Number(x.total || 0)) }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { x: { beginAtZero: true } }
+    }
+  });
+
+  window.__devChartsInit = true;
+}
+
+// expõe para o template pai acionar
+window.__initChartsDevolucoes = initChartsDevolucoes;
+</script>

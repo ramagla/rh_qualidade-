@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+  <h2 class="text-center">Histórico de Revisões — Roteiro {{ roteiro.item.codigo }} {{ roteiro.get_tipo_roteiro_display }}</h2>
+
+  <div class="text-end mb-3">
+    {% if request.user|has_permission:"tecnico.change_roteiroproducao" %}
+      <a href="{% url 'tecnico:adicionar_revisao_roteiro' roteiro.id %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Adicionar Revisão
+      </a>
+    {% endif %}
+  </div>
+
+  <table class="table table-centered">
+    <thead>
+      <tr>
+        <th>Nº Revisão</th>
+        <th>Data</th>
+        <th>Status</th>
+        <th class="text-center">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for revisao in revisoes %}
+      <tr>
+        <td>{{ revisao.numero_revisao }}</td>
+        <td>{{ revisao.data_revisao|date:"d/m/Y" }}</td>
+        <td>
+          {% if revisao.status == 'ativo' %}
+            <span class="badge bg-success">Ativo</span>
+          {% else %}
+            <span class="badge bg-secondary">Inativo</span>
+          {% endif %}
+        </td>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-2 flex-wrap">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#modalDescricao{{ revisao.id }}">
+              <i class="bi bi-eye"></i>
+            </button>
+            {% if request.user|has_permission:"tecnico.delete_roteiroproducao" and revisao.status == 'ativo' %}
+            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalInativar{{ revisao.id }}">
+              <i class="bi bi-x-circle"></i>
+            </button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+
+      <!-- Modal Descrição -->
+      <div class="modal fade" id="modalDescricao{{ revisao.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+              <h5 class="modal-title">Descrição da Revisão {{ revisao.numero_revisao }}</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              {{ revisao.descricao_mudanca|safe }}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Inativar -->
+      <div class="modal fade" id="modalInativar{{ revisao.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="post" action="{% url 'tecnico:inativar_revisao_roteiro' revisao.id %}">
+              {% csrf_token %}
+              <div class="modal-header">
+                <h5 class="modal-title">Inativar Revisão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                Tem certeza que deseja inativar a revisão <strong>{{ revisao.numero_revisao }}</strong>?
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger">Confirmar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

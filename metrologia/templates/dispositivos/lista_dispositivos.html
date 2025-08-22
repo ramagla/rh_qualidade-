@@ -52,6 +52,16 @@
           {% endfor %}
         </select>
       </div>
+      <div class="col-12">
+  <label for="prazo" class="form-label"><i class="bi bi-hourglass-split me-1"></i> Prazo</label>
+  <select name="prazo" id="prazo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+    <option value="">Todos</option>
+    <option value="dentro"  {% if prazo_selecionado == "dentro"  %}selected{% endif %}>Dentro do Prazo</option>
+    <option value="proximo" {% if prazo_selecionado == "proximo" %}selected{% endif %}>Próximo do Prazo</option>
+    <option value="fora"    {% if prazo_selecionado == "fora"    %}selected{% endif %}>Fora do Prazo</option>
+  </select>
+</div>
+
 
       <div class="col-12">
         <label for="data_inicio" class="form-label"><i class="bi bi-calendar me-1"></i> Data Início</label>
@@ -162,20 +172,19 @@
         <td>{{ dispositivo.local_armazenagem }}</td>
         <td>{{ dispositivo.data_ultima_calibracao|date:"d/m/Y" }}</td>
         <td>
-          {% if dispositivo.data_ultima_calibracao %}
-            {% with dispositivo.data_ultima_calibracao|add_months:dispositivo.frequencia_calibracao as proxima_calibracao %}
-              {% if proxima_calibracao < today %}
-                <span class="badge bg-danger small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
-              {% elif proxima_calibracao <= today|add_days:31 %}
-                <span class="badge bg-warning small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
-              {% else %}
-                <span class="badge bg-success small-text">{{ proxima_calibracao|date:"d/m/Y" }}</span>
-              {% endif %}
-            {% endwith %}
-          {% else %}
-            <span class="text-muted">Não Informada</span>
-          {% endif %}
-        </td>
+  {% if dispositivo.proxima_calibracao %}
+    {% if dispositivo.proxima_calibracao < today %}
+      <span class="badge bg-danger small-text">{{ dispositivo.proxima_calibracao|date:"d/m/Y" }}</span>
+    {% elif dispositivo.proxima_calibracao <= today|add_days:31 %}
+      <span class="badge bg-warning small-text">{{ dispositivo.proxima_calibracao|date:"d/m/Y" }}</span>
+    {% else %}
+      <span class="badge bg-success small-text">{{ dispositivo.proxima_calibracao|date:"d/m/Y" }}</span>
+    {% endif %}
+  {% else %}
+    <span class="text-muted">Não Informada</span>
+  {% endif %}
+</td>
+
         <td class="d-flex justify-content-center gap-1 flex-wrap">
           {% if request.user|has_permission:"metrologia.view_dispositivo" %}
             {% include 'partials/global/_botao_visualizar.html' with objeto=dispositivo url_visualizar='visualizar_dispositivo' %}

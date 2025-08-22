@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load filters_gerais %}
+{% block title %}Dashboard de Faturamento{% endblock %}
+
+{% block content %}
+<style>
+  .card-resumo{border-radius:12px;color:#fff;padding:1.2rem 1.5rem;margin-bottom:1rem;box-shadow:0 0.4rem 1rem rgba(0,0,0,.1)}
+  .resumo-azul{background:linear-gradient(135deg,#00c6ff,#007bff)}
+  .resumo-roxo{background:linear-gradient(135deg,#8e2de2,#4a00e0)}
+  .resumo-roxo2{background:linear-gradient(135deg,#6a11cb,#2575fc)}
+  .resumo-title{font-size:.9rem;font-weight:500}
+  .resumo-valor{font-size:2rem;font-weight:700}
+  input[type="date"]{min-height:38px}
+  .input-group-text{background:#f1f1f1;border-right:0}
+  .input-group .form-control{border-left:0}
+</style>
+
+<div class="container py-4">
+  <h4 class="mb-3 text-primary">
+    <i class="bi bi-bar-chart-fill me-2"></i>Dashboard de Faturamento
+  </h4>
+
+  <!-- Filtro de período (único para todas as abas) -->
+<form method="get" class="row g-3 align-items-end mb-4 px-2">
+  <input type="hidden" name="tab" id="tabHidden" value="{{ tab_ativa|default:'metas' }}">
+    <div class="col-xl-3 col-md-4 col-sm-6">
+      <label for="data_inicio" class="form-label mb-1 text-muted">
+        <i class="bi bi-calendar-event me-1"></i> De
+      </label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+        <input type="date" name="data_inicio" id="data_inicio" class="form-control"
+               value="{{ data_inicio }}">
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-4 col-sm-6">
+      <label for="data_fim" class="form-label mb-1 text-muted">
+        <i class="bi bi-calendar-check me-1"></i> Até
+      </label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
+        <input type="date" name="data_fim" id="data_fim" class="form-control"
+               value="{{ data_fim }}">
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-4 col-sm-12 d-flex gap-2 mt-2">
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="bi bi-search me-1"></i> Filtrar
+      </button>
+    </div>
+  </form>
+
+  <!-- Abas -->
+ <ul class="nav nav-tabs mb-3" role="tablist">
+  <li class="nav-item" role="presentation">
+   <button class="nav-link {% if tab_ativa|default:"metas" == "metas" %}active{% endif %}"
+        data-bs-toggle="tab" data-bs-target="#aba-metas" type="button" role="tab">
+
+      <i class="bi bi-star me-1"></i> Metas
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link {% if tab_ativa == 'vendas' %}active{% endif %}"
+            data-bs-toggle="tab" data-bs-target="#aba-vendas" type="button" role="tab">
+      <i class="bi bi-basket2 me-1"></i> Vendas
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link {% if tab_ativa == 'devolucoes' %}active{% endif %}"
+            data-bs-toggle="tab" data-bs-target="#aba-devolucoes" type="button" role="tab">
+      <i class="bi bi-arrow-counterclockwise me-1"></i> Devoluções
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link {% if tab_ativa == 'ficha' %}active{% endif %}"
+            data-bs-toggle="tab" data-bs-target="#aba-ficha" type="button" role="tab">
+      <i class="bi bi-person-badge me-1"></i> Ficha
+    </button>
+  </li>
+</ul>
+
+
+  <div class="tab-content">
+<div class="tab-pane fade {% if tab_ativa|default:"metas" == "metas" %}show active{% endif %}" id="aba-metas" role="tabpanel">
+    {% include "comercial/dashboard_faturamento/_aba_metas.html" %}
+  </div>
+  <div class="tab-pane fade {% if tab_ativa == 'vendas' %}show active{% endif %}" id="aba-vendas" role="tabpanel">
+    {% include "comercial/dashboard_faturamento/_aba_vendas.html" %}
+  </div>
+  <div class="tab-pane fade {% if tab_ativa == 'devolucoes' %}show active{% endif %}" id="aba-devolucoes" role="tabpanel">
+    {% include "comercial/dashboard_faturamento/_aba_devolucoes.html" %}
+  </div>
+  <div class="tab-pane fade {% if tab_ativa == 'ficha' %}show active{% endif %}" id="aba-ficha" role="tabpanel">
+    {% include "comercial/dashboard_faturamento/_aba_ficha.html" %}
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+<script>
+// Mantém a aba ativa no reload (atualiza o hidden "tab")
+document.addEventListener('shown.bs.tab', function (ev) {
+  var target = ev.target && ev.target.getAttribute('data-bs-target');
+  var hidden = document.getElementById('tabHidden');
+  if (hidden) {
+    var map = {'#aba-metas':'metas', '#aba-vendas':'vendas', '#aba-devolucoes':'devolucoes', '#aba-ficha':'ficha'};
+    hidden.value = map[target] || 'metas';
+  }
+
+  // inicializações lazy
+  if (target === '#aba-vendas' && typeof window.__initChartsVendas === 'function') {
+    window.__initChartsVendas();
+  }
+  if (target === '#aba-devolucoes' && typeof window.__initChartsDevolucoes === 'function') {
+    window.__initChartsDevolucoes();
+  }
+});
+
+// Ajusta o hidden ao carregar, conforme a aba marcada como ativa
+(function() {
+  var active = document.querySelector('.nav-tabs .nav-link.active');
+  var target = active ? active.getAttribute('data-bs-target') : '#aba-metas';
+  var hidden = document.getElementById('tabHidden');
+  if (hidden) {
+    var map = {'#aba-metas':'metas', '#aba-vendas':'vendas', '#aba-devolucoes':'devolucoes', '#aba-ficha':'ficha'};
+    hidden.value = map[target] || 'metas';
+  }
+
+  // inicializações imediatas
+  if (document.querySelector('#aba-vendas.show.active') && typeof window.__initChartsVendas === 'function') {
+    window.__initChartsVendas();
+  }
+  if (document.querySelector('#aba-devolucoes.show.active') && typeof window.__initChartsDevolucoes === 'function') {
+    window.__initChartsDevolucoes();
+  }
+})();
+</script>
+
+
+
+{% endblock %}

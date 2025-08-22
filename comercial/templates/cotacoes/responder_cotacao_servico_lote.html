@@ -4,73 +4,182 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-<title>Responder Cotação – Serviço Externo – {{ codigo }}{% if materia_prima %} — {{ materia_prima.descricao }}{% endif %}</title>
+  <title>
+    Responder Cotação – Serviço Externo – {{ codigo }}{% if materia_prima %} — {{ materia_prima.descricao }}{% endif %}
+  </title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+  <style>
+    .btn-abrir-desenho {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      letter-spacing: .2px;
+      border-radius: 999px;
+      padding: .75rem 1.25rem;
+      box-shadow: 0 .25rem .75rem rgba(0,0,0,.06);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .btn-abrir-desenho:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.10);
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body class="bg-light">
   <div class="container mt-5 p-4 bg-white shadow rounded">
 
-    <!-- Título -->
-    <h2 class="mb-1">
-  <i class="bi bi-tools me-2 text-danger"></i>
-  Responder Cotação – Serviço Externo – <strong>{{ codigo }}</strong>
-  {% if materia_prima and materia_prima.descricao %} — {{ materia_prima.descricao }}{% endif %}
-</h2>
-<p class="text-muted mb-4">
-  <i class="bi bi-card-text me-1"></i>
-  {% if materia_prima and materia_prima.descricao %}
-    {{ materia_prima.descricao }}
-  {% else %}
-    {% with mp=servicos.0.insumo.materia_prima %}
-      {{ mp.descricao|default:"" }}
-    {% endwith %}
-  {% endif %}
-</p>
+    <!-- Título com Código, Cotação e Pré-Cálculo -->
+    <h2 class="mb-1 d-flex flex-wrap align-items-center gap-2">
+      <i class="bi bi-tools me-2 text-danger"></i>
+      <span>Responder Cotação – Serviço Externo</span>
+    </h2>
 
+    {% with prec=servicos.0.precalculo %}
+      <div class="text-muted small mb-2 d-flex flex-wrap align-items-center gap-3">
+        <span>
+          <i class="bi bi-upc-scan me-1"></i>
+          Código: <strong>{{ codigo }}</strong>
+        </span>
+        <span>
+          <i class="bi bi-receipt me-1"></i>
+          Cotação nº:
+          <strong>{{ prec.cotacao.numero|default_if_none:cotacao_numero|default:cotacao_numero|default:"—" }}</strong>
+        </span>
+        <span>
+          <i class="bi bi-clipboard-check me-1"></i>
+          Pré-Cálculo nº:
+          <strong>{{ prec.numero|default_if_none:precalculo_numero|default:precalculo_numero|default:"—" }}</strong>
+        </span>
+      </div>
+    {% endwith %}
+
+    <!-- Subtítulo / Descrição do material associado -->
+    <p class="text-muted mb-4">
+      <i class="bi bi-card-text me-1"></i>
+      {% if materia_prima and materia_prima.descricao %}
+        {{ materia_prima.descricao }}
+      {% else %}
+        {% with mp=servicos.0.insumo.materia_prima %}
+          {{ mp.descricao|default:"" }}
+        {% endwith %}
+      {% endif %}
+    </p>
 
     <!-- Alerta com instruções -->
-<div class="alert alert-info small">
-  <div class="d-flex align-items-center gap-2 mb-1">
-    <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
-    Cotar no mínimo <strong>2 fornecedores diferentes</strong>. Caso não haja fonte homologada, consulte o setor responsável.
-  </div>
-  <div class="d-flex align-items-center gap-2">
-    <i class="bi bi-clock fs-5 text-muted"></i>
-    O prazo de entrega deve ser informado em <strong>dias corridos</strong>.
-  </div>
-</div>
+    <div class="alert alert-info small">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+        Cotar no mínimo <strong>2 fornecedores diferentes</strong>. Caso não haja fonte homologada, consulte o setor responsável.
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-clock fs-5 text-muted"></i>
+        O prazo de entrega deve ser informado em <strong>dias corridos</strong>.
+      </div>
+    </div>
 
-{% if servicos.0.precalculo.analise_comercial_item.roteiro_selecionado.fontes_homologadas.exists %}
-<!-- Fontes Homologadas -->
-<div class="alert alert-warning border border-dark-subtle shadow-sm">
-  <div class="d-flex align-items-center mb-2">
-    <i class="bi bi-building-check fs-5 text-dark me-2"></i>
-    <strong class="text-dark fs-6">Fontes Homologadas para este serviço:</strong>
-  </div>
-  <ul class="mb-0 ps-3">
-    {% for fonte in servicos.0.precalculo.analise_comercial_item.roteiro_selecionado.fontes_homologadas.all %}
-      <li class="fw-semibold text-dark">
-        <i class="bi bi-chevron-right text-primary me-1"></i> {{ fonte.nome }}
-      </li>
-    {% endfor %}
-  </ul>
-</div>
-{% endif %}
+    {% if servicos.0.precalculo.analise_comercial_item.roteiro_selecionado.fontes_homologadas.exists %}
+      <!-- Fontes Homologadas -->
+      <div class="alert alert-warning border border-dark-subtle shadow-sm">
+        <div class="d-flex align-items-center mb-2">
+          <i class="bi bi-building-check fs-5 text-dark me-2"></i>
+          <strong class="text-dark fs-6">Fontes Homologadas para este serviço:</strong>
+        </div>
+        <ul class="mb-0 ps-3">
+          {% for fonte in servicos.0.precalculo.analise_comercial_item.roteiro_selecionado.fontes_homologadas.all %}
+            <li class="fw-semibold text-dark">
+              <i class="bi bi-chevron-right text-primary me-1"></i> {{ fonte.nome }}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
 
+    <!-- Cards: Desenvolvido / Pesos -->
+    {% with sev=servicos.0 mp=servicos.0.insumo.materia_prima %}
+    <div class="row g-3 mb-3">
+      <!-- Desenvolvido (mm) -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 shadow-sm mb-0 h-100">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-rulers fs-4 text-dark"></i>
+            <span class="fw-bold">Desenvolvido (mm):</span>
+          </div>
+          <span class="text-primary fw-semibold">
+            {% if sev.desenvolvido_mm %}
+              {{ sev.desenvolvido_mm|floatformat:3 }}
+            {% elif mp and mp.desenvolvido_mm %}
+              {{ mp.desenvolvido_mm|floatformat:3 }}
+            {% else %}—{% endif %}
+          </span>
+        </div>
+      </div>
 
-    <!-- Peso líquido -->
-<div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 mb-3 shadow-sm">
-  <div class="d-flex align-items-center gap-2">
-    <i class="bi bi-droplet-half fs-4 text-dark"></i>
-    <span class="fw-bold fs-5">Peso Líquido Total:</span>
-  </div>
-  <span class="fs-5 text-primary fw-semibold">
-    {{ servicos.0.peso_liquido_total|floatformat:2 }} kg
-  </span>
-</div>
+      <!-- Peso Líquido -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 shadow-sm mb-0 h-100">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-box fs-4 text-dark"></i>
+            <span class="fw-bold">Peso Líquido:</span>
+          </div>
+          <span class="text-primary fw-semibold">
+            {% if sev.peso_liquido %}
+              {{ sev.peso_liquido|floatformat:4 }} kg
+            {% elif mp and mp.peso_liquido %}
+              {{ mp.peso_liquido|floatformat:4 }} kg
+            {% else %}—{% endif %}
+          </span>
+        </div>
+      </div>
 
+      <!-- Peso Bruto -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 shadow-sm mb-0 h-100">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-box-seam fs-4 text-dark"></i>
+            <span class="fw-bold">Peso Bruto:</span>
+          </div>
+          <span class="text-primary fw-semibold">
+            {% if sev.peso_bruto %}
+              {{ sev.peso_bruto|floatformat:4 }} kg
+            {% elif mp and mp.peso_bruto %}
+              {{ mp.peso_bruto|floatformat:4 }} kg
+            {% else %}—{% endif %}
+          </span>
+        </div>
+      </div>
+
+      <!-- Peso Líquido Total -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 shadow-sm mb-0 h-100">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-basket-fill fs-4 text-dark"></i>
+            <span class="fw-bold">Peso Líquido Total:</span>
+          </div>
+          <span class="text-primary fw-semibold">
+            {{ sev.peso_liquido_total|floatformat:4 }} kg
+          </span>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+
+    <!-- Botão: Abrir Desenho do Item -->
+    {% if servicos.0.precalculo.analise_comercial_item.item.desenho %}
+      <div class="my-3 d-flex justify-content-center">
+        <a href="{{ servicos.0.precalculo.analise_comercial_item.item.desenho.url }}"
+           target="_blank"
+           rel="noopener"
+           class="btn btn-primary btn-abrir-desenho">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>Abrir Desenho do Item</span>
+        </a>
+      </div>
+    {% endif %}
 
     <!-- Observações gerais -->
     {% if observacoes_gerais|trim %}
@@ -83,8 +192,6 @@
         </div>
       </div>
     {% endif %}
-
-
 
     <!-- Formulário de resposta -->
     <form method="post" class="mt-4">
@@ -125,42 +232,42 @@
           </tr>
         </thead>
         <tbody>
-  {% for sev in servicos %}
-    <tr>
-      <input type="hidden" name="id_{{ forloop.counter0 }}" value="{{ sev.id }}">
-      <td>
-        <select name="fornecedor_{{ forloop.counter0 }}" class="form-select select2">
-          <option value="">Selecione o fornecedor</option>
-          {% for f in fornecedores %}
-            <option value="{{ f.id }}" {% if sev.fornecedor and f.id == sev.fornecedor.id %}selected{% endif %}>
-              {{ f.nome }}
-            </option>
+          {% for sev in servicos %}
+            <tr>
+              <input type="hidden" name="id_{{ forloop.counter0 }}" value="{{ sev.id }}">
+              <td>
+                <select name="fornecedor_{{ forloop.counter0 }}" class="form-select select2">
+                  <option value="">Selecione o fornecedor</option>
+                  {% for f in fornecedores %}
+                    <option value="{{ f.id }}" {% if sev.fornecedor and f.id == sev.fornecedor.id %}selected{% endif %}>{{ f.nome }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                <input type="number" step="0.01" name="icms_{{ forloop.counter0 }}" value="{{ sev.icms|default:'0.00' }}" class="form-control" placeholder="Ex: 18.00" />
+              </td>
+              <td>
+                <input type="number"
+                       name="lote_minimo_{{ forloop.counter0 }}"
+                       value="{{ sev.lote_minimo|floatformat:2 }}"
+                       class="form-control text-end"
+                       step="0.01" min="0" lang="pt-BR" inputmode="decimal"
+                       placeholder="Ex: 115,90" />
+              </td>
+              <td>
+                <input type="number" name="entrega_dias_{{ forloop.counter0 }}" value="{{ sev.entrega_dias }}" class="form-control" placeholder="Ex: 30" />
+              </td>
+              <td>
+                <input type="number"
+                       name="preco_kg_{{ forloop.counter0 }}"
+                       value="{{ sev.preco_kg|floatformat:4 }}"
+                       class="form-control text-end"
+                       step="0.0001" min="0" lang="pt-BR" inputmode="decimal"
+                       placeholder="Ex: 14,5000" />
+              </td>
+            </tr>
           {% endfor %}
-        </select>
-      </td>
-      <td>
-        <input type="number" step="0.01" name="icms_{{ forloop.counter0 }}" value="{{ sev.icms|default:'0.00' }}" class="form-control" placeholder="Ex: 18.00" />
-      </td>
-      <td>
-     <input type="number" name="lote_minimo_{{ forloop.counter0 }}"
-       value="{{ sev.lote_minimo|floatformat:2 }}"
-       class="form-control text-end"
-       step="0.01" min="0" lang="pt-BR" inputmode="decimal"
-       placeholder="Ex: 115,90" />
-      </td>
-      <td>
-        <input type="number" name="entrega_dias_{{ forloop.counter0 }}" value="{{ sev.entrega_dias }}" class="form-control" placeholder="Ex: 30" />
-      </td>
-      <td>
-<input type="number" name="preco_kg_{{ forloop.counter0 }}"
-       value="{{ sev.preco_kg|floatformat:4 }}"
-       class="form-control text-end"
-       step="0.0001" min="0" lang="pt-BR" inputmode="decimal"
-       placeholder="Ex: 14,5000" />      </td>
-    </tr>
-  {% endfor %}
-</tbody>
-
+        </tbody>
       </table>
 
       <!-- Botão de envio -->

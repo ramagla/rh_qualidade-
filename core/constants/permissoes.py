@@ -105,6 +105,8 @@ CUSTOM_PERMISSOES = [
 
 
     ("comercial", "dashboard", "acesso_comercial", "Pode acessar o módulo Comercial"),
+    ("comercial", "dashboard", "view_dashboard_faturamento", "Pode ver o Dashboard de Faturamento"),
+
     ("comercial", "ferramenta", "enviar_cotacao", "Pode enviar cotação de ferramenta"),
     ("comercial", "precalculo", "gerar_proposta", "Pode gerar proposta comercial"),
     ("comercial", "precalculo", "ver_precificacao", "Pode acessar precificação detalhada do produto"),
@@ -116,6 +118,7 @@ CUSTOM_PERMISSOES = [
     ("comercial", "indicadores", "view_indicador_itens_novos", "Pode acessar indicador 4.2 - Número de Itens Novos Vendidos"),
     ("comercial", "indicadores", "view_indicador_cotacoes_funcionario", "Pode acessar indicador 4.3 - Nº de Cotações por Funcionário"),
     ("comercial", "indicadores", "view_indicador_taxa_aprovacao", "Pode acessar indicador 4.4 - Taxa de Orçamentos Aprovados"),
+    ("comercial", "indicadores", "view_indicador_faturamento", "Pode ver o Indicador 1.1 - Faturamento"),
 
     ("metrologia", "relatorio", "relatorio_f062", "Pode acessar o relatório Solicitação de Orçamento para Calibração (F062)"),
     ("metrologia", "relatorio", "gerar_f062", "Pode gerar a Solicitação de Orçamento para Calibração (F062)"),

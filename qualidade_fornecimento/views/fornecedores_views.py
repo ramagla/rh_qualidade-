@@ -108,6 +108,10 @@ def cadastrar_fornecedor(request):
     if request.method == "POST":
         form = FornecedorForm(request.POST, request.FILES)
         if form.is_valid():
+            obj = form.save(commit=False)
+            if obj.vencimento_certificacao:
+                obj.data_avaliacao_risco = obj.vencimento_certificacao
+            obj.save()
             try:
                 form.save()
                 messages.success(request, "Fornecedor cadastrado com sucesso!")
@@ -141,6 +145,9 @@ def editar_fornecedor(request, id):
             try:
                 # Salva sem confirmar no DB para permitir tratar o arquivo antes
                 obj = form.save(commit=False)
+                if obj.vencimento_certificacao:
+                    obj.data_avaliacao_risco = obj.vencimento_certificacao
+                obj.save()
 
                 # Suporte a dois jeitos de pedir remoção do arquivo:
                 # 1) Nosso checkbox custom: remover_certificado=1

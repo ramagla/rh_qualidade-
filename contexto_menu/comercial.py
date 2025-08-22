@@ -4,14 +4,37 @@ def menu_comercial(user):
 
     menu = []
 
-    # Dashboard
-    menu.append({
-        "name": "Dashboard",
-        "url": "comercial_home",
-        "icon": "fas fa-home",
-    })
+    # =========================
+    # Dashboards
+    # =========================
+    submenu_dashboards = []
 
-    # Submenu Cadastros
+    # Dashboard de Cotações
+    if user.has_perm("comercial.view_cotacao"):
+        submenu_dashboards.append({
+            "name": "Dashboard de Cotações",
+            "url": "comercial_home",
+            "icon": "fas fa-file-signature",
+        })
+
+    # Dashboard de Faturamento (perm custom correta)
+    if user.has_perm("comercial.view_dashboard_faturamento"):
+        submenu_dashboards.append({
+            "name": "Dashboard de Faturamento",
+            "url": "dashboard_faturamento",
+            "icon": "fas fa-file-invoice-dollar",
+        })
+
+    if submenu_dashboards:
+        menu.append({
+            "name": "Dashboards",
+            "icon": "fas fa-home",
+            "submenu": submenu_dashboards,
+        })
+
+    # =========================
+    # Cadastros
+    # =========================
     submenu_cadastros = []
 
     if user.has_perm("comercial.view_cliente"):
@@ -49,6 +72,10 @@ def menu_comercial(user):
             "submenu": submenu_cadastros,
         })
 
+    # =========================
+    # Módulos
+    # =========================
+
     # Cotações
     if user.has_perm("comercial.view_cotacao"):
         menu.append({
@@ -65,7 +92,7 @@ def menu_comercial(user):
             "icon": "fas fa-project-diagram",
         })
 
-
+    # Viabilidade / Análise de Risco
     if user.has_perm("comercial.view_viabilidadeanaliserisco"):
         menu.append({
             "name": "Viabilidade / Análise de Risco",
@@ -73,35 +100,64 @@ def menu_comercial(user):
             "icon": "fas fa-shield-alt",
         })
 
-    if user.has_perm("comercial.view_cotacao"):  # ou outra permissão adequada
-        submenu_indicadores = [
-            {
-                "name": "4.1 - Atendimento do Prazo de Cotação",
-                "url": "indicador_prazo_cotacao",
-                "icon": "fas fa-clock",
-            },
-            {
-                "name": "4.2 - Nº de Itens Novos Vendidos",
-                "url": "indicador_itens_novos",
-                "icon": "fas fa-cubes",
-            },
-            {
-                "name": "4.3 - Nº de Cotações por Funcionário",
-                "url": "indicador_cotacoes_funcionario",
-                "icon": "fas fa-user-friends",
-            },
-            {
-                "name": "4.4 - Taxa de Orçamentos Aprovados",
-                "url": "indicador_taxa_aprovacao",
-                "icon": "fas fa-percentage",
-            },
-        ]
+    # Faturamento (lista)
+    if user.has_perm("comercial.view_faturamentoregistro"):
+        menu.append({
+            "name": "Faturamento",
+            "url": "lista_faturamento",
+            "icon": "fas fa-file-invoice-dollar",
+        })
 
+    # =========================
+    # Indicadores
+    # =========================
+    submenu_indicadores = []
+
+    # 1.1 - Faturamento
+    if user.has_perm("comercial.view_indicador_faturamento"):
+        submenu_indicadores.append({
+            "name": "1.1 - Faturamento",
+            "url": "indicador_faturamento",
+            "icon": "fas fa-file-invoice-dollar",
+        })
+
+    # 4.1 - Atendimento do Prazo de Cotação
+    if user.has_perm("comercial.view_indicador_prazo_cotacao"):
+        submenu_indicadores.append({
+            "name": "4.1 - Atendimento do Prazo de Cotação",
+            "url": "indicador_prazo_cotacao",
+            "icon": "fas fa-clock",
+        })
+
+    # 4.2 - Nº de Itens Novos Vendidos
+    if user.has_perm("comercial.view_indicador_itens_novos"):
+        submenu_indicadores.append({
+            "name": "4.2 - Nº de Itens Novos Vendidos",
+            "url": "indicador_itens_novos",
+            "icon": "fas fa-cubes",
+        })
+
+    # 4.3 - Nº de Cotações por Funcionário
+    if user.has_perm("comercial.view_indicador_cotacoes_funcionario"):
+        submenu_indicadores.append({
+            "name": "4.3 - Nº de Cotações por Funcionário",
+            "url": "indicador_cotacoes_funcionario",
+            "icon": "fas fa-user-friends",
+        })
+
+    # 4.4 - Taxa de Orçamentos Aprovados
+    if user.has_perm("comercial.view_indicador_taxa_aprovacao"):
+        submenu_indicadores.append({
+            "name": "4.4 - Taxa de Orçamentos Aprovados",
+            "url": "indicador_taxa_aprovacao",
+            "icon": "fas fa-percentage",
+        })
+
+    if submenu_indicadores:
         menu.append({
             "name": "Indicadores",
             "icon": "fas fa-chart-line",
             "submenu": submenu_indicadores,
         })
-
 
     return menu

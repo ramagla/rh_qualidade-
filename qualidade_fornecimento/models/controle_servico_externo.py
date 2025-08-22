@@ -70,17 +70,16 @@ class ControleServicoExterno(models.Model):
         atraso = self.calcular_atraso_em_dias()
         if atraso >= 21:
             return 30
-        elif atraso >= 16:
+        if 15 <= atraso <= 20:
             return 20
-        elif atraso >= 11:
+        if 11 <= atraso <= 14:
             return 15
-        elif atraso >= 7:
+        if 7 <= atraso <= 10:
             return 10
-        elif atraso >= 4:
+        if 3 <= atraso <= 6:
             return 5
-        elif atraso >= 1:
-            return 2
-        return 0
+        return 0  # 0, 1 ou 2 dias: sem demérito (conforme PQ006)
+
     
     def save(self, *args, **kwargs):
         from qualidade_fornecimento.models.inspecao10 import DevolucaoServicoExterno

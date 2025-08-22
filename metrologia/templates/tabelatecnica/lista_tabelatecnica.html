@@ -106,6 +106,15 @@
           {% endfor %}
         </select>
       </div>
+<div class="col-12">
+  <label for="prazo" class="form-label"><i class="bi bi-hourglass-split me-1"></i> Prazo</label>
+  <select name="prazo" id="prazo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+    <option value="">Todos</option>
+    <option value="dentro" {% if prazo_selecionado == "dentro" %}selected{% endif %}>Dentro do Prazo</option>
+    <option value="proximo" {% if prazo_selecionado == "proximo" %}selected{% endif %}>Próximo do Prazo</option>
+    <option value="fora" {% if prazo_selecionado == "fora" %}selected{% endif %}>Fora do Prazo</option>
+  </select>
+</div>
 
       <div class="col-12 mt-3">
         {% include 'partials/global/_botao_filtrar.html' %}
@@ -119,7 +128,7 @@
 
  <!-- Cards de Indicadores -->
 <div class="row mb-4">
-  {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Equipamentos" valor=total_tabelas subtitulo="Equipamentos cadastrados" icone="bi-rulers" %}
+  {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Equipamentos" valor=total_equipamentos_ativos subtitulo="Equipamentos ativos" icone="bi-rulers" %}
   {% include 'partials/global/_card_indicador.html' with cor="danger" titulo="Fora do Prazo" valor=total_fora_prazo subtitulo="Calibração vencida" icone="bi-exclamation-triangle-fill" %}
   {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="Próximo do Prazo" valor=total_proximo_prazo subtitulo="Próximo do vencimento" icone="bi-clock-fill" %}
 </div>

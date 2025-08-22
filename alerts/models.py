@@ -58,6 +58,9 @@ class AlertaConfigurado(models.Model):
         ("RESPOSTA_COTACAO_MATERIAL", "📦 Resposta de Cotação de Material"),
         ("RESPOSTA_COTACAO_SERVICO", "🛠 Resposta de Cotação de Serviço"),
         ("ROTEIRO_ATUALIZADO", "🧵 Roteiro Atualizado — Definir Preço Final"),  # ⬅️ NOVO
+        ("SOLICITACAO_COTACAO_MATERIAL", "📨 Solicitação de Cotação de Material"),
+        ("SOLICITACAO_COTACAO_SERVICO", "📨 Solicitação de Cotação de Serviço"),
+
 
     ]
 
@@ -79,6 +82,9 @@ class AlertaConfigurado(models.Model):
             "RESPOSTA_COTACAO_MATERIAL": "📦 Resposta de Cotação de Material",
             "RESPOSTA_COTACAO_SERVICO": "🛠 Resposta de Cotação de Serviço",
             "ROTEIRO_ATUALIZADO": "🧵 Roteiro Atualizado — Definir Preço Final",  # Novo tipo
+            "SOLICITACAO_COTACAO_MATERIAL": "📨 Solicitação de Cotação de Material",   # Novo tipo
+            "SOLICITACAO_COTACAO_SERVICO": "📨 Solicitação de Cotação de Serviço",     # Novo tipo
+    
 
 
         }

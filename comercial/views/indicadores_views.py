@@ -520,3 +520,166 @@ def indicador_taxa_aprovacao(request):
 
     return render(request, "indicadores/4_4_taxa_aprovacao.html", context)
 
+
+
+from decimal import Decimal
+from io import BytesIO
+import base64
+
+# helper local para gráfico de barras (mesmo padrão dos outros)
+def gerar_grafico_barras(x_labels, y_values, metas_values=None, titulo="Faturamento Líquido Mensal"):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    # saneamento dos dados
+    y = list(map(float, y_values))
+    m = list(map(float, metas_values)) if metas_values is not None else None
+    if m is not None and len(m) != len(y):
+        # iguala o comprimento: preenche com a última meta conhecida ou zero
+        last = m[-1] if m else 0.0
+        m = (m + [last] * (len(y) - len(m)))[:len(y)]
+
+    fig, ax = plt.subplots(figsize=(10, 3.5))
+
+    # barras do realizado
+    ax.bar(x_labels, y, label="Realizado", zorder=2)
+
+    # linha da meta acima das barras
+    if m is not None:
+        ax.plot(x_labels, m, linestyle="--", linewidth=1.8, marker="o",
+                label="Meta", color="red", zorder=3)
+
+    ax.set_title(titulo)
+    ax.set_ylabel("R$")
+
+    # define limites com folga de 10% considerando realizado e meta
+    ymax = max(y + (m if m is not None else [0.0])) if y else 0.0
+    ax.set_ylim(0, ymax * 1.10 if ymax > 0 else 1)
+
+    # rótulos nas barras
+    for i, v in enumerate(y):
+        if v > 0:
+            ax.text(i, v, f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+                    ha="center", va="bottom", fontsize=8)
+
+    # rótulos na meta
+    if m is not None:
+        for i, mv in enumerate(m):
+            if mv > 0:
+                ax.text(i, mv, f"{mv:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+                        ha="center", va="bottom", fontsize=8, color="red")
+
+    # grade leve para leitura
+    ax.grid(axis="y", alpha=0.2, zorder=1)
+
+    # legenda sempre visível
+    ax.legend(loc="upper left")
+
+    fig.tight_layout()
+    buf = BytesIO()
+    fig.savefig(buf, format="png", dpi=150)
+    plt.close(fig)
+    return base64.b64encode(buf.getvalue()).decode("utf-8")
+
+
+
+
+@login_required
+@permission_required("comercial.view_indicador_faturamento", raise_exception=True)
+def indicador_faturamento(request):
+
+    from django.utils.timezone import now
+    from comercial.models.faturamento import FaturamentoRegistro
+    from comercial.models.indicadores import MetaFaturamento
+    from comercial.utils.indicadores import salvar_registro_indicador
+
+    ano = int(request.GET.get("ano", now().year))
+    mes_atual = now().month
+    meses_labels = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
+
+    # base do ano
+    qs = (FaturamentoRegistro.objects
+          .filter(ocorrencia__year=ano)
+          .only("ocorrencia","tipo","nfe","valor_total","valor_total_com_ipi"))
+
+    nf_validas = [Decimal("0.00")] * 12
+    vales = [Decimal("0.00")] * 12
+    devolucoes = [Decimal("0.00")] * 12
+
+    for r in qs:
+        m = r.ocorrencia.month - 1
+        valor = r.valor_total_com_ipi or r.valor_total or Decimal("0.00")
+        tipo = (r.tipo or "Venda")
+        nfe = (r.nfe or "").strip().lower()
+
+        if tipo == "Venda" and nfe not in ("", "vale"):
+            nf_validas[m] += valor
+        elif tipo == "Venda":
+            vales[m] += valor
+        elif tipo == "Devolução":
+            devolucoes[m] += valor
+
+    liquido = [(nf_validas[i] + vales[i] - devolucoes[i]).quantize(Decimal("0.01")) for i in range(12)]
+
+    # metas por mês vindas do banco (até o mês atual)
+    metas_mes = []
+    for i in range(1, mes_atual + 1):
+        meta_obj = MetaFaturamento.objects.filter(ano=ano, mes=i).first()
+        metas_mes.append(meta_obj.valor if meta_obj else Decimal("0.00"))
+
+    # médias e totais (até mês atual)
+    realizado_visivel = liquido[:mes_atual]
+    media = (sum(realizado_visivel) / (mes_atual or 1)).quantize(Decimal("0.01"))
+    media_meta = (sum(metas_mes) / (mes_atual or 1)).quantize(Decimal("0.01"))
+    meta_total = sum(metas_mes).quantize(Decimal("0.01"))
+
+    # comentários + persistência no registro de indicadores
+    comentarios = []
+    for i in range(mes_atual):
+        val = realizado_visivel[i]
+        meta_val = metas_mes[i]
+        status = "dentro da meta" if val >= meta_val else "abaixo da meta"
+        texto = (
+            "Faturamento de R$ "
+            + f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            + " (meta: R$ "
+            + f"{meta_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            + f") — {status}."
+        )
+        comentarios.append({"data": f"{meses_labels[i]}/{ano}", "texto": texto})
+
+        # segue a MESMA assinatura usada nos indicadores 4.x
+        salvar_registro_indicador(
+            indicador="1.1",
+            ano=ano,
+            mes=i+1,
+            valor=float(val),
+            media=float(media),
+            meta=float(meta_val),
+            total_realizados=float(val),
+            total_aprovados=0,
+            comentario=texto
+        )
+
+    grafico_base64 = gerar_grafico_barras(
+    meses_labels[:mes_atual],
+    [float(v) for v in realizado_visivel],
+    [float(m) for m in metas_mes]
+)
+
+
+    context = {
+        "ano": ano,
+        "mes_atual": mes_atual,
+        "meses": meses_labels,
+        "dados_faturamento": dict(zip(meses_labels, liquido)),
+        "total_ano": sum(realizado_visivel),
+        "media": media,
+        "media_meta": media_meta,
+        "metas_mes": dict(zip(meses_labels[:mes_atual], metas_mes)),
+        "grafico_base64": grafico_base64,
+        "comentarios": comentarios,
+        "meta_total": meta_total,
+    }
+    return render(request, "indicadores/1_1_faturamento.html", context)

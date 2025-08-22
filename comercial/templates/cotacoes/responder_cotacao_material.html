@@ -13,10 +13,34 @@
 </head>
 <body class="bg-light">
   <div class="container mt-5 p-4 bg-white shadow rounded">
-  <h2 class="mb-1">
+  <h2 class="mb-1 d-flex flex-wrap align-items-center gap-2">
   <i class="bi bi-receipt-cutoff me-2 text-primary"></i>
-  Responder Cotação – Código: <strong>{{ codigo }}</strong>
+  <span>Responder Cotação</span>
 </h2>
+
+{% with prec=materiais.0.precalculo %}
+  <div class="text-muted small mb-2 d-flex flex-wrap align-items-center gap-3">
+    <span>
+      <i class="bi bi-upc-scan me-1"></i>
+      Código: <strong>{{ codigo }}</strong>
+    </span>
+    <span>
+      <i class="bi bi-receipt me-1"></i>
+      Cotação nº:
+      <strong>
+        {{ prec.cotacao.numero|default_if_none:cotacao_numero|default:cotacao_numero|default:"—" }}
+      </strong>
+    </span>
+    <span>
+      <i class="bi bi-clipboard-check me-1"></i>
+      Pré-Cálculo nº:
+      <strong>
+        {{ prec.numero|default_if_none:precalculo_numero|default:precalculo_numero|default:"—" }}
+      </strong>
+    </span>
+  </div>
+{% endwith %}
+
 <p class="text-muted mb-4">
   <i class="bi bi-card-text me-1"></i> {{ materiais.0.descricao }}
 </p>
@@ -54,16 +78,87 @@
 
 
 
-   <!-- Destaque para o Peso Bruto Total -->
-<div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 mb-3 shadow-sm">
-  <div class="d-flex align-items-center gap-2">
-    <i class="bi bi-basket-fill fs-4 text-dark"></i>
-    <span class="fw-bold fs-5">Peso Bruto Total:</span>
+  <!-- Bloco com Desenvolvido, Pesos e botão do desenho -->
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 shadow-sm mb-0 h-100">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-rulers fs-4 text-dark"></i>
+        <span class="fw-bold">Desenvolvido (mm):</span>
+      </div>
+      <span class="text-primary fw-semibold">
+        {{ materiais.0.desenvolvido_mm|floatformat:3 }}
+      </span>
+    </div>
   </div>
-  <span class="fs-5 text-primary fw-semibold">
-    {{ materiais.0.peso_bruto_total|floatformat:2 }} kg
-  </span>
+
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 shadow-sm mb-0 h-100">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-box fs-4 text-dark"></i>
+        <span class="fw-bold">Peso Líquido:</span>
+      </div>
+      <span class="text-primary fw-semibold">
+        {{ materiais.0.peso_liquido|floatformat:6 }} kg
+      </span>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 shadow-sm mb-0 h-100">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-box-seam fs-4 text-dark"></i>
+        <span class="fw-bold">Peso Bruto:</span>
+      </div>
+      <span class="text-primary fw-semibold">
+        {{ materiais.0.peso_bruto|floatformat:6 }} kg
+      </span>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="alert alert-secondary d-flex align-items-center justify-content-between p-3 shadow-sm mb-0 h-100">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-basket-fill fs-4 text-dark"></i>
+        <span class="fw-bold">Peso Bruto Total:</span>
+      </div>
+      <span class="text-primary fw-semibold">
+        {{ materiais.0.peso_bruto_total|floatformat:6 }} kg
+      </span>
+    </div>
+  </div>
 </div>
+
+{% if materiais.0.precalculo.analise_comercial_item.item.desenho %}
+  <div class="my-3 d-flex justify-content-center">
+    <a href="{{ materiais.0.precalculo.analise_comercial_item.item.desenho.url }}"
+       target="_blank"
+       rel="noopener"
+       class="btn btn-primary btn-abrir-desenho">
+      <i class="bi bi-file-earmark-text"></i>
+      <span>Abrir Desenho do Item</span>
+    </a>
+  </div>
+{% endif %}
+
+<style>
+  .btn-abrir-desenho {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    letter-spacing: .2px;
+    border-radius: 999px;
+    padding: .75rem 1.25rem;
+    box-shadow: 0 .25rem .75rem rgba(0,0,0,.06);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-abrir-desenho:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.10);
+    text-decoration: none;
+  }
+</style>
+
 
    {% if observacoes_gerais|trim %}
   <div class="mb-3">

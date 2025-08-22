@@ -10,6 +10,8 @@ from comercial.utils.email_cotacao_utils import (
 )
 from comercial.views import ordem_desenvolvimento_views
 from comercial.views import indicadores_views
+from comercial.views import api_views
+from comercial.views import faturamento_views
 
 urlpatterns = [
     # Dashboard
@@ -106,8 +108,21 @@ urlpatterns = [
     path("indicadores/4.2-itens-novos/", indicadores_views.indicador_itens_novos, name="indicador_itens_novos"),
     path("indicadores/4.3-cotacoes-funcionario/", indicadores_views.indicador_cotacoes_funcionario, name="indicador_cotacoes_funcionario"),
     path("indicadores/4.4-taxa-aprovacao/", indicadores_views.indicador_taxa_aprovacao, name="indicador_taxa_aprovacao"),
+    path("indicadores/1.1-faturamento/", indicadores_views.indicador_faturamento, name="indicador_faturamento"),
+
     path("dashboard/mapa-clientes/", dashboard_views.mapa_clientes_por_regiao, name="mapa_clientes"),
     path("dashboard/cidades-clientes/", dashboard_views.listar_cidades_clientes, name="listar_cidades_clientes"),
+    # Dashboard de Faturamento
+    path('dashboard/faturamento/',dashboard_views.dashboard_faturamento, name='dashboard_faturamento'  ),
     path("dashboard/cidades-nomes/", dashboard_views.listar_cidades_nomes, name="listar_cidades_nomes"),
+    path("api/getVendas", api_views.get_vendas, name="api_get_vendas"),
+    path("api/getNotasFiscais", api_views.get_notas_fiscais, name="api_get_notas_fiscais"),
+    path("faturamento/", faturamento_views.lista_faturamento, name="lista_faturamento"),
+    path("faturamento/sync/", faturamento_views.sync_faturamento, name="sync_faturamento"),
+    path("faturamento/novo/", faturamento_views.criar_faturamento, name="criar_faturamento"),
+    path("faturamento/<int:pk>/editar/", faturamento_views.editar_faturamento, name="editar_faturamento"),
+    path("faturamento/<int:pk>/excluir/", faturamento_views.excluir_faturamento, name="excluir_faturamento"),
+    path("faturamento/relatorio/", faturamento_views.relatorio_faturamento, name="relatorio_faturamento"),
+    path("faturamento/relatorio-duplicatas/", faturamento_views.relatorio_duplicatas, name="relatorio_duplicatas"),
 
 ]

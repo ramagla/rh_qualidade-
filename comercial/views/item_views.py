@@ -148,64 +148,156 @@ def excluir_item(request, pk):
     return redirect('lista_itens')
 
 
+from decimal import Decimal, InvalidOperation
+from django.db import transaction
+import pandas as pd
+
+# Mapas e utilitários
+_TIPO_ITEM_MAP = {
+    "cotacao": "Cotacao",
+    "cotação": "Cotacao",
+    "corrente": "Corrente",
+}
+
+_TIPO_PECA_MAP = {
+    "mola": "Mola",
+    "estampado": "Estampado",
+    "estampa": "Estampado",
+    "aramado": "Aramado",
+}
+
+_STATUS_MAP = {
+    "ativo": "Ativo",
+    "inativo": "Inativo",
+}
+
+def _to_bool(v):
+    if pd.isna(v):
+        return False
+    s = str(v).strip().lower()
+    return s in {"1", "true", "t", "y", "yes", "sim", "s"}
+
+def _to_decimal(v):
+    if v in (None, "") or pd.isna(v):
+        return None
+    s = str(v).strip().replace(".", "").replace(",", ".") if isinstance(v, str) else str(v)
+    try:
+        return Decimal(s)
+    except (InvalidOperation, ValueError):
+        return None
+
+def _to_int_positive(v):
+    if v in (None, "") or pd.isna(v):
+        return None
+    try:
+        n = int(float(v))
+        return n if n >= 0 else None
+    except (ValueError, TypeError):
+        return None
+
+def _norm_choice(value, mapping, default):
+    if value in (None, "") or pd.isna(value):
+        return default
+    return mapping.get(str(value).strip().lower(), default)
+
+def _to_date(v):
+    if v in (None, "") or pd.isna(v):
+        return None
+    try:
+        dt = pd.to_datetime(v, dayfirst=False, errors="coerce")
+        return dt.date() if pd.notna(dt) else None
+    except Exception:
+        return None
+
 @login_required
 @permission_required("comercial.importar_excel_itens", raise_exception=True)
 def importar_itens_excel(request):
-    if request.method == "POST" and request.FILES.get("arquivo"):
-        excel_file = request.FILES["arquivo"]
-        try:
-            df = pd.read_excel(excel_file)
+    if request.method != "POST" or not request.FILES.get("arquivo"):
+        return render(request, "cadastros/importacoes/importar_itens.html")
 
-            obrigatorios = ["Código", "Descrição", "NCM", "Lote Mínimo", "Cliente"]
+    excel_file = request.FILES["arquivo"]
 
-            for col in obrigatorios:
-                if col not in df.columns:
-                    messages.error(request, f"Coluna obrigatória ausente: {col}")
-                    return redirect("importar_itens_excel")
+    try:
+        df = pd.read_excel(excel_file)
+    except Exception as e:
+        messages.error(request, f"Não foi possível ler o arquivo Excel: {e}")
+        return redirect("importar_itens_excel")
 
-            criados = 0
-            ignorados = 0
+    obrigatorios = ["Código", "Descrição", "NCM", "Lote Mínimo", "Cliente"]
+    ausentes = [c for c in obrigatorios if c not in df.columns]
+    if ausentes:
+        messages.error(request, f"Coluna(s) obrigatória(s) ausente(s): {', '.join(ausentes)}")
+        return redirect("importar_itens_excel")
 
-            for _, row in df.iterrows():
-                codigo = str(row["Código"]).strip()
-                if Item.objects.filter(codigo=codigo).exists():
-                    ignorados += 1
-                    continue
+    # Normalização prévia dos códigos existentes (já salvos em MAIÚSCULO pelo save())
+    codigos_existentes = set(Item.objects.values_list("codigo", flat=True))
 
-                cliente = Cliente.objects.filter(razao_social__iexact=row["Cliente"]).first()
-                ferramenta = Ferramenta.objects.filter(codigo__iexact=row.get("Ferramenta", "")).first()
+    criados = 0
+    ignorados_duplicado = 0
+    ignorados_sem_cliente = 0
+    linhas_invalidas = 0
 
-                if not cliente:
-                    continue  # ignora se cliente não encontrado
+    with transaction.atomic():
+        for _, row in df.iterrows():
+            codigo = str(row["Código"]).strip().upper()
+            if not codigo:
+                linhas_invalidas += 1
+                continue
 
-                Item.objects.create(
-                    codigo=codigo,
-                    descricao=row["Descrição"],
-                    ncm=row["NCM"],
-                    lote_minimo=row["Lote Mínimo"],
-                    cliente=cliente,
-                    ferramenta=ferramenta,
-                    codigo_cliente=row.get("Código no Cliente", ""),
-                    descricao_cliente=row.get("Descrição no Cliente", ""),
-                    ipi=row.get("IPI (%)", None),
-                    tipo_item=row.get("Tipo de Item", "Cotacao"),
-                    tipo_de_peca=row.get("Tipo de Peça", "Mola"),
-                    status=row.get("Status", "Ativo"),
-                    automotivo_oem=bool(row.get("Automotivo OEM", False)),
-                    requisito_especifico=bool(row.get("Requisito Específico Cliente?", False)),
-                    item_seguranca=bool(row.get("É Item de Segurança?", False)),
-                    codigo_desenho=row.get("Código do Desenho", ""),
-                    revisao=row.get("Revisão", ""),
-                    data_revisao=row.get("Data da Revisão", None),
-                )
-                criados += 1
+            if codigo in codigos_existentes:
+                ignorados_duplicado += 1
+                continue
 
-            messages.success(request, f"Importação concluída: {criados} item(ns) criado(s), {ignorados} ignorados (código duplicado).")
-            return redirect("lista_itens")
+            # Cliente
+            cliente_nome = str(row["Cliente"]).strip()
+            cliente = Cliente.objects.filter(razao_social__iexact=cliente_nome).first()
+            if not cliente:
+                ignorados_sem_cliente += 1
+                continue
 
-        except Exception as e:
-            messages.error(request, f"Erro ao importar: {e}")
-            return redirect("importar_itens_excel")
+            # Ferramenta (opcional)
+            ferramenta_codigo = str(row.get("Ferramenta", "") or "").strip()
+            ferramenta = None
+            if ferramenta_codigo:
+                ferramenta = Ferramenta.objects.filter(codigo__iexact=ferramenta_codigo).first()
 
-    return render(request, "cadastros/importacoes/importar_itens.html")
+            lote_minimo = _to_int_positive(row["Lote Mínimo"])
+            if lote_minimo is None:
+                linhas_invalidas += 1
+                continue
 
+            item = Item(
+                codigo=codigo,
+                descricao=str(row["Descrição"]).strip() if not pd.isna(row["Descrição"]) else "",
+                ncm=str(row["NCM"]).strip() if not pd.isna(row["NCM"]) else "",
+                lote_minimo=lote_minimo,
+                cliente=cliente,
+                ferramenta=ferramenta,
+                codigo_cliente=str(row.get("Código no Cliente", "") or "").strip(),
+                descricao_cliente=str(row.get("Descrição no Cliente", "") or "").strip(),
+                ipi=_to_decimal(row.get("IPI (%)", None)),
+                tipo_item=_norm_choice(row.get("Tipo de Item", None), _TIPO_ITEM_MAP, "Cotacao"),
+                tipo_de_peca=_norm_choice(row.get("Tipo de Peça", None), _TIPO_PECA_MAP, "Mola"),
+                status=_norm_choice(row.get("Status", None), _STATUS_MAP, "Ativo"),
+                automotivo_oem=_to_bool(row.get("Automotivo OEM", False)),
+                requisito_especifico=_to_bool(row.get("Requisito Específico Cliente?", False)),
+                item_seguranca=_to_bool(row.get("É Item de Segurança?", False)),
+                codigo_desenho=str(row.get("Código do Desenho", "") or "").strip(),
+                revisao=str(row.get("Revisão", "") or "").strip(),
+                data_revisao=_to_date(row.get("Data da Revisão", None)),
+            )
+            # O save() já normaliza campos em maiúsculo onde aplicável
+            item.save()
+            codigos_existentes.add(codigo)
+            criados += 1
+
+    messages.success(
+        request,
+        (
+            f"Importação concluída. Criados: {criados}. "
+            f"Ignorados (código duplicado): {ignorados_duplicado}. "
+            f"Ignorados (cliente não encontrado): {ignorados_sem_cliente}. "
+            f"Linhas inválidas: {linhas_invalidas}."
+        ),
+    )
+    return redirect("lista_itens")

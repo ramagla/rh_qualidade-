@@ -36,18 +36,23 @@
         </div>
       </div>
       <div class="row text-center">
-        <div class="col-12">
-          <div class="fw-semibold text-muted small mb-1">
-            <i class="bi bi-rulers me-1"></i> Padrão Utilizado
-          </div>
-          <div class="fs-6 fw-bold">
-            {{ calibracoes.first.instrumento_utilizado.nome_equipamento }},
-            {{ calibracoes.first.instrumento_utilizado.capacidade_minima }} -
-            {{ calibracoes.first.instrumento_utilizado.capacidade_maxima }}
-            ({{ calibracoes.first.instrumento_utilizado.resolucao|floatformat:2 }})
-          </div>
-        </div>
-      </div>
+  <div class="col-12">
+    <div class="fw-semibold text-muted small mb-1">
+      <i class="bi bi-rulers me-1"></i> Padrão Utilizado
+    </div>
+    <div class="fs-6 fw-bold">
+      {% if calibracoes.first.calibracao_cliente %}
+        Calibração do cliente
+      {% else %}
+        {{ calibracoes.first.instrumento_utilizado.nome_equipamento }},
+        {{ calibracoes.first.instrumento_utilizado.capacidade_minima }} -
+        {{ calibracoes.first.instrumento_utilizado.capacidade_maxima }}
+        ({{ calibracoes.first.instrumento_utilizado.resolucao|floatformat:2 }})
+      {% endif %}
+    </div>
+  </div>
+</div>
+
     </div>
   </div>
   
@@ -83,27 +88,45 @@
           </thead>
           <tbody>
             {% for calibracao in calibracoes %}
-              {% for afericao in calibracao.afericoes.all %}
-                <tr>
-                  <td>{{ afericao.cota.numero }}</td>
-                  <td>{{ calibracao.instrumento_utilizado.codigo }}</td>
-                  <td>{{ afericao.valor }}</td>
-                  <td>
-                    {% if afericao.status == 'Aprovado' %}
-                      <span class="badge bg-success rounded-pill px-3 py-2">
-                        ✔️ SIM
-                      </span>
-                    {% else %}
-                      <span class="badge bg-danger rounded-pill px-3 py-2">
-                        ❌ NÃO
-                      </span>
-                    {% endif %}
-                  </td>
-                  <td>{{ calibracao.data_afericao|date:"d/m/Y" }}</td>
-                  <td>{{ calibracao.nome_responsavel.nome }}</td>
-                </tr>
-              {% endfor %}
-            {% endfor %}
+  {% if calibracao.calibracao_cliente %}
+    {# Em calibração do cliente normalmente não há aferições.
+       Mostrar uma linha sintética por calibração. #}
+    <tr>
+      <td colspan="2" class="text-start">
+        <span class="text-muted">Sem aferições</span>
+      </td>
+      <td class="text-center">—</td>
+      <td>
+        <span class="badge bg-secondary rounded-pill px-3 py-2">N/A</span>
+      </td>
+      <td>{{ calibracao.data_afericao|date:"d/m/Y" }}</td>
+      <td class="fw-semibold">Calibração do cliente</td>
+    </tr>
+  {% else %}
+    {# Fluxo padrão com aferições #}
+    {% for afericao in calibracao.afericoes.all %}
+      <tr>
+        <td>{{ afericao.cota.numero }}</td>
+        <td>{{ calibracao.instrumento_utilizado.codigo }}</td>
+        <td>{{ afericao.valor }}</td>
+        <td>
+          {% if afericao.status == 'Aprovado' %}
+            <span class="badge bg-success rounded-pill px-3 py-2">✔️ SIM</span>
+          {% else %}
+            <span class="badge bg-danger rounded-pill px-3 py-2">❌ NÃO</span>
+          {% endif %}
+        </td>
+        <td>{{ calibracao.data_afericao|date:"d/m/Y" }}</td>
+        <td>{{ calibracao.nome_responsavel.nome }}</td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="6" class="text-center text-muted">Sem aferições registradas.</td>
+      </tr>
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+
           </tbody>
         </table>
       </div>

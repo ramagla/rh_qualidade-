@@ -13,9 +13,19 @@ from .departamentos import Departamentos
 class MaxFileSizeValidator:
     def __init__(self, max_mb=5):
         self.max_mb = max_mb
+
     def __call__(self, arquivo):
-        if arquivo and arquivo.size > self.max_mb * 1024 * 1024:
-            raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+        if not arquivo:
+            return
+
+        try:
+            if hasattr(arquivo, "size") and arquivo.size > self.max_mb * 1024 * 1024:
+                raise ValidationError(f"Tamanho máximo permitido é {self.max_mb} MB.")
+        except FileNotFoundError:
+            # Caso o arquivo não exista mais fisicamente, apenas ignora.
+            # O ideal é corrigir o registro órfão no banco.
+            return
+
     def __eq__(self, other):
         return isinstance(other, MaxFileSizeValidator) and self.max_mb == other.max_mb
 

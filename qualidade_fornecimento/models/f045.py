@@ -138,6 +138,7 @@ class RelatorioF045(models.Model):
         if not rolos.exists():
             return "Re"
 
+        # Obtém limites da norma aplicáveis à bitola do cadastro
         try:
             norma = NormaTecnica.objects.get(
                 nome_norma=self.relacao.materia_prima.norma
@@ -150,14 +151,19 @@ class RelatorioF045(models.Model):
                 bitola_minima__lte=bitola_val,
                 bitola_maxima__gte=bitola_val,
             ).first()
+            res_min = Decimal(str(tracao.resistencia_min)) if tracao and tracao.resistencia_min is not None else None
+            res_max = Decimal(str(tracao.resistencia_max)) if tracao and tracao.resistencia_max is not None else None
             dureza_limite = (
                 Decimal(str(tracao.dureza).replace(",", "."))
                 if tracao and tracao.dureza
                 else None
             )
         except Exception:
+            res_min = None
+            res_max = None
             dureza_limite = None
 
+        # 1) Regras por rolo (mantidas)
         for rolo in rolos:
             if dureza_limite is not None and rolo.dureza is not None:
                 if rolo.dureza > dureza_limite:
@@ -172,7 +178,33 @@ class RelatorioF045(models.Model):
                 if getattr(rolo, campo, "").upper() != "OK":
                     return "Re"
 
+        # 2) Regras pelos campos do certificado do fornecedor (novas)
+        #    - Tração do certificado fora de [res_min, res_max] => Re
+        #    - Dureza do certificado acima do limite da norma  => Re
+        def _parse_decimal_str(valor):
+            if valor is None:
+                return None
+            s = str(valor).strip()
+            s = s.replace("kgf/mm2", "").replace("kgf/mm²", "").replace("MPa", "").replace("HRB", "").replace("HRC", "")
+            s = s.replace(",", ".")
+            try:
+                return Decimal(s)
+            except Exception:
+                return None
+
+        tracao_cert = _parse_decimal_str(self.resistencia_tracao)
+        dureza_cert = _parse_decimal_str(self.dureza_certificado)
+
+        if tracao is not None and tracao_cert is not None and res_min is not None and res_max is not None:
+            if not (res_min <= tracao_cert <= res_max):
+                return "Re"
+
+        if dureza_limite is not None and dureza_cert is not None:
+            if dureza_cert > dureza_limite:
+                return "Re"
+
         return "Ap"
+
 
     def save(self, *args, **kwargs):
         limites = kwargs.pop("limites_quimicos", None)

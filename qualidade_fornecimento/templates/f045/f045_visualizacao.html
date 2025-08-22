@@ -113,6 +113,8 @@
       <th><div class="circle">08</div><br>Estricção (%)</th>
       <th><div class="circle">12</div><br>Torção</th>
       <th><div class="circle">11</div><br>Dureza</th>
+            <th>Laudo</th>
+
     </tr>
   </thead>
   <tbody>
@@ -127,6 +129,15 @@
           N/A
         {% else %}
           {{ obj.dureza_certificado }}
+        {% endif %}
+      </td>
+       <td>
+        {% if laudo_certificado_pdf == "Ap" %}
+          <span style="color: green;">✔️</span>
+        {% elif laudo_certificado_pdf == "Re" %}
+          <span style="color: red;">❌</span>
+        {% else %}
+          —
         {% endif %}
       </td>
     </tr>
@@ -166,15 +177,15 @@
       <td>
         {% if relacao.materia_prima.largura %}
           {% if rolo.bitola_espessura and rolo.bitola_largura %}
-            {{ rolo.bitola_espessura|stringformat:"0.2f" }} – {{ rolo.bitola_largura|stringformat:"0.2f" }}
+            {{ rolo.bitola_espessura|stringformat:"0.4f" }} – {{ rolo.bitola_largura|stringformat:"0.4f" }}
           {% elif rolo.bitola_espessura %}
-            {{ rolo.bitola_espessura|stringformat:"0.2f" }}
+            {{ rolo.bitola_espessura|stringformat:"0.4f" }}
           {% else %}
             —
           {% endif %}
         {% else %}
           {% if rolo.bitola_espessura %}
-            {{ rolo.bitola_espessura|stringformat:"0.2f" }}
+            {{ rolo.bitola_espessura|stringformat:"0.4f" }}
           {% else %}
             —
           {% endif %}

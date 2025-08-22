@@ -8,78 +8,116 @@
 {% include 'partials/global/_toast_mensagens.html' %}
 {% include 'partials/global/_header_titulo.html' with titulo="Lista de Documentos" icone="bi bi-journal-text" emoji="📄" %}
 
-<div class="container py-4">
+<div class="container-fluid mt-5">
 
-  <!-- Botão de Cadastro -->
-  <div class="d-flex justify-content-end mb-4">
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões superiores: Filtros (offcanvas) e Cadastro -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
     {% if request.user|has_permission:'Funcionario.add_documento' %}
-      <a href="{% url 'cadastrar_documento' %}" class="btn btn-success">
-        <i class="bi bi-plus-circle me-2"></i> Cadastrar Documento
+      <a href="{% url 'cadastrar_documento' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
       </a>
     {% endif %}
   </div>
 
-  <!-- Filtros -->
-<div class="card shadow-sm mb-4 border-0">
-  <div class="card-header bg-light fw-bold">
-    <i class="bi bi-funnel me-2"></i> Filtros
+  <!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Documentos
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
-  <div class="card-body">
-    <form method="get" novalidate>
-      <div class="row g-3">
 
-        <!-- Filtro Nome -->
-        <div class="col-md-6 col-lg-3">
-          <label for="nome" class="form-label">Filtrar por Nome</label>
-          <select name="nome" id="nome" class="form-select select2" aria-label="Filtrar por Nome">
-            <option value="">Todos</option>
-            {% for documento in documentos_distinct %}
-              <option value="{{ documento.nome }}" {% if request.GET.nome == documento.nome %}selected{% endif %}>{{ documento.nome }}</option>
-            {% endfor %}
-          </select>
-        </div>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
 
-        <!-- Filtro Código -->
-        <div class="col-md-6 col-lg-3">
-          <label for="codigo" class="form-label">Filtrar por Código</label>
-          <select name="codigo" id="codigo" class="form-select select2" aria-label="Filtrar por Código">
-            <option value="">Todos</option>
-            {% for codigo in codigos_distinct %}
-              <option value="{{ codigo.codigo }}" {% if request.GET.codigo == codigo.codigo %}selected{% endif %}>{{ codigo.codigo }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Filtro Departamento -->
-        <div class="col-md-6 col-lg-3">
-          <label for="departamento" class="form-label">Filtrar por Departamento</label>
-          <select name="departamento" id="departamento" class="form-select select2" aria-label="Filtrar por Departamento">
-            <option value="">Todos</option>
-            {% for dep_id, dep_nome in departamentos_distinct %}
-              <option value="{{ dep_id }}" {% if request.GET.departamento == dep_id|stringformat:"s" %}selected{% endif %}>{{ dep_nome }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Filtro Status -->
-        <div class="col-md-6 col-lg-3">
-          <label for="status" class="form-label">Filtrar por Status</label>
-          <select name="status" id="status" class="form-select select2" aria-label="Filtrar por Status">
-            <option value="">Todos</option>
-            {% for key, value in status_choices %}
-              <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>{{ value }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
+      <!-- Nome -->
+      <div class="col-12">
+        <label for="nome" class="form-label"><i class="bi bi-fonts me-1"></i> Nome</label>
+        <select name="nome" id="nome" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for documento in documentos_distinct %}
+            <option value="{{ documento.nome }}" {% if request.GET.nome == documento.nome %}selected{% endif %}>
+              {{ documento.nome }}
+            </option>
+          {% endfor %}
+        </select>
       </div>
 
-      <div class="mt-4">
+      <!-- Código -->
+      <div class="col-12">
+        <label for="codigo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código</label>
+        <select name="codigo" id="codigo" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for codigo in codigos_distinct %}
+            <option value="{{ codigo.codigo }}" {% if request.GET.codigo == codigo.codigo %}selected{% endif %}>
+              {{ codigo.codigo }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Departamento -->
+      <div class="col-12">
+        <label for="departamento" class="form-label"><i class="bi bi-diagram-3 me-1"></i> Departamento</label>
+        <select name="departamento" id="departamento" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for dep_id, dep_nome in departamentos_distinct %}
+            <option value="{{ dep_id }}" {% if request.GET.departamento == dep_id|stringformat:"s" %}selected{% endif %}>
+              {{ dep_nome }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Status -->
+      <div class="col-12">
+        <label for="status" class="form-label"><i class="bi bi-check2-square me-1"></i> Status</label>
+        <select name="status" id="status" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for key, value in status_choices %}
+            <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>{{ value }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Período da Última Revisão (opcional) -->
+      <div class="col-12">
+        <label class="form-label"><i class="bi bi-calendar-range me-1"></i> Período da Última Revisão</label>
+        <div class="row g-2">
+          <div class="col-6">
+            <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+          </div>
+          <div class="col-6">
+            <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- Botão Filtrar -->
+      <div class="col-12 mt-3">
         {% include 'partials/global/_botao_filtrar.html' %}
       </div>
     </form>
   </div>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    $('.select2').each(function () {
+      const $el = $(this);
+      $el.select2({
+        placeholder: "Selecione uma opção",
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $($el.data('dropdown-parent') || document.body)
+      });
+    });
+  });
+</script>
 
 
   <!-- Indicadores -->
@@ -91,23 +129,58 @@
   </div>
 
   <!-- Tabela de Documentos -->
-  <div class="table-responsive shadow-sm rounded">
-    <table class="table table-hover align-middle text-center">
-      <caption class="visually-hidden">Tabela de documentos cadastrados</caption>
-      <thead class="table-light">
-        <tr>
-          <th scope="col"><i class="bi bi-upc me-1"></i> Código</th>
-          <th scope="col"><i class="bi bi-journal-text me-1"></i> Nome</th>
-          <th scope="col"><i class="bi bi-person-badge me-1"></i> Responsável</th>
-          <th scope="col"><i class="bi bi-flag me-1"></i> Status</th>
-          <th scope="col"><i class="bi bi-card-checklist me-1"></i> Última Revisão</th>
-          <th scope="col"><i class="bi bi-calendar-event me-1"></i> Atualização</th>
-          <th scope="col"><i class="bi bi-gear-fill me-1"></i> Ações</th>
-        </tr>
-      </thead>
+  <div class="table-responsive zebra-tabela mt-4">
+  <table class="table table-bordered table-striped align-middle text-center">
+    <thead class="table-light">
+      <tr>
+        <th class="text-center align-middle">
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-upc mb-1"></i>
+            <small>Código</small>
+          </div>
+        </th>
+        <th class="text-center align-middle">
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-journal-text mb-1"></i>
+            <small>Nome</small>
+          </div>
+        </th>
+        <th class="text-center align-middle">
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-person-badge mb-1"></i>
+            <small>Responsável</small>
+          </div>
+        </th>
+        <th class="text-center align-middle">
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-flag mb-1"></i>
+            <small>Status</small>
+          </div>
+        </th>
+        <th class="text-center align-middle">
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-card-checklist mb-1"></i>
+            <small>Última Revisão</small>
+          </div>
+        </th>
+        <th class="text-center align-middle">
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-calendar-event mb-1"></i>
+            <small>Atualização</small>
+          </div>
+        </th>
+        <th class="text-center align-middle">
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-gear mb-1"></i>
+            <small>Ações</small>
+          </div>
+        </th>
+      </tr>
+    </thead>
+
       <tbody>
-        {% if documentos %}
-          {% for documento in documentos %}
+        {% if page_obj %}
+            {% for documento in page_obj %}
             <tr>
               <td>{{ documento.codigo }}</td>
 
@@ -135,12 +208,12 @@
 
               </td>
               <td>
-                {% if documento.revisoes.last %}
-                  {{ documento.revisoes.last.data_revisao|date:"d/m/Y" }}
-                {% else %}
-                  <span class="text-muted">Sem atualização</span>
-                {% endif %}
-              </td>
+  {% if documento.revisoes.first %}
+    {{ documento.revisoes.first.data_revisao|date:"d/m/Y" }}
+  {% else %}
+    <span class="text-muted">Sem atualização</span>
+  {% endif %}
+</td>
               <td>
                 <div class="d-flex justify-content-center flex-wrap gap-2">
                   {% if request.user|has_permission:'Funcionario.change_documento' %}
@@ -167,12 +240,13 @@
             </tr>
           {% endfor %}
         {% else %}
-          <tr>
-            <td colspan="7">
-              {% include 'partials/global/_sem_resultados.html' with item_nome="documento" %}
-            </td>
-          </tr>
-        {% endif %}
+            <tr>
+              <td colspan="7">
+                {% include 'partials/global/_sem_resultados.html' with item_nome="documento" %}
+              </td>
+            </tr>
+          {% endif %}
+
       </tbody>
     </table>
   </div>

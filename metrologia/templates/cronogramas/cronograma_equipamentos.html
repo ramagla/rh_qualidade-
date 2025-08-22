@@ -47,48 +47,59 @@
   </div>
   
   <!-- Filtros -->
-  <div class="card shadow-sm mb-4 d-print-none">
-    <div class="card-header bg-light d-flex align-items-center gap-2">
-      <i class="bi bi-funnel-fill text-primary"></i>
-      <strong>Filtros de Pesquisa</strong>
-    </div>
-    <div class="card-body">
-      <form method="GET" class="row row-cols-1 row-cols-md-4 g-3 align-items-end">
-        <div class="col">
-          <label for="ano" class="form-label"><i class="bi bi-calendar3 me-1"></i> Ano:</label>
-          <select id="ano" name="ano" class="form-select">
-            <option value="">Todos</option>
-            {% for ano in anos_disponiveis %}
-              <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-md-3">
-          <label for="grandeza" class="form-label"><i class="bi bi-rulers me-1"></i> Grandeza:</label>
-          <select id="grandeza" name="grandeza" class="form-select">
-            <option value="">Todas</option>
-            {% for tipo in tipos_grandeza %}
-              <option value="{{ tipo }}" {% if tipo == request.GET.grandeza %}selected{% endif %}>{{ tipo }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-md-3">
-          <label for="tipo_avaliacao" class="form-label"><i class="bi bi-bar-chart-line me-1"></i> Tipo de Avaliação:</label>
-          <select id="tipo_avaliacao" name="tipo_avaliacao" class="form-select">
-            <option value="">Todos</option>
-            {% for tipo in tipos_avaliacao %}
-              <option value="{{ tipo }}" {% if tipo == request.GET.tipo_avaliacao %}selected{% endif %}>{{ tipo }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        {% include 'partials/global/_botao_filtrar.html' %}
-      </form>
-    </div>
+<div class="card shadow-sm mb-4 d-print-none">
+  <div class="card-header bg-light d-flex align-items-center gap-2">
+    <i class="bi bi-funnel-fill text-primary"></i>
+    <strong>Filtros de Pesquisa</strong>
   </div>
-  
+  <div class="card-body">
+    <form method="GET" class="row row-cols-1 row-cols-md-4 g-3 align-items-end">
+      <div class="col">
+        <label for="ano" class="form-label"><i class="bi bi-calendar3 me-1"></i> Ano:</label>
+        <select id="ano" name="ano" class="form-select">
+          <option value="">Todos</option>
+          {% for ano in anos_disponiveis %}
+            <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label for="codigo" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código:</label>
+        <input type="text" id="codigo" name="codigo" class="form-control"
+               value="{{ request.GET.codigo }}" placeholder="Digite o código">
+      </div>
+
+      <div class="col-md-3">
+        <label for="grandeza" class="form-label"><i class="bi bi-rulers me-1"></i> Grandeza:</label>
+        <select id="grandeza" name="grandeza" class="form-select">
+          <option value="">Todas</option>
+          {% for tipo in tipos_grandeza %}
+            <option value="{{ tipo }}" {% if tipo == request.GET.grandeza %}selected{% endif %}>{{ tipo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label for="tipo_avaliacao" class="form-label"><i class="bi bi-bar-chart-line me-1"></i> Tipo de Avaliação:</label>
+        <select id="tipo_avaliacao" name="tipo_avaliacao" class="form-select">
+          <option value="">Todos</option>
+          {% for tipo in tipos_avaliacao %}
+            <option value="{{ tipo }}" {% if tipo == request.GET.tipo_avaliacao %}selected{% endif %}>{{ tipo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Botão centralizado -->
+ <div class="w-100 d-flex justify-content-center mt-2">
+  {% include 'partials/global/_botao_filtrar.html' %}
+</div>
+
+
+    </form>
+  </div>
+</div>
+
   <!-- Scroll horizontal superior -->
 <div class="table-scroll-top overflow-auto mb-2" style="height: 20px;">
   <div style="width: max-content;"></div>
@@ -222,7 +233,21 @@
           </td>
           <td>{{ equipamento.frequencia_calibracao }}</td>
           <td>{{ equipamento.laboratorio }}</td>
-          <td>{{ equipamento.numero_certificado }}</td>
+          <td>
+            {% if equipamento.certificado_url %}
+              <a href="{{ equipamento.certificado_url }}" target="_blank" rel="noopener"
+                class="link-primary text-decoration-none">
+                {{ equipamento.numero_certificado }}
+                <i class="bi bi-box-arrow-up-right ms-1"></i>
+              </a>
+            {% else %}
+              {% if equipamento.numero_certificado and equipamento.numero_certificado != "N/A" %}
+                {{ equipamento.numero_certificado }}
+              {% else %}
+                <span class="text-muted">N/A</span>
+              {% endif %}
+            {% endif %}
+          </td>          
           <td>{{ equipamento.erro_equipamento }}</td>
           <td>{{ equipamento.incerteza }}</td>
           <td>{{ equipamento.l }}</td>
@@ -243,29 +268,31 @@
 </div>
 <style>
     @media print {
-        .custom-table th,
-        .custom-table td {
-          font-size: 8pt !important;
-          padding: 2px 4px !important;
-        }
-      
-        .custom-header td,
-        .custom-header th {
-          font-size: 8pt !important;
-          padding: 2px 4px !important;
-        }
-      
-        body, html {
-          font-size: 8pt !important;
-        }
-      }
+  /* Força a tabela a caber na página */
+  .print-container {
+    zoom: 85%; /* ajuste até caber na página, pode testar 80% ou 90% */
+  }
 
-      @media (max-width: 768px) {
-        .custom-table th,
-        .custom-table td {
-          white-space: nowrap;
-        }
-      }
+  table {
+    font-size: 11px; /* diminui um pouco a fonte */
+    table-layout: fixed; /* evita que colunas se expandam demais */
+    width: 100% !important;
+  }
+
+  th, td {
+    word-wrap: break-word; /* quebra o texto se for muito longo */
+    white-space: normal !important;
+    padding: 2px 4px !important;
+  }
+
+  /* Remove scrolls na impressão */
+  .table-responsive,
+  .table-scroll-bottom,
+  .table-scroll-top {
+    overflow: visible !important;
+  }
+}
+
       
     </style>      
 

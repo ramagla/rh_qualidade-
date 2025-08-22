@@ -6,6 +6,7 @@ from django.utils.text import slugify
 from django.utils.deconstruct import deconstructible
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from dateutil.relativedelta import relativedelta
 
 def renomear_certificado_calibracao(instance, filename):
     nome, ext = os.path.splitext(filename)
@@ -95,3 +96,11 @@ class Calibracao(models.Model):
 
     def __str__(self):
         return f"{self.codigo} - {self.numero_certificado}"
+
+    def get_proxima_calibracao(self, frequencia_meses: int):
+            """Retorna a próxima calibração no último dia do mês."""
+            if not self.data_calibracao:
+                return None
+            proxima = self.data_calibracao + relativedelta(months=frequencia_meses)
+            ultimo_dia = calendar.monthrange(proxima.year, proxima.month)[1]
+            return proxima.replace(day=ultimo_dia)

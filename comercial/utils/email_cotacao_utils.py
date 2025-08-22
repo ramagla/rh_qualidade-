@@ -1,42 +1,51 @@
+# email_cotacao_utils.py
+
 from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
-from django.core.mail import send_mail
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.urls import reverse, NoReverseMatch
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.contrib import messages
-from django.http import HttpResponseForbidden
 from django.core import signing
+from django.core.mail import EmailMultiAlternatives, send_mail
+from django.db.models import Q
+from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 
 from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExterno
-from Funcionario.models import Settings as SistemaSettings
 from alerts.models import AlertaConfigurado, AlertaUsuario
 
 
+# -------------------------
+# Utilitário: link público
+# -------------------------
 def gerar_link_publico(request, viewname: str, pk: int, tipo: str, dias_validade: int = 15) -> str:
     payload = {"id": int(pk), "tipo": tipo}
     token = signing.dumps(payload, salt="cotacao-publica")
     url = reverse(viewname, args=[pk])
     return request.build_absolute_uri(f"{url}?t={token}")
 
+
+# ------------------------------------------------------
+# Disparo (solicitação) de cotação de Matéria-Prima
+# ------------------------------------------------------
 def disparar_email_cotacao_material(request, material):
     """
-    Envia e-mail para solicitar resposta de cotação da matéria-prima.
+    Envia e-mail para solicitar resposta de cotação da matéria-prima
+    e cria alerta In-App para usuários/grupos configurados.
     """
-    link = gerar_link_publico(
+    link_publico = gerar_link_publico(
         request,
         viewname="responder_cotacao_materia_prima",
         pk=material.pk,
         tipo="mp",
-        dias_validade=15
+        dias_validade=15,
     )
 
+    # Descrição da MP (se existir no catálogo)
     try:
         mp = MateriaPrimaCatalogo.objects.get(codigo=material.codigo)
         descricao = mp.descricao
@@ -57,38 +66,69 @@ def disparar_email_cotacao_material(request, material):
 🏭 Fontes Homologadas:
 {fontes_texto}
 
-🔗 Responder: {link}
-"""
+🔗 Responder: {link_publico}
+""".strip()
 
+    # 1) E-mail oficial para Compras
     send_mail(
         subject="📨 Cotação de Matéria-Prima",
-        message=corpo.strip(),
+        message=corpo,
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=["compras@brasmol.com.br"],
         fail_silently=False,
     )
 
+    # 2) Alerta In-App + (opcional) e-mails dos destinatários configurados
+    try:
+        config = AlertaConfigurado.objects.get(tipo="SOLICITACAO_COTACAO_MATERIAL", ativo=True)
+        destinatarios = set(config.usuarios.all())
+        for g in config.grupos.all():
+            destinatarios.update(g.user_set.all())
+
+        # Link do alerta → abrir diretamente a página de resposta
+        try:
+            link_resp = request.build_absolute_uri(reverse("responder_cotacao_materia_prima", args=[material.id]))
+        except NoReverseMatch:
+            link_resp = "/"
+
+        for user in destinatarios:
+            AlertaUsuario.objects.create(
+                usuario=user,
+                titulo=f"📨 Cotação de Material Solicitada ({material.codigo})",
+                mensagem=f"Foi solicitada a cotação da matéria-prima {descricao}.",
+                tipo="SOLICITACAO_COTACAO_MATERIAL",
+                referencia_id=material.id,
+                url_destino=link_resp,  # 🔗 vai direto ao template de resposta
+            )
+
+        # Replica por e-mail (se houver e-mails configurados)
+        emails = [u.email for u in destinatarios if getattr(u, "email", None)]
+        if emails:
+            send_mail(
+                subject="[Sistema Bras-Mol] Cotação de Matéria-Prima solicitada",
+                message=corpo,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=emails,
+                fail_silently=True,
+            )
+    except AlertaConfigurado.DoesNotExist:
+        pass
+
+    # Carimbo de solicitação no(s) registro(s)
     if material.preco_kg is None and material.compras_solicitado_em is None:
         if material.status != "ok":
             material.status = "aguardando"
             material.compras_solicitado_em = timezone.now()
             material.save(update_fields=["status", "compras_solicitado_em"])
 
-        else:
-            # já "ok": não altera nada
-            pass
 
-from decimal import Decimal
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, render, redirect
-from qualidade_fornecimento.models import FornecedorQualificado
-from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
-from comercial.models.precalculo import PreCalculoMaterial, PreCalculoServicoExterno
-
+# ------------------------------------------------------
+# View pública de resposta de cotação (Matéria-Prima)
+# ------------------------------------------------------
 def responder_cotacao_materia_prima(request, pk):
     """
-    View pública para que fornecedores preencham os dados de cotação da matéria-prima.
-    Para usuários anônimos, exige validação do token (link assinado).
+    View pública para fornecedores responderem à cotação da matéria-prima.
+    Para anônimos, valida o token assinado.
     """
     if not request.user.is_authenticated:
         token = request.GET.get("t")
@@ -155,7 +195,7 @@ def responder_cotacao_materia_prima(request, pk):
                 except (InvalidOperation, ValueError):
                     mat.preco_kg = None
 
-            # Opcional: marca como OK se recebeu preço
+            # Marca como OK se recebeu preço
             if mat.preco_kg:
                 mat.status = "ok"
 
@@ -163,7 +203,7 @@ def responder_cotacao_materia_prima(request, pk):
             houve_alteracao = True
 
         if houve_alteracao:
-            # Alerta + e-mail apenas uma vez após processar todas as linhas
+            # Alerta + e-mail (padrão que você já usa) :contentReference[oaicite:2]{index=2}
             try:
                 config = AlertaConfigurado.objects.get(tipo="RESPOSTA_COTACAO_MATERIAL", ativo=True)
                 destinatarios = set(config.usuarios.all())
@@ -183,26 +223,20 @@ def responder_cotacao_materia_prima(request, pk):
                 emails = [u.email for u in destinatarios if getattr(u, "email", None)]
                 if emails:
                     precalc = material.precalculo
-                    # Tenta gerar link interno pro pré-cálculo
+                    # Link interno pro pré-cálculo
                     try:
                         if getattr(precalc, "cotacao_id", None):
-                            link = request.build_absolute_uri(
-                                reverse("itens_precaculo", args=[precalc.cotacao_id])
-                            )
+                            link = request.build_absolute_uri(reverse("itens_precaculo", args=[precalc.cotacao_id]))
                         else:
-                            link = request.build_absolute_uri(
-                                reverse("visualizar_precalculo", args=[precalc.id])
-                            )
+                            link = request.build_absolute_uri(reverse("visualizar_precalculo", args=[precalc.id]))
                     except NoReverseMatch:
                         link = request.build_absolute_uri("/")
-
 
                     context = {
                         "usuario": request.user if request.user.is_authenticated else None,
                         "cotacao": getattr(precalc, "cotacao", None),
                         "precalculo": precalc,
                         "link": link,
-                        # opcionais para manter padrão do seu modelo
                         "link_normas": None,
                         "qtd_normas": 0,
                     }
@@ -245,20 +279,14 @@ def responder_cotacao_materia_prima(request, pk):
     )
 
 
-
-
-from django.db.models import Q
-from django.urls import NoReverseMatch
-
-from django.urls import reverse
-from django.conf import settings
-
-from django.db.models import Q
-from django.urls import NoReverseMatch
-from django.utils import timezone
-from django.conf import settings
-
+# ------------------------------------------------------
+# Disparo (solicitação) de cotação de Serviço Externo
+# ------------------------------------------------------
 def disparar_emails_cotacao_servicos(request, precalc):
+    """
+    Envia e-mail de solicitação de cotação por insumo e cria alerta In-App
+    para usuários/grupos configurados, seguindo o mesmo padrão dos demais.
+    """
     print(f"[SE-UTIL][INI][PC={precalc.id}]")
     pendentes = (
         precalc.servicos
@@ -286,17 +314,18 @@ def disparar_emails_cotacao_servicos(request, precalc):
         codigo = getattr(mp, "codigo", "sem_codigo")
         descricao = getattr(mp, "descricao", "-")
 
+        # Link público para o fornecedor responder em lote
         try:
-            link = gerar_link_publico(
+            link_publico = gerar_link_publico(
                 request,
                 viewname="responder_cotacao_servico_lote",
                 pk=s0.pk,
                 tipo="sev",
-                dias_validade=15
+                dias_validade=15,
             )
         except NoReverseMatch as e:
             print(f"[SE-UTIL][URL][PC={precalc.id}] NoReverseMatch='{e}'")
-            link = "(rota indisponível)"
+            link_publico = "(rota indisponível)"
 
         corpo = f"""
 🧪 Solicitação de Cotação - Serviço Externo
@@ -304,10 +333,12 @@ def disparar_emails_cotacao_servicos(request, precalc):
 📦 Código: {codigo}
 📝 Descrição: {descricao}
 
-🔗 Responder: {link}
+🔗 Responder: {link_publico}
 """.strip()
 
-        print(f"[SE-UTIL][MAIL][PC={precalc.id}] insumo_id={insumo_id} codigo={codigo} link={link}")
+        print(f"[SE-UTIL][MAIL][PC={precalc.id}] insumo_id={insumo_id} codigo={codigo} link={link_publico}")
+
+        # 1) E-mail oficial para Compras
         send_mail(
             subject="📨 Cotação de Serviço Externo",
             message=corpo,
@@ -316,6 +347,42 @@ def disparar_emails_cotacao_servicos(request, precalc):
             fail_silently=False,
         )
 
+        # 2) Alerta In-App + e-mail para os destinatários configurados
+        try:
+            config = AlertaConfigurado.objects.get(tipo="SOLICITACAO_COTACAO_SERVICO", ativo=True)
+            destinatarios = set(config.usuarios.all())
+            for g in config.grupos.all():
+                destinatarios.update(g.user_set.all())
+
+            # Link do alerta → abrir diretamente a página de resposta
+            try:
+                link_resp = request.build_absolute_uri(reverse("responder_cotacao_servico_lote", args=[s0.id]))
+            except NoReverseMatch:
+                link_resp = "/"
+
+            for user in destinatarios:
+                AlertaUsuario.objects.create(
+                    usuario=user,
+                    titulo=f"📨 Cotação de Serviço Solicitada ({codigo})",
+                    mensagem=f"Foi solicitada a cotação do serviço externo referente ao material {codigo} – {descricao}.",
+                    tipo="SOLICITACAO_COTACAO_SERVICO",
+                    referencia_id=s0.id,
+                    url_destino=link_resp,  # 🔗 vai direto ao template de resposta
+                )
+
+            emails = [u.email for u in destinatarios if getattr(u, "email", None)]
+            if emails:
+                send_mail(
+                    subject="[Sistema Bras-Mol] Cotação de Serviço Externo solicitada",
+                    message=corpo,
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                    recipient_list=emails,
+                    fail_silently=True,
+                )
+        except AlertaConfigurado.DoesNotExist:
+            pass
+
+        # Carimbo de solicitação nos registros pendentes do insumo
         agora = timezone.now()
         ids_pend = [
             s.id for s in lista
@@ -334,19 +401,13 @@ def disparar_emails_cotacao_servicos(request, precalc):
     return enviados
 
 
-
-
-from decimal import Decimal, InvalidOperation
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, render, redirect
-from qualidade_fornecimento.models import FornecedorQualificado
-from comercial.models.precalculo import PreCalculoServicoExterno
-from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
-
+# ------------------------------------------------------
+# View pública de resposta de cotação (Serviço em lote)
+# ------------------------------------------------------
 def responder_cotacao_servico_lote(request, pk):
     """
-    View pública para que fornecedores preencham os dados de cotação de serviços em lote.
-    Para usuários anônimos, exige validação do token (link assinado).
+    View pública para fornecedores responderem à cotação de serviços (em lote).
+    Para anônimos, valida o token assinado.
     """
     if not request.user.is_authenticated:
         token = request.GET.get("t")
@@ -396,7 +457,7 @@ def responder_cotacao_servico_lote(request, pk):
     if request.method == "POST":
         houve_alteracao = False
 
-        # Importante: o template deve enviar <input type="hidden" name="id_{{ forloop.counter0 }}" value="{{ sev.id }}">
+        # Template deve enviar <input type="hidden" name="id_{{ forloop.counter0 }}" value="{{ sev.id }}">
         for i, _ in enumerate(servicos):
             sev_id = request.POST.get(f"id_{i}")
             if not sev_id:
@@ -409,7 +470,7 @@ def responder_cotacao_servico_lote(request, pk):
 
             sev.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
 
-            # normalizador local pt-BR → Decimal
+            # Normalizador local pt-BR → Decimal
             def _dec(v, casas="0.01"):
                 if v in (None, ""):
                     return None
@@ -420,16 +481,13 @@ def responder_cotacao_servico_lote(request, pk):
                         if s.rfind(",") > s.rfind("."):
                             s = s.replace(".", "").replace(",", ".")
                         else:
-                            # en-US com milhar por vírgula: 1,234.56 → remove as vírgulas de milhar
+                            # en-US 1,234.56 → remove vírgulas de milhar
                             s = s.replace(",", "")
                     elif "," in s:
-                        # apenas vírgula → vírgula decimal
                         s = s.replace(",", ".")
-                    # se só tem ponto, mantém como decimal
                     return Decimal(s).quantize(Decimal(casas))
                 except (InvalidOperation, ValueError):
                     return None
-
 
             sev.icms         = _dec(request.POST.get(f"icms_{i}"), "0.01")
             sev.lote_minimo  = _dec(request.POST.get(f"lote_minimo_{i}"), "0.01")
@@ -439,7 +497,6 @@ def responder_cotacao_servico_lote(request, pk):
 
             sev.preco_kg     = _dec(request.POST.get(f"preco_kg_{i}"), "0.0001")
 
-
             # Marca como OK apenas se houver preço informado
             if sev.preco_kg:
                 sev.status = "ok"
@@ -448,7 +505,7 @@ def responder_cotacao_servico_lote(request, pk):
             houve_alteracao = True
 
         if houve_alteracao:
-            # Alerta + e-mail enviados uma única vez após processar todas as linhas
+            # Alerta + e-mail (padrão que você já usa) :contentReference[oaicite:3]{index=3}
             try:
                 config = AlertaConfigurado.objects.get(tipo="RESPOSTA_COTACAO_SERVICO", ativo=True)
                 destinatarios = set(config.usuarios.all())
@@ -474,16 +531,11 @@ def responder_cotacao_servico_lote(request, pk):
                     precalc = servico.precalculo
                     try:
                         if getattr(precalc, "cotacao_id", None):
-                            link = request.build_absolute_uri(
-                                reverse("itens_precaculo", args=[precalc.cotacao_id])
-                            )
+                            link = request.build_absolute_uri(reverse("itens_precaculo", args=[precalc.cotacao_id]))
                         else:
-                            link = request.build_absolute_uri(
-                                reverse("visualizar_precalculo", args=[precalc.id])
-                            )
+                            link = request.build_absolute_uri(reverse("visualizar_precalculo", args=[precalc.id]))
                     except NoReverseMatch:
                         link = request.build_absolute_uri("/")
-
 
                     context = {
                         "usuario": request.user if request.user.is_authenticated else None,
@@ -532,5 +584,3 @@ def responder_cotacao_servico_lote(request, pk):
             "codigo": codigo,
         }
     )
-
-

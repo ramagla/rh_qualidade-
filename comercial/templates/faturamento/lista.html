@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+
+{% block title %}Faturamento{% endblock %}
+
+{% block content %}
+{% load static %}
+{% load humanize %}
+{% load custom_filters %}
+{% load filters_gerais %}
+
+{# Estilos e toasts globais #}
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_toast_mensagens.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+
+<div class="container-fluid mt-5">
+
+  {# Cabeçalho da página #}
+  {% include "partials/global/_header_titulo.html"  with titulo="Faturamento" icone="bi bi-file-earmark-text" emoji="📄" %}
+
+  {# Barra de ações: Filtros + Novo + Sync #}
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+
+  {% if request.user|has_permission:"comercial.add_faturamentoregistro" %}
+    <a href="{% url 'criar_faturamento' %}"
+       class="btn-cadastrar-personalizado btn-acao-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2"></i>
+      Novo Registro
+    </a>
+  {% endif %}
+
+    <a href="{% url 'relatorio_faturamento' %}?{{ request.GET.urlencode }}"
+     class="btn-relatorio-personalizado btn-acao-personalizado d-inline-flex align-items-center" target="_blank">
+    <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>
+    Gerar Relatório
+  </a>
+
+  <a href="{% url 'relatorio_duplicatas' %}?{{ request.GET.urlencode }}"
+     class="btn-relatorio-personalizado btn-acao-personalizado d-inline-flex align-items-center" target="_blank">
+    <i class="bi bi-receipt me-2"></i>
+    Duplicatas
+  </a>
+
+
+  <button class="btn-sync-personalizado btn-acao-personalizado d-inline-flex align-items-center"
+          type="button" data-bs-toggle="collapse" data-bs-target="#syncCollapse"
+          aria-expanded="false" aria-controls="syncCollapse">
+    <i class="bi bi-arrow-repeat me-2"></i>
+    Sincronizar (API)
+  </button>
+</div>
+
+
+
+  {# Collapse: Form de Sync #}
+<div class="collapse" id="syncCollapse">
+  <div class="card shadow-sm border-0">
+    <div class="card-header d-flex align-items-center gap-2 bg-light">
+      <i class="bi bi-cloud-arrow-down-fill"></i>
+      <span class="fw-semibold">Sincronização de Faturamento (API)</span>
+    </div>
+
+    <div class="card-body">
+      <form method="post" action="{% url 'sync_faturamento' %}" class="row g-3 align-items-end">
+        {% csrf_token %}
+
+        <div class="col-12 col-md-3">
+          <label for="dtInicio" class="form-label fw-medium">
+            <i class="bi bi-calendar-date me-1"></i>Data Início
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+            <input id="dtInicio" type="date" name="data_inicio" class="form-control" required>
+          </div>
+          <div class="form-text">Primeiro dia do período a sincronizar.</div>
+        </div>
+
+        <div class="col-12 col-md-3">
+          <label for="dtFim" class="form-label fw-medium">
+            <i class="bi bi-calendar-date-fill me-1"></i>Data Fim
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-calendar3-event"></i></span>
+            <input id="dtFim" type="date" name="data_fim" class="form-control" required>
+          </div>
+          <div class="form-text">Último dia do período a sincronizar.</div>
+        </div>
+
+        <div class="col-12 col-md-4 d-flex align-items-center">
+          <div class="form-check form-switch w-100">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   id="sobrescrever" name="sobrescrever" value="1">
+            <label class="form-check-label fw-medium" for="sobrescrever">
+              Sobrescrever existentes (exceto congelados)
+            </label>
+            <div class="form-text">
+              Registros <b>congelados</b> no Cadastro ficam protegidos de atualização.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-2">
+          <button type="submit" class="btn-sync-personalizado btn-acao-personalizado w-100">
+            <i class="bi bi-arrow-repeat me-2"></i> Executar
+          </button>
+        </div>
+
+        <div class="col-12">
+          <div class="alert alert-info d-flex align-items-start gap-2 py-2 px-3 mb-0">
+            <i class="bi bi-info-circle mt-1"></i>
+            <div>
+              A sincronização considera o período informado e aplica as regras de sobrescrita acima.
+              Para lotes muito grandes, prefira janelas mensais.
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+  {# Offcanvas Filtros #}
+{# Offcanvas Filtros #}
+<div class="offcanvas offcanvas-end offcanvas-modern"
+     tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel" aria-hidden="true">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Faturamento
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+
+      <!-- Linha 1: Período -->
+      <div class="col-md-6">
+        <label for="data_de" class="form-label fw-semibold">
+          <i class="bi bi-calendar-event me-1"></i> De (Ocorrência)
+        </label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+          <input type="date" name="de" id="data_de" class="form-control" value="{{ filtros.de }}">
+        </div>
+        <div class="form-text">Filtra pela <b>data da ocorrência</b>.</div>
+      </div>
+
+      <div class="col-md-6">
+        <label for="data_ate" class="form-label fw-semibold">
+          <i class="bi bi-calendar-event me-1"></i> Até (Ocorrência)
+        </label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+          <input type="date" name="ate" id="data_ate" class="form-control" value="{{ filtros.ate }}">
+        </div>
+      </div>
+
+      <!-- Linha 2: Cliente + Tipo -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" for="cliente">
+          <i class="bi bi-building me-1"></i> Cliente
+        </label>
+       <select name="cliente" id="cliente"
+        class="form-select select2"
+        data-placeholder="Selecione um cliente"
+        data-dropdown-parent="#filtrosOffcanvas">
+  <option value=""></option>
+  {% for nome in clientes_texto_options %}
+    <option value="{{ nome }}" {% if filtros.cliente == nome %}selected{% endif %}>{{ nome }}</option>
+  {% endfor %}
+</select>
+
+
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" for="tipo">
+          <i class="bi bi-tag-fill me-1"></i> Tipo
+        </label>
+        <select name="tipo" id="tipo" class="form-select">
+          <option value="">Todos</option>
+          {% for val, label in tipo_choices %}
+            <option value="{{ val }}" {% if filtros.tipo == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Linha 3: NF-e + Código Item -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" for="nfe">
+          <i class="bi bi-upc-scan me-1"></i> NF-e
+        </label>
+        <input type="text" name="nfe" id="nfe" class="form-control" value="{{ filtros.nfe }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" for="item">
+          <i class="bi bi-box me-1"></i> Cód. Item
+        </label>
+        <input type="text" name="item" id="item" class="form-control" value="{{ filtros.item }}">
+      </div>
+
+      <!-- Linha 4: Congelados -->
+      <div class="col-12">
+        <div class="form-check mt-1">
+          <input class="form-check-input" type="checkbox" id="apenas_congelados"
+                 name="apenas_congelados" value="1"
+                 {% if filtros.apenas_congelados == '1' %}checked{% endif %}>
+          <label class="form-check-label" for="apenas_congelados">
+            Mostrar apenas registros congelados
+          </label>
+        </div>
+      </div>
+
+      <!-- Ações -->
+      <div class="col-12 mt-2 d-flex gap-2">
+        {% include "partials/global/_botao_filtrar.html" %}       
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+
+{# Indicadores (Total Base, IPI e ICMS) #}
+<div class="row row-cols-1 row-cols-md-4 g-4 mb-4 mt-4">
+{% include "partials/global/_card_indicador.html" with cor="info" titulo="VALOR BASE (SEM IPI)" valor=indicadores.total_sem_ipi|default:"0"|formatar_reais subtitulo="Soma dos valores (R$)" icone="bi-currency-dollar" %}
+  {% include "partials/global/_card_indicador.html" with cor="warning" titulo="TOTAL IPI"            valor=indicadores.total_ipi|formatar_reais subtitulo="Soma do IPI (R$)" icone="bi-percent" %}
+  {% include "partials/global/_card_indicador.html" with cor="success" titulo="TOTAL ICMS"           valor=indicadores.total_icms|formatar_reais subtitulo="Valor estimado (R$)" icone="bi-cash-coin" %}
+{% include "partials/global/_card_indicador.html" with cor="secondary" titulo="TOTAL DE REGISTROS" valor=indicadores.total_registros|default:0 subtitulo="Qtd. de registros" icone="bi-card-list" %}
+</div>
+
+
+
+
+
+  {# Título + legenda opcional #}
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted"></i>📑 Registros de Faturamento
+  </h5>
+
+  {# Tabela #}
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visually-hidden">Tabela de faturamento</caption>
+      <thead class="table-light">
+  <tr>
+    <th class="text-center align-middle"><i class="bi bi-upc-scan"></i><br><small>NF-e</small></th>
+    <th class="text-center align-middle"><i class="bi bi-tag"></i><br><small>Tipo</small></th>
+
+    <th class="text-center align-middle"><i class="bi bi-calendar2-week"></i><br><small>Ocorrência</small></th>
+    <th class="text-center align-middle"><i class="bi bi-building"></i><br><small>Cliente</small></th>
+    <th class="text-center align-middle"><i class="bi bi-link-45deg"></i><br><small>Vínculo</small></th>
+
+    <!-- Frete removido -->
+    <th class="text-center align-middle"><i class="bi bi-box"></i><br><small>Código</small></th>
+    <th class="text-center align-middle"><i class="bi bi-123"></i><br><small>Qtde</small></th>
+    <th class="text-center align-middle"><i class="bi bi-currency-dollar"></i><br><small>Vlr Unit.</small></th>
+    <th class="text-center align-middle"><i class="bi bi-cash-stack"></i><br><small>Vlr Total s/ IPI</small></th>
+    <th class="text-center align-middle"><i class="bi bi-percent"></i><br><small>IPI (%)</small></th>
+    <th class="text-center align-middle"><i class="bi bi-bar-chart-line-fill"></i><br><small>ICMS (%)</small></th>
+
+    <th class="text-center align-middle"><i class="bi bi-snow"></i><br><small>Congelado?</small></th>
+    <th class="text-center align-middle"><i class="bi bi-gear"></i><br><small>Ações</small></th>
+  </tr>
+</thead>
+<tbody>
+{% for r in page_obj %}
+  <tr>
+    <!-- NF-e nula => 'Vale' -->
+    <td>{{ r.nfe|default:"Vale" }}</td>
+    <td>
+      {% if r.tipo == "Venda" %}
+        <span class="badge bg-success d-inline-flex align-items-center gap-1">
+          <i class="bi bi-arrow-up-circle"></i> Venda
+        </span>
+      {% elif r.tipo == "Devolução" %}
+        <span class="badge bg-danger d-inline-flex align-items-center gap-1">
+          <i class="bi bi-arrow-down-circle"></i> Devolução
+        </span>
+      {% else %}
+        <span class="badge bg-secondary">—</span>
+      {% endif %}
+    </td>
+    <!-- Ocorrência dd/mm/yyyy -->
+<td>{{ r.ocorrencia|date:"d/m/Y"|default:"—" }}</td>
+
+    <td class="text-start">{{ r.cliente|default:"—" }}</td>
+<td>
+  {% if r.cliente_vinculado %}
+    <span class="badge bg-success">Sim</span>
+  {% else %}
+    <span class="badge bg-danger">Não</span>
+  {% endif %}
+</td>
+    <!-- Frete removido -->
+
+    <td class="text-start">{{ r.item_codigo|default:"—" }}</td>
+
+    <!-- Qtde: 2 casas + linha auxiliar no padrão BR (milhar com ponto) -->
+   <td class="text-end">
+  {{ r.item_quantidade|default_if_none:0|milhar_ptbr }}
+</td>
+
+<td class="text-end">
+  R$ {{ r.item_valor_unitario|default_if_none:0|stringformat:".4f"|cut:"."|slice:":-4" }},{{ r.item_valor_unitario|stringformat:".4f"|split:"."|last }}
+</td>
+
+
+
+    <!-- Novo: Valor Total sem IPI -->
+<td class="text-end">
+  {{ r.valor_total|default_if_none:0|formatar_reais }}
+</td>
+
+    <td>{{ r.item_ipi|default_if_none:"0.00"|floatformat:2 }}</td>
+<td>{{ r.perc_icms|default_if_none:"0.00"|floatformat:2 }}</td>
+
+    <td>
+      {% if r.congelado %}
+        <span class="text-info d-inline-flex align-items-center gap-1">
+          <i class="bi bi-snow2"></i> Sim
+        </span>
+      {% else %}
+        <span class="text-muted">Não</span>
+      {% endif %}
+    </td>
+
+    <td>
+      <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+        {% if request.user|has_permission:"comercial.change_faturamentoregistro" %}
+          {% include "partials/global/_botao_editar.html" with objeto=r url_editar="editar_faturamento" label="registro" %}
+        {% endif %}
+        {% if request.user|has_permission:"comercial.delete_faturamentoregistro" %}
+          {% include "partials/global/_botao_excluir.html" with objeto=r url_excluir="excluir_faturamento" label="registro" %}
+          {% include "partials/global/_modal_exclusao.html"   with objeto=r url_excluir="excluir_faturamento" %}
+        {% endif %}
+      </div>
+    </td>
+  </tr>
+{% empty %}
+  {% include "partials/global/_sem_resultados.html" with colspan=10 mensagem="Nenhum registro encontrado." %}
+{% endfor %}
+</tbody>
+
+    </table>
+
+    {# Paginação #}
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+</div>
+{% endblock %}

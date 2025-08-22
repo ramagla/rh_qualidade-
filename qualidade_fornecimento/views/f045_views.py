@@ -57,11 +57,20 @@ def visualizar_f045_pdf(request, relacao_id):
     try:
         norma_obj = relacao.materia_prima.norma
         tipo_abnt = relacao.materia_prima.tipo_abnt
-        composicao = NormaComposicaoElemento.objects.filter(norma=norma_obj, tipo_abnt__iexact=tipo_abnt).first()
+        composicao = NormaComposicaoElemento.objects.filter(
+            norma=norma_obj, tipo_abnt__iexact=tipo_abnt
+        ).first()
         bitola = relacao.materia_prima.bitola.replace(",", ".") if relacao.materia_prima.bitola else None
         bitola_float = float(bitola) if bitola else None
-        norma_tracao = NormaTracao.objects.filter(norma=norma_obj, tipo_abnt__iexact=tipo_abnt,
-                                                  bitola_minima__lte=bitola_float, bitola_maxima__gte=bitola_float).first() if bitola_float and tipo_abnt else None
+        norma_tracao = (
+            NormaTracao.objects.filter(
+                norma=norma_obj,
+                tipo_abnt__iexact=tipo_abnt,
+                bitola_minima__lte=bitola_float,
+                bitola_maxima__gte=bitola_float,
+            ).first()
+            if bitola_float and tipo_abnt else None
+        )
     except (NormaTecnica.DoesNotExist, NormaComposicaoElemento.DoesNotExist, ValueError):
         composicao = None
         norma_tracao = None
@@ -89,15 +98,51 @@ def visualizar_f045_pdf(request, relacao_id):
                     ok = vmin <= val <= vmax
                 else:
                     ok = False
-            except:
+            except Exception:
                 val = valor
                 ok = False
-
             encontrados.append({
                 "sigla": sigla, "min": vmin, "max": vmax,
                 "valor": val, "ok": ok,
-                "nome_elemento": "",  # Opcional
+                "nome_elemento": "",
             })
+
+    # ===== Laudo do Certificado (Tração/Dureza vs Norma) para o PDF =====
+    def _parse_decimal_str(valor):
+        if valor is None:
+            return None
+        s = str(valor).strip()
+        for tok in ("kgf/mm2", "kgf/mm²", "MPa", "HRB", "HRC", "—", "N/A"):
+            s = s.replace(tok, "")
+        s = s.replace(",", ".")
+        try:
+            return Decimal(s)
+        except Exception:
+            return None
+
+    res_min = res_max = dureza_limite = None
+    if norma_tracao:
+        if getattr(norma_tracao, "resistencia_min", None) is not None:
+            res_min = Decimal(str(norma_tracao.resistencia_min).replace(",", "."))
+        if getattr(norma_tracao, "resistencia_max", None) is not None:
+            res_max = Decimal(str(norma_tracao.resistencia_max).replace(",", "."))
+        if getattr(norma_tracao, "dureza", None):
+            dureza_limite = Decimal(str(norma_tracao.dureza).replace(",", "."))
+
+    tracao_cert = _parse_decimal_str(getattr(f045, "resistencia_tracao", None))
+    dureza_cert = _parse_decimal_str(getattr(f045, "dureza_certificado", None))
+
+    if tracao_cert is None and dureza_cert is None:
+        laudo_certificado_pdf = None
+    else:
+        tracao_ok = True
+        dureza_ok = True
+        if tracao_cert is not None and res_min is not None and res_max is not None:
+            tracao_ok = (res_min <= tracao_cert <= res_max)
+        if dureza_limite is not None and dureza_cert is not None:
+            dureza_ok = (dureza_cert <= dureza_limite)
+        laudo_certificado_pdf = "Ap" if (tracao_ok and dureza_ok) else "Re"
+    # ===== FIM Laudo do Certificado =====
 
     # Assinatura padrão (fallback)
     assinatura_nome = f045.usuario.get_full_name() or f045.usuario.username
@@ -108,7 +153,6 @@ def visualizar_f045_pdf(request, relacao_id):
     qr_base64 = None
     url_validacao = None
 
-    # Se tiver assinatura eletrônica, sobrescreve os dados
     assinatura_eletronica = AssinaturaEletronica.objects.filter(
         origem_model="RelatorioF045",
         origem_id=f045.id
@@ -147,9 +191,13 @@ def visualizar_f045_pdf(request, relacao_id):
 
         # Título
         "titulo": f"F045 – Relatório {f045.nro_relatorio}",
+
+        # Novo: laudo calculado para impressão na tabela “Outras características”
+        "laudo_certificado_pdf": laudo_certificado_pdf,
     }
 
     return render(request, "f045/f045_visualizacao.html", context)
+
 
 
 

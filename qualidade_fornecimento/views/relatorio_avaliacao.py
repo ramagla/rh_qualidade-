@@ -47,11 +47,11 @@ def relatorio_avaliacao_view(request):
                     for d in dados
                     if d.status_geral() in ["Reprovado", "Aprovado Condicionalmente"]
                 )
+                # vamos mapear atraso -> demérito (PQ006)
                 atrasos = [
                     s.servico.atraso_em_dias
                     for s in dados
-                    if hasattr(s.servico, "atraso_em_dias")
-                    and s.servico.atraso_em_dias is not None
+                    if getattr(s.servico, "atraso_em_dias", None) is not None
                 ]
             else:
                 dados = RelacaoMateriaPrima.objects.filter(
@@ -60,13 +60,23 @@ def relatorio_avaliacao_view(request):
                 reprovados = dados.filter(
                     status__in=["Reprovado", "Aprovado Condicionalmente"]
                 ).count()
-                atrasos = [
-                    d.atraso_em_dias for d in dados if d.atraso_em_dias is not None
-                ]
+                atrasos = [d.atraso_em_dias for d in dados if d.atraso_em_dias is not None]
 
             total = max(1, dados.count())
             iqf = 1 - (reprovados / total)
-            ip = 1 - (sum(atrasos) / len(atrasos) / 100) if atrasos else 1
+
+            def _demerito_por_atraso(dias):
+                if dias >= 21: return 30
+                if 15 <= dias <= 20: return 20
+                if 11 <= dias <= 14: return 15
+                if 7 <= dias <= 10:  return 10
+                if 3 <= dias <= 6:   return 5
+                return 0  # 0–2 dias: sem demérito
+
+            demeritos = [_demerito_por_atraso(int(d)) for d in atrasos]
+            media_dem = (sum(demeritos) / len(demeritos)) if demeritos else 0
+            ip = 1 - (media_dem / 30)  # fração: 1.0 = 100% (sem demérito)
+
             pontuacao = (fornecedor.score or 0) / 100  # transformar score em fração
 
             # Ponderações
@@ -177,7 +187,19 @@ def relatorio_iqf_view(request):
             atrasos = grupo_mes["atraso_em_dias"].dropna()
 
             iqf = 1 - (reprovados / total)
-            ip = 1 - (atrasos.sum() / len(atrasos) / 100) if len(atrasos) > 0 else 1
+
+            def _demerito_por_atraso(dias):
+                d = int(dias)
+                if d >= 21: return 30
+                if 15 <= d <= 20: return 20
+                if 11 <= d <= 14: return 15
+                if 7 <= d <= 10:  return 10
+                if 3 <= d <= 6:   return 5
+                return 0
+
+            media_dem = atrasos.apply(_demerito_por_atraso).mean() if len(atrasos) > 0 else 0
+            ip = 1 - (media_dem / 30)  # fração: 1.0 = 100%
+
             iqs = 0.9  # Valor fixo de pontuação como índice de qualidade do fornecedor
 
             nota_final = round((iqf * 0.5 + ip * 0.3 + iqs * 0.2) * 100, 2)

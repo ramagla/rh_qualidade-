@@ -24,7 +24,41 @@ def dashboard_qualidade_view(request):
     total = max(1, dados_mp.count())
 
     iqf = round((1 - (reprovados / total)) * 100, 1)
-    ip = round((1 - (sum(atrasos) / len(atrasos) / 100)) * 100, 1) if atrasos else 100
+    # IP (índice por demérito – PQ006) – CORRETO
+    def _ip_por_atraso(dias):
+        if dias is None:
+            return 0
+        if dias >= 21:
+            return 30
+        if 15 <= dias <= 20:
+            return 20
+        if 11 <= dias <= 14:
+            return 15
+        if 7 <= dias <= 10:
+            return 10
+        if 3 <= dias <= 6:
+            return 5
+        return 0  # 0, 1 ou 2 dias: sem demérito
+
+    # Serviços externos: usa calcular_ip() se existir; senão, mapeia por atraso
+    demeritos_servico = [
+        (s.calcular_ip() if hasattr(s, "calcular_ip") else _ip_por_atraso(getattr(s, "atraso_em_dias", 0)))
+        for s in ControleServicoExterno.objects.all()
+    ]
+
+    # Matéria-prima: prioriza o campo já calculado; senão, mapeia pelo atraso
+    demeritos_mp = []
+    for r in RelacaoMateriaPrima.objects.all():
+        if getattr(r, "demerito_ip", None) is not None:
+            demeritos_mp.append(r.demerito_ip)
+        else:
+            demeritos_mp.append(_ip_por_atraso(getattr(r, "atraso_em_dias", 0)))
+
+    demeritos = demeritos_servico + demeritos_mp
+    media_dem = (sum(demeritos) / len(demeritos)) if demeritos else 0
+
+    # Converte demérito (0–30) para índice 0–100, onde 100 é sem demérito
+    ip = round(100 * (1 - (media_dem / 30)), 1)
 
     # Simulação de IQG apenas para gráfico
     pontuacao_simulada = 90 / 100
