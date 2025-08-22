@@ -7,3 +7,4 @@ from .precalculo import PreCalculo
 from .ordem_desenvolvimento import OrdemDesenvolvimento
 from .viabilidade import ViabilidadeAnaliseRisco
 from .indicadores import IndicadorComercialRegistroMensal
+from .faturamento import FaturamentoDuplicata, FaturamentoRegistro

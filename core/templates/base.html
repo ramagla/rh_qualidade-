@@ -620,14 +620,15 @@
       });
     </script>
 
+    <!-- Botão flutuante de alertas -->
     {% if alertas_nao_lidos > 0 %}
-    <div class="dropdown" id="alerta-flutuante">
-      <a class="btn btn-warning rounded-circle" href="#" id="botaoAlertas" data-bs-toggle="dropdown" aria-expanded="false" title="Alertas de Qualidade">
-        <i class="bi bi-envelope-fill fs-4"></i>
-        {% if alertas_nao_lidos > 0 %}
+<div class="dropdown" id="alerta-flutuante">
+    <a class="btn btn-warning rounded-circle" href="#" id="botaoAlertas" data-bs-toggle="dropdown" aria-expanded="false" title="Alertas de Qualidade">
+      <i class="bi bi-envelope-fill fs-4"></i>
+      {% if alertas_nao_lidos > 0 %}
         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
           {{ alertas_nao_lidos }}
-          <span class="visualmente-oculto">alertas não lidos</span>
+          <span class="visually-hidden">alertas não lidos</span>
         </span>
       {% endif %}
     </a>
@@ -674,6 +675,7 @@
       
   </div>
   {% endif %}
+
 
     <form id="csrf-token-form" style="display: none;">
       {% csrf_token %}
