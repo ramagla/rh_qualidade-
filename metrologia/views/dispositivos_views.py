@@ -20,6 +20,11 @@ from metrologia.models.models_dispositivos import (
 from metrologia.models.models_tabelatecnica import TabelaTecnica
 from django.contrib.auth.decorators import login_required, permission_required
 
+import calendar
+from dateutil.relativedelta import relativedelta
+
+def _eom(d):
+    return d.replace(day=calendar.monthrange(d.year, d.month)[1])
 
 @login_required
 @permission_required("metrologia.view_dispositivo", raise_exception=True)
@@ -28,79 +33,98 @@ def lista_dispositivos(request):
     range_start = today
     range_end = today + timedelta(days=31)
 
-    # Adiciona a anotação de próxima calibração
-    dispositivos = Dispositivo.objects.annotate(
-        proxima_calibracao=ExpressionWrapper(
-            Coalesce(F("data_ultima_calibracao"), Value(today))
-            + ExpressionWrapper(
-                Coalesce(F("frequencia_calibracao"), Value(1)) * Value(30),
-                output_field=timedelta,
-            ),
-            output_field=DateField(),
-        )
-    )
+    # Base queryset
+    qs = Dispositivo.objects.all()
 
-    # Estatísticas para os cards
-    total_dispositivos = dispositivos.count()
-    total_fora_prazo = dispositivos.filter(proxima_calibracao__lt=today).count()
-    total_proximo_prazo = dispositivos.filter(
-        proxima_calibracao__gte=range_start, proxima_calibracao__lte=range_end
-    ).count()
-
+    # 🔁 Filtros dinâmicos (no queryset, antes de montar a lista)
     local_armazenagem = request.GET.get("local_armazenagem")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
+    codigo = request.GET.get("codigo")
+    cliente = request.GET.get("cliente")
+    situacao = request.GET.get("situacao")
 
-    # Filtros dinâmicos
     if data_inicio and data_fim:
-        dispositivos = dispositivos.filter(
-            data_ultima_calibracao__range=[data_inicio, data_fim]
-        )
+        qs = qs.filter(data_ultima_calibracao__range=[data_inicio, data_fim])
 
     if local_armazenagem:
-        dispositivos = dispositivos.filter(
-            local_armazenagem__icontains=local_armazenagem
-        )
+        qs = qs.filter(local_armazenagem__icontains=local_armazenagem)
 
-    codigo = request.GET.get("codigo")
     if codigo:
-        dispositivos = dispositivos.filter(codigo=codigo)
+        qs = qs.filter(codigo=codigo)
 
-    cliente = request.GET.get("cliente")
     if cliente:
-        dispositivos = dispositivos.filter(cliente__icontains=cliente)
+        qs = qs.filter(cliente__icontains=cliente)
 
-    situacao = request.GET.get("situacao")
     if situacao:
-        dispositivos = dispositivos.filter(controle_entrada_saida__situacao=situacao)
+        qs = qs.filter(controle_entrada_saida__situacao=situacao)
 
-    # Paginação
-    paginator = Paginator(dispositivos, 10)  # 10 dispositivos por página
-    page_number = request.GET.get("page")
+    # 🗓️ Calcula proxima_calibracao (EOM) e monta lista para paginação
+    dispositivos = []
+    for d in qs:
+        if d.data_ultima_calibracao and d.frequencia_calibracao:
+            prox = _eom(d.data_ultima_calibracao + relativedelta(months=d.frequencia_calibracao))
+            setattr(d, "proxima_calibracao", prox)
+        else:
+            setattr(d, "proxima_calibracao", None)
+        dispositivos.append(d)
+
+    # 📊 Estatísticas dos cards (com a lista já filtrada)
+    total_dispositivos = len(dispositivos)
+    total_fora_prazo = len([d for d in dispositivos if d.proxima_calibracao and d.proxima_calibracao < today])
+    total_proximo_prazo = len([d for d in dispositivos if d.proxima_calibracao and range_start <= d.proxima_calibracao <= range_end])
+
+    filtro_prazo = request.GET.get("prazo")
+
+    dentro, proximo, fora = [], [], []
+    for d in dispositivos:
+        if d.proxima_calibracao:
+            if d.proxima_calibracao < today:
+                fora.append(d)
+            elif range_start <= d.proxima_calibracao <= range_end:
+                proximo.append(d)
+            else:
+                dentro.append(d)
+        else:
+            # sem próxima calculada: trate como "dentro" para exibir (ajuste se preferir ocultar)
+            dentro.append(d)
+
+    if filtro_prazo == "fora":
+        dispositivos_filtrados = fora
+    elif filtro_prazo == "proximo":
+        dispositivos_filtrados = proximo
+    elif filtro_prazo == "dentro":
+        dispositivos_filtrados = dentro
+    else:
+        dispositivos_filtrados = dentro + proximo + fora
+
+    # 📄 Paginação sobre a lista filtrada por prazo
+    paginator = Paginator(dispositivos_filtrados, 10)
+    page_number = request.GET.get("page") or 1
     page_obj = paginator.get_page(page_number)
+
+    # 📋 Combos e contadores que dependem de QuerySet (use o qs filtrado)
+    codigos_disponiveis = qs.values_list("codigo", flat=True).distinct().order_by("codigo")
+    clientes_disponiveis = qs.values_list("cliente", flat=True).distinct().order_by("cliente")
+    total_ok = qs.filter(controle_entrada_saida__situacao="OK").count()
+    total_nok = qs.filter(controle_entrada_saida__situacao="NOK").count()
+    locais_disponiveis = qs.values_list("local_armazenagem", flat=True).distinct().order_by("local_armazenagem")
 
     context = {
         "page_obj": page_obj,
-        "codigos_disponiveis": dispositivos.values_list("codigo", flat=True)
-        .distinct()
-        .order_by("codigo"),
-        "clientes_disponiveis": dispositivos.values_list("cliente", flat=True)
-        .distinct()
-        .order_by("cliente"),
+        "codigos_disponiveis": codigos_disponiveis,
+        "clientes_disponiveis": clientes_disponiveis,
         "total_dispositivos": total_dispositivos,
         "total_fora_prazo": total_fora_prazo,
         "total_proximo_prazo": total_proximo_prazo,
-        "total_ok": dispositivos.filter(controle_entrada_saida__situacao="OK").count(),
-        "total_nok": dispositivos.filter(
-            controle_entrada_saida__situacao="NOK"
-        ).count(),
-        "today": today,  # Passa a data atual para o template
-        "locais_disponiveis": dispositivos.values_list("local_armazenagem", flat=True)
-        .distinct()
-        .order_by("local_armazenagem"),
+        "total_ok": total_ok,
+        "total_nok": total_nok,
+        "today": today,
+        "locais_disponiveis": locais_disponiveis,
+        "prazo_selecionado": filtro_prazo, 
     }
-
     return render(request, "dispositivos/lista_dispositivos.html", context)
+
 
 
 

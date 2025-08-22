@@ -20,7 +20,6 @@ class CalibracaoDispositivoForm(forms.ModelForm):
             "data_afericao": forms.DateInput(
                 attrs={"type": "date", "class": "form-control"}, format="%Y-%m-%d"
             ),
-            "observacoes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "anexo": forms.FileInput(attrs={"class": "form-control", "accept": ".pdf,.doc,.docx"}),
 
         }
@@ -28,22 +27,39 @@ class CalibracaoDispositivoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        if self.instance and self.instance.calibracao_cliente:
+                    # 🔒 Mantém apenas os campos essenciais
+                    manter = ["codigo_dispositivo", "data_afericao", "observacoes", "anexo"]
+                    for campo in list(self.fields.keys()):
+                        if campo not in manter:
+                            self.fields.pop(campo)
+                            
         # Converter data do banco para o formato YYYY-MM-DD (necessário para o input type="date")
         if self.instance and self.instance.data_afericao:
             self.initial["data_afericao"] = self.instance.data_afericao
 
         # Carregar dados dinâmicos e ordenar
+# Sinalização do modo "calibração do cliente"
+        is_cliente = False
+        if "calibracao_cliente" in self.data:
+            val = self.data.get("calibracao_cliente")
+            is_cliente = str(val).lower() in ("1", "true", "on")
+        elif getattr(self.instance, "calibracao_cliente", False):
+            is_cliente = True
+
         self.fields["instrumento_utilizado"] = forms.ModelChoiceField(
             queryset=TabelaTecnica.objects.all().order_by("nome_equipamento"),
             widget=Select2Widget(attrs={"class": "form-select"}),
             empty_label="Selecione um instrumento",
             label="Instrumento",
+            required=not is_cliente,
         )
         self.fields["nome_responsavel"] = forms.ModelChoiceField(
             queryset=Funcionario.objects.all().order_by("nome"),
             widget=Select2Widget(attrs={"class": "form-select"}),
             empty_label="Selecione um responsável",
             label="Nome do Responsável",
+            required=not is_cliente,
         )
     def clean_anexo(self):
             f = self.cleaned_data.get("anexo")

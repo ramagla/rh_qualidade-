@@ -270,91 +270,122 @@
 
 
   <!-- Tabela de Roteiros -->
-  <h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📄 Lista de Roteiros</h5>
-  <div class="table-responsive zebra-tabela mt-4">
-    <table class="table table-bordered table-striped align-middle text-center">
-     <thead class="table-light align-middle text-center">
-  <tr>
-    <th>
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-upc mb-1"></i>
-        <small>Código do Item</small>
-      </div>
-    </th>
-    <th>
-  <div class="d-flex flex-column align-items-center">
-    <i class="bi bi-bookmark mb-1"></i>
-    <small>Tipo</small>
-  </div>
-</th>
+<h5 class="mb-3"><i class="bi bi-table me-2 text-muted"></i>📄 Lista de Roteiros</h5>
+<div class="table-responsive zebra-tabela mt-4">
+  <table class="table table-bordered table-striped align-middle text-center">
+    <thead class="table-light align-middle text-center">
+      <tr>
+        <th>
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-upc mb-1"></i>
+            <small>Código do Item</small>
+          </div>
+        </th>
+        <th>
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-bookmark mb-1"></i>
+            <small>Tipo</small>
+          </div>
+        </th>
+        <th>
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-list-ol mb-1"></i>
+            <small>Nº de Etapas</small>
+          </div>
+        </th>
+        <th>
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-calendar-plus mb-1"></i>
+            <small>Criado em</small>
+          </div>
+        </th>
+        <th>
+          <i class="bi bi-check2-circle me-1"></i> Aprovado?
+        </th>
+        <th>
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-card-checklist mb-1"></i>
+            <small>Última Revisão</small>
+          </div>
+        </th>
+        <th>
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-gear mb-1"></i>
+            <small>Ações</small>
+          </div>
+        </th>
+      </tr>
+    </thead>
 
-    
-    <th>
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-list-ol mb-1"></i>
-        <small>Nº de Etapas</small>
-      </div>
-    </th>
-    <th>
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-calendar-plus mb-1"></i>
-        <small>Criado em</small>
-      </div>
-    </th>
-     <th>
-      <i class="bi bi-check2-circle me-1"></i> Aprovado?
-    </th>
-    <th>
-      <div class="d-flex flex-column align-items-center">
-        <i class="bi bi-gear mb-1"></i>
-        <small>Ações</small>
-      </div>
-    </th>
-  </tr>
-</thead>
+    <tbody>
+      {% for roteiro in page_obj %}
+      <tr>
+        <td>{{ roteiro.item.codigo }}</td>
+        <td>{{ roteiro.get_tipo_roteiro_display }}</td>
+        <td>{{ roteiro.etapas.count }}</td>
+        <td>{{ roteiro.criado_em|date:"d/m/Y H:i" }}</td>
 
-      <tbody>
-        {% for roteiro in page_obj %}
-        <tr>
-          <td>{{ roteiro.item.codigo }}</td>
-          <td>{{ roteiro.tipo_roteiro }}</td>
+        <td class="text-center align-middle">
+          {% if roteiro.aprovado %}
+            <span class="badge bg-success d-inline-flex align-items-center gap-1">
+              <i class="bi bi-check-circle"></i> Sim
+              <span class="ms-1 text-white-50 small">
+                ({{ roteiro.aprovado_por.get_full_name|default:roteiro.aprovado_por.username }} – {{ roteiro.aprovado_em|date:"d/m/Y H:i" }})
+              </span>
+            </span>
+          {% else %}
+            <span class="badge bg-secondary">
+              <i class="bi bi-hourglass-split me-1"></i> Não
+            </span>
+          {% endif %}
+        </td>
 
-          <td>{{ roteiro.etapas.count }}</td>
-          <td>{{ roteiro.criado_em|date:"d/m/Y H:i" }}</td>
-            <td class="text-center align-middle">
-      {% if roteiro.aprovado %}
-        <span class="badge bg-success d-inline-flex align-items-center gap-1">
-          <i class="bi bi-check-circle"></i> Sim
-          <span class="ms-1 text-white-50 small">
-            ({{ roteiro.aprovado_por.get_full_name|default:roteiro.aprovado_por.username }} – {{ roteiro.aprovado_em|date:"d/m/Y H:i" }})
-          </span>
-        </span>
-      {% else %}
-        <span class="badge bg-secondary">
-          <i class="bi bi-hourglass-split me-1"></i> Não
-        </span>
-      {% endif %}
-    </td>
-         <td>
-              <div class="d-inline-flex gap-1 justify-content-center flex-wrap">
-              {% if request.user|has_permission:"tecnico.view_roteiroproducao" and roteiro.item.tipo_item != "Cotacao" %}
+        <td class="text-center align-middle">
+          {% with roteiro.revisoes.all|first as ultima %}
+            {% if ultima %}
+              <span class="d-inline-flex flex-column">
+                <span class="fw-semibold">{{ ultima.numero_revisao }}</span>
+                <small class="text-muted">{{ ultima.data_revisao|date:"d/m/Y" }}</small>
+              </span>
+            {% else %}
+              <span class="text-muted">Sem revisão</span>
+            {% endif %}
+          {% endwith %}
+        </td>
+
+        <td>
+          <div class="d-inline-flex gap-1 justify-content-center flex-wrap">
+            {% if request.user|has_permission:"tecnico.view_roteiroproducao" and roteiro.item.tipo_item != "Cotacao" %}
               {% include "partials/global/_botao_visualizar.html" with objeto=roteiro url_visualizar="tecnico:tecnico_visualizar_roteiro" label="roteiro" %}
-              {% endif %}
-              {% if request.user|has_permission:"tecnico.change_roteiroproducao" %}
-              {% include "partials/global/_botao_editar.html" with objeto=roteiro url_editar="tecnico:tecnico_editar_roteiro" label="roteiro" %}
-              {% endif %}
-              {% if request.user|has_permission:"tecnico.delete_roteiroproducao" %}
-              {% include "partials/global/_botao_excluir.html" with objeto=roteiro url_excluir="tecnico:tecnico_excluir_roteiro" label="roteiro" %}
-              {% endif %}
-              </div>
-              </td>
+            {% endif %}
 
-        </tr>
-        {% empty %}
-        {% include "partials/global/_sem_resultados.html" with colspan=5 mensagem="Nenhum roteiro encontrado." %}
-        {% endfor %}
-      </tbody>
-    </table>
+            {% if request.user|has_permission:"tecnico.change_roteiroproducao" %}
+              {% include "partials/global/_botao_editar.html" with objeto=roteiro url_editar="tecnico:tecnico_editar_roteiro" label="roteiro" %}
+            {% endif %}
+
+            {% if request.user|has_permission:"tecnico.view_roteiroproducao" %}
+              <a href="{% url 'tecnico:historico_revisoes_roteiro' roteiro.id %}"
+   class="btn btn-sm btn-info mt-1"
+   title="Histórico de Revisões"
+   aria-label="Histórico de Revisões">
+  <i class="bi bi-clock-history" aria-hidden="true"></i>
+</a>
+
+            {% endif %}
+
+                {% if request.user|has_permission:"tecnico.delete_roteiroproducao" %}
+              {% include "partials/global/_botao_excluir.html" with objeto=roteiro url_excluir="tecnico:tecnico_excluir_roteiro" label="roteiro" %}
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+        {% include "partials/global/_sem_resultados.html" with colspan=7 mensagem="Nenhum roteiro encontrado." %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
 
     <!-- Paginação -->
     {% include "partials/global/_paginacao.html" %}

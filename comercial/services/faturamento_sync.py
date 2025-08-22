@@ -6,7 +6,16 @@ from comercial.models.faturamento import FaturamentoRegistro
 from comercial.models.clientes import Cliente
 import re
 from datetime import datetime, timedelta
+import hashlib
+from decimal import Decimal, InvalidOperation
+from django.db import transaction
+from comercial.api_client import BrasmolClient
+from comercial.models.faturamento import FaturamentoRegistro, FaturamentoDuplicata
+from comercial.models.clientes import Cliente
+import re
+from datetime import datetime, timedelta
 
+from django.conf import settings
 
 from django.conf import settings
 
@@ -73,6 +82,85 @@ def _parse_date_any(s):
         except ValueError:
             pass
     return None
+
+def _as_money_2(v):
+    if v is None or v == "":
+        return None
+    try:
+        return Decimal(str(v)).quantize(Decimal("0.01"))
+    except Exception:
+        return None
+
+def _upsert_duplicatas_de_lote_nf(lote_nf, vendas_por_nf):
+    """
+    Recebe um 'lote' de Notas Fiscais (cada nf é um dict com possível 'duplicatas')
+    e persiste FaturamentoDuplicata. Usa vendas_por_nf (mapa NF -> meta cliente/ocorrência)
+    para enriquecer cliente/ocorrência quando possível.
+    """
+    ins = upd = skip = 0
+    for nf in (lote_nf or []):
+        numero_nf = str(nf.get("numero") or "").strip()
+        if not numero_nf:
+            continue
+        duplics = nf.get("duplicatas") or []
+        meta = vendas_por_nf.get(numero_nf, {})
+
+        for d in duplics:
+            num_parc = d.get("numero")
+            dt_venc  = _parse_date_any(d.get("data_vencimento"))
+            val_dup  = _as_money_2(d.get("valor_duplicata"))
+
+            if val_dup is None:
+                continue
+
+            chave = FaturamentoDuplicata._hash(numero_nf, num_parc, dt_venc, val_dup)
+            defaults = {
+                "nfe": numero_nf,
+                "numero_parcela": num_parc,
+                "data_vencimento": dt_venc,
+                "valor_duplicata": val_dup,
+                "cliente_codigo": meta.get("cliente_codigo"),
+                "cliente": meta.get("cliente"),
+                "ocorrencia": meta.get("ocorrencia"),
+
+                # NOVOS CAMPOS – preferimos dados no nível da NF; se vierem na duplicata, herdamos de d
+                "natureza": nf.get("natureza") or d.get("natureza"),
+                "cfop": nf.get("cfop") or d.get("cfop"),
+                "valor_pis": _as_money_2(nf.get("valor_pis") or d.get("valor_pis")),
+                "valor_cofins": _as_money_2(nf.get("valor_cofins") or d.get("valor_cofins")),
+            }
+
+            # tenta herdar o cliente_vinculado de um registro de faturamento com a mesma NF
+            if not defaults.get("cliente_codigo"):
+                fr = (
+                    FaturamentoRegistro.objects
+                    .select_related("cliente_vinculado")
+                    .filter(nfe__iexact=numero_nf)
+                    .order_by("-id")
+                    .first()
+                )
+                if fr:
+                    defaults["cliente_vinculado"] = fr.cliente_vinculado
+                    defaults["cliente_codigo"] = fr.cliente_codigo
+                    defaults["cliente"] = fr.cliente
+                    defaults["ocorrencia"] = fr.ocorrencia
+
+            obj, created = FaturamentoDuplicata.objects.get_or_create(
+                chave_unica=chave, defaults=defaults
+            )
+            if not created:
+                changed = False
+                for k, v in defaults.items():
+                    if getattr(obj, k) != v and v is not None:
+                        setattr(obj, k, v)
+                        changed = True
+                if changed:
+                    obj.save(update_fields=list(defaults.keys()))
+                    upd += 1
+                else:
+                    skip += 1
+    return ins, upd, skip
+
 
 def _code_variants(cod_norm: str):
     """
@@ -455,6 +543,25 @@ def sincronizar_faturamento(data_inicio: str, data_fim: str, pagina="1", registr
                 cliente_vinculado=cliente_obj,
             )
             ins += 1
+    vendas_por_nf = {}
+    for d in linhas:
+        n_raw = str(d.get("nfe") or "").strip()
+        if not n_raw:
+            continue
+
+        # Normaliza a NF para reduzir misses ao cruzar com a API
+        somente_digitos = "".join(ch for ch in n_raw if ch.isdigit())
+        n_norm = somente_digitos if somente_digitos else n_raw
+
+        meta_cliente = {
+            "cliente_codigo": _to_str_upper(d.get("cliente_codigo")),
+            "cliente": d.get("cliente"),
+            "ocorrencia": _parse_date_any(d.get("ocorrencia")),
+        }
+
+        # Mapeia pelas duas chaves (normalizada e bruta) para tolerar variações
+        vendas_por_nf[n_norm] = meta_cliente
+        vendas_por_nf[n_raw] = meta_cliente
 
     # ---- Segunda fase: buscar Notas Fiscais e atualizar perc_icms por item ----
         # ---- Segunda fase: buscar Notas Fiscais (por número) e atualizar perc_icms por item ----
@@ -541,6 +648,10 @@ def sincronizar_faturamento(data_inicio: str, data_fim: str, pagina="1", registr
     icms_nf_default = {}    # numero_str -> Decimal(aliquota) se todos os itens válidos forem iguais
     ok_busca = err_busca = vazias = 0
     debug_falhas = []
+    # Contadores de duplicatas
+    dup_ins = 0
+    dup_upd = 0
+    dup_skip = 0
 
     for nf_num in sorted(nfs_alvo):
         lote, meta = _fetch_nf_por_nota(client, nf_num, page_size=200)
@@ -552,6 +663,10 @@ def sincronizar_faturamento(data_inicio: str, data_fim: str, pagina="1", registr
             vazias += 1
             debug_falhas.append(meta)
             continue
+        di, du, ds = _upsert_duplicatas_de_lote_nf(lote, vendas_por_nf)
+        dup_ins += di
+        dup_upd += du
+        dup_skip += ds
 
         ok_busca += 1
         for nf in lote:
@@ -709,7 +824,10 @@ def sincronizar_faturamento(data_inicio: str, data_fim: str, pagina="1", registr
         upd += hit_atualizado
 
 
-    _dbg(f"=== FIM SYNC FATURAMENTO === inseridos={ins} | atualizados={upd} | pulados={skip}")
+    _dbg(
+        f"=== FIM SYNC FATURAMENTO === inseridos={ins} | atualizados={upd} | pulados={skip} "
+        f"| duplicatas: ins={dup_ins} upd={dup_upd} skip={dup_skip}"
+    )
 
     return ins, upd, skip
 

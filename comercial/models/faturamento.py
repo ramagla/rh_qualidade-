@@ -120,3 +120,80 @@ class FaturamentoRegistro(models.Model):
             self.chave_unica = nova
 
         super().save(*args, **kwargs)
+
+# comercial/models/faturamento.py
+
+from django.db import models
+from decimal import Decimal
+import hashlib
+from comercial.models.clientes import Cliente  # ajuste conforme o path real
+
+
+class FaturamentoDuplicata(models.Model):
+    """
+    Duplicatas por NF (título/parcelas de uma Nota Fiscal).
+    Vinculamos por 'nfe' (número da nota) e, quando possível,
+    relacionamos ao Cliente usando o mesmo match do faturamento.
+    """
+    nfe = models.CharField("NF-e", max_length=50, db_index=True)
+    numero_parcela = models.CharField("Parcela", max_length=50, null=True, blank=True)
+    data_vencimento = models.DateField("Data de Vencimento", null=True, blank=True)
+    valor_duplicata = models.DecimalField("Valor da Duplicata", max_digits=16, decimal_places=2)
+
+    # Dados auxiliares para futura análise / relatórios
+    cliente_codigo = models.CharField("Código do Cliente", max_length=50, null=True, blank=True)
+    cliente = models.CharField("Cliente (texto livre)", max_length=200, null=True, blank=True)
+    cliente_vinculado = models.ForeignKey(
+        Cliente,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="duplicatas_faturamento",
+        verbose_name="Cliente Vinculado"
+    )
+    ocorrencia = models.DateField("Ocorrência (NF)", null=True, blank=True)
+    
+     # NOVOS CAMPOS FISCAIS
+    natureza = models.CharField("Natureza da Operação", max_length=200, null=True, blank=True)
+    cfop = models.CharField("CFOP", max_length=10, null=True, blank=True)
+    valor_pis = models.DecimalField("Valor PIS", max_digits=16, decimal_places=2, null=True, blank=True)
+    valor_cofins = models.DecimalField("Valor COFINS", max_digits=16, decimal_places=2, null=True, blank=True)
+
+    # Idempotência por NF+parcela+data+valor
+    chave_unica = models.CharField("Chave Única", max_length=255, unique=True, db_index=True)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Faturamento (Duplicata)"
+        verbose_name_plural = "Faturamento (Duplicatas)"
+        indexes = [
+            models.Index(fields=["nfe", "data_vencimento"]),
+        ]
+
+    def __str__(self):
+        p = self.numero_parcela or "—"
+        return f"NF {self.nfe} • Parcela {p} • Vence {self.data_vencimento or '—'}"
+
+    @staticmethod
+    def _hash(nfe, numero_parcela, data_vencimento, valor_duplicata):
+        dv = (data_vencimento.strftime("%Y-%m-%d") if data_vencimento else "")
+        base = f"{nfe or ''}|{numero_parcela or ''}|{dv}|{valor_duplicata or ''}"
+        return hashlib.sha256(base.encode("utf-8")).hexdigest()
+
+    def save(self, *args, **kwargs):
+        if not self.chave_unica:
+            self.chave_unica = self._hash(
+                self.nfe, self.numero_parcela, self.data_vencimento, self.valor_duplicata
+            )
+        # tenta vincular cliente pelo código (igual ao FaturamentoRegistro)
+        if self.cliente_codigo:
+            cod = str(self.cliente_codigo).strip().upper()
+            self.cliente_vinculado = (
+                Cliente.objects
+                .filter(cod_bm__isnull=False)
+                .filter(cod_bm__iexact=cod)
+                .first()
+            )
+        super().save(*args, **kwargs)

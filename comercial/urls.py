@@ -123,5 +123,6 @@ urlpatterns = [
     path("faturamento/<int:pk>/editar/", faturamento_views.editar_faturamento, name="editar_faturamento"),
     path("faturamento/<int:pk>/excluir/", faturamento_views.excluir_faturamento, name="excluir_faturamento"),
     path("faturamento/relatorio/", faturamento_views.relatorio_faturamento, name="relatorio_faturamento"),
+    path("faturamento/relatorio-duplicatas/", faturamento_views.relatorio_duplicatas, name="relatorio_duplicatas"),
 
 ]

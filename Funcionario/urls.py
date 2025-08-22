@@ -146,8 +146,8 @@ urlpatterns = [
     path("jobrotation/editar/<int:id>/", job_rotation_views.editar_jobrotation_evaluation, name="editar_jobrotation_evaluation"),
     path("jobrotation/<int:id>/excluir/", job_rotation_views.excluir_jobrotation, name="excluir_jobrotation"),
     path("jobrotation/imprimir/<int:id>/", job_rotation_views.imprimir_jobrotation_evaluation, name="imprimir_jobrotation_evaluation"),
-
-
+    
+    
     # Matriz de Polivalência
     path("matriz/", matriz_views.lista_matriz_polivalencia, name="lista_matriz_polivalencia"),
     path("matriz/cadastrar/", matriz_views.cadastrar_matriz_polivalencia, name="cadastrar_matriz_polivalencia"),

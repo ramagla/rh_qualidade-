@@ -16,35 +16,69 @@ from metrologia.models import Dispositivo, TabelaTecnica
 from qualidade_fornecimento.models import FornecedorQualificado
 
 
+def _eom(d):
+    return d.replace(day=calendar.monthrange(d.year, d.month)[1])
+
+
 @shared_task
 def enviar_alertas_calibracao():
+    """
+    Envia alertas de calibração:
+    - 'vencida': proxima_calibracao < hoje
+    - 'proxima': hoje <= proxima_calibracao <= hoje+30
+    Regras:
+      • Próxima calibração calculada com fim-do-mês.
+      • Apenas EQUIPAMENTOS ativos (TabelaTecnica.status='ativo') geram e-mail.
+      • Dispositivos seguem a mesma lógica de datas (EOM).
+    """
     today = now().date()
     range_end = today + timedelta(days=30)
 
-    equipamentos = TabelaTecnica.objects.annotate(
-        proxima_calibracao=ExpressionWrapper(
-            F("data_ultima_calibracao") + F("frequencia_calibracao") * timedelta(days=30),
-            output_field=DateField(),
-        )
-    )
-    dispositivos = Dispositivo.objects.annotate(
-        proxima_calibracao=ExpressionWrapper(
-            F("data_ultima_calibracao") + F("frequencia_calibracao") * Value(30),
-            output_field=DateField(),
-        )
-    )
+    # -----------------------
+    # EQUIPAMENTOS (somente ativos)
+    # -----------------------
+    equipamentos_qs = TabelaTecnica.objects.filter(status="ativo")
+    equipamentos_vencidos = []
+    equipamentos_proximos = []
+
+    for eq in equipamentos_qs:
+        if not (eq.data_ultima_calibracao and eq.frequencia_calibracao):
+            continue
+        prox = _eom(eq.data_ultima_calibracao + relativedelta(months=eq.frequencia_calibracao))
+        setattr(eq, "proxima_calibracao", prox)
+        if prox < today:
+            equipamentos_vencidos.append(eq)
+        elif today <= prox <= range_end:
+            equipamentos_proximos.append(eq)
+
+    # -----------------------
+    # DISPOSITIVOS (mantido sem filtro de 'ativo' pois o modelo não expõe status)
+    # -----------------------
+    dispositivos_qs = Dispositivo.objects.all()
+    dispositivos_vencidos = []
+    dispositivos_proximos = []
+
+    for d in dispositivos_qs:
+        if not (d.data_ultima_calibracao and d.frequencia_calibracao):
+            continue
+        prox = _eom(d.data_ultima_calibracao + relativedelta(months=d.frequencia_calibracao))
+        setattr(d, "proxima_calibracao", prox)
+        if prox < today:
+            dispositivos_vencidos.append(d)
+        elif today <= prox <= range_end:
+            dispositivos_proximos.append(d)
 
     conjuntos = {
         "vencida": {
-            "equipamentos": equipamentos.filter(proxima_calibracao__lt=today),
-            "dispositivos": dispositivos.filter(proxima_calibracao__lt=today),
+            "equipamentos": equipamentos_vencidos,
+            "dispositivos": dispositivos_vencidos,
             "alerta_in_app": "MANUTENCAO_VENCIDA",
             "mensagem": "está com a calibração vencida",
             "template": "alertas/calibracao_vencida.html",
         },
         "proxima": {
-            "equipamentos": equipamentos.filter(proxima_calibracao__range=(today, range_end)),
-            "dispositivos": dispositivos.filter(proxima_calibracao__range=(today, range_end)),
+            "equipamentos": equipamentos_proximos,
+            "dispositivos": dispositivos_proximos,
             "alerta_in_app": "MANUTENCAO_PROXIMA",
             "mensagem": "está com a calibração próxima do vencimento",
             "template": "alertas/calibracao_proxima.html",
@@ -52,13 +86,13 @@ def enviar_alertas_calibracao():
     }
 
     for chave, dados in conjuntos.items():
-        # Envio por e-mail
+        # Config de e-mail (opcional, via tabela Alerta: 'vencida' | 'proxima')
         try:
             alerta_email = Alerta.objects.get(nome=chave)
         except Alerta.DoesNotExist:
             alerta_email = None
 
-        # Alerta in-app
+        # Config de alerta in-app
         try:
             config = AlertaConfigurado.objects.get(tipo=dados["alerta_in_app"], ativo=True)
             destinatarios_in_app = set(config.usuarios.all())
@@ -72,7 +106,7 @@ def enviar_alertas_calibracao():
             nome = f"{dispositivo.codigo} – {dispositivo.descricao}"
             context = {
                 "objeto": dispositivo,
-                "proxima_calibracao": dispositivo.proxima_calibracao,
+                "proxima_calibracao": getattr(dispositivo, "proxima_calibracao", None),
                 "tipo": "dispositivos",
             }
 
@@ -85,22 +119,26 @@ def enviar_alertas_calibracao():
                     from_email="no-reply@brasmol.com.br",
                     recipient_list=alerta_email.get_destinatarios_list(),
                     html_message=html_content,
+                    fail_silently=True,
                 )
 
             # In-app
             for user in destinatarios_in_app:
                 AlertaUsuario.objects.create(
                     usuario=user,
-                    titulo = "📟 Calibração de Dispositivo Vencida" if chave == "vencida" else "🕒 Calibração de Dispositivo Próxima",
-                    mensagem = f"O dispositivo {nome} {dados['mensagem']}."
+                    titulo="📟 Calibração de Dispositivo Vencida" if chave == "vencida" else "🕒 Calibração de Dispositivo Próxima",
+                    mensagem=f"O dispositivo {nome} {dados['mensagem']}.",
+                    tipo=dados["alerta_in_app"],
+                    referencia_id=dispositivo.id,
+                    url_destino=f"/metrologia/dispositivos/{dispositivo.id}/visualizar/",
                 )
 
-        # Equipamentos
+        # Equipamentos (apenas ativos já filtrados acima)
         for equipamento in dados["equipamentos"]:
             nome = f"{equipamento.codigo} – {equipamento.nome_equipamento}"
             context = {
                 "objeto": equipamento,
-                "proxima_calibracao": equipamento.proxima_calibracao,
+                "proxima_calibracao": getattr(equipamento, "proxima_calibracao", None),
                 "tipo": "equipamentos",
             }
 
@@ -113,16 +151,20 @@ def enviar_alertas_calibracao():
                     from_email="no-reply@brasmol.com.br",
                     recipient_list=alerta_email.get_destinatarios_list(),
                     html_message=html_content,
+                    fail_silently=True,
                 )
 
             # In-app
             for user in destinatarios_in_app:
                 AlertaUsuario.objects.create(
                     usuario=user,
-                    titulo = "🔩 Calibração de Equipamento Vencida" if chave == "vencida" else "🕒 Calibração de Equipamento Próxima",
-                    mensagem = f"O equipamento {nome} {dados['mensagem']}."
-
+                    titulo="🔩 Calibração de Equipamento Vencida" if chave == "vencida" else "🕒 Calibração de Equipamento Próxima",
+                    mensagem=f"O equipamento {nome} {dados['mensagem']}.",
+                    tipo=dados["alerta_in_app"],
+                    referencia_id=equipamento.id,
+                    url_destino=f"/metrologia/tabelatecnica/{equipamento.id}/visualizar/",
                 )
+                
 @shared_task
 def enviar_alertas_fornecedores_proximos():
     today = now().date()

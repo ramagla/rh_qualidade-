@@ -87,24 +87,24 @@ class RelacaoMateriaPrima(models.Model):
             atraso = (self.data_entrada - data_ref).days
         self.atraso_em_dias = max(atraso, 0) if atraso is not None else None
 
-        # Define demérito conforme atraso
+        # Define demérito conforme atraso (faixas do PQ006)
         if self.atraso_em_dias is not None:
-            if self.atraso_em_dias >= 21:
+            atraso = self.atraso_em_dias
+            if atraso >= 21:
                 self.demerito_ip = 30
-            elif self.atraso_em_dias >= 16:
+            elif 15 <= atraso <= 20:
                 self.demerito_ip = 20
-            elif self.atraso_em_dias >= 11:
+            elif 11 <= atraso <= 14:
                 self.demerito_ip = 15
-            elif self.atraso_em_dias >= 7:
+            elif 7 <= atraso <= 10:
                 self.demerito_ip = 10
-            elif self.atraso_em_dias >= 4:
+            elif 3 <= atraso <= 6:
                 self.demerito_ip = 5
-            elif self.atraso_em_dias >= 1:
-                self.demerito_ip = 2
             else:
-                self.demerito_ip = 0
+                self.demerito_ip = 0  # 0, 1 ou 2 dias: sem demérito
         else:
             self.demerito_ip = None
+
 
         # Salva tudo de uma vez só
         super().save(*args, **kwargs)

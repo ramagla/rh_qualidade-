@@ -2,7 +2,9 @@ from decimal import Decimal
 from django.db import models
 from django.apps import apps  # <-- Importa o apps para uso dinâmico
 from Funcionario.models import Funcionario
-
+from django_ckeditor_5.fields import CKEditor5Field
+from dateutil.relativedelta import relativedelta
+import calendar
 import os
 from django.utils.text import slugify
 from django.utils.deconstruct import deconstructible
@@ -30,7 +32,12 @@ class CalibracaoDispositivo(models.Model):
         ("Aprovado", "Aprovado"),
         ("Reprovado", "Reprovado"),
     ]
-
+    
+    calibracao_cliente = models.BooleanField(
+            default=False,
+            verbose_name="Calibração feita pelo cliente"
+        )
+    
     codigo_dispositivo = models.ForeignKey(
         'metrologia.Dispositivo',  # <-- lazy reference!
         on_delete=models.CASCADE,
@@ -59,7 +66,8 @@ class CalibracaoDispositivo(models.Model):
         related_name="calibracoes_realizadas",
         verbose_name="Nome do Responsável",
     )
-    observacoes = models.TextField(blank=True, verbose_name="Observações")
+    observacoes = CKEditor5Field("Observações gerais da calibração", blank=True, null=True)
+
     anexo = models.FileField(
             upload_to=renomear_anexo_calibracao,
             null=True,
@@ -103,7 +111,14 @@ class CalibracaoDispositivo(models.Model):
             return self.codigo_dispositivo.codigo[:-2]
         return self.codigo_dispositivo.codigo
 
-
+    def get_proxima_calibracao(self, frequencia_meses: int):
+            """Retorna a próxima calibração no último dia do mês."""
+            if not self.data_afericao:
+                return None
+            proxima = self.data_afericao + relativedelta(months=frequencia_meses)
+            ultimo_dia = calendar.monthrange(proxima.year, proxima.month)[1]
+            return proxima.replace(day=ultimo_dia)
+    
 class Afericao(models.Model):
     calibracao_dispositivo = models.ForeignKey(
         "CalibracaoDispositivo",

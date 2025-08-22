@@ -40,7 +40,8 @@ class RoteiroProducaoForm(forms.ModelForm):
                 if not self.instance.pk:
                     self.fields["fontes_homologadas"].initial = item_obj.fontes_homologadas.all()
             except Item.DoesNotExist:
-                pass
+    
+              pass
 
 
     def clean(self):
@@ -59,3 +60,10 @@ class RoteiroProducaoForm(forms.ModelForm):
                     "Já existe um roteiro para este item e tipo de roteiro."
                 )
         return cleaned
+
+    def clean_revisao(self):
+        # garante que o valor final é o do model sincronizado
+        instance = getattr(self, "instance", None)
+        if instance and instance.pk:
+            return instance.revisao  # já atualizado pelo signal
+        return self.cleaned_data.get("revisao")

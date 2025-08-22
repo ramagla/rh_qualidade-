@@ -13,7 +13,7 @@ from metrologia.models import AnaliseCriticaMetrologia
 
 
 @login_required
-@permission_required('metrologia.view_análisecríticametrologia', raise_exception=True)
+@permission_required('metrologia.view_analisecriticametrologia', raise_exception=True)
 def lista_analise_critica(request):
     qs = AnaliseCriticaMetrologia.objects.all().order_by('-assinado_em')
 
@@ -49,7 +49,7 @@ from datetime import datetime
 
 
 @login_required
-@permission_required("metrologia.add_análisecríticametrologia", raise_exception=True)
+@permission_required("metrologia.add_analisecriticametrologia", raise_exception=True)
 def cadastrar_analise_critica(request):
     form = AnaliseCriticaMetrologiaForm(request.POST or None)
     if form.is_valid():
@@ -111,7 +111,7 @@ def cadastrar_analise_critica(request):
 
 
 @login_required
-@permission_required("metrologia.change_análisecríticametrologia", raise_exception=True)
+@permission_required("metrologia.change_analisecriticametrologia", raise_exception=True)
 def editar_analise_critica(request, id):
     analise = get_object_or_404(AnaliseCriticaMetrologia, id=id)
     form = AnaliseCriticaMetrologiaForm(request.POST or None, instance=analise)
@@ -176,7 +176,7 @@ def editar_analise_critica(request, id):
 
 
 @login_required
-@permission_required("metrologia.view_análisecríticametrologia", raise_exception=True)
+@permission_required("metrologia.view_analisecriticametrologia", raise_exception=True)
 def visualizar_analise_critica(request, id):
     analise = get_object_or_404(AnaliseCriticaMetrologia, id=id)
 
@@ -219,7 +219,7 @@ def visualizar_analise_critica(request, id):
     })
 
 @login_required
-@permission_required("metrologia.delete_análisecríticametrologia", raise_exception=True)
+@permission_required("metrologia.delete_analisecriticametrologia", raise_exception=True)
 def excluir_analise_critica(request, id):
     analise = get_object_or_404(AnaliseCriticaMetrologia, id=id)
     if request.method == "POST":

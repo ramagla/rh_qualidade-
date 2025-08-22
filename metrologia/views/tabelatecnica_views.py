@@ -25,7 +25,21 @@ from django.utils.timezone import now
 from Funcionario.models import Funcionario
 from ..forms import TabelaTecnicaForm
 from ..models.models_tabelatecnica import TabelaTecnica
+import calendar
+from dateutil.relativedelta import relativedelta
 
+# IMPORTS (garanta no topo)
+import calendar
+from datetime import timedelta
+from dateutil.relativedelta import relativedelta
+from django.utils.timezone import now
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required, permission_required
+from Funcionario.models import Funcionario
+from metrologia.models.models_tabelatecnica import TabelaTecnica
+
+def _eom(d):
+    return d.replace(day=calendar.monthrange(d.year, d.month)[1])
 
 @login_required
 @permission_required("metrologia.view_tabelatecnica", raise_exception=True)
@@ -34,39 +48,25 @@ def lista_tabelatecnica(request):
     range_start = today
     range_end = today + timedelta(days=31)
 
-    # 🔍 Apenas instrumentos ATIVOS para estatísticas dos cards
-    ativos = TabelaTecnica.objects.filter(status="ativo").annotate(
-        proxima_calibracao=ExpressionWrapper(
-            Coalesce(F("data_ultima_calibracao"), Value(today)) +
-            ExpressionWrapper(
-                Coalesce(F("frequencia_calibracao"), Value(1)) * Value(30),
-                output_field=DurationField()
-            ),
-            output_field=DateField()
-        )
-    )
+    # 🔹 Cards (somente ATIVOS)
+    ativos = TabelaTecnica.objects.filter(status="ativo")
+    total_equipamentos_ativos = ativos.count()
+    total_equipamentos = TabelaTecnica.objects.count()  # caso o template use total geral
 
-    # 📊 Estatísticas para os cards
-    total_tabelas = ativos.count()
-    total_fora_prazo = ativos.filter(proxima_calibracao__lt=today).count()
-    total_proximo_prazo = ativos.filter(
-        proxima_calibracao__gte=range_start,
-        proxima_calibracao__lte=range_end
-    ).count()
+    total_fora_prazo = 0
+    total_proximo_prazo = 0
+    for eq in ativos:
+        if eq.data_ultima_calibracao and eq.frequencia_calibracao:
+            prox = _eom(eq.data_ultima_calibracao + relativedelta(months=eq.frequencia_calibracao))
+            if prox < today:
+                total_fora_prazo += 1
+            elif range_start <= prox <= range_end:
+                total_proximo_prazo += 1
 
-    # 🧾 Lista geral com anotação, sem filtro fixo de status
-    tabelas = TabelaTecnica.objects.annotate(
-        proxima_calibracao=ExpressionWrapper(
-            Coalesce(F("data_ultima_calibracao"), Value(today)) +
-            ExpressionWrapper(
-                Coalesce(F("frequencia_calibracao"), Value(1)) * Value(30),
-                output_field=DurationField()
-            ),
-            output_field=DateField()
-        )
-    )
+    # 🔹 Base para listagem (sem filtro fixo de status)
+    tabelas = TabelaTecnica.objects.all()
 
-    # 🔁 Filtros dinâmicos
+    # 🔁 Filtros dinâmicos (por campos)
     codigo = request.GET.get("codigo")
     if codigo:
         tabelas = tabelas.filter(codigo=codigo)
@@ -94,32 +94,71 @@ def lista_tabelatecnica(request):
     if fabricante:
         tabelas = tabelas.filter(fabricante__icontains=fabricante)
 
-    responsaveis = Funcionario.objects.filter(
-        id__in=tabelas.values_list("responsavel_id", flat=True)
-    ).distinct().only("id", "nome")
+    # 🔎 Filtro por PRAZO (dentro | fora | proximo)
+    filtro_prazo = request.GET.get("prazo")  # valores esperados: 'dentro', 'fora', 'proximo'
 
+    # Converte o queryset filtrado em lista e calcula a proxima_calibracao (EOM)
+    lista = []
+    dentro, fora, proximo = [], [], []
+    for eq in tabelas:
+        if eq.data_ultima_calibracao and eq.frequencia_calibracao:
+            prox = _eom(eq.data_ultima_calibracao + relativedelta(months=eq.frequencia_calibracao))
+            setattr(eq, "proxima_calibracao", prox)
+            if prox < today:
+                fora.append(eq)
+            elif range_start <= prox <= range_end:
+                proximo.append(eq)
+            else:
+                dentro.append(eq)
+        else:
+            setattr(eq, "proxima_calibracao", None)
+            # Sem data/frequência: considere como "dentro" somente se você quiser exibir.
+            dentro.append(eq)
+
+    if filtro_prazo == "fora":
+        lista = fora
+    elif filtro_prazo == "proximo":
+        lista = proximo
+    elif filtro_prazo == "dentro":
+        lista = dentro
+    else:
+        # sem filtro de prazo, mostra todos
+        lista = dentro + proximo + fora
+
+    # 📋 Dados para selects
+    responsaveis = (
+        Funcionario.objects.filter(id__in=tabelas.values_list("responsavel_id", flat=True))
+        .distinct()
+        .only("id", "nome")
+    )
     unidades_medida_choices = dict(TabelaTecnica.UNIDADE_MEDIDA_CHOICES)
 
-    paginator = Paginator(tabelas, 10)
-    page_number = request.GET.get("page")
+    # 📄 Paginação (agora sobre a lista já filtrada por prazo)
+    paginator = Paginator(lista, 10)
+    page_number = request.GET.get("page") or 1
     page_obj = paginator.get_page(page_number)
 
     context = {
         "page_obj": page_obj,
+        # combos
         "equipamentos": tabelas.values_list("nome_equipamento", flat=True).distinct().order_by("nome_equipamento"),
         "unidades_medida": unidades_medida_choices,
         "codigos": tabelas.values_list("codigo", flat=True).distinct().order_by("codigo"),
         "responsaveis": responsaveis,
         "proprietarios": tabelas.values_list("proprietario", flat=True).distinct().order_by("proprietario"),
         "fabricantes": tabelas.values_list("fabricante", flat=True).distinct().order_by("fabricante"),
+        # status/filtros
         "status_selecionado": status,
-        "total_tabelas": total_tabelas,
+        "prazo_selecionado": filtro_prazo,
+        # cards
+        "total_equipamentos": total_equipamentos,                 # total geral (se o card usa esta chave)
+        "total_equipamentos_ativos": total_equipamentos_ativos,   # total somente ativos (card pode usar esta)
         "total_fora_prazo": total_fora_prazo,
         "total_proximo_prazo": total_proximo_prazo,
         "today": today,
     }
-
     return render(request, "tabelatecnica/lista_tabelatecnica.html", context)
+
 
 
 @login_required

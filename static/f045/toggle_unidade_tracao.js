@@ -1,4 +1,4 @@
-// toggle_unidade_tracao.js
+// toggle_unidade_tracao.js — revalida rolos e certificado, com logs
 const FATOR_CONVERSAO = 0.10197;
 
 function formatarValor(v) {
@@ -6,16 +6,16 @@ function formatarValor(v) {
 }
 
 function toggleUnidadeTracao(switchEl) {
-  const emMpa = switchEl.checked;
-  console.log('[toggleUnidadeTracao] emMpa =', emMpa);
+  const emMpa = switchEl.checked === true;
+  console.log("[F045/ToggleUnidade] MPa?", emMpa);
 
-  // cabeçalhos
-  document.getElementById('th_rmin').textContent = emMpa
-    ? 'R. Mín (MPa)' : 'R. Mín (Kgf/mm²)';
-  document.getElementById('th_rmax').textContent = emMpa
-    ? 'R. Máx (MPa)' : 'R. Máx (Kgf/mm²)';
+  // Cabeçalhos
+  const thMin = document.getElementById('th_rmin');
+  const thMax = document.getElementById('th_rmax');
+  if (thMin) thMin.textContent = emMpa ? 'R. Mín (MPa)' : 'R. Mín (Kgf/mm²)';
+  if (thMax) thMax.textContent = emMpa ? 'R. Máx (MPa)' : 'R. Máx (Kgf/mm²)';
 
-  // células rmin / rmax
+  // Células rmin/rmax
   ['rmin','rmax'].forEach(pref => {
     document.querySelectorAll(`td[id^="${pref}_"]`).forEach(cell => {
       const id = cell.id.replace(`${pref}_`, '');
@@ -24,29 +24,27 @@ function toggleUnidadeTracao(switchEl) {
                 .value.replace(',', '.')
       );
       if (!isNaN(orig)) {
-        const conv = emMpa
-          ? orig / FATOR_CONVERSAO
-          : orig;
+        const conv = emMpa ? (orig / FATOR_CONVERSAO) : orig;
         cell.textContent = formatarValor(conv);
       }
     });
   });
 
-  // e converta também os inputs de tração (valor visual)
+  // Inputs de tração dos rolos (visual) + revalidação
   document.querySelectorAll('input[id^="tracao_"]').forEach(input => {
-    // guarde o bruto uma única vez
-    if (!input.dataset.original) {
-      input.dataset.original = input.value;
-    }
-    const bruto = parseFloat(input.dataset.original.replace(',', '.'));
+    if (!input.dataset.original) input.dataset.original = input.value;
+    const bruto = parseFloat(String(input.dataset.original).replace(',', '.'));
     if (!isNaN(bruto)) {
-      const conv = emMpa
-        ? (bruto / FATOR_CONVERSAO)
-        : bruto;
+      const conv = emMpa ? (bruto / FATOR_CONVERSAO) : bruto;
       input.value = formatarValor(conv);
     }
-    // revalide o rolo para atualizar o laudo visual
     const id = input.id.split('_')[1];
-    validarBitolaETracao(id);
+    if (typeof validarBitolaETracao === 'function') validarBitolaETracao(id);
   });
+
+  // Revalida o certificado também
+  if (typeof window.__f045_validarCertificado === 'function') {
+    console.log("[F045/ToggleUnidade] Revalidando certificado…");
+    window.__f045_validarCertificado();
+  }
 }

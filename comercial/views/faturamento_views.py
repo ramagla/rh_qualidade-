@@ -2,12 +2,11 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from alerts import models
-from comercial.models.faturamento import FaturamentoRegistro
 from comercial.services.faturamento_sync import sincronizar_faturamento
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
-from comercial.models.faturamento import FaturamentoRegistro
+from comercial.models.faturamento import FaturamentoRegistro, FaturamentoDuplicata
 from comercial.services.faturamento_sync import sincronizar_faturamento
 from comercial.forms.faturamento_forms import FaturamentoRegistroForm
 
@@ -32,6 +31,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from comercial.models.faturamento import FaturamentoRegistro
 from django.db.models import F, Sum, Value
+
+
 
 
 
@@ -169,6 +170,7 @@ def lista_faturamento(request):
         "tipo_choices": FaturamentoRegistro.TIPO_CHOICES,
     }
     return render(request, "faturamento/lista.html", context)
+
 
 @login_required
 @permission_required("comercial.view_faturamentoregistro", raise_exception=True)
@@ -471,4 +473,202 @@ def relatorio_faturamento(request):
         "tabela_devolucoes": tabela_devolucoes,
         "total_devolucoes": total_devolucoes,
         "totalizador": totalizador,
+    })
+
+@login_required
+@permission_required("comercial.view_faturamentoregistro", raise_exception=True)
+def relatorio_duplicatas(request):
+    """
+    Relatório de Duplicatas com:
+      - Colunas: Nº NF, Data (emissão/ocorrência), Cliente, Vencimento, Valor (duplicata),
+                 Valor do ICMS (soma por NF), Valor do IPI (soma por NF), Valor Total (Valor + IPI)
+      - Cards: Total no Período, Com Vencimento Este Mês (mês do filtro), Pagamento à Vista,
+               Total de Tributos (ICMS + IPI, somados 1x por NF)
+      - Gráfico: Top 10 clientes (labels via filtro de primeiro nome no template)
+    """
+    from decimal import Decimal
+    from collections import defaultdict
+    from datetime import timedelta
+
+    data_inicio = (request.GET.get("data_inicio") or "").strip()
+    data_fim    = (request.GET.get("data_fim") or "").strip()
+
+    # Resposta padrão sem filtros aplicados
+    if not data_inicio or not data_fim:
+        messages.info(request, "Selecione Data Início e Data Fim para visualizar.")
+        return render(request, "faturamento/relatorio_duplicatas.html", {
+            "data_inicio": data_inicio,
+            "data_fim": data_fim,
+            "linhas": [],
+            "total_periodo": Decimal("0.00"),
+            "total_mes": Decimal("0.00"),
+            "total_avista": Decimal("0.00"),
+            "total_tributos": Decimal("0.00"),
+            "chart_data": [],
+        })
+
+    # Parse datas (mesma helper usada no relatório atual)
+    try:
+        dt_ini = _parse_any_date(data_inicio)
+        dt_fim = _parse_any_date(data_fim)
+    except Exception:
+        messages.error(request, "Datas inválidas. Use o seletor de data.")
+        return redirect(request.path)
+
+    # 1) NFs com ocorrência no período (emissão vinda do FaturamentoRegistro)
+    nfs_por_emissao = list(
+        FaturamentoRegistro.objects
+            .filter(ocorrencia__isnull=False,
+                    ocorrencia__gte=dt_ini,
+                    ocorrencia__lte=dt_fim)
+            .values_list("nfe", flat=True)
+            .distinct()
+    )
+
+    # 2) Duplicatas que já possuem a própria ocorrência no período (fallback)
+    qs = (
+        FaturamentoDuplicata.objects
+        .select_related("cliente_vinculado")
+        .filter(
+            Q(nfe__in=nfs_por_emissao) |
+            Q(ocorrencia__isnull=False, ocorrencia__gte=dt_ini, ocorrencia__lte=dt_fim)
+        )
+        .filter(data_vencimento__isnull=False)  # mantém exigência de ter vencimento para exibição
+        .only(
+            "nfe", "numero_parcela", "data_vencimento", "valor_duplicata",
+            "cliente", "cliente_codigo", "cliente_vinculado_id", "ocorrencia"
+        )
+        .order_by("ocorrencia", "nfe", "id")
+    )
+
+    # Somatórios por NF a partir do FaturamentoRegistro (ICMS e IPI)
+    nfs = list(qs.values_list("nfe", flat=True).distinct())
+    icms_por_nf = defaultdict(lambda: Decimal("0.00"))
+    ipi_por_nf  = defaultdict(lambda: Decimal("0.00"))
+    data_por_nf = {}  # menor data de ocorrência (emissão) por NF
+
+    if nfs:
+        regs = (
+            FaturamentoRegistro.objects
+            .filter(nfe__in=nfs)
+            .only(
+                "nfe", "ocorrencia",
+                "item_quantidade", "item_valor_unitario",
+                "perc_icms", "item_ipi",
+                "cliente", "cliente_vinculado_id"
+            )
+        )
+        for r in regs:
+            qtd = r.item_quantidade or 0
+            vunit = Decimal(str(r.item_valor_unitario or "0"))
+            base = (vunit * Decimal(qtd)) if (qtd and vunit is not None) else Decimal("0.00")
+
+            # Valor ICMS = base * (aliquota/100)
+            perc_icms = Decimal(str(r.perc_icms)) if r.perc_icms is not None else None
+            if perc_icms is not None:
+                icms_por_nf[r.nfe] += (base * (perc_icms / Decimal("100")))
+
+            # IPI já vem em valor
+            if r.item_ipi is not None:
+                ipi_por_nf[r.nfe] += Decimal(str(r.item_ipi))
+
+            # Emissão/ocorrência: menor data por NF
+            if r.ocorrencia:
+                if (r.nfe not in data_por_nf) or (data_por_nf[r.nfe] and r.ocorrencia < data_por_nf[r.nfe]):
+                    data_por_nf[r.nfe] = r.ocorrencia
+
+    # Montagem das linhas e dos totais
+    linhas = []
+    total_periodo = Decimal("0.00")
+
+    for d in qs:
+        nfe = d.nfe or ""
+        # Emissão/ocorrência: preferir a que veio gravada na duplicata; fallback para mapa por NF
+        emissao = d.ocorrencia or data_por_nf.get(nfe)
+        cliente_nome = getattr(d.cliente_vinculado, "razao_social", None) or (d.cliente or "—")
+
+        valor_dup = Decimal(str(d.valor_duplicata or "0")).quantize(Decimal("0.01"))
+        valor_icms = icms_por_nf[nfe].quantize(Decimal("0.01"))
+        valor_ipi  = ipi_por_nf[nfe].quantize(Decimal("0.01"))
+        valor_total = (valor_dup + valor_ipi).quantize(Decimal("0.01"))
+
+        total_periodo += valor_dup
+
+        linhas.append({
+            "nfe": nfe,
+            "data": emissao,                     # exibida como Data
+            "cliente": cliente_nome,             # no template: {{ l.cliente|primeiro_nome }}
+            "vencimento": d.data_vencimento,
+            "valor": valor_dup,                  # valor da duplicata
+            "valor_icms": valor_icms,            # soma por NF
+            "valor_ipi": valor_ipi,              # soma por NF
+            "valor_total": valor_total,          # Valor + IPI (conforme solicitado)
+            "emissao": emissao,                  # usado para a lógica de à vista
+        })
+
+    # Gráfico: Top 10 clientes por valor de duplicatas (labels usarão |primeiro_nome no template)
+    agg_por_cliente = defaultdict(lambda: Decimal("0.00"))
+    for l in linhas:
+        agg_por_cliente[l["cliente"]] += l["valor"]
+    top10 = sorted(agg_por_cliente.items(), key=lambda kv: kv[1], reverse=True)[:10]
+    chart_data = [{"cliente": k, "valor": v} for k, v in top10]
+
+    # === Totais dos cards ===
+    # 1) "Com Vencimento Este Mês" -> mês do filtro (dt_ini)
+    total_mes = sum(
+        l["valor"]
+        for l in linhas
+        if l["vencimento"] and l["vencimento"].year == dt_ini.year and l["vencimento"].month == dt_ini.month
+    )
+
+    # 2) "Pagamento à Vista"
+    total_avista = sum(
+        l["valor"]
+        for l in linhas
+        if l.get("emissao") and (l["vencimento"] == l["emissao"] or l["vencimento"] == l["emissao"] + timedelta(days=1))
+    )
+
+    # 3) "Total de Tributos (ICMS + IPI)" -> somar 1x por NF
+    nfs_distintas = {l["nfe"] for l in linhas if l["nfe"]}
+    total_tributos = sum(
+        (icms_por_nf.get(nf, Decimal("0")) + ipi_por_nf.get(nf, Decimal("0")))
+        for nf in nfs_distintas
+    )
+
+    # === Totais por COLUNA (rodapé da tabela) ===
+    # Valor (duplicata) é por linha; ICMS/IPI são por NF (evita duplicar por parcela)
+    total_valor = sum(l["valor"] for l in linhas)
+    total_icms = sum(icms_por_nf.get(nf, Decimal("0.00")) for nf in nfs_distintas)
+    total_ipi  = sum(ipi_por_nf.get(nf,  Decimal("0.00")) for nf in nfs_distintas)
+
+    # Valor Total do período (rodapé) = soma dos valores das duplicatas + IPI 1x por NF
+    total_geral = (total_valor + total_ipi)
+
+    # Quantiza para 2 casas (consistência visual)
+    q2 = lambda x: Decimal(x).quantize(Decimal("0.01"))
+    total_valor = q2(total_valor)
+    total_icms  = q2(total_icms)
+    total_ipi   = q2(total_ipi)
+    total_geral = q2(total_geral)
+    qtde_duplicatas = len(linhas)
+
+    return render(request, "faturamento/relatorio_duplicatas.html", {
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "linhas": linhas,
+
+        # Cards
+        "total_periodo": total_periodo,
+        "total_mes": total_mes,
+        "total_avista": total_avista,
+        "total_tributos": total_tributos,
+    "qtde_duplicatas": qtde_duplicatas,
+        # Gráfico
+        "chart_data": chart_data,
+
+        # Rodapé (totalizador por coluna)
+        "total_valor": total_valor,
+        "total_icms": total_icms,
+        "total_ipi": total_ipi,
+        "total_geral": total_geral,
     })

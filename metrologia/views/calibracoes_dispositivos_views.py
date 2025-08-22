@@ -100,27 +100,34 @@ def salvar_calibracao_dispositivo(request, pk=None):
             try:
                 calibracao_dispositivo = form.save()
 
-                for key, value in request.POST.items():
-                    if key.startswith("afericoes["):
-                        cota_numero = key.split("[")[1].split("]")[0]
-                        if not cota_numero.isdigit():
-                            raise ValueError(f"Número da cota inválido: {cota_numero}")
-                        cota = Cota.objects.filter(
-                            numero=cota_numero,
-                            dispositivo=calibracao_dispositivo.codigo_dispositivo,
-                        ).first()
-                        if not cota:
-                            raise Http404(f"Cota {cota_numero} não encontrada.")
+                if not getattr(calibracao_dispositivo, "calibracao_cliente", False):
+                    for key, value in request.POST.items():
+                        if key.startswith("afericoes["):
+                            cota_numero = key.split("[")[1].split("]")[0]
+                            if not cota_numero.isdigit():
+                                raise ValueError(f"Número da cota inválido: {cota_numero}")
+                            cota = Cota.objects.filter(
+                                numero=cota_numero,
+                                dispositivo=calibracao_dispositivo.codigo_dispositivo,
+                            ).first()
+                            if not cota:
+                                raise Http404(f"Cota {cota_numero} não encontrada.")
 
-                        valor = float(value.replace(",", ".")) if value else None
-                        if valor is not None:
-                            Afericao.objects.update_or_create(
-                                calibracao_dispositivo=calibracao_dispositivo,
-                                cota=cota,
-                                defaults={"valor": valor}
-                            )
+                            valor = float(value.replace(",", ".")) if value else None
+                            if valor is not None:
+                                Afericao.objects.update_or_create(
+                                    calibracao_dispositivo=calibracao_dispositivo,
+                                    cota=cota,
+                                    defaults={"valor": valor}
+                                )
 
-                calibracao_dispositivo.atualizar_status()
+                    # Atualiza status apenas quando houver aferições
+                    calibracao_dispositivo.atualizar_status()
+                else:
+                    # Em calibração do cliente não há aferições; status pode ficar em branco
+                    # ou você pode definir uma convenção, ex.: "Aprovado" com base no documento anexado.
+                    pass
+
 
                 msg = "Calibração atualizada com sucesso!" if pk else "Calibração cadastrada com sucesso!"
                 messages.success(request, msg)

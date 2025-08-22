@@ -1,43 +1,70 @@
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, redirect, get_object_or_404
-from django.forms import inlineformset_factory
+from datetime import datetime
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+
 from django.contrib import messages
-from comercial.models import Item
-from comercial.models.centro_custo import CentroDeCusto
-from tecnico.models.roteiro import RoteiroProducao, EtapaRoteiro
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Max, Count, Q 
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.timezone import now
+from django.http import JsonResponse
+
+from comercial.models import Item, CentroDeCusto, Ferramenta
+from qualidade_fornecimento.models import MateriaPrimaCatalogo
 from tecnico.forms.roteiro_form import RoteiroProducaoForm
 from tecnico.forms.roteiro_formsets import EtapaFormSet, InsumoFormSet, PropriedadesFormSet
-from comercial.models.ferramenta import Ferramenta
-from tecnico.models.maquina import ServicoRealizado
-from django.db import transaction
+from tecnico.models.maquina import Maquina, ServicoRealizado
+from tecnico.models.roteiro import (
+    RoteiroProducao,
+    EtapaRoteiro,
+    PropriedadesEtapa,
+    InsumoEtapa,
+    RoteiroRevisao,   # novo modelo de histórico de revisões
+)
 
-from tecnico.models.roteiro import RoteiroProducao
-from django.core.paginator import Paginator
+import re
 
-from django.contrib.auth.decorators import login_required, permission_required
-from django.core.paginator import Paginator
-from django.db.models import Count
-from django.shortcuts import render
-from tecnico.models import RoteiroProducao
-from datetime import datetime
-from qualidade_fornecimento.models import MateriaPrimaCatalogo
+LIMITE_ABS_INTEIRO = Decimal("1000")   # 10^3 para max_digits=10, decimal_places=7
+DEC_PLACES = 7
+QUANT_7 = Decimal("1").scaleb(-DEC_PLACES)  # = Decimal('0.0000001')
 
-from django.utils.timezone import now
-from django.contrib import messages
-from django.shortcuts import redirect
+def limpar_decimal(valor, padrao=None):
+    """
+    - Aceita '', None -> retorna None (evita gravar 0 indevido).
+    - Remove separador de milhar.
+    - Converte vírgula para ponto (pt-BR -> en-US).
+    - Normaliza para 7 casas decimais.
+    - Valida limite absoluto (< 1000).
+    """
+    if valor is None:
+        return padrao
+    s = str(valor).strip()
+    if s == "":
+        return padrao
 
-from django.db.models import Max, Count, Q
+    # remove qualquer coisa que não seja dígito, vírgula, ponto ou sinal
+    s = re.sub(r"[^\d,.\-+]", "", s)
 
-from datetime import datetime
-from django.utils.timezone import now
-from decimal import Decimal, InvalidOperation
+    # "1.234,56" -> "1234.56"; "1234,56" -> "1234.56"
+    if "," in s and "." in s:
+        s = s.replace(".", "").replace(",", ".")
+    else:
+        s = s.replace(",", ".")
 
-
-def limpar_decimal(valor, padrao="0"):
     try:
-        return Decimal(str(valor).replace(",", "."))
-    except (InvalidOperation, TypeError, ValueError):
-        return Decimal(padrao)
+        d = Decimal(s)
+    except (InvalidOperation, ValueError, TypeError):
+        return padrao
+
+    # normaliza para 7 casas decimais
+    d = d.quantize(QUANT_7, rounding=ROUND_HALF_UP)
+
+    # valida limite absoluto do Decimal(10,7): |x| < 1000
+    if abs(d) >= LIMITE_ABS_INTEIRO:
+        raise ValueError(f"Valor {d} ultrapassa o limite permitido (< 1000).")
+
+    return d
 
 @login_required
 @permission_required("tecnico.view_roteiroproducao", raise_exception=True)
@@ -275,7 +302,6 @@ def cadastrar_roteiro(request):
     item_id = request.POST.get("item") or None
     initial_data = {"item": item_id} if item_id else {}
 
-    # 🔄 Se item foi informado e não é POST de submissão, busca fontes do item
     if item_id and not request.POST.get("fontes_homologadas"):
         try:
             item = Item.objects.get(id=item_id)
@@ -324,16 +350,26 @@ def cadastrar_roteiro(request):
                 )
 
                 # Insumos
-                for ins in et.get("insumos", []):
+                # Insumos
+            for i, ins in enumerate(et.get("insumos", []), start=1):
+                try:
                     InsumoEtapa.objects.create(
                         etapa=etapa,
                         materia_prima_id=ins["materia_prima_id"],
-                        tipo_insumo=ins["tipo_insumo"],
-                        obrigatorio=ins["obrigatorio"],
+                        tipo_insumo=ins.get("tipo_insumo", "matéria_prima"),
+                        obrigatorio=ins.get("obrigatorio", False),
                         desenvolvido=limpar_decimal(ins.get("desenvolvido")),
                         peso_liquido=limpar_decimal(ins.get("peso_liquido")),
                         peso_bruto=limpar_decimal(ins.get("peso_bruto")),
                     )
+                except ValueError as e:
+                    messages.error(
+                        request,
+                        f"Etapa {et.get('etapa')} — Insumo #{i}: {e}. "
+                        "Use no máximo 7 casas decimais e valor absoluto < 1000."
+                    )
+                    raise
+
 
 
                 # Propriedades
@@ -415,15 +451,17 @@ def ajax_fontes_homologadas_por_item(request):
 def editar_roteiro(request, pk):
     """
     Edição de Roteiro com preservação de etapas existentes.
-    Estratégia:
-      - Envia para o template o JSON das etapas com o campo 'id'.
-      - No POST, faz upsert por 'id' (atualiza quando existe; cria quando não).
-      - Exclui apenas as etapas que foram removidas no front.
-      - Insumos são regravados por etapa (mais simples e consistente).
-      - Propriedades (OneToOne) usa get_or_create e set() para M2M de máquinas.
+    A revisão do formulário vem SEMPRE da última revisão do histórico (por data/id).
     """
     roteiro = get_object_or_404(RoteiroProducao, pk=pk)
+
+    # ➜ última revisão pela data (tie-break por id)
+    # Apenas para exibir no helptext
+    ultima_revisao_hist = roteiro.revisoes.order_by("-data_revisao", "-id").first()
+
     form = RoteiroProducaoForm(request.POST or None, instance=roteiro)
+    # ❗ Não setamos mais initial aqui; o valor vem do model (sincronizado pelo signal)
+
 
     # Dados auxiliares para selects/autocomplete do template
     insumos_data = list(
@@ -478,14 +516,13 @@ def editar_roteiro(request, pk):
             props = {}
 
         roteiro_data["etapas"].append({
-            "id": etapa.id,  # ✅ essencial para o upsert
+            "id": etapa.id,
             "etapa": etapa.etapa,
             "setor": etapa.setor_id,
             "pph": float(etapa.pph or 0),
             "setup_minutos": etapa.setup_minutos or 0,
             "insumos": insumos_list,
             "propriedades": props,
-            # Mantido se o template espera essa estrutura:
             "segurancas": [
                 ("seguranca_mp", "MP"),
                 ("seguranca_ts", "TS"),
@@ -500,9 +537,8 @@ def editar_roteiro(request, pk):
 
         if form.is_valid():
             with transaction.atomic():
+                # ❗ Não alteramos 'revisao' automaticamente aqui.
                 roteiro = form.save()
-                roteiro.revisao = (roteiro.revisao or 1) + 1
-                roteiro.save(update_fields=["revisao"])
 
                 # Carrega payload com segurança
                 try:
@@ -541,16 +577,24 @@ def editar_roteiro(request, pk):
 
                     # INSUMOS: recria para garantir consistência
                     etapa_obj.insumos.all().delete()
-                    for ins in et.get("insumos", []):
-                        InsumoEtapa.objects.create(
-                            etapa=etapa_obj,
-                            materia_prima_id=ins["materia_prima_id"],
-                            tipo_insumo=ins.get("tipo_insumo", "matéria_prima"),
-                            obrigatorio=ins.get("obrigatorio", False),
-                            desenvolvido=limpar_decimal(ins.get("desenvolvido")),
-                            peso_liquido=limpar_decimal(ins.get("peso_liquido")),
-                            peso_bruto=limpar_decimal(ins.get("peso_bruto")),
-                        )
+                    for i, ins in enumerate(et.get("insumos", []), start=1):
+                        try:
+                            InsumoEtapa.objects.create(
+                                etapa=etapa_obj,
+                                materia_prima_id=ins["materia_prima_id"],
+                                tipo_insumo=ins.get("tipo_insumo", "matéria_prima"),
+                                obrigatorio=ins.get("obrigatorio", False),
+                                desenvolvido=limpar_decimal(ins.get("desenvolvido")),
+                                peso_liquido=limpar_decimal(ins.get("peso_liquido")),
+                                peso_bruto=limpar_decimal(ins.get("peso_bruto")),
+                            )
+                        except ValueError as e:
+                            messages.error(
+                                request,
+                                f"Etapa {et.get('etapa')} — Insumo #{i}: {e}. "
+                                "Use no máximo 7 casas decimais e valor absoluto < 1000."
+                            )
+                            raise
 
                     # PROPRIEDADES: upsert OneToOne e set() em M2M
                     props = et.get("propriedades") or {}
@@ -569,7 +613,6 @@ def editar_roteiro(request, pk):
                         maquinas_ids = [m["id"] for m in props.get("maquinas", []) if m.get("id")]
                         prop_obj.maquinas.set(maquinas_ids)
                     else:
-                        # Se não há propriedades válidas, remove o registro existente
                         PropriedadesEtapa.objects.filter(etapa=etapa_obj).delete()
 
                 # Remove apenas as etapas que sumiram do payload
@@ -596,7 +639,9 @@ def editar_roteiro(request, pk):
             ("seguranca_l2", "L2"),
         ],
         "servicos": list(ServicoRealizado.objects.order_by("nome").values("id", "nome")),
+        "ultima_revisao": ultima_revisao_hist,  # opcional para o template exibir helptext
     })
+
 
 
 
@@ -773,3 +818,55 @@ def importar_roteiros_excel(request):
             return redirect("importar_roteiros_excel")
 
     return render(request, "roteiros/importar_roteiros.html")
+
+
+# tecnico/views/roteiros_views.py
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+
+from tecnico.models.roteiro import RoteiroProducao, RoteiroRevisao
+from tecnico.forms.roteiro_revisao_form import RoteiroRevisaoForm
+
+@login_required
+@permission_required("tecnico.view_roteiroproducao", raise_exception=True)
+def historico_revisoes_roteiro(request, pk):
+    roteiro = get_object_or_404(RoteiroProducao, pk=pk)
+    revisoes = roteiro.revisoes.all()  # mais recente primeiro (ordering no model)
+    return render(request, "roteiros/historico_revisoes_roteiro.html", {
+        "roteiro": roteiro,
+        "revisoes": revisoes,
+    })
+
+@login_required
+@permission_required("tecnico.change_roteiroproducao", raise_exception=True)
+def adicionar_revisao_roteiro(request, pk):
+    roteiro = get_object_or_404(RoteiroProducao, pk=pk)
+    if request.method == "POST":
+        form = RoteiroRevisaoForm(request.POST)
+        if form.is_valid():
+            revisao = form.save(commit=False)
+            revisao.roteiro = roteiro
+            revisao.criado_por = request.user
+            revisao.save()
+            messages.success(request, "Revisão adicionada com sucesso.")
+            return redirect("tecnico:historico_revisoes_roteiro", pk=roteiro.pk)
+    else:
+        form = RoteiroRevisaoForm()
+
+    return render(request, "roteiros/adicionar_revisao_roteiro.html", {
+        "roteiro": roteiro,
+        "form": form,
+    })
+
+@login_required
+@permission_required("tecnico.delete_roteiroproducao", raise_exception=True)
+def inativar_revisao_roteiro(request, revisao_id):
+    revisao = get_object_or_404(RoteiroRevisao, pk=revisao_id)
+    roteiro_id = revisao.roteiro_id
+    if request.method == "POST":
+        revisao.status = "inativo"
+        revisao.save(update_fields=["status"])
+        messages.success(request, "Revisão inativada com sucesso.")
+        return redirect("tecnico:historico_revisoes_roteiro", pk=roteiro_id)
+    return render(request, "roteiros/confirmar_inativacao_revisao.html", {"revisao": revisao})

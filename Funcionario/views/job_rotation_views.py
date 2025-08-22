@@ -202,3 +202,5 @@ def imprimir_jobrotation_evaluation(request, id):
         return response
 
     return render(request, "jobrotation/imprimir_jobrotation_evaluation.html", context)
+
+

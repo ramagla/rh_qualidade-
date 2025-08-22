@@ -11,6 +11,15 @@
     {% csrf_token %}
     {% include 'partials/global/_form_errors.html' %}
 
+    <div class="mb-3">
+    <div class="form-check form-switch">
+      {{ form.calibracao_cliente|add_class:"form-check-input" }}
+      <label class="form-check-label" for="id_calibracao_cliente">
+        <i class="bi bi-person-check"></i> Calibração feita pelo cliente
+      </label>
+    </div>
+  </div>
+
     <div class="accordion" id="accordionFormulario">
       <!-- Seção 1: Identificação do Dispositivo -->
       <div class="accordion-item">
@@ -48,14 +57,15 @@
         </h2>
         <div id="collapseCalibracao" class="accordion-collapse collapse" data-bs-parent="#accordionFormulario">
           <div class="accordion-body row g-3">
-            <div class="col-md-6">
-              <label for="instrumento_utilizado" class="form-label">
-                <i class="bi bi-rulers"></i> Instrumento:
-              </label>
-              {{ form.instrumento_utilizado|add_class:"form-select select2" }}
-            </div>
+            <div class="col-md-6" id="grp_instrumento">
+            <label for="instrumento_utilizado" class="form-label">
+              <i class="bi bi-rulers"></i> Instrumento:
+            </label>
+            {{ form.instrumento_utilizado|add_class:"form-select select2" }}
+          </div>
 
-            <div class="col-md-6">
+
+            <div class="col-md-6" id="grp_responsavel">
               <label for="nome_responsavel" class="form-label">
                 <i class="bi bi-person-badge"></i> Nome do Responsável:
               </label>
@@ -153,113 +163,194 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const selectDispositivo = $("#id_codigo_dispositivo");
-      const codigoPecaInput = document.getElementById("codigo_peca");
-      const cotasContainer = document.getElementById("cotas-container");
-      const desenhoMiniatura = document.getElementById("desenho_miniatura");
-      const imagemAmpliada = document.getElementById("imagem_ampliada");
-      const calibracaoId = "{{ calibracao.id|default:'' }}"; // só tem valor na edição
-  
-      // Inicializar Select2
-      selectDispositivo.select2({
-        placeholder: "Selecione um dispositivo",
-        allowClear: true
+  document.addEventListener("DOMContentLoaded", function () {
+    // --------- Referências básicas ---------
+    const selectDispositivo = $("#id_codigo_dispositivo");
+    const codigoPecaInput   = document.getElementById("codigo_peca");
+    const cotasContainer    = document.getElementById("cotas-container");
+    const desenhoMiniatura  = document.getElementById("desenho_miniatura");
+    const imagemAmpliada    = document.getElementById("imagem_ampliada");
+    const calibracaoId      = "{{ calibracao.id|default:'' }}";
+
+    // Switch (não checkbox) — mesma id do campo do form
+    const swCliente = document.getElementById("id_calibracao_cliente");
+
+    // Grupos de campos a ocultar quando a calibração é do cliente
+    // Preferimos ids explícitos (grp_instrumento / grp_responsavel);
+    // se não existirem, caímos no fallback via closest(".col-md-6").
+    const campoInstrumento = document.getElementById("id_instrumento_utilizado");
+    const grupoInstrumento =
+      document.getElementById("grp_instrumento") ||
+      (campoInstrumento ? campoInstrumento.closest(".col-md-6") : null);
+
+    const campoResponsavel = document.getElementById("id_nome_responsavel");
+    const grupoResponsavel =
+      document.getElementById("grp_responsavel") ||
+      (campoResponsavel ? campoResponsavel.closest(".col-md-6") : null);
+
+    // Accordion de Cotas — ocultamos o item inteiro
+    const collapseCotas = document.getElementById("collapseCotas");
+    const itemCotas     = collapseCotas ? collapseCotas.closest(".accordion-item") : null;
+
+    // --------- Funções utilitárias ---------
+    function isCalibracaoCliente() {
+      return !!(swCliente && swCliente.checked);
+    }
+
+    function aplicarModoCliente() {
+      const cliente = isCalibracaoCliente();
+
+      // Ocultar/mostrar grupos de Instrumento e Responsável
+      [grupoInstrumento, grupoResponsavel].forEach((el) => {
+        if (!el) return;
+        el.classList.toggle("d-none", cliente);
       });
-  
-      // Evento ao mudar o dispositivo
-      selectDispositivo.on("change", function () {
-        const dispositivoId = $(this).val();
-        if (!dispositivoId) {
-          // Reset
-          codigoPecaInput.value = "";
-          desenhoMiniatura.innerHTML = `<p class="text-muted">Selecione um dispositivo para visualizar o desenho.</p>`;
-          imagemAmpliada.removeAttribute("data-src");
-          cotasContainer.innerHTML = "<p>Selecione um dispositivo para carregar as cotas associadas.</p>";
-          return;
-        }
-  
-        let url = `/metrologia/get_dispositivo_info/${dispositivoId}/`;
-        if (calibracaoId) {
-          url += `?calibracao_id=${calibracaoId}`;
-        }
-  
-        fetch(url)
-          .then(response => response.json())
-          .then(data => {
-            // Código da Peça
-            codigoPecaInput.value = data.codigo_peca || "";
-  
-            // Miniatura do Desenho
+
+      // Desabilitar campos para não enviar valores quando ocultos
+      if (campoInstrumento) campoInstrumento.disabled = cliente;
+      if (campoResponsavel) campoResponsavel.disabled = cliente;
+
+      // Ocultar/mostrar a seção de Cotas (inteira)
+      if (itemCotas) itemCotas.classList.toggle("d-none", cliente);
+
+      // Se for cliente, sobrescreve o conteúdo das cotas com um aviso
+      if (cliente && cotasContainer) {
+        cotasContainer.innerHTML = "<p>Não aplicável para calibração feita pelo cliente.</p>";
+      }
+    }
+
+    function resetDispositivoUI() {
+      if (codigoPecaInput) codigoPecaInput.value = "";
+      if (desenhoMiniatura)
+        desenhoMiniatura.innerHTML = `<p class="text-muted">Selecione um dispositivo para visualizar o desenho.</p>`;
+      if (imagemAmpliada) imagemAmpliada.removeAttribute("data-src");
+      if (cotasContainer)
+        cotasContainer.innerHTML = "<p>Selecione um dispositivo para carregar as cotas associadas.</p>";
+    }
+
+    // --------- Inicializar Select2 ---------
+    selectDispositivo.select2({
+      placeholder: "Selecione um dispositivo",
+      allowClear: true
+    });
+
+    // --------- Evento: mudança de dispositivo ---------
+    selectDispositivo.on("change", function () {
+      const dispositivoId = $(this).val();
+
+      if (!dispositivoId) {
+        resetDispositivoUI();
+        return;
+      }
+
+      let url = `/metrologia/get_dispositivo_info/${dispositivoId}/`;
+      if (calibracaoId) url += `?calibracao_id=${calibracaoId}`;
+
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          // Código da peça
+          if (codigoPecaInput) codigoPecaInput.value = data.codigo_peca || "";
+
+          // Miniatura do desenho
+          if (desenhoMiniatura) {
             if (data.desenho_url) {
-              desenhoMiniatura.innerHTML = `<img src="${data.desenho_url}" alt="Desenho do dispositivo" class="img-fluid h-100" style="object-fit: contain;">`;
-              imagemAmpliada.setAttribute("data-src", data.desenho_url);
+              desenhoMiniatura.innerHTML =
+                `<img src="${data.desenho_url}" alt="Desenho do dispositivo" class="img-fluid h-100" style="object-fit: contain;">`;
+              if (imagemAmpliada) imagemAmpliada.setAttribute("data-src", data.desenho_url);
             } else {
               desenhoMiniatura.innerHTML = `<p class="text-muted">Nenhum desenho disponível para este dispositivo.</p>`;
-              imagemAmpliada.removeAttribute("data-src");
+              if (imagemAmpliada) imagemAmpliada.removeAttribute("data-src");
             }
-  
-            // Cotas
-            cotasContainer.innerHTML = "";
-            data.cotas.forEach((cota) => {
-              const row = document.createElement("div");
-              row.className = "col-md-6 mb-3";
-              row.innerHTML = `
-                <label for="afericao_${cota.numero}" class="form-label">
-                  <i class="bi bi-arrow-right-circle me-1"></i> Aferição para Cota ${cota.numero}:
-                </label>
-                <input type="text" class="form-control" id="afericao_${cota.numero}" 
-                  name="afericoes[${cota.numero}]"
-                  value="${cota.valor_aferido || ''}"
-                  data-min="${cota.valor_minimo}" 
-                  data-max="${cota.valor_maximo}" 
-                  autocomplete="off">
-                <small>Entre ${cota.valor_minimo} e ${cota.valor_maximo}</small>
-                <div id="status_${cota.numero}" class="mt-2 text-muted" role="status" aria-live="polite">Status: Pendente</div>
-              `;
-              cotasContainer.appendChild(row);
-  
-              // Validação dinâmica
-              const afericaoInput = document.getElementById(`afericao_${cota.numero}`);
-              afericaoInput.addEventListener("input", function () {
-                const valor = parseFloat(this.value.replace(',', '.'));
-                const statusDiv = document.getElementById(`status_${cota.numero}`);
-                const min = parseFloat(this.dataset.min);
-                const max = parseFloat(this.dataset.max);
-  
-                if (!isNaN(valor) && valor >= min && valor <= max) {
-                  statusDiv.textContent = "Status: Aprovado";
-                  statusDiv.className = "mt-2 text-success";
-                } else {
-                  statusDiv.textContent = "Status: Reprovado";
-                  statusDiv.className = "mt-2 text-danger";
-                }
-              });
+          }
+
+          // Se for calibração do cliente, não renderizamos inputs de cotas
+          if (isCalibracaoCliente()) {
+            if (cotasContainer) {
+              cotasContainer.innerHTML = "<p>Não aplicável para calibração feita pelo cliente.</p>";
+            }
+            return;
+          }
+
+          // Renderização normal das cotas
+          if (!cotasContainer) return;
+          cotasContainer.innerHTML = "";
+
+          (data.cotas || []).forEach((cota) => {
+            const row = document.createElement("div");
+            row.className = "col-md-6 mb-3";
+            row.innerHTML = `
+              <label for="afericao_${cota.numero}" class="form-label">
+                <i class="bi bi-arrow-right-circle me-1"></i> Aferição para Cota ${cota.numero}:
+              </label>
+              <input type="text" class="form-control" id="afericao_${cota.numero}"
+                     name="afericoes[${cota.numero}]"
+                     value="${cota.valor_aferido || ''}"
+                     data-min="${cota.valor_minimo}"
+                     data-max="${cota.valor_maximo}"
+                     autocomplete="off">
+              <small>Entre ${cota.valor_minimo} e ${cota.valor_maximo}</small>
+              <div id="status_${cota.numero}" class="mt-2 text-muted" role="status" aria-live="polite">Status: Pendente</div>
+            `;
+            cotasContainer.appendChild(row);
+
+            // Validação dinâmica por cota
+            const afericaoInput = document.getElementById(`afericao_${cota.numero}`);
+            afericaoInput.addEventListener("input", function () {
+              const valor = parseFloat(this.value.replace(",", "."));
+              const statusDiv = document.getElementById(`status_${cota.numero}`);
+              const min = parseFloat(this.dataset.min);
+              const max = parseFloat(this.dataset.max);
+
+              if (!isNaN(valor) && valor >= min && valor <= max) {
+                statusDiv.textContent = "Status: Aprovado";
+                statusDiv.className = "mt-2 text-success";
+              } else {
+                statusDiv.textContent = "Status: Reprovado";
+                statusDiv.className = "mt-2 text-danger";
+              }
             });
-          })
-          .catch(error => {
-            console.error("Erro ao buscar informações do dispositivo:", error);
           });
-      });
-  
-      // Lazy-load da imagem ampliada no modal
-      const modal = document.getElementById("imagemModal");
-      modal.addEventListener("show.bs.modal", function () {
-        const src = imagemAmpliada.getAttribute("data-src");
-        if (src) {
-          imagemAmpliada.src = src;
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar informações do dispositivo:", error);
+        });
+    });
+
+    // --------- Toggle em tempo real do switch ---------
+    if (swCliente) {
+      swCliente.addEventListener("change", function () {
+        aplicarModoCliente();
+        // Recarrega cotas conforme o modo atual (cliente/normal)
+        if (selectDispositivo.val()) {
+          selectDispositivo.trigger("change");
         }
       });
-      modal.addEventListener("hidden.bs.modal", function () {
-        imagemAmpliada.removeAttribute("src");
+    }
+
+    // --------- Modal (lazy-load da imagem ampliada) ---------
+    const modal = document.getElementById("imagemModal");
+    if (modal) {
+      modal.addEventListener("show.bs.modal", function () {
+        const src = imagemAmpliada ? imagemAmpliada.getAttribute("data-src") : null;
+        if (src && imagemAmpliada) imagemAmpliada.src = src;
       });
-  
-      // 🔁 Forçar carregamento automático na edição
-      if (selectDispositivo.val()) {
-        selectDispositivo.trigger("change");
-      }
-    });
-  </script>
+      modal.addEventListener("hidden.bs.modal", function () {
+        if (imagemAmpliada) imagemAmpliada.removeAttribute("src");
+      });
+    }
+
+    // --------- Estado inicial ---------
+    aplicarModoCliente();
+
+    // Edição: força carregar dados do dispositivo já selecionado
+    if (selectDispositivo.val()) {
+      selectDispositivo.trigger("change");
+    }
+  });
+</script>
+
+
   
   
 {% endblock %}

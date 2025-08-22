@@ -133,7 +133,7 @@ const BAR_BORDER = ABC_CLASS.map(c =>
 
 window.__chartABC = new Chart(ctx3, {
   data: {
-    labels: ABC_LB,
+    labels: ABC_LB.map(n => String(n).trim().split(' ')[0]),
     datasets: [
       {
         type: 'bar',

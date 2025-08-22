@@ -195,7 +195,13 @@
       {% for calibracao in page_obj %}
         <tr>
           <td>{{ calibracao.codigo_dispositivo.codigo }}</td>
-          <td>{{ calibracao.instrumento_utilizado.nome_equipamento }}</td>
+          <td>
+            {% if calibracao.calibracao_cliente %}
+              Calibração do cliente
+            {% else %}
+              {{ calibracao.instrumento_utilizado.nome_equipamento|default:"—" }}
+            {% endif %}
+          </td>
           <td>
             {% if calibracao.status == "Aprovado" %}
               <span class="badge bg-success">Aprovado</span>
@@ -204,12 +210,23 @@
             {% endif %}
           </td>
           <td>{{ calibracao.data_afericao|date:"d/m/Y" }}</td>
-          <td>{{ calibracao.nome_responsavel.nome }}</td>
           <td>
-            <button type="button" class="btn btn-link text-primary small-icon" data-bs-toggle="modal" data-bs-target="#modalCotas{{ calibracao.id }}">
-              <i class="bi bi-eye-fill"></i>
-            </button>
+            {% if calibracao.calibracao_cliente %}
+              Calibração do cliente
+            {% else %}
+              {{ calibracao.nome_responsavel.nome|default:"—" }}
+            {% endif %}
           </td>
+         <td>
+  {% if calibracao.calibracao_cliente %}
+    <span class="text-muted">N/A</span>
+  {% else %}
+    <button type="button" class="btn btn-link text-primary small-icon" data-bs-toggle="modal" data-bs-target="#modalCotas{{ calibracao.id }}">
+      <i class="bi bi-eye-fill"></i>
+    </button>
+  {% endif %}
+</td>
+
           <td class="d-flex justify-content-center gap-1">
             {% if request.user|has_permission:"metrologia.change_calibracaodispositivo" %}
               {% include 'partials/global/_botao_editar.html' with objeto=calibracao url_editar='editar_calibracao_dispositivo' %}

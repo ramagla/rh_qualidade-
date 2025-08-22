@@ -87,9 +87,9 @@ class FornecedorQualificadoForm(forms.ModelForm):
                 self.initial["vencimento_certificacao"] = (
                     self.instance.vencimento_certificacao.strftime("%Y-%m-%d")
                 )
-            if self.instance.data_avaliacao_risco:
+                # 🔹 Garante que avaliação de risco = vencimento
                 self.initial["data_avaliacao_risco"] = (
-                    self.instance.data_avaliacao_risco.strftime("%Y-%m-%d")
+                    self.instance.vencimento_certificacao.strftime("%Y-%m-%d")
                 )
             if self.instance.data_auditoria:
                 self.initial["data_auditoria"] = self.instance.data_auditoria.strftime(
@@ -146,3 +146,11 @@ class FornecedorQualificadoForm(forms.ModelForm):
         if isinstance(f, UploadedFile) and f.size > 5 * 1024 * 1024:
             raise forms.ValidationError("O arquivo excede 5 MB.")
         return f
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        vencimento = cleaned_data.get("vencimento_certificacao")
+        if vencimento:
+            cleaned_data["data_avaliacao_risco"] = vencimento
+        return cleaned_data
+

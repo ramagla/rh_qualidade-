@@ -30,11 +30,18 @@
     </a>
   {% endif %}
 
-  <a href="{% url 'relatorio_faturamento' %}?{{ request.GET.urlencode }}"
+    <a href="{% url 'relatorio_faturamento' %}?{{ request.GET.urlencode }}"
      class="btn-relatorio-personalizado btn-acao-personalizado d-inline-flex align-items-center" target="_blank">
     <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>
     Gerar Relatório
   </a>
+
+  <a href="{% url 'relatorio_duplicatas' %}?{{ request.GET.urlencode }}"
+     class="btn-relatorio-personalizado btn-acao-personalizado d-inline-flex align-items-center" target="_blank">
+    <i class="bi bi-receipt me-2"></i>
+    Duplicatas
+  </a>
+
 
   <button class="btn-sync-personalizado btn-acao-personalizado d-inline-flex align-items-center"
           type="button" data-bs-toggle="collapse" data-bs-target="#syncCollapse"

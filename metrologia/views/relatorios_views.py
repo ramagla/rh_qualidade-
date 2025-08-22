@@ -9,6 +9,12 @@ from django.utils.timezone import now
 from Funcionario.models import Funcionario
 from metrologia.models.models_tabelatecnica import TabelaTecnica
 from django.contrib.auth.decorators import login_required, permission_required
+import calendar
+from dateutil.relativedelta import relativedelta
+
+def _eom(d):
+    return d.replace(day=calendar.monthrange(d.year, d.month)[1])
+
 
 @login_required
 @permission_required("metrologia.relatorio_equipamentos_calibrar", raise_exception=True)
@@ -17,29 +23,22 @@ def lista_equipamentos_a_calibrar(request):
     range_end = today + timedelta(days=30)
 
     # Adiciona a anotação para calcular a próxima calibração com o uso de relativedelta
-    tabelas = TabelaTecnica.objects.annotate(
-        proxima_calibracao=ExpressionWrapper(
-            Coalesce(F("data_ultima_calibracao"), Value(today))
-            + ExpressionWrapper(
-                Coalesce(
-                    F("frequencia_calibracao"), Value(1), output_field=IntegerField()
-                )
-                * Value(30),
-                output_field=DateField(),
-            ),
-            output_field=DateField(),
-        )
-    )
+    ativos = TabelaTecnica.objects.all()
+    vencidos, proximos = [], []
+
+    for eq in ativos:
+        if eq.data_ultima_calibracao and eq.frequencia_calibracao:
+            prox = _eom(eq.data_ultima_calibracao + relativedelta(months=eq.frequencia_calibracao))
+            eq.proxima_calibracao = prox
+            if prox < today:
+                vencidos.append(eq)
+            elif today <= prox <= range_end:
+                proximos.append(eq)
 
     # Equipamentos com calibração vencida
-    equipamentos_vencidos = tabelas.filter(proxima_calibracao__lt=today).order_by(
-        "proxima_calibracao"
-    )
+    equipamentos_vencidos = sorted(vencidos, key=lambda x: x.proxima_calibracao)
+    equipamentos_proximos = sorted(proximos, key=lambda x: x.proxima_calibracao)
 
-    # Equipamentos próximos do vencimento
-    equipamentos_proximos = tabelas.filter(
-        proxima_calibracao__gte=today, proxima_calibracao__lte=range_end
-    ).order_by("proxima_calibracao")
 
     context = {
         "equipamentos_vencidos": equipamentos_vencidos,

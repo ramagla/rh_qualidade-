@@ -3,6 +3,7 @@ from django.urls import path
 
 from qualidade_fornecimento.views import materiaprima_catalogo_views as mp_views
 from qualidade_fornecimento.views import norma_views
+from qualidade_fornecimento.views import materiaprima_views
 from qualidade_fornecimento.views.controle_servico_externo_views import (
     api_leadtime,
     cadastrar_controle_servico_externo,
@@ -214,5 +215,7 @@ urlpatterns = [
         importar_excel_servico_externo,
         name="importar_excel_servico"
     ),
+    path("tb050/rolos/editar/<int:id>/", materiaprima_views.editar_rolo, name="tb050_editar_rolo"),
+    path("qualidade/tb050/rolos/atualizar-peso/", materiaprima_views.atualizar_peso_rolo, name="tb050_atualizar_peso_rolo"),
 
 ]

@@ -104,7 +104,7 @@ def menu_metrologia(user):
             "submenu": relatorios,
         })
 
-    if user.has_perm("metrologia.view_análisecrítica"):
+    if user.has_perm("metrologia.view_analisecriticametrologia"):
         menu.append({
             "name": "Análise Crítica",
             "url": "lista_analise_critica",

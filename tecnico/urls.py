@@ -37,6 +37,8 @@ urlpatterns = [
         name="indicador_51_prazo_desenvolvimento"
     ),
     path("ajax/fontes-homologadas/", roteiros_views.ajax_fontes_homologadas_por_item, name="ajax_fontes_homologadas"),
-
+    path("roteiros/<int:pk>/historico/", roteiros_views.historico_revisoes_roteiro, name="historico_revisoes_roteiro"),
+    path("roteiros/<int:pk>/revisoes/adicionar/", roteiros_views.adicionar_revisao_roteiro, name="adicionar_revisao_roteiro"),
+    path("roteiros/revisoes/<int:revisao_id>/inativar/", roteiros_views.inativar_revisao_roteiro, name="inativar_revisao_roteiro"),
     
 ]

@@ -656,3 +656,44 @@ def adicionar_rolo(request, id):
         else:
             messages.error(request, "Erro ao adicionar rolo. Verifique os dados.")
     return redirect("tb050_list")
+
+@login_required
+def editar_rolo(request, id):
+    rolo = get_object_or_404(RoloMateriaPrima, pk=id)
+    if request.method == "POST":
+        try:
+            novo_peso = request.POST.get("peso")
+            if novo_peso:
+                rolo.peso = float(novo_peso.replace(",", "."))
+                rolo.save()
+                messages.success(request, f"Peso do rolo #{rolo.nro_rolo} atualizado para {rolo.peso} kg.")
+            else:
+                messages.error(request, "Informe um peso válido.")
+        except Exception as e:
+            messages.error(request, f"Erro ao atualizar peso: {e}")
+    return redirect("tb050_list")
+
+from django.views.decorators.http import require_POST
+
+@login_required
+@require_POST
+def atualizar_peso_rolo(request):
+    rolo_id = request.POST.get("rolo_id")
+    peso_str = request.POST.get("peso")
+
+    if not rolo_id:
+        messages.error(request, "Rolo inválido.")
+        return redirect("tb050_list")
+
+    rolo = get_object_or_404(RoloMateriaPrima, pk=rolo_id)
+
+    try:
+        if not peso_str:
+            raise ValueError("Informe um peso válido.")
+        rolo.peso = float(str(peso_str).replace(",", "."))
+        rolo.save()
+        messages.success(request, f"Peso do rolo #{rolo.nro_rolo} atualizado para {rolo.peso} kg.")
+    except Exception as e:
+        messages.error(request, f"Erro ao atualizar peso: {e}")
+
+    return redirect("tb050_list")

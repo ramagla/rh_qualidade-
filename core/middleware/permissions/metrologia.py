@@ -73,12 +73,15 @@ metrologia_permissions = {
     "lista_analise_critica": "metrologia.view_análisecrítica",
 
 
-    # Análise Crítica de Metrologia
-    "lista_analise_critica": "metrologia.view_análisecríticametrologia",
-    "cadastrar_analise_critica": "metrologia.add_análisecríticametrologia",
-    "editar_analise_critica": "metrologia.change_análisecríticametrologia",
-    "visualizar_analise_critica": "metrologia.view_análisecríticametrologia",
-    "excluir_analise_critica": "metrologia.delete_análisecríticametrologia",
+  # PARA (exemplo de ajustes no mapa)
+    "lista_analise_critica": "metrologia.view_analisecriticametrologia",
+    "cadastrar_analise_critica": "metrologia.add_analisecriticametrologia",
+    "editar_analise_critica": "metrologia.change_analisecriticametrologia",
+    "visualizar_analise_critica": "metrologia.view_analisecriticametrologia",
+    "excluir_analise_critica": "metrologia.delete_analisecriticametrologia",
+
+
+
 
 
 }

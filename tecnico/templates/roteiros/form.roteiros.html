@@ -65,13 +65,25 @@
             {{ form.peso_unitario_gramas|add_class:"form-control" }}
           </div>
 
-          <div class="col-md-2">
-            <label for="{{ form.revisao.id_for_label }}" class="form-label">
-              <i class="bi bi-arrow-repeat me-1"></i> Revisão do Roteiro
-            </label>
-            {{ form.revisao|add_class:"form-control text-center" }}
-          </div>
-        </div>
+         <div class="col-md-2">
+  <label for="{{ form.revisao.id_for_label }}" class="form-label">
+    <i class="bi bi-arrow-repeat me-1"></i> Revisão do Roteiro
+  </label>
+
+  {# Valor vem do próprio model (roteiro.revisao), mantemos readonly #}
+  {{ form.revisao|add_class:"form-control text-center"|attr:"readonly:readonly" }}
+
+  <small class="text-muted d-block mt-1">
+    {% if ultima_revisao %}
+      Última do histórico: Rev. <strong>{{ ultima_revisao.numero_revisao }}</strong>
+      ({{ ultima_revisao.data_revisao|date:"d/m/Y" }})
+    {% else %}
+      Sem histórico de revisão até o momento.
+    {% endif %}
+  </small>
+</div>
+
+
 <div class="row g-3 mt-3">
   <div class="col-12">
   <label class="form-label">

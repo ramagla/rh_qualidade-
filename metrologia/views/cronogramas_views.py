@@ -2,12 +2,18 @@ from datetime import date, timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.shortcuts import render
-
+import calendar
+from dateutil.relativedelta import relativedelta
 from metrologia.models.models_dispositivos import Dispositivo
 
 from ..models.models_calibracao import Calibracao
 from ..models.models_tabelatecnica import TabelaTecnica
 from django.contrib.auth.decorators import login_required, permission_required
+
+# Calcular próxima calibração
+def _eom(d):  # end of month
+    return d.replace(day=calendar.monthrange(d.year, d.month)[1])
+
 
 @login_required
 @permission_required("metrologia.cronograma_calibracao_equipamentos", raise_exception=True)
@@ -17,6 +23,7 @@ def cronograma_equipamentos(request):
     ano = request.GET.get("ano")
     grandeza = request.GET.get("grandeza")
     tipo_avaliacao = request.GET.get("tipo_avaliacao")
+    codigo = request.GET.get("codigo")
 
     # Base de consulta com anotação para próxima calibração
     equipamentos = TabelaTecnica.objects.filter(status__iexact="Ativo").order_by(
@@ -30,6 +37,8 @@ def cronograma_equipamentos(request):
         equipamentos = equipamentos.filter(unidade_medida=grandeza)
     if tipo_avaliacao:
         equipamentos = equipamentos.filter(tipo_avaliacao=tipo_avaliacao)
+    if codigo:
+        equipamentos = equipamentos.filter(codigo__icontains=codigo)
 
     # Lista para armazenar dados formatados
     equipamento_data = []
@@ -38,14 +47,13 @@ def cronograma_equipamentos(request):
         # Dados de calibração relacionados
         calibracao = Calibracao.objects.filter(codigo=equipamento).last()
 
-        # Calcular próxima calibração
+        
+        # Equipamentos
         proxima_calibracao = (
-            equipamento.data_ultima_calibracao
-            + timedelta(days=equipamento.frequencia_calibracao * 30)
+            _eom(equipamento.data_ultima_calibracao + relativedelta(months=equipamento.frequencia_calibracao))
             if equipamento.data_ultima_calibracao and equipamento.frequencia_calibracao
             else None
         )
-
         # Formatar a capacidade com valores seguros
         capacidade_minima = (
             f"{equipamento.capacidade_minima:.4f}"
@@ -84,19 +92,16 @@ def cronograma_equipamentos(request):
                 "data_proxima_calibracao": proxima_calibracao,  # Sem strftime
                 "frequencia_calibracao": equipamento.frequencia_calibracao or "-",
                 "laboratorio": calibracao.laboratorio if calibracao else "N/A",
-                "numero_certificado": (
-                    calibracao.numero_certificado if calibracao else "N/A"
+                "numero_certificado": (calibracao.numero_certificado if calibracao else "N/A"),
+                "certificado_url": (
+                    calibracao.certificado_anexo.url
+                    if (calibracao and calibracao.certificado_anexo)
+                    else None
                 ),
-                "erro_equipamento": (
-                    calibracao.erro_equipamento if calibracao else "N/A"
-                ),
+                "erro_equipamento": (calibracao.erro_equipamento if calibracao else "N/A"),
                 "incerteza": calibracao.incerteza if calibracao else "N/A",
                 "l": calibracao.l if calibracao else "N/A",
-                "exatidao_requerida": (
-                    equipamento.exatidao_requerida
-                    if equipamento.exatidao_requerida
-                    else "N/A"
-                ),
+                "exatidao_requerida": (equipamento.exatidao_requerida if equipamento.exatidao_requerida else "N/A"),
                 "status": calibracao.status if calibracao else "N/A",
             }
         )
@@ -120,6 +125,7 @@ def cronograma_equipamentos(request):
         "ano": ano,
         "grandeza": grandeza,
         "tipo_avaliacao": tipo_avaliacao,
+        "codigo": codigo,
         "today": today,
     }
 
@@ -133,6 +139,8 @@ def cronograma_dispositivos(request):
     # Filtros
     ano = request.GET.get("ano")
     cliente = request.GET.get("cliente")
+    codigo = request.GET.get("codigo")
+    estudo = request.GET.get("estudo")
 
     # Base de consulta
     dispositivos = Dispositivo.objects.all()
@@ -141,6 +149,12 @@ def cronograma_dispositivos(request):
         dispositivos = dispositivos.filter(data_ultima_calibracao__year=ano)
     if cliente:
         dispositivos = dispositivos.filter(cliente__iexact=cliente)
+    if codigo:
+        dispositivos = dispositivos.filter(codigo__icontains=codigo)
+    if estudo:
+        dispositivos = dispositivos.filter(estudo_realizado=estudo)
+    
+    estudos_disponiveis = Dispositivo.objects.values_list("estudo_realizado", flat=True).distinct()
 
     dispositivo_data = []
     for dispositivo in dispositivos:
@@ -166,8 +180,7 @@ def cronograma_dispositivos(request):
 
         # Calcular próxima calibração
         proxima_calibracao = (
-            dispositivo.data_ultima_calibracao
-            + relativedelta(months=dispositivo.frequencia_calibracao)
+            _eom(dispositivo.data_ultima_calibracao + relativedelta(months=dispositivo.frequencia_calibracao))
             if dispositivo.data_ultima_calibracao and dispositivo.frequencia_calibracao
             else None
         )
@@ -202,8 +215,11 @@ def cronograma_dispositivos(request):
         "dispositivos": dispositivo_data,
         "anos_disponiveis": [ano.year for ano in anos_disponiveis],
         "clientes_disponiveis": clientes_disponiveis,
+        "estudos_disponiveis": estudos_disponiveis,
         "ano": ano,
         "cliente": cliente,
+        "codigo": codigo,
+        "estudo": estudo,
         "today": today,
     }
 
