@@ -31,9 +31,16 @@
   <div class="card-body">
     <div class="row row-cols-1 row-cols-md-2 row-cols-print-2 g-3">
       <div class="col print-col">
-        <p class="mb-1 text-muted">Data:</p>
-        <p class="fw-semibold">{{ data|default:"Todas" }}</p>
-      </div>
+  <p class="mb-1 text-muted">Período:</p>
+  <p class="fw-semibold">
+    {% if data_inicio or data_fim %}
+      {{ data_inicio|default:"…" }} até {{ data_fim|default:"…" }}
+    {% else %}
+      Todos
+    {% endif %}
+  </p>
+</div>
+
       <div class="col print-col">
         <p class="mb-1 text-muted">Colaborador:</p>
         <p class="fw-semibold">{{ nome|default:"Todos" }}</p>
@@ -64,10 +71,16 @@
       </select>
     </div>
 
-    <div class="col-md-4">
-      <label class="form-label">Data</label>
-      <input type="date" name="data" value="{{ data }}" class="form-control">
-    </div>
+    <div class="col-md-3">
+  <label class="form-label">Data Inicial</label>
+  <input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control">
+</div>
+
+<div class="col-md-3">
+  <label class="form-label">Data Final</label>
+  <input type="date" name="data_fim" value="{{ data_fim }}" class="form-control">
+</div>
+
 
     <div class="col-md-4">
       <label class="form-label">Tipo</label>

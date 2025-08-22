@@ -98,7 +98,8 @@ from collections import defaultdict
 @permission_required("portaria.relatorio_atrasos_saidas", raise_exception=True)
 def relatorio_atrasos_saidas(request):
     nome = request.GET.get("nome")
-    data_filtro = request.GET.get("data")
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
     tipo = request.GET.get("tipo")
 
     entrada_padrao = time(7, 0)
@@ -108,38 +109,39 @@ def relatorio_atrasos_saidas(request):
     limite_atraso = (datetime.combine(date.today(), entrada_padrao) + tolerancia).time()
     limite_saida = (datetime.combine(date.today(), saida_padrao) - tolerancia).time()
 
-    queryset = AtrasoSaida.objects.select_related("funcionario") \
-        .exclude(tipo="hora_extra")
+    queryset = AtrasoSaida.objects.select_related("funcionario").exclude(tipo="hora_extra")
 
+    # Filtros
     if nome:
         queryset = queryset.filter(funcionario__nome=nome)
-    if data_filtro:
-        queryset = queryset.filter(data=data_filtro)
+    if data_inicio:
+        queryset = queryset.filter(data__gte=data_inicio)
+    if data_fim:
+        queryset = queryset.filter(data__lte=data_fim)
+    if tipo:
+        queryset = queryset.filter(tipo=tipo)
 
     eventos = []
     horas_por_funcionario = defaultdict(float)
-    total_horas = 0  # ✅ somatório correto da coluna de horas
+    total_horas = 0.0  # minutos somados; converteremos quando necessário
 
     for e in queryset:
         horas_diferenca = None
         h = e.horario
 
-        if h:
-            if e.tipo == "atraso" and h > limite_atraso:
-                atraso = datetime.combine(date.min, h) - datetime.combine(date.min, limite_atraso)
-                horas_diferenca = atraso.total_seconds() / 60
-            elif e.tipo == "saida" and h < limite_saida:
-                saida_antecipada = datetime.combine(date.min, limite_saida) - datetime.combine(date.min, h)
-                horas_diferenca = saida_antecipada.total_seconds() / 60
-                if h < time(12, 0):  # desconto almoço
-                    horas_diferenca -= 60
-                horas_diferenca = max(horas_diferenca, 0)
-            else:
-                continue
-        else:
+        if not h:
             continue
 
-        if tipo and tipo != e.tipo:
+        if e.tipo == "atraso" and h > limite_atraso:
+            atraso = datetime.combine(date.min, h) - datetime.combine(date.min, limite_atraso)
+            horas_diferenca = atraso.total_seconds() / 60
+        elif e.tipo == "saida" and h < limite_saida:
+            saida_antecipada = datetime.combine(date.min, limite_saida) - datetime.combine(date.min, h)
+            horas_diferenca = saida_antecipada.total_seconds() / 60
+            if h < time(12, 0):  # desconto almoço
+                horas_diferenca -= 60
+            horas_diferenca = max(horas_diferenca, 0)
+        else:
             continue
 
         horas_por_funcionario[e.funcionario.nome] += horas_diferenca or 0
@@ -148,25 +150,28 @@ def relatorio_atrasos_saidas(request):
         eventos.append({
             "obj": e,
             "tipo": e.tipo,
-            "horas": horas_diferenca,
+            "horas": horas_diferenca,  # minutos
         })
 
+    # Ordenação por nome do funcionário
     eventos.sort(key=lambda e: e["obj"].funcionario.nome)
 
     total_hoje = sum(1 for e in eventos if e["obj"].data == date.today())
     total_sem_justificativa = sum(1 for e in eventos if not e["obj"].observacao)
 
+    # Dados para selects
     nomes_disponiveis = Funcionario.objects.filter(status="Ativo").values_list("nome", flat=True).distinct()
 
     context = {
         "eventos": eventos,
         "nome": nome,
-        "data": data_filtro,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
         "tipo": tipo,
         "nomes_disponiveis": nomes_disponiveis,
         "total_hoje": total_hoje,
         "total_sem_justificativa": total_sem_justificativa,
-        "total_horas": total_horas,  # ✅ correto agora
+        "total_horas": total_horas,  # minutos somados (mantido para compatibilidade)
         "total_por_funcionario": dict(horas_por_funcionario),
         "horas_por_funcionario": dict(horas_por_funcionario),
     }

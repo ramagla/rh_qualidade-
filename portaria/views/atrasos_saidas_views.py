@@ -28,15 +28,19 @@ def lista_atrasos_saidas(request):
 
     # Filtros
     nome = request.GET.get("nome")
-    data_filtro = request.GET.get("data")
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
     tipo = request.GET.get("tipo")
 
     if nome:
         eventos_queryset = eventos_queryset.filter(funcionario__nome=nome)
-    if data_filtro:
-        eventos_queryset = eventos_queryset.filter(data=data_filtro)
+    if data_inicio:
+        eventos_queryset = eventos_queryset.filter(data__gte=data_inicio)
+    if data_fim:
+        eventos_queryset = eventos_queryset.filter(data__lte=data_fim)
     if tipo in ["atraso", "saida", "hora_extra"]:
         eventos_queryset = eventos_queryset.filter(tipo=tipo)
+
 
     # Indicadores
     total_registros = eventos_queryset.count()
@@ -62,7 +66,13 @@ def lista_atrasos_saidas(request):
         "total_hoje": total_hoje,
         "total_sem_justificativa": total_sem_justificativa,
         "total_hora_extra": total_hora_extra,
+        # período aplicado
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "nome": nome,
+        "tipo": tipo,
     }
+
 
     return render(request, "atrasosSaidas/atrasos_saidas_lista.html", context)
 

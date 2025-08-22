@@ -36,10 +36,22 @@
         </div>
 
         <!-- Data -->
-        <div class="col-12">
-          <label for="data" class="form-label"><i class="bi bi-calendar-event me-1"></i> Data</label>
-          <input type="date" name="data" id="data" value="{{ request.GET.data }}" class="form-control">
+        <!-- Data Inicial -->
+        <div class="col-12 col-md-6">
+          <label for="data_inicio" class="form-label">
+            <i class="bi bi-calendar2-week me-1"></i> Data Inicial
+          </label>
+          <input type="date" name="data_inicio" id="data_inicio" value="{{ request.GET.data_inicio|default:data_inicio }}" class="form-control">
         </div>
+
+        <!-- Data Final -->
+        <div class="col-12 col-md-6">
+          <label for="data_fim" class="form-label">
+            <i class="bi bi-calendar2-week me-1"></i> Data Final
+          </label>
+          <input type="date" name="data_fim" id="data_fim" value="{{ request.GET.data_fim|default:data_fim }}" class="form-control">
+        </div>
+
 
         <!-- Tipo -->
         <div class="col-12">
@@ -86,6 +98,29 @@
 
 
 
+{% if data_inicio or data_fim or nome or tipo %}
+<div class="alert alert-light border d-flex align-items-center gap-3">
+  <i class="bi bi-funnel text-primary"></i>
+  <div class="small">
+    <strong>Período:</strong>
+    {% if data_inicio or data_fim %}
+      {{ data_inicio|default:"…" }} até {{ data_fim|default:"…" }}
+    {% else %}
+      Todos
+    {% endif %}
+    {% if nome %} &nbsp;|&nbsp; <strong>Funcionário:</strong> {{ nome }}{% endif %}
+    {% if tipo %}
+      &nbsp;|&nbsp; <strong>Tipo:</strong>
+      {% if tipo == 'atraso' %}Atraso{% elif tipo == 'saida' %}Saída Antecipada{% elif tipo == 'hora_extra' %}Hora Extra{% endif %}
+    {% endif %}
+  </div>
+  <div class="ms-auto">
+    <a href="{% url 'lista_atrasos_saidas' %}" class="btn btn-sm btn-outline-secondary">
+      Limpar filtros
+    </a>
+  </div>
+</div>
+{% endif %}
 
 
 
