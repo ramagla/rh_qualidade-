@@ -19,17 +19,37 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from comercial.models.precalculo import PreCalculo
 
 
+# comercial/forms/precalculos_form.py
+
+from decimal import Decimal, InvalidOperation
+from django import forms
+from django.forms import HiddenInput, TextInput
+
 class PreCalculoMaterialForm(forms.ModelForm):
     class Meta:
         model = PreCalculoMaterial
         fields = '__all__'
-        exclude = (
-            'cotacao', 'created_at', 'updated_at',
-            'created_by', 'updated_by',
-        )       
+        exclude = ('cotacao','created_at','updated_at','created_by','updated_by',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        def step_for(field_name, default="any"):
+            f = self._meta.model._meta.get_field(field_name)
+            places = getattr(f, "decimal_places", None)
+            return f"0.{''.join('0' for _ in range(places-1))}1" if places and places > 0 else default
+
+        def to_plain_str(value, field_name):
+            if value in (None, ""):
+                return ""
+            f = self._meta.model._meta.get_field(field_name)
+            places = getattr(f, "decimal_places", 10)
+            q = Decimal(1).scaleb(-places)
+            try:
+                d = Decimal(str(value)).quantize(q)
+                return f"{d:.{places}f}"
+            except Exception:
+                return ""
 
         self.fields['roteiro'].required = False
         self.fields['roteiro'].widget = HiddenInput()
@@ -41,70 +61,60 @@ class PreCalculoMaterialForm(forms.ModelForm):
         })
 
         self.fields['status'].required = False
-        self.fields['status'].widget.attrs.update({
-            'class': 'form-control form-control-sm'
-        })
+        self.fields['status'].widget.attrs.update({'class': 'form-control form-control-sm'})
 
-        self.fields['icms'].required = False
-        self.fields['icms'].widget.attrs.update({
-            'class': 'form-control form-control-sm',
-            'placeholder': '0.00'
-        })        
-
-        campos = [
-            'lote_minimo', 'entrega_dias', 'fornecedor', 'icms',
-            'preco_kg', 'desenvolvido_mm', 'peso_liquido', 'peso_bruto', 'peso_bruto_total'
-        ]
+        campos = ['lote_minimo','entrega_dias','fornecedor','icms',
+                  'preco_kg','desenvolvido_mm','peso_liquido','peso_bruto','peso_bruto_total']
         for campo in campos:
             if campo in self.fields:
                 widget = self.fields[campo].widget
-                css_class = (
-                    'form-select form-select-sm'
-                    if isinstance(widget, forms.Select)
-                    else 'form-control form-control-sm'
-                )
+                is_select = isinstance(widget, forms.Select)
                 self.fields[campo].required = False
-                self.fields[campo].widget.attrs.update({'class': css_class})
+                self.fields[campo].widget.attrs.update({
+                    'class': 'form-select form-select-sm' if is_select else 'form-control form-control-sm'
+                })
 
-        if 'peso_bruto_total' in self.fields:
-            self.fields['peso_bruto_total'].widget = TextInput(
-                attrs={
-                    'class': 'form-control form-control-sm text-end peso-bruto-total',
-                }
-            )
+        # Evita notação científica no browser: usa TextInput nos campos decimais técnicos
+        for campo in ['desenvolvido_mm','peso_liquido','peso_bruto','peso_bruto_total']:
+            if campo in self.fields:
+                self.fields[campo].widget = TextInput(attrs={
+                    'class': ('form-control form-control-sm text-end' if campo.endswith('total')
+                              else 'form-control form-control-sm'),
+                    'inputmode': 'decimal',
+                    'step': step_for(campo)
+                })
 
+        # Seta valores iniciais como string decimal plana
         if not self.is_bound and self.instance and self.instance.pk:
-            for campo in ['peso_liquido', 'peso_bruto', 'peso_bruto_total', 'desenvolvido_mm']:
-                valor = getattr(self.instance, campo, None)
-                if isinstance(valor, Decimal):
-                    self.initial[campo] = str(valor)
+            for campo in ['peso_liquido','peso_bruto','peso_bruto_total','desenvolvido_mm']:
+                self.initial[campo] = to_plain_str(getattr(self.instance, campo, None), campo)
 
     def has_changed(self):
         changed = super().has_changed()
-        peso_bruto_total_str = self.data.get(self.add_prefix("peso_bruto_total"), "").strip()
-        if not changed and peso_bruto_total_str and peso_bruto_total_str != "0,000":
-            return True
+        raw = (self.data.get(self.add_prefix("peso_bruto_total"), "") or "").strip()
+        if not changed and raw:
+            try:
+                val = Decimal(raw.replace(".", "").replace(",", "."))
+                return val != Decimal("0")
+            except Exception:
+                return True
         return changed
 
     def clean(self):
         cleaned_data = super().clean()
-
-        campos_decimal = [
-            'lote_minimo', 'entrega_dias', 'icms', 'preco_kg',
-            'peso_liquido', 'peso_bruto', 'peso_bruto_total', 'desenvolvido_mm'
-        ]
-
+        campos_decimal = ['lote_minimo','entrega_dias','icms','preco_kg',
+                          'peso_liquido','peso_bruto','peso_bruto_total','desenvolvido_mm']
         for campo in campos_decimal:
             valor = cleaned_data.get(campo)
             if isinstance(valor, str):
                 valor = valor.replace(".", "").replace(",", ".")
             try:
-                cleaned_data[campo] = Decimal(valor) if valor not in [None, ''] else None
+                cleaned_data[campo] = Decimal(valor) if valor not in [None, ""] else None
             except (ValueError, InvalidOperation):
                 self.add_error(campo, f"Valor inválido em {campo}: {valor}")
                 cleaned_data[campo] = None
-
         return cleaned_data
+
 
 
 
@@ -216,9 +226,13 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
 
     def has_changed(self):
         changed = super().has_changed()
-        peso_liquido_total_str = self.data.get(self.add_prefix("peso_liquido_total"), "").strip()
-        if not changed and peso_liquido_total_str and peso_liquido_total_str != "0,00000":
-            return True
+        raw = (self.data.get(self.add_prefix("peso_bruto_total"), "") or "").strip()
+        if not changed and raw:
+            try:
+                val = Decimal(raw.replace(".", "").replace(",", "."))
+                return val != Decimal("0")
+            except Exception:
+                return True
         return changed
 
     def clean(self):

@@ -177,6 +177,16 @@ def responder_cotacao_materia_prima(request, pk):
     if request.method == "POST":
         houve_alteracao = False
 
+        # 1) Observações (CKEditor 5 envia HTML)
+        obs_text = request.POST.get("observacoes_gerais")
+        if material.precalculo is not None and obs_text is not None:
+            atual = material.precalculo.observacoes_materiais
+            if (atual or "") != (obs_text or ""):
+                material.precalculo.observacoes_materiais = obs_text
+                material.precalculo.save(update_fields=["observacoes_materiais"])
+                houve_alteracao = True
+
+        # 2) Linhas de materiais
         for i, mat in enumerate(materiais):
             # Se já está OK, não altera
             if mat.status == "ok":
@@ -187,11 +197,19 @@ def responder_cotacao_materia_prima(request, pk):
             mat.lote_minimo   = request.POST.get(f"lote_minimo_{i}") or None
             mat.entrega_dias  = request.POST.get(f"entrega_dias_{i}") or None
 
+            # preço/kg aceita decimais pt-BR ou en-US
             preco_raw = request.POST.get(f"preco_kg_{i}") or None
             if preco_raw:
-                preco_raw = preco_raw.replace(",", ".")
+                s = str(preco_raw).strip().replace(" ", "")
                 try:
-                    mat.preco_kg = Decimal(preco_raw)
+                    if "," in s and "." in s:
+                        if s.rfind(",") > s.rfind("."):  # 1.234,56 -> 1234.56
+                            s = s.replace(".", "").replace(",", ".")
+                        else:  # 1,234.56 -> 1234.56
+                            s = s.replace(",", "")
+                    elif "," in s:
+                        s = s.replace(",", ".")
+                    mat.preco_kg = Decimal(s)
                 except (InvalidOperation, ValueError):
                     mat.preco_kg = None
 
@@ -203,7 +221,7 @@ def responder_cotacao_materia_prima(request, pk):
             houve_alteracao = True
 
         if houve_alteracao:
-            # Alerta + e-mail (padrão que você já usa) :contentReference[oaicite:2]{index=2}
+            # Alerta + e-mail
             try:
                 config = AlertaConfigurado.objects.get(tipo="RESPOSTA_COTACAO_MATERIAL", ativo=True)
                 destinatarios = set(config.usuarios.all())
@@ -223,7 +241,6 @@ def responder_cotacao_materia_prima(request, pk):
                 emails = [u.email for u in destinatarios if getattr(u, "email", None)]
                 if emails:
                     precalc = material.precalculo
-                    # Link interno pro pré-cálculo
                     try:
                         if getattr(precalc, "cotacao_id", None):
                             link = request.build_absolute_uri(reverse("itens_precaculo", args=[precalc.cotacao_id]))
@@ -277,6 +294,7 @@ def responder_cotacao_materia_prima(request, pk):
             "codigo": codigo,
         }
     )
+
 
 
 # ------------------------------------------------------
@@ -422,18 +440,42 @@ def responder_cotacao_servico_lote(request, pk):
         except signing.BadSignature:
             return HttpResponseForbidden("Link inválido.")
 
-    servico = get_object_or_404(PreCalculoServicoExterno, pk=pk)
-    codigo = servico.insumo.materia_prima.codigo
+    # Helper local: resolve código/MP/insumo de forma segura
+    def _resolver_codigo_mp_insumo(serv):
+        insumo_local = getattr(serv, "insumo", None)
+        mp_local = getattr(insumo_local, "materia_prima", None) if insumo_local else None
+        codigo_mp_local = getattr(mp_local, "codigo", None)
 
-    servicos = (
-        PreCalculoServicoExterno.objects
-        .filter(precalculo=servico.precalculo, insumo__materia_prima__codigo=codigo)
-        .select_related("insumo", "insumo__materia_prima")
-        .order_by("pk")
+        if codigo_mp_local:
+            return codigo_mp_local, mp_local, insumo_local
+
+        precalc_local = getattr(serv, "precalculo", None)
+        ac_local = getattr(precalc_local, "analise_comercial_item", None) if precalc_local else None
+        item_ac = getattr(ac_local, "item", None) if ac_local else None
+        item_pre = getattr(precalc_local, "item", None) if precalc_local else None
+
+        codigo_item = getattr(item_ac, "codigo", None) or getattr(item_pre, "codigo", None)
+        return codigo_item or "", mp_local, insumo_local
+
+    servico = get_object_or_404(
+        PreCalculoServicoExterno.objects.select_related("precalculo", "insumo", "insumo__materia_prima"),
+        pk=pk,
     )
 
-    # Se todos já possuem preço, mostra a tela de finalizado
-    if not servicos.filter(preco_kg__isnull=True).exists():
+    # Resolve código/mp/insumo com tolerância a None
+    codigo, materia_prima, insumo = _resolver_codigo_mp_insumo(servico)
+
+    # Agrupamento do lote
+    base_qs = PreCalculoServicoExterno.objects.select_related("insumo", "insumo__materia_prima")
+    if codigo:
+        servicos = base_qs.filter(precalculo=servico.precalculo, insumo__materia_prima__codigo=codigo).order_by("pk")
+    elif insumo:
+        servicos = base_qs.filter(precalculo=servico.precalculo, insumo_id=insumo.id).order_by("pk")
+    else:
+        servicos = base_qs.filter(id=servico.id).order_by("pk")
+
+    # Se todos já possuem preço, mostra finalizado
+    if not servicos.filter(Q(preco_kg__isnull=True) | Q(preco_kg=0)).exists():
         return render(request, "cotacoes/cotacao_servico_lote_finalizada.html", {"servico": servico})
 
     fornecedores = (
@@ -445,11 +487,6 @@ def responder_cotacao_servico_lote(request, pk):
         .order_by("nome")
     )
 
-    try:
-        materia_prima = servico.insumo.materia_prima
-    except Exception:
-        materia_prima = None
-
     cotacao_numero     = servico.precalculo.cotacao.numero if servico.precalculo else None
     precalculo_numero  = servico.precalculo.numero if servico.precalculo else None
     observacoes_gerais = servico.precalculo.observacoes_servicos if servico.precalculo else ""
@@ -457,7 +494,16 @@ def responder_cotacao_servico_lote(request, pk):
     if request.method == "POST":
         houve_alteracao = False
 
-        # Template deve enviar <input type="hidden" name="id_{{ forloop.counter0 }}" value="{{ sev.id }}">
+        # 1) Salvar Observações (CKEditor 5 envia HTML; não usar .strip())
+        obs_text = request.POST.get("observacoes_gerais")
+        if servico.precalculo is not None and obs_text is not None:
+            atual = servico.precalculo.observacoes_servicos
+            if (atual or "") != (obs_text or ""):
+                servico.precalculo.observacoes_servicos = obs_text
+                servico.precalculo.save(update_fields=["observacoes_servicos"])
+                houve_alteracao = True
+
+        # 2) Salvar linhas de serviços
         for i, _ in enumerate(servicos):
             sev_id = request.POST.get(f"id_{i}")
             if not sev_id:
@@ -477,7 +523,7 @@ def responder_cotacao_servico_lote(request, pk):
                 s = str(v).strip().replace(" ", "")
                 try:
                     if "," in s and "." in s:
-                        # pt-BR: 1.234,56 → remove milhares "." e troca "," por "."
+                        # pt-BR 1.234,56 → remove milhares "." e troca "," por "."
                         if s.rfind(",") > s.rfind("."):
                             s = s.replace(".", "").replace(",", ".")
                         else:
@@ -497,7 +543,6 @@ def responder_cotacao_servico_lote(request, pk):
 
             sev.preco_kg     = _dec(request.POST.get(f"preco_kg_{i}"), "0.0001")
 
-            # Marca como OK apenas se houver preço informado
             if sev.preco_kg:
                 sev.status = "ok"
 
@@ -505,16 +550,15 @@ def responder_cotacao_servico_lote(request, pk):
             houve_alteracao = True
 
         if houve_alteracao:
-            # Alerta + e-mail (padrão que você já usa) :contentReference[oaicite:3]{index=3}
+            # Alerta + e-mail
             try:
                 config = AlertaConfigurado.objects.get(tipo="RESPOSTA_COTACAO_SERVICO", ativo=True)
                 destinatarios = set(config.usuarios.all())
                 for g in config.grupos.all():
                     destinatarios.update(g.user_set.all())
 
-                mp = getattr(servico.insumo, "materia_prima", None)
-                codigo_mp = getattr(mp, "codigo", "")
-                desc_mp   = getattr(mp, "descricao", "")
+                codigo_mp = codigo or ""
+                desc_mp   = getattr(materia_prima, "descricao", "")
 
                 for user in destinatarios:
                     AlertaUsuario.objects.create(
@@ -584,3 +628,6 @@ def responder_cotacao_servico_lote(request, pk):
             "codigo": codigo,
         }
     )
+
+
+

@@ -27,44 +27,50 @@ import re
 
 # tecnico/views/roteiros_views.py
 LIMITE_ABS_INTEIRO = Decimal("100000")  # exemplo de novo limite
-DEC_PLACES = 7
-QUANT_7 = Decimal("1").scaleb(-DEC_PLACES)
-
+DEC_PLACES = 10
+QUANT_10 = Decimal("1").scaleb(-DEC_PLACES)  # 0.0000000001
 
 def limpar_decimal(valor, padrao=None):
     """
-    - Aceita '', None -> retorna None (evita gravar 0 indevido).
-    - Remove separador de milhar.
+    - Aceita '', None -> retorna padrao (None).
+    - Suporta notação científica (ex.: 5e-9).
     - Converte vírgula para ponto (pt-BR -> en-US).
-    - Normaliza para 7 casas decimais.
-    - Valida limite absoluto (< 1000).
+    - Normaliza para 10 casas decimais (alinha com o model).
+    - Valida limite absoluto (< 100000 conforme sua constante).
     """
     if valor is None:
         return padrao
-    s = str(valor).strip()
-    if s == "":
-        return padrao
 
-    # remove qualquer coisa que não seja dígito, vírgula, ponto ou sinal
-    s = re.sub(r"[^\d,.\-+]", "", s)
-
-    # "1.234,56" -> "1234.56"; "1234,56" -> "1234.56"
-    if "," in s and "." in s:
-        s = s.replace(".", "").replace(",", ".")
+    # Se já vier como número, preserve notação científica com str()
+    if isinstance(valor, (int, float, Decimal)):
+        try:
+            d = Decimal(str(valor))
+        except (InvalidOperation, ValueError, TypeError):
+            return padrao
     else:
-        s = s.replace(",", ".")
+        s = str(valor).strip()
+        if s == "":
+            return padrao
 
-    try:
-        d = Decimal(s)
-    except (InvalidOperation, ValueError, TypeError):
-        return padrao
+        # permite 'e'/'E' para notação científica
+        s = re.sub(r"[^\deE,.\-+]", "", s)
 
-    # normaliza para 7 casas decimais
-    d = d.quantize(QUANT_7, rounding=ROUND_HALF_UP)
+        # normaliza separador decimal
+        if "," in s and "." in s:
+            s = s.replace(".", "").replace(",", ".")
+        else:
+            s = s.replace(",", ".")
 
-    # valida limite absoluto do Decimal(10,7): |x| < 1000
+        try:
+            d = Decimal(s)  # aceita '5e-9'
+        except (InvalidOperation, ValueError, TypeError):
+            return padrao
+
+    # normaliza para 10 casas decimais (igual ao DecimalField)
+    d = d.quantize(QUANT_10, rounding=ROUND_HALF_UP)
+
     if abs(d) >= LIMITE_ABS_INTEIRO:
-        raise ValueError(f"Valor {d} ultrapassa o limite permitido (< 1000).")
+        raise ValueError(f"Valor {d} ultrapassa o limite permitido (< 100000).")
 
     return d
 

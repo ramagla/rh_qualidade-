@@ -133,8 +133,8 @@ class InsumoEtapa(models.Model):
     obrigatorio = models.BooleanField(default=False)
 
     desenvolvido = models.DecimalField("Desenvolvido em (mm)", max_digits=20, decimal_places=10, null=True, blank=True)
-    peso_liquido = models.DecimalField("Peso Líquido (kg)", max_digits=10, decimal_places=7, null=True, blank=True)
-    peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=10, decimal_places=7, null=True, blank=True)
+    peso_liquido = models.DecimalField("Peso Líquido (kg)", max_digits=20, decimal_places=10, null=True, blank=True)
+    peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=20, decimal_places=10, null=True, blank=True)
 
     def __str__(self):
         return f"{self.materia_prima.codigo} ({'obrigatório' if self.obrigatorio else 'opcional'})"

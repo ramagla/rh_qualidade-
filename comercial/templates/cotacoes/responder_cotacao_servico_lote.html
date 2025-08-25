@@ -39,24 +39,45 @@
       <span>Responder Cotação – Serviço Externo</span>
     </h2>
 
-    {% with prec=servicos.0.precalculo %}
-      <div class="text-muted small mb-2 d-flex flex-wrap align-items-center gap-3">
+    {% with prec=servicos.0.precalculo ac=servicos.0.precalculo.analise_comercial_item %}
+  <div class="text-muted small mb-2 d-flex flex-wrap align-items-center gap-3">
+    <span>
+      <i class="bi bi-upc-scan me-1"></i>
+      Código: <strong>{{ codigo|default:"—" }}</strong>
+    </span>
+    <span>
+      <i class="bi bi-receipt me-1"></i>
+      Cotação nº:
+      <strong>{{ prec.cotacao.numero|default_if_none:cotacao_numero|default:cotacao_numero|default:"—" }}</strong>
+    </span>
+    <span>
+      <i class="bi bi-clipboard-check me-1"></i>
+      Pré-Cálculo nº:
+      <strong>{{ prec.numero|default_if_none:precalculo_numero|default:precalculo_numero|default:"—" }}</strong>
+    </span>
+
+    {# ✅ NOVO: Quantidade Estimada (sem parênteses no if) #}
+    {% if ac %}
+      {% if ac.qtde_estimada or ac.periodo %}
         <span>
-          <i class="bi bi-upc-scan me-1"></i>
-          Código: <strong>{{ codigo }}</strong>
+          <i class="bi bi-calculator me-1"></i>
+          Qtde Estimada:
+          {% if ac.qtde_estimada %}
+            <strong>{{ ac.qtde_estimada|decimal_pt:0 }}</strong>
+          {% elif prec.qtde_estimada %}
+            <strong>{{ prec.qtde_estimada|decimal_pt:0 }}</strong>
+          {% else %}
+            <strong>—</strong>
+          {% endif %}
+          {% if ac.periodo %}
+            <small class="text-muted">/ {{ ac.get_periodo_display }}</small>
+          {% endif %}
         </span>
-        <span>
-          <i class="bi bi-receipt me-1"></i>
-          Cotação nº:
-          <strong>{{ prec.cotacao.numero|default_if_none:cotacao_numero|default:cotacao_numero|default:"—" }}</strong>
-        </span>
-        <span>
-          <i class="bi bi-clipboard-check me-1"></i>
-          Pré-Cálculo nº:
-          <strong>{{ prec.numero|default_if_none:precalculo_numero|default:precalculo_numero|default:"—" }}</strong>
-        </span>
-      </div>
-    {% endwith %}
+      {% endif %}
+    {% endif %}
+  </div>
+{% endwith %}
+
 
     <!-- Subtítulo / Descrição do material associado -->
     <p class="text-muted mb-4">
@@ -110,11 +131,11 @@
             <span class="fw-bold">Desenvolvido (mm):</span>
           </div>
           <span class="text-primary fw-semibold">
-            {% if sev.desenvolvido_mm %}
-              {{ sev.desenvolvido_mm|floatformat:3 }}
-            {% elif mp and mp.desenvolvido_mm %}
-              {{ mp.desenvolvido_mm|floatformat:3 }}
-            {% else %}—{% endif %}
+           {% if sev.desenvolvido_mm %}
+                {{ sev.desenvolvido_mm|decimal_pt:7 }}
+              {% elif mp and mp.desenvolvido_mm %}
+                {{ mp.desenvolvido_mm|decimal_pt:7 }}
+              {% else %}—{% endif %}
           </span>
         </div>
       </div>
@@ -128,9 +149,9 @@
           </div>
           <span class="text-primary fw-semibold">
             {% if sev.peso_liquido %}
-              {{ sev.peso_liquido|floatformat:4 }} kg
+              {{ sev.peso_liquido|decimal_pt:10 }} kg
             {% elif mp and mp.peso_liquido %}
-              {{ mp.peso_liquido|floatformat:4 }} kg
+              {{ mp.peso_liquido|decimal_pt:10 }} kg
             {% else %}—{% endif %}
           </span>
         </div>
@@ -145,9 +166,9 @@
           </div>
           <span class="text-primary fw-semibold">
             {% if sev.peso_bruto %}
-              {{ sev.peso_bruto|floatformat:4 }} kg
+              {{ sev.peso_bruto|decimal_pt:10 }} kg
             {% elif mp and mp.peso_bruto %}
-              {{ mp.peso_bruto|floatformat:4 }} kg
+              {{ mp.peso_bruto|decimal_pt:10 }} kg
             {% else %}—{% endif %}
           </span>
         </div>
@@ -161,8 +182,7 @@
             <span class="fw-bold">Peso Líquido Total:</span>
           </div>
           <span class="text-primary fw-semibold">
-            {{ sev.peso_liquido_total|floatformat:4 }} kg
-          </span>
+          {{ sev.peso_liquido_total|decimal_pt:7 }} kg          </span>
         </div>
       </div>
     </div>
@@ -181,21 +201,27 @@
       </div>
     {% endif %}
 
-    <!-- Observações gerais -->
-    {% if observacoes_gerais|trim %}
-      <div class="mb-3">
-        <label class="form-label mb-1">
-          <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
-        </label>
-        <div class="border rounded bg-light px-3 py-2" style="white-space: pre-wrap; line-height: 1.3;">
-          {{ observacoes_gerais|trim|safe }}
-        </div>
-      </div>
-    {% endif %}
+   
+
 
     <!-- Formulário de resposta -->
     <form method="post" class="mt-4">
       {% csrf_token %}
+
+
+       <!-- Observações gerais (AGORA DENTRO DO FORM) -->
+  <div class="mb-3">
+    <label for="id_observacoes_gerais" class="form-label mb-1">
+      <i class="bi bi-chat-left-text me-1 text-muted"></i> Observações Gerais
+    </label>
+    <textarea
+      id="id_observacoes_gerais"
+      name="observacoes_gerais"
+      class="form-control"
+      rows="6"
+    >{{ observacoes_gerais|default_if_none:""|safe }}</textarea>
+    <div class="form-text">Estas observações serão salvas no Pré-Cálculo (serviços).</div>
+  </div>
       <table class="table table-bordered align-middle text-center">
         <thead class="table-light">
           <tr>
@@ -290,5 +316,39 @@
       });
     });
   </script>
+  <!-- CKEditor 5 (Classic) -->
+<!-- Coloque estes <script> depois dos demais scripts (jQuery/Select2), antes de fechar </body> -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/translations/pt-br.js"></script>
+<script>
+  (function () {
+    const textarea = document.getElementById('id_observacoes_gerais');
+    if (!textarea) return;
+
+    ClassicEditor.create(textarea, {
+      language: 'pt-br',
+      toolbar: {
+        items: [
+          'undo','redo','|',
+          'heading','|',
+          'bold','italic','underline','removeFormat','|',
+          'bulletedList','numberedList','blockQuote','|',
+          'link','insertTable'
+        ]
+      },
+      placeholder: 'Escreva aqui observações gerais sobre a cotação...'
+    }).then(editor => {
+      // ⚠️ SINCRONIZAÇÃO NO SUBMIT
+      const form = textarea.closest('form');
+      if (form) {
+        form.addEventListener('submit', () => {
+          textarea.value = editor.getData();  // <- garante que vai no POST
+        });
+      }
+    }).catch(console.error);
+  })();
+</script>
+
+
 </body>
 </html>

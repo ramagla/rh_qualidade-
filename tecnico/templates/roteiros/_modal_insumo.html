@@ -27,20 +27,20 @@
               <label class="form-label" for="desenvolvidoInsumo">
                 <i class="bi bi-hammer me-1 text-muted"></i> Desenvolvido em (mm):
               </label>
-              <input type="number" step="0.0000001" min="0" class="form-control" name="desenvolvido" id="desenvolvidoInsumo">
+<input type="number" step="any" min="0" class="form-control" name="desenvolvido" id="desenvolvidoInsumo">
             </div>
           <div class="col-md-4">
             <label class="form-label">
               <i class="bi bi-box2-heart me-1 text-muted"></i> Peso Líquido (kg):
             </label>
-            <input type="number" step="0.000001" min="0" class="form-control" name="peso_liquido">
+<input type="number" step="any" min="0" class="form-control" name="peso_liquido">
           </div>
 
           <div class="col-md-4">
             <label class="form-label">
               <i class="bi bi-box2-fill me-1 text-muted"></i> Peso Bruto (kg):
             </label>
-            <input type="number" step="0.000001" min="0" class="form-control" name="peso_bruto">
+<input type="number" step="any" min="0" class="form-control" name="peso_bruto">
           </div>
 
          <small class="form-text text-muted">
@@ -81,31 +81,108 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const modalInsumo = document.getElementById("modalInsumo");
+  const btnSalvar   = document.getElementById("btnSalvarInsumo");
 
-  // SALVAR INSUMO
-  document.getElementById("btnSalvarInsumo")?.addEventListener("click", () => {
-    const sel            = modalInsumo.querySelector('select[name="insumo"]');
-    const peso_liquido   = modalInsumo.querySelector('input[name="peso_liquido"]').value;
-    const peso_bruto     = modalInsumo.querySelector('input[name="peso_bruto"]').value;
-    const desenvolvido   = modalInsumo.querySelector('input[name="desenvolvido"]').value;
-    const tipo           = modalInsumo.querySelector('select[name="tipo_insumo"]').value;
-    const obrigatorio    = modalInsumo.querySelector('input[name="obrigatorio"]').checked;
-    const id             = sel.value;
-    const texto          = sel.options[sel.selectedIndex]?.text || "";
+  // ---------- helpers ----------
+  function normalizeToNumber(val) {
+    if (val === null || val === undefined) return null;
+    let s = String(val).trim();
+    if (!s) return null;
+    // troca vírgula por ponto e preserva notação científica
+    s = s.replace(/\s+/g, "").replace(/,/g, ".");
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  }
 
-    const div    = window.etapaAtiva;
-    const data   = JSON.parse(div.querySelector(".dados-etapa").value);
-    const index  = parseInt(modalInsumo.dataset.index, 10);
-    const isEd   = !isNaN(index) && index >= 0;
+  function toPlainString(val, maxDecimals = 10) {
+    if (val === null || val === undefined) return "";
+    const n = Number(String(val).replace(",", "."));
+    if (!Number.isFinite(n)) return "";
+    let s = n.toFixed(Math.min(maxDecimals + 5, 20));
+    if (s.includes(".")) {
+      const [i, f] = s.split(".");
+      const frac = f.slice(0, maxDecimals).replace(/0+$/, "");
+      return frac ? `${i}.${frac}` : i;
+    }
+    return s;
+  }
 
+
+  function getEtapaContext() {
+    const div  = window.etapaAtiva;
+    const data = JSON.parse(div.querySelector(".dados-etapa").value);
+    return { div, data };
+  }
+
+  function setEtapaData(div, data) {
+    div.querySelector(".dados-etapa").value = JSON.stringify(data);
+  }
+
+  function renderInsumoLi(insumo, texto, index) {
+    const devFmt = toPlainString(insumo.desenvolvido, 10) || "0";
+    const liqFmt = toPlainString(insumo.peso_liquido, 10) || "0";
+    const bruFmt = toPlainString(insumo.peso_bruto, 10)   || "0";
+
+    return `
+      <li class="list-group-item d-flex justify-content-between align-items-center small">
+        <span>
+          <strong>${texto}</strong> —
+          ${insumo.tipo_insumo} /
+          ${insumo.obrigatorio ? "Obrigatório" : "Opcional"} /
+          Desenvolvido: ${devFmt} mm /
+          Líq: ${liqFmt} kg /
+          Bruto: ${bruFmt} kg
+        </span>
+        <span class="d-flex gap-1">
+          <button type="button" class="btn btn-sm btn-outline-secondary editar-insumo" data-index="${index}">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-danger remover-insumo" data-index="${index}">
+            <i class="bi bi-x-circle"></i>
+          </button>
+        </span>
+      </li>
+    `;
+  }
+
+  function refreshListaInsumos(div, data) {
+    const ul = div.querySelector(".lista-insumos");
+    ul.innerHTML = "";
+    data.insumos.forEach((ins, idx) => {
+      const sel = modalInsumo.querySelector('select[name="insumo"]');
+      // tenta resolver o texto pelo id atual do select2 carregado no modal (fallback: id)
+      let texto = "";
+      const opt = Array.from(sel.options).find(o => o.value == ins.materia_prima_id);
+      texto = opt ? opt.text : String(ins.materia_prima_id);
+      ul.insertAdjacentHTML("beforeend", renderInsumoLi(ins, texto, idx));
+    });
+  }
+
+  // ---------- salvar insumo ----------
+  btnSalvar?.addEventListener("click", () => {
+    const sel          = modalInsumo.querySelector('select[name="insumo"]');
+    const id           = sel.value;
+    const texto        = sel.options[sel.selectedIndex]?.text || "";
+
+    const peso_liquido = normalizeToNumber(modalInsumo.querySelector('input[name="peso_liquido"]').value);
+    const peso_bruto   = normalizeToNumber(modalInsumo.querySelector('input[name="peso_bruto"]').value);
+    const desenvolvido = normalizeToNumber(modalInsumo.querySelector('input[name="desenvolvido"]').value);
+    const tipo         = modalInsumo.querySelector('select[name="tipo_insumo"]').value || "matéria_prima";
+    const obrigatorio  = modalInsumo.querySelector('input[name="obrigatorio"]').checked;
+
+    const { div, data } = getEtapaContext();
+
+    // monta objeto mantendo números como Number (backend aceitará notação científica também)
     const novoInsumo = {
-      materia_prima_id: id,
-      tipo_insumo:      tipo,
-      obrigatorio:      obrigatorio,
-      desenvolvido:     parseFloat(desenvolvido  || 0),
-      peso_liquido:     parseFloat(peso_liquido  || 0),
-      peso_bruto:       parseFloat(peso_bruto    || 0)
-    };
+  materia_prima_id: id,
+  tipo_insumo:      tipo,
+  obrigatorio:      !!obrigatorio,
+  desenvolvido:     desenvolvido ?? 0,
+  peso_liquido:     peso_liquido ?? 0,
+  peso_bruto:       peso_bruto   ?? 0,
+};
+    const index = parseInt(modalInsumo.dataset.index, 10);
+    const isEd  = !Number.isNaN(index) && index >= 0;
 
     if (isEd) {
       data.insumos.splice(index, 1, novoInsumo);
@@ -114,111 +191,88 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     delete modalInsumo.dataset.index;
-    div.querySelector(".dados-etapa").value = JSON.stringify(data);
-
-    // Atualiza a lista na UI
-    const ul = div.querySelector(".lista-insumos");
-    const devFmt = parseFloat(novoInsumo.desenvolvido).toFixed(6);
-    const liqFmt = parseFloat(novoInsumo.peso_liquido).toFixed(6);
-    const bruFmt = parseFloat(novoInsumo.peso_bruto).toFixed(6);
-
-
-    const itemHTML = `
-      <li class="list-group-item d-flex justify-content-between align-items-center small">
-        <span>
-          <strong>${texto}</strong> — 
-          ${tipo} / 
-          ${obrigatorio ? "Obrigatório" : "Opcional"} / 
-          Desenvolvido: ${devFmt} mm / 
-          Líq: ${liqFmt} kg / 
-          Bruto: ${bruFmt} kg
-        </span>
-        <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
-          <i class="bi bi-x-circle"></i>
-        </button>
-      </li>
-    `;
-
-    if (isEd && ul.children[index]) {
-      ul.children[index].outerHTML = itemHTML;
-    } else {
-      ul.insertAdjacentHTML("beforeend", itemHTML);
-    }
+    setEtapaData(div, data);
+    refreshListaInsumos(div, data);
 
     bootstrap.Modal.getInstance(modalInsumo)?.hide();
     document.querySelectorAll(".modal-backdrop").forEach(e => e.remove());
   });
 
-  // EDITAR INSUMO (abre a modal e preenche os campos)
+  // ---------- eventos da lista de insumos (editar / remover) ----------
   document.querySelectorAll(".lista-insumos").forEach(lista => {
     lista.addEventListener("click", function (e) {
-      const btn = e.target.closest(".remover-insumo") || e.target.closest(".editar-insumo");
-      if (!btn || btn.classList.contains("remover-insumo")) return;
+      const btnRemover = e.target.closest(".remover-insumo");
+      const btnEditar  = e.target.closest(".editar-insumo");
+      const etapaDiv   = e.currentTarget.closest(".etapa-form");
+      if (!etapaDiv) return;
 
-      const idx = parseInt(btn.dataset.index, 10);
-      const div = window.etapaAtiva;
-      const data = JSON.parse(div.querySelector(".dados-etapa").value);
-      const insumo = data.insumos[idx];
-      if (!insumo) return;
+      // Remover
+      if (btnRemover) {
+        const idx = parseInt(btnRemover.dataset.index, 10);
+        const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
+        if (!Number.isNaN(idx) && data.insumos[idx]) {
+          data.insumos.splice(idx, 1);
+          setEtapaData(etapaDiv, data);
+          refreshListaInsumos(etapaDiv, data);
+        }
+        return;
+      }
 
-      // texto e select de matéria-prima
-      modalInsumo.querySelector('select[name="insumo"]').value = insumo.materia_prima_id;
-      $(modalInsumo.querySelector('select[name="insumo"]')).trigger('change');
+      // Editar
+      if (btnEditar) {
+        const idx = parseInt(btnEditar.dataset.index, 10);
+        const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
+        const insumo = data.insumos[idx];
+        if (!insumo) return;
 
-      // valores numéricos formatados
-      const devVal = insumo.desenvolvido != null
-        ? parseFloat(insumo.desenvolvido).toFixed(6)
-        : "";
-      const liqVal = insumo.peso_liquido != null
-        ? parseFloat(insumo.peso_liquido).toFixed(6)
-        : "";
-      const bruVal = insumo.peso_bruto != null
-        ? parseFloat(insumo.peso_bruto).toFixed(6)
-        : "";
+        window.etapaAtiva = etapaDiv; // garante contexto correto
 
-      modalInsumo.querySelector('input[name="desenvolvido"]').value = devVal;
-      modalInsumo.querySelector('input[name="peso_liquido"]').value  = liqVal;
-      modalInsumo.querySelector('input[name="peso_bruto"]').value    = bruVal;
+        // matéria-prima
+        const sel = modalInsumo.querySelector('select[name="insumo"]');
+        sel.value = insumo.materia_prima_id;
+        $(sel).trigger('change');
 
-      // outros campos
-      modalInsumo.querySelector('select[name="tipo_insumo"]').value   = insumo.tipo_insumo;
-      modalInsumo.querySelector('input[name="obrigatorio"]').checked  = !!insumo.obrigatorio;
+        // numéricos (mostra em decimal "puro")
+        modalInsumo.querySelector('input[name="desenvolvido"]').value = toPlainString(insumo.desenvolvido, 10);
+        modalInsumo.querySelector('input[name="peso_liquido"]').value  = toPlainString(insumo.peso_liquido, 10);
+        modalInsumo.querySelector('input[name="peso_bruto"]').value    = toPlainString(insumo.peso_bruto, 10);
 
-      // marca índice para salvar edição
-      modalInsumo.dataset.index = idx;
+        // demais campos
+        modalInsumo.querySelector('select[name="tipo_insumo"]').value  = insumo.tipo_insumo || "matéria_prima";
+        modalInsumo.querySelector('input[name="obrigatorio"]').checked = !!insumo.obrigatorio;
 
-      new bootstrap.Modal(modalInsumo).show();
+        // marca índice
+        modalInsumo.dataset.index = idx;
+
+        new bootstrap.Modal(modalInsumo).show();
+      }
     });
   });
 
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const modalInsumo = document.getElementById("modalInsumo");
+  // ---------- cálculo automático do Peso Bruto ----------
   const pesoLiquidoInput = modalInsumo.querySelector('input[name="peso_liquido"]');
-  const pesoBrutoInput = modalInsumo.querySelector('input[name="peso_bruto"]');
-
+  const pesoBrutoInput   = modalInsumo.querySelector('input[name="peso_bruto"]');
   let pesoBrutoEditadoManualmente = false;
 
-  // Detecta se o usuário digitou manualmente no peso bruto
   pesoBrutoInput.addEventListener("input", () => {
     pesoBrutoEditadoManualmente = true;
   });
 
-  // Quando o peso líquido mudar, calcula o peso bruto (caso não tenha sido editado manualmente)
   pesoLiquidoInput.addEventListener("input", () => {
-    if (!pesoBrutoEditadoManualmente) {
-      const pesoLiquido = parseFloat(pesoLiquidoInput.value.replace(",", ".")) || 0;
-      const pesoBrutoCalculado = pesoLiquido * 1.03;
-      pesoBrutoInput.value = pesoBrutoCalculado.toFixed(6);
+    if (pesoBrutoEditadoManualmente) return;
+    const liq = normalizeToNumber(pesoLiquidoInput.value);
+    if (liq === null) {
+      pesoBrutoInput.value = "";
+      return;
     }
+    const brutoCalc = liq * 1.03;
+    pesoBrutoInput.value = toPlainString(brutoCalc, 10);
   });
 
-  // Sempre que a modal for aberta, reseta o controle de edição
-  const modalBootstrap = bootstrap.Modal.getOrCreateInstance(modalInsumo);
+  // reset flag ao abrir a modal
   modalInsumo.addEventListener("show.bs.modal", () => {
     pesoBrutoEditadoManualmente = false;
   });
+
 });
 </script>

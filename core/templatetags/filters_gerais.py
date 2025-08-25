@@ -662,3 +662,27 @@ def reais_sem_centavos(valor):
         return f"R$ {valor:,}".replace(",", ".")
     except (ValueError, TypeError):
         return "R$ 0"
+    
+
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+
+@register.filter
+def decimal_pt(value, places=7):
+    """
+    Formata Decimal/float com vírgula e 'places' casas fixas.
+    Uso: {{ valor|decimal_pt:7 }}  →  0,1234567
+    """
+    if value is None or value == "":
+        return ""
+    try:
+        places = int(places)
+        d = Decimal(str(value))
+        q = Decimal("1").scaleb(-places)  # 10**(-places)
+        d = d.quantize(q, rounding=ROUND_HALF_UP)
+        return f"{d:.{places}f}".replace(".", ",")
+    except (InvalidOperation, ValueError):
+        # fallback sem quebrar o template
+        try:
+            return f"{float(value):.{int(places)}f}".replace(".", ",")
+        except Exception:
+            return str(value)

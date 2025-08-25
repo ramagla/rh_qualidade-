@@ -4,8 +4,11 @@ from comercial.forms.precalculos_form import PreCalculoMaterialForm
 from comercial.models.precalculo import PreCalculo, PreCalculoMaterial
 from comercial.utils.email_cotacao_utils import disparar_email_cotacao_material
 from tecnico.models.roteiro import InsumoEtapa
+from decimal import Decimal, ROUND_HALF_UP
+from tecnico.models.roteiro import InsumoEtapa
+from comercial.models.precalculo import PreCalculoMaterial
 
-
+  
 def processar_aba_materiais(request, precalc, materiais_respondidos, form_precalculo=None):
     salvo = False
 

@@ -234,7 +234,7 @@
           const liquido = parseFloat(liquidoInput.value.replace(",", ".")) || 0;
           const resultado = liquido * qtdeEstimada;
           totalInput.removeAttribute("readonly");
-          totalInput.value = resultado.toFixed(3).replace(".", ",");
+          totalInput.value = resultado.toFixed(10).replace(".", ",");
           totalInput.setAttribute("readonly", "readonly");
         };
 
@@ -245,5 +245,61 @@
   });
 </script>
 
+<!-- …(código atual da aba Serviços, até o último <script> existente)… -->
+
+<!-- Normalização: remove notação científica e aplica decimal “plano” com vírgula -->
+<script>
+  (function () {
+    function toPlainString(val, maxDecimals = 10) {
+      if (val === null || val === undefined) return "";
+      const n = Number(String(val).replace(",", "."));
+      if (!Number.isFinite(n)) return "";
+
+      let s = n.toFixed(Math.min(maxDecimals + 5, 20));
+      if (s.includes(".")) {
+        const [i, f] = s.split(".");
+        const frac = f.slice(0, maxDecimals).replace(/0+$/, "");
+        s = frac ? `${i}.${frac}` : i;
+      }
+      return s;
+    }
+
+    function normalizarCamposServicos(scope) {
+      const seletores = [
+        "input[name$='-desenvolvido_mm']",
+        "input[name$='-peso_liquido']",
+        "input[name$='-peso_bruto']",
+        "input[name$='-preco_kg']",
+        "input[name$='-icms']",
+        "input[name$='-peso_liquido_total']",
+      ].join(",");
+
+      const campos = scope.querySelectorAll(seletores);
+      campos.forEach((inp) => {
+        const aplicar = (forcar = false) => {
+          const raw = (inp.value || "").trim();
+          if (!raw) return;
+
+          if (/[eE]-?\d+/.test(raw) || forcar) {
+            const n = Number(raw.replace(",", "."));
+            if (!Number.isFinite(n)) return;
+
+            const casas = 10;
+            let s = toPlainString(n, casas).replace(".", ",");
+            inp.value = s;
+          }
+        };
+
+        aplicar(false);
+        inp.addEventListener("blur", () => aplicar(true));
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const container = document.querySelector(".bg-servicos")?.closest("form") || document;
+      normalizarCamposServicos(container);
+    });
+  })();
+</script>
 
 

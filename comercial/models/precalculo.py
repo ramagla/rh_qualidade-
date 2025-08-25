@@ -441,9 +441,9 @@ class PreCalculoMaterial(AuditModel):
     selecionado = models.BooleanField(default=False)
 
     desenvolvido_mm = models.DecimalField("Desenvolvido (mm)", max_digits=8, decimal_places=4)
-    peso_liquido = models.DecimalField("Peso Líquido (kg)", max_digits=20, decimal_places=7)
-    peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=20, decimal_places=7)
-    peso_bruto_total = models.DecimalField("Peso Bruto Total (kg)", max_digits=20, decimal_places=7, null=True, blank=True)
+    peso_liquido = models.DecimalField("Peso Líquido (kg)", max_digits=20, decimal_places=10)
+    peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=20, decimal_places=10)
+    peso_bruto_total = models.DecimalField("Peso Bruto Total (kg)", max_digits=20, decimal_places=10, null=True, blank=True)
     preco_kg = models.DecimalField("Preço /kg", max_digits=12, decimal_places=4, null=True, blank=True)
 
     status = models.CharField("Status da Cotação", max_length=20, choices=STATUS_CHOICES, default='aguardando')
@@ -530,12 +530,12 @@ class PreCalculoServicoExterno(AuditModel):
         "ICMS (%)", max_digits=5, decimal_places=2,
         null=True, blank=True
     )
-    desenvolvido_mm = models.DecimalField("Desenvolvido (mm)", max_digits=8, decimal_places=2)
-    peso_liquido = models.DecimalField("Peso Líquido (kg)", max_digits=20, decimal_places=7)
-    peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=20, decimal_places=7)
+    desenvolvido_mm = models.DecimalField("Desenvolvido (mm)", max_digits=15, decimal_places=7)
+    peso_liquido = models.DecimalField("Peso Líquido (kg)", max_digits=20, decimal_places=10)
+    peso_bruto = models.DecimalField("Peso Bruto (kg)", max_digits=20, decimal_places=10)
     preco_kg = models.DecimalField("Preço /kg", max_digits=12, decimal_places=4, null=True, blank=True)
     selecionado = models.BooleanField(default=False)
-    peso_liquido_total = models.DecimalField("Peso Líquido Total (kg)", max_digits=20, decimal_places=7, null=True, blank=True)
+    peso_liquido_total = models.DecimalField("Peso Líquido Total (kg)", max_digits=20, decimal_places=10, null=True, blank=True)
 
     status = models.CharField("Status da Cotação", max_length=20, choices=STATUS_CHOICES, default='aguardando')
     compras_solicitado_em = models.DateTimeField(null=True, blank=True)

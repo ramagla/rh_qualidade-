@@ -245,7 +245,7 @@
           // Somente calcula se qtdeEstimada for maior que zero
           if (qtdeEstimada > 0 && pesoBruto > 0) {
             const resultado = pesoBruto * qtdeEstimada;
-            pesoBrutoTotalInput.value = resultado.toFixed(3).replace(".", ",");
+pesoBrutoTotalInput.value = resultado.toFixed(10).replace(".", ",");
           } else {
             // Se já houver valor preenchido vindo do backend, mantém
             const valorOriginal = pesoBrutoTotalInput.defaultValue || pesoBrutoTotalInput.value;
@@ -284,7 +284,7 @@
       const valorPesoLiq = campoPesoLiq?.value;
       const valorPesoBruto = campoPesoBruto?.value;
       const bruto = parseFloat(valorPesoBruto?.replace(",", ".")) || 0;
-      const totalCalculado = (bruto * qtdeEstimada).toFixed(3).replace(".", ",");
+      const totalCalculado = toPlain(bruto * qtdeEstimada, 10).replace(".", ",");
 
       for (let i = 1; i < linhas.length; i++) {
         const linha = linhas[i];
@@ -378,4 +378,127 @@
   });
 </script>
 
+<script>
+  (function () {
+    function toPlainString(val, maxDecimals = 10) {
+      if (val === null || val === undefined) return "";
+      const n = Number(String(val).replace(",", "."));
+      if (!Number.isFinite(n)) return "";
 
+      // Gera string com precisão extra e depois limita/limpa zeros
+      let s = n.toFixed(Math.min(maxDecimals + 5, 20));
+      if (s.includes(".")) {
+        const [i, f] = s.split(".");
+        const frac = f.slice(0, maxDecimals).replace(/0+$/, "");
+        s = frac ? `${i}.${frac}` : i;
+      }
+      return s;
+    }
+
+    function normalizarCamposMateriais(scope) {
+      const seletores = [
+        "input[name$='-desenvolvido_mm']",
+        "input[name$='-peso_liquido']",
+        "input[name$='-peso_bruto']",
+        "input[name$='-preco_kg']",
+        "input[name$='-icms']",
+        "input[name$='-peso_bruto_total']",
+      ].join(",");
+
+      const campos = scope.querySelectorAll(seletores);
+      campos.forEach((inp) => {
+        const aplicar = (forcar = false) => {
+          const raw = (inp.value || "").trim();
+          if (!raw) return;
+
+          // Normaliza se veio em notação científica, ou se for forçado (blur)
+          if (/[eE]-?\d+/.test(raw) || forcar) {
+            const n = Number(raw.replace(",", "."));
+            if (!Number.isFinite(n)) return;
+
+            // Totais já usam 3 casas nos seus cálculos
+            const casas = 10;
+            let s = toPlainString(n, casas).replace(".", ",");
+            inp.value = s;
+          }
+        };
+
+        // Corrige na carga
+        aplicar(false);
+        // E no blur (caso o usuário digite 1e-6, etc.)
+        inp.addEventListener("blur", () => aplicar(true));
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const container = document.querySelector(".bg-materiais")?.closest("form") || document;
+      normalizarCamposMateriais(container);
+    });
+  })();
+</script>
+<script>
+  // Utilitário único para 10 casas decimais
+  function toPlain(val, maxDecimals = 10) {
+    const n = Number(String(val).replace(",", "."));
+    if (!Number.isFinite(n)) return "";
+    let s = n.toFixed(Math.min(maxDecimals + 5, 20));
+    if (s.includes(".")) {
+      const [i, f] = s.split(".");
+      const frac = f.slice(0, maxDecimals).replace(/0+$/, "");
+      s = frac ? i + "." + frac : i;
+    }
+    return s;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const qtde = parseFloat("{{ form_analise.instance.qtde_estimada|default_if_none:'0' }}".replace(",", ".")) || 0;
+
+    // Calcula P.Total sem truncar e não sobrescreve backend
+    document.querySelectorAll("tbody tr").forEach(row => {
+      const bruto = row.querySelector("input[name$='-peso_bruto']");
+      const total = row.querySelector("input[name$='-peso_bruto_total']");
+      if (!bruto || !total) return;
+
+      const atualizar = () => {
+        const v = parseFloat((bruto.value || "").replace(",", ".")) || 0;
+        const res = v * qtde;
+        if (!total.value || total.value === "0" || total.value === "0,000" || total.value === "0,0000000000") {
+          total.value = toPlain(res, 10).replace(".", ",");
+        }
+      };
+      atualizar();
+      bruto.addEventListener("input", atualizar);
+    });
+
+    // Normalização geral com 10 casas para todos (inclusive total)
+    document.querySelectorAll("input[name$='-desenvolvido_mm'],input[name$='-peso_liquido'],input[name$='-peso_bruto'],input[name$='-peso_bruto_total']").forEach(inp => {
+      const aplicar = (forcar = false) => {
+        const raw = (inp.value || "").trim();
+        if (!raw) return;
+        if (/[eE]-?\d+/.test(raw) || forcar) {
+          inp.value = toPlain(raw, 10).replace(".", ",");
+        }
+      };
+      aplicar(false);
+      inp.addEventListener("blur", () => aplicar(true));
+    });
+
+    // Não copiar valores do 1º item se os demais já têm dados do backend
+    const linhas = document.querySelectorAll("tbody tr");
+    if (linhas.length >= 2) {
+      const p = linhas[0];
+      const vDes = p.querySelector("input[name$='-desenvolvido_mm']")?.value ?? "";
+      const vLiq = p.querySelector("input[name$='-peso_liquido']")?.value ?? "";
+      const vBru = p.querySelector("input[name$='-peso_bruto']")?.value ?? "";
+      for (let i = 1; i < linhas.length; i++) {
+        const r = linhas[i];
+        const d = r.querySelector("input[name$='-desenvolvido_mm']");
+        const l = r.querySelector("input[name$='-peso_liquido']");
+        const b = r.querySelector("input[name$='-peso_bruto']");
+        if (d && !d.value && vDes) d.value = vDes;
+        if (l && !l.value && vLiq) l.value = vLiq;
+        if (b && !b.value && vBru) b.value = vBru;
+      }
+    }
+  });
+</script>

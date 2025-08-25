@@ -10,7 +10,7 @@ class InsumoForm(forms.ModelForm):
             'materia_prima': Select(attrs={'class': 'form-select select2'}),
             'tipo_insumo': Select(attrs={'class': 'form-select'}),
             'obrigatorio': CheckboxInput(attrs={'class': 'form-check-input'}),
-            'desenvolvido': NumberInput(attrs={'class': 'form-control', 'step': '0.0000001'}),
-            'peso_liquido': NumberInput(attrs={'class': 'form-control', 'step': '0.0000001'}),
-            'peso_bruto': NumberInput(attrs={'class': 'form-control', 'step': '0.0000001'}),
+            'desenvolvido': NumberInput(attrs={'class': 'form-control', 'step': 'any', 'inputmode': 'decimal'}),
+            'peso_liquido': NumberInput(attrs={'class': 'form-control', 'step': 'any', 'inputmode': 'decimal'}),
+            'peso_bruto':   NumberInput(attrs={'class': 'form-control', 'step': 'any', 'inputmode': 'decimal'}),
         }

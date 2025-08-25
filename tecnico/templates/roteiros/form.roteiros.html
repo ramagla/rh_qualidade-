@@ -245,17 +245,28 @@ if (!window.roteiroScriptRegistrado) {
         });
 
         const ulI = div.querySelector(".lista-insumos");
-        data.insumos.forEach(ins => {
-          // encontra dados do insumo
-          const mat = insumosData.find(i => i.id == ins.materia_prima_id);
-          const txt = mat
-            ? `${mat.codigo} – ${mat.descricao}`
-            : ins.materia_prima_id;
+        // helper local para exibir número sempre em decimal "puro"
+        function toPlainStringLocal(value, maxDecimals = 10) {
+          if (value === null || value === undefined) return "";
+          const n = Number(String(value).replace(",", "."));
+          if (!Number.isFinite(n)) return "";
+          let s = n.toFixed(Math.min(maxDecimals + 5, 20));
+          if (s.includes(".")) {
+            const [i, f] = s.split(".");
+            const frac = f.slice(0, maxDecimals).replace(/0+$/, "");
+            return frac ? `${i}.${frac}` : i;
+          }
+          return s;
+        }
 
-          // normaliza e formata valores numéricos
-          const dev = parseFloat(ins.desenvolvido) || 0;
-          const liq = parseFloat(ins.peso_liquido)  || 0;
-          const bru = parseFloat(ins.peso_bruto)    || 0;
+        data.insumos.forEach(ins => {
+          const mat = insumosData.find(i => i.id == ins.materia_prima_id);
+          const txt = mat ? `${mat.codigo} – ${mat.descricao}` : ins.materia_prima_id;
+
+          // formata SEM notação científica
+          const dev = toPlainStringLocal(ins.desenvolvido, 10) || "0";
+          const liq = toPlainStringLocal(ins.peso_liquido, 10)  || "0";
+          const bru = toPlainStringLocal(ins.peso_bruto, 10)    || "0";
 
           ulI.insertAdjacentHTML("beforeend", `
             <li class="list-group-item d-flex justify-content-between align-items-center small">
@@ -263,17 +274,16 @@ if (!window.roteiroScriptRegistrado) {
                 <strong>${txt}</strong> — 
                 ${ins.tipo_insumo} / 
                 ${ins.obrigatorio ? "Obrigatório" : "Opcional"} / 
-                Desenvolvido: ${dev.toFixed(3)} mm / 
-                Líq: ${liq.toFixed(3)} kg / 
-                Bruto: ${bru.toFixed(3)} kg
+                Desenvolvido: ${dev} mm /
+                Líq: ${liq} kg /
+                Bruto: ${bru} kg
               </span>
               <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
                 <i class="bi bi-x-circle"></i>
               </button>
             </li>
           `);
-
-        }); // fecha apenas o forEach
+        });
 
 
         const ulP = div.querySelector(".lista-propriedades");
@@ -324,31 +334,54 @@ if (!window.roteiroScriptRegistrado) {
       }
 
       // Adicionar/Editar Insumo
-      if (e.target.closest(".btn-add-insumo")) {
+       if (e.target.closest(".btn-add-insumo")) {
         window.etapaAtiva = etapaDiv;
         const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
-        const insumos = data.insumos || [];
+        const insumos = (data.insumos || []);
         const modalInsumo = document.getElementById("modalInsumo");
+
+        // helper local: força string decimal "plana" (evita 5e-9)
+        function toPlainStringForModal(value, maxDecimals = 10) {
+          if (value === null || value === undefined) return "";
+          const n = Number(String(value).replace(",", "."));
+          if (!Number.isFinite(n)) return "";
+          let s = n.toFixed(Math.min(maxDecimals + 5, 20));
+          if (s.includes(".")) {
+            const [i, f] = s.split(".");
+            const frac = f.slice(0, maxDecimals).replace(/0+$/,"");
+            return frac ? `${i}.${frac}` : i;
+          }
+          return s;
+        }
 
         if (insumos.length > 0) {
           const lastIndex = insumos.length - 1;
           const insumo = insumos[lastIndex];
+
           modalInsumo.querySelector('select[name="insumo"]').value = insumo.materia_prima_id;
           $(modalInsumo.querySelector('select[name="insumo"]')).trigger('change');
-          modalInsumo.querySelector('input[name="peso_liquido"]').value   = insumo.peso_liquido || "";
-          modalInsumo.querySelector('input[name="peso_bruto"]').value     = insumo.peso_bruto   || "";
-          modalInsumo.querySelector('input[name="desenvolvido"]').value   = insumo.desenvolvido  || "";
-          modalInsumo.querySelector('select[name="tipo_insumo"]').value   = insumo.tipo_insumo   || "matéria_prima";
-          modalInsumo.querySelector('input[name="obrigatorio"]').checked  = !!insumo.obrigatorio;
+
+          // ⇩ agora sempre manda string decimal (sem notação científica)
+          modalInsumo.querySelector('input[name="peso_liquido"]').value =
+            toPlainStringForModal(insumo.peso_liquido, 10);
+          modalInsumo.querySelector('input[name="peso_bruto"]').value   =
+            toPlainStringForModal(insumo.peso_bruto, 10);
+          modalInsumo.querySelector('input[name="desenvolvido"]').value =
+            toPlainStringForModal(insumo.desenvolvido, 10);
+
+          modalInsumo.querySelector('select[name="tipo_insumo"]').value  =
+            insumo.tipo_insumo || "matéria_prima";
+          modalInsumo.querySelector('input[name="obrigatorio"]').checked = !!insumo.obrigatorio;
+
           modalInsumo.dataset.index = lastIndex;
         } else {
           modalInsumo.querySelector('select[name="insumo"]').value = "";
           $(modalInsumo.querySelector('select[name="insumo"]')).trigger('change');
-          modalInsumo.querySelector('input[name="peso_liquido"]').value   = "";
-          modalInsumo.querySelector('input[name="peso_bruto"]').value     = "";
-          modalInsumo.querySelector('input[name="desenvolvido"]').value   = "";
-          modalInsumo.querySelector('select[name="tipo_insumo"]').value   = "matéria_prima";
-          modalInsumo.querySelector('input[name="obrigatorio"]').checked  = false;
+          modalInsumo.querySelector('input[name="peso_liquido"]').value = "";
+          modalInsumo.querySelector('input[name="peso_bruto"]').value   = "";
+          modalInsumo.querySelector('input[name="desenvolvido"]').value = "";
+          modalInsumo.querySelector('select[name="tipo_insumo"]').value = "matéria_prima";
+          modalInsumo.querySelector('input[name="obrigatorio"]').checked = false;
           delete modalInsumo.dataset.index;
         }
 
