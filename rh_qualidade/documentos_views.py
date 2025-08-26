@@ -12,6 +12,7 @@ from Funcionario.forms import DocumentoForm, RevisaoDocForm
 from Funcionario.models.documentos import Documento, RevisaoDoc
 from Funcionario.models.revisao_doc_leitura import RevisaoDocLeitura
 from django.contrib.auth import get_user_model
+from django.db.models import Max
 
 User = get_user_model()
 
@@ -69,6 +70,14 @@ def lista_documentos(request):
     total_aprovados = documentos.filter(status="aprovado").count()
     total_em_revisao = documentos.filter(status="em_revisao").count()
     total_inativos = documentos.filter(status="inativo").count()
+
+    # Ordenar pelo mais recente (última revisão) primeiro
+    documentos = (
+        documentos
+        .annotate(ultima_revisao=Max("revisoes__data_revisao"))
+        .order_by("-ultima_revisao", "-id")
+        .distinct()
+    )
 
     # Paginação
     paginator = Paginator(documentos, 10)

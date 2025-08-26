@@ -78,7 +78,6 @@ urlpatterns = [
     path("ajax/roteiros-por-item/", ajax_views.ajax_roteiros_por_item, name="ajax_roteiros_por_item"),
     path("ajax/dados-cliente/", ajax_views.dados_cliente_ajax, name="dados_cliente_ajax"),
 
-
     # Relatorios 
     path("cotacoes/precalculo/<int:pk>/visualizar/", precalc_views.visualizar_precalculo, name="visualizar_precalculo"),
     path("cotacoes/precalculo/<int:pk>/precificacao/", precalc_views.precificacao_produto, name="precificacao_produto"),
@@ -119,10 +118,10 @@ urlpatterns = [
     path("api/getNotasFiscais", api_views.get_notas_fiscais, name="api_get_notas_fiscais"),
     path("faturamento/", faturamento_views.lista_faturamento, name="lista_faturamento"),
     path("faturamento/sync/", faturamento_views.sync_faturamento, name="sync_faturamento"),
+    path("faturamento/sync-notas/", faturamento_views.sync_faturamento_notas, name="sync_faturamento_notas"),
     path("faturamento/novo/", faturamento_views.criar_faturamento, name="criar_faturamento"),
     path("faturamento/<int:pk>/editar/", faturamento_views.editar_faturamento, name="editar_faturamento"),
     path("faturamento/<int:pk>/excluir/", faturamento_views.excluir_faturamento, name="excluir_faturamento"),
     path("faturamento/relatorio/", faturamento_views.relatorio_faturamento, name="relatorio_faturamento"),
     path("faturamento/relatorio-duplicatas/", faturamento_views.relatorio_duplicatas, name="relatorio_duplicatas"),
-
 ]

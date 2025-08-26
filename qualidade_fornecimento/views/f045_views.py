@@ -60,16 +60,24 @@ def visualizar_f045_pdf(request, relacao_id):
         composicao = NormaComposicaoElemento.objects.filter(
             norma=norma_obj, tipo_abnt__iexact=tipo_abnt
         ).first()
-        bitola = relacao.materia_prima.bitola.replace(",", ".") if relacao.materia_prima.bitola else None
-        bitola_float = float(bitola) if bitola else None
+        try:
+            bitola_decimal = (
+                Decimal(str(relacao.materia_prima.bitola).replace(",", "."))
+                if relacao.materia_prima.bitola not in (None, "")
+                else None
+            )
+        except (InvalidOperation, TypeError, ValueError):
+            bitola_decimal = None
+
         norma_tracao = (
             NormaTracao.objects.filter(
                 norma=norma_obj,
                 tipo_abnt__iexact=tipo_abnt,
-                bitola_minima__lte=bitola_float,
-                bitola_maxima__gte=bitola_float,
+                bitola_minima__lte=bitola_decimal,
+                bitola_maxima__gte=bitola_decimal,
             ).first()
-            if bitola_float and tipo_abnt else None
+            if (bitola_decimal is not None and tipo_abnt)
+            else None
         )
     except (NormaTecnica.DoesNotExist, NormaComposicaoElemento.DoesNotExist, ValueError):
         composicao = None
@@ -290,17 +298,19 @@ def gerar_f045(request, relacao_id):
             ]
 
         bitola = parse_decimal_seguro(relacao.materia_prima.bitola)
-        tipo_abnt = relacao.materia_prima.tipo_abnt  # Novo: pega o tipo ABNT do cadastro
+        tipo_abnt = relacao.materia_prima.tipo_abnt
 
-        if bitola and tipo_abnt:
-            tracao = NormaTracao.objects.filter(
+        tracao = (
+            NormaTracao.objects.filter(
                 norma=norma_obj,
                 tipo_abnt__iexact=tipo_abnt,
                 bitola_minima__lte=bitola,
-                bitola_maxima__gte=bitola
+                bitola_maxima__gte=bitola,
             ).first()
-        else:
-            tracao = None
+            if (bitola is not None and tipo_abnt)
+            else None
+        )
+
 
         if tracao:
             res_min = tracao.resistencia_min
@@ -372,8 +382,9 @@ def gerar_f045(request, relacao_id):
     bitola_raw = relacao.materia_prima.bitola or "0"
     largura_raw = relacao.materia_prima.largura or "0"
 
-    bitola_nominal = float(parse_decimal_seguro(bitola_raw) or 0)
-    largura_nominal = float(parse_decimal_seguro(largura_raw) or 0)
+    bitola_nominal = parse_decimal_seguro(bitola_raw) or Decimal("0")
+    largura_nominal = parse_decimal_seguro(largura_raw) or Decimal("0")
+
 
 
 
@@ -386,7 +397,7 @@ def gerar_f045(request, relacao_id):
             tolerancia = parse_decimal_seguro(relacao.materia_prima.tolerancia or "0")
             tolerancia_largura = parse_decimal_seguro(relacao.materia_prima.tolerancia_largura or "0")
 
-            dureza_limite = parse_decimal(dureza_norma)
+            dureza_limite = parse_decimal(dureza_norma)  # mantém, retorna Decimal ou None
 
             for form_rolo in formset:
                 if not form_rolo.has_changed():
@@ -422,13 +433,13 @@ def gerar_f045(request, relacao_id):
 
                 # Atualiza laudo
                 rolo.aprova_rolo(
-                    bitola_nominal,
-                    largura_nominal,
-                    tolerancia,
-                    tolerancia_largura,
-                    res_min,
-                    res_max,
-                    dureza_limite,
+                    bitola_nominal,           # Decimal
+                    largura_nominal,          # Decimal
+                    tolerancia,               # Decimal
+                    tolerancia_largura,       # Decimal
+                    res_min,                  # Decimal ou None
+                    res_max,                  # Decimal ou None
+                    dureza_limite,            # Decimal ou None
                 )
                 rolo.save()
 
@@ -522,12 +533,12 @@ def gerar_f045(request, relacao_id):
             "res_min": res_min,
             "res_max": res_max,
             "dureza_padrao": dureza_norma,
-            "bitola_nominal": bitola_nominal,
-            "largura_nominal": largura_nominal,
+            "bitola_nominal": f"{bitola_nominal}".replace(".", ","),
+            "largura_nominal": f"{largura_nominal}".replace(".", ","),
+
         },
     )
 
 
 from django.http import JsonResponse
-
 

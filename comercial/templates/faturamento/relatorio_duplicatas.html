@@ -4,6 +4,7 @@
 {% load conversores %}
 {% load humanize %}
 {% load filters_gerais %}
+{% load static %}
 
 {% block content %}
 {% include 'partials/global/_styles_componentes.html' %}
@@ -12,29 +13,63 @@
 
 <div class="print-container container mt-5">
 
+  {# Botão imprimir #}
   {% include 'partials/global/_botao_impressao.html' %}
 
+  <div class="mb-4 row g-2 d-print-none">
+    <!-- Filtro (GET) -->
   <form method="GET" class="mb-4 row g-2 d-print-none">
     <div class="col-md-3">
-      <label for="data_inicio" class="form-label">
-        <i class="bi bi-calendar2-week me-1"></i> Data Início (Vencimento)
-      </label>
-      <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ data_inicio }}">
-    </div>
+        <label for="data_inicio" class="form-label">
+          <i class="bi bi-calendar2-week me-1"></i> Data Início
+        </label>
+        <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ data_inicio }}">
+      </div>
     <div class="col-md-3">
-      <label for="data_fim" class="form-label">
-        <i class="bi bi-calendar2-week me-1"></i> Data Fim (Vencimento)
-      </label>
-      <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ data_fim }}">
-    </div>
+        <label for="data_fim" class="form-label">
+          <i class="bi bi-calendar2-week me-1"></i> Data Fim
+        </label>
+        <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ data_fim }}">
+      </div>
     <div class="col-md-2 d-flex align-items-end">
-      <button type="submit" class="btn btn-primary w-100">
-        <i class="bi bi-funnel"></i> Filtrar
-      </button>
-    </div>
-  </form>
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-funnel"></i> Filtrar
+        </button>
+      </div>
+    </form>
 
-  {% load static %}
+    <!-- Sincronizar Notas (POST) -->
+    <form id="form-sync-notas" method="POST" action="{% url 'sync_faturamento_notas' %}" class="col-12 col-lg-4 d-flex align-items-end">
+      {% csrf_token %}
+      <input type="hidden" id="hidden_data_inicio" name="data_inicio" value="">
+      <input type="hidden" id="hidden_data_fim" name="data_fim" value="">
+      <button type="submit" class="btn btn-outline-secondary w-100">
+        <i class="bi bi-receipt"></i> Sincronizar Notas (API)
+      </button>
+    </form>
+  </div>
+
+  <script>
+  (function () {
+    const formSync = document.getElementById('form-sync-notas');
+    if (!formSync) return;
+    formSync.addEventListener('submit', function (ev) {
+      const di = (document.getElementById('data_inicio') || {}).value || '';
+      const df = (document.getElementById('data_fim') || {}).value || '';
+      if (!di || !df) {
+        ev.preventDefault();
+        alert('Informe o período (Data Início e Data Fim).');
+        return false;
+      }
+      document.getElementById('hidden_data_inicio').value = di;
+      document.getElementById('hidden_data_fim').value = df;
+    });
+  })();
+  </script>
+
+
+  
+  <!-- Cabeçalho -->
   <div class="table-responsive mb-3">
     <table class="table table-bordered align-middle text-center mb-0" style="table-layout:fixed;">
       <tr>
@@ -44,7 +79,7 @@
         <td style="width:55%;" class="px-2 py-1 text-center align-middle">
           <div class="text-center">
             <strong>RELATÓRIO DE DUPLICATAS</strong><br>
-            <span class="text-uppercase">Resumo por período de vencimento</span>
+            <span class="text-uppercase">Resumo por período de emissão</span>
           </div>
         </td>
         <td style="width:25%; padding:0; vertical-align:middle;">
@@ -62,7 +97,7 @@
   </div>
 
   <!-- KPIs -->
-  <div class="print-cards mb-3 d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+<div class="print-cards print-4 mb-3 d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
     <div class="card shadow-sm h-100 no-break border-primary">
       <div class="card-body text-center py-3">
         <div class="kpi-number fs-4 fw-bold text-primary mb-1">
@@ -73,7 +108,6 @@
         </div>
       </div>
     </div>
-
     <div class="card shadow-sm h-100 no-break border-danger">
       <div class="card-body text-center py-3">
         <div class="kpi-number fs-4 fw-bold text-danger mb-1">
@@ -84,7 +118,6 @@
         </div>
       </div>
     </div>
-
     <div class="card shadow-sm h-100 no-break border-warning">
       <div class="card-body text-center py-3">
         <div class="kpi-number fs-4 fw-bold text-warning mb-1">
@@ -95,7 +128,6 @@
         </div>
       </div>
     </div>
-
     <div class="card shadow-sm h-100 no-break border-success">
       <div class="card-body text-center py-3">
         <div class="kpi-number fs-4 fw-bold text-success mb-1">
@@ -108,53 +140,50 @@
     </div>
   </div>
 
-  <!-- Tabela principal (sem totalizador) -->
-  <div class="card shadow-sm mb-3 border-primary">
-    <div class="card-header bg-white fw-semibold py-2 text-primary">
+  <!-- Tabela -->
+<div class="card shadow-sm mb-3 border-primary">
+  <div class="card-header bg-white fw-semibold py-2 text-primary">
       <i class="bi bi-receipt me-2"></i>Duplicatas — Detalhamento
     </div>
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-sm table-hover table-striped align-middle mb-0">
+<table class="table table-sm table-hover table-striped align-middle text-center mb-0 tabela-dup">
           <thead class="table-primary">
-  <tr>
-    <th class="text-center align-middle"><i class="bi bi-receipt d-block fs-6"></i>Nº NF</th>
-    <th class="text-center align-middle"><i class="bi bi-calendar-event d-block fs-6"></i>Data</th>
-    <th class="text-center align-middle"><i class="bi bi-person-badge d-block fs-6"></i>Cliente</th>
-    <th class="text-center align-middle"><i class="bi bi-calendar-check d-block fs-6"></i>Vencimento</th>
-    <th class="text-center align-middle"><i class="bi bi-cash-coin d-block fs-6"></i>Valor</th>
-    <th class="text-center align-middle"><i class="bi bi-percent d-block fs-6"></i>Valor ICMS</th>
-    <th class="text-center align-middle"><i class="bi bi-percent d-block fs-6"></i>Valor IPI</th>
-    <th class="text-center align-middle"><i class="bi bi-file-earmark-text d-block fs-6"></i>Natureza</th>
-    <th class="text-center align-middle"><i class="bi bi-upc-scan d-block fs-6"></i>CFOP</th>
-    <th class="text-center align-middle"><i class="bi bi-cash-stack d-block fs-6"></i>Valor PIS</th>
-    <th class="text-center align-middle"><i class="bi bi-cash-stack d-block fs-6"></i>Valor COFINS</th>
-    <th class="text-center align-middle"><i class="bi bi-calculator d-block fs-6"></i>Valor Total (Valor + IPI)</th>
-  </tr>
-</thead>
-
-
+            <tr>
+              <th><i class="bi bi-receipt d-block mb-1"></i>Nº NF</th>
+              <th><i class="bi bi-calendar-event d-block mb-1"></i>Data</th>
+              <th><i class="bi bi-person-badge d-block mb-1"></i>Cliente</th>
+              <th><i class="bi bi-calendar-check d-block mb-1"></i>Venc.</th>
+              <th><i class="bi bi-cash-coin d-block mb-1"></i>Valor</th>
+              <th><i class="bi bi-percent d-block mb-1"></i>ICMS</th>
+              <th><i class="bi bi-percent d-block mb-1"></i>IPI</th>
+              <th><i class="bi bi-journal-text d-block mb-1"></i>Natureza</th>
+              <th><i class="bi bi-upc-scan d-block mb-1"></i>CFOP</th>
+              {% comment %} <th><i class="bi bi-cash-stack d-block mb-1"></i>PIS</th>
+              <th><i class="bi bi-cash-stack d-block mb-1"></i>COFINS</th> {% endcomment %}
+              <th><i class="bi bi-calculator d-block mb-1"></i>Total</th>
+            </tr>
+          </thead>
           <tbody>
             {% if linhas %}
               {% for l in linhas %}
               <tr>
-                <td class="text-nowrap">{{ l.nfe }}</td>
-                <td class="text-nowrap">{% if l.data %}{{ l.data|date:"d/m/Y" }}{% else %}—{% endif %}</td>
-                <td class="text-start">{{ l.cliente|primeiro_nome }}</td>
-                <td class="text-nowrap">{{ l.vencimento|date:"d/m/Y" }}</td>
-                <td class="text-end">{{ l.valor|formatar_reais }}</td>
-                <td class="text-end">{{ l.valor_icms|formatar_reais }}</td>
-                <td class="text-end">{{ l.valor_ipi|formatar_reais }}</td>
-                <td class="text-start">{{ l.natureza }}</td>
-                <td class="text-nowrap">{{ l.cfop }}</td>
-                <td class="text-end">{{ l.valor_pis|formatar_reais }}</td>
-                <td class="text-end">{{ l.valor_cofins|formatar_reais }}</td>
-                <td class="text-end fw-semibold">{{ l.valor_total|formatar_reais }}</td>
-
+                <td>{{ l.nfe }}</td>
+                <td>{% if l.data %}{{ l.data|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+                <td>{{ l.cliente|primeiro_nome }}</td>
+                <td>{{ l.vencimento|date:"d/m/Y" }}</td>
+                <td>{{ l.valor|formatar_reais }}</td>
+                <td>{{ l.valor_icms|formatar_reais }}</td>
+                <td>{{ l.valor_ipi|formatar_reais }}</td>
+                <td>{{ l.natureza }}</td>
+                <td>{{ l.cfop }}</td>
+                {% comment %} <td>{{ l.valor_pis|formatar_reais }}</td>
+                <td>{{ l.valor_cofins|formatar_reais }}</td> {% endcomment %}
+                <td>{{ l.valor_total|formatar_reais }}</td>
               </tr>
               {% endfor %}
             {% else %}
-              <tr><td colspan="8" class="text-muted text-center">Sem duplicatas no período.</td></tr>
+              <tr><td colspan="12" class="text-muted">Sem duplicatas no período.</td></tr>
             {% endif %}
           </tbody>
         </table>
@@ -162,174 +191,95 @@
     </div>
   </div>
 
-  <!-- TOTALIZADORES EM CARDS (mesmo design dos KPIs do topo) -->
-<div class="card shadow-sm mb-3 border-success no-break">
-  <div class="card-header bg-white fw-semibold py-2 text-success">
-    <i class="bi bi-calculator me-2"></i>Totalizadores do Período
-  </div>
-  <div class="card-body">
-    <div class="print-cards d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
-      <div class="card shadow-sm h-100 border-primary">
-        <div class="card-body text-center py-3">
-          <div class="kpi-number fs-4 fw-bold text-primary mb-1">
-      {{ qtde_duplicatas|default_if_none:0|default:0 }}
+  <!-- Totalizadores -->
+  <div class="card shadow-sm mb-3 border-success no-break">
+    <div class="card-header bg-white fw-semibold py-2 text-success">
+      <i class="bi bi-calculator me-2"></i>Totalizadores do Período
     </div>
-    <div class="kpi-label text-secondary small">
-      <i class="bi bi-receipt me-1"></i>Quantidade de Duplicatas
-    </div>
-        </div>
-      </div>
-
-      <div class="card shadow-sm h-100 border-info">
-        <div class="card-body text-center py-3">
-          <div class="kpi-number fs-4 fw-bold text-info mb-1">
-            {{ total_icms|default_if_none:0|default:0|formatar_reais }}
-          </div>
-          <div class="kpi-label text-secondary small">
-            <i class="bi bi-percent me-1"></i>Total ICMS
+    <div class="card-body">
+<div class="print-cards print-4 d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <div class="card shadow-sm h-100 border-primary">
+          <div class="card-body text-center py-3">
+            <div class="kpi-number fs-4 fw-bold text-primary mb-1">{{ qtde_duplicatas|default_if_none:0|default:0 }}</div>
+            <div class="kpi-label text-secondary small">
+              <i class="bi bi-receipt me-1"></i>Quantidade de Duplicatas
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="card shadow-sm h-100 border-warning">
-        <div class="card-body text-center py-3">
-          <div class="kpi-number fs-4 fw-bold text-warning mb-1">
-            {{ total_ipi|default_if_none:0|default:0|formatar_reais }}
-          </div>
-          <div class="kpi-label text-secondary small">
-            <i class="bi bi-basket2 me-1"></i>Total IPI
+        <div class="card shadow-sm h-100 border-info">
+          <div class="card-body text-center py-3">
+            <div class="kpi-number fs-4 fw-bold text-info mb-1">{{ total_icms|formatar_reais}}</div>
+            <div class="kpi-label text-secondary small">
+              <i class="bi bi-percent me-1"></i>Total ICMS
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="card shadow-sm h-100 border-success">
-        <div class="card-body text-center py-3">
-          <div class="kpi-number fs-4 fw-bold text-success mb-1">
-            {{ total_geral|default_if_none:0|default:0|formatar_reais }}
+        <div class="card shadow-sm h-100 border-warning">
+          <div class="card-body text-center py-3">
+            <div class="kpi-number fs-4 fw-bold text-warning mb-1">{{ total_ipi|formatar_reais}}</div>
+            <div class="kpi-label text-secondary small">
+              <i class="bi bi-basket2 me-1"></i>Total IPI
+            </div>
           </div>
-          <div class="kpi-label text-secondary small">
-            <i class="bi bi-calculator me-1"></i>Total Geral (Valor + IPI)
+        </div>
+        <div class="card shadow-sm h-100 border-success">
+          <div class="card-body text-center py-3">
+            <div class="kpi-number fs-4 fw-bold text-success mb-1">{{ total_geral|formatar_reais }}</div>
+            <div class="kpi-label text-secondary small">
+              <i class="bi bi-calculator me-1"></i>Total Geral (Valor + IPI)
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-
-  <style media="print">
-  /* evita barras de rolagem e cortes */
-  .table-responsive{ overflow:visible !important; height:auto !important; max-height:none !important; }
-  thead, tbody, tr, td, th{ break-inside:avoid !important; page-break-inside:avoid !important; }
-
-  /* deixa a tabela “respirar” e não cortar valores longos */
-  .table{ table-layout:auto !important; width:100% !important; font-size:9px !important; }
-  .table th, .table td{
-    padding:2px 6px !important;
-    line-height:1.15 !important;
-    white-space:normal !important;
-    word-break:break-word !important;
-    overflow:visible !important;
-  }
-
-  /* gráfico menor e sem distorção no print */
-  .chart-card{ page-break-inside:avoid; }
-  .chart-print-box{ height:160px !important; }
-  #chart_dup_clientes{ width:100% !important; height:160px !important; max-height:160px !important; }
-</style>
-
-  <!-- Gráfico: Top 10 por Cliente (primeiro nome) -->
+  <!-- Gráfico -->
   <div class="card shadow-sm mb-3 border-info chart-card">
     <div class="card-header bg-white fw-semibold py-2 text-info">
-      <i class="bi bi-bar-chart-line me-2"></i>Top 10 Clientes (Primeiro Nome) — Valor de Duplicatas
+      <i class="bi bi-bar-chart-line me-2"></i>Top 10 Clientes — Valor de Duplicatas
     </div>
     <div class="chart-print-box">
-<canvas id="chart_dup_clientes" width="560" height="160"></canvas>
+      <canvas id="chart_dup_clientes" width="560" height="160"></canvas>
     </div>
   </div>
 
+  <!-- Observações -->
   <p class="mt-2 small text-muted">
     <i class="bi bi-info-circle me-1"></i>
     Os valores consideram o campo <b>valor_duplicata</b> das duplicatas vinculadas à NF.
     O “Pagamento à Vista” considera quando a data de emissão é a mesma do vencimento ou quando o vencimento ocorre 1 dia após a emissão.
+    <br>
+    <strong>Importante:</strong> os totalizadores <em>(Total no Período, Total ICMS, Total IPI)</em> consideram apenas as notas com CFOP
+    <b>{{ cfops_totalizadores }}</b>. A tabela acima lista <u>todas</u> as NFs, independentemente do CFOP.
   </p>
 
-</div>
-
-  {# Rodapé (forçado a imprimir) #}
+  <!-- Rodapé forçado na impressão -->
   <div class="formulario-rodape d-none d-print-block">
     {% include 'partials/global/_formulario_rodape.html' with numero_formulario="Duplicatas" %}
   </div>
 
+</div> <!-- /.print-container -->
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function () {
   const el = document.getElementById('chart_dup_clientes');
   if (!el || typeof Chart === 'undefined') return;
 
-  const labels = [
-    {% for p in chart_data %}"{{ p.cliente|primeiro_nome }}"{% if not forloop.last %},{% endif %}{% endfor %}
-  ];
-  const rawVals = [
-    {% for p in chart_data %}"{{ p.valor|floatformat:2 }}"{% if not forloop.last %},{% endif %}{% endfor %}
-  ];
-  const dataVals = rawVals.map(v => parseFloat(String(v).replace(',', '.')) || 0);
-
-  new Chart(el, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Valor de Duplicatas',
-        data: dataVals
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(ctx.parsed.y)
-          }
-        }
-      },
-      scales: {
-        y: {
-          ticks: {
-            callback: (val) => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(val)
-          }
-        }
-      }
-    }
-  });
-})();
-</script>
-
-
-<script>
-window.addEventListener('load', function () {
-  const el = document.getElementById('chart_dup_clientes');
-  if (!el || typeof Chart === 'undefined') return;
-
-  const labels = [
-    {% for p in chart_data %}"{{ p.cliente|primeiro_nome }}"{% if not forloop.last %},{% endif %}{% endfor %}
-  ];
-  const rawVals = [
-    {% for p in chart_data %}"{{ p.valor|floatformat:2 }}"{% if not forloop.last %},{% endif %}{% endfor %}
-  ];
+  const labels = [{% for p in chart_data %}"{{ p.cliente|primeiro_nome }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+  const rawVals = [{% for p in chart_data %}"{{ p.valor|floatformat:2 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
   const dataVals = rawVals.map(v => parseFloat(String(v).replace(',', '.')) || 0);
 
   const chart = new Chart(el, {
     type: 'bar',
     data: { labels, datasets: [{ label: 'Valor de Duplicatas', data: dataVals, borderWidth: 1 }] },
     options: {
-      // Mantém tamanho do <canvas> (evita “esticar” no print)
       responsive: false,
       maintainAspectRatio: false,
       animation: false,
-      indexAxis: 'y', // barras HORIZONTAIS
+      indexAxis: 'y',
       layout: { padding: { top: 4, right: 8, bottom: 4, left: 8 } },
       plugins: {
         legend: { display: false },
@@ -356,7 +306,6 @@ window.addEventListener('load', function () {
     }
   });
 
-  // Tamanho estável durante a impressão
   function resizeForPrint(){ try{ chart.resize(560, 160); }catch(e){} }
   function resizeForScreen(){ try{ chart.resize(560, 160); }catch(e){} }
 
@@ -370,50 +319,66 @@ window.addEventListener('load', function () {
   } else if (mql && mql.addListener) {
     mql.addListener(e => e.matches ? resizeForPrint() : resizeForScreen());
   }
-});
+})();
 </script>
-
 
 <style>
   .table thead th i { opacity:.85; }
   .table thead th { vertical-align:bottom; }
   .sticky-top { top:0; z-index:2; }
 
+  /* Layout padrão (tela) */
   .print-container { max-width:1100px; }
   .print-cards{ display:grid; grid-template-columns:1fr; gap:.5rem; }
-  @media (min-width:992px){ .print-cards{ grid-template-columns:repeat(4,1fr);} }
+  @media (min-width:992px){ .print-cards{ grid-template-columns:repeat(3,1fr);} }
   .kpi-number{ font-size:clamp(1.25rem,3vw,2.25rem); line-height:1.1; }
   .kpi-label{ font-size:.9rem; }
 
+  /* Página A4 e compressão para caber em 1 folha */
   @page { size:A4 portrait; margin:10mm; }
 
   @media print{
-    html, body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  html, body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; overflow:visible!important; }
 
     .d-print-none{ display:none!important; }
-    .sticky-top{ position:static!important; }
+    .sticky-top{ position:static!important; }  /* desativa sticky no print */
     .print-container{ padding:8px; max-width:820px; }
 
-    .print-cards{
-      display:grid!important; grid-template-columns:repeat(4,1fr)!important;
-      gap:6px!important; margin-bottom:8px;
-    }
+    /* Mantém grid, mas permite especificar 4 colunas quando desejado */
+  .print-cards{
+    display:grid!important; gap:6px!important; margin-bottom:8px;
+  }
+  /* Força 4 colunas na impressão para os grupos de KPIs */
+  .print-cards.print-4{
+    grid-template-columns:repeat(4,1fr)!important;
+  }
 
     .card, .shadow-sm{ box-shadow:none!important; border:1px solid #dcdcdc; }
     .card-header{ padding:6px 10px!important; font-size:11px!important; }
     .card-body{ padding:8px 10px!important; }
-
     .kpi-number{ font-size:18px!important; }
     .kpi-label{ font-size:10px!important; }
 
     .table{ font-size:9px!important; table-layout:fixed; }
-    .table th, .table td{ padding:2px 6px!important; line-height:1.15!important; white-space:nowrap; }
+    .table th, .table td{
+      padding:2px 6px!important; line-height:1.15!important; white-space:nowrap;
+    }
     .table thead th{ font-size:9.5px!important; }
 
-    /* Sem scroll na impressão */
-    .table-responsive{ overflow:visible!important; height:auto!important; max-height:none!important; }
-    thead, tbody, tr, td, th{ break-inside:avoid!important; page-break-inside:avoid!important; }
-    .no-break{ break-inside:avoid!important; page-break-inside:avoid!important; }
+    .table-responsive, table, thead, tbody, tr, td, th{
+      break-inside:avoid; page-break-inside:avoid;
+    }
+    .no-break{ break-inside:avoid; page-break-inside:avoid; }
+
+    .mb-4{ margin-bottom:.5rem!important; }
+    .mb-3{ margin-bottom:.4rem!important; }
+    .mt-3{ margin-top:.4rem!important; }
+    .ps-2{ padding-left:.25rem!important; }
+
+    /* Garante que o partial do rodapé apareça mesmo com classes no próprio include */
+    .formulario-rodape-wrapper, .formulario-rodape-wrapper *{ display:initial; visibility:visible; }
+    .formulario-rodape-wrapper .d-print-none{ display:initial!important; }
   }
+
 </style>
 {% endblock %}

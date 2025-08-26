@@ -23,10 +23,10 @@ class RoloMateriaPrima(models.Model):
     )
 
     bitola_espessura = models.DecimalField(
-        "Espessura", max_digits=6, decimal_places=2, null=True, blank=True
+        "Espessura", max_digits=10, decimal_places=4, null=True, blank=True
     )
     bitola_largura = models.DecimalField(
-        "Largura", max_digits=6, decimal_places=2, null=True, blank=True
+        "Largura", max_digits=10, decimal_places=4, null=True, blank=True
     )
 
     enrolamento = models.CharField(

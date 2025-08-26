@@ -686,3 +686,6 @@ def decimal_pt(value, places=7):
             return f"{float(value):.{int(places)}f}".replace(".", ",")
         except Exception:
             return str(value)
+
+
+
