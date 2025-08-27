@@ -54,9 +54,13 @@
       <strong><i class="bi bi-clipboard-check me-1"></i> Conclusão geral</strong>
       <span class="badge rounded-pill text-bg-primary" id="pct-label">0%</span>
     </div>
-    <div class="progress" role="progressbar" aria-label="Progresso geral" aria-valuemin="0" aria-valuemax="100">
+
+    <!-- wrap com indicador na cauda -->
+    <div class="progress position-relative" role="progressbar" aria-label="Progresso geral" aria-valuemin="0" aria-valuemax="100" id="pct-wrap">
       <div class="progress-bar" id="pct-bar" style="width:0%"></div>
+      <span id="pct-tail" class="pct-tail">0%</span>
     </div>
+
     <small class="text-muted d-block mt-1" id="pct-hint">Aguardando seleção…</small>
   </div>
 </div>
@@ -76,36 +80,46 @@
   .flow-vertical{
     display:flex;
     flex-direction:column;
-    gap:40px;                 /* espaçamento maior entre nós */
-    max-width: 720px;         /* largura confortável */
-    margin: 0 auto;           /* centraliza */
+    gap:40px;
+    max-width: 720px;
+    margin: 0 auto;
     padding: 10px 0 20px;
   }
 
   .flow-node{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;      /* 🔹 empurra meta para a direita */
-  gap:1rem;
-  padding:1rem 1.25rem;
-  border-radius:1rem;
-  background:#fff;
-  border:1px solid #e6e9ef;
-  box-shadow:0 .25rem .75rem rgba(0,0,0,.06);
-  position:relative;
-}
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    padding:1rem 1.25rem;
+    border-radius:1rem;
+    background:#fff;
+    border:1px solid #e6e9ef;
+    box-shadow:0 .25rem .75rem rgba(0,0,0,.06);
+    position:relative;
+  }
 
-.flow-node .text{ flex:1; min-width:0; }   /* título/detalhe ocupam o meio */
-.meta-right{
-  margin-left:1rem;
-  font-size:.8rem; opacity:.8; line-height:1.1;
-  white-space:nowrap;
-}
-.meta-right .meta-line{ }
-@media (max-width: 768px){
-  .flow-node{ flex-direction:column; align-items:flex-start; }
-  .meta-right{ align-self:stretch; text-align:left; white-space:normal; }
-}
+  .flow-node .text{ flex:1; min-width:0; }
+  .meta-right{
+    margin-left:1rem;
+    font-size:.8rem; opacity:.8; line-height:1.1;
+    white-space:nowrap;
+  }
+
+  /* “setinhas/subitens” (se ainda estiver usando) */
+  .subitems{ margin-top:.5rem; display:flex; flex-direction:column; gap:.25rem; }
+  .subitem{ display:flex; align-items:center; min-height:22px; }
+  .subitem .arrow{ width:22px; height:2px; background:#94a3b8; margin-right:.5rem; position:relative; flex:0 0 22px; }
+  .subitem .arrow::after{
+    content:""; position:absolute; right:-5px; top:-3px;
+    border-left:6px solid #94a3b8; border-top:3px solid transparent; border-bottom:3px solid transparent;
+  }
+  .subitem .subtext{ font-size:.82rem; color:#334155; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 100%; }
+
+  @media (max-width: 768px){
+    .flow-node{ flex-direction:column; align-items:flex-start; }
+    .meta-right{ align-self:stretch; text-align:left; white-space:normal; }
+  }
 
   .flow-node .icon{
     width:44px; height:44px; border-radius:9999px;
@@ -116,7 +130,7 @@
   .flow-node .title{ font-weight:600; line-height:1.1; }
   .flow-node .detail{ font-size:.8rem; opacity:.8; }
 
-  /* Conector VERTICAL com seta */
+  /* Conector vertical com seta */
   .flow-node::after{
     content:"";
     position:absolute;
@@ -132,7 +146,7 @@
     top:calc(100% + 32px - 6px);
     border-left:6px solid transparent;
     border-right:6px solid transparent;
-    border-top:6px solid #cbd5e1;   /* seta */
+    border-top:6px solid #cbd5e1;
   }
   .flow-node:last-child::after,
   .flow-node:last-child::before{ display:none; }
@@ -140,20 +154,30 @@
   /* Estados */
   .state-ok      { border-color:#22c55e; }
   .state-ok .icon{ background:#dcfce7; color:#166534; }
-
   .state-pendente      { border-color:#e2e8f0; }
-
   .state-andamento      { border-color:#60a5fa; }
   .state-andamento .icon{ background:#dbeafe; color:#1e40af; }
-
   .state-amostras       { border-color:#facc15; }
   .state-amostras .icon { background:#fef9c3; color:#92400e; }
-
   .state-reprovado      { border-color:#ef4444; }
   .state-reprovado .icon{ background:#fee2e2; color:#7f1d1d; }
-
   .state-atraso         { border-color:#fb923c; }
   .state-atraso .icon   { background:#ffedd5; color:#7c2d12; }
+
+  /* === Indicador de % na cauda da barra === */
+  .pct-tail{
+    position:absolute;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-size:.78rem;
+    font-weight:600;
+    padding:.05rem .4rem;
+    background:#fff;
+    border:1px solid #dbe3ef;
+    border-radius:999px;
+    color:#0d6efd;   /* cor do primary */
+    pointer-events:none;
+  }
 </style>
 
 <script>
@@ -167,35 +191,68 @@
   const $bar   = document.getElementById('pct-bar');
   const $label = document.getElementById('pct-label');
   const $hint  = document.getElementById('pct-hint');
+  const $tail  = document.getElementById('pct-tail');   // rótulo no fim da barra
 
   // pesos para % de conclusão
   // ok=1, amostras=0.75, andamento=0.5, atraso=0.25, pendente/reprovado=0
-  const PESOS = {
-    ok: 1, amostras: 0.75, andamento: 0.5, atraso: 0.25, pendente: 0, reprovado: 0
-  };
+  const PESOS = { ok:1, amostras:.75, andamento:.5, atraso:.25, pendente:0, reprovado:0 };
+
+  // ------------ UI helpers ------------
+  function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+  function htmlAsideCards(no){
+    const arr = Array.isArray(no.cards_lado) ? no.cards_lado : [];
+    if(!arr.length) return "";
+    const items = arr.map(c => `
+      <div class="aside-card">
+        <div class="topline">
+          <div class="title" title="${esc(c.titulo)}">${esc(c.titulo)}</div>
+          ${c.badge ? `<span class="badge text-bg-secondary">${esc(c.badge)}</span>` : ""}
+        </div>
+        ${c.sub ? `<div class="sub" title="${esc(c.sub)}">${esc(c.sub)}</div>` : ""}
+        <div class="infos">
+          ${c.info1 ? `<div>${esc(c.info1)}</div>` : ""}
+          ${c.info2 ? `<div>${esc(c.info2)}</div>` : ""}
+          ${c.info3 ? `<div>${esc(c.info3)}</div>` : ""}
+        </div>
+      </div>
+    `).join("");
+    return `<div class="aside-cards">${items}</div>`;
+  }
 
   function htmlNode(no){
-  const state = 'state-' + (no.status || 'pendente');
-  const metaResp = no.meta?.resp || "";
-  const metaData = no.meta?.data || "";
-  const metaHtml = (metaResp || metaData) ? `
-    <div class="meta-right text-end">
-      ${metaResp ? `<div class="meta-line">${metaResp}</div>` : ""}
-      ${metaData ? `<div class="meta-line">${metaData}</div>` : ""}
-    </div>` : "";
-  return `
-    <div class="flow-node ${state}">
-      <div class="icon"><i class="bi ${no.icone||'bi-circle'}"></i></div>
-      <div class="text">
-        <div class="title">${no.titulo||''}</div>
-        <div class="detail">${no.detalhe||''}</div>
+    const state = 'state-' + ((no && no.status) ? no.status : 'pendente');
+
+    // meta direita
+    const meta = (no && no.meta) ? no.meta : {};
+    const metaResp = meta.resp || "";
+    const metaData = meta.data || "";
+    const metaHtml = (metaResp || metaData)
+      ? `<div class="meta-right text-end">
+           ${metaResp ? `<div class="meta-line">${esc(metaResp)}</div>` : ""}
+           ${metaData ? `<div class="meta-line">${esc(metaData)}</div>` : ""}
+         </div>`
+      : "";
+
+    // nó principal
+    const core = `
+      <div class="flow-node ${state}">
+        <div class="icon"><i class="bi ${(no && no.icone) ? no.icone : 'bi-circle'}"></i></div>
+        <div class="text">
+          <div class="title">${(no && no.titulo) ? esc(no.titulo) : ''}</div>
+          <div class="detail">${(no && no.detalhe) ? esc(no.detalhe) : ''}</div>
+        </div>
+        ${metaHtml}
       </div>
-      ${metaHtml}
-    </div>
-  `;
-}
+    `;
 
+    // cartões laterais (materiais/serviços selecionados vêm em no.cards_lado)
+    const aside = htmlAsideCards(no);
+    const rowCls = aside ? "flow-row" : "flow-row no-aside";
+    return `<div class="${rowCls}">${core}${aside}</div>`;
+  }
 
+  // ------------ cálculo progresso ------------
   function calcConclusao(fluxo){
     if(!fluxo || !fluxo.length) return 0;
     let soma = 0;
@@ -212,21 +269,25 @@
     }
     $lane.innerHTML = data.fluxo.map(htmlNode).join('');
 
-    // Atualiza progresso geral
+    // Atualiza progresso geral + rótulos
     const pct = calcConclusao(data.fluxo);
     $bar.style.width = pct + '%';
     $label.textContent = pct + '%';
+    $tail.textContent  = pct + '%';
+    const pos = Math.min(98, Math.max(2, pct));  // evita grudar nas bordas
+    $tail.style.left = pos + '%';
+
     $hint.textContent  = 'Com base no status de todas as etapas do fluxo.';
     $card.classList.remove('d-none');
   }
 
-  // Carrega pré-cálculos ao escolher a cotação
+  // ------------ carregamento selects ------------
   $cot.addEventListener('change', async function(){
     $pre.innerHTML = '<option value="">Carregando…</option>';
     $pre.disabled = true; $btn.disabled = true;
 
     const id = this.value;
-    if(!id){ 
+    if(!id){
       $pre.innerHTML = '<option value="">— selecione a cotação primeiro —</option>';
       return;
     }
@@ -235,7 +296,7 @@
       const json = await resp.json();
       if(json.ok){
         const opts = ['<option value="">— selecione —</option>'];
-        json.precalculos.forEach(p => opts.push(`<option value="${p.id}">${p.label}</option>`));
+        json.precalculos.forEach(p => opts.push(`<option value="${p.id}">${esc(p.label)}</option>`));
         $pre.innerHTML = opts.join('');
         $pre.disabled = false;
       }else{
@@ -246,20 +307,35 @@
     }
   });
 
-  // Habilita botão ao escolher o pré-cálculo
-  $pre.addEventListener('change', function(){
-    $btn.disabled = !this.value;
-  });
+  // habilita botão ao escolher o pré-cálculo
+  $pre.addEventListener('change', function(){ $btn.disabled = !this.value; });
+  document.addEventListener('DOMContentLoaded', function(){ if($pre.value){ $btn.disabled = false; } });
 
-  // Buscar e renderizar status
+  // ------------ buscar e renderizar status ------------
   async function loadStatus(){
     const id = $pre.value;
     if(!id){ return; }
+
+    $lane.innerHTML = '<div class="text-muted small">Carregando fluxo…</div>';
+
     try{
-      const resp = await fetch(`{% url 'ajax_status_precalculo' 0 %}`.replace('/0/','/'+id+'/'));
+      const url = `{% url 'ajax_status_precalculo' 0 %}`.replace('/0/','/'+id+'/');
+      const resp = await fetch(url, {headers: {"X-Requested-With":"XMLHttpRequest"}});
+      if(!resp.ok){
+        $lane.innerHTML = `<div class="text-danger small">Falha ao buscar status (${resp.status}).</div>`;
+        return;
+      }
       const json = await resp.json();
-      if(json.ok){ renderFluxo(json); }
-    }catch(e){ /* silent */ }
+      if(json && json.ok && Array.isArray(json.fluxo)){
+        renderFluxo(json);
+      }else{
+        console.error('Resposta inesperada:', json);
+        $lane.innerHTML = '<div class="text-danger small">Resposta inesperada do servidor.</div>';
+      }
+    }catch(e){
+      console.error('Erro ao carregar fluxo:', e);
+      $lane.innerHTML = '<div class="text-danger small">Erro ao carregar fluxo.</div>';
+    }
   }
 
   // Botão "Ver fluxo"
@@ -269,5 +345,57 @@
   setInterval(loadStatus, 12000);
 })();
 </script>
+
+<style>
+/* ... mantém o que já existe ... */
+
+/* Linha com nó + coluna lateral */
+.flow-row{
+  display:grid;
+  grid-template-columns: 1fr minmax(260px, 360px);
+  gap:14px;
+  align-items:start;
+}
+.flow-row.no-aside{ grid-template-columns: 1fr; }  /* quando não houver cartões */
+
+/* Coluna lateral com cartões */
+.aside-cards{
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+}
+
+/* Cartão lateral compacto */
+.aside-card{
+  border:1px solid #e6e9ef;
+  border-radius:.75rem;
+  padding:.6rem .75rem;
+  background:#fff;
+  box-shadow:0 .15rem .5rem rgba(0,0,0,.04);
+  font-size:.9rem;
+}
+.aside-card .topline{
+  display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+}
+.aside-card .badge{
+  font-size:.7rem;
+}
+.aside-card .title{
+  font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.aside-card .sub{
+  font-size:.82rem; color:#475569; margin-top:.15rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.aside-card .infos{
+  margin-top:.35rem; display:flex; flex-direction:column; gap:.15rem;
+  font-size:.82rem; color:#334155;
+}
+
+/* Responsivo: empilha no mobile */
+@media (max-width: 992px){
+  .flow-row{ grid-template-columns: 1fr; }
+}
+</style>
 
 {% endblock %}

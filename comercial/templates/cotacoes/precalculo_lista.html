@@ -78,12 +78,11 @@
       <small>Código</small>
     </th>
     <th class="text-center align-middle">
-  <div class="d-flex flex-column align-items-center">
-    <i class="bi bi-diagram-3 mb-1"></i>
-    <small>Roteiro</small>
-  </div>
-</th>
-
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-diagram-3 mb-1"></i>
+        <small>Roteiro<br>(Custo Unit.)</small>
+      </div>
+    </th>
     <th>
       <i class="bi bi-currency-dollar text-primary"></i><br>
       <small>Preço Final</small>
@@ -91,24 +90,32 @@
   </tr>
 </thead>
 
-              <tbody>
-  {% for precalc in precalculos %}
-    <tr>
-      <td class="align-middle text-center">
-        <input type="checkbox" name="precalculos_selecionados" value="{{ precalc.id }}">
-      </td>
-      <td class="align-middle text-center">
-        {{ precalc.numero }}
-      </td>
-      <td class="align-middle text-center">
-        {{ precalc.analise_comercial_item.item.codigo }}
-      </td>
-      <td class="align-middle text-center">
-        {{ precalc.preco_manual|default:precalc.preco_selecionado|formatar_reais }}
-      </td>
-    </tr>
-  {% endfor %}
+<tbody>
+{% for precalc in precalculos %}
+  <tr>
+    <td class="align-middle text-center">
+      <input type="checkbox" name="precalculos_selecionados" value="{{ precalc.id }}">
+    </td>
+    <td class="align-middle text-center">
+      {{ precalc.numero }}
+    </td>
+    <td class="align-middle text-center">
+      {{ precalc.analise_comercial_item.item.codigo }}
+    </td>
+
+    <!-- Coluna Roteiro: custo unitário total sem impostos -->
+    <td class="align-middle text-center">
+      {{ precalc.custo_unitario_total_sem_impostos|floatformat:4 }}
+    </td>
+
+    <!-- Coluna Preço Final: manual ou selecionado -->
+    <td class="align-middle text-center">
+      {{ precalc.preco_manual|default:precalc.preco_selecionado|floatformat:4 }}
+    </td>
+  </tr>
+{% endfor %}
 </tbody>
+
 
             </table>
           </div>

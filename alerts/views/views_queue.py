@@ -104,3 +104,34 @@ def celery_queue_purge(request):
     except Exception:
         pass
     return redirect("celery_dashboard")
+
+# alerts/views_queue.py
+from django.views.decorators.http import require_POST
+from celery import signature
+
+@login_required
+@user_passes_test(_staff_check)
+@require_POST
+def celery_queue_run(request):
+    """
+    Força a execução imediata da primeira tarefa da fila.
+    """
+    queue = request.POST.get("queue")
+    if queue not in {"emails", "celery"}:
+        return HttpResponseForbidden("Fila inválida.")
+
+    r = _redis_from_broker()
+    try:
+        raw = r.lpop(queue)
+        if raw:
+            # Mensagens da fila Celery são JSON codificados
+            payload = json.loads(raw)
+            body = payload.get("body")
+            if body:
+                task = signature(payload["headers"]["task"], args=payload["body"], kwargs={})
+                task.apply_async(queue=queue)
+    except Exception as e:
+        print(f"[ERRO CELERY RUN] {e}")
+
+    return redirect("celery_dashboard")
+

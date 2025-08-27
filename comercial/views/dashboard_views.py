@@ -960,12 +960,17 @@ def ajax_status_precalculo(request, pk: int):
     prec = get_object_or_404(PreCalculo, pk=pk)
 
     def _fmt_date(dt):
+        """Aceita date/datetime; não quebra com datetime naive."""
+        if not dt:
+            return ""
         try:
-            if not dt:
-                return ""
-            # aceita date ou datetime
-            if hasattr(dt, "date"):
-                dt = timezone.localtime(dt)
+            if isinstance(dt, datetime):
+                # só converte para o fuso local se for AWARE
+                if timezone.is_aware(dt):
+                    dt = timezone.localtime(dt)
+                # quando for datetime, muitas vezes você quer hora também
+                return dt.strftime("%d/%m/%Y %H:%M")
+            # objetos date (ou qualquer um com strftime)
             return dt.strftime("%d/%m/%Y")
         except Exception:
             return ""
@@ -1035,14 +1040,51 @@ def ajax_status_precalculo(request, pk: int):
         "detalhe": ac_detalhe,
         "meta": { "resp": f"Resp.: {_nome(ac_resp)}" if ac_resp else "", "data": _fmt_date(ac_dt) }
     }
-    # ---------- Nó: Materiais ----------
+    # ---------- Nó: Materiais (apenas selecionado em cartões laterais) ----------
     qs_mat = PreCalculoMaterial.objects.filter(precalculo=prec)
     tem_preco_mat = qs_mat.filter(preco_kg__isnull=False).exists()
     compras_atraso_mat = getattr(prec, "compras_em_atraso", False)
     status_materiais = "ok" if tem_preco_mat else "pendente"
-    if compras_atraso_mat: status_materiais = "atraso"
+    if compras_atraso_mat:
+        status_materiais = "atraso"
 
-    # tenta alguma pista de resp/data em um material qualquer (último atualizado)
+    def _fmt_brl(v):
+        from decimal import Decimal
+        try:
+            q = Decimal(str(v or 0))
+        except Exception:
+            return ""
+        s = f"{q:,.4f}"
+        return "R$ " + s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+    # só os selecionados
+    mat_sel = qs_mat.filter(selecionado=True)
+
+    cards_lado_mat = []
+    for m in mat_sel:   # sem select_related para não dar FieldError
+        codigo = getattr(m, "codigo", "") or getattr(m, "nome_materia_prima", "") or "-"
+        descricao = (getattr(m, "descricao", "") or "").strip()
+
+        preco = getattr(m, "preco_kg", None)
+        # tentativas de “peso total”
+        peso_total = (
+            getattr(m, "peso_liquido_total", None)
+            or getattr(m, "peso_bruto_total", None)
+            or getattr(m, "peso_liquido", None)
+            or getattr(m, "desenvolvido_mm", None)
+            or 0
+        )
+        valor_total = (preco or 0) * (peso_total or 0)
+
+        cards_lado_mat.append({
+            "titulo": str(codigo),
+            "sub": descricao,
+            "badge": "Material",
+            "info1": f"Preço: {_fmt_brl(preco)}" if preco else "Preço: —",
+            "info2": f"Peso: {peso_total}",
+            "info3": f"Total: {_fmt_brl(valor_total)}",
+        })
+
     mat_last = qs_mat.order_by("-id").first()
     mat_resp = _first_attr(mat_last, "responsavel", "usuario", "comprador", "atualizado_por", "criado_por")
     mat_dt   = _first_attr(mat_last, "atualizado_em", "modificado_em", "criado_em", "data")
@@ -1052,17 +1094,55 @@ def ajax_status_precalculo(request, pk: int):
         "icone": "bi-box",
         "status": status_materiais,
         "detalhe": "Com preço" if tem_preco_mat else "Sem preço",
-        "meta": { "resp": f"Resp.: {_nome(mat_resp)}" if mat_resp else "", "data": _fmt_date(mat_dt) }
+        "meta": { "resp": f"Resp.: {_nome(mat_resp)}" if mat_resp else "", "data": _fmt_date(mat_dt) },
+        # >>> cartões laterais
+        "cards_lado": cards_lado_mat
     }
 
-    # ---------- Nó: Serviços Externos ----------
+    # ---------- Nó: Serviços Externos (apenas selecionado em cartões laterais) ----------
     qs_serv = PreCalculoServicoExterno.objects.filter(precalculo=prec)
     total_serv = qs_serv.count()
     com_preco_serv = qs_serv.filter(preco_kg__gt=0).count()
     compras_atraso_serv = getattr(prec, "compras_em_atraso", False)
     status_servicos = "ok" if (total_serv == 0 or com_preco_serv == total_serv) else "andamento"
-    if total_serv and com_preco_serv == 0: status_servicos = "pendente"
-    if compras_atraso_serv: status_servicos = "atraso"
+    if total_serv and com_preco_serv == 0:
+        status_servicos = "pendente"
+    if compras_atraso_serv:
+        status_servicos = "atraso"
+
+    serv_sel = qs_serv.filter(selecionado=True)
+
+    cards_lado_serv = []
+    for s in serv_sel: 
+        # tenta código/desc do insumo ou da matéria-prima vinculada no insumo
+        alvo = getattr(s, "insumo", None)
+        codigo = (
+            getattr(s, "codigo_materia_prima", "")
+            or (getattr(alvo, "materia_prima", None) and getattr(alvo.materia_prima, "codigo", "")) or "-"
+        )
+        descricao = (
+            getattr(s, "descricao_materia_prima", "")
+            or (getattr(alvo, "materia_prima", None) and getattr(alvo.materia_prima, "descricao", "")) or ""
+        )
+
+        preco = getattr(s, "preco_kg", None)
+        peso_total = (
+            getattr(s, "peso_liquido_total", None)
+            or getattr(s, "peso_bruto_total", None)
+            or getattr(s, "peso_liquido", None)
+            or getattr(s, "desenvolvido_mm", None)
+            or 0
+        )
+        valor_total = (preco or 0) * (peso_total or 0)
+
+        cards_lado_serv.append({
+            "titulo": str(codigo),
+            "sub": (descricao or "").strip(),
+            "badge": "Serviço",
+            "info1": f"Preço: {_fmt_brl(preco)}" if preco else "Preço: —",
+            "info2": f"Peso: {peso_total}",
+            "info3": f"Total: {_fmt_brl(valor_total)}",
+        })
 
     serv_last = qs_serv.order_by("-id").first()
     serv_resp = _first_attr(serv_last, "responsavel", "usuario", "comprador", "atualizado_por", "criado_por")
@@ -1073,21 +1153,30 @@ def ajax_status_precalculo(request, pk: int):
         "icone": "bi-tools",
         "status": status_servicos,
         "detalhe": f"{com_preco_serv}/{total_serv} com preço" if total_serv else "Sem serviços",
-        "meta": { "resp": f"Resp.: {_nome(serv_resp)}" if serv_resp else "", "data": _fmt_date(serv_dt) }
+        "meta": { "resp": f"Resp.: {_nome(serv_resp)}" if serv_resp else "", "data": _fmt_date(serv_dt) },
+        # >>> cartões laterais
+        "cards_lado": cards_lado_serv
     }
 
-    # ---------- Nó: Roteiro ----------
-    roteiro_obj = getattr(prec, "roteiro_item", None)  # OneToOne do PreCalculo
 
-    if roteiro_obj and getattr(roteiro_obj, "observacoes", None):
+
+    # ---------- Nó: Roteiro (OK se houver Observações do Roteiro no PreCalculo) ----------
+    import re
+
+    # CKEditor fica em PreCalculo.observacoes_roteiro
+    obs_html = getattr(prec, "observacoes_roteiro", "") or ""
+    obs_txt  = re.sub(r"<[^>]+>", "", str(obs_html)).strip()  # remove tags e espaços
+
+    if obs_txt:
         rot_status  = "ok"
-        rot_detalhe = roteiro_obj.observacoes[:60]  # mostra os 60 primeiros caracteres
+        rot_detalhe = obs_txt[:80]  # mostra um resumo
     else:
         rot_status  = "pendente"
         rot_detalhe = "Não definido"
 
-    rot_resp = _first_attr(roteiro_obj, "usuario", "responsavel", "criado_por")
-    rot_dt   = _first_attr(roteiro_obj, "data_assinatura", "atualizado_em", "criado_em")
+    # meta: como as observações pertencem ao PreCalculo, usamos o próprio registro
+    rot_resp = _first_attr(prec, "updated_by", "criado_por", "created_by", "usuario")
+    rot_dt   = _first_attr(prec, "updated_at", "criado_em", "created_at")
 
     no_roteiro = {
         "titulo": "Roteiro",
@@ -1171,28 +1260,115 @@ def ajax_status_precalculo(request, pk: int):
 
 
     # ---------- Nó: Preço Final ----------
-    preco_manual = getattr(prec, "preco_manual", None)
+    from decimal import Decimal
+
+    from decimal import Decimal
+
+    def _fmt_brl(v):
+        try:
+            q = Decimal(str(v or 0))
+        except Exception:
+            return ""
+        s = f"{q:,.4f}"
+        return "R$ " + s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+    preco_manual      = getattr(prec, "preco_manual", None)
     preco_selecionado = getattr(prec, "preco_selecionado", None)
-    preco_ok = ((preco_manual or 0) > 0) or bool(preco_selecionado)
-    preco_resp = _first_attr(prec, "atualizado_por", "usuario", "criado_por")
-    preco_dt   = _first_attr(prec, "atualizado_em", "modificado_em", "criado_em")
+
+    preco_ok  = ((preco_manual or 0) > 0) or bool(preco_selecionado)
+    origem    = "manual" if (preco_manual or 0) > 0 else ("selecionado" if preco_selecionado else None)
+
+    valor_escolhido_str = ""
+
+    if origem == "manual":
+        valor_escolhido_str = _fmt_brl(preco_manual)
+
+    elif origem == "selecionado":
+        alvo = preco_selecionado
+        # 1) tenta atributos/métodos comuns
+        candidatos = [
+            "preco_final", "valor_final", "preco", "valor",
+            "preco_unitario", "valor_unitario", "unitario",
+            "get_preco_final_display", "get_valor_display"
+        ]
+        valor_num = None
+        for nome in candidatos:
+            if hasattr(alvo, nome):
+                val = getattr(alvo, nome)
+                if callable(val):
+                    try:
+                        val = val()
+                    except Exception:
+                        val = None
+                # guarda se for numérico
+                if isinstance(val, (int, float, Decimal)):
+                    valor_num = val
+                    break
+                # pode ser string já formatada -> usar direto
+                if isinstance(val, str) and val.strip():
+                    valor_escolhido_str = val.strip()
+                    break
+
+        # 2) se achou número, formata BRL
+        if not valor_escolhido_str and valor_num is not None:
+            valor_escolhido_str = _fmt_brl(valor_num)
+
+        # 3) fallback final: usa representação textual do objeto
+        if not valor_escolhido_str:
+            try:
+                valor_escolhido_str = str(alvo).strip()
+            except Exception:
+                valor_escolhido_str = ""
+
+    # Detalhe
+    if preco_ok:
+        sufixo = f" — {valor_escolhido_str}" if valor_escolhido_str else ""
+        preco_detalhe = f"Definido ({origem}){sufixo}"
+    else:
+        preco_detalhe = "Indefinido"
+
+    # Meta: apenas quando houver preço
+    meta_resp = meta_data = ""
+    if preco_ok:
+        resp_obj = _first_attr(prec, "usuario_preco", "responsavel_preco", "atualizado_por")
+        dt_val   = _first_attr(prec, "data_preco", "data_definicao_preco", "atualizado_em")
+        if resp_obj: meta_resp = f"Resp.: {_nome(resp_obj)}"
+        if dt_val:   meta_data = _fmt_date(dt_val)
+
     no_preco = {
         "titulo": "Preço Final",
         "icone": "bi-currency-dollar",
         "status": "ok" if preco_ok else "pendente",
-        "detalhe": "Definido" if preco_ok else "Indefinido",
-        "meta": { "resp": f"Resp.: {_nome(preco_resp)}" if preco_resp else "", "data": _fmt_date(preco_dt) }
+        "detalhe": preco_detalhe,  # ex.: "Definido (selecionado) — 0.40 (25%) 🧮"  ou  "Definido (manual) — R$ 12.345,6789"
+        "meta": {"resp": meta_resp, "data": meta_data}
     }
 
-    # ---------- Nó: Proposta ----------
+
+
+
+    # ---------- Nó: Proposta (data + hora) ----------
     data_envio = getattr(cot, "data_envio_proposta", None) if cot else None
-    prop_resp = _first_attr(cot, "responsavel_envio", "responsavel", "usuario_responsavel")
+    prop_resp  = _first_attr(cot, "responsavel_envio", "responsavel", "usuario_responsavel")
+
+    # formata dd/mm/aaaa HH:MM (com timezone local quando houver)
+    data_hora_envio = ""
+    if data_envio:
+        try:
+            from django.utils import timezone
+            dt_show = timezone.localtime(data_envio) if getattr(data_envio, "tzinfo", None) else data_envio
+        except Exception:
+            dt_show = data_envio
+        data_hora_envio = dt_show.strftime("%d/%m/%Y %H:%M")
+
     no_proposta = {
         "titulo": "Proposta",
         "icone": "bi-envelope-paper",
         "status": "ok" if data_envio else "pendente",
-        "detalhe": _fmt_date(data_envio) if data_envio else "Sem envio",
-        "meta": { "resp": f"Resp.: {_nome(prop_resp)}" if prop_resp else "", "data": _fmt_date(data_envio) }
+        "detalhe": (data_hora_envio if data_envio else "Sem envio"),
+        "meta": {
+            "resp": f"Resp.: {_nome(prop_resp)}" if prop_resp else "",
+            "data": data_hora_envio
+        }
     }
 
     fluxo = [
@@ -1208,4 +1384,5 @@ def ajax_status_precalculo(request, pk: int):
     ]
 
     return JsonResponse({"ok": True, "fluxo": fluxo})
+
 

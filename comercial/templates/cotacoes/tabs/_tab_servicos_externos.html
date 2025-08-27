@@ -9,7 +9,7 @@
   }
 </style>
 
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" novalidate>
   <input type="hidden" name="aba" value="servicos">
   {% csrf_token %}
 
@@ -157,11 +157,19 @@
   {{ form.insumo }} 
 </td>
 
-            <td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm" }}</td>
-            <td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm" }}</td>
+            <td class="bg-lightblue">
+              {{ form.lote_minimo|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:decimal"|attr:"data-decimal:2"|attr:"autocomplete:off" }}
+            </td>
+            <td class="bg-lightblue">
+              {{ form.entrega_dias|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:numeric"|attr:"pattern:^\d{1,5}$"|attr:"autocomplete:off" }}
+            </td>
             <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
-            <td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
-            <td class="bg-lightblue">{{ form.preco_kg|add_class:"form-control form-control-sm" }}</td>
+<td class="bg-lightblue">
+  {{ form.icms|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:decimal"|attr:"data-decimal:2"|attr:"autocomplete:off" }}
+</td>
+<td class="bg-lightblue">
+  {{ form.preco_kg |add_class:"form-control form-control-sm text-end" |attr:"type:text"|attr:"inputmode:decimal"|attr:"data-decimal:4"|attr:"autocomplete:off" }}
+</td>
             <td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm" }}</td>
             <td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm" }}</td>
             <td class="bg-lightyellow">{{ form.peso_bruto|add_class:"form-control form-control-sm" }}</td>

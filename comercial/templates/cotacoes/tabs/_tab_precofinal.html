@@ -125,10 +125,9 @@
                 {% for opcao in precos_sem_impostos %}
                   <tr>
                     <td>
-                      <input type="radio" name="preco_selecionado"
-                      value="{{ opcao.unitario|stringformat:'0.4f'|cut:',' }}"
-                      {% if form_precofinal.instance.preco_selecionado == opcao.unitario %}checked{% endif %}>
-               
+                     <input type="radio" name="preco_selecionado"
+  value="{{ opcao.unitario|stringformat:'0.4f'|cut:',' }}"
+  {% if form_precofinal.instance.preco_selecionado|stringformat:'0.4f' == opcao.unitario|stringformat:'0.4f' %}checked{% endif %}>
 
                     </td>
                     
@@ -194,8 +193,8 @@
               <tr>
                 <td>
                   <input type="radio" name="preco_selecionado"
-                  value="{{ opcao.unitario|stringformat:'0.4f'|cut:',' }}"
-                  {% if form_precofinal.instance.preco_selecionado == opcao.unitario %}checked{% endif %}>
+  value="{{ opcao.unitario|stringformat:'0.4f'|cut:',' }}"
+  {% if form_precofinal.instance.preco_selecionado|stringformat:'0.4f' == opcao.unitario|stringformat:'0.4f' %}checked{% endif %}>
            
 
                 </td>

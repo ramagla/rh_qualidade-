@@ -29,14 +29,24 @@
                 <tr>
                   <td>{{ f.nome }}</td>
                   <td class="text-end"><span class="badge bg-secondary">{{ f.tamanho }}</span></td>
-                  <td class="text-end">
-                    <form method="post" action="{% url 'celery_queue_purge' %}" onsubmit="return confirm('Esvaziar a fila {{ f.nome }}?');" class="d-inline">
-                      {% csrf_token %}
-                      <input type="hidden" name="queue" value="{{ f.nome }}">
-                      <button class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-trash3"></i> Limpar
-                      </button>
-                    </form>
+                 <td class="text-end">
+  <form method="post" action="{% url 'celery_queue_purge' %}" onsubmit="return confirm('Esvaziar a fila {{ f.nome }}?');" class="d-inline">
+    {% csrf_token %}
+    <input type="hidden" name="queue" value="{{ f.nome }}">
+    <button class="btn btn-sm btn-outline-danger">
+      <i class="bi bi-trash3"></i> Limpar
+    </button>
+  </form>
+
+  <form method="post" action="{% url 'celery_queue_run' %}" onsubmit="return confirm('Executar a primeira tarefa da fila {{ f.nome }} agora?');" class="d-inline ms-1">
+  {% csrf_token %}
+  <input type="hidden" name="queue" value="{{ f.nome }}">
+  <button class="btn btn-sm btn-outline-success">
+    <i class="bi bi-play-fill"></i> Executar
+  </button>
+</form>
+</td>
+
                   </td>
                 </tr>
                 {% empty %}
