@@ -166,13 +166,25 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE          # usa America/Sao_Paulo
 CELERY_ENABLE_UTC = False            # executa no horário local
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+from kombu import Queue
 
 # Fila padrão e roteamento para a fila de e-mails
 CELERY_TASK_DEFAULT_QUEUE = "default"
+
+CELERY_TASK_QUEUES = (
+    Queue("default"),
+    Queue("emails"),
+    Queue("celery"),   # fila padrão do Celery (opcional, mas ajuda nos diagnósticos)
+)
+
 CELERY_TASK_ROUTES = {
     "alerts.tasks.send_email_async": {"queue": "emails"},
     "alerts.tasks.send_email_multipart_async": {"queue": "emails"},
 }
+
+
+# Evita o aviso do Celery 6 sobre retry no startup
+broker_connection_retry_on_startup = True
 
 # Configurações de arquivos estáticos e mídia
 STATIC_URL = "/static/"
