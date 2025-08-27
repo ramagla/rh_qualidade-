@@ -29,6 +29,7 @@ def editar_alerta_configurado(request, alerta_id):
         alerta.grupos.set(grupos_ids)
         alerta.ativo = "ativo" in request.POST
         alerta.exigir_confirmacao_modal = "exigir_confirmacao_modal" in request.POST  # NOVO
+        alerta.observacoes = request.POST.get("observacoes") or ""
         alerta.save()
         return redirect("alerts:gerenciar_alertas")  # ← Aqui está a correção
 

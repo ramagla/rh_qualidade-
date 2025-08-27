@@ -77,6 +77,7 @@ class AlertaConfigurado(models.Model):
     grupos = models.ManyToManyField(Group, blank=True)
     ativo = models.BooleanField(default=True)
     exigir_confirmacao_modal = models.BooleanField(default=False)
+    observacoes = models.TextField("Observações/Descrição", blank=True, null=True)
 
     def __str__(self):
         nomes_exibicao = {
