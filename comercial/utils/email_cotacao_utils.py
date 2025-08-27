@@ -158,15 +158,17 @@ def responder_cotacao_materia_prima(request, pk):
     if not materiais.filter(preco_kg__isnull=True).exists():
         return render(request, "cotacoes/cotacao_material_finalizada.html", {"material": material})
 
+    TIPOS_MP = ["Arame de Aço", "Arame de inox", "Fita de Aço/Inox"]
+    ATIVOS_PADRAO = ["Ativo", "Em Homologação", "Em Homologacao"]  # tolera sem acento
+
     fornecedores = (
         FornecedorQualificado.objects
         .filter(
-            Q(ativo="Ativo"),
-            Q(produto_servico__iregex=r"(arame\s+de\s+inox)|(arame\s+de\s+aço)|(fita\s+de\s+(aço|inox))")
+            ativo__in=ATIVOS_PADRAO,
+            produto_servico__in=TIPOS_MP
         )
         .order_by("nome")
     )
-
     try:
         materia_prima = MateriaPrimaCatalogo.objects.get(codigo=codigo)
     except MateriaPrimaCatalogo.DoesNotExist:
@@ -484,11 +486,16 @@ def responder_cotacao_servico_lote(request, pk):
     if not servicos.filter(Q(preco_kg__isnull=True) | Q(preco_kg=0)).exists():
         return render(request, "cotacoes/cotacao_servico_lote_finalizada.html", {"servico": servico})
 
+    # responder_cotacao_servico_lote
+    ATIVOS_PADRAO = ["Ativo", "Em Homologação", "Em Homologacao"]  # tolera sem acento
+    STATUS_OK = ["Qualificado", "Qualificado Condicional"]
+
     fornecedores = (
         FornecedorQualificado.objects
         .filter(
-            Q(status__in=["Qualificado", "Qualificado Condicional"]),
-            Q(produto_servico__iregex=r"(trat)")
+            ativo__in=ATIVOS_PADRAO,
+            status__in=STATUS_OK,
+            produto_servico="Trat. Superficial"  # bate 1:1 com choices do modelo
         )
         .order_by("nome")
     )

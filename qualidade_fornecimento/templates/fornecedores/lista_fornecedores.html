@@ -86,13 +86,15 @@
         </div>
       
         <div class="col-12">
-          <label for="status" class="form-label">Fornecedor Ativo/Inativo</label>
+          <!-- PARA -->
+          <label for="status" class="form-label">Status do Fornecedor</label>
           <select class="form-select" id="status" name="status">
-            <option value="">Somente Ativos</option>
+            <option value="">Ativos e Em Homologação (padrão)</option>
             {% for stat in filter_status %}
               <option value="{{ stat }}" {% if request.GET.status == stat %}selected{% endif %}>{{ stat }}</option>
             {% endfor %}
           </select>
+
         </div>
       
         <div class="col-12 mt-3">

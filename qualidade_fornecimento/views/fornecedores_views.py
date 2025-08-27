@@ -55,12 +55,12 @@ def lista_fornecedores(request):
     if ativo_filter:
         fornecedores_qs = fornecedores_qs.filter(ativo=ativo_filter)
     else:
-        fornecedores_qs = fornecedores_qs.filter(ativo="Ativo")
+        fornecedores_qs = fornecedores_qs.filter(ativo__in=["Ativo", "Em Homologação"])
 
     # Dados para popular os selects (exceto nome, que agora é input text)
     filter_produtos      = sorted(set(fornecedores_base_qs.values_list("produto_servico", flat=True)))
     filter_certificacoes = sorted(set(fornecedores_base_qs.values_list("tipo_certificacao", flat=True)))
-    filter_status        = ["Ativo", "Inativo"]
+    filter_status        = ["Ativo", "Em Homologação", "Inativo"]
 
     # Paginação
     paginator  = Paginator(fornecedores_qs, 10)
