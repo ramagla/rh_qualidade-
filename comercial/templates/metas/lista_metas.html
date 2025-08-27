@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Metas de Faturamento{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+{% load filters_gerais %}
+{% load humanize %}
+
+{% include "partials/global/_styles_componentes.html" %}
+
+<div class="container-fluid mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Metas de Faturamento" icone="bi bi-bullseye" emoji="🎯" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:"comercial.add_metafaturamento" %}
+      <a href="{% url 'cadastrar_meta' %}"
+         class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i>
+        Nova Meta
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Offcanvas Filtros -->
+  <div class="offcanvas offcanvas-end offcanvas-modern"
+       tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Metas
+      </h5>
+      <button type="button" class="btn-close text-reset"
+              data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+
+        <!-- Ano De -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="ano_de" class="form-label">
+            <i class="bi bi-calendar-event me-1"></i> Ano (de)
+          </label>
+          <input type="number" name="ano_de" id="ano_de"
+                 class="form-control"
+                 value="{{ filtros.ano_de }}">
+        </div>
+
+        <!-- Ano Até -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="ano_ate" class="form-label">
+            <i class="bi bi-calendar-event me-1"></i> Ano (até)
+          </label>
+          <input type="number" name="ano_ate" id="ano_ate"
+                 class="form-control"
+                 value="{{ filtros.ano_ate }}">
+        </div>
+
+        <!-- Mês -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="mes" class="form-label">
+            <i class="bi bi-calendar3 me-1"></i> Mês
+          </label>
+          <select name="mes" id="mes"
+                  class="form-select select2"
+                  data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todos</option>
+            {% for val, label in meses_options %}
+              <option value="{{ val }}" {% if filtros.mes == val|stringformat:"s" %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Valor mínimo -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="valor_min" class="form-label">
+            <i class="bi bi-currency-dollar me-1"></i> Valor mín. (R$)
+          </label>
+          <input type="text" name="valor_min" id="valor_min" class="form-control"
+                 placeholder="ex.: 10.000,00"
+                 value="{{ filtros.valor_min }}">
+        </div>
+
+        <!-- Valor máximo -->
+        <div class="col-md-6 filtro-wrapper">
+          <label for="valor_max" class="form-label">
+            <i class="bi bi-currency-dollar me-1"></i> Valor máx. (R$)
+          </label>
+          <input type="text" name="valor_max" id="valor_max" class="form-control"
+                 placeholder="ex.: 200.000,00"
+                 value="{{ filtros.valor_max }}">
+        </div>
+
+        <!-- Botão Filtrar -->
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Indicadores -->
+<div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="info"    titulo="Qtde de Metas"   valor=indicadores.kpi_qtde subtitulo="Registros filtrados" icone="bi-list-ol" %}
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Soma das Metas"  valor=indicadores.kpi_soma|formatar_reais subtitulo="Total no filtro"     icone="bi-graph-up-arrow" %}
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Média das Metas" valor=indicadores.kpi_media|formatar_reais subtitulo="Média no filtro"     icone="bi-bar-chart-line" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Meta Ano Atual"  valor=indicadores.kpi_ano_atual|formatar_reais subtitulo="Acumulada do ano" icone="bi-calendar2-check" %}
+</div>
+
+
+  <!-- Lista -->
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted"></i>📄 Lista de Metas
+  </h5>
+
+  <div class="table-responsive zebra-tabela mt-3">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visualmente-oculto">Tabela de metas de faturamento</caption>
+      <thead class="table-light">
+        <tr>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-calendar-event mb-1"></i>
+              <small>Ano</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-calendar3 mb-1"></i>
+              <small>Mês</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-currency-dollar mb-1"></i>
+              <small>Valor (R$)</small>
+            </div>
+          </th>
+          <th class="text-center align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-gear mb-1"></i>
+              <small>Ações</small>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in page_obj %}
+          <tr>
+            <td class="align-middle">{{ m.ano }}</td>
+<td class="align-middle">{{ m.get_mes_display|default:m.mes }}</td>
+<td class="align-middle">{{ m.valor|formatar_reais }}</td>
+<td class="align-middle">
+  <div class="d-flex justify-content-center align-items-center gap-1">
+      {% if request.user|has_permission:"comercial.change_metafaturamento" %}
+        {% include "partials/global/_botao_editar.html" with objeto=m url_editar="editar_meta" label="meta" %}
+      {% endif %}
+      {% if request.user|has_permission:"comercial.delete_metafaturamento" %}
+        {% include "partials/global/_botao_excluir.html" with objeto=m url_excluir="excluir_meta" label="meta" %}
+        {% include "partials/global/_modal_exclusao.html" with objeto=m url_excluir="excluir_meta" %}
+      {% endif %}
+  </div>
+</td>
+
+
+
+          </tr>
+        {% empty %}
+          {% include "partials/global/_sem_resultados.html" with colspan=4 mensagem="Nenhuma meta encontrada." %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+</div>
+{% endblock %}

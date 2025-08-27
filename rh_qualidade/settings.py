@@ -167,6 +167,12 @@ CELERY_TIMEZONE = TIME_ZONE          # usa America/Sao_Paulo
 CELERY_ENABLE_UTC = False            # executa no horário local
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
+# Fila padrão e roteamento para a fila de e-mails
+CELERY_TASK_DEFAULT_QUEUE = "default"
+CELERY_TASK_ROUTES = {
+    "alerts.tasks.send_email_async": {"queue": "emails"},
+    "alerts.tasks.send_email_multipart_async": {"queue": "emails"},
+}
 
 # Configurações de arquivos estáticos e mídia
 STATIC_URL = "/static/"

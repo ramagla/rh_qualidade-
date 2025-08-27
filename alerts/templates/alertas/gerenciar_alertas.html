@@ -15,6 +15,7 @@
                     <th>Usuários</th>
                     <th>Grupos</th>
                     <th>Status</th>
+                    <th>Confirmação</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -36,13 +37,20 @@
                                 <span class="text-muted">Nenhum</span>
                             {% endfor %}
                         </td>
-                        <td>
-                            {% if alerta.ativo %}
-                                <span class="badge bg-success">Ativo</span>
-                            {% else %}
-                                <span class="badge bg-danger">Inativo</span>
-                            {% endif %}
-                        </td>
+                       <td>
+  {% if alerta.ativo %}
+    <span class="badge bg-success">Ativo</span>
+  {% else %}
+    <span class="badge bg-danger">Inativo</span>
+  {% endif %}
+</td>
+<td>
+  {% if alerta.exigir_confirmacao_modal %}
+    <span class="badge bg-warning text-dark">Modal</span>
+  {% else %}
+    <span class="badge bg-secondary">Padrão</span>
+  {% endif %}
+</td>
                         <td>
                             <a href="{% url 'alerts:editar_alerta_configurado' alerta.id %}" class="btn btn-sm btn-outline-primary" title="Editar Alerta">
                                 <i class="bi bi-pencil-square"></i>

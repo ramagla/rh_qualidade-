@@ -4,7 +4,8 @@ from decimal import Decimal
 
 class IndicadorComercialRegistroMensal(models.Model):
     INDICADORES_CHOICES = [
-        ("1.1", "Faturamento"),
+        ("1.1",   "Índice de Faturamento (Semestral)"),
+        ("1.1.1", "Faturamento Mensal (R$)"),
         ("4.1", "Atendimento do Prazo de Cotação"),
         ("4.2", "Número de Itens Novos Vendidos"),
         ("4.3", "Número de Cotações por Funcionário"),

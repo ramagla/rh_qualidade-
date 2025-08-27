@@ -744,3 +744,5 @@ def relatorio_duplicatas(request):
         "cfops_totalizadores": ", ".join(sorted(CFOPS_TOTALIZADORES)),
     }
     return render(request, "faturamento/relatorio_duplicatas.html", context)
+
+

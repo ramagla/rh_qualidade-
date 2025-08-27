@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User, Group
+from django.utils import timezone
 
 
 class Alerta(models.Model):
@@ -41,6 +42,13 @@ class AlertaUsuario(models.Model):
     excluido = models.BooleanField(default=False) 
     criado_em = models.DateTimeField(auto_now_add=True)
 
+    exige_confirmacao = models.BooleanField(default=False)
+    confirmado_em = models.DateTimeField(blank=True, null=True)
+    def confirmar(self):
+            self.lido = True
+            self.confirmado_em = timezone.now()
+            self.save(update_fields=["lido", "confirmado_em"])
+
     def __str__(self):
         return f"{self.titulo} → {self.usuario.username}"
 
@@ -68,6 +76,7 @@ class AlertaConfigurado(models.Model):
     usuarios = models.ManyToManyField(User, blank=True, related_name="alertas_configurados")
     grupos = models.ManyToManyField(Group, blank=True)
     ativo = models.BooleanField(default=True)
+    exigir_confirmacao_modal = models.BooleanField(default=False)
 
     def __str__(self):
         nomes_exibicao = {

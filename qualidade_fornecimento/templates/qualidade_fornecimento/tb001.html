@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}TB001 - Qualificação de Fornecedores{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+{# Estilos e botão de impressão (já usados no seu projeto) #}
+{% include 'partials/global/_estilos_impressao_paisagem.html' %}
+{% include 'partials/global/_botao_impressao.html' %}
+
+<style>
+  .welcome-banner{
+    border-radius:12px;
+    background:linear-gradient(90deg,#0d6efd 0%,#0dcaf0 100%);
+    color:#fff; padding:1.1rem 1.3rem; margin-bottom:1.2rem;
+    box-shadow:0 .5rem 1rem rgba(0,0,0,.08);
+  }
+  .kpi-card{ border:none; border-radius:14px; background:#f8fafc;
+    transition:transform .2s ease, box-shadow .2s ease; }
+  .kpi-card:hover{ transform:translateY(-3px); box-shadow:0 6px 22px rgba(0,0,0,.08); }
+  .kpi-value{ font-size:1.8rem; font-weight:800; }
+  .table-card{ border-radius:12px; overflow:hidden; }
+  .table thead th{ white-space:nowrap; }
+
+  /* ===== Ajustes de impressão ===== */
+  /* Configuração da página de impressão */
+/* ====== TB001 | Impressão ====== */
+@page {
+  size: A4 landscape;
+  margin: 12mm 10mm 20mm 10mm; /* topo, direita, base(↓), esquerda */
+}
+
+@media print {
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    overflow: visible !important;
+    font-size: 10px !important; /* fonte base menor */
+  }
+
+  .card, .shadow-sm { box-shadow: none !important; }
+  .card-header { background: #f3f3f3 !important; }
+  .welcome-banner { box-shadow: none !important; margin-bottom: 8px !important; }
+  .print-hide { display: none !important; }
+
+  /* KPIs não aparecem no PDF */
+  .tb001-kpis { display: none !important; }
+
+  /* Tabela sem scroll + cabeçalho repetido em cada página */
+  .tb001-wrap { max-height: none !important; overflow: visible !important; }
+  .tb001-table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    font-size: 9px !important;        /* fonte menor na tabela */
+  }
+  .tb001-table thead { display: table-header-group !important; } /* repete cabeçalho */
+  .tb001-table tfoot { display: table-footer-group !important; }
+  .tb001-table tr,
+  .tb001-table td,
+  .tb001-table th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .tb001-table td,
+  .tb001-table th {
+    padding: 4px 5px !important;       /* menos espaço nas células */
+    vertical-align: middle !important;
+    font-size: 9px !important;
+    text-align: center !important;     /* centraliza conteúdo */
+  }
+  .tb001-table thead th { white-space: normal !important; }
+  .table-responsive { overflow: visible !important; }
+
+  /* Espaço reservado para o rodapé (↑ aumente se precisar) */
+  .print-spacer { height: 26mm !important; }
+
+  /* Rodapé fixo em todas as páginas */
+  .print-footer {
+    position: fixed !important;
+    left: 0; right: 0; bottom: 0;
+    z-index: 1000;
+    background: #fff;
+    padding: 0 10mm;                   /* alinha ao recuo da página */
+  }
+  .print-footer .card,
+  .print-footer .shadow-sm { box-shadow: none !important; }
+
+  /* Logo menor no print */
+  .welcome-banner img { height: 35px !important; }
+}
+
+
+</style>
+
+
+<div class="container mt-4">
+
+  <!-- Banner -->
+<div class="welcome-banner d-flex align-items-center justify-content-between">
+  <div class="d-flex align-items-center gap-3">
+    <!-- 🔹 Logo da empresa -->
+    <img src="{% static 'img/logo_branco.png' %}" alt="Logo Bras-Mol" 
+         style="height:50px; width:auto;" class="me-2">
+
+    <div>
+      <h5 class="mb-0">TB001 • Tabela de Qualificação de Fornecedores</h5>
+      <small class="opacity-75">Qualificação e Monitoramento de Fornecedores</small>
+    </div>
+  </div>
+  <div class="text-end">
+    <small class="d-block opacity-75">Rev. 11</small>
+    <small class="opacity-75">Hoje: {{ today|date:"d/m/Y" }}</small>
+  </div>
+</div>
+
+
+  <!-- KPIs (adicionada classe tb001-kpis para forçar 1 linha no print) -->
+  <div class="row g-3 mb-3 tb001-kpis">
+    <div class="col-6 col-lg-3">
+      <div class="card kpi-card">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted">Total</div>
+            <div class="kpi-value text-dark">{{ kpi_total|default:0 }}</div>
+          </div>
+          <i class="bi bi-grid-3x3-gap fs-1 text-primary"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card kpi-card">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted">Qualificados</div>
+            <div class="kpi-value text-success">{{ kpi_qualificados|default:0 }}</div>
+          </div>
+          <i class="bi bi-check2-circle fs-1 text-success"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card kpi-card">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted">Condicionais</div>
+            <div class="kpi-value text-warning">{{ kpi_condicionais|default:0 }}</div>
+          </div>
+          <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card kpi-card">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted">Reprovados</div>
+            <div class="kpi-value text-danger">{{ kpi_reprovados|default:0 }}</div>
+          </div>
+          <i class="bi bi-x-octagon fs-1 text-danger"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela principal -->
+  <div class="card table-card shadow-sm">
+     <!-- 🔎 Filtros (não aparecem na impressão) -->
+  <div class="card-header bg-light print-hide">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-12 col-md-4">
+  <label for="filtro-fornecedor" class="form-label mb-1">Fornecedor</label>
+  <select name="fornecedor" id="filtro-fornecedor"
+          class="form-select select2" style="width:100%">
+    <option value="">Todos</option>
+    {% for nome in fornecedores_opcoes %}
+      <option value="{{ nome }}" {% if filtros.fornecedor == nome %}selected{% endif %}>
+        {{ nome }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+
+      <div class="col-6 col-md-4">
+        <label class="form-label mb-1">Produto/Serviço</label>
+        <select name="produto" class="form-select">
+          <option value="">Todos</option>
+          {% for key, label in produtos_opcoes %}
+            <option value="{{ key }}" {% if filtros.produto == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <label class="form-label mb-1">Tipo de certificação</label>
+        <select name="cert" class="form-select">
+          <option value="">Todas</option>
+          {% for key, label in certificacoes_opcoes %}
+            <option value="{{ key }}" {% if filtros.cert == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 col-md-1 d-grid">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-funnel"></i>
+        </button>
+      </div>
+
+      <div class="col-12 mt-1">
+        {% if request.GET.urlencode %}
+          <a href="{% url 'relatorio_tb001' %}" class="btn btn-sm btn-outline-secondary">
+            Limpar filtros
+          </a>
+          <small class="text-muted ms-2">Exibindo resultados filtrados.</small>
+        {% else %}
+          <small class="text-muted">Exibindo todos os fornecedores qualificados e ativos.</small>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+  <!-- /Filtros -->
+
+    <div class="card-body p-0">
+      <!-- Na tela pode ter scroll; no print, o CSS acima remove -->
+      <div class="table-responsive tb001-wrap" style="max-height:65vh; overflow:auto;">
+        <table class="table table-bordered table-sm align-middle mb-0 tb001-table">
+          <thead class="table-light text-center align-middle">
+  <tr>
+    <th colspan="3">
+      <i class="bi bi-award-fill d-block mb-1 text-primary"></i>
+      Homologação / Nível de Certificação
+    </th>
+    <th colspan="2">
+      <i class="bi bi-file-earmark-check d-block mb-1 text-success"></i>
+      Certificação do Sistema
+    </th>
+    <th colspan="3">
+      <i class="bi bi-shield-check d-block mb-1 text-warning"></i>
+      Avaliação de Risco (Formulário F211)
+    </th>
+    <th colspan="3">
+      <i class="bi bi-clipboard-data d-block mb-1 text-info"></i>
+      Cronograma de Auditoria de Processo em Fornecedores<br>(F154 / CQI's)
+    </th>
+    <th colspan="2">
+      <i class="bi bi-person-badge d-block mb-1 text-secondary"></i>
+      Especialista Responsável<br>Segurança do Produto
+    </th>
+    <th rowspan="2">
+      <i class="bi bi-graph-up-arrow d-block mb-1 text-dark"></i>
+      IQS
+    </th>
+  </tr>
+ <tr>
+  <th>
+    <i class="bi bi-building d-block mb-1 text-muted"></i>
+    Fornecedor
+  </th>
+  <th>
+    <i class="bi bi-box-seam d-block mb-1 text-muted"></i>
+    Produto/Serviço
+  </th>
+  <th>
+    <i class="bi bi-calendar-check d-block mb-1 text-muted"></i>
+    Data Homologação
+  </th>
+  <th>
+    <i class="bi bi-award d-block mb-1 text-muted"></i>
+    Tipo
+  </th>
+  <th>
+    <i class="bi bi-calendar-x d-block mb-1 text-muted"></i>
+    Vencimento
+  </th>
+  <th>
+    <i class="bi bi-shield-exclamation d-block mb-1 text-muted"></i>
+    Risco
+  </th>
+  <th>
+    <i class="bi bi-calendar-event d-block mb-1 text-muted"></i>
+    Realizada em
+  </th>
+  <th>
+    <i class="bi bi-calendar-range d-block mb-1 text-muted"></i>
+    Próxima Avaliação
+  </th>
+  <th>
+    <i class="bi bi-journal-text d-block mb-1 text-muted"></i>
+    Tipo/Formulário
+  </th>
+  <th>
+    <i class="bi bi-calendar2-check d-block mb-1 text-muted"></i>
+    Realizada em
+  </th>
+  <th>
+    <i class="bi bi-calendar2-event d-block mb-1 text-muted"></i>
+    Próx. Auditoria
+  </th>
+  <th>
+    <i class="bi bi-flag d-block mb-1 text-muted"></i>
+    Status
+  </th>
+  <th>
+    <i class="bi bi-person-lines-fill d-block mb-1 text-muted"></i>
+    Nome / Contato
+  </th>
+</tr>
+
+</thead>
+
+         <tbody>
+  {% for f in fornecedores %}
+  <tr>
+    <td class="text-center align-middle">{{ f.nome|primeiro_nome }}</td>
+    <td class="text-center align-middle">{{ f.produto_servico }}</td>
+    <td class="text-center align-middle">{{ f.data_homologacao|date:"d/m/Y" }}</td>
+    <td class="text-center align-middle">{{ f.tipo_certificacao }}</td>
+    <td class="text-center align-middle">{{ f.vencimento_certificacao|date:"d/m/Y" }}</td>
+    <td class="text-center align-middle">{{ f.risco }}</td>
+    <td class="text-center align-middle">{{ f.data_avaliacao_risco|date:"d/m/Y" }}</td>
+    <td class="text-center align-middle">{{ f.proxima_avaliacao_risco|date:"m/Y" }}</td>
+    <td class="text-center align-middle">{{ f.tipo_formulario }}</td>
+    <td class="text-center align-middle">{{ f.data_auditoria|date:"d/m/Y" }}</td>
+    <td class="text-center align-middle">{{ f.proxima_auditoria|date:"d/m/Y" }}</td>
+    <td class="text-center align-middle">
+      {% if f.status == "Qualificado" %}
+        <span class="badge bg-success">Qualificado</span>
+      {% elif "Condicional" in f.status %}
+        <span class="badge bg-warning text-dark">{{ f.status }}</span>
+      {% elif f.status == "Reprovado" %}
+        <span class="badge bg-danger">Reprovado</span>
+      {% else %}
+        <span class="badge bg-secondary">{{ f.status }}</span>
+      {% endif %}
+    </td>
+    <td class="text-center align-middle">
+      <div><strong>{{ f.especialista_nome }}</strong></div>
+      <div class="small text-muted">{{ f.especialista_cargo }}</div>
+      <div class="small"><a href="mailto:{{ f.especialista_contato }}">{{ f.especialista_contato }}</a></div>
+    </td>
+    <td class="text-center align-middle">{{ f.score|floatformat:0 }}%</td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="14" class="text-center text-muted">Nenhum fornecedor cadastrado.</td>
+  </tr>
+  {% endfor %}
+</tbody>
+<tfoot class="tb001-tfoot print-only">
+  <tr>
+    <td colspan="14" class="p-0">
+      {% include 'partials/global/_formulario_rodape.html' with numero_formulario="TB001" %}
+    </td>
+  </tr>
+</tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+
+
+</div>
+{% endblock %}

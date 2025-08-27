@@ -65,6 +65,13 @@ def menu_comercial(user):
             "icon": "fas fa-cash-register",
         })
 
+    if user.has_perm("comercial.view_metafaturamento"):
+        submenu_cadastros.append({
+            "name": "Metas de Faturamento",
+            "url": "lista_metas",
+            "icon": "fas fa-bullseye",
+        })
+
     if submenu_cadastros:
         menu.append({
             "name": "Cadastros",
@@ -113,13 +120,22 @@ def menu_comercial(user):
     # =========================
     submenu_indicadores = []
 
-    # 1.1 - Faturamento
-    if user.has_perm("comercial.view_indicador_faturamento"):
+   # 1.1 - Índice de Faturamento
+    if user.has_perm("comercial.view_indicador_faturamento_indice"):
         submenu_indicadores.append({
-            "name": "1.1 - Faturamento",
-            "url": "indicador_faturamento",
+            "name": "1.1 - Índice de Faturamento",
+            "url": "indicador_indice_faturamento",
+            "icon": "fas fa-percentage",
+        })
+
+    # 1.1.1 - Faturamento Mensal
+    if user.has_perm("comercial.view_indicador_faturamento_mensal"):
+        submenu_indicadores.append({
+            "name": "1.1.1 - Faturamento Mensal",
+            "url": "indicador_faturamento_mensal",
             "icon": "fas fa-file-invoice-dollar",
         })
+
 
     # 4.1 - Atendimento do Prazo de Cotação
     if user.has_perm("comercial.view_indicador_prazo_cotacao"):

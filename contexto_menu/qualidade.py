@@ -72,6 +72,11 @@ def menu_qualidade(user):
                     "url": "relatorio_iqf",
                     "icon": "fas fa-tachometer-alt",
                 },
+                # {
+                #     "name": "8.2 - Compras x Faturamento",
+                #     "url": "indicador_8_2",
+                #     "icon": "fas fa-balance-scale",
+                # },
                 {
                     "name": "6.5 - ICTE",
                     "url": "relatorio_ppm",

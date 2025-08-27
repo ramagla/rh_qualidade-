@@ -1,0 +1,113 @@
+{# templates/alerts/celery_dashboard.html #}
+{% extends "base.html" %}
+
+{% block title %}Fila de Tarefas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h5 class="mb-3"><i class="bi bi-diagram-3 me-2"></i> Gerenciamento de Fila (Celery/Redis)</h5>
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-6">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-inboxes me-2"></i> Filas Monitoradas</span>
+          <button id="btn-refresh" class="btn btn-sm btn-outline-primary">Atualizar</button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Fila</th>
+                  <th class="text-end">Itens</th>
+                  <th class="text-end">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-queues">
+                {% for f in filas %}
+                <tr>
+                  <td>{{ f.nome }}</td>
+                  <td class="text-end"><span class="badge bg-secondary">{{ f.tamanho }}</span></td>
+                  <td class="text-end">
+                    <form method="post" action="{% url 'celery_queue_purge' %}" onsubmit="return confirm('Esvaziar a fila {{ f.nome }}?');" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="queue" value="{{ f.nome }}">
+                      <button class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash3"></i> Limpar
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-muted">Nenhuma fila registrada.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <small class="text-muted">Use “Limpar” com cautela: remove mensagens pendentes na lista da fila no Redis.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <div class="card">
+        <div class="card-header"><i class="bi bi-cpu me-2"></i> Workers</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6 class="mb-2">Ativos (active)</h6>
+            <pre class="small bg-light p-2 border rounded" id="pre-active">{{ active|safe|json_script:"active_data" }}</pre>
+          </div>
+          <div class="mb-3">
+            <h6 class="mb-2">Reservados (reserved)</h6>
+            <pre class="small bg-light p-2 border rounded" id="pre-reserved">{{ reserved|safe|json_script:"reserved_data" }}</pre>
+          </div>
+          <div class="mb-3">
+            <h6 class="mb-2">Agendados (scheduled)</h6>
+            <pre class="small bg-light p-2 border rounded" id="pre-scheduled">{{ scheduled|safe|json_script:"scheduled_data" }}</pre>
+          </div>
+          <div>
+            <h6 class="mb-2">Stats</h6>
+            <pre class="small bg-light p-2 border rounded">{{ stats|json_script:"stats_data" }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Render simples dos blocos active/reserved/scheduled via JSON do endpoint
+document.getElementById('btn-refresh')?.addEventListener('click', function() {
+  fetch("{% url 'celery_dashboard_json' %}", {headers: {"X-Requested-With":"XMLHttpRequest"}})
+    .then(r => r.json())
+    .then(data => {
+      // Atualiza as filas
+      const tbody = document.getElementById('tbody-queues');
+      tbody.innerHTML = "";
+      data.filas.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${f.nome}</td>
+          <td class="text-end"><span class="badge bg-secondary">${f.tamanho}</span></td>
+          <td class="text-end">
+            <form method="post" action="{% url 'celery_queue_purge' %}" onsubmit="return confirm('Esvaziar a fila ${f.nome}?');" class="d-inline">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+              <input type="hidden" name="queue" value="${f.nome}">
+              <button class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash3"></i> Limpar
+              </button>
+            </form>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      // Atualiza blocos de workers
+      document.getElementById('pre-active').textContent    = JSON.stringify(data.active, null, 2);
+      document.getElementById('pre-reserved').textContent  = JSON.stringify(data.reserved, null, 2);
+      document.getElementById('pre-scheduled').textContent = JSON.stringify(data.scheduled, null, 2);
+    })
+    .catch(console.error);
+});
+</script>
+{% endblock %}

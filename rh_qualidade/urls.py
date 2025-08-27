@@ -7,6 +7,7 @@ from django.views.generic import TemplateView  # ✅ adicione
 from assinatura_eletronica.views import validar_assinatura
 from rh_qualidade.recibos_views import importar_zip_recibos, recibos_pagamento
 from .views import pwa_manifest, pwa_service_worker  # ✅
+from alerts.views.views_queue import celery_dashboard, celery_dashboard_json, celery_queue_purge
 
 from .views import (
     acesso_negado,
@@ -121,6 +122,10 @@ path("permissoes-acesso/", permissoes_acesso, name="permissoes_acesso_lista"),
     # Recibos
     path("recibos/", recibos_pagamento, name="recibos_pagamento"),
     path("recibos/importar/", importar_zip_recibos, name="importar_zip_recibos"),
+
+    path("fila/", celery_dashboard, name="celery_dashboard"),
+    path("fila/json/", celery_dashboard_json, name="celery_dashboard_json"),
+    path("fila/purge/", celery_queue_purge, name="celery_queue_purge"),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,84 @@
+{% load static %}
+
+{% if alertas_modal %}
+  {% for alerta in alertas_modal %}
+  <div class="modal fade" id="alertaModal{{ alerta.id }}" tabindex="-1"
+       aria-labelledby="alertaModalLabel{{ alerta.id }}" aria-hidden="true"
+       data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-warning">
+        <div class="modal-header">
+          <h5 class="modal-title" id="alertaModalLabel{{ alerta.id }}">
+            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>{{ alerta.titulo }}
+          </h5>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2" style="white-space: pre-wrap; word-break: break-word;">
+            {{ alerta.mensagem }}
+          </div>
+          {% if alerta.url_destino %}
+            <a href="{{ alerta.url_destino }}" target="_blank" rel="noopener"
+               class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Abrir relacionado
+            </a>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" data-confirmar-alerta="{{ alerta.id }}">
+            <i class="bi bi-check2-circle me-1"></i> Li e entendi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <script>
+    (function(){
+      document.addEventListener("DOMContentLoaded", function(){
+        // Abre em sequência cada modal pendente
+        var modais = [{% for alerta in alertas_modal %}"#alertaModal{{ alerta.id }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+        var idx = 0;
+
+        function abrirProximo(){
+          if (idx >= modais.length) return;
+          var id = modais[idx++];
+          var el = document.querySelector(id);
+          if (!el) return abrirProximo();
+          var m = new bootstrap.Modal(el, {backdrop: 'static', keyboard: false});
+          el.addEventListener('hidden.bs.modal', abrirProximo, {once:true});
+          m.show();
+        }
+
+        abrirProximo();
+
+        document.querySelectorAll("[data-confirmar-alerta]").forEach(function(btn){
+          btn.addEventListener("click", function(){
+            var alertaId = this.getAttribute("data-confirmar-alerta");
+            var csrf = document.querySelector('#csrf-token-form input[name=csrfmiddlewaretoken]');
+            var token = csrf ? csrf.value : null;
+
+            fetch("{% url 'alerts:confirmar_alerta_usuario' 0 %}".replace("/0/","/"+alertaId+"/"), {
+              method: "POST",
+              headers: token ? {"X-CSRFToken": token} : {},
+            })
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+              if (data && data.status === "ok"){
+                var modalEl = btn.closest(".modal");
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+              } else {
+                alert("Não foi possível confirmar este alerta.");
+              }
+            })
+            .catch(function(e){
+              console.error(e);
+              alert("Erro de conexão ao confirmar o alerta.");
+            });
+          });
+        });
+      });
+    })();
+  </script>
+{% endif %}

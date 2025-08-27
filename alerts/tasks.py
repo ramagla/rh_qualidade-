@@ -1,12 +1,13 @@
 # Standard library
+import calendar
 from datetime import timedelta
 
 # Terceiros
 from celery import shared_task
+from dateutil.relativedelta import relativedelta
 
 # Django
 from django.core.mail import send_mail
-from django.db.models import DateField, ExpressionWrapper, F, Value
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 
@@ -14,11 +15,56 @@ from django.utils.timezone import now
 from alerts.models import Alerta, AlertaUsuario, AlertaConfigurado
 from metrologia.models import Dispositivo, TabelaTecnica
 from qualidade_fornecimento.models import FornecedorQualificado
-
+from django.conf import settings
+from django.core.mail import send_mail, EmailMultiAlternatives
 
 def _eom(d):
     return d.replace(day=calendar.monthrange(d.year, d.month)[1])
 
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 5},
+    rate_limit="30/m",
+    acks_late=True,
+    soft_time_limit=20,
+    time_limit=30
+)
+def send_email_async(self, subject, message, recipient_list, html_message=None, from_email=None, fail_silently=True):
+    if not recipient_list:
+        return 0
+    return send_mail(
+        subject=subject,
+        message=message or "",
+        from_email=from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@brasmol.com.br"),
+        recipient_list=recipient_list,
+        html_message=html_message,
+        fail_silently=fail_silently,
+    )
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 5},
+    rate_limit="20/m",
+    acks_late=True,
+    soft_time_limit=20,
+    time_limit=30
+)
+def send_email_multipart_async(self, subject, text_body, html_body, to_list, from_email=None, fail_silently=True):
+    if not to_list:
+        return 0
+    msg = EmailMultiAlternatives(
+        subject=subject,
+        body=text_body or "",
+        from_email=from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@brasmol.com.br"),
+        to=to_list,
+    )
+    if html_body:
+        msg.attach_alternative(html_body, "text/html")
+    return msg.send(fail_silently=fail_silently)
 
 @shared_task
 def enviar_alertas_calibracao():
@@ -113,12 +159,12 @@ def enviar_alertas_calibracao():
             # E-mail
             if alerta_email:
                 html_content = render_to_string(dados["template"], context)
-                send_mail(
+                send_email_async.delay(
                     subject=f"Calibração {chave} para {nome}",
                     message=f"A calibração do dispositivo {nome} {dados['mensagem']}.",
-                    from_email="no-reply@brasmol.com.br",
                     recipient_list=alerta_email.get_destinatarios_list(),
                     html_message=html_content,
+                    from_email="no-reply@brasmol.com.br",
                     fail_silently=True,
                 )
 
@@ -131,6 +177,7 @@ def enviar_alertas_calibracao():
                     tipo=dados["alerta_in_app"],
                     referencia_id=dispositivo.id,
                     url_destino=f"/metrologia/dispositivos/{dispositivo.id}/visualizar/",
+                    exige_confirmacao=getattr(config, "exigir_confirmacao_modal", False)
                 )
 
         # Equipamentos (apenas ativos já filtrados acima)
@@ -145,12 +192,12 @@ def enviar_alertas_calibracao():
             # E-mail
             if alerta_email:
                 html_content = render_to_string(dados["template"], context)
-                send_mail(
+                send_email_async.delay(
                     subject=f"Calibração {chave} para {nome}",
                     message=f"A calibração do equipamento {nome} {dados['mensagem']}.",
-                    from_email="no-reply@brasmol.com.br",
                     recipient_list=alerta_email.get_destinatarios_list(),
                     html_message=html_content,
+                    from_email="no-reply@brasmol.com.br",
                     fail_silently=True,
                 )
 
@@ -163,6 +210,7 @@ def enviar_alertas_calibracao():
                     tipo=dados["alerta_in_app"],
                     referencia_id=equipamento.id,
                     url_destino=f"/metrologia/tabelatecnica/{equipamento.id}/visualizar/",
+                    exige_confirmacao=getattr(config, "exigir_confirmacao_modal", False)
                 )
                 
 @shared_task
@@ -198,15 +246,17 @@ def enviar_alertas_fornecedores_proximos():
                     tipo=tipo_alerta,
                     referencia_id=fornecedor.id,
                     url_destino=f"/fornecedores/{fornecedor.id}/visualizar/",
+                    exige_confirmacao=getattr(config, "exigir_confirmacao_modal", False)
                 )
+
 
                 # E-mail (se e-mail do usuário estiver preenchido)
                 if user.email:
-                    send_mail(
+                    send_email_async.delay(
                         subject=titulo,
                         message=mensagem,
-                        from_email="no-reply@brasmol.com.br",
                         recipient_list=[user.email],
+                        from_email="no-reply@brasmol.com.br",
                         fail_silently=True,
                     )
 
@@ -328,11 +378,11 @@ def enviar_alertas_avaliacao_tecnica_pendente():
 
             # E-mail (se existir)
             if user.email:
-                send_mail(
+                send_email_async.delay(
                     subject=subject,
                     message=text,
-                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@brasmol.com.br"),
                     recipient_list=[user.email],
                     html_message=html,
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@brasmol.com.br"),
                     fail_silently=True,
                 )

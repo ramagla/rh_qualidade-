@@ -5,6 +5,8 @@ from django.contrib.auth.models import User, Group
 from alerts.models import AlertaConfigurado
 from alerts.models import AlertaUsuario
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.utils import timezone
 
 @login_required
 @permission_required("alerts.view_alertaconfigurado", raise_exception=True)
@@ -26,6 +28,7 @@ def editar_alerta_configurado(request, alerta_id):
         alerta.usuarios.set(usuarios_ids)
         alerta.grupos.set(grupos_ids)
         alerta.ativo = "ativo" in request.POST
+        alerta.exigir_confirmacao_modal = "exigir_confirmacao_modal" in request.POST  # NOVO
         alerta.save()
         return redirect("alerts:gerenciar_alertas")  # ← Aqui está a correção
 
@@ -36,6 +39,15 @@ def editar_alerta_configurado(request, alerta_id):
         "usuarios": usuarios,
         "grupos": grupos,
     })
+
+
+@csrf_exempt
+@require_POST
+@login_required
+def confirmar_alerta_usuario(request, alerta_id):
+    alerta = get_object_or_404(AlertaUsuario, pk=alerta_id, usuario=request.user, excluido=False)
+    alerta.confirmar()
+    return JsonResponse({"status": "ok"})
 
 @csrf_exempt
 @login_required

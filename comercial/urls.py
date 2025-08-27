@@ -1,5 +1,5 @@
 from django.urls import path
-from comercial.views import centro_custo_views, cliente_views, ferramenta_views, viabilidade_views
+from comercial.views import centro_custo_views, cliente_views, ferramenta_views, metas_views, viabilidade_views
 from comercial.views import item_views
 from comercial.views import dashboard_views
 from comercial.views import cotacao_views, precalc_views
@@ -103,11 +103,14 @@ urlpatterns = [
     path("viabilidades/excluir/<int:pk>/", viabilidade_views.excluir_viabilidade, name="excluir_viabilidade"),
 
     # Indicadores
+    path("indicadores/1.1-indice-faturamento/", indicadores_views.indicador_indice_faturamento, name="indicador_indice_faturamento"),
+    path("indicadores/1.1.1-faturamento-mensal/", indicadores_views.indicador_faturamento, name="indicador_faturamento_mensal"),
+
     path("indicadores/4.1-prazo-cotacao/", indicadores_views.indicador_prazo_cotacao, name="indicador_prazo_cotacao"),
     path("indicadores/4.2-itens-novos/", indicadores_views.indicador_itens_novos, name="indicador_itens_novos"),
     path("indicadores/4.3-cotacoes-funcionario/", indicadores_views.indicador_cotacoes_funcionario, name="indicador_cotacoes_funcionario"),
     path("indicadores/4.4-taxa-aprovacao/", indicadores_views.indicador_taxa_aprovacao, name="indicador_taxa_aprovacao"),
-    path("indicadores/1.1-faturamento/", indicadores_views.indicador_faturamento, name="indicador_faturamento"),
+
 
     path("dashboard/mapa-clientes/", dashboard_views.mapa_clientes_por_regiao, name="mapa_clientes"),
     path("dashboard/cidades-clientes/", dashboard_views.listar_cidades_clientes, name="listar_cidades_clientes"),
@@ -124,4 +127,11 @@ urlpatterns = [
     path("faturamento/<int:pk>/excluir/", faturamento_views.excluir_faturamento, name="excluir_faturamento"),
     path("faturamento/relatorio/", faturamento_views.relatorio_faturamento, name="relatorio_faturamento"),
     path("faturamento/relatorio-duplicatas/", faturamento_views.relatorio_duplicatas, name="relatorio_duplicatas"),
+
+
+     # Metas de Faturamento (CRUD)
+    path("metas/", metas_views.lista_metas, name="lista_metas"),
+    path("metas/cadastrar/", metas_views.cadastrar_meta, name="cadastrar_meta"),
+    path("metas/editar/<int:pk>/", metas_views.editar_meta, name="editar_meta"),
+    path("metas/excluir/<int:pk>/", metas_views.excluir_meta, name="excluir_meta"),
 ]

@@ -5,7 +5,8 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.contrib import messages
 from django.core import signing
-from django.core.mail import EmailMultiAlternatives, send_mail
+from django.core.mail import EmailMultiAlternatives
+from alerts.tasks import send_email_async, send_email_multipart_async
 from django.db.models import Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
@@ -70,11 +71,11 @@ def disparar_email_cotacao_material(request, material):
 """.strip()
 
     # 1) E-mail oficial para Compras
-    send_mail(
+    send_email_async.delay(
         subject="📨 Cotação de Matéria-Prima",
         message=corpo,
-        from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=["compras@brasmol.com.br"],
+        from_email=settings.DEFAULT_FROM_EMAIL,
         fail_silently=False,
     )
 
@@ -99,16 +100,17 @@ def disparar_email_cotacao_material(request, material):
                 tipo="SOLICITACAO_COTACAO_MATERIAL",
                 referencia_id=material.id,
                 url_destino=link_resp,  # 🔗 vai direto ao template de resposta
+                exige_confirmacao=getattr(config, "exigir_confirmacao_modal", False),
             )
 
         # Replica por e-mail (se houver e-mails configurados)
         emails = [u.email for u in destinatarios if getattr(u, "email", None)]
         if emails:
-            send_mail(
+            send_email_async.delay(
                 subject="[Sistema Bras-Mol] Cotação de Matéria-Prima solicitada",
                 message=corpo,
-                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=emails,
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 fail_silently=True,
             )
     except AlertaConfigurado.DoesNotExist:
@@ -236,6 +238,8 @@ def responder_cotacao_materia_prima(request, pk):
                         tipo="RESPOSTA_COTACAO_MATERIAL",
                         referencia_id=material.id,
                         url_destino=request.path,
+                        exige_confirmacao=getattr(config, "exigir_confirmacao_modal", False),
+
                     )
 
                 emails = [u.email for u in destinatarios if getattr(u, "email", None)]
@@ -262,14 +266,14 @@ def responder_cotacao_materia_prima(request, pk):
                     html_body = render_to_string("emails/cotacao_material_respondida.html", context)
                     text_body = render_to_string("emails/cotacao_material_respondida.txt", context)
 
-                    msg = EmailMultiAlternatives(
+                    send_email_multipart_async.delay(
                         subject=subject,
-                        body=text_body,
+                        text_body=text_body,
+                        html_body=html_body,
+                        to_list=emails,
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        to=emails,
+                        fail_silently=True,
                     )
-                    msg.attach_alternative(html_body, "text/html")
-                    msg.send(fail_silently=True)
 
             except AlertaConfigurado.DoesNotExist:
                 pass
@@ -357,11 +361,11 @@ def disparar_emails_cotacao_servicos(request, precalc):
         print(f"[SE-UTIL][MAIL][PC={precalc.id}] insumo_id={insumo_id} codigo={codigo} link={link_publico}")
 
         # 1) E-mail oficial para Compras
-        send_mail(
+        send_email_async.delay(
             subject="📨 Cotação de Serviço Externo",
             message=corpo,
-            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
             recipient_list=["compras@brasmol.com.br"],
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
             fail_silently=False,
         )
 
@@ -386,15 +390,17 @@ def disparar_emails_cotacao_servicos(request, precalc):
                     tipo="SOLICITACAO_COTACAO_SERVICO",
                     referencia_id=s0.id,
                     url_destino=link_resp,  # 🔗 vai direto ao template de resposta
+                    exige_confirmacao=getattr(config, "exigir_confirmacao_modal", False),
+
                 )
 
             emails = [u.email for u in destinatarios if getattr(u, "email", None)]
             if emails:
-                send_mail(
+                send_email_async.delay(
                     subject="[Sistema Bras-Mol] Cotação de Serviço Externo solicitada",
                     message=corpo,
-                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
                     recipient_list=emails,
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
                     fail_silently=True,
                 )
         except AlertaConfigurado.DoesNotExist:
@@ -568,6 +574,8 @@ def responder_cotacao_servico_lote(request, pk):
                         tipo="RESPOSTA_COTACAO_SERVICO",
                         referencia_id=servico.id,
                         url_destino=request.path,
+                        exige_confirmacao=getattr(config, "exigir_confirmacao_modal", False),
+
                     )
 
                 emails = [u.email for u in destinatarios if getattr(u, "email", None)]
@@ -596,14 +604,14 @@ def responder_cotacao_servico_lote(request, pk):
                     html_body = render_to_string("emails/cotacao_servico_respondida.html", context)
                     text_body = render_to_string("emails/cotacao_servico_respondida.txt", context)
 
-                    msg = EmailMultiAlternatives(
+                    send_email_multipart_async.delay(
                         subject=subject,
-                        body=text_body,
+                        text_body=text_body,
+                        html_body=html_body,
+                        to_list=emails,
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        to=emails,
+                        fail_silently=True,
                     )
-                    msg.attach_alternative(html_body, "text/html")
-                    msg.send(fail_silently=True)
 
             except AlertaConfigurado.DoesNotExist:
                 pass

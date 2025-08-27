@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if modo == 'editar' %}Editar Meta{% else %}Cadastrar Meta{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 760px;">
+
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <h4 class="mb-3 d-flex align-items-center gap-2">
+    <i class="bi bi-bullseye"></i>
+    {% if modo == 'editar' %}Editar Meta de Faturamento{% else %}Cadastrar Meta de Faturamento{% endif %}
+  </h4>
+
+  <form method="post" class="card shadow-sm">
+    <div class="card-body">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Ano</label>
+          {{ form.ano }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Mês</label>
+          {{ form.mes }}
+        </div>
+        <div class="col-md-4">
+  <label class="form-label">Valor (R$)</label>
+  {{ form.valor }}
+</div>
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+  $(function(){
+    // Máscara só para milhares (sem casas decimais)
+    $('input[name="valor"]').mask('000.000.000.000.000', {reverse: true});
+
+    // Ao enviar o form, remover os pontos para salvar corretamente no banco
+    $('form').on('submit', function() {
+      var campo = $('input[name="valor"]');
+      campo.val(campo.val().replace(/\./g, ''));
+    });
+  });
+</script>
+{% endblock %}
+
+
+      </div>
+
+      {% if form.errors %}
+        <div class="alert alert-danger mt-3 mb-0">
+          Verifique os campos destacados.
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card-footer d-flex justify-content-between">
+      <a href="{% url 'lista_metas' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-chevron-left me-1"></i> Voltar
+      </a>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check2-circle me-1"></i> Salvar
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

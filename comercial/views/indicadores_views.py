@@ -682,4 +682,143 @@ def indicador_faturamento(request):
         "comentarios": comentarios,
         "meta_total": meta_total,
     }
-    return render(request, "indicadores/1_1_faturamento.html", context)
+    return render(request, "indicadores/1_1_1_faturamento.html", context)
+
+
+from decimal import Decimal
+from io import BytesIO
+import base64
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+from django.utils.timezone import now
+
+from comercial.models.faturamento import FaturamentoRegistro
+from comercial.models.indicadores import MetaFaturamento
+from comercial.utils.indicadores import salvar_registro_indicador
+
+
+def _faturamento_liquido_por_mes(ano: int) -> dict[int, Decimal]:
+    """
+    Faturamento do período (NF c/ IPI) = NF válidas + Vales - Devoluções.
+    Retorna: {1..12: Decimal('0.00')}
+    """
+    valores = {m: Decimal("0.00") for m in range(1, 13)}
+    qs = (FaturamentoRegistro.objects
+          .filter(ocorrencia__year=ano)
+          .only("ocorrencia", "tipo", "nfe", "valor_total", "valor_total_com_ipi"))
+
+    nf_validas = {m: Decimal("0.00") for m in range(1, 13)}
+    vales      = {m: Decimal("0.00") for m in range(1, 13)}
+    devol      = {m: Decimal("0.00") for m in range(1, 13)}
+
+    for r in qs:
+        m = int(r.ocorrencia.month)
+        valor = r.valor_total_com_ipi or r.valor_total or Decimal("0.00")
+        tipo  = (r.tipo or "Venda")
+        nfe   = (r.nfe or "").strip().lower()
+        if tipo == "Venda" and nfe not in ("", "vale"):
+            nf_validas[m] += valor
+        elif tipo == "Venda":
+            vales[m] += valor
+        elif tipo == "Devolução":
+            devol[m] += valor
+
+    for m in range(1, 13):
+        valores[m] = (nf_validas[m] + vales[m] - devol[m]).quantize(Decimal("0.01"))
+    return valores
+
+
+def _meta_por_mes(ano: int) -> dict[int, Decimal]:
+    """Busca MetaFaturamento mensal. Retorna {1..12: Decimal}."""
+    metas = {m: Decimal("0.00") for m in range(1, 13)}
+    for m in range(1, 13):
+        obj = MetaFaturamento.objects.filter(ano=ano, mes=m).first()
+        metas[m] = (obj.valor if obj else Decimal("0.00")).quantize(Decimal("0.01"))
+    return metas
+
+
+def _grafico_semestral_base64(labels, valores, meta_ref=100.0):
+    fig, ax = plt.subplots(figsize=(8.5, 3.6))
+    ax.bar(labels, valores)
+    ax.axhline(y=meta_ref, linestyle="--")
+    ax.set_ylim(0, max([meta_ref] + valores) + 10)
+    ax.set_ylabel("% da meta")
+    ax.set_title("Índice de Faturamento (Semestral)")
+    for i, v in enumerate(valores):
+        ax.text(i, v + 1, f"{v:.1f}%", ha="center", fontsize=9)
+    buf = BytesIO()
+    plt.tight_layout()
+    fig.savefig(buf, format="png", dpi=150)
+    b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    buf.close()
+    plt.close(fig)
+    return b64
+
+
+@login_required
+@permission_required("comercial.view_indicador_faturamento_indice", raise_exception=True)
+def indicador_indice_faturamento(request):
+    """
+    1.1 - Índice de Faturamento (Semestral, %)
+    Indicador_sem = (Faturamento_sem / Meta_sem) * 100
+    Meta de referência: 100%
+    """
+    ano = int(request.GET.get("ano", now().year))
+
+    # dados mensais (para somar semestres)
+    realizado_mes = _faturamento_liquido_por_mes(ano)
+    meta_mes      = _meta_por_mes(ano)
+
+    # agregação por semestre
+    real_s1 = sum(realizado_mes[m] for m in range(1, 7))
+    real_s2 = sum(realizado_mes[m] for m in range(7, 13))
+    meta_s1 = sum(meta_mes[m]      for m in range(1, 7))
+    meta_s2 = sum(meta_mes[m]      for m in range(7, 13))
+
+    # indicador por semestre (Real/Meta * 100)
+    ind_s1 = float((real_s1 / meta_s1) * 100) if meta_s1 > 0 else 0.0
+    ind_s2 = float((real_s2 / meta_s2) * 100) if meta_s2 > 0 else 0.0
+
+    # média entre os semestres (apenas os com valor)
+    presentes = [v for v in (ind_s1, ind_s2) if v > 0]
+    media = round(sum(presentes) / len(presentes), 1) if presentes else 0.0
+
+    # gráfico de 2 barras
+    grafico_base64 = _grafico_semestral_base64(["1º Sem", "2º Sem"], [ind_s1, ind_s2], 100.0)
+
+    # comentários
+    comentarios = [
+        {"data": "1º Semestre", "texto": f"Índice de {ind_s1:.1f}%, " + ("dentro da meta." if ind_s1 >= 100 else "abaixo da meta.")},
+        {"data": "2º Semestre", "texto": f"Índice de {ind_s2:.1f}%, " + ("dentro da meta." if ind_s2 >= 100 else "abaixo da meta.")},
+    ]
+
+    # registro (usa mês de fechamento do semestre: 6 e 12)
+    salvar_registro_indicador(
+        indicador="1.1", ano=ano, mes=6,
+        valor=ind_s1, media=media, meta=100.0,
+        total_realizados=float(real_s1), total_aprovados=float(meta_s1),
+        comentario=comentarios[0]["texto"]
+    )
+    salvar_registro_indicador(
+        indicador="1.1", ano=ano, mes=12,
+        valor=ind_s2, media=media, meta=100.0,
+        total_realizados=float(real_s2), total_aprovados=float(meta_s2),
+        comentario=comentarios[1]["texto"]
+    )
+
+    contexto = {
+        "ano": ano,
+        "media": media,
+        "grafico_base64": grafico_base64,
+        "comentarios": comentarios,
+
+        # para a tabela curta por semestre
+        "indice_semestres": {1: ind_s1, 2: ind_s2},
+    }
+
+    return render(request, "indicadores/1_1_faturamento.html", contexto)
