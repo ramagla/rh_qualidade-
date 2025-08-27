@@ -129,100 +129,110 @@ from comercial.models.precalculo import PreCalculoServicoExterno
 from tecnico.models.roteiro import InsumoEtapa
 
 
+# comercial/forms/precalculos_form.py (classe completa ajustada + prints)
+from decimal import Decimal, InvalidOperation
+from django import forms
+from django.forms.widgets import TextInput
+from django.db.models import Q
+from tecnico.models.roteiro import InsumoEtapa
+from comercial.models.precalculo import PreCalculoServicoExterno
+
 class PreCalculoServicoExternoForm(forms.ModelForm):
     class Meta:
         model = PreCalculoServicoExterno
         fields = "__all__"
         exclude = (
-            'cotacao', 'created_at', 'updated_at',
-            'created_by', 'updated_by',
-            'nome_insumo', 'descricao_materia_prima', 'unidade',
+            "cotacao", "created_at", "updated_at",
+            "created_by", "updated_by",
+            "nome_insumo", "descricao_materia_prima", "unidade",
         )
-       
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields['insumo'].queryset = InsumoEtapa.objects.filter(
+        # 🛠 Insumo: NÃO obrigatório e preserva a instância; esconde o campo
+        insumo_id = getattr(self.instance, "insumo_id", None)
+        self.fields["insumo"].required = False
+        self.fields["insumo"].widget = forms.HiddenInput()
+        self.fields["insumo"].label = "Insumo"
+
+        if insumo_id:
+            # Restringe ao próprio insumo (evita "Escolha inválida")
+            self.fields["insumo"].queryset = InsumoEtapa.objects.filter(pk=insumo_id)
+            self.fields["insumo"].initial = insumo_id
+            self.fields["insumo"].empty_label = None
+        else:
+            # Sem insumo definido na instância: não apresenta opções
+            self.fields["insumo"].queryset = InsumoEtapa.objects.none()
+
+        # (Opcional) queryset padrão — útil quando for criar novas linhas no futuro
+        self._qs_padrao_trat = InsumoEtapa.objects.filter(
             Q(etapa__setor__nome__icontains="Tratamento Externo") |
             Q(etapa__setor__nome__icontains="Oleamento")
-        )
-        self.fields['insumo'].required = True
-        self.fields['insumo'].widget = forms.HiddenInput()
-        self.fields['insumo'].label = "Insumo"
+        ).only("id")
 
-        self.fields['codigo_materia_prima'].required = False
-        self.fields['codigo_materia_prima'].widget.attrs.update({
-            'class': 'form-control form-control-sm codigo-input',
-            'readonly': 'readonly',
-        })
-
-        if 'status' in self.fields:
-            self.fields['status'].required = False
-            self.fields['status'].widget.attrs.update({
-                'class': 'form-control form-control-sm'
+        # Código MP (somente leitura)
+        if "codigo_materia_prima" in self.fields:
+            self.fields["codigo_materia_prima"].required = False
+            self.fields["codigo_materia_prima"].widget.attrs.update({
+                "class": "form-control form-control-sm codigo-input",
+                "readonly": "readonly",
             })
 
-        if 'icms' in self.fields:
-            self.fields['icms'].required = False
-            self.fields['icms'].widget.attrs.update({
-                'class': 'form-control form-control-sm',
-                'placeholder': '0.00'
+        # Status / ICMS (opcionais)
+        if "status" in self.fields:
+            self.fields["status"].required = False
+            self.fields["status"].widget.attrs.update({"class": "form-control form-control-sm"})
+        if "icms" in self.fields:
+            self.fields["icms"].required = False
+            self.fields["icms"].widget.attrs.update({
+                "class": "form-control form-control-sm",
+                "placeholder": "0.00",
             })
 
-        
+        # Campos visuais + obrigatoriedade
         campos = [
-            'lote_minimo', 'entrega_dias', 'fornecedor', 'icms', 'preco_kg',
-            'desenvolvido_mm', 'peso_liquido', 'peso_bruto', 'peso_liquido_total'
+            "lote_minimo", "entrega_dias", "fornecedor", "icms", "preco_kg",
+            "desenvolvido_mm", "peso_liquido", "peso_bruto", "peso_liquido_total",
         ]
         for campo in campos:
             if campo in self.fields:
                 widget = self.fields[campo].widget
                 css_class = (
-                    'form-select form-select-sm'
+                    "form-select form-select-sm"
                     if isinstance(widget, forms.Select)
-                    else 'form-control form-control-sm'
+                    else "form-control form-control-sm"
                 )
-                # ➜ lote_minimo como número decimal (duas casas), alinhado à direita
-                if campo == 'lote_minimo':
+                if campo == "lote_minimo":
                     self.fields[campo].widget = forms.NumberInput(attrs={
-                        'class': 'form-control form-control-sm text-end',
-                        'placeholder': '0,00',
-                        'step': '0.01',
-                        'min': '0'
+                        "class": "form-control form-control-sm text-end",
+                        "placeholder": "0,00",
+                        "step": "0.01",
+                        "min": "0",
                     })
                 else:
-                    self.fields[campo].widget.attrs.update({'class': css_class})
+                    self.fields[campo].widget.attrs.update({"class": css_class})
                 self.fields[campo].required = False
 
-        if 'peso_liquido_total' in self.fields:
-            self.fields['peso_liquido_total'].widget = TextInput(
-                attrs={
-                    'class': 'form-control form-control-sm text-end peso-liquido-total',
-                    'readonly': 'readonly',
-                }
-            )
-
-        if 'desenvolvido_mm' in self.fields:
-            self.fields['desenvolvido_mm'].widget = TextInput(
-                attrs={
-                    'class': 'form-control form-control-sm',
-                }
-            )
-
-        print(f"[DEBUG] Form init - PK: {self.instance.pk}, Bound: {self.is_bound}")
-        # ainda em PreCalculoServicoExternoForm.__init__
-        for campo in ['peso_liquido', 'peso_bruto', 'desenvolvido_mm', 'peso_liquido_total']:
+        # Widgets específicos
+        if "peso_liquido_total" in self.fields:
+            self.fields["peso_liquido_total"].widget = TextInput(attrs={
+                "class": "form-control form-control-sm text-end peso-liquido-total",
+                "readonly": "readonly",
+            })
+        for campo in ["peso_liquido", "peso_bruto", "desenvolvido_mm", "peso_liquido_total"]:
             if campo in self.fields:
                 self.fields[campo].widget = TextInput(attrs={
-                    'class': 'form-control form-control-sm',
-                    'placeholder': '0,0000000'
+                    "class": "form-control form-control-sm",
+                    "placeholder": "0,0000000",
                 })
-        # (sem alterar a lista acima; apenas garantimos que 'lote_minimo' já foi tratado separadamente)
 
-
-
-
+        # 🔎 Debug útil em produção
+        print(
+            f"[DEBUG] Form init - PK: {self.instance.pk}, Bound: {self.is_bound}, "
+            f"insumo_id={insumo_id}, qs_count={self.fields['insumo'].queryset.count()}",
+            flush=True
+        )
 
     def has_changed(self):
         changed = super().has_changed()
@@ -236,39 +246,56 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
         return changed
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned = super().clean()
 
-        # Decimais de fato
+        # 🛡 Se o POST não trouxe insumo, preserve o da instância (quando houver)
+        if not cleaned.get("insumo"):
+            if getattr(self.instance, "insumo_id", None):
+                cleaned["insumo"] = self.instance.insumo
+            else:
+                # Mantém vazio (não obrigatório). Se quiser, pode-se aplicar um default da _qs_padrao_trat.
+                pass
+
+        # Decimais
         campos_decimal = [
-            'lote_minimo', 'icms', 'preco_kg',
-            'peso_liquido', 'peso_bruto', 'peso_liquido_total', 'desenvolvido_mm'
+            "lote_minimo", "icms", "preco_kg",
+            "peso_liquido", "peso_bruto", "peso_liquido_total", "desenvolvido_mm",
         ]
         for campo in campos_decimal:
-            valor = cleaned_data.get(campo)
+            valor = cleaned.get(campo)
             if isinstance(valor, str):
                 valor = valor.replace(".", "").replace(",", ".")
             try:
-                cleaned_data[campo] = Decimal(valor) if valor not in [None, ''] else None
+                cleaned[campo] = Decimal(valor) if valor not in [None, ""] else None
             except (ValueError, InvalidOperation):
                 self.add_error(campo, f"Valor inválido em {campo}: {valor}")
-                cleaned_data[campo] = None
+                cleaned[campo] = None
 
-        # Inteiros (PostgreSQL não aceita Decimal aqui)
-        valor_dias = cleaned_data.get('entrega_dias')
+        # Inteiros
+        valor_dias = cleaned.get("entrega_dias")
         if isinstance(valor_dias, str):
             valor_dias = valor_dias.strip().replace(".", "").replace(",", ".")
         if valor_dias in [None, ""]:
-            cleaned_data['entrega_dias'] = None
+            cleaned["entrega_dias"] = None
         else:
             try:
-                # aceita “10.0”/“10,0” vindos do input e normaliza
-                cleaned_data['entrega_dias'] = int(Decimal(str(valor_dias)))
+                cleaned["entrega_dias"] = int(Decimal(str(valor_dias)))
             except (ValueError, InvalidOperation):
-                self.add_error('entrega_dias', f"Valor inválido em entrega_dias: {valor_dias}")
-                cleaned_data['entrega_dias'] = None
+                self.add_error("entrega_dias", f"Valor inválido em entrega_dias: {valor_dias}")
+                cleaned["entrega_dias"] = None
 
-        return cleaned_data
+        # 🔎 Debug do clean
+        print(
+            "[DEBUG][CLEAN] PK=", getattr(self.instance, "pk", None),
+            "insumo_final=", getattr(cleaned.get("insumo"), "pk", None),
+            "lote_minimo=", cleaned.get("lote_minimo"),
+            "entrega_dias=", cleaned.get("entrega_dias"),
+            "icms=", cleaned.get("icms"),
+            "preco_kg=", cleaned.get("preco_kg"),
+            flush=True
+        )
 
+        return cleaned
 
 
 

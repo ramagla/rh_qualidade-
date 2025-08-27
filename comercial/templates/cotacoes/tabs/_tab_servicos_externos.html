@@ -221,26 +221,29 @@
 </form>
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  const form = document.querySelector("form[method='post']");
-  if(form){
-    form.addEventListener("submit", function(e){
-      const fd = new FormData(form);
-      const keys = Array.from(fd.keys());
-      console.group("%c[DEBUG][SERVICOS] Submit","color:blue;font-weight:bold");
-      console.log("Total campos:", keys.length);
-      console.log("Sample keys:", keys.slice(0,30));
-      console.log("Campos críticos:", {
-        lote_minimo: fd.get("fs_sev-0-lote_minimo"),
-        entrega_dias: fd.get("fs_sev-0-entrega_dias"),
-        fornecedor: fd.get("fs_sev-0-fornecedor"),
-        icms: fd.get("fs_sev-0-icms"),
-        preco_kg: fd.get("fs_sev-0-preco_kg")
-      });
-      console.groupEnd();
-    }, {capture:true});
-  }
+  const form = document.querySelector("form[method='post'][enctype]");
+  if(!form) return;
+  form.addEventListener("submit", function(){
+    const fd = new FormData(form);
+    const keys = Array.from(fd.keys());
+    console.group("%c[SERVICOS][SUBMIT]","color:#0a58ca;font-weight:bold");
+    console.log("TOTAL keys:", keys.length);
+    console.log("sample:", keys.slice(0, 40));
+    // Primeiro form (índice 0)
+    const p = "sev-0-"; // mantém seu prefixo atual
+    console.log("criticos(0):", {
+      lote_minimo: fd.get(p+"lote_minimo"),
+      entrega_dias: fd.get(p+"entrega_dias"),
+      fornecedor:  fd.get(p+"fornecedor"),
+      icms:        fd.get(p+"icms"),
+      preco_kg:    fd.get(p+"preco_kg"),
+      insumo:      fd.get(p+"insumo")
+    });
+    console.groupEnd();
+  }, {capture:true});
 });
 </script>
+
 <style>
   input[readonly].form-control-sm {
     background-color: #f8f9fa;

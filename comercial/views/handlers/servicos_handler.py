@@ -16,16 +16,28 @@ class ServicoInlineFormSet(BaseInlineFormSet):
             if fld in form.fields:
                 form.fields[fld].required = False
 
-        # ✅ Fixar o INSUMO na própria instância para evitar "Faça uma escolha válida"
+        # 🛠️ INSUMO: não obrigatório + preservar valor existente
         if "insumo" in form.fields:
             inst = form.instance
             insumo_id = getattr(inst, "insumo_id", None)
-            form.fields["insumo"].queryset = InsumoEtapa.objects.filter(pk=insumo_id)
-            form.fields["insumo"].empty_label = None
-            form.fields["insumo"].initial = insumo_id
-            form.fields["insumo"].widget = HiddenInput()
+
+            # Não travar a validação por ausência de insumo no POST
+            form.fields["insumo"].required = False
+
+            if insumo_id:
+                # Quando houver, restringe ao próprio insumo e esconde
+                form.fields["insumo"].queryset = InsumoEtapa.objects.filter(pk=insumo_id)
+                form.fields["insumo"].initial = insumo_id
+                form.fields["insumo"].empty_label = None
+                form.fields["insumo"].widget = HiddenInput()
+            else:
+                # Sem insumo na instância: mantém campo oculto/ignorado
+                # (segue não obrigatório; o clean() do form preserva se vier a existir)
+                form.fields["insumo"].queryset = InsumoEtapa.objects.none()
+                form.fields["insumo"].widget = HiddenInput()
 
         return form
+
 
 def processar_aba_servicos(request, precalc, submitted=False, servicos_respondidos=False, form_precalculo=None):
     print(f"[SERVICOS][ENTER][PC={precalc.id}] method={request.method}")
