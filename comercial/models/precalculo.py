@@ -390,7 +390,10 @@ class AnaliseComercial(models.Model):
 
     tipo_embalagem = models.BooleanField("9. Qual o tipo de embalagem a ser utilizada ?", default=False)
     tipo_embalagem_obs = models.CharField("Detalhar Tipo", max_length=200, blank=True)
-
+    necessita_ferramental = models.BooleanField(
+            "Necessita de ferramental/dispositivo?",
+            null=True, blank=True
+        )
     conclusao = models.CharField("Conclusão da Análise Crítica", max_length=30, choices=RESULTADO)
     consideracoes = CKEditor5Field("Considerações", config_name="default", blank=True, null=True)
     qtde_estimada = models.PositiveIntegerField("Quantidade Estimada", null=True, blank=True)
@@ -764,7 +767,7 @@ class RoteiroCotacao(AuditModel):
 class Desenvolvimento(AuditModel):
     """Modelo final de desenvolvimento da cotação."""
     precalculo = models.OneToOneField("PreCalculo", on_delete=models.CASCADE, related_name="desenvolvimento_item",null=True, blank=True)
-    completo = models.BooleanField("Tudo preenchido corretamente?", default=False)
+    completo = models.BooleanField("Tudo preenchido corretamente?", null=True, blank=True)
     consideracoes = CKEditor5Field("Considerações Finais", config_name="default", blank=True, null=True)
 # 🔐 Metadados de Assinatura
     usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)

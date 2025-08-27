@@ -126,6 +126,17 @@
   {{ form_analise.capacidade_produtiva|add_class:"form-select-sm campo-analise" }}
 {% endif %}
   </div>
+<!-- Necessita de Ferramental -->
+<div class="col-12 col-md-4">
+  <label for="{{ form_analise.necessita_ferramental.id_for_label }}" class="form-label">
+    <i class="bi bi-tools me-1 text-muted"></i> Necessita de Ferramental/Dispositivo?
+  </label>
+  {% if form_analise.necessita_ferramental.errors %}
+    {{ form_analise.necessita_ferramental|add_class:"form-select-sm campo-analise is-invalid" }}
+  {% else %}
+    {{ form_analise.necessita_ferramental|add_class:"form-select-sm campo-analise" }}
+  {% endif %}
+</div>
 
   <!-- Status -->
   <div class="col-12 col-md-4">

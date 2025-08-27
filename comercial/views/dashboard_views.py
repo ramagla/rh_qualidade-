@@ -897,3 +897,315 @@ def dashboard_faturamento(request):
         "tab_ativa": tab_ativa,  
     }
     return render(request, "comercial/dashboard_faturamento.html", context)
+
+
+# comercial/views/dashboard_views.py
+from django.contrib.auth.decorators import login_required, permission_required
+from django.http import JsonResponse, Http404
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
+
+from comercial.models.cotacao import Cotacao
+from comercial.models.precalculo import PreCalculo, PreCalculoMaterial, PreCalculoServicoExterno
+
+# ----------------------------
+# Página
+# ----------------------------
+@login_required
+@permission_required("comercial.view_precalculo", raise_exception=True)
+def acompanhamento_precalculo(request):
+    """
+    Página do acompanhamento do Pré-Cálculo (por Cotação/Pré-Cálculo).
+    O fluxo é atualizado via AJAX.
+    """
+    # Carrega algumas cotações para o select (opcionalmente filtra por período GET)
+    qs_cot = Cotacao.objects.order_by("-id")[:50]
+    contexto = {
+        "cotacoes": qs_cot,
+        "titulo": "Acompanhamento do Pré-Cálculo (tempo real)",
+        "descricao": "Selecione a Cotação e o Pré-Cálculo para visualizar o fluxo por etapas.",
+    }
+    return render(request, "comercial/acompanhamento_live.html", contexto)
+
+
+# ----------------------------
+# AJAX helpers
+# ----------------------------
+@login_required
+@permission_required("comercial.view_precalculo", raise_exception=True)
+def ajax_precalculos_por_cotacao(request, cotacao_id: int):
+    """
+    Retorna a lista de pré-cálculos de uma cotação para preencher o segundo select.
+    """
+    cot = get_object_or_404(Cotacao, pk=cotacao_id)
+    precs = (
+        PreCalculo.objects
+        .filter(cotacao=cot)
+        .order_by("-id")
+        .values("id", "numero")
+    )
+    data = [{"id": p["id"], "label": f'{p["numero"]}'} for p in precs]
+    return JsonResponse({"ok": True, "precalculos": data})
+
+
+from django.utils import timezone
+
+@login_required
+@permission_required("comercial.view_precalculo", raise_exception=True)
+def ajax_status_precalculo(request, pk: int):
+    """
+    Calcula o status de cada etapa do fluxo e retorna em JSON,
+    incluindo 'meta' (responsável e data) para exibição à direita do card.
+    """
+    prec = get_object_or_404(PreCalculo, pk=pk)
+
+    def _fmt_date(dt):
+        try:
+            if not dt:
+                return ""
+            # aceita date ou datetime
+            if hasattr(dt, "date"):
+                dt = timezone.localtime(dt)
+            return dt.strftime("%d/%m/%Y")
+        except Exception:
+            return ""
+
+    def _first_attr(obj, *names):
+        """retorna o primeiro atributo existente e não vazio"""
+        for n in names:
+            if obj and hasattr(obj, n):
+                val = getattr(obj, n)
+                if callable(val):
+                    try:
+                        val = val()
+                    except Exception:
+                        val = None
+                if val not in (None, "", 0):
+                    return val
+        return None
+
+    def _nome(obj):
+        # tenta achar nome amigável de usuário/funcionário
+        v = _first_attr(obj,
+            "nome", "get_full_name", "full_name", "nome_completo",
+            "first_name", "username", "responsavel_nome")
+        return str(v) if v else ""
+
+    # ---------- Nó: Cotação ----------
+    cot = getattr(prec, "cotacao", None)
+    cot_resp = _first_attr(cot, "responsavel", "usuario_responsavel", "criado_por", "usuario")
+    cot_dt   = _first_attr(cot, "data_abertura", "criado_em", "atualizado_em")
+    no_cotacao = {
+        "titulo": "Cotação",
+        "icone": "bi-clipboard-data",
+        "status": "ok" if cot else "pendente",
+        "detalhe": f"#{getattr(cot, 'numero', '')}" if cot else "Sem cotação vinculada",
+        "meta": {
+            "resp": f"Resp.: {_nome(cot_resp)}" if cot_resp else "",
+            "data": _fmt_date(cot_dt)
+        }
+    }
+
+    # --- Nó: Análise Comercial (conclusão pela "Conclusão da Análise Crítica")
+    ac = getattr(prec, "analise_comercial_item", None)
+
+    # tenta localizar o campo "Conclusão da Análise Crítica" em possíveis nomes
+    ac_conc = _first_attr(
+        ac,
+        "conclusao_analise_critica", "conclusao_da_analise_critica",
+        "conclusao_critica", "analise_critica_conclusao", "conclusao"
+    )
+
+    # regra: OK somente se o campo estiver preenchido (não vazio/None)
+    if ac_conc not in (None, "", 0, False):
+        ac_status = "ok"
+        ac_detalhe = str(ac_conc)
+    else:
+        # se quiser manter informação auxiliar do status anterior, pode sinalizar "Pendente"
+        ac_status = "pendente"
+        ac_detalhe = "Pendente"
+
+    ac_resp = _first_attr(ac, "responsavel", "usuario", "atualizado_por", "criado_por")
+    ac_dt   = _first_attr(ac, "atualizado_em", "modificado_em", "criado_em", "data")
+
+    no_analise = {
+        "titulo": "Análise Comercial",
+        "icone": "bi-clipboard-check",
+        "status": ac_status,
+        "detalhe": ac_detalhe,
+        "meta": { "resp": f"Resp.: {_nome(ac_resp)}" if ac_resp else "", "data": _fmt_date(ac_dt) }
+    }
+    # ---------- Nó: Materiais ----------
+    qs_mat = PreCalculoMaterial.objects.filter(precalculo=prec)
+    tem_preco_mat = qs_mat.filter(preco_kg__isnull=False).exists()
+    compras_atraso_mat = getattr(prec, "compras_em_atraso", False)
+    status_materiais = "ok" if tem_preco_mat else "pendente"
+    if compras_atraso_mat: status_materiais = "atraso"
+
+    # tenta alguma pista de resp/data em um material qualquer (último atualizado)
+    mat_last = qs_mat.order_by("-id").first()
+    mat_resp = _first_attr(mat_last, "responsavel", "usuario", "comprador", "atualizado_por", "criado_por")
+    mat_dt   = _first_attr(mat_last, "atualizado_em", "modificado_em", "criado_em", "data")
+
+    no_materiais = {
+        "titulo": "Materiais",
+        "icone": "bi-box",
+        "status": status_materiais,
+        "detalhe": "Com preço" if tem_preco_mat else "Sem preço",
+        "meta": { "resp": f"Resp.: {_nome(mat_resp)}" if mat_resp else "", "data": _fmt_date(mat_dt) }
+    }
+
+    # ---------- Nó: Serviços Externos ----------
+    qs_serv = PreCalculoServicoExterno.objects.filter(precalculo=prec)
+    total_serv = qs_serv.count()
+    com_preco_serv = qs_serv.filter(preco_kg__gt=0).count()
+    compras_atraso_serv = getattr(prec, "compras_em_atraso", False)
+    status_servicos = "ok" if (total_serv == 0 or com_preco_serv == total_serv) else "andamento"
+    if total_serv and com_preco_serv == 0: status_servicos = "pendente"
+    if compras_atraso_serv: status_servicos = "atraso"
+
+    serv_last = qs_serv.order_by("-id").first()
+    serv_resp = _first_attr(serv_last, "responsavel", "usuario", "comprador", "atualizado_por", "criado_por")
+    serv_dt   = _first_attr(serv_last, "atualizado_em", "modificado_em", "criado_em", "data")
+
+    no_servicos = {
+        "titulo": "Serviços Externos",
+        "icone": "bi-tools",
+        "status": status_servicos,
+        "detalhe": f"{com_preco_serv}/{total_serv} com preço" if total_serv else "Sem serviços",
+        "meta": { "resp": f"Resp.: {_nome(serv_resp)}" if serv_resp else "", "data": _fmt_date(serv_dt) }
+    }
+
+    # ---------- Nó: Roteiro ----------
+    roteiro_obj = getattr(prec, "roteiro_item", None)  # OneToOne do PreCalculo
+
+    if roteiro_obj and getattr(roteiro_obj, "observacoes", None):
+        rot_status  = "ok"
+        rot_detalhe = roteiro_obj.observacoes[:60]  # mostra os 60 primeiros caracteres
+    else:
+        rot_status  = "pendente"
+        rot_detalhe = "Não definido"
+
+    rot_resp = _first_attr(roteiro_obj, "usuario", "responsavel", "criado_por")
+    rot_dt   = _first_attr(roteiro_obj, "data_assinatura", "atualizado_em", "criado_em")
+
+    no_roteiro = {
+        "titulo": "Roteiro",
+        "icone": "bi-diagram-3",
+        "status": rot_status,
+        "detalhe": rot_detalhe,
+        "meta": {
+            "resp": f"Resp.: {_nome(rot_resp)}" if rot_resp else "",
+            "data": _fmt_date(rot_dt),
+        },
+    }
+
+    # --- Nó: Avaliação Técnica (usa conclusao_tec preenchido) ---
+    aval = getattr(prec, "avaliacao_tecnica_item", None)  # OneToOne no PreCalculo
+
+    # concluído se houver qualquer valor nas choices
+    if aval and getattr(aval, "conclusao_tec", None):
+        aval_status  = "ok"
+        # mostra o rótulo amigável da choice
+        aval_detalhe = getattr(aval, "get_conclusao_tec_display", lambda: str(aval.conclusao_tec))()
+    else:
+        aval_status  = "pendente"
+        aval_detalhe = "Pendente"
+
+    # meta: quem e quando (prioriza assinatura)
+    aval_resp = _first_attr(aval, "usuario", "responsavel", "atualizado_por", "criado_por")
+    aval_dt   = _first_attr(aval, "data_assinatura", "assinado_em", "atualizado_em", "criado_em")
+
+    no_avaliacao = {
+        "titulo": "Avaliação Técnica",
+        "icone": "bi-gear",
+        "status": aval_status,
+        "detalhe": aval_detalhe,
+        "meta": {
+            "resp": f"Resp.: {_nome(aval_resp)}" if aval_resp else "",
+            "data": _fmt_date(aval_dt),
+        },
+    }
+
+
+  # ---------- Nó: Desenvolvimento (Pré-Cálculo) ----------
+    # pega o objeto correto: PreCalculo → desenvolvimento_item
+    dev_obj = getattr(prec, "desenvolvimento_item", None)  # OneToOne do pré-cálculo
+
+    # lê a flag booleana do próprio Desenvolvimento
+    dev_val = None
+    if dev_obj is not None:
+        if hasattr(dev_obj, "completo"):
+            dev_val = getattr(dev_obj, "completo")
+        elif hasattr(dev_obj, "todas_informacoes_preenchidas"):
+            # fallback se o nome for diferente no seu banco
+            dev_val = getattr(dev_obj, "todas_informacoes_preenchidas")
+
+    # define status e detalhe
+    if dev_val is True:
+        dev_status  = "ok"
+        dev_detalhe = "✔️ Sim"
+    elif dev_val is False:
+        dev_status  = "pendente"
+        dev_detalhe = "❌ Não"
+    else:
+        dev_status  = "pendente"
+        dev_detalhe = "—"
+
+    # meta (quem e quando) – o seu modelo usa campos padrão de auditoria
+    dev_resp = _first_attr(dev_obj, "usuario", "responsavel", "responsavel_tecnico", "criado_por")
+    dev_dt   = _first_attr(dev_obj, "data_assinatura", "atualizado_em", "criado_em", "data_abertura")
+
+    no_desenvolvimento = {
+        "titulo": "Desenvolvimento",
+        "icone": "bi-rocket-takeoff",
+        "status": dev_status,
+        "detalhe": dev_detalhe,
+        "meta": {
+            "resp": f"Resp.: {_nome(dev_resp)}" if dev_resp else "",
+            "data": _fmt_date(dev_dt),
+        },
+    }
+
+
+
+
+    # ---------- Nó: Preço Final ----------
+    preco_manual = getattr(prec, "preco_manual", None)
+    preco_selecionado = getattr(prec, "preco_selecionado", None)
+    preco_ok = ((preco_manual or 0) > 0) or bool(preco_selecionado)
+    preco_resp = _first_attr(prec, "atualizado_por", "usuario", "criado_por")
+    preco_dt   = _first_attr(prec, "atualizado_em", "modificado_em", "criado_em")
+    no_preco = {
+        "titulo": "Preço Final",
+        "icone": "bi-currency-dollar",
+        "status": "ok" if preco_ok else "pendente",
+        "detalhe": "Definido" if preco_ok else "Indefinido",
+        "meta": { "resp": f"Resp.: {_nome(preco_resp)}" if preco_resp else "", "data": _fmt_date(preco_dt) }
+    }
+
+    # ---------- Nó: Proposta ----------
+    data_envio = getattr(cot, "data_envio_proposta", None) if cot else None
+    prop_resp = _first_attr(cot, "responsavel_envio", "responsavel", "usuario_responsavel")
+    no_proposta = {
+        "titulo": "Proposta",
+        "icone": "bi-envelope-paper",
+        "status": "ok" if data_envio else "pendente",
+        "detalhe": _fmt_date(data_envio) if data_envio else "Sem envio",
+        "meta": { "resp": f"Resp.: {_nome(prop_resp)}" if prop_resp else "", "data": _fmt_date(data_envio) }
+    }
+
+    fluxo = [
+        no_cotacao,
+        no_analise,
+        no_avaliacao,
+        no_materiais,
+        no_servicos,
+        no_roteiro,
+        no_desenvolvimento,
+        no_preco,
+        no_proposta,
+    ]
+
+    return JsonResponse({"ok": True, "fluxo": fluxo})
+

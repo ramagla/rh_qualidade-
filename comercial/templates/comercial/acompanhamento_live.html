@@ -1,0 +1,273 @@
+{# templates/comercial/precalculo/acompanhamento_live.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Acompanhamento do Pré-Cálculo (tempo real){% endblock %}
+
+{% block content %}
+
+<!-- Banner -->
+<div class="welcome-banner d-flex align-items-center justify-content-between rounded-4 px-3 px-md-4 py-3 mb-3"
+     style="background: linear-gradient(90deg,#1e90ff 0%, #00c6ff 100%); color:#fff;">
+  <div class="d-flex align-items-center gap-3">
+    <i class="bi bi-activity fs-1"></i>
+    <div>
+      <h5 class="mb-0">{{ titulo }}</h5>
+      <small class="opacity-75">{{ descricao }}</small>
+    </div>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <a href="{% url 'comercial_home' %}" class="btn btn-outline-light btn-sm">
+      <i class="bi bi-house"></i> Dashboard
+    </a>
+  </div>
+</div>
+
+<!-- Filtro -->
+<form class="row g-2 align-items-end d-print-none mb-3" id="form-filtro">
+  <div class="col-md-5">
+    <label class="form-label mb-1"><i class="bi bi-clipboard2 me-1"></i> Cotação</label>
+    <select id="sel-cotacao" class="form-select">
+      <option value="">— Selecione —</option>
+      {% for c in cotacoes %}
+        <option value="{{ c.id }}">#{{ c.numero }} — {{ c.cliente.razao_social|default:"" }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-5">
+    <label class="form-label mb-1"><i class="bi bi-file-earmark-text me-1"></i> Pré-Cálculo</label>
+    <select id="sel-precalc" class="form-select" disabled>
+      <option value="">— selecione a cotação primeiro —</option>
+    </select>
+  </div>
+  <div class="col-md-2 d-grid">
+    <button type="button" id="btn-ver" class="btn btn-primary" disabled>
+      <i class="bi bi-eye"></i> Ver fluxo
+    </button>
+  </div>
+</form>
+
+<!-- Card: Progresso Geral -->
+<div class="card shadow-sm mb-3 d-none" id="card-progresso">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <strong><i class="bi bi-clipboard-check me-1"></i> Conclusão geral</strong>
+      <span class="badge rounded-pill text-bg-primary" id="pct-label">0%</span>
+    </div>
+    <div class="progress" role="progressbar" aria-label="Progresso geral" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar" id="pct-bar" style="width:0%"></div>
+    </div>
+    <small class="text-muted d-block mt-1" id="pct-hint">Aguardando seleção…</small>
+  </div>
+</div>
+
+<!-- Fluxo (vertical) -->
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div id="fluxo-container" class="flow-lane flow-vertical">
+      <div class="text-muted small">Selecione uma Cotação e um Pré-Cálculo para visualizar o fluxo.</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .flow-lane{ position:relative; padding:16px; }
+
+  .flow-vertical{
+    display:flex;
+    flex-direction:column;
+    gap:40px;                 /* espaçamento maior entre nós */
+    max-width: 720px;         /* largura confortável */
+    margin: 0 auto;           /* centraliza */
+    padding: 10px 0 20px;
+  }
+
+  .flow-node{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;      /* 🔹 empurra meta para a direita */
+  gap:1rem;
+  padding:1rem 1.25rem;
+  border-radius:1rem;
+  background:#fff;
+  border:1px solid #e6e9ef;
+  box-shadow:0 .25rem .75rem rgba(0,0,0,.06);
+  position:relative;
+}
+
+.flow-node .text{ flex:1; min-width:0; }   /* título/detalhe ocupam o meio */
+.meta-right{
+  margin-left:1rem;
+  font-size:.8rem; opacity:.8; line-height:1.1;
+  white-space:nowrap;
+}
+.meta-right .meta-line{ }
+@media (max-width: 768px){
+  .flow-node{ flex-direction:column; align-items:flex-start; }
+  .meta-right{ align-self:stretch; text-align:left; white-space:normal; }
+}
+
+  .flow-node .icon{
+    width:44px; height:44px; border-radius:9999px;
+    display:grid; place-items:center;
+    background:#f1f5f9; color:#334155;
+    font-size:1.25rem; flex:0 0 44px;
+  }
+  .flow-node .title{ font-weight:600; line-height:1.1; }
+  .flow-node .detail{ font-size:.8rem; opacity:.8; }
+
+  /* Conector VERTICAL com seta */
+  .flow-node::after{
+    content:"";
+    position:absolute;
+    left:50%; transform:translateX(-50%);
+    top:100%;
+    width:2px; height:32px;
+    background:#cbd5e1;
+  }
+  .flow-node::before{
+    content:"";
+    position:absolute;
+    left:50%; transform:translateX(-50%);
+    top:calc(100% + 32px - 6px);
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-top:6px solid #cbd5e1;   /* seta */
+  }
+  .flow-node:last-child::after,
+  .flow-node:last-child::before{ display:none; }
+
+  /* Estados */
+  .state-ok      { border-color:#22c55e; }
+  .state-ok .icon{ background:#dcfce7; color:#166534; }
+
+  .state-pendente      { border-color:#e2e8f0; }
+
+  .state-andamento      { border-color:#60a5fa; }
+  .state-andamento .icon{ background:#dbeafe; color:#1e40af; }
+
+  .state-amostras       { border-color:#facc15; }
+  .state-amostras .icon { background:#fef9c3; color:#92400e; }
+
+  .state-reprovado      { border-color:#ef4444; }
+  .state-reprovado .icon{ background:#fee2e2; color:#7f1d1d; }
+
+  .state-atraso         { border-color:#fb923c; }
+  .state-atraso .icon   { background:#ffedd5; color:#7c2d12; }
+</style>
+
+<script>
+(function(){
+  const $cot   = document.getElementById('sel-cotacao');
+  const $pre   = document.getElementById('sel-precalc');
+  const $btn   = document.getElementById('btn-ver');
+  const $lane  = document.getElementById('fluxo-container');
+
+  const $card  = document.getElementById('card-progresso');
+  const $bar   = document.getElementById('pct-bar');
+  const $label = document.getElementById('pct-label');
+  const $hint  = document.getElementById('pct-hint');
+
+  // pesos para % de conclusão
+  // ok=1, amostras=0.75, andamento=0.5, atraso=0.25, pendente/reprovado=0
+  const PESOS = {
+    ok: 1, amostras: 0.75, andamento: 0.5, atraso: 0.25, pendente: 0, reprovado: 0
+  };
+
+  function htmlNode(no){
+  const state = 'state-' + (no.status || 'pendente');
+  const metaResp = no.meta?.resp || "";
+  const metaData = no.meta?.data || "";
+  const metaHtml = (metaResp || metaData) ? `
+    <div class="meta-right text-end">
+      ${metaResp ? `<div class="meta-line">${metaResp}</div>` : ""}
+      ${metaData ? `<div class="meta-line">${metaData}</div>` : ""}
+    </div>` : "";
+  return `
+    <div class="flow-node ${state}">
+      <div class="icon"><i class="bi ${no.icone||'bi-circle'}"></i></div>
+      <div class="text">
+        <div class="title">${no.titulo||''}</div>
+        <div class="detail">${no.detalhe||''}</div>
+      </div>
+      ${metaHtml}
+    </div>
+  `;
+}
+
+
+  function calcConclusao(fluxo){
+    if(!fluxo || !fluxo.length) return 0;
+    let soma = 0;
+    fluxo.forEach(n => { soma += (PESOS[n.status] ?? 0); });
+    const pct = Math.round((soma / fluxo.length) * 100);
+    return Math.max(0, Math.min(100, pct));
+  }
+
+  function renderFluxo(data){
+    if(!data || !data.fluxo || !data.fluxo.length){
+      $lane.innerHTML = '<div class="text-muted small">Sem dados para exibir.</div>';
+      $card.classList.add('d-none');
+      return;
+    }
+    $lane.innerHTML = data.fluxo.map(htmlNode).join('');
+
+    // Atualiza progresso geral
+    const pct = calcConclusao(data.fluxo);
+    $bar.style.width = pct + '%';
+    $label.textContent = pct + '%';
+    $hint.textContent  = 'Com base no status de todas as etapas do fluxo.';
+    $card.classList.remove('d-none');
+  }
+
+  // Carrega pré-cálculos ao escolher a cotação
+  $cot.addEventListener('change', async function(){
+    $pre.innerHTML = '<option value="">Carregando…</option>';
+    $pre.disabled = true; $btn.disabled = true;
+
+    const id = this.value;
+    if(!id){ 
+      $pre.innerHTML = '<option value="">— selecione a cotação primeiro —</option>';
+      return;
+    }
+    try{
+      const resp = await fetch(`{% url 'ajax_precalculos_por_cotacao' 0 %}`.replace('/0/','/'+id+'/'));
+      const json = await resp.json();
+      if(json.ok){
+        const opts = ['<option value="">— selecione —</option>'];
+        json.precalculos.forEach(p => opts.push(`<option value="${p.id}">${p.label}</option>`));
+        $pre.innerHTML = opts.join('');
+        $pre.disabled = false;
+      }else{
+        $pre.innerHTML = '<option value="">Erro ao carregar</option>';
+      }
+    }catch(e){
+      $pre.innerHTML = '<option value="">Falha de rede</option>';
+    }
+  });
+
+  // Habilita botão ao escolher o pré-cálculo
+  $pre.addEventListener('change', function(){
+    $btn.disabled = !this.value;
+  });
+
+  // Buscar e renderizar status
+  async function loadStatus(){
+    const id = $pre.value;
+    if(!id){ return; }
+    try{
+      const resp = await fetch(`{% url 'ajax_status_precalculo' 0 %}`.replace('/0/','/'+id+'/'));
+      const json = await resp.json();
+      if(json.ok){ renderFluxo(json); }
+    }catch(e){ /* silent */ }
+  }
+
+  // Botão "Ver fluxo"
+  $btn.addEventListener('click', loadStatus);
+
+  // “Tempo real” simples
+  setInterval(loadStatus, 12000);
+})();
+</script>
+
+{% endblock %}

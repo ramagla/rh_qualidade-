@@ -33,10 +33,33 @@
 </style>
 
 <div class="container py-4">
-  <h4 class="mb-4 text-primary"><i class="bi bi-bar-chart-fill me-2"></i>Dashboard Comercial</h4>
-<a href="{% url 'mapa_clientes' %}" class="btn btn-outline-primary ms-2 mb-4">
-  <i class="bi bi-map-fill me-1"></i> Mapa de Clientes por Região
-</a>
+<h4 class="mb-3 text-primary"><i class="bi bi-bar-chart-fill me-2"></i>Dashboard Comercial</h4>
+
+<!-- Banner no padrão Metrologia/Qualidade -->
+<div class="welcome-banner d-flex align-items-center justify-content-between rounded-4 px-3 px-md-4 py-3 mb-4"
+     style="background: linear-gradient(90deg,#1e90ff 0%, #00c6ff 100%); color:#fff;">
+  <div class="d-flex align-items-center gap-3">
+    <i class="bi bi-bar-chart-steps fs-1"></i>
+    <div>
+      <h5 class="mb-0">Bem-vindo ao Painel Comercial</h5>
+      <small class="opacity-75">Acompanhe o fluxo de Pré-Cálculo e visualize os principais indicadores.</small>
+    </div>
+  </div>
+
+  <!-- Botões rápidos (atalhos) -->
+  <div class="d-flex align-items-center gap-2">
+    <a href="{% url 'acompanhamento_precalculo' %}"
+       class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm">
+      <i class="bi bi-graph-up fs-5"></i><span>Acompanhamento do Pré-Cálculo</span>
+    </a>
+    <a href="{% url 'mapa_clientes' %}"
+       class="btn btn-info d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm text-white">
+      <i class="bi bi-map fs-5"></i><span>Mapa de Clientes</span>
+    </a>
+  </div>
+</div>
+
+
 
   <form method="get" class="row g-3 align-items-end mb-4 px-2">
   <div class="col-xl-3 col-md-4 col-sm-6">

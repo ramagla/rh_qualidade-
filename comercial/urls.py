@@ -127,7 +127,20 @@ urlpatterns = [
     path("faturamento/<int:pk>/excluir/", faturamento_views.excluir_faturamento, name="excluir_faturamento"),
     path("faturamento/relatorio/", faturamento_views.relatorio_faturamento, name="relatorio_faturamento"),
     path("faturamento/relatorio-duplicatas/", faturamento_views.relatorio_duplicatas, name="relatorio_duplicatas"),
+        path('dashboard/precalculo/tempo-real/', 
+            dashboard_views.acompanhamento_precalculo, 
+            name='acompanhamento_precalculo'),
 
+        # AJAX: carregar pré-cálculos de uma cotação
+        path('dashboard/precalculo/ajax/precalculos/<int:cotacao_id>/',
+            dashboard_views.ajax_precalculos_por_cotacao,
+            name='ajax_precalculos_por_cotacao'),
+
+        # AJAX: status por etapa (fluxo)
+        path('dashboard/precalculo/ajax/status/<int:pk>/',
+            dashboard_views.ajax_status_precalculo,
+            name='ajax_status_precalculo'),
+    
 
      # Metas de Faturamento (CRUD)
     path("metas/", metas_views.lista_metas, name="lista_metas"),

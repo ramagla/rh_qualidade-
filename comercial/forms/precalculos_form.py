@@ -495,6 +495,12 @@ class AnaliseComercialForm(forms.ModelForm):
         # Valor inicial para status
         self.fields['status'].initial = 'andamento'
 
+        self.fields['necessita_ferramental'].required = False
+        self.fields['necessita_ferramental'].widget = forms.Select(
+            choices=[('', '---------'), (True, 'Sim'), (False, 'Não')],
+            attrs={'class': 'form-select form-select-sm'}
+        )
+
         # Capacidade produtiva com select customizado
         self.fields['capacidade_produtiva'].required = False
         self.fields['capacidade_produtiva'].widget = forms.Select(
@@ -609,8 +615,10 @@ class DesenvolvimentoForm(forms.ModelForm):
         fields = ["completo", "consideracoes"]
 
         widgets = {
-            "completo": forms.RadioSelect(choices=[(True, "Sim"), (False, "Não")]),
-            "consideracoes": CKEditor5Widget(config_name="default"),
+        "completo": forms.RadioSelect(
+                choices=[("", "---------"), (True, "Sim"), (False, "Não")]
+            ),            
+        "consideracoes": CKEditor5Widget(config_name="default"),
         }
 
 class PreCalculoForm(forms.ModelForm):

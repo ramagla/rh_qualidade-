@@ -1,5 +1,6 @@
 # email_cotacao_utils.py
 
+import re
 from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
@@ -430,6 +431,9 @@ def disparar_emails_cotacao_servicos(request, precalc):
 # ------------------------------------------------------
 # View pública de resposta de cotação (Serviço em lote)
 # ------------------------------------------------------
+import re
+from decimal import Decimal, InvalidOperation
+
 def responder_cotacao_servico_lote(request, pk):
     """
     View pública para fornecedores responderem à cotação de serviços (em lote).
@@ -486,8 +490,8 @@ def responder_cotacao_servico_lote(request, pk):
     if not servicos.filter(Q(preco_kg__isnull=True) | Q(preco_kg=0)).exists():
         return render(request, "cotacoes/cotacao_servico_lote_finalizada.html", {"servico": servico})
 
-    # responder_cotacao_servico_lote
-    ATIVOS_PADRAO = ["Ativo", "Em Homologação", "Em Homologacao"]  # tolera sem acento
+    # Fornecedores válidos
+    ATIVOS_PADRAO = ["Ativo", "Em Homologação", "Em Homologacao"]
     STATUS_OK = ["Qualificado", "Qualificado Condicional"]
 
     fornecedores = (
@@ -495,7 +499,7 @@ def responder_cotacao_servico_lote(request, pk):
         .filter(
             ativo__in=ATIVOS_PADRAO,
             status__in=STATUS_OK,
-            produto_servico="Trat. Superficial"  # bate 1:1 com choices do modelo
+            produto_servico="Trat. Superficial"
         )
         .order_by("nome")
     )
@@ -507,7 +511,7 @@ def responder_cotacao_servico_lote(request, pk):
     if request.method == "POST":
         houve_alteracao = False
 
-        # 1) Salvar Observações (CKEditor 5 envia HTML; não usar .strip())
+        # 1) Observações gerais (CKEditor 5 envia HTML)
         obs_text = request.POST.get("observacoes_gerais")
         if servico.precalculo is not None and obs_text is not None:
             atual = servico.precalculo.observacoes_servicos
@@ -516,54 +520,60 @@ def responder_cotacao_servico_lote(request, pk):
                 servico.precalculo.save(update_fields=["observacoes_servicos"])
                 houve_alteracao = True
 
-        # 2) Salvar linhas de serviços
-        for i, _ in enumerate(servicos):
-            sev_id = request.POST.get(f"id_{i}")
+        # 2) Salvar linhas de serviços (todos os índices enviados)
+        post = request.POST
+        idxs = sorted({
+            int(m.group(1))
+            for k in post.keys()
+            for m in [re.match(r"^id_(\d+)$", k)]
+            if m
+        })
+
+        def _to_decimal_br(value, casas="0.01"):
+            s = (value or "").strip()
+            if not s:
+                return None
+            s = "".join(ch for ch in s if ch.isdigit() or ch in ",.")
+            try:
+                if "," in s and "." in s:
+                    if s.rfind(",") > s.rfind("."):
+                        s = s.replace(".", "").replace(",", ".")
+                    else:
+                        s = s.replace(",", "")
+                elif "," in s:
+                    s = s.replace(",", ".")
+                return Decimal(s).quantize(Decimal(casas))
+            except (InvalidOperation, ValueError):
+                return None
+
+        for i in idxs:
+            sev_id = post.get(f"id_{i}")
             if not sev_id:
                 continue
-
             try:
-                sev = PreCalculoServicoExterno.objects.get(id=sev_id)
-            except PreCalculoServicoExterno.DoesNotExist:
+                sev = PreCalculoServicoExterno.objects.get(pk=int(sev_id))
+            except (PreCalculoServicoExterno.DoesNotExist, ValueError, TypeError):
                 continue
 
-            sev.fornecedor_id = request.POST.get(f"fornecedor_{i}") or None
+            sev.fornecedor_id = post.get(f"fornecedor_{i}") or None
+            sev.icms          = _to_decimal_br(post.get(f"icms_{i}"), "0.01")
+            sev.lote_minimo   = _to_decimal_br(post.get(f"lote_minimo_{i}"), "0.01")
+            sev.preco_kg      = _to_decimal_br(post.get(f"preco_kg_{i}"), "0.0001")
 
-            # Normalizador local pt-BR → Decimal
-            def _dec(v, casas="0.01"):
-                if v in (None, ""):
-                    return None
-                s = str(v).strip().replace(" ", "")
-                try:
-                    if "," in s and "." in s:
-                        # pt-BR 1.234,56 → remove milhares "." e troca "," por "."
-                        if s.rfind(",") > s.rfind("."):
-                            s = s.replace(".", "").replace(",", ".")
-                        else:
-                            # en-US 1,234.56 → remove vírgulas de milhar
-                            s = s.replace(",", "")
-                    elif "," in s:
-                        s = s.replace(",", ".")
-                    return Decimal(s).quantize(Decimal(casas))
-                except (InvalidOperation, ValueError):
-                    return None
+            prazo_raw = (post.get(f"entrega_dias_{i}") or "").strip()
+            apenas_digitos = "".join(ch for ch in prazo_raw if ch.isdigit())
+            sev.entrega_dias = int(apenas_digitos) if apenas_digitos else None
 
-            sev.icms         = _dec(request.POST.get(f"icms_{i}"), "0.01")
-            sev.lote_minimo  = _dec(request.POST.get(f"lote_minimo_{i}"), "0.01")
-
-            entrega_raw      = request.POST.get(f"entrega_dias_{i}")
-            sev.entrega_dias = int(entrega_raw) if (entrega_raw and entrega_raw.isdigit()) else None
-
-            sev.preco_kg     = _dec(request.POST.get(f"preco_kg_{i}"), "0.0001")
-
-            if sev.preco_kg:
+            if sev.preco_kg is not None and sev.preco_kg > 0:
                 sev.status = "ok"
 
-            sev.save()
+            sev.save(update_fields=[
+                "fornecedor", "icms", "lote_minimo", "preco_kg", "entrega_dias", "status"
+            ])
             houve_alteracao = True
 
         if houve_alteracao:
-            # Alerta + e-mail
+            # Dispara alerta + e-mails
             try:
                 config = AlertaConfigurado.objects.get(tipo="RESPOSTA_COTACAO_SERVICO", ativo=True)
                 destinatarios = set(config.usuarios.all())
@@ -582,7 +592,6 @@ def responder_cotacao_servico_lote(request, pk):
                         referencia_id=servico.id,
                         url_destino=request.path,
                         exige_confirmacao=getattr(config, "exigir_confirmacao_modal", False),
-
                     )
 
                 emails = [u.email for u in destinatarios if getattr(u, "email", None)]
@@ -643,6 +652,5 @@ def responder_cotacao_servico_lote(request, pk):
             "codigo": codigo,
         }
     )
-
 
 

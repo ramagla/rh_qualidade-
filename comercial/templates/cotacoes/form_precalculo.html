@@ -63,11 +63,13 @@
         </li>
       {% endif %}
       
-      <li class="nav-item" role="presentation">
-<a class="nav-link bg-ferramentas text-dark" id="tab-ferramentas" data-bs-toggle="tab" href="#pane-ferramentas" role="tab">
-          <i class="bi bi-hammer me-1"></i> Ferramentas
-        </a>
-      </li>
+     {% if precalc.analise_comercial_item and precalc.analise_comercial_item.necessita_ferramental %}
+  <li class="nav-item" role="presentation">
+    <a class="nav-link bg-ferramentas text-dark" id="tab-ferramentas" data-bs-toggle="tab" href="#pane-ferramentas" role="tab">
+      <i class="bi bi-hammer me-1"></i> Ferramentas
+    </a>
+  </li>
+{% endif %}
       <li class="nav-item" role="presentation">
 <a class="nav-link bg-roteiro text-dark" id="tab-roteiro" data-bs-toggle="tab" href="#pane-roteiro" role="tab">
           <i class="bi bi-diagram-3-fill me-1"></i> Roteiro
@@ -113,9 +115,12 @@
         </div>
       {% endif %}
 
-      <div class="tab-pane fade bg-ferramentas" id="pane-ferramentas" role="tabpanel">
-        {% include "cotacoes/tabs/_tab_ferramentas.html" %}
-      </div>
+      {% if precalc.analise_comercial_item and precalc.analise_comercial_item.necessita_ferramental %}
+  <div class="tab-pane fade bg-ferramentas" id="pane-ferramentas" role="tabpanel">
+    {% include "cotacoes/tabs/_tab_ferramentas.html" %}
+  </div>
+{% endif %}
+
       <div class="tab-pane fade bg-roteiro" id="pane-roteiro" role="tabpanel">
         {% include "cotacoes/tabs/_tab_roteiro.html" %}
       </div>
