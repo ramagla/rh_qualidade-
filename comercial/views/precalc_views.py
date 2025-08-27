@@ -231,21 +231,16 @@ def editar_precaculo(request, pk):
         # precalc_views.py (trecho do POST/aba="servicos")
         elif aba == "servicos" and (
             "form_servicos_submitted" in request.POST or
-            any(k.startswith("sev-") for k in request.POST)
+            any(k.startswith("fs_sev-") for k in request.POST)
         ):
-            total_serv = precalc.servicos.count()
-            faltam = precalc.servicos.filter(
-                Q(preco_kg__isnull=True) | Q(preco_kg=0)
-            ).exists()
-            # Considera NÃO respondido quando não há serviços OU quando ainda faltam preços
-            servicos_respondidos = (total_serv > 0) and (not faltam)
-
+            print(f"[VIEW][SERVICOS][PC={precalc.id}] aba='servicos' recebida com {len(request.POST.keys())} campos")
             salvo, _, fs_sev = processar_aba_servicos(
                 request,
                 precalc,
                 servicos_respondidos=servicos_respondidos,
                 form_precalculo=form_precalculo,
             )
+            print(f"[VIEW][SERVICOS][PC={precalc.id}] retorno salvo={salvo}")
 
 
 

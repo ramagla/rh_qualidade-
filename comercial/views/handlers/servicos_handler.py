@@ -145,7 +145,9 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
             form.fields["peso_bruto"].initial = instancia.peso_bruto
 
     if request.method == "POST" and "form_servicos_submitted" in request.POST:
-        print(f"[SERVICOS][CHK][PC={precalc.id}] form_servicos_submitted=True")
+        print(f"[SERVICOS][POST][PC={precalc.id}] submetido com {len(request.POST.keys())} campos")
+        print(f"[SERVICOS][POST][PC={precalc.id}] keys_sample={list(request.POST.keys())[:25]}")
+
         valid = fs_sev.is_valid()
         print(f"[SERVICOS][CHK][PC={precalc.id}] fs_sev.is_valid()={valid}")
 
@@ -156,6 +158,9 @@ def processar_aba_servicos(request, precalc, submitted=False, servicos_respondid
         if valid:
             fs_sev.save()
             print(f"[SERVICOS][SAVE][PC={precalc.id}] formset_salvo=True")
+            amostra = list(precalc.servicos.values("id","lote_minimo","entrega_dias","fornecedor_id","icms","preco_kg")[:5])
+            print(f"[SERVICOS][SAVE][PC={precalc.id}] amostra={amostra}")
+
 
             if form_precalculo and form_precalculo.is_valid():
                 obs = form_precalculo.cleaned_data.get("observacoes_servicos")
