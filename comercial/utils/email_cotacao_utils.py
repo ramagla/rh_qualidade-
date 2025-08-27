@@ -653,4 +653,3 @@ def responder_cotacao_servico_lote(request, pk):
         }
     )
 
-

@@ -25,21 +25,26 @@ from decimal import Decimal, InvalidOperation
 from django import forms
 from django.forms import HiddenInput, TextInput
 
+from decimal import Decimal, InvalidOperation
+from django import forms
+from django.forms import HiddenInput, TextInput
+
 class PreCalculoMaterialForm(forms.ModelForm):
     class Meta:
         model = PreCalculoMaterial
-        fields = '__all__'
-        exclude = ('cotacao','created_at','updated_at','created_by','updated_by',)
+        fields = "__all__"
+        exclude = ("cotacao", "created_at", "updated_at", "created_by", "updated_by",)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # ——— Helpers ———
         def step_for(field_name, default="any"):
             f = self._meta.model._meta.get_field(field_name)
             places = getattr(f, "decimal_places", None)
-            return f"0.{''.join('0' for _ in range(places-1))}1" if places and places > 0 else default
+            return f"0.{''.join('0' for _ in range(max(0, places-1)))}1" if places and places > 0 else default
 
-        def to_plain_str(value, field_name):
+        def to_plain_str(value, field_name, right_align=False):
             if value in (None, ""):
                 return ""
             f = self._meta.model._meta.get_field(field_name)
@@ -47,47 +52,66 @@ class PreCalculoMaterialForm(forms.ModelForm):
             q = Decimal(1).scaleb(-places)
             try:
                 d = Decimal(str(value)).quantize(q)
-                return f"{d:.{places}f}"
+                s = f"{d:.{places}f}"
+                return s
             except Exception:
                 return ""
 
-        self.fields['roteiro'].required = False
-        self.fields['roteiro'].widget = HiddenInput()
+        # ——— Campos não obrigatórios / visuais ———
+        self.fields["roteiro"].required = False
+        self.fields["roteiro"].widget = HiddenInput()
 
-        self.fields['codigo'].required = False
-        self.fields['codigo'].widget.attrs.update({
-            'class': 'form-control form-control-sm codigo-input',
-            'readonly': 'readonly',
+        self.fields["codigo"].required = False
+        self.fields["codigo"].widget.attrs.update({
+            "class": "form-control form-control-sm codigo-input",
+            "readonly": "readonly",
         })
 
-        self.fields['status'].required = False
-        self.fields['status'].widget.attrs.update({'class': 'form-control form-control-sm'})
+        if "status" in self.fields:
+            self.fields["status"].required = False
+            self.fields["status"].widget.attrs.update({"class": "form-control form-control-sm"})
 
-        campos = ['lote_minimo','entrega_dias','fornecedor','icms',
-                  'preco_kg','desenvolvido_mm','peso_liquido','peso_bruto','peso_bruto_total']
+        campos = [
+            "lote_minimo", "entrega_dias", "fornecedor", "icms", "preco_kg",
+            "desenvolvido_mm", "peso_liquido", "peso_bruto", "peso_bruto_total",
+        ]
         for campo in campos:
             if campo in self.fields:
                 widget = self.fields[campo].widget
                 is_select = isinstance(widget, forms.Select)
-                self.fields[campo].required = False
-                self.fields[campo].widget.attrs.update({
-                    'class': 'form-select form-select-sm' if is_select else 'form-control form-control-sm'
-                })
 
-        # Evita notação científica no browser: usa TextInput nos campos decimais técnicos
-        for campo in ['desenvolvido_mm','peso_liquido','peso_bruto','peso_bruto_total']:
+                # Lote mínimo como NumberInput (duas casas) alinhado à direita
+                if campo == "lote_minimo":
+                    self.fields[campo].widget = forms.NumberInput(attrs={
+                        "class": "form-control form-control-sm text-end",
+                        "placeholder": "0,00",
+                        "step": "0.01",
+                        "min": "0",
+                        "inputmode": "decimal",
+                    })
+                else:
+                    self.fields[campo].widget.attrs.update({
+                        "class": "form-select form-select-sm" if is_select else "form-control form-control-sm"
+                    })
+                self.fields[campo].required = False
+
+        # Anti-notação científica para decimais técnicos
+        for campo in ["desenvolvido_mm", "peso_liquido", "peso_bruto", "peso_bruto_total"]:
             if campo in self.fields:
                 self.fields[campo].widget = TextInput(attrs={
-                    'class': ('form-control form-control-sm text-end' if campo.endswith('total')
-                              else 'form-control form-control-sm'),
-                    'inputmode': 'decimal',
-                    'step': step_for(campo)
+                    "class": ("form-control form-control-sm text-end" if campo.endswith("total")
+                              else "form-control form-control-sm"),
+                    "inputmode": "decimal",
+                    "step": step_for(campo),
                 })
 
-        # Seta valores iniciais como string decimal plana
+        # Inicial plano (string) para evitar E-notation no browser
         if not self.is_bound and self.instance and self.instance.pk:
-            for campo in ['peso_liquido','peso_bruto','peso_bruto_total','desenvolvido_mm']:
+            for campo in ["peso_liquido", "peso_bruto", "peso_bruto_total", "desenvolvido_mm"]:
                 self.initial[campo] = to_plain_str(getattr(self.instance, campo, None), campo)
+
+        # 🔎 Debug útil no prod
+        print(f"[MP-FORM][INIT] pk={getattr(self.instance,'pk',None)} bound={self.is_bound}", flush=True)
 
     def has_changed(self):
         changed = super().has_changed()
@@ -101,19 +125,46 @@ class PreCalculoMaterialForm(forms.ModelForm):
         return changed
 
     def clean(self):
-        cleaned_data = super().clean()
-        campos_decimal = ['lote_minimo','entrega_dias','icms','preco_kg',
-                          'peso_liquido','peso_bruto','peso_bruto_total','desenvolvido_mm']
+        cleaned = super().clean()
+
+        # ——— Decimais ———
+        campos_decimal = [
+            "lote_minimo", "icms", "preco_kg",
+            "peso_liquido", "peso_bruto", "peso_bruto_total", "desenvolvido_mm",
+        ]
         for campo in campos_decimal:
-            valor = cleaned_data.get(campo)
+            valor = cleaned.get(campo)
             if isinstance(valor, str):
                 valor = valor.replace(".", "").replace(",", ".")
             try:
-                cleaned_data[campo] = Decimal(valor) if valor not in [None, ""] else None
+                cleaned[campo] = Decimal(valor) if valor not in [None, ""] else None
             except (ValueError, InvalidOperation):
                 self.add_error(campo, f"Valor inválido em {campo}: {valor}")
-                cleaned_data[campo] = None
-        return cleaned_data
+                cleaned[campo] = None
+
+        # ——— Inteiro (PostgreSQL integer) ———
+        valor_dias = cleaned.get("entrega_dias")
+        if isinstance(valor_dias, str):
+            valor_dias = valor_dias.strip().replace(".", "").replace(",", ".")
+        if valor_dias in [None, ""]:
+            cleaned["entrega_dias"] = None
+        else:
+            try:
+                cleaned["entrega_dias"] = int(Decimal(str(valor_dias)))
+            except (ValueError, InvalidOperation):
+                self.add_error("entrega_dias", f"Valor inválido em entrega_dias: {valor_dias}")
+                cleaned["entrega_dias"] = None
+
+        # 🔎 Debug do clean
+        print(
+            "[MP-FORM][CLEAN]",
+            "lote_minimo=", cleaned.get("lote_minimo"),
+            "entrega_dias=", cleaned.get("entrega_dias"),
+            "icms=", cleaned.get("icms"),
+            "preco_kg=", cleaned.get("preco_kg"),
+            flush=True
+        )
+        return cleaned
 
 
 

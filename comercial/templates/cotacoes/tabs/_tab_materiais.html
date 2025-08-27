@@ -161,11 +161,19 @@
 {{ form.id }}
 <td class="text-center align-middle"><input type="radio" name="material_selecionado" value="{{ form.prefix }}" class="form-check-input mt-1" {% if form.instance.selecionado %}checked{% endif %}></td>
 <td>{{ form.codigo|add_class:"form-control form-control-sm codigo-input" }}</td>
-<td class="bg-lightblue">{{ form.lote_minimo|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 100" }}</td>
-<td class="bg-lightblue">{{ form.entrega_dias|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 5" }}</td>
+<td class="bg-lightblue">
+  {{ form.lote_minimo|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:decimal"|attr:"data-decimal:2"|attr:"autocomplete:off"|attr:"placeholder:Ex: 100,00" }}
+</td>
+<td class="bg-lightblue">
+  {{ form.entrega_dias|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:numeric"|attr:"pattern:^\d{1,5}$"|attr:"autocomplete:off"|attr:"placeholder:Ex: 5" }}
+</td>
 <td class="bg-lightblue">{{ form.fornecedor|add_class:"form-select form-select-sm" }}</td>
-<td class="bg-lightblue">{{ form.icms|add_class:"form-control form-control-sm" }}</td>
-<td class="bg-lightblue">{{ form.preco_kg|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 12,345" }}</td>
+<td class="bg-lightblue">
+  {{ form.icms|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:decimal"|attr:"data-decimal:2"|attr:"autocomplete:off"|attr:"placeholder:Ex: 18,00" }}
+</td>
+<td class="bg-lightblue">
+  {{ form.preco_kg|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:decimal"|attr:"data-decimal:4"|attr:"autocomplete:off"|attr:"placeholder:Ex: 12,3456" }}
+</td>
 <td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm"|attr:"placeholder:Desenv. (mm)" }}</td>
 <td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 1,234" }}</td>
 <td class="bg-lightyellow">{{ form.peso_bruto|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 1,500" }}</td>
@@ -204,7 +212,23 @@
     </div>
   </div>
 </form>
-
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form[method='post']");
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+      try {
+        const fd = new FormData(form);
+        const entries = Array.from(fd.entries())
+          .filter(([k]) => k.startsWith("mat-"))
+          .slice(0, 40);
+        console.log("[MP][SUBMIT] total_campos:", entries.length, "amostra:", entries);
+      } catch (err) {
+        console.warn("[MP][SUBMIT] log falhou:", err);
+      }
+    });
+  });
+</script>
 
 <!-- Preenchimento automático de código -->
 <script>
