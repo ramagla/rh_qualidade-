@@ -238,12 +238,11 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
+        # Decimais de fato
         campos_decimal = [
-            'lote_minimo', 'entrega_dias', 'icms', 'preco_kg',
+            'lote_minimo', 'icms', 'preco_kg',
             'peso_liquido', 'peso_bruto', 'peso_liquido_total', 'desenvolvido_mm'
         ]
-
-
         for campo in campos_decimal:
             valor = cleaned_data.get(campo)
             if isinstance(valor, str):
@@ -253,6 +252,20 @@ class PreCalculoServicoExternoForm(forms.ModelForm):
             except (ValueError, InvalidOperation):
                 self.add_error(campo, f"Valor inválido em {campo}: {valor}")
                 cleaned_data[campo] = None
+
+        # Inteiros (PostgreSQL não aceita Decimal aqui)
+        valor_dias = cleaned_data.get('entrega_dias')
+        if isinstance(valor_dias, str):
+            valor_dias = valor_dias.strip().replace(".", "").replace(",", ".")
+        if valor_dias in [None, ""]:
+            cleaned_data['entrega_dias'] = None
+        else:
+            try:
+                # aceita “10.0”/“10,0” vindos do input e normaliza
+                cleaned_data['entrega_dias'] = int(Decimal(str(valor_dias)))
+            except (ValueError, InvalidOperation):
+                self.add_error('entrega_dias', f"Valor inválido em entrega_dias: {valor_dias}")
+                cleaned_data['entrega_dias'] = None
 
         return cleaned_data
 
