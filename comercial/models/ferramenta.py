@@ -224,14 +224,6 @@ class Ferramenta(models.Model):
 
 
 
-
-
-
-
-
-
-
-
 class ItemBloco(models.Model):
     bloco = models.ForeignKey(BlocoFerramenta, on_delete=models.CASCADE, related_name="itens")
     numero_item = models.CharField("Nº Item", max_length=20)
