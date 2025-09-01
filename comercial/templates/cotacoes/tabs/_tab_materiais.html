@@ -172,7 +172,7 @@
   {{ form.icms|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:decimal"|attr:"data-decimal:2"|attr:"autocomplete:off"|attr:"placeholder:Ex: 18,00" }}
 </td>
 <td class="bg-lightblue">
-  {{ form.preco_kg|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:decimal"|attr:"data-decimal:4"|attr:"autocomplete:off"|attr:"placeholder:Ex: 12,3456" }}
+{{ form.preco_kg|add_class:"form-control form-control-sm text-end"|attr:"type:text"|attr:"inputmode:decimal"|attr:"step:any"|attr:"data-decimal:4"|attr:"autocomplete:off"|attr:"placeholder:Ex: 12,3456" }}
 </td>
 <td class="bg-lightyellow">{{ form.desenvolvido_mm|add_class:"form-control form-control-sm"|attr:"placeholder:Desenv. (mm)" }}</td>
 <td class="bg-lightyellow">{{ form.peso_liquido|add_class:"form-control form-control-sm"|attr:"placeholder:Ex: 1,234" }}</td>
@@ -213,22 +213,25 @@
   </div>
 </form>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector("form[method='post']");
-    if (!form) return;
-    form.addEventListener("submit", function (e) {
-      try {
-        const fd = new FormData(form);
-        const entries = Array.from(fd.entries())
-          .filter(([k]) => k.startsWith("mat-"))
-          .slice(0, 40);
-        console.log("[MP][SUBMIT] total_campos:", entries.length, "amostra:", entries);
-      } catch (err) {
-        console.warn("[MP][SUBMIT] log falhou:", err);
-      }
+(function(){
+  function normalizePtBR(s){s=(s||"").toString().trim().replace(/\s+/g,"");if(!s)return"";if(s.includes(",")&&s.includes("."))s=s.replace(/\./g,"").replace(",",".");else if(s.includes(","))s=s.replace(",",".");return s;}
+  function quantizeStringDecimal(s,places){s=normalizePtBR(s);if(!s)return"";let sign="";if(s[0]==="-"||s[0]==="+"){sign=s[0]==="-"?"-":"";s=s.slice(1);}let a=s.split(".");let intp=a[0]||"0";let frac=a[1]||"";intp=intp.replace(/^0+(?=\d)/,"");while(frac.length<places)frac+="0";if(frac.length>places){const cut=frac.slice(0,places);const rest=frac[places];if(rest>="5"){let carry=1;let out=cut.split("");for(let i=out.length-1;i>=0;i--){let d=out[i].charCodeAt(0)-48+carry;if(d>=10){out[i]=String.fromCharCode(48+(d-10));carry=1;}else{out[i]=String.fromCharCode(48+d);carry=0;break;}}if(carry===1){out=new Array(places).fill("0");let ii=intp.split("");let k=ii.length-1;carry=1;for(;k>=0;k--){let d=ii[k].charCodeAt(0)-48+carry;if(d>=10){ii[k]=String.fromCharCode(48+(d-10));carry=1;}else{ii[k]=String.fromCharCode(48+d);carry=0;break;}}if(carry===1)ii.unshift("1");intp=ii.join("");}frac=out.join("");}else{frac=cut;}}if(places===0)return sign+(intp||"0");return sign+(intp||"0")+"."+(frac||"0".repeat(places));}
+
+  document.addEventListener("DOMContentLoaded",function(){
+    const form=document.querySelector("form[method='post']");if(!form)return;
+
+    form.querySelectorAll("input[name$='-preco_kg']").forEach(inp=>{
+      inp.addEventListener("blur",function(){const places=parseInt(inp.getAttribute("data-decimal")||"4",10);const out=quantizeStringDecimal(inp.value,places);inp.value=out?out.replace(".",","):"";});
     });
+
+    form.addEventListener("submit",function(){
+      form.querySelectorAll("input[name$='-preco_kg']").forEach(inp=>{const places=parseInt(inp.getAttribute("data-decimal")||"4",10);inp.value=quantizeStringDecimal(inp.value,places);});
+      form.querySelectorAll("input[name$='-icms'], input[name$='-peso_liquido'], input[name$='-peso_bruto'], input[name$='-peso_bruto_total']").forEach(inp=>{inp.value=normalizePtBR(inp.value);});
+    },{capture:true});
   });
+})();
 </script>
+
 
 <!-- Preenchimento automático de código -->
 <script>
@@ -408,8 +411,6 @@ pesoBrutoTotalInput.value = resultado.toFixed(10).replace(".", ",");
       if (val === null || val === undefined) return "";
       const n = Number(String(val).replace(",", "."));
       if (!Number.isFinite(n)) return "";
-
-      // Gera string com precisão extra e depois limita/limpa zeros
       let s = n.toFixed(Math.min(maxDecimals + 5, 20));
       if (s.includes(".")) {
         const [i, f] = s.split(".");
@@ -420,12 +421,11 @@ pesoBrutoTotalInput.value = resultado.toFixed(10).replace(".", ",");
     }
 
     function normalizarCamposMateriais(scope) {
+      // ⚠️ SOMENTE CAMPOS TÉCNICOS – NUNCA mexer em preco_kg, icms, lote_minimo
       const seletores = [
         "input[name$='-desenvolvido_mm']",
         "input[name$='-peso_liquido']",
         "input[name$='-peso_bruto']",
-        "input[name$='-preco_kg']",
-        "input[name$='-icms']",
         "input[name$='-peso_bruto_total']",
       ].join(",");
 
@@ -435,21 +435,16 @@ pesoBrutoTotalInput.value = resultado.toFixed(10).replace(".", ",");
           const raw = (inp.value || "").trim();
           if (!raw) return;
 
-          // Normaliza se veio em notação científica, ou se for forçado (blur)
+          // normaliza apenas quando veio em notação científica ou no blur
           if (/[eE]-?\d+/.test(raw) || forcar) {
             const n = Number(raw.replace(",", "."));
             if (!Number.isFinite(n)) return;
-
-            // Totais já usam 3 casas nos seus cálculos
-            const casas = 10;
-            let s = toPlainString(n, casas).replace(".", ",");
+            let s = toPlainString(n, 10).replace(".", ",");
             inp.value = s;
           }
         };
 
-        // Corrige na carga
         aplicar(false);
-        // E no blur (caso o usuário digite 1e-6, etc.)
         inp.addEventListener("blur", () => aplicar(true));
       });
     }
@@ -460,6 +455,7 @@ pesoBrutoTotalInput.value = resultado.toFixed(10).replace(".", ",");
     });
   })();
 </script>
+
 <script>
   // Utilitário único para 10 casas decimais
   function toPlain(val, maxDecimals = 10) {
@@ -524,5 +520,17 @@ pesoBrutoTotalInput.value = resultado.toFixed(10).replace(".", ",");
         if (b && !b.value && vBru) b.value = vBru;
       }
     }
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("input[name$='-preco_kg'], input[name$='-icms'], input[name$='-lote_minimo']").forEach((el, i) => {
+      el.addEventListener("focus",  () => console.log(`[UI] focus  #${i} ${el.name} = '${el.value}'`));
+      el.addEventListener("input",  () => console.log(`[UI] input  #${i} ${el.name} = '${el.value}'`));
+      el.addEventListener("blur",   () => console.log(`[UI] blur   #${i} ${el.name} = '${el.value}'`));
+      el.form?.addEventListener("submit", () => {
+        console.log(`[UI] submit #${i} ${el.name} (FINAL) = '${el.value}'`);
+      });
+    });
   });
 </script>

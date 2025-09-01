@@ -10,13 +10,14 @@ from decimal import Decimal
 from django.db.models import Q
 
 from django.forms import TextInput
-
+from django.db.models import DecimalField
 from django import forms
 from comercial.models.precalculo import PreCalculoMaterial
 from tecnico.models.roteiro import InsumoEtapa, RoteiroProducao
 from django.forms import HiddenInput
 from django_ckeditor_5.widgets import CKEditor5Widget
 from comercial.models.precalculo import PreCalculo
+from decimal import ROUND_HALF_UP
 
 
 # comercial/forms/precalculos_form.py
@@ -26,6 +27,10 @@ from django import forms
 from django.forms import HiddenInput, TextInput
 
 from decimal import Decimal, InvalidOperation
+from django import forms
+from django.forms import HiddenInput, TextInput
+
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from django import forms
 from django.forms import HiddenInput, TextInput
 
@@ -52,8 +57,7 @@ class PreCalculoMaterialForm(forms.ModelForm):
             q = Decimal(1).scaleb(-places)
             try:
                 d = Decimal(str(value)).quantize(q)
-                s = f"{d:.{places}f}"
-                return s
+                return f"{d:.{places}f}"
             except Exception:
                 return ""
 
@@ -80,7 +84,6 @@ class PreCalculoMaterialForm(forms.ModelForm):
                 widget = self.fields[campo].widget
                 is_select = isinstance(widget, forms.Select)
 
-                # Lote mínimo como NumberInput (duas casas) alinhado à direita
                 if campo == "lote_minimo":
                     self.fields[campo].widget = forms.NumberInput(attrs={
                         "class": "form-control form-control-sm text-end",
@@ -110,7 +113,6 @@ class PreCalculoMaterialForm(forms.ModelForm):
             for campo in ["peso_liquido", "peso_bruto", "peso_bruto_total", "desenvolvido_mm"]:
                 self.initial[campo] = to_plain_str(getattr(self.instance, campo, None), campo)
 
-        # 🔎 Debug útil no prod
         print(f"[MP-FORM][INIT] pk={getattr(self.instance,'pk',None)} bound={self.is_bound}", flush=True)
 
     def has_changed(self):
@@ -124,6 +126,21 @@ class PreCalculoMaterialForm(forms.ModelForm):
                 return True
         return changed
 
+    # ——— Normalizador robusto (pt-BR e ponto) ———
+    @staticmethod
+    def _normalize_decimal(val: str) -> str:
+        s = str(val).strip().replace(" ", "")
+        if "," in s and "." in s:
+            # pt-BR: ponto=milhar, vírgula=decimal
+            if s.rfind(",") > s.rfind("."):
+                s = s.replace(".", "").replace(",", ".")
+            else:
+                # caso raro 1,234.56 -> 1234.56
+                s = s.replace(",", "")
+        elif "," in s:
+            s = s.replace(",", ".")
+        return s
+
     def clean(self):
         cleaned = super().clean()
 
@@ -134,18 +151,30 @@ class PreCalculoMaterialForm(forms.ModelForm):
         ]
         for campo in campos_decimal:
             valor = cleaned.get(campo)
+
             if isinstance(valor, str):
-                valor = valor.replace(".", "").replace(",", ".")
+                valor = self._normalize_decimal(valor)
+
             try:
-                cleaned[campo] = Decimal(valor) if valor not in [None, ""] else None
+                if valor in [None, ""]:
+                    cleaned[campo] = None
+                else:
+                    d = Decimal(str(valor))
+                    cleaned[campo] = d
             except (ValueError, InvalidOperation):
                 self.add_error(campo, f"Valor inválido em {campo}: {valor}")
                 cleaned[campo] = None
 
+        # 🔒 Arredondar em 2 casas APENAS onde a regra pede
+        q2 = Decimal("0.01")
+        for campo in ("preco_kg", "icms", "lote_minimo"):
+            if cleaned.get(campo) is not None:
+                cleaned[campo] = cleaned[campo].quantize(q2, rounding=ROUND_HALF_UP)
+
         # ——— Inteiro (PostgreSQL integer) ———
         valor_dias = cleaned.get("entrega_dias")
         if isinstance(valor_dias, str):
-            valor_dias = valor_dias.strip().replace(".", "").replace(",", ".")
+            valor_dias = self._normalize_decimal(valor_dias)
         if valor_dias in [None, ""]:
             cleaned["entrega_dias"] = None
         else:
@@ -155,7 +184,6 @@ class PreCalculoMaterialForm(forms.ModelForm):
                 self.add_error("entrega_dias", f"Valor inválido em entrega_dias: {valor_dias}")
                 cleaned["entrega_dias"] = None
 
-        # 🔎 Debug do clean
         print(
             "[MP-FORM][CLEAN]",
             "lote_minimo=", cleaned.get("lote_minimo"),
@@ -165,6 +193,7 @@ class PreCalculoMaterialForm(forms.ModelForm):
             flush=True
         )
         return cleaned
+
 
 
 

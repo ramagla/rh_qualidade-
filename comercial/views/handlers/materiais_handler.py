@@ -89,32 +89,64 @@ def processar_aba_materiais(request, precalc, materiais_respondidos, form_precal
         total = int(data.get("mat-TOTAL_FORMS", 0) or 0)
         print(f"[MP][POST][PC={precalc.id}] mat-TOTAL_FORMS={total}", flush=True)
 
+        def _normalize_decimal(val: str) -> str:
+            """
+            Normaliza strings numéricas aceitando:
+            - pt-BR: '39.000,50'  -> '39000.50'
+            - ponto: '39000.50'   -> '39000.50'
+            - simples: '37,98'    -> '37.98'
+            """
+            s = str(val).strip().replace(" ", "")
+            if "," in s and "." in s:
+                # pt-BR: ponto = milhar, vírgula = decimal
+                s = s.replace(".", "").replace(",", ".")
+            elif "," in s:
+                s = s.replace(",", ".")
+            else:
+                # só ponto ou apenas dígitos
+                pass
+            return s
+
         decimais = (
-            "lote_minimo", "icms", "preco_kg",
-            "desenvolvido_mm", "peso_liquido", "peso_bruto", "peso_bruto_total",
+    "icms", "preco_kg",
+    "desenvolvido_mm", "peso_liquido", "peso_bruto", "peso_bruto_total",
         )
+        inteiros = ("lote_minimo",)  # campo inteiro no modelo
+
         for i in range(total):
+            # Inteiros (aceita "10,0" ou "10.0" e converte para inteiro)
+            for fld in inteiros:
+                key = f"mat-{i}-{fld}"
+                val = data.get(key)
+                if val not in (None, ""):
+                    s = _normalize_decimal(val)
+                    try:
+                        data[key] = str(int(Decimal(s)))
+                    except Exception as e:
+                        print(f"[MP][POST][PC={precalc.id}] int_parse_falhou key={key} val='{val}' err='{e}'", flush=True)
+
+            # Decimais com quantize baseado no campo do modelo
             for fld in decimais:
                 key = f"mat-{i}-{fld}"
                 val = data.get(key)
                 if val not in (None, ""):
                     try:
-                        # Campos de compras podem vir com milhar + vírgula
-                        if fld in ("lote_minimo", "icms", "preco_kg"):
-                            s = str(val).replace(".", "").replace(",", ".")
-                        else:
-                            s = str(val).replace(",", ".")
-                        Decimal(s)  # valida
-                        data[key] = s
+                        s = _normalize_decimal(val)
+                        # pega decimal_places direto do modelo
+                        field = PreCalculoMaterial._meta.get_field(fld)
+                        dp = getattr(field, "decimal_places", 0)
+                        quant = Decimal(1).scaleb(-dp) if dp > 0 else Decimal(1)
+                        num = Decimal(s).quantize(quant)  # ARREDONDA corretamente
+                        data[key] = str(num)
                     except Exception as e:
-                        print(f"[MP][POST][PC={precalc.id}] normalizacao_falhou key={key} val='{val}' err='{e}'", flush=True)
+                        print(f"[MP][POST][PC={precalc.id}] quantize_falhou key={key} val='{val}' err='{e}'", flush=True)
 
-        # Inteiro (aceita '10,0')
+        # Inteiro (aceita '10,0' e '10.0')
         for i in range(total):
             k = f"mat-{i}-entrega_dias"
             v = data.get(k)
             if v and isinstance(v, str):
-                data[k] = v.strip().replace(".", "").replace(",", ".")
+                data[k] = _normalize_decimal(v)
 
     MatSet = inlineformset_factory(
         PreCalculo, PreCalculoMaterial,
