@@ -135,7 +135,7 @@
                 {{ ft.observacoes|safe|default:"—" }}
               </td>
               <td>
-                {{ ft.ferramenta.valor_total|formatar_reais }}
+{{ ft.valor_aplicado|formatar_reais }}
               </td>
             </tr>
           {% endfor %}

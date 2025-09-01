@@ -141,6 +141,8 @@ urlpatterns = [
             dashboard_views.ajax_status_precalculo,
             name='ajax_status_precalculo'),
     
+        path("ajax/valores-forma-calculo/", ferramenta_views.ajax_valores_forma_calculo, name="ajax_valores_forma_calculo"),
+
 
      # Metas de Faturamento (CRUD)
     path("metas/", metas_views.lista_metas, name="lista_metas"),

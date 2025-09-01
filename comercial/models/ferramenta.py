@@ -31,6 +31,10 @@ class Ferramenta(models.Model):
         ("Outro", "Outros"),
     ]
 
+    FORMA_CALCULO_CHOICES = [
+            ("PADRAO", "Cálculo Padrão"),
+        ]
+    
     codigo = models.CharField(max_length=20, unique=True)
     descricao = models.CharField(max_length=255)
     vida_util_em_pecas = models.PositiveIntegerField(verbose_name="Vida útil (em peças)")
@@ -55,7 +59,12 @@ class Ferramenta(models.Model):
         blank=True,
         related_name="ferramentas"
     )
-
+    forma_calculo = models.CharField(
+            "Forma de Cálculo",
+            max_length=20,
+            choices=FORMA_CALCULO_CHOICES,
+            default="PADRAO"
+        )
     # Valores de cotação por kg (preenchidos manualmente)
     valor_unitario_matriz = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     valor_unitario_puncao = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -227,7 +236,7 @@ class ItemBloco(models.Model):
     bloco = models.ForeignKey(BlocoFerramenta, on_delete=models.CASCADE, related_name="itens")
     numero_item = models.CharField("Nº Item", max_length=20)
     medidas = models.CharField("Medidas (ex: 25,4x94x165)", max_length=100)
-    material = models.CharField("Material", max_length=50, choices=[("SAE 1020", "SAE 1020"), ("VND", "VND")])
+    material = models.CharField("Material",max_length=50,choices=[("SAE 1020", "SAE 1020"),("VND", "VND"),("SAE D2", "SAE D2"),])
     peso_aco = models.DecimalField("Peso Aço", max_digits=5, decimal_places=2, default=7.86)
 
     volume = models.DecimalField("Volume", max_digits=10, decimal_places=2, null=True, blank=True)

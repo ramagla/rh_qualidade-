@@ -53,10 +53,19 @@
         </h2>
         <div id="collapseBloco" class="accordion-collapse collapse show" data-bs-parent="#accordionBloco">
           <div class="accordion-body row g-3">
-            <div class="col-md-4">
-              <label class="form-label"><i class="bi bi-hash me-1"></i> Número do Bloco:</label>
-              {{ form.numero|add_class:"form-control" }}
-            </div>
+            <!-- form_blocos.html — campo Número do Bloco “com cara de texto”, mas editável -->
+<style>
+.as-text{border:0;background:transparent;padding-left:0;box-shadow:none}
+</style>
+<div class="col-md-4">
+  <label class="form-label"><i class="bi bi-hash me-1"></i> Número do Bloco:</label>
+  {% if form.instance.pk %}
+    {{ form.numero|add_class:"form-control as-text"|attr:"placeholder:Ex: Bloco 1" }}
+  {% else %}
+    {{ form.numero|add_class:"form-control"|attr:"placeholder:Ex: Bloco 1" }}
+  {% endif %}
+</div>
+
           </div>
         </div>
       </div>

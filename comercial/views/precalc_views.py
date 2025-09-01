@@ -66,10 +66,16 @@ def gerar_qrcode_base64(url):
 @permission_required("comercial.view_precalculo", raise_exception=True)
 def itens_precaculo(request, pk):
     cot = get_object_or_404(Cotacao, pk=pk)
-    precalculos = PreCalculo.objects.filter(cotacao=cot).order_by("numero")
+    precalculos = (
+        PreCalculo.objects
+        .filter(cotacao=cot)
+        .select_related("analise_comercial_item")
+        .prefetch_related("ferramentas_item__ferramenta")
+        .order_by("numero")
+    )
 
-    # Enriquecimento de cada pré-cálculo
     for precalc in precalculos:
+        # Sinais de preenchimento das abas
         precalc.tipo_precalculo = "Item de Cotação"
         precalc.total_materiais = precalc.materiais.count()
         precalc.total_servicos = precalc.servicos.count()
@@ -78,13 +84,26 @@ def itens_precaculo(request, pk):
         precalc.avaliacao_ok = hasattr(precalc, "avaliacao_tecnica_item")
         precalc.desenvolvimento_ok = hasattr(precalc, "desenvolvimento_item")
 
-        # Valor Ferramental
+        # Valor Ferramental (usa o que foi digitado no pré-cálculo)
+        def _valor_ferramenta_usado(rel):
+            try:
+                # 1) Se existir o @property do seu modelo, ele já faz o fallback
+                if hasattr(rel, "valor_aplicado"):
+                    return Decimal(rel.valor_aplicado or 0)
+                # 2) Caso não exista o property, usa o campo direto
+                if hasattr(rel, "valor_utilizado") and rel.valor_utilizado not in [None, ""]:
+                    return Decimal(rel.valor_utilizado)
+            except Exception:
+                pass
+            # 3) Fallback: valor do cadastro da Ferramenta
+            return Decimal(rel.ferramenta.valor_total or 0)
+
         precalc.valor_ferramental = sum(
-            f.ferramenta.valor_total or Decimal("0.00")
-            for f in precalc.ferramentas_item.all()
+            _valor_ferramenta_usado(rel) for rel in precalc.ferramentas_item.all()
         )
 
-        # Preço efetivo (override manual ou selecionado)
+
+        # Preço efetivo (manual tem prioridade sobre selecionado)
         preco_final = (
             precalc.preco_manual
             if precalc.preco_manual and precalc.preco_manual > Decimal("0.00")
@@ -92,39 +111,36 @@ def itens_precaculo(request, pk):
         )
 
         # Valor Total = Preço Escolhido × Qtde Estimada
-        qtde = getattr(precalc.analise_comercial_item, "qtde_estimada", 0) or 0
-        precalc.valor_total = preco_final * Decimal(qtde)
+        qtde = Decimal(getattr(precalc.analise_comercial_item, "qtde_estimada", 0) or 0)
+        precalc.valor_total = (preco_final or Decimal("0.00")) * qtde
 
         # Total Geral = Valor Total + Ferramental
-        precalc.total_geral = precalc.valor_total + precalc.valor_ferramental
+        precalc.total_geral = (precalc.valor_total or Decimal("0.00")) + (precalc.valor_ferramental or Decimal("0.00"))
 
         # Preço Escolhido com percentual (%)
         if precalc.preco_manual and precalc.preco_manual > Decimal("0.00"):
-            custo_unitario = precalc.calcular_precos_com_impostos()[0]["unitario"]
-            percentual_manual = (
-                (preco_final - custo_unitario)
-                / custo_unitario
-                * Decimal("100")
-            ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            precalc.preco_margem_formatado = f"{preco_final:.2f} ({percentual_manual}%) ✍️"
-
+            custos = precalc.calcular_precos_com_impostos()
+            if custos:
+                custo_unitario = custos[0]["unitario"]
+                percentual_manual = (
+                    (preco_final - custo_unitario) / (custo_unitario or Decimal("1"))
+                    * Decimal("100")
+                ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                precalc.preco_margem_formatado = f"{preco_final:.2f} ({percentual_manual}%) ✍️"
+            else:
+                precalc.preco_margem_formatado = f"{preco_final:.2f} ✍️"
         else:
             encontrado = None
-
             for item in precalc.calcular_precos_com_impostos():
                 if round(item["unitario"], 4) == round(preco_final, 4):
                     encontrado = f"{item['unitario']:.2f} ({item['percentual']}%) 💰"
                     break
-
             if not encontrado:
                 for item in precalc.calcular_precos_sem_impostos():
                     if round(item["unitario"], 4) == round(preco_final, 4):
                         encontrado = f"{item['unitario']:.2f} ({item['percentual']}%) 🧮"
                         break
-
             precalc.preco_margem_formatado = encontrado or (f"{preco_final:.2f}" if preco_final else None)
-
-
 
     # Paginação
     paginator = Paginator(precalculos, 10)
@@ -151,6 +167,7 @@ def itens_precaculo(request, pk):
 
 
 
+
 @login_required
 @permission_required("comercial.change_precalculo", raise_exception=True)
 def editar_precaculo(request, pk):
@@ -160,7 +177,32 @@ def editar_precaculo(request, pk):
     salvo  = False
     mensagem_precofinal = None   
 
-
+    campos_obs = [
+        ("material_fornecido", "material_fornecido_obs"),
+        ("requisitos_entrega", "requisitos_entrega_obs"),
+        ("requisitos_pos_entrega", "requisitos_pos_entrega_obs"),
+        ("requisitos_comunicacao", "requisitos_comunicacao_obs"),
+        ("requisitos_notificacao", "requisitos_notificacao_obs"),
+        ("especificacao_embalagem", "especificacao_embalagem_obs"),
+        ("especificacao_identificacao", "especificacao_identificacao_obs"),
+        ("tipo_embalagem", "tipo_embalagem_obs"),
+    ]
+    campos_obs_tecnica = [
+        ("possui_projeto", "projeto_obs"),
+        ("precisa_dispositivo", "dispositivo_obs"),
+        ("caracteristicas_criticas", "criticas_obs"),
+        ("precisa_amostras", "amostras_obs"),
+        ("restricao_dimensional", "restricao_obs"),
+        ("acabamento_superficial", "acabamento_obs"),
+        ("validacao_metrologica", "metrologia_obs"),
+        ("rastreabilidade", "rastreabilidade_obs"),
+        ("metas_a", "metas_a_obs"),
+        ("metas_b", "metas_b_obs"),
+        ("metas_c", "metas_c_obs"),
+        ("metas_d", "metas_d_obs"),
+        ("seguranca", "seguranca_obs"),
+        ("requisito_especifico", "requisito_especifico_obs"),
+    ]
 
     # identifica aba submetida
     if request.method == "GET":
@@ -265,12 +307,12 @@ def editar_precaculo(request, pk):
                 'roteiro'  : 'observacoes_roteiro',
             }.get(aba)
 
-
             # ⚠️ Recarrega os valores anteriores das outras observações para evitar sobrescrita
-            campos_obs = ["observacoes_materiais", "observacoes_servicos", "observacoes_roteiro"]
-            for campo in campos_obs:
-                if campo != campo_obs:  # preserva os campos não submetidos agora
+            campos_obs_fields = ["observacoes_materiais", "observacoes_servicos", "observacoes_roteiro"]
+            for campo in campos_obs_fields:
+                if campo != campo_obs:
                     setattr(precalc, campo, getattr(precalc, campo))
+
 
             if campo_obs and campo_obs in form_precalculo.cleaned_data:
                 valor = form_precalculo.cleaned_data[campo_obs]
@@ -352,8 +394,9 @@ def editar_precaculo(request, pk):
     # precalc_views.py (trecho do GET/fallback que carrega os formsets)
     if not fs_sev and (
         request.method == "GET" or
-        any(k.startswith("sev-") for k in request.POST)
+        any(k.startswith("fs_sev-") for k in request.POST)
     ):
+
         total_serv = precalc.servicos.count()
         faltam = precalc.servicos.filter(
             Q(preco_kg__isnull=True) | Q(preco_kg=0)
@@ -383,36 +426,6 @@ def editar_precaculo(request, pk):
 
     if not fs_ferr:
         _, fs_ferr = processar_aba_ferramentas(request, precalc)
-
-    # campos de observações para o template
-        campos_obs = [
-        ("material_fornecido", "material_fornecido_obs"),
-        ("requisitos_entrega", "requisitos_entrega_obs"),
-        ("requisitos_pos_entrega", "requisitos_pos_entrega_obs"),
-        ("requisitos_comunicacao", "requisitos_comunicacao_obs"),
-        ("requisitos_notificacao", "requisitos_notificacao_obs"),
-        ("especificacao_embalagem", "especificacao_embalagem_obs"),
-        ("especificacao_identificacao", "especificacao_identificacao_obs"),
-        ("tipo_embalagem", "tipo_embalagem_obs"),
-    ]
-
-    campos_obs_tecnica = [
-        ("possui_projeto", "projeto_obs"),
-        ("precisa_dispositivo", "dispositivo_obs"),
-        ("caracteristicas_criticas", "criticas_obs"),
-        ("precisa_amostras", "amostras_obs"),
-        ("restricao_dimensional", "restricao_obs"),
-        ("acabamento_superficial", "acabamento_obs"),
-        ("validacao_metrologica", "metrologia_obs"),
-        ("rastreabilidade", "rastreabilidade_obs"),
-        ("metas_a", "metas_a_obs"),
-        ("metas_b", "metas_b_obs"),
-        ("metas_c", "metas_c_obs"),
-        ("metas_d", "metas_d_obs"),
-        ("seguranca", "seguranca_obs"),
-        ("requisito_especifico", "requisito_especifico_obs"),
-    ]
-
 
     perguntas_avaliacao_tecnica = [
         {"campo": "caracteristicas_criticas", "label": "1. Existe característica especial além das relacionadas nas especificações?", "obs": "criticas_obs"},
@@ -1139,12 +1152,20 @@ def precificacao_produto(request, pk):
     }
 
     # ——— Ferramental
+    def _valor_ferramenta_usado(rel):
+        for nome in ["valor_cotacao", "valor", "preco", "valor_personalizado"]:
+            if hasattr(rel, nome):
+                v = getattr(rel, nome)
+                if v is not None and v != "":
+                    try:
+                        return Decimal(v)
+                    except Exception:
+                        pass
+        return Decimal(rel.ferramenta.valor_total or 0)
+
     valor_ferramental = Decimal("0.00")
-    for f in precalc.ferramentas_item.all():
-        try:
-            valor_ferramental += Decimal(f.ferramenta.valor_total or 0)
-        except AttributeError:
-            continue
+    for rel in precalc.ferramentas_item.all():
+        valor_ferramental += _valor_ferramenta_usado(rel)
 
     analise = precalc.analise_comercial_item
     item = analise.item if analise else None
@@ -1201,24 +1222,36 @@ def gerar_proposta_view(request, cotacao_id):
         )
 
         # Cálculo do valor total do ferramental
+        def _valor_ferramenta_usado(rel):
+            for nome in ["valor_cotacao", "valor", "preco", "valor_personalizado"]:
+                if hasattr(rel, nome):
+                    v = getattr(rel, nome)
+                    if v is not None and v != "":
+                        try:
+                            return Decimal(v)
+                        except Exception:
+                            pass
+            return Decimal(rel.ferramenta.valor_total or 0)
+
         for precalc in precalculos:
+            # anota cada relação com o valor que será exibido na tabela da proposta
+            for rel in precalc.ferramentas_item.all():
+                rel.valor_usado = _valor_ferramenta_usado(rel)
+
             precalc.valor_ferramental = sum(
-                (f.ferramenta.valor_total or 0)
-                for f in precalc.ferramentas_item.all()
+                (getattr(rel, "valor_usado", Decimal("0.00")))
+                for rel in precalc.ferramentas_item.all()
             )
 
-            # ① data de geração para exibição
-            data_geracao = timezone.localtime().date()
+        data_geracao = timezone.localtime().date()
+        cotacao.data_envio_proposta = data_geracao
+        cotacao.save(update_fields=["data_envio_proposta"])
 
-            # ② persista na cotação
-            cotacao.data_envio_proposta = data_geracao
-            cotacao.save(update_fields=["data_envio_proposta"])
-
-            return render(request, "cotacoes/proposta_preview.html", {
-                "cotacao": cotacao,
-                "precalculos": precalculos,
-                "data_geracao": data_geracao,
-            })
+        return render(request, "cotacoes/proposta_preview.html", {
+            "cotacao": cotacao,
+            "precalculos": precalculos,
+            "data_geracao": data_geracao,
+        })
 
 
 

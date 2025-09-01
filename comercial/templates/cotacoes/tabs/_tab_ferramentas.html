@@ -1,3 +1,4 @@
+{# comercial/templates/comercial/precalculos/_tab_ferramentas.html #}
 {% load widget_tweaks %}
 {% load filters_gerais %}
 
@@ -8,68 +9,70 @@
   {% csrf_token %}
   {{ fs_ferr.management_form }}
 
-  <!-- adicionada classe para escopo de estilos -->
   <div class="border p-4 rounded shadow-sm bg-white tab-ferramentas">
-    <h5 class="mb-4">
+    <h5 class="mb-3">
       <i class="bi bi-tools text-danger me-2"></i> Ferramentas Utilizadas
     </h5>
+
+    <div class="d-flex justify-content-end mb-2 gap-2">
+      <button type="button" id="btn-add-ferramenta" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Adicionar ferramenta
+      </button>
+    </div>
 
     <div class="table-responsive">
       <table class="table table-bordered align-middle text-center">
         <thead class="table-light align-middle text-center">
-          <tr>
-            <th style="width: 30%">
-              <div class="d-flex flex-column align-items-center">
-                <i class="bi bi-hammer mb-1 text-muted"></i>
-                <small>Ferramenta</small>
-              </div>
-            </th>
+  <tr>
+    <th style="width: 28%">
+      <i class="bi bi-wrench-adjustable-circle text-primary d-block mb-1"></i>
+      Ferramenta
+    </th>
+    <th style="width: 28%">
+      <i class="bi bi-currency-dollar text-success d-block mb-1"></i>
+      Valor para esta cotação (R$)
+    </th>
+    <th style="width: 30%">
+      <i class="bi bi-card-text text-secondary d-block mb-1"></i>
+      Observações
+    </th>
+    <th style="width:14%">
+      <i class="bi bi-gear-fill text-danger d-block mb-1"></i>
+      Ações
+    </th>
+  </tr>
+</thead>
 
-            <!-- AUMENTADO de 20% para 30% -->
-            <th style="width: 30%">
-              <div class="d-flex flex-column align-items-center">
-                <i class="bi bi-currency-dollar mb-1 text-muted"></i>
-                <small>Valor para esta cotação (R$)</small>
-              </div>
-            </th>
 
-            <!-- DIMINUÍDO: largura explícita menor -->
-            <th style="width: 22%">
-              <div class="d-flex flex-column align-items-center">
-                <i class="bi bi-chat-left-text mb-1 text-muted"></i>
-                <small>Observações</small>
-              </div>
-            </th>
-          </tr>
-        </thead>
-
-        <tbody>
+        <tbody id="tb-ferramentas">
           {% for form in fs_ferr.forms %}
-          <tr>
+          <tr class="linha-ferramenta">
             {{ form.id }}
-
             <td>
               {{ form.ferramenta|add_class:"form-select select2 form-select-sm ferramenta-select" }}
             </td>
+            <td class="p-2 text-center valor-td">
+  <div class="valor-cell">
+    <div class="hint">
+      {% if form.instance.ferramenta %}
+        <small class="text-muted">Valor do cadastro: {{ form.instance.ferramenta.valor_total|formatar_reais }}</small>
+      {% else %}
+        <small class="text-muted">Selecione uma ferramenta para sugerir o valor.</small>
+      {% endif %}
+    </div>
+    {{ form.valor_utilizado|add_class:"form-control form-control-sm text-end valor-utilizado" }}
+  </div>
+</td>
 
-            <td class="p-2 text-center">
-              {{ form.valor_utilizado|add_class:"form-control form-control-sm text-end valor-utilizado" }}
-              <div class="mt-1">
-                {% if form.instance.ferramenta %}
-                  <small class="text-muted">
-                    Valor do cadastro: {{ form.instance.ferramenta.valor_total|formatar_reais }}
-                  </small>
-                {% else %}
-                  <small class="text-muted">Selecione uma ferramenta para sugerir o valor.</small>
-                {% endif %}
-              </div>
+
+            <td class="obs">
+              {{ form.observacoes|add_class:"js-ck form-control form-control-sm" }}
             </td>
-
-            <!-- observações com largura e altura menores -->
-            <td class="p-0">
-              <div class="form-control form-control-sm" style="width: 100%; max-width: 520px;">
-                {{ form.observacoes }}
-              </div>
+            <td class="acoes">
+              {{ form.DELETE|add_class:"chk-delete d-none" }}
+              <button type="button" class="btn btn-outline-danger btn-sm btn-remover" title="Excluir linha">
+                <i class="bi bi-trash"></i>
+              </button>
             </td>
           </tr>
           {% endfor %}
@@ -85,42 +88,75 @@
   </div>
 </form>
 
+<template id="tpl-ferramenta">
+  <tr class="linha-ferramenta">
+    <td>
+      <select name="ferr-__prefix__-ferramenta" class="form-select select2 form-select-sm ferramenta-select" id="id_ferr-__prefix__-ferramenta"></select>
+    </td>
+    <td class="p-2 text-center">
+      <input type="number" name="ferr-__prefix__-valor_utilizado" step="0.01" min="0" placeholder="0,00"
+             class="form-control form-control-sm text-end valor-utilizado" id="id_ferr-__prefix__-valor_utilizado">
+      <div class="mt-1"><small class="text-muted">Selecione uma ferramenta para sugerir o valor.</small></div>
+    </td>
+    <td class="obs">
+      <textarea name="ferr-__prefix__-observacoes" class="js-ck form-control form-control-sm"
+                id="id_ferr-__prefix__-observacoes"></textarea>
+    </td>
+    <td class="acoes">
+      <input type="checkbox" name="ferr-__prefix__-DELETE" id="id_ferr-__prefix__-DELETE" class="chk-delete d-none">
+      <button type="button" class="btn btn-outline-danger btn-sm btn-remover" title="Excluir linha">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>
+    <input type="hidden" name="ferr-__prefix__-id" id="id_ferr-__prefix__-id">
+  </tr>
+</template>
+
 <script>
-  // Inicialização do Select2
-  $(document).ready(function () {
+  function initEditorIfAvailable(selector) {
+    try {
+      if (window.CKEDITOR && CKEDITOR.replace) {
+        const id = selector.replace('#', '');
+        if (!CKEDITOR.instances[id]) CKEDITOR.replace(id);
+      } else if (window.ClassicEditor) {
+        const el = document.querySelector(selector);
+        if (el && !el.dataset.ckInitialized) {
+          ClassicEditor.create(el).then(() => { el.dataset.ckInitialized = "1"; }).catch(() => {});
+        }
+      }
+    } catch (e) {}
+  }
+
+  $(function(){
     $(".select2").select2({ width: 'resolve' });
+    $(".chk-delete").prop("checked", false);
+    $("textarea.js-ck").each(function(){ initEditorIfAvailable("#" + this.id); });
   });
 
-  // Sugerir o valor do cadastro ao trocar a ferramenta
-  $(document).on("change", ".ferramenta-select", function () {
-    const row = $(this).closest("tr");
-    const id = $(this).val();
+  document.getElementById("btn-add-ferramenta").addEventListener("click", function(){
+    const tpl     = document.getElementById("tpl-ferramenta").innerHTML;
+    const totalEl = document.getElementById("id_ferr-TOTAL_FORMS");
+    const idx     = parseInt(totalEl.value, 10);
+    const html    = tpl.replace(/__prefix__/g, idx);
+    const tbody   = document.getElementById("tb-ferramentas");
+    tbody.insertAdjacentHTML("beforeend", html);
+    totalEl.value = idx + 1;
 
-    if (!id) {
-      row.find(".valor-utilizado").val("");
-      row.find(".valor-utilizado").attr("placeholder", "0,00");
-      row.find(".valor-utilizado").closest("td").find("small.text-muted").text("Selecione uma ferramenta para sugerir o valor.");
-      return;
-    }
+    const $first = $(".ferramenta-select").first();
+    const $new   = $("#id_ferr-" + idx + "-ferramenta");
+    if ($first.length) { $new.html($first.html()); }
+    $new.val(null).trigger("change").select2({ width: 'resolve' });
 
-    $.get("{% url 'ajax_valor_ferramenta' %}", { id: id }, function (data) {
-      const valor = (data && data.valor_total !== null) ? parseFloat(data.valor_total).toFixed(2) : "";
-      const $inp  = row.find(".valor-utilizado");
-      const $hint = row.find("small.text-muted");
-
-      if (!$inp.val()) {
-        $inp.val(valor);
-      }
-
-      if (valor) {
-        $hint.text("Valor do cadastro: R$ " + valor.replace(".", ","));
-      } else {
-        $hint.text("Sem valor cadastrado para esta ferramenta.");
-      }
-    });
+    $("#id_ferr-" + idx + "-DELETE").prop("checked", false);
+    initEditorIfAvailable("#id_ferr-" + idx + "-observacoes");
   });
 
-  // Garantir que o submit marque a aba
+  $(document).on("click", ".btn-remover", function(){
+    const $row = $(this).closest("tr");
+    $row.find(".chk-delete").prop("checked", true);
+    $row.addClass("linha-oculta").hide();
+  });
+
   document.addEventListener("DOMContentLoaded", function () {
     const abaSubmetidaInput = document.getElementById("abaSubmetidaInput");
     const salvarBtn = document.querySelector("button[type='submit']");
@@ -133,16 +169,17 @@
 </script>
 
 <style>
-  /* Altura menor do editor apenas nesta aba */
-  .tab-ferramentas .ck-editor__editable { min-height: 80px !important; }
-
-  /* Ajuste fino de largura das colunas em telas médias/grandes */
+  td.obs textarea.form-control { width:100%; }
+  .tab-ferramentas .ck-editor__editable { min-height: 120px !important; }
+  td.acoes { text-align:center; }
+  td.acoes .btn.btn-outline-danger { padding: .2rem .5rem; }
+  .linha-oculta { opacity:.6; }
   @media (min-width: 992px) {
-    .tab-ferramentas table tbody tr > td:nth-child(1) { width: 30%; }
-    .tab-ferramentas table tbody tr > td:nth-child(2) { width: 30%; } /* Valor maior */
-    .tab-ferramentas table tbody tr > td:nth-child(3) { width: 22%; } /* Observações menor */
+    .tab-ferramentas table tbody tr > td:nth-child(1) { width: 28%; }
+    .tab-ferramentas table tbody tr > td:nth-child(2) { width: 28%; }
+    .tab-ferramentas table tbody tr > td:nth-child(3) { width: 30%; }
+    .tab-ferramentas table tbody tr > td:nth-child(4) { width: 14%; }
   }
-
   .select2-container--default .select2-selection--single { height: 31px; }
   .select2-container .select2-selection--single .select2-selection__rendered { line-height: 31px; }
   .select2-container .select2-selection--single .select2-selection__arrow { height: 31px; }

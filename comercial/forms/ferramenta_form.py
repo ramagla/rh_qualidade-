@@ -30,6 +30,7 @@ class FerramentaForm(forms.ModelForm):
             "num_carros": forms.NumberInput(attrs={"class": "form-control"}),
             "num_formadores": forms.NumberInput(attrs={"class": "form-control"}),
             "bloco": forms.Select(attrs={"class": "form-select select2"}),
+            "forma_calculo": forms.Select(attrs={"class": "form-select select2"}),
             "valor_unitario_sae": forms.NumberInput(attrs={"class": "form-control"}),
             "valor_unitario_vnd": forms.NumberInput(attrs={"class": "form-control"}),
 
@@ -91,7 +92,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from comercial.models.ferramenta import BlocoFerramenta, ItemBloco
 
-# 🧱 Formulário do Bloco
+# ferramenta_form.py — BlocoForm
 class BlocoForm(forms.ModelForm):
     class Meta:
         model = BlocoFerramenta
@@ -99,6 +100,8 @@ class BlocoForm(forms.ModelForm):
         widgets = {
             "numero": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Bloco 1"})
         }
+
+
 
 
 # 🧩 Formulário dos Itens do Bloco

@@ -179,22 +179,53 @@ def excluir_ferramenta(request, pk):
     return redirect("lista_ferramentas")
 
 
+from decimal import Decimal
+
 @login_required
 @permission_required("comercial.view_ferramenta", raise_exception=True)
 def enviar_cotacao_ferramenta(request, pk):
     ferramenta = get_object_or_404(Ferramenta, pk=pk)
 
-    # Gera token e data de envio
+    # Token e data de envio
     ferramenta.token_cotacao = uuid.uuid4()
     ferramenta.cotacao_enviada_em = timezone.now()
     ferramenta.save()
 
-    # Gera link público para resposta
+    # Link público para resposta
     link = request.build_absolute_uri(
         reverse("responder_cotacao", args=[ferramenta.token_cotacao])
     )
 
-    # Corpo simplificado do e-mail
+    # Helper de formatação pt-BR com 3 casas
+    def _fmt(v):
+        try:
+            return f"{Decimal(v or 0):,.3f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        except Exception:
+            return "0,000"
+
+    # Pesos vindos do bloco (já persistidos para SAE 1020/VND e computados para D2)
+    sae1020_bloco = ferramenta.peso_sae_kg or 0
+    vnd_bloco = ferramenta.peso_vnd_kg or 0
+    d2_bloco = 0
+    if ferramenta.bloco:
+        # Soma D2 de todos os itens do bloco
+        d2_bloco = sum(
+            (item.peso_total or 0)
+            for item in ferramenta.bloco.itens.filter(material="SAE D2")
+        )
+
+    # Pesos vindos das fórmulas
+    d2_matriz = ferramenta.kg_matriz or 0
+    d2_puncao = ferramenta.kg_puncao or 0
+    d2_formadores = ferramenta.kg_formadores or 0
+    p20_flange = ferramenta.kg_flange or 0
+    sae1020_carros = ferramenta.kg_carros or 0
+
+    # Agrupamentos para leitura
+    sae1020_total = (sae1020_bloco or 0) + (sae1020_carros or 0)
+    d2_total = (d2_bloco or 0) + (d2_matriz or 0) + (d2_puncao or 0) + (d2_formadores or 0)
+
+    # Corpo rico em detalhes
     corpo = f"""
 🚀 Nova solicitação de cotação enviada:
 
@@ -206,6 +237,12 @@ def enviar_cotacao_ferramenta(request, pk):
 
 📄 Desenho: {'Sim' if ferramenta.desenho_pdf else 'Não'}
 🔗 Link: {link}
+
+📦 Materiais (Kg)
+• SAE 1020 — Total: {_fmt(sae1020_total)}  | Bloco: {_fmt(sae1020_bloco)}  | Carros: {_fmt(sae1020_carros)}
+• VND      — Total: {_fmt(vnd_bloco)}      | Bloco: {_fmt(vnd_bloco)}
+• SAE D2   — Total: {_fmt(d2_total)}       | Bloco: {_fmt(d2_bloco)}  | Matriz: {_fmt(d2_matriz)}  | Punção: {_fmt(d2_puncao)}  | Formadores: {_fmt(d2_formadores)}
+• SAE P20  — Flange: {_fmt(p20_flange)}
 """
 
     # Envio do e-mail
@@ -297,12 +334,20 @@ def formulario_cotacao(request, token):
         return redirect("responder_cotacao", token=token)
 
     # 📦 Prepara dados agrupados de materiais
+    # ferramenta_views.py — dentro de formulario_cotacao()
+    d2_bloco = 0
+    if ferramenta.bloco:
+        d2_bloco = sum(
+            (item.peso_total or 0) for item in ferramenta.bloco.itens.filter(material="SAE D2")
+        )
+
     materiais_agrupados = {
         "SAE 1020": (ferramenta.peso_sae_kg or 0) + (ferramenta.kg_carros or 0),
         "VND": ferramenta.peso_vnd_kg or 0,
-        "SAE D2": (ferramenta.kg_matriz or 0) + (ferramenta.kg_puncao or 0) + (ferramenta.kg_formadores or 0),
+        "SAE D2": d2_bloco + (ferramenta.kg_matriz or 0) + (ferramenta.kg_puncao or 0) + (ferramenta.kg_formadores or 0),
         "SAE P20": ferramenta.kg_flange or 0,
     }
+
 
     return render(request, "cadastros/responder_cotacao.html", {
         "ferramenta": ferramenta,
@@ -430,6 +475,7 @@ def lista_blocos(request):
     # Novos indicadores
     total_sae = ItemBloco.objects.filter(material="SAE 1020", bloco__in=blocos).aggregate(Sum("peso_total"))["peso_total__sum"] or 0
     total_vnd = ItemBloco.objects.filter(material="VND", bloco__in=blocos).aggregate(Sum("peso_total"))["peso_total__sum"] or 0
+    total_sae_d2 = ItemBloco.objects.filter(material="SAE D2", bloco__in=blocos).aggregate(Sum("peso_total"))["peso_total__sum"] or 0
     peso_medio = blocos.annotate(total=Sum("itens__peso_total")).aggregate(Avg("total"))["total__avg"] or 0
 
     context = {
@@ -439,6 +485,7 @@ def lista_blocos(request):
         "peso_total_geral": peso_total_geral,
         "total_sae": total_sae,
         "total_vnd": total_vnd,
+        "total_sae_d2": total_sae_d2,
         "peso_medio": peso_medio,
         "blocos_distintos": blocos_distintos,
     }
@@ -527,16 +574,38 @@ def excluir_bloco(request, pk):
 
 
 
+# comercial/views/ferramenta_views.py — ajax_materiais_do_bloco
 @login_required
 def ajax_materiais_do_bloco(request, bloco_id):
     try:
         bloco = BlocoFerramenta.objects.prefetch_related("itens").get(pk=bloco_id)
         sae_total = sum((item.peso_total or 0) for item in bloco.itens.filter(material="SAE 1020"))
         vnd_total = sum((item.peso_total or 0) for item in bloco.itens.filter(material="VND"))
+        sae_d2_total = sum((item.peso_total or 0) for item in bloco.itens.filter(material="SAE D2"))
         return JsonResponse({
             "sucesso": True,
             "sae_kg": float(sae_total),
-            "vnd_kg": float(vnd_total)
+            "vnd_kg": float(vnd_total),
+            "sae_d2_kg": float(sae_d2_total)
         })
     except Exception as e:
         return JsonResponse({"sucesso": False, "erro": str(e)})
+
+@login_required
+def ajax_valores_forma_calculo(request):
+    forma = request.GET.get("forma") or "PADRAO"
+
+    # Por enquanto só "PADRAO". Ajuste estes valores quando criar novas formas.
+    PRESETS = {
+        "PADRAO": {
+            "passo": "0",
+            "largura_tira": "0",
+            "num_matrizes": "0",
+            "num_puncoes": "0",
+            "num_carros": "0",
+            "num_formadores": "0",
+        }
+    }
+
+    valores = PRESETS.get(forma, PRESETS["PADRAO"])
+    return JsonResponse({"sucesso": True, "valores": valores})
