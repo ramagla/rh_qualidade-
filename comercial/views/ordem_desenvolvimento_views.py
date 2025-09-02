@@ -12,6 +12,9 @@ from assinatura_eletronica.models import AssinaturaEletronica
 from assinatura_eletronica.utils import gerar_assinatura, gerar_qrcode_base64
 from comercial.forms.ordem_desenvolvimento_form import OrdemDesenvolvimentoForm
 from comercial.models import OrdemDesenvolvimento, Cliente
+from alerts.models import AlertaConfigurado, AlertaUsuario
+from django.conf import settings
+from alerts.tasks import send_email_async
 
 @login_required
 @permission_required("comercial.view_ordemdesenvolvimento", raise_exception=True)
@@ -102,10 +105,9 @@ def cadastrar_ordem_desenvolvimento(request):
                 ordem.assinatura_comercial_email = request.user.email
                 ordem.assinatura_comercial_data = timezone.now()
 
-                # Gera hash e registra assinatura
+                # Gera hash e registra assinatura (antes do save, como já estava)
                 hash_valido = gerar_assinatura(ordem, request.user)
                 conteudo_assinado = f"COMERCIAL|{ordem.pk}|{ordem.codigo_brasmol}"
-
                 AssinaturaEletronica.objects.get_or_create(
                     hash=hash_valido,
                     defaults={
@@ -123,7 +125,6 @@ def cadastrar_ordem_desenvolvimento(request):
 
                 hash_valido = gerar_assinatura(ordem, request.user)
                 conteudo_assinado = f"TECNICA|{ordem.pk}|{ordem.codigo_brasmol}"
-
                 AssinaturaEletronica.objects.get_or_create(
                     hash=hash_valido,
                     defaults={
@@ -134,7 +135,54 @@ def cadastrar_ordem_desenvolvimento(request):
                     }
                 )
 
+            # salva para garantir numero/id
             ordem.save()
+
+            # Disparo de alerta In-App (+ modal conforme config)
+            try:
+                config = AlertaConfigurado.objects.get(
+                    tipo="ORDEM_DESENVOLVIMENTO_CRIADA",
+                    ativo=True
+                )
+                exigir_modal = bool(getattr(config, "exigir_confirmacao_modal", False))
+                destinatarios = set(config.usuarios.all())
+                for g in config.grupos.all():
+                    destinatarios.update(g.user_set.all())
+            except AlertaConfigurado.DoesNotExist:
+                exigir_modal = False
+                destinatarios = set()
+
+            url_visualizar = reverse("visualizar_ordem_desenvolvimento", args=[ordem.id])
+
+            if destinatarios:
+                for user in destinatarios:
+                    # In-app
+                    AlertaUsuario.objects.create(
+                        usuario=user,
+                        titulo=f"🆕 Nova Ordem de Desenvolvimento Nº {ordem.numero}",
+                        mensagem=f"Foi cadastrada uma nova OD para o cliente {ordem.cliente}.",
+                        tipo="ORDEM_DESENVOLVIMENTO_CRIADA",
+                        referencia_id=ordem.id,
+                        url_destino=url_visualizar,
+                        exige_confirmacao=exigir_modal
+                    )
+
+                    # E-mail (opcional: envia se o usuário tiver e-mail)
+                    if user.email:
+                        send_email_async.delay(
+                            subject=f"🆕 Nova Ordem de Desenvolvimento Nº {ordem.numero}",
+                            message=f"Uma nova OD foi cadastrada para o cliente {ordem.cliente}.",
+                            recipient_list=[user.email],
+                        )
+            else:
+                # Sem destinatários configurados: feedback útil para diagnóstico em DEV
+                if settings.DEBUG:
+                    messages.warning(
+                        request,
+                        "Nenhum destinatário configurado em ORDEM_DESENVOLVIMENTO_CRIADA. "
+                        "Verifique em ‘Alertas In-App > Gerenciar’."
+                    )
+
             messages.success(request, "Ordem cadastrada com sucesso.")
             return redirect("lista_ordens_desenvolvimento")
     else:
@@ -145,6 +193,7 @@ def cadastrar_ordem_desenvolvimento(request):
         "titulo": "Cadastrar Ordem de Desenvolvimento",
         "ordem": None,
     })
+
 
 @login_required
 @permission_required("comercial.change_ordemdesenvolvimento", raise_exception=True)

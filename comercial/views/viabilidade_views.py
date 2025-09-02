@@ -15,7 +15,10 @@ from comercial.forms.viabilidade_forms import ViabilidadeAnaliseRiscoForm
 from comercial.models import Cliente, PreCalculo
 from comercial.models.viabilidade import ViabilidadeAnaliseRisco
 
-
+# ➕ alertas (in-app + e-mail)
+from alerts.models import AlertaConfigurado, AlertaUsuario
+from alerts.tasks import send_email_async
+from django.conf import settings
 
 @login_required
 @permission_required("comercial.view_viabilidadeanaliserisco", raise_exception=True)
@@ -68,6 +71,31 @@ def lista_viabilidades(request):
 
 
 
+# viabilidade_views.py
+
+from datetime import datetime
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.timezone import make_aware
+from django.conf import settings  # ➕ (para montar link absoluto no e-mail, se quiser)
+
+from assinatura_eletronica.models import AssinaturaEletronica
+from assinatura_eletronica.utils import gerar_assinatura, gerar_qrcode_base64
+from comercial.forms.viabilidade_forms import ViabilidadeAnaliseRiscoForm
+from comercial.models import Cliente, PreCalculo
+from comercial.models.viabilidade import ViabilidadeAnaliseRisco
+
+# ➕ ALERTAS (in-app + e-mail)
+from alerts.models import AlertaConfigurado, AlertaUsuario
+from alerts.tasks import send_email_async
+
+
 @login_required
 @permission_required("comercial.add_viabilidadeanaliserisco", raise_exception=True)
 def cadastrar_viabilidade(request):
@@ -96,6 +124,7 @@ def cadastrar_viabilidade(request):
         ],
     }
 
+    # Cadastro inicial só permite a aba "comercial" (mesma regra já existente)
     if request.method == "POST" and aba != "comercial":
         messages.warning(
             request,
@@ -110,6 +139,7 @@ def cadastrar_viabilidade(request):
         })
 
     if request.method == "POST":
+        # Restringe os fields visíveis/enviáveis pela aba ativa (como já fazia)
         campos_permitidos = set(CAMPOS_ABA.get(aba, []))
         for name in list(form.fields.keys()):
             if name not in campos_permitidos:
@@ -121,7 +151,7 @@ def cadastrar_viabilidade(request):
             viab = form.save(commit=False)
             viab.criado_por = request.user
 
-            # Dados da assinatura comercial
+            # Assinatura comercial (mantido)
             viab.assinatura_comercial_nome = request.user.get_full_name()
             viab.assinatura_comercial_departamento = (
                 getattr(getattr(request.user, "funcionario", None), "cargo_atual", None).nome
@@ -132,7 +162,7 @@ def cadastrar_viabilidade(request):
             viab.save()
             print("💾 [CADASTRAR] Viabilidade criada com ID:", viab.pk)
 
-            # Assinatura Eletrônica com hash e conteúdo
+            # Assinatura eletrônica (mantido)
             hash_valido = gerar_assinatura(viab, request.user)
             conteudo_assinado = f"COMERCIAL|{viab.pk}|{viab.conclusao_comercial}"
 
@@ -145,6 +175,50 @@ def cadastrar_viabilidade(request):
                     "origem_id": viab.pk,
                 }
             )
+
+            # 🔔 ALERTA in-app + MODAL (conforme configuração) + E-MAIL
+            try:
+                config = AlertaConfigurado.objects.get(
+                    tipo="VIABILIDADE_CRIADA",  # ➕ adicione este tipo em TIPO_ALERTA_CHOICES
+                    ativo=True
+                )
+                exigir_modal = bool(getattr(config, "exigir_confirmacao_modal", False))
+                destinatarios = set(config.usuarios.all())
+                for g in config.grupos.all():
+                    destinatarios.update(g.user_set.all())
+            except AlertaConfigurado.DoesNotExist:
+                exigir_modal = False
+                destinatarios = set()
+
+            url_destino = reverse("visualizar_viabilidade", args=[viab.pk])  # rota existente
+            base = getattr(settings, "SITE_URL", "").rstrip("/")
+            link_abs = f"{base}{url_destino}" if base else url_destino
+
+            titulo = f"🆕 Nova Viabilidade Nº {viab.numero:03d}"
+            corpo = (
+                "Foi cadastrada uma nova Viabilidade / Análise de Risco.\n"
+                f"Cliente: {getattr(viab, 'cliente', '—')}\n"
+                f"Acesse: {link_abs}"
+            )
+
+            for user in destinatarios:
+                # In-app (modal se configurado)
+                AlertaUsuario.objects.create(
+                    usuario=user,
+                    titulo=titulo,
+                    mensagem=corpo,
+                    tipo="VIABILIDADE_CRIADA",
+                    referencia_id=viab.pk,
+                    url_destino=url_destino,          # relativo (frontend resolve)
+                    exige_confirmacao=exigir_modal
+                )
+                # E-mail (assíncrono)
+                if user.email:
+                    send_email_async.delay(
+                        subject=titulo,
+                        message=corpo,
+                        recipient_list=[user.email],
+                    )
 
             messages.success(request, "Aba 'comercial' salva com sucesso. Continue preenchendo as demais abas.")
             return redirect("editar_viabilidade", pk=viab.pk)

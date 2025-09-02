@@ -6,10 +6,15 @@ from comercial.models.precalculo import AnaliseComercial
 from comercial.models.ordem_desenvolvimento import OrdemDesenvolvimento
 from django.db import transaction
 from django.utils.timezone import now
+from django.urls import reverse
+from django.conf import settings
 import logging
 
 from django.db import models
-
+from comercial.models import OrdemDesenvolvimento
+from django.db import models
+from alerts.models import AlertaConfigurado, AlertaUsuario  # choices/estrutura existentes:contentReference[oaicite:0]{index=0}
+from alerts.tasks import send_email_async  # tarefa Celery já pronta para e-mail:contentReference[oaicite:1]{index=1}
 logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=OrdemDesenvolvimento)
@@ -59,7 +64,6 @@ def criar_ordem_desenvolvimento_ao_aprovar(sender, instance, created, **kwargs):
         item = instance.item
         cliente = item.cliente
 
-        # Garante atomicidade
         with transaction.atomic():
             ultimo_numero = OrdemDesenvolvimento.objects.aggregate(
                 models.Max("numero")
@@ -70,11 +74,11 @@ def criar_ordem_desenvolvimento_ao_aprovar(sender, instance, created, **kwargs):
                 precalculo=precalc,
                 item=item,
                 cliente=cliente,
-                razao="novo",  # Valor padrão, pode ser ajustado
+                razao="novo",
                 metodologia_aprovacao=instance.metodologia,
                 qtde_amostra=None,
                 automotivo_oem=item.automotivo_oem,
-                comprador=cliente.comprador if hasattr(cliente, "comprador") else "",
+                comprador=getattr(cliente, "comprador", "") or "",
                 requisito_especifico=item.requisito_especifico,
                 item_seguranca=item.item_seguranca,
                 codigo_desenho=item.codigo_desenho,
@@ -86,11 +90,61 @@ def criar_ordem_desenvolvimento_ao_aprovar(sender, instance, created, **kwargs):
             )
 
             logger.info(f"✅ OD #{od.numero} criada automaticamente para o Pré-Cálculo #{precalc.pk}")
+
+            # 🔔 Disparo dos alertas/email APÓS commit (garante ID e consistência)
+            def _notificar():
+                try:
+                    config = AlertaConfigurado.objects.get(
+                        tipo="ORDEM_DESENVOLVIMENTO_CRIADA",  # você adicionou este choice em AlertaConfigurado:contentReference[oaicite:2]{index=2}
+                        ativo=True,
+                    )
+                    exigir_modal = bool(getattr(config, "exigir_confirmacao_modal", False))
+                    destinatarios = set(config.usuarios.all())
+                    for g in config.grupos.all():
+                        destinatarios.update(g.user_set.all())
+                except AlertaConfigurado.DoesNotExist:
+                    exigir_modal = False
+                    destinatarios = set()
+
+                # URL para visualizar OD (rota existe nas suas urls):contentReference[oaicite:3]{index=3}
+                path = reverse("visualizar_ordem_desenvolvimento", args=[od.id])
+                base = getattr(settings, "SITE_URL", "").rstrip("/")
+                link_abs = f"{base}{path}" if base else path
+
+                titulo = f"🆕 Nova Ordem de Desenvolvimento Nº {od.numero}"
+                msg_txt = (
+                    f"Foi cadastrada automaticamente uma nova OD para o cliente {od.cliente}.\n"
+                    f"Acesse: {link_abs}"
+                )
+
+                for user in destinatarios:
+                    # In-app (com modal se configurado)
+                    AlertaUsuario.objects.create(
+                        usuario=user,
+                        titulo=titulo,
+                        mensagem=msg_txt,
+                        tipo="ORDEM_DESENVOLVIMENTO_CRIADA",
+                        referencia_id=od.id,
+                        url_destino=path,  # deixe relativo; seu front já resolve
+                        exige_confirmacao=exigir_modal,
+                    )
+
+                    # E-mail assíncrono (se houver e-mail do usuário)
+                    if user.email:
+                        send_email_async.delay(
+                            subject=titulo,
+                            message=msg_txt,
+                            recipient_list=[user.email],
+                        )
+
+            # agenda notificação pós-commit
+            transaction.on_commit(_notificar)
+
     except Exception as e:
         logger.error(f"❌ Erro ao criar OD automática: {e}")
 
-from datetime import datetime
 
+from datetime import datetime
 
 @receiver(post_save, sender=AnaliseComercial)
 def criar_ordem_amostra_ao_solicitar(sender, instance, created, **kwargs):
@@ -108,7 +162,7 @@ def criar_ordem_amostra_ao_solicitar(sender, instance, created, **kwargs):
         with transaction.atomic():
             hoje_str = datetime.now().strftime("%Y%m%d")
 
-            # Gera código da amostra
+            # Gera código da amostra (garante unicidade no dia)
             sufixo_amostra = 1
             codigo_amostra = f"{hoje_str}-{sufixo_amostra:02d}"
             while OrdemDesenvolvimento.objects.filter(codigo_amostra=codigo_amostra).exists():
@@ -119,18 +173,18 @@ def criar_ordem_amostra_ao_solicitar(sender, instance, created, **kwargs):
                 models.Max("numero")
             )["numero__max"] or 99
 
-            OrdemDesenvolvimento.objects.create(
+            od = OrdemDesenvolvimento.objects.create(
                 numero=ultimo_numero + 1,
                 precalculo=precalc,
                 item=item,
                 cliente=cliente,
                 razao="amostras",
                 amostra="sim",
-                codigo_amostra=codigo_amostra,  # ✅ Apenas este campo gerado
+                codigo_amostra=codigo_amostra,
                 metodologia_aprovacao=instance.metodologia,
                 qtde_amostra=300,
                 automotivo_oem=item.automotivo_oem,
-                comprador=getattr(cliente, "comprador", ""),
+                comprador=getattr(cliente, "comprador", "") or "",
                 requisito_especifico=item.requisito_especifico,
                 item_seguranca=item.item_seguranca,
                 codigo_desenho=item.codigo_desenho,
@@ -140,8 +194,59 @@ def criar_ordem_amostra_ao_solicitar(sender, instance, created, **kwargs):
                 assinatura_comercial_email=instance.assinatura_cn,
                 assinatura_comercial_data=instance.data_assinatura or now(),
             )
+
+            # Notificação pós-commit (garante ID e consistência)
+            def _notificar():
+                try:
+                    config = AlertaConfigurado.objects.get(
+                        tipo="ORDEM_DESENVOLVIMENTO_CRIADA",
+                        ativo=True
+                    )
+                    exigir_modal = bool(getattr(config, "exigir_confirmacao_modal", False))
+                    destinatarios = set(config.usuarios.all())
+                    for g in config.grupos.all():
+                        destinatarios.update(g.user_set.all())
+                except AlertaConfigurado.DoesNotExist:
+                    exigir_modal = False
+                    destinatarios = set()
+
+                # Rota de visualização da OD
+                path = reverse("visualizar_ordem_desenvolvimento", args=[od.id])
+                base = getattr(settings, "SITE_URL", "").rstrip("/")
+                link_abs = f"{base}{path}" if base else path
+
+                titulo = f"🆕 Nova Ordem de Desenvolvimento Nº {od.numero} (Amostras)"
+                msg_txt = (
+                    f"Foi criada automaticamente uma OD (amostras) para o cliente {od.cliente}.\n"
+                    f"Código da amostra: {od.codigo_amostra}\n"
+                    f"Acesse: {link_abs}"
+                )
+
+                for user in destinatarios:
+                    # In-app (com modal se configurado)
+                    AlertaUsuario.objects.create(
+                        usuario=user,
+                        titulo=titulo,
+                        mensagem=msg_txt,
+                        tipo="ORDEM_DESENVOLVIMENTO_CRIADA",
+                        referencia_id=od.id,
+                        url_destino=path,   # relativo
+                        exige_confirmacao=exigir_modal
+                    )
+
+                    # E-mail (assíncrono)
+                    if user.email:
+                        send_email_async.delay(
+                            subject=titulo,
+                            message=msg_txt,
+                            recipient_list=[user.email],
+                        )
+
+            transaction.on_commit(_notificar)
+
     except Exception as e:
         logger.error(f"❌ Erro ao criar OD para amostras: {e}")
+
 
 
 
@@ -186,22 +291,66 @@ def criar_viabilidade_automatica(sender, instance, created, **kwargs):
                 data_desenho=item.data_revisao,
                 codigo_brasmol=item.codigo,
 
-                # Valores padrão (ou ajuste caso adicione depois)
                 produto_definido=False,
                 risco_comercial=False,
 
                 assinatura_comercial_nome=instance.assinatura_nome,
                 assinatura_comercial_departamento="COMERCIAL",
-                assinatura_comercial_data=instance.data_assinatura,
+                assinatura_comercial_data=instance.data_assinatura or now(),
                 conclusao_comercial=instance.conclusao,
                 consideracoes_comercial=instance.consideracoes,
-                criado_por=instance.usuario
+                criado_por=getattr(instance, "usuario", None),
             )
 
-
             logger.info(f"✅ Viabilidade #{viabilidade.numero} criada automaticamente para o Pré-Cálculo #{precalc.pk}")
+
+            def _notificar():
+                try:
+                    config = AlertaConfigurado.objects.get(
+                        tipo="VIABILIDADE_CRIADA",
+                        ativo=True
+                    )
+                    exigir_modal = bool(getattr(config, "exigir_confirmacao_modal", False))
+                    destinatarios = set(config.usuarios.all())
+                    for g in config.grupos.all():
+                        destinatarios.update(g.user_set.all())
+                except AlertaConfigurado.DoesNotExist:
+                    exigir_modal = False
+                    destinatarios = set()
+
+                path = reverse("visualizar_viabilidade", args=[viabilidade.pk])
+                base = getattr(settings, "SITE_URL", "").rstrip("/")
+                link_abs = f"{base}{path}" if base else path
+
+                titulo = f"🆕 Nova Viabilidade Nº {viabilidade.numero:03d}"
+                corpo = (
+                    "Foi criada automaticamente uma Viabilidade / Análise de Risco.\n"
+                    f"Cliente: {getattr(viabilidade, 'cliente', '—')}\n"
+                    f"Acesse: {link_abs}"
+                )
+
+                for user in destinatarios:
+                    AlertaUsuario.objects.create(
+                        usuario=user,
+                        titulo=titulo,
+                        mensagem=corpo,
+                        tipo="VIABILIDADE_CRIADA",
+                        referencia_id=viabilidade.pk,
+                        url_destino=path,
+                        exige_confirmacao=exigir_modal,
+                    )
+                    if user.email:
+                        send_email_async.delay(
+                            subject=titulo,
+                            message=corpo,
+                            recipient_list=[user.email],
+                        )
+
+            transaction.on_commit(_notificar)
+
     except Exception as e:
         logger.error(f"❌ Erro ao criar Viabilidade automática: {e}")
+
 
 
 from django.db.models.signals import post_save
