@@ -26,6 +26,7 @@ from Funcionario.utils.relatorios_utils import (
 )
 
 from Funcionario.models.indicadores import FechamentoIndicadorTreinamento
+from django.db.models import Count
 
 
 
@@ -38,6 +39,18 @@ from Funcionario.utils.relatorios_utils import (
     dividir_horas_por_trimestre,
     generate_training_hours_chart_styled
 )
+
+# ---------- Helpers comuns ao Indicador ----------
+
+def _parse_horas(valor):
+    """Aceita '8h', '2,5h', '32 horas', '1.0' → float horas."""
+    if valor is None:
+        return 0.0
+    m = re.search(r"(\d+(?:[.,]\d+)?)", str(valor))
+    if not m:
+        return 0.0
+    return float(m.group(1).replace(",", "."))
+
 
 def _valor_registro_por_trimestre(reg, t):
     """
@@ -58,55 +71,83 @@ def _valor_registro_por_trimestre(reg, t):
 STATUS_OK = {"concluido", "concluído", "CONCLUIDO", "CONCLUÍDO"}
 TRIMESTRES = {1: (1, 3), 2: (4, 6), 3: (7, 9), 4: (10, 12)}
 
+
+# ---------- Indicador Trimestral (Horas/funcionário) ----------
+
 class RelatorioPlanilhaTreinamentosView(TemplateView):
     template_name = "relatorios/indicador.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         ano = int(self.request.GET.get("ano", datetime.now().year))
+        ano_corrente = datetime.now().year
         trimestre_atual = ((datetime.now().month - 1) // 3) + 1
 
         total_horas_por_trimestre = {t: 0.0 for t in TRIMESTRES}
-        total_horas_treinamento = 0.0  # hora-pessoa total do ano (para exibição, se quiser)
+        total_horas_treinamento = 0.0  # hora-pessoa total do ano (informativo)
 
         # 1) Tenta usar os fechamentos existentes
-        fechamentos = {t: FechamentoIndicadorTreinamento.objects.filter(ano=ano, trimestre=t).first()
-                       for t in range(1, 5)}
+        fechamentos = {
+            t: FechamentoIndicadorTreinamento.objects.filter(ano=ano, trimestre=t).first()
+            for t in range(1, 5)
+        }
 
         if all(fechamentos.values()):
             # Todos os 4 registros existem → lê com fallback seguro
             media = {t: _valor_registro_por_trimestre(fechamentos[t], t) for t in range(1, 5)}
+
+            # Oculta trimestres FUTUROS no ano corrente
+            if ano == ano_corrente:
+                for t_fut in range(trimestre_atual + 1, 5):
+                    media[t_fut] = 0.0
+
             media_geral = round(sum(media.values()) / 4.0, 2)
+
         else:
-            # 2) Recalcula a partir dos treinamentos do ano (HORA-PESSOA)
+            # 2) Recalcula a partir dos treinamentos do ano (HORA-PESSOA, somente Concluídos)
             for t, (m_ini, m_fim) in TRIMESTRES.items():
-                treinamentos = Treinamento.objects.filter(
-                    data_inicio__year=ano,
-                    data_inicio__month__gte=m_ini,
-                    data_inicio__month__lte=m_fim,
-                    status__in=STATUS_OK,
-                ).annotate(n_participantes=Count("funcionarios", distinct=True))
+                treinamentos = (
+                    Treinamento.objects.filter(
+                        data_inicio__year=ano,
+                        data_inicio__month__gte=m_ini,
+                        data_inicio__month__lte=m_fim,
+                        status__in=STATUS_OK,
+                    )
+                    .annotate(n_participantes=Count("funcionarios", distinct=True))
+                )
 
                 for tmt in treinamentos:
                     carga = _parse_horas(tmt.carga_horaria)
                     participantes = int(tmt.n_participantes or 0)
-
                     total_hp = carga * participantes
                     total_horas_treinamento += total_hp
 
                     dist = dividir_horas_por_trimestre(tmt.data_inicio, tmt.data_fim, total_hp)
                     for tri, horas in dist.items():
+                        # não somar horas em trimestres FUTUROS do ano corrente
+                        if ano == ano_corrente and tri > trimestre_atual:
+                            continue
                         total_horas_por_trimestre[tri] += horas
 
             total_funcionarios = Funcionario.objects.filter(status="Ativo").count() or 1
             media = {t: round(h / total_funcionarios, 2) for t, h in total_horas_por_trimestre.items()}
+
+            # Mascara exibição de FUTUROS no ano corrente
+            if ano == ano_corrente:
+                for t_fut in range(trimestre_atual + 1, 5):
+                    media[t_fut] = 0.0
+
             media_geral = round(sum(media.values()) / 4.0, 2)
 
-            # Persiste (um registro por trimestre, limpando campos de outros trimestres)
+            # Persiste: NÃO grava valores em trimestres futuros do ano corrente
             for t in range(1, 5):
                 defaults = {"media": media_geral}
                 for k in (1, 2, 3, 4):
-                    defaults[f"valor_t{k}"] = media.get(t) if k == t else None
+                    if ano == ano_corrente and t > trimestre_atual:
+                        defaults[f"valor_t{k}"] = None  # futuro → não grava
+                    else:
+                        defaults[f"valor_t{k}"] = media.get(t) if k == t else None
+
                 FechamentoIndicadorTreinamento.objects.update_or_create(
                     ano=ano, trimestre=t, defaults=defaults
                 )
@@ -141,6 +182,38 @@ class RelatorioPlanilhaTreinamentosView(TemplateView):
         return context
 
 
+@login_required
+@permission_required("Funcionario.view_fechamentoindicadortreinamento", raise_exception=True)
+def atualizar_indicador_trimestre(request):
+    if request.method != "POST":
+        messages.error(request, _("Método inválido."))
+        return redirect(request.META.get("HTTP_REFERER", "/"))
+
+    try:
+        ano = int(request.POST.get("ano"))
+        trimestre = int(request.POST.get("trimestre"))
+    except (TypeError, ValueError):
+        messages.error(request, _("Ano ou trimestre inválidos."))
+        return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
+
+    if trimestre not in (1, 2, 3, 4):
+        messages.error(request, _("Trimestre precisa ser 1, 2, 3 ou 4."))
+        return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
+
+    try:
+        resultado = recalcular_fechamento_trimestre(ano=ano, trimestre=trimestre, usuario=request.user)
+    except Exception as exc:
+        messages.error(request, _(f"Falha ao atualizar T{trimestre}/{ano}: {exc}"))
+        return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
+
+    msg = _("Indicador atualizado com sucesso: Ano %(ano)s • T%(tri)s • Média do trimestre %(media)s • Média anual %(media_anual)s.") % {
+        "ano": ano,
+        "tri": trimestre,
+        "media": f"{resultado.get('media_trimestre', 0):.2f}",
+        "media_anual": f"{resultado.get('media_anual', 0):.2f}",
+    }
+    messages.success(request, msg)
+    return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
 
 
 
@@ -334,35 +407,3 @@ from Funcionario.services.indicadores import (
     recalcular_fechamento_trimestre,  # vamos criar no arquivo abaixo
 )
 
-@login_required
-@permission_required("Funcionario.view_fechamentoindicadortreinamento", raise_exception=True)
-def atualizar_indicador_trimestre(request):
-    if request.method != "POST":
-        messages.error(request, _("Método inválido."))
-        return redirect(request.META.get("HTTP_REFERER", "/"))
-
-    try:
-        ano = int(request.POST.get("ano"))
-        trimestre = int(request.POST.get("trimestre"))
-    except (TypeError, ValueError):
-        messages.error(request, _("Ano ou trimestre inválidos."))
-        return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
-
-    if trimestre not in (1, 2, 3, 4):
-        messages.error(request, _("Trimestre precisa ser 1, 2, 3 ou 4."))
-        return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
-
-    try:
-        resultado = recalcular_fechamento_trimestre(ano=ano, trimestre=trimestre, usuario=request.user)
-    except Exception as exc:
-        messages.error(request, _(f"Falha ao atualizar T{trimestre}/{ano}: {exc}"))
-        return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
-
-    msg = _("Indicador atualizado com sucesso: Ano %(ano)s • T%(tri)s • Média do trimestre %(media)s • Média anual %(media_anual)s.") % {
-        "ano": ano,
-        "tri": trimestre,
-        "media": f"{resultado.get('media_trimestre', 0):.2f}",
-        "media_anual": f"{resultado.get('media_anual', 0):.2f}",
-    }
-    messages.success(request, msg)
-    return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
