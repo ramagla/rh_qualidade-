@@ -23,6 +23,7 @@ from Funcionario.models import (
 from Funcionario.utils.treinamento_utils import criar_ou_atualizar_avaliacao, obter_dados_relatorio_f003, obter_treinamentos_requeridos
 from Funcionario.models import Departamentos
 
+import re  # no topo do arquivo, se ainda não houver
 
 # views: lista_treinamentos (treinamento_views.py)
 from datetime import datetime
@@ -64,6 +65,21 @@ def lista_treinamentos(request):
     paginator = Paginator(treinamentos, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
 
+    def _parse_horas(valor):
+        """
+        Aceita formatos como '8h', '260 h', '32 horas', '10,5h'.
+        Retorna float de horas. Vazio/None -> 0.0
+        """
+        if valor is None:
+            return 0.0
+        m = re.search(r'(\d+(?:[.,]\d+)?)', str(valor))
+        if not m:
+            return 0.0
+        return float(m.group(1).replace(',', '.'))
+
+    # ... após aplicar todos os filtros (inclusive por término, se você já adicionou) ...
+    total_horas_periodo = sum(_parse_horas(t.carga_horaria) for t in treinamentos)
+
     context = {
         "treinamentos": page_obj,
         "page_obj": page_obj,
@@ -74,11 +90,11 @@ def lista_treinamentos(request):
         "treinamentos_concluidos": treinamentos.filter(status="concluido").count(),
         "treinamentos_em_andamento": treinamentos.filter(status="cursando").count(),
         "treinamentos_requeridos": treinamentos.filter(status="requerido").count(),
-        # mantemos os valores na UI
-        "termino_de": termino_de,
-        "termino_ate": termino_ate,
+         "termino_de": request.GET.get("termino_de", ""),
+    "termino_ate": request.GET.get("termino_ate", ""),
+        # ✅ novo
+        "total_horas_periodo": round(total_horas_periodo, 2),
     }
-
     return render(request, "treinamentos/lista_treinamentos.html", context)
 
 

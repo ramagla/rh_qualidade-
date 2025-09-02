@@ -125,21 +125,21 @@
     <div class="row g-2">
       <div class="col-6">
         <input
-          type="date"
-          name="termino_de"
-          class="form-control"
-          value="{{ request.GET.termino_de|default:termino_de }}"
-          aria-label="Data de término inicial"
-        >
+            type="date"
+            name="termino_de"
+            class="form-control"
+            value="{{ termino_de|default:'' }}"
+            aria-label="Data de término inicial"
+          />
       </div>
       <div class="col-6">
         <input
-          type="date"
-          name="termino_ate"
-          class="form-control"
-          value="{{ request.GET.termino_ate|default:termino_ate }}"
-          aria-label="Data de término final"
-        >
+  type="date"
+  name="termino_ate"
+  class="form-control"
+  value="{{ termino_ate|default:'' }}"
+  aria-label="Data de término final"
+/>
       </div>
     </div>
     <small class="text-muted">Filtra pela <strong>data de término</strong> do treinamento.</small>
@@ -157,12 +157,15 @@
 
 
 
+<!-- lista_treinamentos.html → bloco dos cards de indicador -->
 <div class="row mb-4">
-  {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total de Treinamentos" valor=total_treinamentos subtitulo="Todos os treinamentos cadastrados." icone="bi-mortarboard-fill" %}
+  {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="Total" valor=total_treinamentos subtitulo="Todos os treinamentos cadastrados." icone="bi-mortarboard-fill" %}
+  {% include 'partials/global/_card_indicador.html' with cor="dark" titulo="Horas do Período" valor=total_horas_periodo|floatformat:2 subtitulo="Soma da carga horária (data de término)." icone="bi-clock-history" %}
   {% include 'partials/global/_card_indicador.html' with cor="success" titulo="Concluídos" valor=treinamentos_concluidos subtitulo="Treinamentos finalizados." icone="bi-check-circle-fill" %}
   {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="Em Andamento" valor=treinamentos_em_andamento subtitulo="Treinamentos em curso." icone="bi-hourglass-split" %}
-  {% include 'partials/global/_card_indicador.html' with cor="info" titulo="Requeridos" valor=treinamentos_requeridos subtitulo="Treinamentos planejados." icone="bi-calendar2-event-fill" %}
+  {% include 'partials/global/_card_indicador.html' with cor="info" titulo="Planejados" valor=treinamentos_requeridos subtitulo="Treinamentos planejados." icone="bi-calendar2-event-fill" %}
 </div>
+
 
 
     <!-- Tabela de Treinamentos -->
