@@ -118,7 +118,32 @@
           <option value="requerido" {% if request.GET.status == "requerido" %}selected{% endif %}>Requerido</option>
         </select>
       </div>
-
+ <div class="col-12">
+    <label class="form-label">
+      <i class="bi bi-calendar2-check me-1"></i> Término (de / até)
+    </label>
+    <div class="row g-2">
+      <div class="col-6">
+        <input
+          type="date"
+          name="termino_de"
+          class="form-control"
+          value="{{ request.GET.termino_de|default:termino_de }}"
+          aria-label="Data de término inicial"
+        >
+      </div>
+      <div class="col-6">
+        <input
+          type="date"
+          name="termino_ate"
+          class="form-control"
+          value="{{ request.GET.termino_ate|default:termino_ate }}"
+          aria-label="Data de término final"
+        >
+      </div>
+    </div>
+    <small class="text-muted">Filtra pela <strong>data de término</strong> do treinamento.</small>
+  </div>
       <!-- Botão Filtrar -->
       <div class="col-12 mt-3">
         {% include "partials/global/_botao_filtrar.html" %}

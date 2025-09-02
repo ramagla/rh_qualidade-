@@ -24,19 +24,37 @@ from Funcionario.utils.treinamento_utils import criar_ou_atualizar_avaliacao, ob
 from Funcionario.models import Departamentos
 
 
+# views: lista_treinamentos (treinamento_views.py)
+from datetime import datetime
+
 @login_required
 def lista_treinamentos(request):
     tipo = request.GET.get("tipo")
     status = request.GET.get("status")
     funcionario_id = request.GET.get("funcionario")
+    termino_de = request.GET.get("termino_de")  # YYYY-MM-DD
+    termino_ate = request.GET.get("termino_ate")  # YYYY-MM-DD
 
     treinamentos = Treinamento.objects.prefetch_related("funcionarios").all()
+
     if tipo:
         treinamentos = treinamentos.filter(tipo=tipo)
     if status:
         treinamentos = treinamentos.filter(status=status)
     if funcionario_id:
         treinamentos = treinamentos.filter(funcionarios__id=funcionario_id)
+
+    # ✅ Filtro por data de término (intervalo)
+    try:
+        if termino_de:
+            dt_ini = datetime.strptime(termino_de, "%Y-%m-%d").date()
+            treinamentos = treinamentos.filter(data_fim__gte=dt_ini)
+        if termino_ate:
+            dt_fim = datetime.strptime(termino_ate, "%Y-%m-%d").date()
+            treinamentos = treinamentos.filter(data_fim__lte=dt_fim)
+    except ValueError:
+        # valores inválidos são simplesmente ignorados
+        pass
 
     treinamentos = treinamentos.order_by("-data_fim")
     funcionarios = Funcionario.objects.filter(
@@ -56,9 +74,13 @@ def lista_treinamentos(request):
         "treinamentos_concluidos": treinamentos.filter(status="concluido").count(),
         "treinamentos_em_andamento": treinamentos.filter(status="cursando").count(),
         "treinamentos_requeridos": treinamentos.filter(status="requerido").count(),
+        # mantemos os valores na UI
+        "termino_de": termino_de,
+        "termino_ate": termino_ate,
     }
 
     return render(request, "treinamentos/lista_treinamentos.html", context)
+
 
 
 @login_required
