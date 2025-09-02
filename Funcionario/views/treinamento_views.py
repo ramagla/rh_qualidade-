@@ -28,24 +28,37 @@ import re  # no topo do arquivo, se ainda não houver
 # views: lista_treinamentos (treinamento_views.py)
 from datetime import datetime
 
+from datetime import datetime
+import re
+
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db.models import Count
+from django.shortcuts import render
+
+from Funcionario.models import Treinamento, Funcionario
+
+
 @login_required
 def lista_treinamentos(request):
-    tipo = request.GET.get("tipo")
-    status = request.GET.get("status")
-    funcionario_id = request.GET.get("funcionario")
-    termino_de = request.GET.get("termino_de")  # YYYY-MM-DD
-    termino_ate = request.GET.get("termino_ate")  # YYYY-MM-DD
+    tipo = request.GET.get("tipo", "")
+    status = request.GET.get("status", "")
+    funcionario_id = request.GET.get("funcionario", "")
+    termino_de = request.GET.get("termino_de", "")
+    termino_ate = request.GET.get("termino_ate", "")
 
     treinamentos = Treinamento.objects.prefetch_related("funcionarios").all()
 
     if tipo:
         treinamentos = treinamentos.filter(tipo=tipo)
+
     if status:
         treinamentos = treinamentos.filter(status=status)
+
     if funcionario_id:
         treinamentos = treinamentos.filter(funcionarios__id=funcionario_id)
 
-    # ✅ Filtro por data de término (intervalo)
+    # Filtro por data de término (intervalo)
     try:
         if termino_de:
             dt_ini = datetime.strptime(termino_de, "%Y-%m-%d").date()
@@ -54,31 +67,34 @@ def lista_treinamentos(request):
             dt_fim = datetime.strptime(termino_ate, "%Y-%m-%d").date()
             treinamentos = treinamentos.filter(data_fim__lte=dt_fim)
     except ValueError:
-        # valores inválidos são simplesmente ignorados
         pass
 
-    treinamentos = treinamentos.order_by("-data_fim")
-    funcionarios = Funcionario.objects.filter(
-        id__in=treinamentos.values_list("funcionarios__id", flat=True)
-    ).distinct().order_by("nome")
+    # Ordenação e anotação do número de participantes
+    treinamentos = treinamentos.order_by("-data_fim").annotate(
+        n_participantes=Count("funcionarios", distinct=True)
+    )
 
+    # Paginação
     paginator = Paginator(treinamentos, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
 
+    # Parser de horas (aceita "8h", "2,5h", "32 horas", "1.0")
     def _parse_horas(valor):
-        """
-        Aceita formatos como '8h', '260 h', '32 horas', '10,5h'.
-        Retorna float de horas. Vazio/None -> 0.0
-        """
         if valor is None:
             return 0.0
-        m = re.search(r'(\d+(?:[.,]\d+)?)', str(valor))
+        m = re.search(r"(\d+(?:[.,]\d+)?)", str(valor))
         if not m:
             return 0.0
-        return float(m.group(1).replace(',', '.'))
+        return float(m.group(1).replace(",", "."))
 
-    # ... após aplicar todos os filtros (inclusive por término, se você já adicionou) ...
-    total_horas_periodo = sum(_parse_horas(t.carga_horaria) for t in treinamentos)
+    # Soma hora-pessoa no período filtrado: carga_horária × nº de colaboradores
+    total_horas_periodo = 0.0
+    for t in treinamentos:
+        total_horas_periodo += _parse_horas(t.carga_horaria) * (t.n_participantes or 0)
+
+    funcionarios = Funcionario.objects.filter(
+        id__in=treinamentos.values_list("funcionarios__id", flat=True)
+    ).distinct().order_by("nome")
 
     context = {
         "treinamentos": page_obj,
@@ -90,12 +106,12 @@ def lista_treinamentos(request):
         "treinamentos_concluidos": treinamentos.filter(status="concluido").count(),
         "treinamentos_em_andamento": treinamentos.filter(status="cursando").count(),
         "treinamentos_requeridos": treinamentos.filter(status="requerido").count(),
-         "termino_de": request.GET.get("termino_de", ""),
-    "termino_ate": request.GET.get("termino_ate", ""),
-        # ✅ novo
+        "termino_de": termino_de,
+        "termino_ate": termino_ate,
         "total_horas_periodo": round(total_horas_periodo, 2),
     }
     return render(request, "treinamentos/lista_treinamentos.html", context)
+
 
 
 

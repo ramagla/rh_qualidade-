@@ -39,114 +39,107 @@ from Funcionario.utils.relatorios_utils import (
     generate_training_hours_chart_styled
 )
 
+def _valor_registro_por_trimestre(reg, t):
+    """
+    Lê valor_t{t}; se vier None/0 tenta outros campos do registro (dados legados).
+    """
+    if not reg:
+        return 0.0
+    v = getattr(reg, f"valor_t{t}", None)
+    if v not in (None, 0):
+        return float(v)
+    for k in (1, 2, 3, 4):
+        alt = getattr(reg, f"valor_t{k}", None)
+        if alt not in (None, 0):
+            return float(alt)
+    return 0.0
+
+
+STATUS_OK = {"concluido", "concluído", "CONCLUIDO", "CONCLUÍDO"}
+TRIMESTRES = {1: (1, 3), 2: (4, 6), 3: (7, 9), 4: (10, 12)}
 
 class RelatorioPlanilhaTreinamentosView(TemplateView):
     template_name = "relatorios/indicador.html"
 
     def get_context_data(self, **kwargs):
-        from Funcionario.models.indicadores import FechamentoIndicadorTreinamento
-
         context = super().get_context_data(**kwargs)
         ano = int(self.request.GET.get("ano", datetime.now().year))
         trimestre_atual = ((datetime.now().month - 1) // 3) + 1
 
-        trimestres = {1: (1, 3), 2: (4, 6), 3: (7, 9), 4: (10, 12)}
-        total_horas_por_trimestre = {t: 0.0 for t in trimestres}
-        total_horas_treinamento = 0.0
+        total_horas_por_trimestre = {t: 0.0 for t in TRIMESTRES}
+        total_horas_treinamento = 0.0  # hora-pessoa total do ano (para exibição, se quiser)
 
-        # Tenta buscar os 4 registros de fechamento individualmente
-        fechamentos = {
-            t: FechamentoIndicadorTreinamento.objects.filter(ano=ano, trimestre=t).first()
-            for t in range(1, 5)
-        }
+        # 1) Tenta usar os fechamentos existentes
+        fechamentos = {t: FechamentoIndicadorTreinamento.objects.filter(ano=ano, trimestre=t).first()
+                       for t in range(1, 5)}
 
         if all(fechamentos.values()):
-            # Todos os trimestres têm fechamento — usa os dados salvos
-            media = {
-                1: fechamentos[1].valor_t1 or 0,
-                2: fechamentos[2].valor_t2 or 0,
-                3: fechamentos[3].valor_t3 or 0,
-                4: fechamentos[4].valor_t4 or 0,
-            }
-            media_geral = round(sum(media.values()) / 4, 2)
-
+            # Todos os 4 registros existem → lê com fallback seguro
+            media = {t: _valor_registro_por_trimestre(fechamentos[t], t) for t in range(1, 5)}
+            media_geral = round(sum(media.values()) / 4.0, 2)
         else:
-            # Recalcula os dados com base nos treinamentos
-            for t, (mes_inicio, mes_fim) in trimestres.items():
+            # 2) Recalcula a partir dos treinamentos do ano (HORA-PESSOA)
+            for t, (m_ini, m_fim) in TRIMESTRES.items():
                 treinamentos = Treinamento.objects.filter(
                     data_inicio__year=ano,
-                    data_inicio__month__gte=mes_inicio,
-                    data_inicio__month__lte=mes_fim,
-                    status="concluido"
-                )
+                    data_inicio__month__gte=m_ini,
+                    data_inicio__month__lte=m_fim,
+                    status__in=STATUS_OK,
+                ).annotate(n_participantes=Count("funcionarios", distinct=True))
 
                 for tmt in treinamentos:
-                    carga = float(tmt.carga_horaria.replace("h", "").strip() or 0)
-                    participantes = Funcionario.objects.filter(
-                        treinamentos__nome_curso=tmt.nome_curso,
-                        treinamentos__data_inicio=tmt.data_inicio
-                    ).distinct().count()
+                    carga = _parse_horas(tmt.carga_horaria)
+                    participantes = int(tmt.n_participantes or 0)
 
-                    total = carga * participantes
-                    total_horas_treinamento += total
+                    total_hp = carga * participantes
+                    total_horas_treinamento += total_hp
 
-                    distribuicao = dividir_horas_por_trimestre(tmt.data_inicio, tmt.data_fim, total)
-                    for trimestre, horas in distribuicao.items():
-                        total_horas_por_trimestre[trimestre] += horas
+                    dist = dividir_horas_por_trimestre(tmt.data_inicio, tmt.data_fim, total_hp)
+                    for tri, horas in dist.items():
+                        total_horas_por_trimestre[tri] += horas
 
             total_funcionarios = Funcionario.objects.filter(status="Ativo").count() or 1
             media = {t: round(h / total_funcionarios, 2) for t, h in total_horas_por_trimestre.items()}
-            media_geral = round(sum(media.values()) / 4, 2)
+            media_geral = round(sum(media.values()) / 4.0, 2)
 
-            # Salva corretamente 1 registro por trimestre
+            # Persiste (um registro por trimestre, limpando campos de outros trimestres)
             for t in range(1, 5):
+                defaults = {"media": media_geral}
+                for k in (1, 2, 3, 4):
+                    defaults[f"valor_t{k}"] = media.get(t) if k == t else None
                 FechamentoIndicadorTreinamento.objects.update_or_create(
-                    ano=ano,
-                    trimestre=t,
-                    defaults={
-                        f"valor_t{t}": media.get(t),
-                        "media": media_geral
-                    }
+                    ano=ano, trimestre=t, defaults=defaults
                 )
 
-        # Geração do gráfico
+        # 3) Gráfico + análise
         grafico = generate_training_hours_chart_styled(media, ano)
-        # Análise de Dados automática com base na meta de 4h por funcionário
         analise_dados = {}
-        meta = 4.0
+        meta = 4.0  # horas/func por trimestre
 
         for t in range(1, 5):
-            valor = media.get(t, 0)
+            valor = media.get(t, 0.0)
             if valor == 0:
-                continue  # ignora trimestres sem dados
-            elif valor >= meta:
-                icone = "✅"
-                mensagem = f"{icone} A média de {valor:.2f}h no {t}º trimestre está dentro da meta de {meta}h por funcionário."
+                continue
+            if valor >= meta:
+                mensagem = f"✅ A média de {valor:.2f}h no {t}º trimestre está dentro da meta de {meta}h por funcionário."
             else:
-                icone = "⚠️"
-                mensagem = f"{icone} A média de {valor:.2f}h no {t}º trimestre está abaixo da meta de {meta}h por funcionário."
-
+                mensagem = f"⚠️ A média de {valor:.2f}h no {t}º trimestre está abaixo da meta de {meta}h por funcionário."
             analise_dados[t] = {"mensagem": mensagem}
 
-       
         context.update({
             "ano": ano,
             "valores": media,
             "media": media_geral,
             "grafico_base64": grafico,
-            "total_horas_treinamento": total_horas_treinamento,
+            "total_horas_treinamento": round(total_horas_treinamento, 2),
             "anos_disponiveis": [d.year for d in Treinamento.objects.dates("data_inicio", "year").distinct()],
             "data_atual": datetime.now().strftime("%d/%m/%Y"),
             "trimestre_atual": trimestre_atual,
-            "trimestres": {
-                1: "1º Trimestre",
-                2: "2º Trimestre",
-                3: "3º Trimestre",
-                4: "4º Trimestre",
-            },
+            "trimestres": {1: "1º Trimestre", 2: "2º Trimestre", 3: "3º Trimestre", 4: "4º Trimestre"},
             "analise_dados": analise_dados,
         })
         return context
+
 
 
 
@@ -365,9 +358,7 @@ def atualizar_indicador_trimestre(request):
         messages.error(request, _(f"Falha ao atualizar T{trimestre}/{ano}: {exc}"))
         return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
 
-    msg = _(
-        "Indicador atualizado com sucesso: Ano %(ano)s • T%(tri)s • Média do trimestre %(media)s • Média anual %(media_anual)s."
-    ) % {
+    msg = _("Indicador atualizado com sucesso: Ano %(ano)s • T%(tri)s • Média do trimestre %(media)s • Média anual %(media_anual)s.") % {
         "ano": ano,
         "tri": trimestre,
         "media": f"{resultado.get('media_trimestre', 0):.2f}",
