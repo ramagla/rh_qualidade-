@@ -330,3 +330,48 @@ def cronograma_avaliacao_eficacia(request):
         "meses": [datetime(ano, m, 1).strftime("%b/%y").capitalize() for m in range(1, 13)],
     }
     return render(request, "relatorios/cronograma_avaliacao_eficacia.html", context)
+
+# relatorios_views.py
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import redirect
+from django.utils.translation import gettext as _
+
+from Funcionario.services.indicadores import (
+    recalcular_fechamento_trimestre,  # vamos criar no arquivo abaixo
+)
+
+@login_required
+@permission_required("Funcionario.view_fechamentoindicadortreinamento", raise_exception=True)
+def atualizar_indicador_trimestre(request):
+    if request.method != "POST":
+        messages.error(request, _("Método inválido."))
+        return redirect(request.META.get("HTTP_REFERER", "/"))
+
+    try:
+        ano = int(request.POST.get("ano"))
+        trimestre = int(request.POST.get("trimestre"))
+    except (TypeError, ValueError):
+        messages.error(request, _("Ano ou trimestre inválidos."))
+        return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
+
+    if trimestre not in (1, 2, 3, 4):
+        messages.error(request, _("Trimestre precisa ser 1, 2, 3 ou 4."))
+        return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
+
+    try:
+        resultado = recalcular_fechamento_trimestre(ano=ano, trimestre=trimestre, usuario=request.user)
+    except Exception as exc:
+        messages.error(request, _(f"Falha ao atualizar T{trimestre}/{ano}: {exc}"))
+        return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))
+
+    msg = _(
+        "Indicador atualizado com sucesso: Ano %(ano)s • T%(tri)s • Média do trimestre %(media)s • Média anual %(media_anual)s."
+    ) % {
+        "ano": ano,
+        "tri": trimestre,
+        "media": f"{resultado.get('media_trimestre', 0):.2f}",
+        "media_anual": f"{resultado.get('media_anual', 0):.2f}",
+    }
+    messages.success(request, msg)
+    return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER", "/"))

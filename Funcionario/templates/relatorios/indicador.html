@@ -35,17 +35,58 @@
   </div>
 
   <!-- Filtro por ano -->
-  <form method="GET" class="row g-3 align-items-end mb-4 d-print-none">
-    <div class="col-md-6">
-      <label for="ano" class="form-label">📅 Selecione o Ano:</label>
-      <select name="ano" id="ano" class="form-select" aria-label="Filtrar por ano">
-        {% for year in anos_disponiveis %}
-          <option value="{{ year }}" {% if year == ano %}selected{% endif %}>{{ year }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    {% include 'partials/global/_botao_filtrar.html' %}
-  </form>
+<form method="GET" class="row g-3 align-items-end mb-4 d-print-none">
+  <div class="col-md-6">
+    <label for="ano" class="form-label">📅 Selecione o Ano:</label>
+    <select name="ano" id="ano" class="form-select" aria-label="Filtrar por ano">
+      {% for year in anos_disponiveis %}
+        <option value="{{ year }}" {% if year == ano %}selected{% endif %}>{{ year }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% include 'partials/global/_botao_filtrar.html' %}
+</form>
+
+<!-- Atualizar indicador por trimestre -->
+<form method="POST" action="{% url 'indicadores_atualizar_trimestre' %}" class="row g-3 align-items-end mb-4 d-print-none">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+  <div class="col-md-3">
+    <label for="ano-update" class="form-label">📅 Ano:</label>
+    <select id="ano-update" name="ano" class="form-select">
+      {% for y in anos_disponiveis %}
+        <option value="{{ y }}" {% if y == ano %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-3">
+    <label for="trimestre" class="form-label">📊 Trimestre:</label>
+    <select id="trimestre" name="trimestre" class="form-select">
+      <option value="1">1º Trimestre</option>
+      <option value="2">2º Trimestre</option>
+      <option value="3">3º Trimestre</option>
+      <option value="4">4º Trimestre</option>
+    </select>
+  </div>
+
+<div class="col-auto">
+  <button type="submit" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-arrow-repeat me-2"></i> Atualizar Indicador
+  </button>
+</div>
+
+</form>
+
+{% if messages %}
+  <div class="mt-2">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} py-2 px-3 mb-2">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
 <!-- 🔵 Alerta Informativo - Distribuição de Horas -->
 <div class="alert alert-info col-12 d-print-none" role="alert">
   <strong>Como são calculadas as horas por trimestre?</strong><br>
