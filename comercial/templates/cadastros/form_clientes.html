@@ -252,7 +252,12 @@
           </label>
           {{ form.razao_social|add_class:"form-control"|attr:"id:id_razao_social" }}
         </div>
-  
+          <div class="col-md-6">
+          <label for="{{ form.nome_fantasia.id_for_label }}" class="form-label">
+            <i class="bi bi-megaphone-fill me-1"></i> Nome Fantasia:
+          </label>
+          {{ form.nome_fantasia|add_class:"form-control"|attr:"id:id_nome_fantasia" }}
+        </div>
         <div class="col-md-6">
           <label for="{{ form.ie.id_for_label }}" class="form-label">
             <i class="bi bi-person-vcard me-1"></i> I.E.:
@@ -560,6 +565,8 @@
         .then(data => {
           if (data.razao_social) {
             document.getElementById("id_razao_social").value = data.razao_social || "";
+            const nf = document.getElementById("id_nome_fantasia");
+            if (nf) nf.value = data.nome_fantasia || "";
             document.getElementById("id_endereco").value =
               (data.descricao_tipo_de_logradouro || "") + " " + (data.logradouro || "");
             document.getElementById("id_numero").value = data.numero || "";

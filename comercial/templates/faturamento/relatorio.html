@@ -159,7 +159,9 @@
   {% if tabela_vales %}
     {% for r in tabela_vales %}
     <tr>
-      <td class="text-start">{{ r.cliente }}</td>
+      <td class="text-start">
+        {% firstof r.cliente_vinculado.nome_fantasia r.cliente_vinculado.razao_social r.cliente %}
+      </td>
       <td class="text-nowrap">{{ r.data }}</td>
       <td>{{ r.valor|default_if_none:0|formatar_reais }}</td>
     </tr>
@@ -201,7 +203,9 @@
           {% if tabela_devolucoes %}
             {% for r in tabela_devolucoes %}
             <tr>
-              <td class="text-start">{{ r.cliente }}</td>
+              <td class="text-start">
+                {% firstof r.cliente_vinculado.nome_fantasia r.cliente_vinculado.razao_social r.cliente %}
+              </td>
               <td class="text-nowrap">{{ r.nfe }}</td>
               <td>{{ r.valor|default_if_none:0|formatar_reais }}</td>
             </tr>

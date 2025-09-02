@@ -25,6 +25,7 @@ class Cliente(models.Model):
 
     # Campos obrigatórios
     razao_social = models.CharField(max_length=255)
+    nome_fantasia = models.CharField(max_length=255, blank=True, null=True, verbose_name="Nome Fantasia")
     cnpj = models.CharField(max_length=18, unique=True)
     endereco = models.CharField(max_length=255)
     numero = models.CharField(max_length=10)

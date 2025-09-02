@@ -153,11 +153,12 @@
             </div>
           </th>
           <th class="align-middle">
-            <div class="d-flex flex-column align-items-center">
-              <i class="bi bi-building"></i>
-              <span>Razão Social</span>
-            </div>
-          </th>
+  <div class="d-flex flex-column align-items-center">
+    <i class="bi bi-building"></i>
+    <span>Nome Fantasia</span>
+  </div>
+</th>
+
           <th class="align-middle">
             <div class="d-flex flex-column align-items-center">
               <i class="bi bi-geo-alt"></i>
@@ -215,7 +216,7 @@
               <span class="text-muted">Sem Logotipo</span>
             {% endif %}
           </td>
-          <td class="text-start">{{ cliente.razao_social }}</td>
+<td class="text-start">{% firstof cliente.nome_fantasia cliente.razao_social %}</td>
           <td>{{ cliente.cidade }} - {{ cliente.uf }}</td>
           <td>{{ cliente.telefone_contato|default:"-" }}</td>
           <td>

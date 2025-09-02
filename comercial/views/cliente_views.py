@@ -275,7 +275,7 @@ def importar_clientes_excel(request):
         try:
             df = pd.read_excel(excel_file)
 
-            obrigatorios = ["Razão Social", "CNPJ", "Endereço", "Número", "Bairro", "Cidade", "CEP", "UF", "Tipo Cliente"]
+            obrigatorios = ["Razão Social", "Nome Fantasia", "CNPJ", "Endereço", "Número", "Bairro", "Cidade", "CEP", "UF", "Tipo Cliente"]
 
             for col in obrigatorios:
                 if col not in df.columns:
@@ -293,6 +293,7 @@ def importar_clientes_excel(request):
 
                 Cliente.objects.create(
                     razao_social=row["Razão Social"],
+                    nome_fantasia=row.get("Nome Fantasia", ""),
                     cnpj=cnpj,
                     endereco=row["Endereço"],
                     numero=str(row["Número"]),

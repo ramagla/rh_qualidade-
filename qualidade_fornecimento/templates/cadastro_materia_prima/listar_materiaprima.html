@@ -166,6 +166,12 @@
       </div>
     </th>
     <th class="text-center py-2">
+  <div class="d-flex flex-column align-items-center">
+    <i class="bi bi-award mb-1" data-bs-toggle="tooltip" title="Classificação ABNT ou Classe do material"></i>
+    <small>Tipo ABNT / Classe</small>
+  </div>
+</th>
+    <th class="text-center py-2">
       <div class="d-flex flex-column align-items-center">
         <i class="bi bi-rulers mb-1" data-bs-toggle="tooltip" title="Espessura ou dimensão da matéria-prima"></i>
         <small>Bitola</small>
@@ -195,6 +201,8 @@
             <td>{{ mp.descricao }}</td>
 <td>{{ mp.tipo_material|default:"—" }}</td>
             <td>{{ mp.norma }}</td>
+            <td>{{ mp.tipo_abnt|default:"—" }}</td>
+
             <td>{{ mp.bitola }}</td>
             <td>{{ mp.localizacao }}</td>
             <td>

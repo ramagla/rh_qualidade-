@@ -144,52 +144,75 @@
 <div class="card shadow-sm mb-3 border-primary">
   <div class="card-header bg-white fw-semibold py-2 text-primary">
       <i class="bi bi-receipt me-2"></i>Duplicatas — Detalhamento
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-<table class="table table-sm table-hover table-striped align-middle text-center mb-0 tabela-dup">
-          <thead class="table-primary">
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover table-striped align-middle text-center mb-0 tabela-dup">
+        <thead class="table-primary">
+          <tr>
+            <th><i class="bi bi-receipt d-block mb-1"></i>Nº NF</th>
+            <th><i class="bi bi-calendar-event d-block mb-1"></i>Data</th>
+            <th><i class="bi bi-person-badge d-block mb-1"></i>Cliente</th>
+            <th><i class="bi bi-calendar-check d-block mb-1"></i>Venc.</th>
+            <th><i class="bi bi-cash-coin d-block mb-1"></i>Valor</th>
+            <th><i class="bi bi-percent d-block mb-1"></i>ICMS</th>
+            <th><i class="bi bi-percent d-block mb-1"></i>IPI</th>
+            <th><i class="bi bi-journal-text d-block mb-1"></i>Natureza</th>
+            <th><i class="bi bi-upc-scan d-block mb-1"></i>CFOP</th>              
+            <th><i class="bi bi-calculator d-block mb-1"></i>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if linhas %}
+            {% for l in linhas %}
             <tr>
-              <th><i class="bi bi-receipt d-block mb-1"></i>Nº NF</th>
-              <th><i class="bi bi-calendar-event d-block mb-1"></i>Data</th>
-              <th><i class="bi bi-person-badge d-block mb-1"></i>Cliente</th>
-              <th><i class="bi bi-calendar-check d-block mb-1"></i>Venc.</th>
-              <th><i class="bi bi-cash-coin d-block mb-1"></i>Valor</th>
-              <th><i class="bi bi-percent d-block mb-1"></i>ICMS</th>
-              <th><i class="bi bi-percent d-block mb-1"></i>IPI</th>
-              <th><i class="bi bi-journal-text d-block mb-1"></i>Natureza</th>
-              <th><i class="bi bi-upc-scan d-block mb-1"></i>CFOP</th>
-              {% comment %} <th><i class="bi bi-cash-stack d-block mb-1"></i>PIS</th>
-              <th><i class="bi bi-cash-stack d-block mb-1"></i>COFINS</th> {% endcomment %}
-              <th><i class="bi bi-calculator d-block mb-1"></i>Total</th>
+              <td>{{ l.nfe }}</td>
+              <td>{% if l.data %}{{ l.data|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+              <td>{{ l.cliente_display }}</td>
+              <td>{{ l.vencimento|date:"d/m/Y" }}</td>
+              <td>
+                {% if l.mostrar_impostos %}
+                  {{ l.valor|formatar_reais }}
+                {% else %}
+                  <span class="tarja-preta" aria-label="Valor oculto"></span>
+                {% endif %}
+              </td>
+              <td>
+                {% if l.mostrar_impostos %}
+                  {{ l.valor_icms|formatar_reais }}
+                {% else %}
+                  <span class="tarja-preta" aria-label="Valor oculto"></span>
+                {% endif %}
+              </td>
+              <td>
+                {% if l.mostrar_impostos %}
+                  {{ l.valor_ipi|formatar_reais }}
+                {% else %}
+                  <span class="tarja-preta" aria-label="Valor oculto"></span>
+                {% endif %}
+              </td>
+              <td>{{ l.natureza }}</td>
+              <td>{{ l.cfop }}</td>               
+              <td>
+                {% if l.mostrar_impostos %}
+                  {{ l.valor_total|formatar_reais }}
+                {% else %}
+                  <span class="tarja-preta" aria-label="Valor oculto"></span>
+                {% endif %}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {% if linhas %}
-              {% for l in linhas %}
-              <tr>
-                <td>{{ l.nfe }}</td>
-                <td>{% if l.data %}{{ l.data|date:"d/m/Y" }}{% else %}—{% endif %}</td>
-                <td>{{ l.cliente|primeiro_nome }}</td>
-                <td>{{ l.vencimento|date:"d/m/Y" }}</td>
-                <td>{{ l.valor|formatar_reais }}</td>
-                <td>{{ l.valor_icms|formatar_reais }}</td>
-                <td>{{ l.valor_ipi|formatar_reais }}</td>
-                <td>{{ l.natureza }}</td>
-                <td>{{ l.cfop }}</td>
-                {% comment %} <td>{{ l.valor_pis|formatar_reais }}</td>
-                <td>{{ l.valor_cofins|formatar_reais }}</td> {% endcomment %}
-                <td>{{ l.valor_total|formatar_reais }}</td>
-              </tr>
-              {% endfor %}
-            {% else %}
-              <tr><td colspan="12" class="text-muted">Sem duplicatas no período.</td></tr>
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="10" class="text-muted">Sem duplicatas no período.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
     </div>
   </div>
+</div>
+
 
   <!-- Totalizadores -->
   <div class="card shadow-sm mb-3 border-success no-break">
@@ -268,7 +291,7 @@
   const el = document.getElementById('chart_dup_clientes');
   if (!el || typeof Chart === 'undefined') return;
 
-  const labels = [{% for p in chart_data %}"{{ p.cliente|primeiro_nome }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const labels = [{% for p in chart_data %}"{{ p.cliente_display }}"{% if not forloop.last %},{% endif %}{% endfor %}];
   const rawVals = [{% for p in chart_data %}"{{ p.valor|floatformat:2 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
   const dataVals = rawVals.map(v => parseFloat(String(v).replace(',', '.')) || 0);
 
@@ -326,7 +349,14 @@
   .table thead th i { opacity:.85; }
   .table thead th { vertical-align:bottom; }
   .sticky-top { top:0; z-index:2; }
-
+.tarja-preta{
+  display:inline-block;
+  width:100%;
+  height:12px;
+  background:#000;
+  border-radius:2px;
+  vertical-align:middle;
+}
   /* Layout padrão (tela) */
   .print-container { max-width:1100px; }
   .print-cards{ display:grid; grid-template-columns:1fr; gap:.5rem; }
@@ -378,6 +408,12 @@
     /* Garante que o partial do rodapé apareça mesmo com classes no próprio include */
     .formulario-rodape-wrapper, .formulario-rodape-wrapper *{ display:initial; visibility:visible; }
     .formulario-rodape-wrapper .d-print-none{ display:initial!important; }
+    .tarja-preta{
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+    background:#000 !important;
+    height:10px;
+  }
   }
 
 </style>

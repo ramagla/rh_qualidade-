@@ -169,7 +169,9 @@
         data-dropdown-parent="#filtrosOffcanvas">
   <option value=""></option>
   {% for nome in clientes_texto_options %}
-    <option value="{{ nome }}" {% if filtros.cliente == nome %}selected{% endif %}>{{ nome }}</option>
+<option value="{{ nome }}" {% if filtros.cliente == nome %}selected{% endif %}>
+  {{ nome }}
+</option>
   {% endfor %}
 </select>
 

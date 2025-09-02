@@ -211,195 +211,78 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const form = document.querySelector("form");
-  const tipoSelect = document.getElementById("id_tipo");
-  const descricaoInput = document.getElementById("id_descricao");
-  const larguraTolerancia = document.getElementById("id_tolerancia_largura");
-  const tipoMaterial = document.getElementById("id_classe");
-  const alertaTratamento = document.getElementById("alertaTipoTratamento");
+  $(document).ready(function () {
+    // Valor inicial do Tipo ABNT vindo do backend (edição). Escape para JS seguro.
+    const initialTipoAbnt = "{{ form.initial.tipo_abnt|default_if_none:form.instance.tipo_abnt|default_if_none:''|escapejs }}";
 
-  const camposTratamento = [
-    "field_localizacao",
-    "field_norma",
-    "field_bitola",
-    "field_classe",
-    "field_tipo_abnt",
-    "field_tolerancia",
-    "field_tolerancia_largura"
-  ];
-
-  const acordeonsExtras = [
-    "headingDimensoes",
-    "headingNormas",
-    "headingLocalizacao"
-  ];
-
-  // Função para alternar campos e alertas baseado no tipo selecionado
-  function toggleCampos() {
-    const isTratamento = tipoSelect.value === "Tratamento";
-    const isFita = descricaoInput.value.toLowerCase().includes("fita");
-
-    camposTratamento.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        if (id === "field_tolerancia_largura") {
-          el.classList.toggle("d-none", isTratamento || !isFita);
-        } else {
-          el.classList.toggle("d-none", isTratamento);
-        }
-      }
-    });
-
-    acordeonsExtras.forEach(id => {
-      const card = document.getElementById(id)?.closest(".accordion-item");
-      if (card) {
-        card.classList.toggle("d-none", isTratamento);
-      }
-    });
-
-    if (alertaTratamento) {
-      alertaTratamento.classList.toggle("d-none", !isTratamento);
-    }
-  }
-
-  // Validação de campos obrigatórios no frontend
-  form.querySelectorAll("input, select, textarea").forEach(function (field) {
-    if (field.classList.contains("is-invalid")) {
-      const parent = field.closest('.form-group, .col-md-4, .col-md-6, .mb-3');
-      if (parent && !parent.querySelector('.invalid-feedback')) {
-        const feedback = document.createElement('div');
-        feedback.classList.add('invalid-feedback');
-        feedback.textContent = "Este campo é obrigatório ou está incorreto.";
-        field.after(feedback);
-      }
-    }
-
-    field.addEventListener("blur", function () {
-      const value = field.value.trim();
-      const required = field.hasAttribute("required");
-      const hasFeedback = field.nextElementSibling?.classList.contains("invalid-feedback");
-
-      if (required && !value) {
-        field.classList.add("is-invalid");
-        if (!hasFeedback) {
-          const feedback = document.createElement("div");
-          feedback.className = "invalid-feedback";
-          feedback.textContent = "Este campo é obrigatório.";
-          field.parentNode.appendChild(feedback);
-        }
-      } else {
-        field.classList.remove("is-invalid");
-        if (hasFeedback) {
-          field.nextElementSibling.remove();
-        }
-      }
-    });
-  });
-
-  // Controle de abertura automática dos accordions
-  descricaoInput.addEventListener("blur", function () {
-    if (descricaoInput.value.trim()) {
-      new bootstrap.Collapse(document.getElementById('collapseDimensoes'), { toggle: true });
-      new bootstrap.Collapse(document.getElementById('collapseIdentificacao'), { toggle: false });
-    }
-  });
-
-  larguraTolerancia?.addEventListener("blur", function () {
-    if (larguraTolerancia.value.trim()) {
-      new bootstrap.Collapse(document.getElementById('collapseNormas'), { toggle: true });
-      new bootstrap.Collapse(document.getElementById('collapseDimensoes'), { toggle: false });
-    }
-  });
-
-  tipoMaterial?.addEventListener("blur", function () {
-    if (tipoMaterial.value.trim()) {
-      new bootstrap.Collapse(document.getElementById('collapseLocalizacao'), { toggle: true });
-      new bootstrap.Collapse(document.getElementById('collapseNormas'), { toggle: false });
-    }
-  });
-
-  // Controle do botão Salvar
-  form.addEventListener("submit", function () {
-    // ⚠️ Força atualização do Select2 para o campo norma
-    $('#id_norma').trigger('change.select2');
-
-    const btn = document.getElementById("btnSalvar");
-    const spinner = document.getElementById("spinnerSalvar");
-    const texto = document.getElementById("textoSalvar");
-
-    btn.disabled = true;
-    spinner.classList.remove("d-none");
-    texto.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Salvando...';
-});
-
-
-  // Inicializa o comportamento ao carregar a página
-  tipoSelect.addEventListener("change", toggleCampos);
-  descricaoInput.addEventListener("input", toggleCampos);
-  toggleCampos();
-});
-</script>
-
-<script>
-  $(document).ready(function() {
-    // Inicializa Select2 para o campo NORMA
+    // ---------- Inicialização do Select2 ----------
     $('#id_norma').select2({
       theme: 'bootstrap-5',
       placeholder: 'Selecione a Norma',
       allowClear: true,
       width: '100%'
     });
-  
-    // Inicializa Select2 para o campo TIPO ABNT
+
     $('#id_tipo_abnt').select2({
       theme: 'bootstrap-5',
       placeholder: 'Selecione o Tipo ABNT',
       allowClear: true,
       width: '100%'
     });
-  
-    // Evento: quando a norma muda, carrega os tipos ABNT
-    $('#id_norma').on('change', function() {
-      const normaSelecionada = $(this).val();  // PEGA O VALUE, que é o ID da norma
+
+    // ---------- Troca da NORMA -> Carregar Tipos ABNT ----------
+    $('#id_norma').on('change', function () {
+      const normaSelecionada = $(this).val(); // ID da norma
       const tipoAbntSelect = $('#id_tipo_abnt');
-  
+
+      // Limpa e mostra "Carregando..."
       tipoAbntSelect.empty();
       tipoAbntSelect.append(new Option('Carregando...', '', true, true)).trigger('change');
-  
+
       if (!normaSelecionada) {
         tipoAbntSelect.empty();
-        tipoAbntSelect.append(new Option('Selecione a Norma primeiro', '', true, true));
-        tipoAbntSelect.trigger('change');
+        tipoAbntSelect.append(new Option('Selecione a Norma primeiro', '', true, true)).trigger('change');
         return;
       }
-  
+
       $.ajax({
         url: "{% url 'get_tipos_abnt' %}",
         type: "GET",
         dataType: "json",
-        data: { norma_id: normaSelecionada },  // AGORA ENVIA ID
-        success: function(data) {
+        data: { norma_id: normaSelecionada },
+        success: function (data) {
           tipoAbntSelect.empty();
           tipoAbntSelect.append(new Option('Selecione o Tipo ABNT', '', true, true));
-          data.tipos.forEach(function(tipo) {
+
+          (data.tipos || []).forEach(function (tipo) {
             tipoAbntSelect.append(new Option(tipo, tipo));
           });
-          tipoAbntSelect.trigger('change');
+
+          // 🔒 Se estiver em edição, reaplica a seleção salva (se existir na lista)
+          if (initialTipoAbnt) {
+            const exists = (data.tipos || []).some(function (t) { return t === initialTipoAbnt; });
+            if (exists) {
+              tipoAbntSelect.val(initialTipoAbnt).trigger('change');
+            } else {
+              tipoAbntSelect.trigger('change');
+            }
+          } else {
+            tipoAbntSelect.trigger('change');
+          }
         },
-        error: function() {
+        error: function () {
           tipoAbntSelect.empty();
           tipoAbntSelect.append(new Option('Erro ao carregar Tipos ABNT', '', true, true)).trigger('change');
         }
       });
     });
-  
-    // ⚠️ IMPORTANTE: força o disparo do .change da norma quando a página carregar
-    // Assim o AJAX do Tipo ABNT vai rodar mesmo em modo de EDIÇÃO
+
+    // ---------- Carregamento inicial ----------
+    // Dispara o carregamento com a norma atual.
+    // Se estiver em edição, 'initialTipoAbnt' garante a restauração após o AJAX.
     $('#id_norma').trigger('change');
   });
-  </script>
-  
+</script>
 
 
 {% endblock %}

@@ -74,7 +74,11 @@ def lista_faturamento(request):
 
     # Cliente (texto), NF-e, Cód. Item, Congelado
     if cliente:
-        qs = qs.filter(cliente__icontains=cliente)
+        qs = qs.filter(
+            Q(cliente_vinculado__nome_fantasia__icontains=cliente)
+            | Q(cliente_vinculado__razao_social__icontains=cliente)
+            | Q(cliente__icontains=cliente)
+        )
     if nfe:
         qs = qs.filter(nfe__icontains=nfe)
     if item:
@@ -150,13 +154,21 @@ def lista_faturamento(request):
 
    # -------- Clientes do select (sem filtro por congelado) --------
     clientes_texto_options = (
-        qs_base.exclude(cliente__isnull=True)
-            .exclude(cliente__exact="")
-            .values_list("cliente", flat=True)
+        qs_base.select_related("cliente_vinculado")
+            .values_list(
+                "cliente_vinculado__nome_fantasia",
+                "cliente_vinculado__razao_social",
+                "cliente"
+            )
             .distinct()
-            .order_by("cliente")
     )
-
+    clientes_texto_options = sorted(
+        {
+            (nf or rs or cli)
+            for nf, rs, cli in clientes_texto_options
+            if (nf or rs or cli)
+        }
+    )
 
     context = {
         "registros": page_obj,
@@ -478,7 +490,11 @@ def relatorio_faturamento(request):
 
     tabela_vales = []
     for r in vendas_vale:
-        cliente_nome = getattr(r.cliente_vinculado, "razao_social", None) or (r.cliente or "—")
+        cliente_nome = (
+            getattr(r.cliente_vinculado, "nome_fantasia", None)
+            or getattr(r.cliente_vinculado, "razao_social", None)
+            or (r.cliente or "—")
+        )
         valor = (r.valor_total_com_ipi or r.valor_total or Decimal("0.00")).quantize(Decimal("0.01"))
         data = r.ocorrencia.strftime("%d/%m/%Y") if r.ocorrencia else "—"
         tabela_vales.append({
@@ -500,10 +516,15 @@ def relatorio_faturamento(request):
     for r in devolucoes:
         valor = (r.valor_total_com_ipi or r.valor_total or Decimal("0.00")).quantize(Decimal("0.01"))
         tabela_devolucoes.append({
-            "cliente": getattr(r.cliente_vinculado, "razao_social", None) or (r.cliente or "—"),
+            "cliente": (
+                getattr(r.cliente_vinculado, "nome_fantasia", None)
+                or getattr(r.cliente_vinculado, "razao_social", None)
+                or (r.cliente or "—")
+            ),
             "nfe": (r.nfe or "—"),
             "valor": valor,
         })
+
         total_devolucoes += valor
 
     # -----------------------------------------------------------
@@ -591,11 +612,17 @@ def relatorio_duplicatas(request):
             Q(ocorrencia__isnull=False, ocorrencia__gte=dt_ini, ocorrencia__lte=dt_fim)
         )
         .filter(data_vencimento__isnull=False)
-        .only("nfe","numero_parcela","data_vencimento","valor_duplicata",
-              "cliente","cliente_codigo","cliente_vinculado_id","ocorrencia",
-              "natureza","cfop","valor_pis","valor_cofins","valor_ipi")
+        .only(
+            "nfe","numero_parcela","data_vencimento","valor_duplicata",
+            "cliente","cliente_codigo","cliente_vinculado_id","ocorrencia",
+            "natureza","cfop","valor_pis","valor_cofins","valor_ipi",
+            # ↓ garanta que venham do vínculo:
+            "cliente_vinculado__nome_fantasia",
+            "cliente_vinculado__razao_social",
+        )
         .order_by("ocorrencia","nfe","id")
     )
+
 
     nfs = list(qs.values_list("nfe", flat=True).distinct())
     icms_por_nf = defaultdict(lambda: Decimal("0.00"))
@@ -605,9 +632,15 @@ def relatorio_duplicatas(request):
     if nfs:
         regs = (
             FaturamentoRegistro.objects
+            .select_related("cliente_vinculado")
             .filter(nfe__in=nfs)
-            .only("nfe","ocorrencia","item_quantidade","item_valor_unitario","perc_icms")
+            .only(
+                "nfe","ocorrencia","item_quantidade","item_valor_unitario","perc_icms",
+                "cliente_vinculado__nome_fantasia","cliente_vinculado__razao_social"
+            )
         )
+        cliente_nome_por_nf = {}
+
         for r in regs:
             qtd   = r.item_quantidade or 0
             vunit = Decimal(str(r.item_valor_unitario or "0"))
@@ -616,6 +649,13 @@ def relatorio_duplicatas(request):
                 icms_por_nf[r.nfe] += (base * (Decimal(str(r.perc_icms)) / Decimal("100")))
             if r.ocorrencia and (r.nfe not in data_por_nf or r.ocorrencia < data_por_nf[r.nfe]):
                 data_por_nf[r.nfe] = r.ocorrencia
+
+            # salva o display do cliente vindo do Registro
+            if r.cliente_vinculado:
+                nome_disp = (r.cliente_vinculado.nome_fantasia or "").strip() or \
+                            (r.cliente_vinculado.razao_social or "").strip()
+                if nome_disp:
+                    cliente_nome_por_nf[r.nfe] = nome_disp
 
         ipi_rows = (
             FaturamentoDuplicata.objects
@@ -632,14 +672,22 @@ def relatorio_duplicatas(request):
     for d in qs:
         nfe = d.nfe or ""
         emissao = d.ocorrencia or data_por_nf.get(nfe)
-        cliente_nome = getattr(d.cliente_vinculado, "razao_social", None) or (d.cliente or "—")
+
+        # 1º: duplicata.vínculo; 2º: nome vindo do Registro por NF; 3º: legado
+        cliente_display = (
+            ((d.cliente_vinculado.nome_fantasia or "").strip() if d.cliente_vinculado else "")
+            or ((d.cliente_vinculado.razao_social or "").strip() if d.cliente_vinculado else "")
+            or cliente_nome_por_nf.get(nfe, "")
+            or (d.cliente or "—")
+        )
 
         valor_dup  = Decimal(str(d.valor_duplicata or "0")).quantize(Decimal("0.01"))
         valor_icms = icms_por_nf[nfe].quantize(Decimal("0.01"))
         valor_ipi  = ipi_por_nf[nfe].quantize(Decimal("0.01"))
 
         cfop_str = str(getattr(d, "cfop", "") or "").strip()
-        if cfop_str in CFOPS_TOTALIZADORES and nfe:
+        cfop_permitido = cfop_str in CFOPS_TOTALIZADORES
+        if cfop_permitido and nfe:
             nfs_cfop_permitido.add(nfe)
 
 
@@ -672,26 +720,30 @@ def relatorio_duplicatas(request):
         linhas.append({
             "nfe": nfe,
             "data": emissao,
-            "cliente": cliente_nome,
+            "cliente": cliente_display,
+            "cliente_display": cliente_display,
             "vencimento": d.data_vencimento,
             "valor": valor_dup,
             "valor_icms": valor_icms,
             "valor_ipi": valor_ipi,
-            "natureza": natureza_formatada,  # <- já formatada!
+            "natureza": natureza_formatada,
             "cfop": getattr(d, "cfop", None),
             "valor_pis": Decimal(str(getattr(d, "valor_pis", "0") or "0")).quantize(Decimal("0.01")),
             "valor_cofins": Decimal(str(getattr(d, "valor_cofins", "0") or "0")).quantize(Decimal("0.01")),
             "valor_total": valor_dup,
             "emissao": emissao,
+            "mostrar_impostos": cfop_permitido,
         })
     # === GRÁFICO (FILTRADO) ===
     from collections import defaultdict as _dd
     agg_por_cliente_cfop = _dd(lambda: Decimal("0.00"))
     for l in linhas:
         if l["nfe"] in nfs_cfop_permitido:
-            agg_por_cliente_cfop[l["cliente"]] += l["valor"]
+            agg_por_cliente_cfop[l["cliente"]] += l["valor"]  # já é display
+
     top10 = sorted(agg_por_cliente_cfop.items(), key=lambda kv: kv[1], reverse=True)[:10]
-    chart_data = [{"cliente": k, "valor": v} for k, v in top10]
+    chart_data = [{"cliente_display": k, "valor": v} for k, v in top10]
+
 
     # === CARDS filtrados por CFOP ===
     linhas_filtradas = [l for l in linhas if l["nfe"] in nfs_cfop_permitido]
