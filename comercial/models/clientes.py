@@ -21,6 +21,8 @@ class Cliente(models.Model):
     TIPO_CADASTRO_CHOICES = [
         ('Cliente', 'Cliente'),
         ('Transportadora', 'Transportadora'),
+        ('Fornecedor', 'Fornecedor'),
+
     ]
 
     # Campos obrigatórios

@@ -102,6 +102,8 @@
             <option value="">Todos</option>
             <option value="Cliente" {% if request.GET.tipo_cadastro == "Cliente" or not request.GET.tipo_cadastro %}selected{% endif %}>Cliente</option>
             <option value="Transportadora" {% if request.GET.tipo_cadastro == "Transportadora" %}selected{% endif %}>Transportadora</option>
+            <option value="Fornecedor" {% if request.GET.tipo_cadastro == "Fornecedor" %}selected{% endif %}>Fornecedor</option>
+
           </select>
         </div>
 

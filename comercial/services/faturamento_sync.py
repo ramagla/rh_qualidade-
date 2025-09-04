@@ -326,8 +326,9 @@ def _fetch_nfs_periodo_com_fallback_mes(client, data_inicio: str, data_fim: str,
 def _upsert_duplicatas_de_lote_nf(lote_nf):
     """
     Insere/atualiza FaturamentoDuplicata a partir de um lote de NFs.
-    Grava valores em R$: PIS, COFINS, IPI e (se existir no model) ICMS.
+    Agora também tenta vincular o Cliente por NOME normalizado quando não houver código.
     """
+    import unicodedata
     ins = upd = skip = 0
 
     def _alias(src, *keys):
@@ -338,6 +339,25 @@ def _upsert_duplicatas_de_lote_nf(lote_nf):
                     return v
         return None
 
+    def _norm_empresa(s: str) -> str:
+        if not s:
+            return ""
+        s = unicodedata.normalize("NFKD", str(s)).encode("ASCII", "ignore").decode("ASCII")
+        s = s.upper()
+        # remove sufixos/siglas comuns e pontuação
+        import re
+        s = re.sub(r"[^A-Z0-9 ]+", " ", s)
+        s = re.sub(r"\b(LTDA|S/?A|SA|EPP|MEI?|MICROEMPRESA|IND(USTRIA)?\.?|COM(ERCIO)?\.?|FAB(RICA)?|GRUPO|HOLDING|DA|DE|DO|DOS|DAS)\b", " ", s)
+        s = re.sub(r"\s+", " ", s).strip()
+        return s
+
+    # índice em memória: nome normalizado -> (id, fantasia, razao)
+    name_index = {}
+    for row in Cliente.objects.values("id", "nome_fantasia", "razao_social", "cod_bm"):
+        for nm in (row["nome_fantasia"], row["razao_social"]):
+            if nm:
+                name_index[_norm_empresa(nm)] = (row["id"], row["nome_fantasia"] or "", row["razao_social"] or "")
+
     for nf in (lote_nf or []):
         numero_nf = str(nf.get("numero") or "").strip()
         if not numero_nf:
@@ -346,14 +366,32 @@ def _upsert_duplicatas_de_lote_nf(lote_nf):
         duplics = nf.get("duplicatas") or []
         itens = nf.get("itens") or []
 
-        # Emissão (fallback p/ ocorrência)
         dt_emissao_nf = _parse_date_any(_alias(nf, "emissao", "data", "data_emissao"))
 
-        # Cliente (fallbacks)
+        # Dados do cliente vindos da NF
         cli_nome_nf = _alias(nf, "cliente", "destinatario", "razao_social", "nome_cliente")
         cli_cod_nf  = _alias(nf, "cod_cliente", "codigo_cliente", "codigo_destinatario")
 
-        # CFOP inferido
+        # Resolve Cliente:
+        cliente_obj = None
+
+        # a) por código (quando existir)
+        if cli_cod_nf:
+            cliente_obj = (
+                Cliente.objects.filter(cod_bm__isnull=False)
+                .filter(cod_bm__iexact=str(cli_cod_nf).strip().upper())
+                .only("id")
+                .first()
+            )
+
+        # b) por nome normalizado (quando não houver código)
+        if not cliente_obj and cli_nome_nf:
+            key = _norm_empresa(cli_nome_nf)
+            tupla = name_index.get(key)
+            if tupla:
+                cliente_obj = Cliente.objects.only("id").get(id=tupla[0])
+
+        # --- CFOP, tributos etc. (mantém sua lógica) ---
         cfop_nf = _alias(nf, "cfop", "cfop_codigo")
         if not cfop_nf:
             for it in itens:
@@ -362,9 +400,10 @@ def _upsert_duplicatas_de_lote_nf(lote_nf):
                     cfop_nf = str(cand).strip()
                     break
 
-        # === IPI em R$ ===
+        # IPI (R$) consolidado
         valor_ipi_nf = _as_money(_alias(nf, "valor_ipi", "valorIPI"))
         if valor_ipi_nf is None and itens:
+            from decimal import Decimal
             total_ipi = Decimal("0.00")
             for it in itens:
                 vi = (
@@ -375,9 +414,10 @@ def _upsert_duplicatas_de_lote_nf(lote_nf):
                     total_ipi += vi
             valor_ipi_nf = total_ipi if total_ipi != Decimal("0.00") else None
 
-        # === ICMS em R$ (não percentual) ===
+        # ICMS (R$) consolidado
         valor_icms_nf = _as_money(_alias(nf, "valor_icms", "valorICMS"))
         if valor_icms_nf is None and itens:
+            from decimal import Decimal
             total_icms = Decimal("0.00")
             achou_icms = False
             for it in itens:
@@ -390,9 +430,10 @@ def _upsert_duplicatas_de_lote_nf(lote_nf):
                     achou_icms = True
             valor_icms_nf = total_icms if achou_icms else None
 
-        # PIS em R$
+        # PIS (R$) consolidado
         pis_nf = _as_money(_alias(nf, "valor_pis", "valorPIS"))
         if pis_nf is None and itens:
+            from decimal import Decimal
             total_pis = Decimal("0.00")
             for it in itens:
                 vp = (
@@ -403,9 +444,10 @@ def _upsert_duplicatas_de_lote_nf(lote_nf):
                     total_pis += vp
             pis_nf = total_pis if total_pis != Decimal("0.00") else None
 
-        # COFINS em R$
+        # COFINS (R$) consolidado
         cofins_nf = _as_money(_alias(nf, "valor_cofins", "valorCOFINS"))
         if cofins_nf is None and itens:
+            from decimal import Decimal
             total_cof = Decimal("0.00")
             for it in itens:
                 vc = (
@@ -425,37 +467,16 @@ def _upsert_duplicatas_de_lote_nf(lote_nf):
 
             chave = FaturamentoDuplicata._hash(numero_nf, num_parc, dt_venc, val_dup)
 
-            itens_nf = itens
             cfop_nf_calc = nf.get("cfop") or d.get("cfop") or cfop_nf
-            if not cfop_nf_calc and itens_nf:
-                cfops = [str(it.get("cfop")).strip() for it in itens_nf if it.get("cfop")]
-                if cfops:
-                    cfop_nf_calc = max(set(cfops), key=cfops.count)
 
             valor_pis_final    = _as_money(nf.get("valor_pis")    or d.get("valor_pis")    or pis_nf)
             valor_cofins_final = _as_money(nf.get("valor_cofins") or d.get("valor_cofins") or cofins_nf)
             valor_ipi_final    = _as_money(nf.get("valor_ipi")    or d.get("valor_ipi")    or valor_ipi_nf)
             valor_icms_final   = _as_money(nf.get("valor_icms")   or d.get("valor_icms")   or valor_icms_nf)
 
-            # fallback extra (se ainda faltar PIS/COFINS)
-            if (valor_pis_final is None or valor_cofins_final is None) and itens_nf:
-                try:
-                    soma_pis = Decimal("0.00")
-                    soma_cof = Decimal("0.00")
-                    for it in itens_nf:
-                        soma_pis += _as_money(it.get("valor_pis"))    or Decimal("0.00")
-                        soma_cof += _as_money(it.get("valor_cofins")) or Decimal("0.00")
-                    if valor_pis_final is None:
-                        valor_pis_final = soma_pis.quantize(Decimal("0.01"))
-                    if valor_cofins_final is None:
-                        valor_cofins_final = soma_cof.quantize(Decimal("0.01"))
-                except Exception:
-                    pass
-
-            # -------- evita FieldError quando campo ainda não existe no banco --------
             allowed_fields = {
                 f.name for f in FaturamentoDuplicata._meta.get_fields()
-                if hasattr(f, "attname")  # ignora relations reverse, etc.
+                if hasattr(f, "attname")
             }
             defaults_raw = {
                 "nfe": numero_nf,
@@ -464,35 +485,28 @@ def _upsert_duplicatas_de_lote_nf(lote_nf):
                 "valor_duplicata": val_dup,
                 "cliente_codigo": _to_str_upper(cli_cod_nf),
                 "cliente": cli_nome_nf,
+                "cliente_vinculado": cliente_obj,   # ✅ agora com vinculação por nome quando necessário
                 "ocorrencia": dt_emissao_nf,
                 "natureza": nf.get("natureza") or d.get("natureza"),
                 "cfop": cfop_nf_calc,
                 "valor_pis": valor_pis_final,
                 "valor_cofins": valor_cofins_final,
-                "valor_ipi": valor_ipi_final,     # R$
-                "valor_icms": valor_icms_final,   # R$ (salvo só se existir no model)
+                "valor_ipi": valor_ipi_final,
+                "valor_icms": valor_icms_final,
             }
             defaults = {k: v for k, v in defaults_raw.items() if k in allowed_fields}
-            # -------------------------------------------------------------------------
 
-            obj, created = FaturamentoDuplicata.objects.get_or_create(
-                chave_unica=chave, defaults=defaults
+            obj, created = FaturamentoDuplicata.objects.update_or_create(
+                chave_unica=chave,
+                defaults=defaults,
             )
             if created:
                 ins += 1
             else:
-                changed = False
-                for k, v in defaults.items():   # só campos válidos
-                    if getattr(obj, k) != v and v is not None:
-                        setattr(obj, k, v)
-                        changed = True
-                if changed:
-                    obj.save(update_fields=list(defaults.keys()))
-                    upd += 1
-                else:
-                    skip += 1
+                upd += 1
 
     return ins, upd, skip
+
 
 
 

@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from comercial.models.faturamento import FaturamentoRegistro, FaturamentoDuplicata
+from comercial.models.clientes import Cliente
 from comercial.forms.faturamento_forms import FaturamentoRegistroForm
 
 
@@ -556,13 +557,6 @@ CFOPS_TOTALIZADORES = {"5101", "6101", "5124", "6124","5125","6109"}
 @login_required
 @permission_required("comercial.view_faturamentoregistro", raise_exception=True)
 def relatorio_duplicatas(request):
-    """
-    ...
-    - Todos os cards de “Totalizadores do Período” (Quantidade, Total no Período, Total ICMS, Total IPI, Total Geral)
-      passam a considerar somente NFs com CFOP em CFOPS_TOTALIZADORES.
-    - A listagem continua exibindo todas as NFs.
-    - O gráfico Top 10 continua filtrado pelos CFOPs permitidos.
-    """
     from decimal import Decimal
     from collections import defaultdict
     from datetime import timedelta
@@ -623,6 +617,24 @@ def relatorio_duplicatas(request):
         .order_by("ocorrencia","nfe","id")
     )
 
+    # === NOVO: índice de nomes para resolver cliente por nome quando não houver vínculo/código ===
+    import unicodedata, re
+    def _norm_empresa(s: str) -> str:
+        if not s:
+            return ""
+        s = unicodedata.normalize("NFKD", str(s)).encode("ASCII", "ignore").decode("ASCII")
+        s = s.upper()
+        s = re.sub(r"[^A-Z0-9 ]+", " ", s)
+        s = re.sub(r"\b(LTDA|S/?A|SA|EPP|MEI?|MICROEMPRESA|IND(USTRIA)?\.?|COM(ERCIO)?\.?|FAB(RICA)?|GRUPO|HOLDING|DA|DE|DO|DOS|DAS)\b", " ", s)
+        s = re.sub(r"\s+", " ", s).strip()
+        return s
+
+    name_index = {}  # nome normalizado -> (fantasia, razao)
+    for row in Cliente.objects.values("nome_fantasia", "razao_social"):
+        for nm in (row["nome_fantasia"], row["razao_social"]):
+            if nm:
+                name_index[_norm_empresa(nm)] = (row["nome_fantasia"] or "", row["razao_social"] or "")
+
 
     nfs = list(qs.values_list("nfe", flat=True).distinct())
     icms_por_nf = defaultdict(lambda: Decimal("0.00"))
@@ -639,17 +651,23 @@ def relatorio_duplicatas(request):
                 "cliente_vinculado__nome_fantasia","cliente_vinculado__razao_social"
             )
         )
-        cliente_nome_por_nf = {}
 
         for r in regs:
             if r.ocorrencia and (r.nfe not in data_por_nf or r.ocorrencia < data_por_nf[r.nfe]):
                 data_por_nf[r.nfe] = r.ocorrencia
 
+        map_nf_to_fantasia = {}
+        map_nf_to_razao    = {}
+
+        for r in regs:
             if r.cliente_vinculado:
-                nome_disp = (r.cliente_vinculado.nome_fantasia or "").strip() or \
-                            (r.cliente_vinculado.razao_social or "").strip()
-                if nome_disp:
-                    cliente_nome_por_nf[r.nfe] = nome_disp
+                nf = (r.cliente_vinculado.nome_fantasia or "").strip()
+                rz = (r.cliente_vinculado.razao_social or "").strip()
+                if nf and r.nfe and r.nfe not in map_nf_to_fantasia:
+                    map_nf_to_fantasia[r.nfe] = nf
+                if rz and r.nfe and r.nfe not in map_nf_to_razao:
+                    map_nf_to_razao[r.nfe] = rz
+
 
         icms_rows = (
             FaturamentoDuplicata.objects
@@ -669,20 +687,70 @@ def relatorio_duplicatas(request):
         for row in ipi_rows:
             ipi_por_nf[row["nfe"]] = (row["v_ipi"] or Decimal("0.00")).quantize(Decimal("0.01"))
 
+        cods = set(
+            c for c in qs.values_list("cliente_codigo", flat=True)
+            if c and str(c).strip()
+        )
+        map_cod_to_nome = {}
+        if cods:
+            rows = (
+                Cliente.objects
+                .filter(cod_bm__in=[str(c).strip().upper() for c in cods])
+                .values_list("cod_bm", "nome_fantasia", "razao_social")
+            )
+            for cod, nf, rz in rows:
+                map_cod_to_nome[str(cod).strip().upper()] = (nf or "", rz or "")
+
         linhas = []
         nfs_cfop_permitido = set()
-        ipi_mostrado_por_nf = set()  # controla a primeira aparição do IPI por NF
+        ipi_mostrado_por_nf = set()
 
         for d in qs:
             nfe = d.nfe or ""
             emissao = d.ocorrencia or data_por_nf.get(nfe)
 
+            cod_norm = str(d.cliente_codigo or "").strip().upper()
+            fantasia_por_cod = ""
+            razao_por_cod    = ""
+            if cod_norm and cod_norm in map_cod_to_nome:
+                fantasia_por_cod, razao_por_cod = map_cod_to_nome[cod_norm]
+
+            fantasia_vinc = ((d.cliente_vinculado.nome_fantasia or "").strip() if d.cliente_vinculado else "")
+            razao_vinc    = ((d.cliente_vinculado.razao_social or "").strip() if d.cliente_vinculado else "")
+
+            fantasia_por_nf = map_nf_to_fantasia.get(nfe, "")
+            razao_por_nf    = map_nf_to_razao.get(nfe, "")
+
+            # NOVO: tenta resolver por nome puro da NF (quando não há vínculo/código)
+            fantasia_por_nome = ""
+            razao_por_nome = ""
+            if not (fantasia_vinc or fantasia_por_cod or fantasia_por_nf or razao_vinc or razao_por_cod or razao_por_nf):
+                key_nome_nf = _norm_empresa(d.cliente or "")
+                if key_nome_nf in name_index:
+                    fantasia_por_nome, razao_por_nome = name_index[key_nome_nf]
+
+            # 1) Fallback de razão social (inclui a vinda por nome) -> primeiro nome
+            razao_fallback = (
+                razao_vinc
+                or razao_por_cod
+                or razao_por_nf
+                or razao_por_nome
+                or (d.cliente or "")
+            ).strip()
+            if razao_fallback:
+                razao_fallback = razao_fallback.split()[0]
+
+            # 2) Prioridade do display
             cliente_display = (
-                ((d.cliente_vinculado.nome_fantasia or "").strip() if d.cliente_vinculado else "")
-                or ((d.cliente_vinculado.razao_social or "").strip() if d.cliente_vinculado else "")
-                or cliente_nome_por_nf.get(nfe, "")
-                or (d.cliente or "—")
+                fantasia_vinc
+                or fantasia_por_cod
+                or fantasia_por_nf
+                or fantasia_por_nome
+                or razao_fallback
+                or "—"
             )
+
+
 
             valor_dup  = Decimal(str(d.valor_duplicata or "0")).quantize(Decimal("0.01"))
             valor_icms = icms_por_nf[nfe].quantize(Decimal("0.01"))
@@ -730,7 +798,7 @@ def relatorio_duplicatas(request):
                 "vencimento": d.data_vencimento,
                 "valor": valor_dup,
                 "valor_icms": valor_icms,
-                "valor_ipi": valor_ipi,  # IPI só na primeira parcela da NF
+                "valor_ipi": valor_ipi,
                 "natureza": natureza_formatada,
                 "cfop": getattr(d, "cfop", None),
                 "valor_pis": Decimal(str(getattr(d, "valor_pis", "0") or "0")).quantize(Decimal("0.01")),
@@ -739,26 +807,23 @@ def relatorio_duplicatas(request):
                 "emissao": emissao,
                 "mostrar_impostos": cfop_permitido,
             })
-    # === GRÁFICO (FILTRADO) ===
+
     from collections import defaultdict as _dd
     agg_por_cliente_cfop = _dd(lambda: Decimal("0.00"))
     for l in linhas:
         if l["nfe"] in nfs_cfop_permitido:
-            agg_por_cliente_cfop[l["cliente"]] += l["valor"]  # já é display
+            agg_por_cliente_cfop[l["cliente"]] += l["valor"]
 
     top10 = sorted(agg_por_cliente_cfop.items(), key=lambda kv: kv[1], reverse=True)[:10]
     chart_data = [{"cliente_display": k, "valor": v} for k, v in top10]
 
-
-    # === CARDS filtrados por CFOP ===
     linhas_filtradas = [l for l in linhas if l["nfe"] in nfs_cfop_permitido]
     total_periodo = sum(l["valor"] for l in linhas_filtradas)
     total_icms    = sum(icms_por_nf.get(nf, Decimal("0.00")) for nf in nfs_cfop_permitido)
     total_ipi     = sum(ipi_por_nf.get(nf, Decimal("0.00")) for nf in nfs_cfop_permitido)
-    total_geral   = total_periodo                       # duplicata já inclui IPI
+    total_geral   = total_periodo
     qtde_dups     = len(linhas_filtradas)
 
-    # === Auxiliares não filtrados (mantidos) ===
     total_mes = sum(
         l["valor"] for l in linhas
         if l["vencimento"] and l["vencimento"].year == dt_ini.year and l["vencimento"].month == dt_ini.month
@@ -779,25 +844,16 @@ def relatorio_duplicatas(request):
         "data_inicio": data_inicio,
         "data_fim": data_fim,
         "linhas": linhas,
-
-        # KPIs do topo (somente 'total_periodo' filtrado por CFOP)
         "total_periodo": q2(total_periodo),
         "total_mes": q2(total_mes),
         "total_avista": q2(total_avista),
         "total_tributos": q2(total_tributos),
-
-        # CARDS “Totalizadores do Período” (todos filtrados)
         "qtde_duplicatas": qtde_dups,
         "total_icms": q2(total_icms),
         "total_ipi": q2(total_ipi),
         "total_geral": q2(total_geral),
-
-        # Gráfico
         "chart_data": chart_data,
-
-        # Não filtrados, caso use em outro lugar:
         "total_valor": q2(total_valor),
-
         "cfops_totalizadores": ", ".join(sorted(CFOPS_TOTALIZADORES)),
     }
     return render(request, "faturamento/relatorio_duplicatas.html", context)

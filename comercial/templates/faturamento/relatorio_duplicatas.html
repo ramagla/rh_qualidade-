@@ -168,7 +168,9 @@
             <tr>
               <td>{{ l.nfe }}</td>
               <td>{% if l.data %}{{ l.data|date:"d/m/Y" }}{% else %}—{% endif %}</td>
-              <td>{{ l.cliente_display }}</td>
+              <td>
+                {% if l.cliente_display %}{{ l.cliente_display }}{% else %}—{% endif %}
+              </td>
               <td>{{ l.vencimento|date:"d/m/Y" }}</td>
               <td>
                 {% if l.mostrar_impostos %}

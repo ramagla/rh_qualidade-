@@ -502,6 +502,9 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    // 🔑 Torna clienteId disponível em todo o escopo
+    const clienteId = "{{ cliente.id|default:0 }}";
+
     // Máscaras
     $('#id_cnpj').mask('00.000.000/0000-00');
     $('#id_cep').mask('00000-000');
@@ -529,7 +532,6 @@
       const input = document.getElementById("id_cnpj");
       const cnpj = input.value.replace(/\D/g, "");
       const alerta = document.getElementById("cnpjExistenteAlerta");
-      const clienteId = "{{ cliente.id|default:0 }}";
 
       alerta.style.display = "none";
       showMessage("");
@@ -618,25 +620,106 @@
   });
 </script>
 
-
 <script>
   $(document).ready(function () {
-    function toggleCamposComerciais() {
+    // Referências aos acordeões (itens inteiros)
+    const $itemDocumentacao   = $('#headingDocumentacao').closest('.accordion-item');
+    const $itemContato        = $('#headingContato').closest('.accordion-item');
+    const $itemTransportadora = $('#headingTransportadora').closest('.accordion-item');
+    const $itemOutros         = $('#headingOutros').closest('.accordion-item');
+
+    // Seletores internos (blocos específicos) -------------------------------
+    // Documentação: manter "Tipo de Cadastro", esconder logotipo e documentos
+    function hideLogoAndDocs() {
+      // logotipo: pega o input e esconde a coluna inteira
+      const $logoInput = $('#id_logotipo');
+      $logoInput.closest('.col-md-6').hide();                           // bloco do logotipo
+      // info de formatos (alert-info) dentro da documentação
+      $logoInput.closest('.accordion-body').find('.alert.alert-info').hide();
+      // formset de documentos e botões
+      $('#formset-documentos').hide();
+      $('#adicionarDocumento').hide();
+      $('#template-documento').hide();
+    }
+    function showLogoAndDocs() {
+      const $logoInput = $('#id_logotipo');
+      $logoInput.closest('.col-md-6').show();
+      $logoInput.closest('.accordion-body').find('.alert.alert-info').show();
+      $('#formset-documentos').show();
+      $('#adicionarDocumento').show();
+      $('#template-documento').show();
+    }
+
+    // Outros Dados: grupos que podem ser ocultados individualmente
+    function hideObservacao() {
+      $('#id_observacao').closest('.col-md-12').hide();                 // Observação (texto rico)
+    }
+    function showObservacao() {
+      $('#id_observacao').closest('.col-md-12').show();
+    }
+    function hideAdimplencia() {
+      $('#id_status_adimplencia').closest('.col-md-4, .col-md-6, .col-12').hide(); // status adimplência
+      $('#id_comprovante_adimplencia').closest('.col-md-8, .col-md-6, .col-12, .mb-3').hide(); // anexo
+    }
+    function showAdimplencia() {
+      $('#id_status_adimplencia').closest('.col-md-4, .col-md-6, .col-12').show();
+      $('#id_comprovante_adimplencia').closest('.col-md-8, .col-md-6, .col-12, .mb-3').show();
+    }
+
+    function toggleCamposPorTipo() {
       const tipoCadastro = $('#id_tipo_cadastro').val();
-  
-      if (tipoCadastro === "Transportadora") {
-        $('.grupo-comercial').hide(); // Oculta ICMS, CFOP, etc.
+
+      if (tipoCadastro === 'Transportadora') {
+        // Transportadora: esconde apenas campos comerciais; mantém contato/transportadora/outros/documentação
+        $('.grupo-comercial').hide();
+        $itemContato.show();
+        $itemTransportadora.show();
+        $itemOutros.show();
+        $itemDocumentacao.show();
+        $('#campo_coleta').show();
+        // Documentos e logotipo continuam visíveis para transportadora
+        showLogoAndDocs();
+        // Observação e Adimplência visíveis
+        showObservacao();
+        showAdimplencia();
+
+      } else if (tipoCadastro === 'Fornecedor') {
+        // Fornecedor: manter obrigatórios (tipo_cadastro, status, tipo_cliente) visíveis
+        $itemDocumentacao.show();          // necessário para manter "Tipo de Cadastro"
+        $itemOutros.show();                // necessário para "Status" e "Tipo"
+        $itemContato.hide();
+        $itemTransportadora.hide();
+
+        // Oculta grupos específicos
+        $('.grupo-comercial').hide();      // ICMS, CFOP, Condição, Código BM
+        hideObservacao();                  // Observação
+        hideAdimplencia();                 // Status adimplência + anexo
+        hideLogoAndDocs();                 // Logotipo + formset documentos
+        $('#campo_coleta').hide();
+
       } else {
+        // Cliente: tudo visível
         $('.grupo-comercial').show();
+        $itemContato.show();
+        $itemTransportadora.show();
+        $itemOutros.show();
+        $itemDocumentacao.show();
+        $('#campo_coleta').hide();
+        showLogoAndDocs();
+        showObservacao();
+        showAdimplencia();
       }
     }
-  
-    toggleCamposComerciais();
-    $('#id_tipo_cadastro').on('change', toggleCamposComerciais);
+
+    // Executa no load e no change
+    toggleCamposPorTipo();
+    $('#id_tipo_cadastro').on('change', toggleCamposPorTipo);
   });
-  
-  
 </script>
+
+
+
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const btnAdicionar = document.getElementById("adicionarDocumento");
