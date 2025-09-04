@@ -159,6 +159,8 @@ class FaturamentoDuplicata(models.Model):
     valor_pis = models.DecimalField("Valor PIS", max_digits=16, decimal_places=2, null=True, blank=True)
     valor_cofins = models.DecimalField("Valor COFINS", max_digits=16, decimal_places=2, null=True, blank=True)
     valor_ipi = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    valor_icms = models.DecimalField("Valor ICMS", max_digits=14, decimal_places=2, null=True, blank=True)  # ✅ novo campo
+
 
     # Idempotência por NF+parcela+data+valor
     chave_unica = models.CharField("Chave Única", max_length=255, unique=True, db_index=True)

@@ -10,7 +10,7 @@ from io import BytesIO
 from comercial.models.faturamento import FaturamentoRegistro
 
 @login_required
-@permission_required("qualidade_fornecimento.view_relacaomateriaprima", raise_exception=True)
+@permission_required("qualidade_fornecimento.view_relatorioiqf", raise_exception=True)
 def indicador_8_2_view(request):
     ano_atual = datetime.now().year
     ano = int(request.GET.get("ano", ano_atual))

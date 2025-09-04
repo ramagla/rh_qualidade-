@@ -616,9 +616,9 @@ def relatorio_duplicatas(request):
             "nfe","numero_parcela","data_vencimento","valor_duplicata",
             "cliente","cliente_codigo","cliente_vinculado_id","ocorrencia",
             "natureza","cfop","valor_pis","valor_cofins","valor_ipi",
-            # ↓ garanta que venham do vínculo:
+            "valor_icms",
             "cliente_vinculado__nome_fantasia",
-            "cliente_vinculado__razao_social",
+            "cliente_vinculado__razao_social"
         )
         .order_by("ocorrencia","nfe","id")
     )
@@ -642,20 +642,23 @@ def relatorio_duplicatas(request):
         cliente_nome_por_nf = {}
 
         for r in regs:
-            qtd   = r.item_quantidade or 0
-            vunit = Decimal(str(r.item_valor_unitario or "0"))
-            base  = (vunit * Decimal(qtd)) if (qtd and vunit is not None) else Decimal("0.00")
-            if r.perc_icms is not None:
-                icms_por_nf[r.nfe] += (base * (Decimal(str(r.perc_icms)) / Decimal("100")))
             if r.ocorrencia and (r.nfe not in data_por_nf or r.ocorrencia < data_por_nf[r.nfe]):
                 data_por_nf[r.nfe] = r.ocorrencia
 
-            # salva o display do cliente vindo do Registro
             if r.cliente_vinculado:
                 nome_disp = (r.cliente_vinculado.nome_fantasia or "").strip() or \
                             (r.cliente_vinculado.razao_social or "").strip()
                 if nome_disp:
                     cliente_nome_por_nf[r.nfe] = nome_disp
+
+        icms_rows = (
+            FaturamentoDuplicata.objects
+            .filter(nfe__in=nfs)
+            .values("nfe")
+            .annotate(v_icms=Max("valor_icms"))
+        )
+        for row in icms_rows:
+            icms_por_nf[row["nfe"]] = (row["v_icms"] or Decimal("0.00")).quantize(Decimal("0.01"))
 
         ipi_rows = (
             FaturamentoDuplicata.objects
@@ -666,74 +669,76 @@ def relatorio_duplicatas(request):
         for row in ipi_rows:
             ipi_por_nf[row["nfe"]] = (row["v_ipi"] or Decimal("0.00")).quantize(Decimal("0.01"))
 
-    linhas = []
-    nfs_cfop_permitido = set()
+        linhas = []
+        nfs_cfop_permitido = set()
+        ipi_mostrado_por_nf = set()  # controla a primeira aparição do IPI por NF
 
-    for d in qs:
-        nfe = d.nfe or ""
-        emissao = d.ocorrencia or data_por_nf.get(nfe)
+        for d in qs:
+            nfe = d.nfe or ""
+            emissao = d.ocorrencia or data_por_nf.get(nfe)
 
-        # 1º: duplicata.vínculo; 2º: nome vindo do Registro por NF; 3º: legado
-        cliente_display = (
-            ((d.cliente_vinculado.nome_fantasia or "").strip() if d.cliente_vinculado else "")
-            or ((d.cliente_vinculado.razao_social or "").strip() if d.cliente_vinculado else "")
-            or cliente_nome_por_nf.get(nfe, "")
-            or (d.cliente or "—")
-        )
+            cliente_display = (
+                ((d.cliente_vinculado.nome_fantasia or "").strip() if d.cliente_vinculado else "")
+                or ((d.cliente_vinculado.razao_social or "").strip() if d.cliente_vinculado else "")
+                or cliente_nome_por_nf.get(nfe, "")
+                or (d.cliente or "—")
+            )
 
-        valor_dup  = Decimal(str(d.valor_duplicata or "0")).quantize(Decimal("0.01"))
-        valor_icms = icms_por_nf[nfe].quantize(Decimal("0.01"))
-        valor_ipi  = ipi_por_nf[nfe].quantize(Decimal("0.01"))
+            valor_dup  = Decimal(str(d.valor_duplicata or "0")).quantize(Decimal("0.01"))
+            valor_icms = icms_por_nf[nfe].quantize(Decimal("0.01"))
 
-        cfop_str = str(getattr(d, "cfop", "") or "").strip()
-        cfop_permitido = cfop_str in CFOPS_TOTALIZADORES
-        if cfop_permitido and nfe:
-            nfs_cfop_permitido.add(nfe)
+            if nfe not in ipi_mostrado_por_nf:
+                valor_ipi = ipi_por_nf[nfe].quantize(Decimal("0.01"))
+                ipi_mostrado_por_nf.add(nfe)
+            else:
+                valor_ipi = Decimal("0.00")
 
+            cfop_str = str(getattr(d, "cfop", "") or "").strip()
+            cfop_permitido = cfop_str in CFOPS_TOTALIZADORES
+            if cfop_permitido and nfe:
+                nfs_cfop_permitido.add(nfe)
 
+            NATUREZA_MAP = {
+                "VENDA DE PRODUCAO DO ESTABELECIMENTO": "Venda",
+                "REMESSA P/INDUSTRIALIZACAO POR ENCOMENDA": "Beneficiamento",
+                "INDUSTRIALIZ. EFETUADA P/OUTRA EMPRESA": "Remessa Industrialização",
+                "DEVOLUCAO DE COMPRA PARA INDUSTRIALIZACAO": "Devolução Ind.",
+                "COMPRA PARA INDUSTRIALIZACAO": "Compra Ind.",
+                "TRANSFERENCIA DE PRODUCAO": "Transferência",
+                "BONIFICACAO": "Bonificação",
+                "EXPORTACAO DE PRODUCAO": "Exportação",
+                "IMPORTACAO DE MERCADORIAS": "Importação",
+                "OUTRAS SAIDAS": "Outras Saídas",
+                "OUTRAS ENTRADAS": "Outras Entradas",
+                "REMESSA DE AMOSTRA GRATIS": "Amostra Grátis",
+                "REMESSA DE VASILHAME OU SACARIA": "Vasilhame/Sacaria",
+                "DEVOLUCAO DE VASILHAME OU SACARIA": "Dev. Vasilhame/Sacaria",
+                "REMESSA P/ CONSERTO": "Remessa p/ Conserto",
+                "VENDA PROD.ESTAB. P/ ZONA FRANCA MANAUS": "Venda p/ ZFM",
+            }
+            natureza_original = getattr(d, "natureza", None)
+            natureza_formatada = NATUREZA_MAP.get(
+                str(natureza_original).strip().upper(),
+                natureza_original or ""
+            )
 
-        # Dicionário para abreviar os nomes longos
-        NATUREZA_MAP = {
-            "VENDA DE PRODUCAO DO ESTABELECIMENTO": "Venda",
-            "REMESSA P/INDUSTRIALIZACAO POR ENCOMENDA": "Beneficiamento",
-            "INDUSTRIALIZ. EFETUADA P/OUTRA EMPRESA": "Remessa Industrialização",
-            "DEVOLUCAO DE COMPRA PARA INDUSTRIALIZACAO": "Devolução Ind.",
-            "COMPRA PARA INDUSTRIALIZACAO": "Compra Ind.",
-            "TRANSFERENCIA DE PRODUCAO": "Transferência",
-            "BONIFICACAO": "Bonificação",
-            "EXPORTACAO DE PRODUCAO": "Exportação",
-            "IMPORTACAO DE MERCADORIAS": "Importação",
-            "OUTRAS SAIDAS": "Outras Saídas",
-            "OUTRAS ENTRADAS": "Outras Entradas",
-            "REMESSA DE AMOSTRA GRATIS": "Amostra Grátis",
-            "REMESSA DE VASILHAME OU SACARIA": "Vasilhame/Sacaria",
-            "DEVOLUCAO DE VASILHAME OU SACARIA": "Dev. Vasilhame/Sacaria",
-            "REMESSA P/ CONSERTO": "Remessa p/ Conserto",
-            "VENDA PROD.ESTAB. P/ ZONA FRANCA MANAUS": "Venda p/ ZFM",
-        }
-        natureza_original = getattr(d, "natureza", None)
-        natureza_formatada = NATUREZA_MAP.get(
-            str(natureza_original).strip().upper(),
-            natureza_original or ""
-        )
-
-        linhas.append({
-            "nfe": nfe,
-            "data": emissao,
-            "cliente": cliente_display,
-            "cliente_display": cliente_display,
-            "vencimento": d.data_vencimento,
-            "valor": valor_dup,
-            "valor_icms": valor_icms,
-            "valor_ipi": valor_ipi,
-            "natureza": natureza_formatada,
-            "cfop": getattr(d, "cfop", None),
-            "valor_pis": Decimal(str(getattr(d, "valor_pis", "0") or "0")).quantize(Decimal("0.01")),
-            "valor_cofins": Decimal(str(getattr(d, "valor_cofins", "0") or "0")).quantize(Decimal("0.01")),
-            "valor_total": valor_dup,
-            "emissao": emissao,
-            "mostrar_impostos": cfop_permitido,
-        })
+            linhas.append({
+                "nfe": nfe,
+                "data": emissao,
+                "cliente": cliente_display,
+                "cliente_display": cliente_display,
+                "vencimento": d.data_vencimento,
+                "valor": valor_dup,
+                "valor_icms": valor_icms,
+                "valor_ipi": valor_ipi,  # IPI só na primeira parcela da NF
+                "natureza": natureza_formatada,
+                "cfop": getattr(d, "cfop", None),
+                "valor_pis": Decimal(str(getattr(d, "valor_pis", "0") or "0")).quantize(Decimal("0.01")),
+                "valor_cofins": Decimal(str(getattr(d, "valor_cofins", "0") or "0")).quantize(Decimal("0.01")),
+                "valor_total": valor_dup,
+                "emissao": emissao,
+                "mostrar_impostos": cfop_permitido,
+            })
     # === GRÁFICO (FILTRADO) ===
     from collections import defaultdict as _dd
     agg_por_cliente_cfop = _dd(lambda: Decimal("0.00"))

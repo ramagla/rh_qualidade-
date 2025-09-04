@@ -21,6 +21,7 @@ from Funcionario.views import relatorios_views
 from Funcionario.views import treinamento_views
 from Funcionario.views import api_views
 from Funcionario.views import funcionario_views as funcionario_utils_views
+from Funcionario.views import jobrotation_assessment_views  # novo
 
 
 # Definição das `urlpatterns`
@@ -197,6 +198,40 @@ urlpatterns = [
 
     path("funcionarios/filtro-generico/", formularios_views.filtro_funcionario_generico, name="filtro_funcionario_generico"),
     path("indicadores/atualizar/", relatorios_views.atualizar_indicador_trimestre,name="indicadores_atualizar_trimestre", ),
+
+    path("jobrotation/avaliacoes/colaborador/<uuid:token>/", jobrotation_assessment_views.preencher_avaliacao_colaborador, name="preencher_avaliacao_colaborador"),
+    path("jobrotation/avaliacoes/gestor/<uuid:token>/", jobrotation_assessment_views.preencher_avaliacao_gestor, name="preencher_avaliacao_gestor"),
+
+
+    path(
+        "jobrotation/avaliacoes/",
+        jobrotation_assessment_views.lista_avaliacoes,
+        name="lista_jobrotation_assessments",
+    ),
+
+    # Visualizar / Editar - AVALIAÇÃO DO COLABORADOR (admin)
+    path(
+        "jobrotation/avaliacoes/colaborador/<int:pk>/",
+        jobrotation_assessment_views.visualizar_avaliacao_colaborador_admin,
+        name="visualizar_avaliacao_colaborador",
+    ),
+    path(
+        "jobrotation/avaliacoes/colaborador/<int:pk>/editar/",
+        jobrotation_assessment_views.editar_avaliacao_colaborador_admin,
+        name="editar_avaliacao_colaborador",
+    ),
+
+    # Visualizar / Editar - AVALIAÇÃO DO GESTOR (admin)
+    path(
+        "jobrotation/avaliacoes/gestor/<int:pk>/",
+        jobrotation_assessment_views.visualizar_avaliacao_gestor_admin,
+        name="visualizar_avaliacao_gestor",
+    ),
+    path(
+        "jobrotation/avaliacoes/gestor/<int:pk>/editar/",
+        jobrotation_assessment_views.editar_avaliacao_gestor_admin,
+        name="editar_avaliacao_gestor",
+    ),
 
 ]
 

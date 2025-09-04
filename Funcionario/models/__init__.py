@@ -19,3 +19,4 @@ from .departamentos import Departamentos
 from .revisao_doc_leitura import RevisaoDocLeitura
 from .recibos import ReciboPagamento
 from .indicadores import FechamentoIndicadorTreinamento
+from .jobrotation_assessments import JobRotationAvaliacaoColaborador,JobRotationAvaliacaoGestor

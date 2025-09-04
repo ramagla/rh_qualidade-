@@ -1,11 +1,21 @@
+import os
+import re
 from datetime import timedelta
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required, permission_required
-from django.db.models import Sum  # ✅ CORRETO
-from django.core.paginator import Paginator
 
-from qualidade_fornecimento.models.inspecao10 import DevolucaoServicoExterno, Inspecao10
+import pandas as pd
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import User
+from django.db.models import Sum
+from django.shortcuts import get_object_or_404, redirect, render
+
 from qualidade_fornecimento.forms.inspecao10_form import Inspecao10Form
+from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
+from qualidade_fornecimento.models.inspecao10 import (
+    DevolucaoServicoExterno,
+    Inspecao10,
+)
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
 
 
@@ -107,37 +117,6 @@ def excluir_inspecao10(request, id):
     return redirect("listar_inspecoes10")
 
 
-
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User
-import pandas as pd
-from datetime import datetime
-from qualidade_fornecimento.models.inspecao10 import Inspecao10
-from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User
-import pandas as pd
-from datetime import datetime
-from qualidade_fornecimento.models.inspecao10 import Inspecao10
-from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
-
-import os
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User
-import pandas as pd
-from datetime import datetime
-from qualidade_fornecimento.models.inspecao10 import Inspecao10
-from qualidade_fornecimento.models.fornecedor import FornecedorQualificado
-import re
-
 @login_required
 @permission_required('qualidade_fornecimento.importar_excel_inspecao10', raise_exception=True)
 def importar_inspecao10_excel(request):
@@ -238,10 +217,6 @@ def importar_inspecao10_excel(request):
     return render(request, "f223/importar_excel.html")
 
 
-from django.db.models import Sum
-
-from django.db.models import Sum, F
-from qualidade_fornecimento.models.inspecao10 import DevolucaoServicoExterno
 
 @login_required
 @permission_required("qualidade_fornecimento.view_inspecao10", raise_exception=True)

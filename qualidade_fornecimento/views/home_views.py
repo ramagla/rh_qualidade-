@@ -1,12 +1,17 @@
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
+
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from django.utils import timezone
+
+from qualidade_fornecimento.models.controle_servico_externo import ControleServicoExterno
 from qualidade_fornecimento.models.f045 import RelatorioF045
 from qualidade_fornecimento.models.inspecao_servico_externo import InspecaoServicoExterno
-from qualidade_fornecimento.models.controle_servico_externo import ControleServicoExterno
 from qualidade_fornecimento.models.materiaPrima import RelacaoMateriaPrima
 from qualidade_fornecimento.utils import gerar_grafico_velocimetro
 
+@login_required
+@permission_required("qualidade_fornecimento.dashboard_qualidade", raise_exception=True)
 def dashboard_qualidade_view(request):
     total_f045 = RelatorioF045.objects.count()
     total_servico = ControleServicoExterno.objects.count()

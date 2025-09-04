@@ -19,6 +19,7 @@ from qualidade_fornecimento.models.norma import (
     NormaTecnica,
     NormaTracao,
 )
+from django.contrib.auth.decorators import login_required, permission_required
 
 
 
@@ -28,6 +29,7 @@ from django.shortcuts import render
 from qualidade_fornecimento.models.norma import NormaTecnica
 
 @login_required
+@permission_required('qualidade_fornecimento.view_normatecnica', raise_exception=True)
 def lista_normas(request):
     nome_norma = request.GET.get("nome_norma")
     tem_tracao = request.GET.get("tem_tracao")
@@ -256,8 +258,9 @@ def excluir_norma(request, id):
         return redirect("lista_normas")
     return render(request, "normas/excluir_norma.html", {"norma": norma})
 
-
-def visualizar_norma(request, id):
+@login_required
+@permission_required('qualidade_fornecimento.view_normatecnica', raise_exception=True)
+def visualizar_norma(request, id):    
     norma = get_object_or_404(NormaTecnica, id=id)
     return render(request, "normas/visualizar_norma.html", {"norma": norma})
 
@@ -290,6 +293,7 @@ def is_tecnico(user):
 from django.utils.timezone import now
 
 @login_required
+@permission_required('qualidade_fornecimento.change_normatecnica', raise_exception=True)
 def aprovar_normas(request):
     if request.method == "POST":
         id_norma = request.POST.get("normas_aprovadas")

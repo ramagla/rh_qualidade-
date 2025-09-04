@@ -77,11 +77,33 @@ def menu_rh(user):
         })
 
     if user.has_perm("Funcionario.view_jobrotationevaluation"):
+        submenu_jobrotation = []
+
+        # Lista de Job Rotation (já existente)
+        submenu_jobrotation.append({
+            "name": "Lista de Job Rotation",
+            "url": "lista_jobrotation_evaluation",  # rota do job_rotation_views
+            "icon": "fas fa-list",
+        })
+
+        # Novo submenu Avaliações (Colaborador/Gestor)
+        if (
+            user.has_perm("Funcionario.view_jobrotationavaliacaocolaborador")
+            or user.has_perm("Funcionario.view_jobrotationavaliacaogestor")
+        ):
+            submenu_jobrotation.append({
+                "name": "Avaliações de Job Rotation",
+                "url": "lista_jobrotation_assessments",  # ✅ nome correto da rota
+                "icon": "fas fa-clipboard-check",
+            })
+
         menu.append({
             "name": "Job Rotation",
-            "url": "lista_jobrotation_evaluation",
             "icon": "fas fa-sync-alt",
+            "submenu": submenu_jobrotation,
         })
+
+
 
     if user.has_perm("Funcionario.view_matrizpolivalencia"):
         menu.append({

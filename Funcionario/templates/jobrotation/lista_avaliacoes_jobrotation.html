@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Avaliações de Job Rotation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+  {% include "partials/global/_header_titulo.html" with titulo="Avaliações de Job Rotation" icone="bi bi-clipboard-check" emoji="📝" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+
+  <!-- Botões -->
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+    {% if request.user|has_permission:'Funcionario.add_jobrotationevaluation' %}
+      <a href="{% url 'cadastrar_jobrotation_evaluation' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Nova Avaliação
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Lista -->
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th>Colaborador</th>
+          <th>Cargo Atual</th>
+          <th>Nova Função</th>
+          <th>Data Início</th>
+          <th>Status RH</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for evaluation in evaluations %}
+        <tr>
+          <td>{{ evaluation.funcionario.nome }}</td>
+          <td>{{ evaluation.cargo_atual.nome|default:"—" }}</td>
+          <td>{{ evaluation.nova_funcao.nome|default:"—" }}</td>
+          <td>{{ evaluation.data_inicio|date:"d/m/Y" }}</td>
+          <td>
+            {% if evaluation.avaliacao_rh == 'Apto' %}
+              <span class="badge bg-success">Apto</span>
+            {% elif evaluation.avaliacao_rh == 'Inapto' %}
+              <span class="badge bg-danger">Inapto</span>
+            {% elif evaluation.avaliacao_rh == 'Prorrogar TN' %}
+              <span class="badge bg-warning text-dark">Prorrogar TN</span>
+            {% else %}
+              <span class="badge bg-secondary">Em progresso</span>
+            {% endif %}
+          </td>
+          <td>
+            {% include "partials/global/_botao_visualizar.html" with objeto=evaluation url_visualizar='visualizar_jobrotation_evaluation' label='avaliação' %}
+            {% include "partials/global/_botao_editar.html" with objeto=evaluation url_editar='editar_jobrotation_evaluation' label='avaliação' %}
+            {% include "partials/global/_botao_excluir.html" with objeto=evaluation url_excluir='excluir_jobrotation' label='avaliação' %}
+          </td>
+        </tr>
+        {% empty %}
+          {% include "partials/global/_sem_resultados.html" with item_nome="avaliação" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include "partials/global/_paginacao.html" %}
+</div>
+{% endblock %}

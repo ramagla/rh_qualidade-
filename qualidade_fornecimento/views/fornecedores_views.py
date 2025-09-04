@@ -1,9 +1,11 @@
 # qualidade_fornecimento/views/fornecedores_views.py
+
+import logging
 from datetime import timedelta
 
 import openpyxl
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -11,15 +13,8 @@ from django.utils import timezone
 from qualidade_fornecimento.forms import FornecedorForm
 from qualidade_fornecimento.models import FornecedorQualificado
 
+logger = logging.getLogger(__name__)
 
-from datetime import timedelta
-
-from django.shortcuts import render
-from django.core.paginator import Paginator
-from django.utils import timezone
-from django.contrib.auth.decorators import login_required, permission_required
-
-from qualidade_fornecimento.models import FornecedorQualificado
 
 @login_required
 @permission_required('qualidade_fornecimento.view_fornecedorqualificado', raise_exception=True)
@@ -95,15 +90,8 @@ def lista_fornecedores(request):
     return render(request, "fornecedores/lista_fornecedores.html", context)
 
 
-
-import logging
-
-from django.contrib import messages
-
-logger = logging.getLogger(__name__)
-
-
 @login_required
+@permission_required('qualidade_fornecimento.add_fornecedorqualificado', raise_exception=True)
 def cadastrar_fornecedor(request):
     if request.method == "POST":
         form = FornecedorForm(request.POST, request.FILES)
@@ -189,6 +177,7 @@ def editar_fornecedor(request, id):
 
 
 @login_required
+@permission_required('qualidade_fornecimento.delete_fornecedorqualificado', raise_exception=True)
 def excluir_fornecedor(request, id):
     fornecedor = get_object_or_404(FornecedorQualificado, id=id)
     if request.method == "POST":
@@ -201,6 +190,7 @@ def excluir_fornecedor(request, id):
 
 
 @login_required
+@permission_required('qualidade_fornecimento.view_fornecedorqualificado', raise_exception=True)
 def visualizar_fornecedor(request, id):
     fornecedor = get_object_or_404(FornecedorQualificado, id=id)
     context = {"fornecedor": fornecedor, "now": timezone.now()}
@@ -209,6 +199,7 @@ def visualizar_fornecedor(request, id):
 
 
 @login_required
+@permission_required('qualidade_fornecimento.importar_excel_fornecedores', raise_exception=True)
 def importar_excel_fornecedores(request):
     if request.method == "POST":
         excel_file = request.FILES.get("excel_file")

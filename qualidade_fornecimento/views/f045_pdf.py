@@ -21,12 +21,14 @@ from qualidade_fornecimento.models.norma import (
     NormaTecnica,
     NormaTracao,
 )
+from django.contrib.auth.decorators import login_required, permission_required
 
 
 # ==========================
 # GERAR PDF FINAL SALVO
 # ==========================
 @login_required
+@permission_required('qualidade_fornecimento.view_relatoriof045', raise_exception=True)
 def gerar_pdf_f045(request, relacao_id):
     return _renderizar_pdf_f045(request, relacao_id, salvar_pdf=True)
 

@@ -32,8 +32,10 @@ from qualidade_fornecimento.models import (
 )
 from qualidade_fornecimento.models.rolo import RoloMateriaPrima
 
+from django.contrib.auth.decorators import login_required, permission_required
 
 @login_required
+@permission_required('qualidade_fornecimento.view_relacaomateriaprima', raise_exception=True)
 def lista_tb050(request):
     """
     Lista/pesquisa de registros TB050 com filtros, indicadores,
@@ -242,6 +244,7 @@ def editar_tb050(request, id):
 
 
 @login_required
+@permission_required('qualidade_fornecimento.delete_relacaomateriaprima', raise_exception=True)
 def excluir_tb050(request, id):
     registro = get_object_or_404(RelacaoMateriaPrima, id=id)
     if request.method == "POST":
@@ -428,6 +431,7 @@ from xhtml2pdf import pisa
 
 
 @login_required
+@permission_required('qualidade_fornecimento.selecionar_etiquetas_tb050', raise_exception=True)
 def selecionar_etiquetas_tb050(request, id):
     registro = get_object_or_404(RelacaoMateriaPrima, id=id)
     rolos = registro.rolos.all()
@@ -447,6 +451,7 @@ def selecionar_etiquetas_tb050(request, id):
 
 
 @login_required
+@permission_required('qualidade_fornecimento.imprimir_etiquetas_tb050', raise_exception=True)
 def imprimir_etiquetas_tb050(request, id):
     registro = get_object_or_404(RelacaoMateriaPrima, id=id)
 
@@ -624,6 +629,7 @@ def imprimir_etiquetas_pdf(request, id):
 from qualidade_fornecimento.models import RelacaoMateriaPrima, NormaTecnica
 
 @login_required
+@permission_required('qualidade_fornecimento.norma_aprovada', raise_exception=True)
 def norma_aprovada(request, id):
     try:
         relacao = RelacaoMateriaPrima.objects.select_related("materia_prima").get(pk=id)
@@ -643,6 +649,7 @@ from qualidade_fornecimento.models.rolo import RoloMateriaPrima
 from qualidade_fornecimento.forms.rolo_forms import RoloMateriaPrimaForm
 
 @login_required
+@permission_required('qualidade_fornecimento.change_relacaomateriaprima', raise_exception=True)
 def adicionar_rolo(request, id):
     relacao = get_object_or_404(RelacaoMateriaPrima, pk=id)
 

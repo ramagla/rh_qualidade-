@@ -1,106 +1,31 @@
-# qualidade_fornecimento/views/controle_servico_externo_views.py
+import json
+import os
+from datetime import datetime
 
-from django.contrib.auth.decorators import login_required
+import pandas as pd
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.csrf import csrf_exempt
 
 from qualidade_fornecimento.forms.controle_servico_externo_form import (
     ControleServicoExternoForm,
     RetornoDiarioFormSet,
 )
-from qualidade_fornecimento.models.controle_servico_externo import (
+from qualidade_fornecimento.models import (
     ControleServicoExterno,
+    FornecedorQualificado,
+    MateriaPrimaCatalogo,
+    RetornoDiario,
 )
-import os
-from django.conf import settings
-
-@login_required
-def cadastrar_controle_servico_externo(request):
-    if request.method == "POST":
-        form = ControleServicoExternoForm(request.POST)
-        formset = RetornoDiarioFormSet(request.POST, prefix="retornos")
-
-        if form.is_valid() and formset.is_valid():
-            servico = form.save(commit=False)
-            servico.save()
-
-            formset.instance = servico
-            formset.save()
-
-            servico.total = servico.calcular_total()
-            servico.status2 = servico.calcular_status2()
-            servico.atraso_em_dias = servico.calcular_atraso_em_dias()
-            servico.ip = servico.calcular_ip()
-            servico.save()
-
-            return redirect("listar_controle_servico_externo")
-
-    else:
-        form = ControleServicoExternoForm()
-        formset = RetornoDiarioFormSet(prefix="retornos")
-
-    # Pega o status da inspeção relacionada, se existir
-    status_inspecao = None
-    if "servico_id" in request.GET:
-        try:
-            servico = ControleServicoExterno.objects.get(pk=request.GET["servico_id"])
-            if hasattr(servico, "inspecao"):
-                status_inspecao = servico.inspecao.status_geral()
-        except ControleServicoExterno.DoesNotExist:
-            status_inspecao = None
-
-    return render(
-        request,
-        "controle_servico_externo/form_controle_servico_externo.html",
-        {"form": form, "formset": formset, "status_inspecao": status_inspecao},
-    )
-
-
-@login_required
-def editar_controle_servico_externo(request, id):
-    servico = get_object_or_404(ControleServicoExterno, id=id)
-
-    if request.method == "POST":
-        form = ControleServicoExternoForm(request.POST, instance=servico)
-        formset = RetornoDiarioFormSet(request.POST, instance=servico, prefix="retornos")
-
-        if form.is_valid() and formset.is_valid():
-            servico = form.save(commit=False)
-            servico.save()
-
-            # ✅ Salva todo o formset (inclui exclusões)
-            formset.save()
-
-            # Atualiza campos automáticos
-            servico.total = servico.calcular_total()
-            servico.status2 = servico.calcular_status2()
-            servico.atraso_em_dias = servico.calcular_atraso_em_dias()
-            servico.ip = servico.calcular_ip()
-            servico.save()
-
-            return redirect("listar_controle_servico_externo")
-
-    else:
-        form = ControleServicoExternoForm(instance=servico)
-        formset = RetornoDiarioFormSet(instance=servico, prefix="retornos")
-
-    # 🔧 Preenche status_inspecao (usado no JS para calcular IQF)
-    status_inspecao = servico.inspecao.status_geral() if hasattr(servico, "inspecao") else None
-
-    return render(
-        request,
-        "controle_servico_externo/form_controle_servico_externo.html",
-        {
-            "form": form,
-            "formset": formset,
-            "editar": True,
-            "status_inspecao": status_inspecao,
-        },
-    )
 
 
 
 @login_required
+@permission_required('qualidade_fornecimento.view_controleservicoexterno', raise_exception=True)
 def listar_controle_servico_externo(request):
     qs = ControleServicoExterno.objects.all().order_by("-data_envio")
 
@@ -169,7 +94,100 @@ def listar_controle_servico_externo(request):
     return render(request, "controle_servico_externo/lista_controle_servico_externo.html", context)
 
 
+
 @login_required
+@permission_required('qualidade_fornecimento.add_controleservicoexterno', raise_exception=True)
+def cadastrar_controle_servico_externo(request):
+    if request.method == "POST":
+        form = ControleServicoExternoForm(request.POST)
+        formset = RetornoDiarioFormSet(request.POST, prefix="retornos")
+
+        if form.is_valid() and formset.is_valid():
+            servico = form.save(commit=False)
+            servico.save()
+
+            formset.instance = servico
+            formset.save()
+
+            servico.total = servico.calcular_total()
+            servico.status2 = servico.calcular_status2()
+            servico.atraso_em_dias = servico.calcular_atraso_em_dias()
+            servico.ip = servico.calcular_ip()
+            servico.save()
+
+            return redirect("listar_controle_servico_externo")
+
+    else:
+        form = ControleServicoExternoForm()
+        formset = RetornoDiarioFormSet(prefix="retornos")
+
+    # Pega o status da inspeção relacionada, se existir
+    status_inspecao = None
+    if "servico_id" in request.GET:
+        try:
+            servico = ControleServicoExterno.objects.get(pk=request.GET["servico_id"])
+            if hasattr(servico, "inspecao"):
+                status_inspecao = servico.inspecao.status_geral()
+        except ControleServicoExterno.DoesNotExist:
+            status_inspecao = None
+
+    return render(
+        request,
+        "controle_servico_externo/form_controle_servico_externo.html",
+        {"form": form, "formset": formset, "status_inspecao": status_inspecao},
+    )
+
+
+@login_required
+@permission_required('qualidade_fornecimento.change_controleservicoexterno', raise_exception=True)
+def editar_controle_servico_externo(request, id):
+    servico = get_object_or_404(ControleServicoExterno, id=id)
+
+    if request.method == "POST":
+        form = ControleServicoExternoForm(request.POST, instance=servico)
+        formset = RetornoDiarioFormSet(request.POST, instance=servico, prefix="retornos")
+
+        if form.is_valid() and formset.is_valid():
+            servico = form.save(commit=False)
+            servico.save()
+
+            # ✅ Salva todo o formset (inclui exclusões)
+            formset.save()
+
+            # Atualiza campos automáticos
+            servico.total = servico.calcular_total()
+            servico.status2 = servico.calcular_status2()
+            servico.atraso_em_dias = servico.calcular_atraso_em_dias()
+            servico.ip = servico.calcular_ip()
+            servico.save()
+
+            return redirect("listar_controle_servico_externo")
+
+    else:
+        form = ControleServicoExternoForm(instance=servico)
+        formset = RetornoDiarioFormSet(instance=servico, prefix="retornos")
+
+    # 🔧 Preenche status_inspecao (usado no JS para calcular IQF)
+    status_inspecao = servico.inspecao.status_geral() if hasattr(servico, "inspecao") else None
+
+    return render(
+        request,
+        "controle_servico_externo/form_controle_servico_externo.html",
+        {
+            "form": form,
+            "formset": formset,
+            "editar": True,
+            "status_inspecao": status_inspecao,
+        },
+    )
+
+
+
+
+
+
+@login_required
+@permission_required('qualidade_fornecimento.delete_controleservicoexterno', raise_exception=True)
 def excluir_controle_servico_externo(request, id):
     servico = get_object_or_404(ControleServicoExterno, id=id)
 
@@ -184,12 +202,16 @@ def excluir_controle_servico_externo(request, id):
     )
 
 
-from django.http import JsonResponse
-
-from qualidade_fornecimento.models import FornecedorQualificado
-
-
 @login_required
+@permission_required('qualidade_fornecimento.view_controleservicoexterno', raise_exception=True)
+def visualizar_controle_servico_externo(request, id):
+    servico = get_object_or_404(ControleServicoExterno, id=id)
+    return render(
+        request,
+        "controle_servico_externo/visualizar_controle_servico_externo.html",
+        {"servico": servico}
+    )
+
 def api_leadtime(request, pk):
     try:
         fornecedor = FornecedorQualificado.objects.get(pk=pk)
@@ -199,25 +221,10 @@ def api_leadtime(request, pk):
         return JsonResponse({"lead_time": 0}, status=404)
 
 
-@login_required
-def visualizar_controle_servico_externo(request, id):
-    servico = get_object_or_404(ControleServicoExterno, id=id)
-    return render(
-        request,
-        "controle_servico_externo/visualizar_controle_servico_externo.html",
-        {"servico": servico}
-    )
-
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from datetime import datetime
-import json
-
-from qualidade_fornecimento.models import ControleServicoExterno, RetornoDiario
 
 @csrf_exempt
 @login_required
+@permission_required('qualidade_fornecimento.change_controleservicoexterno', raise_exception=True)
 def registrar_entrega_servico_externo(request, servico_id):
     if request.method == "POST":
         try:
@@ -265,19 +272,6 @@ def registrar_entrega_servico_externo(request, servico_id):
 
     return JsonResponse({"success": False, "error": "Método não permitido."})
 
-
-
-import os
-import pandas as pd
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import redirect, render
-from qualidade_fornecimento.models import (
-    ControleServicoExterno,
-    FornecedorQualificado,
-    MateriaPrimaCatalogo,
-    RetornoDiario,
-)
 
 @login_required
 @permission_required('qualidade_fornecimento.importar_excel_servico_externo', raise_exception=True)

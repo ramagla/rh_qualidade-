@@ -7,7 +7,7 @@ from qualidade_fornecimento.models import FornecedorQualificado
 
 
 @login_required
-@permission_required("comercial.view_faturamentoregistro", raise_exception=True)
+@permission_required("qualidade_fornecimento.relatorio_avaliacao_view", raise_exception=True)
 def tb001_view(request):
     """
     TB001 - Relatório de Qualificação de Fornecedores

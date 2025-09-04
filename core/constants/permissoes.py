@@ -28,6 +28,7 @@ CUSTOM_PERMISSOES = [
     ("qualidade_fornecimento", "inspecao10", "importar_excel_inspecao10", "Pode importar inspeções 10 via Excel"),
     ("qualidade_fornecimento", "relatorioinspecaoanalitico", "view_relatorioinspecaoanalitico", "Pode visualizar relatório analítico de inspeções"),
     ("qualidade_fornecimento", "relatorioppm", "view_relatorio_ppm", "Pode visualizar o relatório 6.4 - PPM"),
+    ("qualidade_fornecimento", "controleservicoexterno", "importar_excel_servico_externo", "Pode importar Controle de Serviço Externo via Excel"),
 
 
 

@@ -1,14 +1,16 @@
-from django.contrib import messages
 import re
 from decimal import Decimal, InvalidOperation
-from time import localtime
-from qualidade_fornecimento.templatetags.custom_filters import parse_decimal_seguro
 
-from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.templatetags.static import static
+from django.utils.timezone import localtime as tz_localtime, now
 
+from assinatura_eletronica.models import AssinaturaEletronica
+from assinatura_eletronica.utils import gerar_assinatura, gerar_qrcode_base64
 from qualidade_fornecimento.forms.inline_rolo_formset import RoloFormSet
 from qualidade_fornecimento.forms.relatorio_f045 import RelatorioF045Form
 from qualidade_fornecimento.models.f045 import RelatorioF045
@@ -18,12 +20,11 @@ from qualidade_fornecimento.models.norma import (
     NormaTecnica,
     NormaTracao,
 )
-from django.templatetags.static import static
-from django.utils.timezone import localtime, now
-from assinatura_eletronica.models import AssinaturaEletronica
-from assinatura_eletronica.utils import gerar_assinatura
+from qualidade_fornecimento.templatetags.custom_filters import parse_decimal_seguro
+
 
 @login_required
+@permission_required('qualidade_fornecimento.view_relatoriof045', raise_exception=True)
 def f045_status(request, f045_id):
     """
     Retorna {"ready": true, "url": "<pdf_url>"} quando o PDF estiver gravado.
@@ -44,10 +45,8 @@ def parse_decimal(value):
         return None
 
 
-
-from assinatura_eletronica.models import AssinaturaEletronica
-from assinatura_eletronica.utils import gerar_qrcode_base64
 @login_required
+@permission_required('qualidade_fornecimento.view_relatoriof045', raise_exception=True)
 def visualizar_f045_pdf(request, relacao_id):
     relacao = get_object_or_404(RelacaoMateriaPrima, pk=relacao_id)
     f045 = relacao.f045
@@ -155,7 +154,7 @@ def visualizar_f045_pdf(request, relacao_id):
     # Assinatura padrão (fallback)
     assinatura_nome = f045.usuario.get_full_name() or f045.usuario.username
     assinatura_email = f045.usuario.email
-    assinatura_data = localtime(f045.data_assinatura) if f045.data_assinatura else None
+    assinatura_data = tz_localtime(f045.data_assinatura) if f045.data_assinatura else None
     assinatura_hash = None
     assinatura_departamento = "Não informado"
     qr_base64 = None
@@ -208,9 +207,8 @@ def visualizar_f045_pdf(request, relacao_id):
 
 
 
-
-
 @login_required
+@permission_required('qualidade_fornecimento.change_relatoriof045', raise_exception=True)
 def gerar_f045(request, relacao_id):
     relacao = get_object_or_404(RelacaoMateriaPrima, pk=relacao_id)
 
@@ -385,10 +383,6 @@ def gerar_f045(request, relacao_id):
     bitola_nominal = parse_decimal_seguro(bitola_raw) or Decimal("0")
     largura_nominal = parse_decimal_seguro(largura_raw) or Decimal("0")
 
-
-
-
-
     if request.method == "POST":
         if form.is_valid() and formset.is_valid():
             updated_f045 = form.save(commit=False)
@@ -538,7 +532,3 @@ def gerar_f045(request, relacao_id):
 
         },
     )
-
-
-from django.http import JsonResponse
-

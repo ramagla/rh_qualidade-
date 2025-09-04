@@ -36,7 +36,10 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import render
 from qualidade_fornecimento.models import NormaTecnica  # Import necessário
+from django.contrib.auth.decorators import login_required, permission_required
 
+@login_required
+@permission_required('qualidade_fornecimento.view_materiaprimacatalogo', raise_exception=True)
 def listar_materia_prima_catalogo(request):
     # Filtros via GET
     codigo = request.GET.get("codigo", "").strip()
@@ -162,6 +165,7 @@ from qualidade_fornecimento.models import MateriaPrimaCatalogo, NormaTecnica
 
 
 @login_required
+@permission_required('qualidade_fornecimento.importar_materia_prima_excel', raise_exception=True)
 def importar_materia_prima_excel(request):
     def limpar_valor(valor):
         if pd.isna(valor):
@@ -352,7 +356,8 @@ def editar_materia_prima(request, pk):
 
 from django.db.models import ProtectedError
 
-
+@login_required
+@permission_required('qualidade_fornecimento.delete_materiaprimacatalogo', raise_exception=True)
 def deletar_materia_prima(request, pk):
     materia_prima = get_object_or_404(MateriaPrimaCatalogo, pk=pk)
 
