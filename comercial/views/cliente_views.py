@@ -29,6 +29,7 @@ def lista_clientes(request):
     tipo_cadastro = request.GET.get('tipo_cadastro', 'Cliente')
     cidade = request.GET.get('cidade', '')
     tipo_cliente = request.GET.get('tipo_cliente', '')  # novo filtro
+    cod_bm = request.GET.get('cod_bm', '')  # 👈 novo parâmetro
 
     cidades_distintas = clientes_all.values_list('cidade', flat=True).distinct().order_by('cidade')
 
@@ -48,6 +49,8 @@ def lista_clientes(request):
         qs = qs.filter(cidade__icontains=cidade)
     if tipo_cliente:
         qs = qs.filter(tipo_cliente=tipo_cliente)
+    if cod_bm:  # 👈 aplica o novo filtro
+        qs = qs.filter(cod_bm__icontains=cod_bm)
 
     # Indicadores
     clientes_indicadores = qs.filter(tipo_cadastro="Cliente", status__in=["Ativo", "Reativado"])

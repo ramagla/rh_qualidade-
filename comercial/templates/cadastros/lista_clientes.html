@@ -41,7 +41,13 @@
 
     <div class="offcanvas-body">
       <form method="get" class="row g-3">
-
+      <!-- Código do Cliente (Cod BM) -->
+      <div class="col-12">
+        <label for="cod_bm" class="form-label">
+          <i class="bi bi-upc-scan me-1"></i> Código do Cliente (Cod BM)
+        </label>
+        <input type="text" name="cod_bm" id="cod_bm" class="form-control" value="{{ request.GET.cod_bm }}">
+      </div>
         <!-- Razão Social -->
         <div class="col-12">
           <label for="id_razao_social" class="form-label">
