@@ -86,27 +86,6 @@
 </div>
 
 
-<script>
-  // Quando a modal abrir, inicializa o Select2
-  $('#modalClonarRoteiro').on('shown.bs.modal', function () {
-    $('#selectRoteiroClonar').select2({
-      dropdownParent: $('#modalClonarRoteiro'),
-      width: '100%',
-      placeholder: 'Selecione um roteiro...',
-      allowClear: false
-    });
-  });
-
-  // Submissão permanece inalterada
-  document.getElementById("formClonarRoteiro").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const id = document.getElementById("selectRoteiroClonar").value;
-    const url = `{% url 'tecnico:clonar_roteiro' 9999 %}`.replace("9999", id);
-    window.location.href = url;
-  });
-</script>
-
-
   <!-- Modal de Aprovação -->
   <div class="modal fade" id="modalAprovarRoteiros" tabindex="-1" aria-labelledby="modalAprovarRoteirosLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -144,118 +123,105 @@
   </div>
 
 
-    <!-- Offcanvas de Filtros -->
-  <div
-    class="offcanvas offcanvas-end"
-    tabindex="-1"
-    id="filtrosOffcanvas"
-    aria-labelledby="filtrosOffcanvasLabel"
-  >
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
-        <i class="bi bi-funnel-fill me-1"></i> Filtros
-      </h5>
-      <button
-        type="button"
-        class="btn-close text-reset"
-        data-bs-dismiss="offcanvas"
-        aria-label="Fechar"
-      ></button>
-    </div>
-    <div class="offcanvas-body">
-      <form method="get" class="row g-3">
-        <!-- Código do Item (Select2) -->
-        <div class="col-12 filtro-wrapper">
-          <label for="codigo_item" class="form-label">
-            <i class="bi bi-upc-scan me-1"></i> Código do Item
-          </label>
-          <select
-            id="codigo_item"
-            name="codigo_item"
-            class="form-select select2"
-            style="width: 100%;"
-          >
-            <option value="">Todos</option>
-            {% for codigo, _ in itens %}
-              <option value="{{ codigo }}" {% if request.GET.codigo_item == codigo %}selected{% endif %}>
-                {{ codigo }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Status -->
-        <div class="col-12 filtro-wrapper">
-          <label for="status" class="form-label">
-            <i class="bi bi-toggle-on me-1"></i> Status
-          </label>
-          <select id="status" name="status" class="form-select">
-  <!-- Mantém Todos, mas raramente usado pois default é 'ativo' -->
-  <option value="" {% if request.GET.status == "" and request.GET.status is not None %}selected{% endif %}>
-    Todos
-  </option>
-  {% for valor, label in status_choices %}
-   <option
-  value="{{ valor }}"
-  {% if request.GET.status == valor or request.GET.status == "" and valor == "ativo" %}
-    selected
-  {% endif %}
+   <!-- Offcanvas de Filtros -->
+<div
+  class="offcanvas offcanvas-end"
+  tabindex="-1"
+  id="filtrosOffcanvas"
+  aria-labelledby="filtrosOffcanvasLabel"
 >
-  {{ label }}
-</option>
-
-  {% endfor %}
-</select>
-
-        </div>
-
-        <!-- Data de Criação -->
-        <div class="col-6 filtro-wrapper">
-          <label for="criado_inicio" class="form-label">
-            <i class="bi bi-calendar-plus me-1"></i> De (Data Criação)
-          </label>
-          <input
-            type="date"
-            id="criado_inicio"
-            name="criado_inicio"
-            class="form-control"
-            value="{{ request.GET.criado_inicio }}"
-          />
-        </div>
-        <div class="col-6 filtro-wrapper">
-          <label for="criado_fim" class="form-label">
-            <i class="bi bi-calendar-minus me-1"></i> Até (Data Criação)
-          </label>
-          <input
-            type="date"
-            id="criado_fim"
-            name="criado_fim"
-            class="form-control"
-            value="{{ request.GET.criado_fim }}"
-          />
-        </div>
-
-        <!-- Botão Filtrar -->
-        <div class="col-12 mt-3">
-          {% include "partials/global/_botao_filtrar.html" %}
-        </div>
-      </form>
-    </div>
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-1"></i> Filtros
+    </h5>
+    <button
+      type="button"
+      class="btn-close text-reset"
+      data-bs-dismiss="offcanvas"
+      aria-label="Fechar"
+    ></button>
   </div>
 
-  <!-- Inicialização do Select2 (ao final do template) -->
-  <script>
-    // Gatilho no momento em que o offcanvas é aberto
-    var filtrosOffcanvas = document.getElementById('filtrosOffcanvas');
-    filtrosOffcanvas.addEventListener('shown.bs.offcanvas', function () {
-      $('#codigo_item').select2({
-        dropdownParent: $('#filtrosOffcanvas'),
-        placeholder: 'Selecione um código...',
-        allowClear: true,
-        width: '100%'
-      });
-    });
-  </script>
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+
+      <!-- Código do Item (Select2) -->
+      <div class="col-12 filtro-wrapper">
+        <label for="codigo_item" class="form-label">
+          <i class="bi bi-upc-scan me-1"></i> Código do Item
+        </label>
+        <select
+          id="codigo_item"
+          name="codigo_item"
+          class="form-select select2"
+          data-dropdown-parent="#filtrosOffcanvas"
+          style="width: 100%;"
+        >
+          <option value="">Todos</option>
+          {% for codigo, _ in itens %}
+            <option value="{{ codigo }}" {% if request.GET.codigo_item == codigo %}selected{% endif %}>
+              {{ codigo }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Status -->
+      <div class="col-12 filtro-wrapper">
+        <label for="status" class="form-label">
+          <i class="bi bi-toggle-on me-1"></i> Status
+        </label>
+        <select id="status" name="status" class="form-select">
+          <!-- Mantém Todos, mas default no view é 'ativo' -->
+          <option value="" {% if request.GET.status == "" and request.GET.status is not None %}selected{% endif %}>
+            Todos
+          </option>
+          {% for valor, label in status_choices %}
+            <option
+              value="{{ valor }}"
+              {% if request.GET.status == valor or request.GET.status == "" and valor == "ativo" %}selected{% endif %}
+            >
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Data de Criação -->
+      <div class="col-6 filtro-wrapper">
+        <label for="criado_inicio" class="form-label">
+          <i class="bi bi-calendar-plus me-1"></i> De (Data Criação)
+        </label>
+        <input
+          type="date"
+          id="criado_inicio"
+          name="criado_inicio"
+          class="form-control"
+          value="{{ request.GET.criado_inicio }}"
+        />
+      </div>
+
+      <div class="col-6 filtro-wrapper">
+        <label for="criado_fim" class="form-label">
+          <i class="bi bi-calendar-minus me-1"></i> Até (Data Criação)
+        </label>
+        <input
+          type="date"
+          id="criado_fim"
+          name="criado_fim"
+          class="form-control"
+          value="{{ request.GET.criado_fim }}"
+        />
+      </div>
+
+      <!-- Botão Filtrar -->
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+    </form>
+  </div>
+</div>
+
 
 
 <!-- Indicadores -->
@@ -391,5 +357,114 @@
     {% include "partials/global/_paginacao.html" %}
   </div>
 </div>
+<!-- ==== Assets (carrega só se necessário) ==== -->
+<script>
+  (function ensureJqueryAndSelect2() {
+    // Carrega jQuery se não existir
+    if (!window.jQuery) {
+      var jq = document.createElement('script');
+      jq.src = "https://code.jquery.com/jquery-3.6.4.min.js";
+      jq.integrity = "sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=";
+      jq.crossOrigin = "anonymous";
+      document.head.appendChild(jq);
+    }
+
+    function loadSelect2() {
+      if (!window.jQuery || !window.$) return setTimeout(loadSelect2, 50);
+      if (!$.fn.select2) {
+        var s2css = document.createElement('link');
+        s2css.rel = "stylesheet";
+        s2css.href = "https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css";
+        document.head.appendChild(s2css);
+
+        var s2js = document.createElement('script');
+        s2js.src = "https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js";
+        s2js.onload = initSelects; // inicializa após carregar
+        document.head.appendChild(s2js);
+      } else {
+        initSelects();
+      }
+    }
+    loadSelect2();
+
+    // Normaliza strings para busca
+    function normalize(str) {
+      return (str || "")
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+    }
+
+    function customMatcher(params, data) {
+      if ($.trim(params.term) === '') { return data; }
+      if (typeof data.text === 'undefined') { return null; }
+      const term = normalize(params.term);
+      const text = normalize(data.text);
+      // busca por substring (contém)
+      if (text.indexOf(term) > -1) { return data; }
+      return null;
+    }
+
+    function safeInit($el, opts) {
+      if (!$el.length) return;
+      // evita re-inicialização
+      if ($el.data('select2')) { return; }
+      $el.select2(opts);
+    }
+
+    function initOffcanvasSelect() {
+      const $offcanvas = $('#filtrosOffcanvas');
+      safeInit($('#codigo_item'), {
+        dropdownParent: $offcanvas,
+        placeholder: 'Selecione um código...',
+        allowClear: true,
+        width: '100%',
+        minimumResultsForSearch: 0,
+        matcher: customMatcher
+      });
+    }
+
+    function initModalSelect() {
+      const $modal = $('#modalClonarRoteiro');
+      safeInit($('#selectRoteiroClonar'), {
+        dropdownParent: $modal,
+        placeholder: 'Selecione um roteiro...',
+        allowClear: false,
+        width: '100%',
+        minimumResultsForSearch: 0,
+        matcher: customMatcher
+      });
+    }
+
+    function initSelects() {
+      // 1) DOM pronto: inicializa
+      $(function () {
+        initOffcanvasSelect();
+        initModalSelect();
+      });
+
+      // 2) Ao abrir o Offcanvas: re-inicializa (corrige dimensões)
+      const offcanvas = document.getElementById('filtrosOffcanvas');
+      if (offcanvas) {
+        offcanvas.addEventListener('shown.bs.offcanvas', function () {
+          // destrói e recria dentro do offcanvas
+          const $el = $('#codigo_item');
+          if ($el.data('select2')) { $el.select2('destroy'); }
+          initOffcanvasSelect();
+        });
+      }
+
+      // 3) Ao abrir a modal "Clonar Roteiro": mesmo padrão
+      $('#modalClonarRoteiro').on('shown.bs.modal', function () {
+        const $el = $('#selectRoteiroClonar');
+        if ($el.data('select2')) { $el.select2('destroy'); }
+        initModalSelect();
+      });
+    }
+  })();
+</script>
+
 
 {% endblock %}

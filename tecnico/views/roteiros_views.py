@@ -744,88 +744,229 @@ from tecnico.models import Maquina
 from comercial.models import Item, CentroDeCusto, Ferramenta
 import pandas as pd
 
+# tecnico/views/roteiros_views.py
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.db import transaction
+from django.shortcuts import render, redirect, get_object_or_404
+
+import pandas as pd
+
+# tecnico/views/roteiros_views.py
+
+# tecnico/views/roteiros_views.py
+import re
+import pandas as pd
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.db import transaction
+from django.shortcuts import render, redirect
+
+# 🔁 AJUSTE ESTES IMPORTS CONFORME SEU PROJETO
+from comercial.models import Item, Ferramenta            # Item/Ferramenta normalmente no app comercial
+from tecnico.models.roteiro import RoteiroProducao, EtapaRoteiro
+from tecnico.models.maquina import Maquina               # ou o módulo correto onde Maquina está
+from comercial.models import CentroDeCusto              # ou o app/módulo correto do CentroDeCusto
+
+
+def _to_int(v):
+    try:
+        return int(str(v).strip())
+    except Exception:
+        return None
+
+
+def _to_float(v):
+    try:
+        s = str(v).strip().replace(",", ".")
+        return float(s) if s else None
+    except Exception:
+        return None
+
+
+def _to_bool(v):
+    return str(v).strip().lower() in {"sim", "true", "1", "yes"}
+
+
+def _norm_item_code(c):
+    """
+    Normaliza o código do item: trim, caixa alta e remove sufixo final de etapa (ex.: A29.001A -> A29.001).
+    """
+    s = str(c).strip().upper()
+    return re.sub(r"[A-Z]$", "", s)
+
+
 @login_required
 @permission_required("tecnico.importar_roteiro", raise_exception=True)
 def importar_roteiros_excel(request):
+    # Recupera resultado anterior (PRG) para mostrar no GET
+    import_result = request.session.pop("import_result", None)
+
+    # Falta de arquivo no POST
+    if request.method == "POST" and not request.FILES.get("arquivo"):
+        messages.error(request, "Selecione um arquivo Excel antes de importar.")
+        return redirect("tecnico:importar_roteiros_excel")
+
     if request.method == "POST" and request.FILES.get("arquivo"):
         excel = request.FILES["arquivo"]
+
         try:
             df = pd.read_excel(excel).fillna("")
 
             obrigatorias = ["Código Item", "Tipo Roteiro", "Etapa Nº", "Setor", "PPH", "Setup (min)"]
-            for col in obrigatorias:
-                if col not in df.columns:
-                    messages.error(request, f"Coluna obrigatória ausente: {col}")
-                    return redirect("importar_roteiros_excel")
+            faltantes = [c for c in obrigatorias if c not in df.columns]
+            if faltantes:
+                messages.error(request, f"Coluna(s) obrigatória(s) ausente(s): {', '.join(faltantes)}.")
+                return redirect("tecnico:importar_roteiros_excel")
 
-            agrupado = df.groupby(["Código Item", "Tipo Roteiro"])
-            criados = 0
+            # Colunas opcionais
+            has_nome_acao      = "Nome Ação" in df.columns
+            has_desc_detalhada = "Descrição Detalhada" in df.columns
+            has_ferramenta     = "Ferramenta" in df.columns
+            has_maquinas       = "Máquinas" in df.columns
+            has_mp_codigo      = "MP Código" in df.columns
+            has_qtde           = "Qtde" in df.columns
+            has_tipo_insumo    = "Tipo Insumo" in df.columns
+            has_obrigatorio    = "Obrigatório" in df.columns
+
+            # Campos existentes no modelo (evita passar chave inválida ao create)
+            etapa_fields = {f.name for f in EtapaRoteiro._meta.get_fields()}
+
+            # Agrupamento (item + tipo de roteiro)
+            agrupado = df.groupby(["Código Item", "Tipo Roteiro"], dropna=False)
+
+            total_roteiros_criados = 0
+            total_etapas_criadas = 0
+
+            erros_grupo_item = []         # grupos ignorados por Item inexistente
+            avisos_grupo_existente = []   # grupos ignorados por roteiro já existente
+            erros_linha_setor = []        # linhas ignoradas por Setor inexistente
+            avisos_relacionados = []      # avisos de refs não encontradas (Ferramenta/Máquina)
 
             with transaction.atomic():
-                for (codigo_item, tipo_roteiro), grupo in agrupado:
+                for (raw_codigo_item, raw_tipo_roteiro), grupo in agrupado:
+                    codigo_item = _norm_item_code(raw_codigo_item)
+                    tipo_roteiro = str(raw_tipo_roteiro).strip().upper()
+
+                    # Item inexistente -> ignora todo o grupo
                     try:
-                        item = Item.objects.get(codigo=str(codigo_item).strip())
-                        roteiro, _ = RoteiroProducao.objects.get_or_create(
-                            item=item,
-                            tipo_roteiro=tipo_roteiro.strip().upper(),
-                            defaults={"revisao": 1}
+                        item = Item.objects.get(codigo=codigo_item)
+                    except Item.DoesNotExist:
+                        erros_grupo_item.append(
+                            f"Item '{codigo_item}' não encontrado. Grupo (item/roteiro {tipo_roteiro}) ignorado."
                         )
+                        continue
 
-                        for _, row in grupo.iterrows():
-                            setor = CentroDeCusto.objects.get(nome__iexact=row["Setor"].strip())
-                            etapa = EtapaRoteiro.objects.create(
-                                roteiro=roteiro,
-                                etapa=int(row["Etapa Nº"]),
-                                setor=setor,
-                                pph=float(row["PPH"]) or None,
-                                setup_minutos=float(row["Setup (min)"]) or None,
+                    # ✅ Se já existir roteiro para (item, tipo), ignora grupo
+                    if RoteiroProducao.objects.filter(item=item, tipo_roteiro=tipo_roteiro).exists():
+                        avisos_grupo_existente.append(
+                            f"Roteiro já existe para Item {codigo_item} / Tipo {tipo_roteiro}. Grupo ignorado."
+                        )
+                        continue
+
+                    # Cria um novo roteiro
+                    roteiro = RoteiroProducao.objects.create(
+                        item=item, tipo_roteiro=tipo_roteiro, revisao=1
+                    )
+                    total_roteiros_criados += 1
+
+                    # Cria etapas do grupo
+                    for _, row in grupo.iterrows():
+                        # Centro de Custo (Setor) obrigatório por linha
+                        try:
+                            setor = CentroDeCusto.objects.get(nome__iexact=str(row["Setor"]).strip())
+                        except CentroDeCusto.DoesNotExist:
+                            erros_linha_setor.append(
+                                f"Setor '{row['Setor']}' não encontrado (Item {codigo_item}, Etapa {row['Etapa Nº']}). Linha ignorada."
                             )
+                            continue
 
-                            # Insumo
-                            if row["MP Código"]:
+                        etapa_data = {
+                            "roteiro": roteiro,
+                            "etapa": _to_int(row["Etapa Nº"]) or 0,
+                            "setor": setor,
+                            "pph": _to_float(row["PPH"]),
+                            "setup_minutos": _to_float(row["Setup (min)"]),
+                        }
+
+                        # Opcionais presentes no modelo
+                        if has_nome_acao and "nome_acao" in etapa_fields:
+                            etapa_data["nome_acao"] = str(row["Nome Ação"]).strip()
+                        if has_desc_detalhada and "descricao_detalhada" in etapa_fields:
+                            etapa_data["descricao_detalhada"] = str(row["Descrição Detalhada"]).strip()
+                        if has_tipo_insumo and "tipo_insumo" in etapa_fields:
+                            etapa_data["tipo_insumo"] = str(row["Tipo Insumo"]).strip()
+                        if has_obrigatorio and "obrigatorio" in etapa_fields:
+                            etapa_data["obrigatorio"] = _to_bool(row["Obrigatório"])
+                        if has_mp_codigo and "mp_codigo" in etapa_fields:
+                            etapa_data["mp_codigo"] = str(row["MP Código"]).strip()
+
+                        if has_qtde and ("qtde" in etapa_fields or "quantidade" in etapa_fields or "quantidade_insumo" in etapa_fields):
+                            valor_qtde = _to_float(row["Qtde"])
+                            if "qtde" in etapa_fields:
+                                etapa_data["qtde"] = valor_qtde
+                            elif "quantidade" in etapa_fields:
+                                etapa_data["quantidade"] = valor_qtde
+                            elif "quantidade_insumo" in etapa_fields:
+                                etapa_data["quantidade_insumo"] = valor_qtde
+
+                        # Ferramenta (FK opcional)
+                        if has_ferramenta and "ferramenta" in etapa_fields:
+                            cod_ferr = str(row["Ferramenta"]).strip()
+                            if cod_ferr:
                                 try:
-                                    mp = MateriaPrimaCatalogo.objects.get(codigo=row["MP Código"].strip())
-                                    InsumoEtapa.objects.create(
-                                        etapa=etapa,
-                                        materia_prima=mp,
-                                        quantidade=float(row["Qtde"]),
-                                        tipo_insumo=row["Tipo Insumo"],
-                                        obrigatorio=(str(row["Obrigatório"]).strip().lower() == "sim"),
+                                    etapa_data["ferramenta"] = Ferramenta.objects.get(codigo=cod_ferr)
+                                except Ferramenta.DoesNotExist:
+                                    avisos_relacionados.append(
+                                        f"Ferramenta '{cod_ferr}' não encontrada (Item {codigo_item}, Etapa {row['Etapa Nº']})."
                                     )
-                                except MateriaPrimaCatalogo.DoesNotExist:
-                                    messages.warning(request, f"MP {row['MP Código']} não encontrada (etapa {etapa}).")
 
-                            # Propriedades
-                            if row["Nome Ação"]:
-                                ferramenta = None
-                                if row["Ferramenta"]:
-                                    ferramenta = Ferramenta.objects.filter(codigo__iexact=row["Ferramenta"].strip()).first()
+                        # Cria a etapa
+                        etapa = EtapaRoteiro.objects.create(**etapa_data)
+                        total_etapas_criadas += 1
 
-                                prop = PropriedadesEtapa.objects.create(
-                                    etapa=etapa,
-                                    nome_acao=row["Nome Ação"],
-                                    descricao_detalhada=row["Descrição Detalhada"],
-                                    ferramenta=ferramenta
-                                )
+                        # Máquinas (M2M opcional)
+                        if has_maquinas:
+                            maquinas_raw = str(row["Máquinas"]).strip()
+                            if maquinas_raw:
+                                codigos = [c.strip() for c in maquinas_raw.split(",") if c.strip()]
+                                for cod_maquina in codigos:
+                                    try:
+                                        maq = Maquina.objects.get(codigo=cod_maquina)
+                                        if hasattr(etapa, "maquinas"):
+                                            etapa.maquinas.add(maq)
+                                        elif hasattr(etapa, "equipamentos"):
+                                            etapa.equipamentos.add(maq)
+                                    except Maquina.DoesNotExist:
+                                        avisos_relacionados.append(
+                                            f"Máquina '{cod_maquina}' não encontrada (Item {codigo_item}, Etapa {row['Etapa Nº']})."
+                                        )
 
-                                # Máquinas (lista separada por vírgula)
-                                codigos_maquinas = [m.strip() for m in str(row["Máquinas"]).split(",") if m.strip()]
-                                maquinas = Maquina.objects.filter(codigo__in=codigos_maquinas)
-                                prop.maquinas.set(maquinas)
+            # Monta o resumo e salva na sessão (PRG)
+            resumo = {
+                "total_roteiros_criados": total_roteiros_criados,
+                "total_etapas_criadas": total_etapas_criadas,
+                "erros_grupo_item": erros_grupo_item,               # itens inexistentes
+                "erros_linha_setor": erros_linha_setor,             # setor inexistente por linha
+                "avisos_relacionados": avisos_relacionados,         # ferramentas/máquinas não encontradas
+                "avisos_grupo_existente": avisos_grupo_existente,   # ✅ grupos pulados por roteiro já existente
+            }
 
-                        criados += 1
-                    except Exception as e:
-                        messages.error(request, f"Erro ao processar {codigo_item} tipo {tipo_roteiro}: {e}")
-                        return redirect("importar_roteiros_excel")
-
-            messages.success(request, f"Importação finalizada: {criados} roteiro(s) criados.")
-            return redirect("tecnico:tecnico_roteiros")
+            messages.success(
+                request,
+                f"Importação finalizada: {total_roteiros_criados} roteiro(s) e {total_etapas_criadas} etapa(s) criados."
+            )
+            request.session["import_result"] = resumo
+            return redirect("tecnico:importar_roteiros_excel")
 
         except Exception as e:
             messages.error(request, f"Erro ao processar o Excel: {e}")
-            return redirect("importar_roteiros_excel")
+            return redirect("tecnico:importar_roteiros_excel")
 
-    return render(request, "roteiros/importar_roteiros.html")
+    # GET: renderiza tela e relatório (se houver)
+    context = {"import_result": import_result}
+    return render(request, "roteiros/importar_roteiros.html", context)
+
 
 
 # tecnico/views/roteiros_views.py

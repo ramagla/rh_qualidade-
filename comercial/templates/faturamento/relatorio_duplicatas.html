@@ -99,15 +99,17 @@
   <!-- KPIs -->
 <div class="print-cards print-4 mb-3 d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
     <div class="card shadow-sm h-100 no-break border-primary">
-      <div class="card-body text-center py-3">
-        <div class="kpi-number fs-4 fw-bold text-primary mb-1">
-          {{ total_periodo|default_if_none:0|formatar_reais }}
-        </div>
-        <div class="kpi-label text-secondary small">
-          <i class="bi bi-cash-coin me-1"></i> Total no Período
-        </div>
-      </div>
+  <div class="card-body text-center py-3">
+    <div class="kpi-number fs-4 fw-bold text-primary mb-1">
+      {{ total_periodo|default_if_none:0|formatar_reais }}
     </div>
+    <div class="kpi-label text-secondary small"
+         title="Soma dos valores líquidos de IPI das duplicatas (Valor da duplicata – IPI por parcela) apenas para NFs com CFOPs {{ cfops_totalizadores }}.">
+      <i class="bi bi-cash-coin me-1"></i> Total no Período (Valor – IPI)
+    </div>
+  </div>
+</div>
+
     <div class="card shadow-sm h-100 no-break border-danger">
       <div class="card-body text-center py-3">
         <div class="kpi-number fs-4 fw-bold text-danger mb-1">
@@ -171,7 +173,13 @@
               <td>
                 {% if l.cliente_display %}{{ l.cliente_display }}{% else %}—{% endif %}
               </td>
-              <td>{{ l.vencimento|date:"d/m/Y" }}</td>
+<td>
+  {% if l.mostrar_impostos %}
+    {% if l.vencimento %}{{ l.vencimento|date:"d/m/Y" }}{% else %}—{% endif %}
+  {% else %}
+    <span class="tarja-preta" aria-label="Valor oculto"></span>
+  {% endif %}
+</td>
               <td>
                 {% if l.mostrar_impostos %}
                   {{ l.valor|formatar_reais }}
@@ -271,13 +279,15 @@
 
   <!-- Observações -->
   <p class="mt-2 small text-muted">
-    <i class="bi bi-info-circle me-1"></i>
-    Os valores consideram o campo <b>valor_duplicata</b> das duplicatas vinculadas à NF.
-    O “Pagamento à Vista” considera quando a data de emissão é a mesma do vencimento ou quando o vencimento ocorre 1 dia após a emissão.
-    <br>
-    <strong>Importante:</strong> os totalizadores <em>(Total no Período, Total ICMS, Total IPI)</em> consideram apenas as notas com CFOP
-    <b>{{ cfops_totalizadores }}</b>. A tabela acima lista <u>todas</u> as NFs, independentemente do CFOP.
-  </p>
+  <i class="bi bi-info-circle me-1"></i>
+  A coluna <b>Valor</b> exibe o montante <u>líquido de IPI</u> por duplicata (<b>Valor da duplicata – IPI</b> da respectiva parcela).
+  O “Pagamento à Vista” considera quando a data de emissão é a mesma do vencimento ou quando o vencimento ocorre 1 dia após a emissão.
+  <br>
+  <strong>Importante:</strong> os totalizadores <em>(Total no Período, Total ICMS, Total IPI)</em> consideram apenas as notas com CFOP
+  <b>{{ cfops_totalizadores }}</b>. O card <em>Total no Período (Valor – IPI)</em> soma os valores líquidos; o card <em>Total IPI</em> soma o IPI total por NF; e o card <em>Total Geral (Valor + IPI)</em> é a soma do líquido com o IPI.
+  A tabela acima lista <u>todas</u> as NFs, independentemente do CFOP.
+</p>
+
 
   <!-- Rodapé forçado na impressão -->
   <div class="formulario-rodape d-none d-print-block">

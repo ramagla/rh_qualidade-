@@ -551,15 +551,16 @@ def relatorio_faturamento(request):
 
 
 
-CFOPS_TOTALIZADORES = {"5101", "6101", "5124", "6124","5125","6109"}
+# ⬆️ Fora da view (topo do arquivo)
+CFOPS_TOTALIZADORES = {"5101", "6101", "5124", "6124", "5125", "6109"}
 
 
 @login_required
 @permission_required("comercial.view_faturamentoregistro", raise_exception=True)
 def relatorio_duplicatas(request):
     from decimal import Decimal
-    from collections import defaultdict
-    from datetime import timedelta
+    from collections import defaultdict, Counter
+    from datetime import timedelta, datetime
     from django.db.models import Q, Sum, Count, Max
 
     data_inicio = (request.GET.get("data_inicio") or "").strip()
@@ -591,6 +592,7 @@ def relatorio_duplicatas(request):
         messages.error(request, "Datas inválidas. Use o seletor de data.")
         return redirect(request.path)
 
+    # NFs que tiveram emissão no período
     nfs_por_emissao = list(
         FaturamentoRegistro.objects
         .filter(ocorrencia__isnull=False, ocorrencia__gte=dt_ini, ocorrencia__lte=dt_fim)
@@ -609,15 +611,13 @@ def relatorio_duplicatas(request):
         .only(
             "nfe","numero_parcela","data_vencimento","valor_duplicata",
             "cliente","cliente_codigo","cliente_vinculado_id","ocorrencia",
-            "natureza","cfop","valor_pis","valor_cofins","valor_ipi",
-            "valor_icms",
-            "cliente_vinculado__nome_fantasia",
-            "cliente_vinculado__razao_social"
+            "natureza","cfop","valor_pis","valor_cofins","valor_ipi","valor_icms",
+            "cliente_vinculado__nome_fantasia","cliente_vinculado__razao_social"
         )
         .order_by("ocorrencia","nfe","id")
     )
 
-    # === NOVO: índice de nomes para resolver cliente por nome quando não houver vínculo/código ===
+    # -------- Normalização de nomes (fallback por texto do cliente) --------
     import unicodedata, re
     def _norm_empresa(s: str) -> str:
         if not s:
@@ -629,30 +629,32 @@ def relatorio_duplicatas(request):
         s = re.sub(r"\s+", " ", s).strip()
         return s
 
-    name_index = {}  # nome normalizado -> (fantasia, razao)
+    name_index = {}
     for row in Cliente.objects.values("nome_fantasia", "razao_social"):
         for nm in (row["nome_fantasia"], row["razao_social"]):
             if nm:
                 name_index[_norm_empresa(nm)] = (row["nome_fantasia"] or "", row["razao_social"] or "")
 
-
     nfs = list(qs.values_list("nfe", flat=True).distinct())
-    icms_por_nf = defaultdict(lambda: Decimal("0.00"))
-    data_por_nf = {}
 
+    # Variáveis padrão (para o caso de não haver NFs)
+    linhas = []
+    nfs_cfop_permitido = set()
+    data_por_nf = {}
     ipi_total_por_nf = {}
     nfs_com_ipi_por_parcela = set()
-
-
+    icms_total_calculado_por_nf = {}
 
     if nfs:
+        # -------- Registros por NF (datas e cálculo do IPI teórico por NF) --------
         regs = (
             FaturamentoRegistro.objects
             .select_related("cliente_vinculado")
             .filter(nfe__in=nfs)
             .only(
                 "nfe","ocorrencia","item_quantidade","item_valor_unitario","perc_icms",
-                "cliente_vinculado__nome_fantasia","cliente_vinculado__razao_social"
+                "valor_total","valor_total_com_ipi",
+                "cliente_vinculado__nome_fantasia","cliente_vinculado__razao_social","cliente_vinculado__icms"
             )
         )
 
@@ -660,42 +662,39 @@ def relatorio_duplicatas(request):
             if r.ocorrencia and (r.nfe not in data_por_nf or r.ocorrencia < data_por_nf[r.nfe]):
                 data_por_nf[r.nfe] = r.ocorrencia
 
-        map_nf_to_fantasia = {}
-        map_nf_to_razao    = {}
-
+        map_nf_to_fantasia, map_nf_to_razao = {}, {}
         for r in regs:
             if r.cliente_vinculado:
                 nf = (r.cliente_vinculado.nome_fantasia or "").strip()
-                rz = (r.cliente_vinculado.razao_social or "").strip()
+                rz = (r.cliente_vinculado.razao_social  or "").strip()
                 if nf and r.nfe and r.nfe not in map_nf_to_fantasia:
                     map_nf_to_fantasia[r.nfe] = nf
                 if rz and r.nfe and r.nfe not in map_nf_to_razao:
                     map_nf_to_razao[r.nfe] = rz
 
+        # -------- Duplicatas agrupadas por NF (ordem final) --------
+        dups_list = list(qs)
+        dups_list.sort(key=lambda d: ((d.nfe or ""), (d.data_vencimento or datetime.max.date()), d.id))
+        dups_por_nf = defaultdict(list)
+        for d in dups_list:
+            dups_por_nf[d.nfe or ""].append(d)
 
-        icms_rows = (
-            FaturamentoDuplicata.objects
-            .filter(nfe__in=nfs)
-            .values("nfe")
-            .annotate(v_icms=Max("valor_icms"))
-        )
-        for row in icms_rows:
-            icms_por_nf[row["nfe"]] = (row["v_icms"] or Decimal("0.00")).quantize(Decimal("0.01"))
-
-        # 2.1) Soma do IPI gravado nas duplicatas (quando vem por parcela)
+        # -------- Bases de IPI (lidas x calculadas) --------
         ipi_sum_rows = (
             FaturamentoDuplicata.objects
-            .filter(nfe__in=nfs)
-            .values("nfe")
-            .annotate(v_ipi=Sum("valor_ipi"))
+            .filter(nfe__in=nfs).values("nfe").annotate(v_ipi=Sum("valor_ipi"))
         )
-        ipi_sum_por_nf = {row["nfe"]: (row["v_ipi"] or Decimal("0.00")).quantize(Decimal("0.01")) for row in ipi_sum_rows}
+        ipi_sum_por_nf = {row["nfe"]: (Decimal(str(row["v_ipi"] or 0))).quantize(Decimal("0.01")) for row in ipi_sum_rows}
+
+        ipi_max_rows = (
+            FaturamentoDuplicata.objects
+            .filter(nfe__in=nfs).values("nfe").annotate(v_ipi_max=Max("valor_ipi"))
+        )
+        ipi_max_por_nf = {row["nfe"]: (Decimal(str(row["v_ipi_max"] or 0))).quantize(Decimal("0.01")) for row in ipi_max_rows}
 
         ipi_distrib_rows = (
             FaturamentoDuplicata.objects
-            .filter(nfe__in=nfs, valor_ipi__gt=0)
-            .values("nfe")
-            .annotate(c=Count("id"))
+            .filter(nfe__in=nfs, valor_ipi__gt=0).values("nfe").annotate(c=Count("id"))
         )
         nfs_com_ipi_por_parcela = {row["nfe"] for row in ipi_distrib_rows if row["c"]}
 
@@ -707,66 +706,97 @@ def relatorio_duplicatas(request):
             if r.nfe:
                 ipi_calc_por_nf[r.nfe] = ipi_calc_por_nf.get(r.nfe, Decimal("0.00")) + delta
 
-        ipi_total_por_nf = {}
-        for nf in nfs:
-            ipi_total_por_nf[nf] = (
-                ipi_sum_por_nf.get(nf, Decimal("0.00"))
-                if nf in nfs_com_ipi_por_parcela
-                else ipi_calc_por_nf.get(nf, Decimal("0.00"))
-            )
+        # -------- Utilitário de rateio --------
+        def _ratear(total: Decimal, m: int):
+            total_cents = int((total * 100).quantize(Decimal("1")))
+            base_cents  = total_cents // m
+            resto       = total_cents - (base_cents * m)
+            return [(Decimal(base_cents + (1 if i < resto else 0)) / Decimal("100")) for i in range(m)]
 
+        # -------- Classificador do IPI por NF --------
+        ipi_estrategia = {}                 # "per_parcela" | "so_primeira" | "rateio" | "none"
+        ipi_primeira_parcela_valor = {}     # valor do IPI quando "so_primeira"
+        ipi_rateio_por_nf = {}              # lista de valores rateados quando "rateio"
 
-        # === PRÉ-CLASSIFICAÇÃO DO IPI POR NF ===
-        # Decide como mostrar o IPI: por parcela, só na 1ª, ou nenhum.
-        dups_list = list(qs)  # materializa para poder agrupar por NF
-        # opcional: garante que a "1ª" é a de menor vencimento
-        dups_list.sort(key=lambda d: ((d.nfe or ""), (d.data_vencimento or datetime.max.date()), d.id))
-
-        ipi_estrategia = {}             # nf -> "per_parcela" | "so_primeira" | "none"
-        ipi_primeira_parcela_valor = {} # nf -> Decimal (quando "so_primeira")
-
-        for nf in nfs:
-            grupo_ipi = [
-                Decimal(str(getattr(d, "valor_ipi", "0") or "0")).quantize(Decimal("0.01"))
-                for d in dups_list if (d.nfe or "") == nf
-            ]
-            if not grupo_ipi:
+        for nf, grupo in dups_por_nf.items():
+            if not grupo:
                 ipi_estrategia[nf] = "none"
                 continue
 
-            m = len(grupo_ipi)
-            sum_dups = sum(grupo_ipi)
-            total_nf = ipi_calc_por_nf.get(nf, Decimal("0.00"))  # << ponto-chave
-            nonzero = [v for v in grupo_ipi if v > 0]
-            all_equal = len(set(grupo_ipi)) == 1 and grupo_ipi[0] > 0
+            m = len(grupo)
+            ipis = [Decimal(str(getattr(d, "valor_ipi", "0") or "0")).quantize(Decimal("0.01")) for d in grupo]
+            duplicatas = [Decimal(str(getattr(d, "valor_duplicata", "0") or "0")).quantize(Decimal("0.01")) for d in grupo]
 
-            if sum_dups > 0:
-                # Caso clássico “IPI só na 1ª”: parcelas iguais (>0) e cada parcela == IPI real da NF
-                if all_equal and m > 1 and total_nf > 0 and grupo_ipi[0] == total_nf:
+            sum_ipi = sum(ipis)
+            nz_ipi  = [v for v in ipis if v > 0]
+            all_equal_ipi = (m > 1 and len(set(ipis)) == 1 and ipis[0] > 0)
+
+            total_nf = ipi_calc_por_nf.get(nf, Decimal("0.00"))
+            if total_nf <= Decimal("0.00"):
+                total_nf = ipi_max_por_nf.get(nf, Decimal("0.00"))
+
+            TOL = Decimal("0.01")
+            def _all_close(vals, tol=TOL):
+                return (max(vals) - min(vals)) <= tol if vals else True
+
+            if m >= 2:
+                v1 = duplicatas[0]
+                outros = duplicatas[1:]
+                if _all_close(outros, TOL) and all(abs(v1 - v) > TOL for v in outros):
                     ipi_estrategia[nf] = "so_primeira"
-                    ipi_primeira_parcela_valor[nf] = total_nf
-                # IPI rateado: a soma das parcelas bate com o IPI real da NF
-                elif total_nf > 0 and sum_dups == total_nf:
-                    ipi_estrategia[nf] = "per_parcela"
-                else:
-                    # quando o registro não tem IPI (total_nf==0) ou há divergência,
-                    # confia no que veio por parcela
-                    ipi_estrategia[nf] = "per_parcela"
+                    ipi_primeira_parcela_valor[nf] = (total_nf if total_nf > 0 else sum_ipi).quantize(Decimal("0.01"))
+                    continue
+
+            if len(nz_ipi) == 1 and total_nf > 0 and nz_ipi[0] == total_nf:
+                ipi_estrategia[nf] = "so_primeira"
+                ipi_primeira_parcela_valor[nf] = total_nf
+                continue
+
+            if all_equal_ipi and total_nf > 0 and ipis[0] == total_nf:
+                ipi_estrategia[nf] = "rateio"
+                ipi_rateio_por_nf[nf] = _ratear(total_nf, m)
+                continue
+
+            if total_nf > 0 and sum_ipi == total_nf and not all_equal_ipi:
+                ipi_estrategia[nf] = "per_parcela"
+                continue
+
+            if sum_ipi == 0 and total_nf > 0:
+                ipi_estrategia[nf] = "so_primeira"
+                ipi_primeira_parcela_valor[nf] = total_nf
+                continue
+
+            total_para_rateio = total_nf if total_nf > 0 else sum_ipi
+            if total_para_rateio > 0 and m > 0:
+                ipi_estrategia[nf] = "rateio"
+                ipi_rateio_por_nf[nf] = _ratear(total_para_rateio, m)
             else:
-                # Nenhuma parcela com IPI; se a NF tem IPI real, mostra só na 1ª
-                if total_nf > 0:
-                    ipi_estrategia[nf] = "so_primeira"
-                    ipi_primeira_parcela_valor[nf] = total_nf
-                else:
-                    ipi_estrategia[nf] = "none"
+                ipi_estrategia[nf] = "none"
 
+        # -------- ICMS: rateio quando detectado “copiado em todas” --------
+        icms_rateio_por_nf = {}
+        icms_total_calculado_por_nf = {}
 
+        for nf, grupo in dups_por_nf.items():
+            vals = [Decimal(str(getattr(d, "valor_icms", "0") or "0")).quantize(Decimal("0.01")) for d in grupo]
+            if not vals:
+                icms_total_calculado_por_nf[nf] = Decimal("0.00")
+                continue
 
+            m = len(vals)
+            sum_vals = sum(vals)
+            max_val  = max(vals)
+            all_equal = (len(set(vals)) == 1 and max_val > 0 and m > 1)
 
-        cods = set(
-            c for c in qs.values_list("cliente_codigo", flat=True)
-            if c and str(c).strip()
-        )
+            if all_equal:
+                total_nf_icms = max_val  # total real da NF copiado em todas
+                icms_rateio_por_nf[nf] = _ratear(total_nf_icms, m)
+                icms_total_calculado_por_nf[nf] = total_nf_icms
+            else:
+                icms_total_calculado_por_nf[nf] = sum_vals
+
+        # -------- Mapeamento por código de cliente --------
+        cods = set(c for c in qs.values_list("cliente_codigo", flat=True) if c and str(c).strip())
         map_cod_to_nome = {}
         if cods:
             rows = (
@@ -774,11 +804,10 @@ def relatorio_duplicatas(request):
                 .filter(cod_bm__in=[str(c).strip().upper() for c in cods])
                 .values_list("cod_bm", "nome_fantasia", "razao_social")
             )
-            for cod, nf, rz in rows:
-                map_cod_to_nome[str(cod).strip().upper()] = (nf or "", rz or "")
+            for cod, nf_, rz in rows:
+                map_cod_to_nome[str(cod).strip().upper()] = (nf_ or "", rz or "")
 
-        linhas = []
-        nfs_cfop_permitido = set()
+        # -------- Linhas da grade (com estratégia aplicada por parcela) --------
         ipi_mostrado_por_nf = set()
 
         for d in dups_list:
@@ -786,52 +815,35 @@ def relatorio_duplicatas(request):
             emissao = d.ocorrencia or data_por_nf.get(nfe)
 
             cod_norm = str(d.cliente_codigo or "").strip().upper()
-            fantasia_por_cod = ""
-            razao_por_cod    = ""
+            fantasia_por_cod, razao_por_cod = "", ""
             if cod_norm and cod_norm in map_cod_to_nome:
                 fantasia_por_cod, razao_por_cod = map_cod_to_nome[cod_norm]
 
             fantasia_vinc = ((d.cliente_vinculado.nome_fantasia or "").strip() if d.cliente_vinculado else "")
-            razao_vinc    = ((d.cliente_vinculado.razao_social or "").strip() if d.cliente_vinculado else "")
-
+            razao_vinc    = ((d.cliente_vinculado.razao_social  or "").strip() if d.cliente_vinculado else "")
             fantasia_por_nf = map_nf_to_fantasia.get(nfe, "")
             razao_por_nf    = map_nf_to_razao.get(nfe, "")
 
-            # NOVO: tenta resolver por nome puro da NF (quando não há vínculo/código)
             fantasia_por_nome = ""
-            razao_por_nome = ""
+            razao_por_nome    = ""
             if not (fantasia_vinc or fantasia_por_cod or fantasia_por_nf or razao_vinc or razao_por_cod or razao_por_nf):
                 key_nome_nf = _norm_empresa(d.cliente or "")
                 if key_nome_nf in name_index:
                     fantasia_por_nome, razao_por_nome = name_index[key_nome_nf]
 
-            # 1) Fallback de razão social (inclui a vinda por nome) -> primeiro nome
             razao_fallback = (
-                razao_vinc
-                or razao_por_cod
-                or razao_por_nf
-                or razao_por_nome
-                or (d.cliente or "")
+                razao_vinc or razao_por_cod or razao_por_nf or razao_por_nome or (d.cliente or "")
             ).strip()
             if razao_fallback:
                 razao_fallback = razao_fallback.split()[0]
 
-            # 2) Prioridade do display
             cliente_display = (
-                fantasia_vinc
-                or fantasia_por_cod
-                or fantasia_por_nf
-                or fantasia_por_nome
-                or razao_fallback
-                or "—"
+                fantasia_vinc or fantasia_por_cod or fantasia_por_nf or fantasia_por_nome or razao_fallback or "—"
             )
 
+            valor_dup = Decimal(str(d.valor_duplicata or "0")).quantize(Decimal("0.01"))
 
-
-            valor_dup  = Decimal(str(d.valor_duplicata or "0")).quantize(Decimal("0.01"))
-            valor_icms = icms_por_nf[nfe].quantize(Decimal("0.01"))
-
-            # --- NOVO: decisão de exibição do IPI por NF ---
+            # IPI por estratégia
             estrat = ipi_estrategia.get(nfe, "none")
             if estrat == "per_parcela":
                 valor_ipi = Decimal(str(getattr(d, "valor_ipi", "0") or "0")).quantize(Decimal("0.01"))
@@ -841,11 +853,20 @@ def relatorio_duplicatas(request):
                     ipi_mostrado_por_nf.add(nfe)
                 else:
                     valor_ipi = Decimal("0.00")
+            elif estrat == "rateio":
+                pos = dups_por_nf.get(nfe, []).index(d)
+                valor_ipi = ipi_rateio_por_nf.get(nfe, [Decimal("0.00")])[pos]
             else:
                 valor_ipi = Decimal("0.00")
 
 
-            
+            # ICMS (rateio quando detectado “copiado”)
+            if nfe in icms_rateio_por_nf:
+                pos = dups_por_nf.get(nfe, []).index(d)
+                valor_icms = icms_rateio_por_nf[nfe][pos]
+            else:
+                valor_icms = Decimal(str(getattr(d, "valor_icms", "0") or "0")).quantize(Decimal("0.01"))
+
             cfop_str = str(getattr(d, "cfop", "") or "").strip()
             cfop_permitido = cfop_str in CFOPS_TOTALIZADORES
             if cfop_permitido and nfe:
@@ -875,24 +896,45 @@ def relatorio_duplicatas(request):
                 natureza_original or ""
             )
 
+            valor_liquido_ipi = (valor_dup - valor_ipi).quantize(Decimal("0.01"))
+            if valor_liquido_ipi < Decimal("0.00"):
+                valor_liquido_ipi = Decimal("0.00")
+
+
             linhas.append({
                 "nfe": nfe,
                 "data": emissao,
                 "cliente": cliente_display,
                 "cliente_display": cliente_display,
                 "vencimento": d.data_vencimento,
-                "valor": valor_dup,
+                "valor": valor_liquido_ipi,   # ← líquido de IPI (novo comportamento)
                 "valor_icms": valor_icms,
                 "valor_ipi": valor_ipi,
                 "natureza": natureza_formatada,
                 "cfop": getattr(d, "cfop", None),
                 "valor_pis": Decimal(str(getattr(d, "valor_pis", "0") or "0")).quantize(Decimal("0.01")),
                 "valor_cofins": Decimal(str(getattr(d, "valor_cofins", "0") or "0")).quantize(Decimal("0.01")),
-                "valor_total": valor_dup,
+                "valor_total": valor_dup,      # “Total” da tabela permanece bruto
                 "emissao": emissao,
                 "mostrar_impostos": cfop_permitido,
             })
 
+        # -------- Totalizar IPI por NF conforme a estratégia aplicada --------
+        for nf, grupo in dups_por_nf.items():
+            est = ipi_estrategia.get(nf, "none")
+            if est == "per_parcela":
+                ipi_total_por_nf[nf] = sum(
+                    Decimal(str(getattr(d, "valor_ipi", "0") or "0")).quantize(Decimal("0.01"))
+                    for d in grupo
+                )
+            elif est == "so_primeira":
+                ipi_total_por_nf[nf] = ipi_primeira_parcela_valor.get(nf, Decimal("0.00")).quantize(Decimal("0.01"))
+            elif est == "rateio":
+                ipi_total_por_nf[nf] = sum(ipi_rateio_por_nf.get(nf, [])) if nf in ipi_rateio_por_nf else Decimal("0.00")
+            else:
+                ipi_total_por_nf[nf] = Decimal("0.00")
+
+    # -------- Totais / gráfico --------
     from collections import defaultdict as _dd
     agg_por_cliente_cfop = _dd(lambda: Decimal("0.00"))
     for l in linhas:
@@ -903,11 +945,15 @@ def relatorio_duplicatas(request):
     chart_data = [{"cliente_display": k, "valor": v} for k, v in top10]
 
     linhas_filtradas = [l for l in linhas if l["nfe"] in nfs_cfop_permitido]
-    total_periodo = sum(l["valor"] for l in linhas_filtradas)
-    total_icms    = sum(icms_por_nf.get(nf, Decimal("0.00")) for nf in nfs_cfop_permitido)
-    total_ipi     = sum(ipi_total_por_nf.get(nf, Decimal("0.00")) for nf in nfs_cfop_permitido)
-    total_geral   = total_periodo
-    qtde_dups     = len(linhas_filtradas)
+    total_periodo = sum(l["valor"] for l in linhas_filtradas)  # soma do “Valor” (líquido de IPI)
+
+    total_icms = sum(icms_total_calculado_por_nf.get(nf, Decimal("0.00")) for nf in nfs_cfop_permitido)
+    total_ipi  = sum(ipi_total_por_nf.get(nf, Decimal("0.00")) for nf in nfs_cfop_permitido)
+
+    # 🔹 NOVO: “Total Geral (Valor + IPI)” coerente com o card e a legenda
+    total_geral = total_periodo + total_ipi
+
+    qtde_dups   = len(linhas_filtradas)
 
     total_mes = sum(
         l["valor"] for l in linhas
@@ -917,10 +963,11 @@ def relatorio_duplicatas(request):
         l["valor"] for l in linhas
         if l.get("emissao") and (l["vencimento"] == l["emissao"] or l["vencimento"] == l["emissao"] + timedelta(days=1))
     )
-    nfs_distintas = {l["nfe"] for l in linhas if l["nfe"]}
+
+    # Tributos agora somam apenas NFs com CFOPs dos totalizadores
     total_tributos = sum(
-        (icms_por_nf.get(nf, Decimal("0")) + ipi_total_por_nf.get(nf, Decimal("0")))
-        for nf in nfs_distintas
+        (icms_total_calculado_por_nf.get(nf, Decimal("0.00")) + ipi_total_por_nf.get(nf, Decimal("0.00")))
+        for nf in nfs_cfop_permitido
     )
 
     total_valor = sum(l["valor"] for l in linhas)
@@ -943,5 +990,3 @@ def relatorio_duplicatas(request):
         "cfops_totalizadores": ", ".join(sorted(CFOPS_TOTALIZADORES)),
     }
     return render(request, "faturamento/relatorio_duplicatas.html", context)
-
-

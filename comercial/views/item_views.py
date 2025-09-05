@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
@@ -177,14 +178,34 @@ def _to_bool(v):
     s = str(v).strip().lower()
     return s in {"1", "true", "t", "y", "yes", "sim", "s"}
 
-def _to_decimal(v):
-    if v in (None, "") or pd.isna(v):
+def _to_decimal_percent(v, *, min_allowed=0, max_allowed=100):
+    """
+    Converte entradas como '15', '9,75', '15%', '  9,75  ' em Decimal(2 casas).
+    Ignora lixo e valores fora de faixa para evitar overflow no numeric(5,2).
+    """
+    if v in (None, "") or (hasattr(pd, "isna") and pd.isna(v)):
         return None
-    s = str(v).strip().replace(".", "").replace(",", ".") if isinstance(v, str) else str(v)
+
+    s = str(v).strip().rstrip("%").strip()
+    # mantém apenas dígitos, vírgula, ponto e sinal
+    s = re.sub(r"[^0-9\.,\-]", "", s)
+    # normaliza: remove milhar e usa ponto como separador decimal
+    s = s.replace(".", "").replace(",", ".")
+
+    if not any(ch.isdigit() for ch in s):
+        return None
+
     try:
-        return Decimal(s)
-    except (InvalidOperation, ValueError):
+        val = Decimal(s)
+    except Exception:
         return None
+
+    # faixa segura para IPI em %
+    if (min_allowed is not None and val < Decimal(min_allowed)) or \
+       (max_allowed is not None and val > Decimal(max_allowed)):
+        return None
+
+    return val.quantize(Decimal("0.01"))
 
 def _to_int_positive(v):
     if v in (None, "") or pd.isna(v):
@@ -209,6 +230,11 @@ def _to_date(v):
     except Exception:
         return None
 
+from decimal import Decimal, InvalidOperation
+from django.db import transaction
+import pandas as pd
+import re
+
 @login_required
 @permission_required("comercial.importar_excel_itens", raise_exception=True)
 def importar_itens_excel(request):
@@ -218,28 +244,41 @@ def importar_itens_excel(request):
     excel_file = request.FILES["arquivo"]
 
     try:
-        df = pd.read_excel(excel_file)
+        # lê tudo como texto (preserva zeros à esquerda, máscara de CNPJ etc.)
+        df = pd.read_excel(excel_file, dtype=str).fillna("")
     except Exception as e:
         messages.error(request, f"Não foi possível ler o arquivo Excel: {e}")
         return redirect("importar_itens_excel")
 
-    obrigatorios = ["Código", "Descrição", "NCM", "Lote Mínimo", "Cliente"]
+    # coluna do cliente: aceita "CNPJ do Cliente" (preferido) ou "Cliente"
+    possiveis_colunas_cliente = ["CNPJ do Cliente", "Cliente"]
+    coluna_cliente = next((c for c in possiveis_colunas_cliente if c in df.columns), None)
+    if not coluna_cliente:
+        messages.error(
+            request,
+            "Coluna de cliente não encontrada. Use 'CNPJ do Cliente' (recomendado) ou 'Cliente' na planilha."
+        )
+        return redirect("importar_itens_excel")
+
+    # obrigatórios
+    obrigatorios = ["Código", "Descrição", "NCM", "Lote Mínimo", coluna_cliente]
     ausentes = [c for c in obrigatorios if c not in df.columns]
     if ausentes:
         messages.error(request, f"Coluna(s) obrigatória(s) ausente(s): {', '.join(ausentes)}")
         return redirect("importar_itens_excel")
 
-    # Normalização prévia dos códigos existentes (já salvos em MAIÚSCULO pelo save())
+    # códigos existentes (já normalizados para UPPER pelo save() do modelo)
     codigos_existentes = set(Item.objects.values_list("codigo", flat=True))
 
     criados = 0
     ignorados_duplicado = 0
     ignorados_sem_cliente = 0
     linhas_invalidas = 0
+    ipi_invalidos = 0  # diagnóstico opcional
 
     with transaction.atomic():
         for _, row in df.iterrows():
-            codigo = str(row["Código"]).strip().upper()
+            codigo = (row.get("Código") or "").strip().upper()
             if not codigo:
                 linhas_invalidas += 1
                 continue
@@ -248,45 +287,56 @@ def importar_itens_excel(request):
                 ignorados_duplicado += 1
                 continue
 
-            # Cliente
-            cliente_nome = str(row["Cliente"]).strip()
-            cliente = Cliente.objects.filter(razao_social__iexact=cliente_nome).first()
+            # --- cliente por CNPJ (com máscara ou só dígitos); fallback: razão social ---
+            entrada_cliente = (row.get(coluna_cliente) or "").strip()
+            cnpj_digitos = re.sub(r"\D", "", entrada_cliente)
+            cliente = None
+            if cnpj_digitos:
+                cliente = Cliente.objects.filter(cnpj__in=[cnpj_digitos, entrada_cliente]).first()
+            if not cliente and entrada_cliente:
+                cliente = Cliente.objects.filter(razao_social__iexact=entrada_cliente).first()
             if not cliente:
                 ignorados_sem_cliente += 1
                 continue
+            # ---------------------------------------------------------------------------
 
-            # Ferramenta (opcional)
-            ferramenta_codigo = str(row.get("Ferramenta", "") or "").strip()
+            # ferramenta (opcional)
+            ferramenta_codigo = (row.get("Ferramenta") or "").strip()
             ferramenta = None
             if ferramenta_codigo:
                 ferramenta = Ferramenta.objects.filter(codigo__iexact=ferramenta_codigo).first()
 
-            lote_minimo = _to_int_positive(row["Lote Mínimo"])
+            # lote mínimo (obrigatório)
+            lote_minimo = _to_int_positive(row.get("Lote Mínimo"))
             if lote_minimo is None:
                 linhas_invalidas += 1
                 continue
 
+            # IPI robusto (evita overflow no numeric(5,2) do modelo Item.ipi):contentReference[oaicite:2]{index=2}
+            ipi_val = _to_decimal_percent(row.get("IPI (%)"))
+            if ipi_val is None and (row.get("IPI (%)") or "").strip() != "":
+                ipi_invalidos += 1  # havia algo na célula, mas inválido/fora de faixa
+
             item = Item(
                 codigo=codigo,
-                descricao=str(row["Descrição"]).strip() if not pd.isna(row["Descrição"]) else "",
-                ncm=str(row["NCM"]).strip() if not pd.isna(row["NCM"]) else "",
+                descricao=(row.get("Descrição") or "").strip(),
+                ncm=(row.get("NCM") or "").strip(),
                 lote_minimo=lote_minimo,
                 cliente=cliente,
                 ferramenta=ferramenta,
-                codigo_cliente=str(row.get("Código no Cliente", "") or "").strip(),
-                descricao_cliente=str(row.get("Descrição no Cliente", "") or "").strip(),
-                ipi=_to_decimal(row.get("IPI (%)", None)),
-                tipo_item=_norm_choice(row.get("Tipo de Item", None), _TIPO_ITEM_MAP, "Cotacao"),
-                tipo_de_peca=_norm_choice(row.get("Tipo de Peça", None), _TIPO_PECA_MAP, "Mola"),
-                status=_norm_choice(row.get("Status", None), _STATUS_MAP, "Ativo"),
-                automotivo_oem=_to_bool(row.get("Automotivo OEM", False)),
-                requisito_especifico=_to_bool(row.get("Requisito Específico Cliente?", False)),
-                item_seguranca=_to_bool(row.get("É Item de Segurança?", False)),
-                codigo_desenho=str(row.get("Código do Desenho", "") or "").strip(),
-                revisao=str(row.get("Revisão", "") or "").strip(),
-                data_revisao=_to_date(row.get("Data da Revisão", None)),
+                codigo_cliente=(row.get("Código no Cliente") or "").strip(),
+                descricao_cliente=(row.get("Descrição no Cliente") or "").strip(),
+                ipi=ipi_val,
+                tipo_item=_norm_choice(row.get("Tipo de Item"), _TIPO_ITEM_MAP, "Cotacao"),
+                tipo_de_peca=_norm_choice(row.get("Tipo de Peça"), _TIPO_PECA_MAP, "Mola"),
+                status=_norm_choice(row.get("Status"), _STATUS_MAP, "Ativo"),
+                automotivo_oem=_to_bool(row.get("Automotivo OEM")),
+                requisito_especifico=_to_bool(row.get("Requisito Específico Cliente?")),
+                item_seguranca=_to_bool(row.get("É Item de Segurança?")),
+                codigo_desenho=(row.get("Código do Desenho") or "").strip(),
+                revisao=(row.get("Revisão") or "").strip(),
+                data_revisao=_to_date(row.get("Data da Revisão")),
             )
-            # O save() já normaliza campos em maiúsculo onde aplicável
             item.save()
             codigos_existentes.add(codigo)
             criados += 1
@@ -297,7 +347,8 @@ def importar_itens_excel(request):
             f"Importação concluída. Criados: {criados}. "
             f"Ignorados (código duplicado): {ignorados_duplicado}. "
             f"Ignorados (cliente não encontrado): {ignorados_sem_cliente}. "
-            f"Linhas inválidas: {linhas_invalidas}."
+            f"Linhas inválidas: {linhas_invalidas}. "
+            f"IPI inválidos (descartados): {ipi_invalidos}."
         ),
     )
     return redirect("lista_itens")
