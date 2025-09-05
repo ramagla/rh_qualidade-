@@ -552,7 +552,7 @@ def relatorio_faturamento(request):
 
 
 # ⬆️ Fora da view (topo do arquivo)
-CFOPS_TOTALIZADORES = {"5101", "6101", "5124", "6124", "5125", "6109"}
+CFOPS_TOTALIZADORES = {"5101", "6101", "5124","5925", "6124", "5125", "6109"}
 
 
 @login_required
@@ -889,6 +889,7 @@ def relatorio_duplicatas(request):
                 "DEVOLUCAO DE VASILHAME OU SACARIA": "Embalagem",
                 "REMESSA P/ CONSERTO": "Conserto",
                 "VENDA PROD.ESTAB. P/ ZONA FRANCA MANAUS": "Venda p/ ZFM",
+                "INDUSTRIALIZAÇÃO EFETUADA P/ OUTRA EMPRESA": "Industrialização"
             }
             natureza_original = getattr(d, "natureza", None)
             natureza_formatada = NATUREZA_MAP.get(
