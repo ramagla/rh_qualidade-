@@ -134,15 +134,15 @@
     </tr>
     <!-- Linha 3: Data e Nota Fiscal -->
     <tr>
-      <td colspan="3" style="text-align:center; vertical-align:middle;">
-        <span class="campo">Data:</span><br>
-        {{ data_atual }}
-      </td>
-      <td colspan="3" style="text-align:center; vertical-align:middle;">
-        <span class="campo">Nota Fiscal:</span><br>
-        {{ registro.nota_fiscal }}
-      </td>
-    </tr>
+  <td colspan="3" style="text-align:center; vertical-align:middle;">
+    <span class="campo">Data de Entrada:</span><br>
+    {{ registro.data_entrada|date:"d/m/Y" }}
+  </td>
+  <td colspan="3" style="text-align:center; vertical-align:middle;">
+    <span class="campo">Nota Fiscal:</span><br>
+    {{ registro.nota_fiscal }}
+  </td>
+</tr>
     <!-- Linha 4: Nº Rolo e Código -->
     <tr>
       <td colspan="3" style="text-align:center; vertical-align:middle;">
@@ -242,8 +242,9 @@
     </tr>
     {% endif %}
   </table>
-  <div class="rodape">F222_Rev.02</div>
-</div>
+<div class="rodape" style="right:2mm; right:auto; text-align:right;">
+  Emissão: {{ data_atual }} | F222_Rev.02
+</div></div>
 {% if not forloop.last %}
 <div style="page-break-after: always;"></div>
 {% endif %}
