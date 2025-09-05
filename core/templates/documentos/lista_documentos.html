@@ -8,20 +8,24 @@
 {% include 'partials/global/_toast_mensagens.html' %}
 {% include 'partials/global/_header_titulo.html' with titulo="Lista de Documentos" icone="bi bi-journal-text" emoji="📄" %}
 
-<div class="container-fluid mt-5">
+<div class="container-fluid mt-4">
 
   {% include "partials/global/_estilos_botoes_acoes.html" %}
 
   <!-- Botões superiores: Filtros (offcanvas) e Cadastro -->
-  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
-    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+ <div class="d-none d-md-flex justify-content-end flex-wrap gap-2 mb-4">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+  {% if request.user|has_permission:'Funcionario.add_documento' %}
+    <a href="{% url 'cadastrar_documento' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
+    </a>
+  {% endif %}
+</div>
 
-    {% if request.user|has_permission:'Funcionario.add_documento' %}
-      <a href="{% url 'cadastrar_documento' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
-        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i> Cadastrar
-      </a>
-    {% endif %}
-  </div>
+<div class="d-flex d-md-none justify-content-center mb-3">
+  {% include "partials/global/_botao_filtros_offcanvas.html" %}
+</div>
+
 
   <!-- Offcanvas de Filtros -->
 <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
@@ -121,133 +125,153 @@
 
 
   <!-- Indicadores -->
+<div class="d-none d-md-block">
   <div class="row g-3 mb-4">
     {% include 'partials/global/_card_indicador.html' with cor="primary" titulo="📁 Total de Documentos" valor=total_documentos subtitulo="Documentos cadastrados." %}
     {% include 'partials/global/_card_indicador.html' with cor="success" titulo="✔️ Aprovados" valor=total_aprovados subtitulo="Documentos aprovados." %}
     {% include 'partials/global/_card_indicador.html' with cor="warning" titulo="⏳ Em Revisão" valor=total_em_revisao subtitulo="Aguardando revisão." %}
     {% include 'partials/global/_card_indicador.html' with cor="danger" titulo="❌ Inativos" valor=total_inativos subtitulo="Documentos inativos." %}
   </div>
+</div>
+
 
   <!-- Tabela de Documentos -->
   <div class="table-responsive zebra-tabela mt-4">
   <table class="table table-bordered table-striped align-middle text-center">
     <thead class="table-light">
-      <tr>
-        <th class="text-center align-middle">
-          <div class="d-flex flex-column align-items-center">
-            <i class="bi bi-upc mb-1"></i>
-            <small>Código</small>
-          </div>
-        </th>
-        <th class="text-center align-middle">
-          <div class="d-flex flex-column align-items-center">
-            <i class="bi bi-journal-text mb-1"></i>
-            <small>Nome</small>
-          </div>
-        </th>
-        <th class="text-center align-middle">
-          <div class="d-flex flex-column align-items-center">
-            <i class="bi bi-person-badge mb-1"></i>
-            <small>Responsável</small>
-          </div>
-        </th>
-        <th class="text-center align-middle">
-          <div class="d-flex flex-column align-items-center">
-            <i class="bi bi-flag mb-1"></i>
-            <small>Status</small>
-          </div>
-        </th>
-        <th class="text-center align-middle">
-          <div class="d-flex flex-column align-items-center">
-            <i class="bi bi-card-checklist mb-1"></i>
-            <small>Última Revisão</small>
-          </div>
-        </th>
-        <th class="text-center align-middle">
-          <div class="d-flex flex-column align-items-center">
-            <i class="bi bi-calendar-event mb-1"></i>
-            <small>Atualização</small>
-          </div>
-        </th>
-        <th class="text-center align-middle">
-          <div class="d-flex flex-column align-items-center">
-            <i class="bi bi-gear mb-1"></i>
-            <small>Ações</small>
-          </div>
-        </th>
-      </tr>
-    </thead>
+  <tr>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-upc mb-1"></i>
+        <small>Código</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-journal-text mb-1"></i>
+        <small>Nome</small>
+      </div>
+    </th>
+    <th class="text-center align-middle d-none d-md-table-cell">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-person-badge mb-1"></i>
+        <small>Responsável</small>
+      </div>
+    </th>
+    <th class="text-center align-middle d-none d-md-table-cell">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-flag mb-1"></i>
+        <small>Status</small>
+      </div>
+    </th>
+    <th class="text-center align-middle d-none d-md-table-cell">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-card-checklist mb-1"></i>
+        <small>Última Revisão</small>
+      </div>
+    </th>
+    <th class="text-center align-middle d-none d-md-table-cell">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-calendar-event mb-1"></i>
+        <small>Atualização</small>
+      </div>
+    </th>
+    <th class="text-center align-middle">
+      <div class="d-flex flex-column align-items-center">
+        <i class="bi bi-gear mb-1"></i>
+        <small>Ações</small>
+      </div>
+    </th>
+  </tr>
+</thead>
+
 
       <tbody>
-        {% if page_obj %}
-            {% for documento in page_obj %}
-            <tr>
-              <td>{{ documento.codigo }}</td>
+  {% if page_obj %}
+    {% for documento in page_obj %}
+      <tr>
+        <td>{{ documento.codigo }}</td>
 
-              <td>{{ documento.nome }}</td>
-              <td>{{ documento.responsavel_recuperacao.nome }}</td>
-              <td>
-                {% if documento.status == 'aprovado' %}
-                  <span class="badge bg-success">{{ documento.get_status_display }}</span>
-                {% elif documento.status == 'em_revisao' %}
-                  <span class="badge bg-warning text-dark">{{ documento.get_status_display }}</span>
-                {% elif documento.status == 'inativo' %}
-                  <span class="badge bg-danger">{{ documento.get_status_display }}</span>
-                {% else %}
-                  <span class="badge bg-secondary">Indefinido</span>
-                {% endif %}
-              </td>
-              <td>
-                {% with documento.revisoes.all|first as ultima_revisao %}
-  {% if ultima_revisao %}
-    {{ ultima_revisao.numero_revisao }}
-  {% else %}
-    <span class="text-muted">Sem revisão</span>
-  {% endif %}
-{% endwith %}
+        <td>{{ documento.nome }}</td>
 
-              </td>
-              <td>
-  {% if documento.revisoes.first %}
-    {{ documento.revisoes.first.data_revisao|date:"d/m/Y" }}
-  {% else %}
-    <span class="text-muted">Sem atualização</span>
-  {% endif %}
-</td>
-              <td>
-                <div class="d-flex justify-content-center flex-wrap gap-2">
-                  {% if request.user|has_permission:'Funcionario.change_documento' %}
-                    {% include 'partials/global/_botao_editar.html' with objeto=documento url_editar='editar_documento' %}
-                  {% endif %}
+        <td class="d-none d-md-table-cell">{{ documento.responsavel_recuperacao.nome }}</td>
 
-                  {% if request.user|has_permission:'Funcionario.view_revisao' %}
-                  <a href="{% url 'historico_documentos' documento.id %}" class="btn btn-sm btn-info mt-1" title="Histórico de Revisões" aria-label="Histórico de {{ documento.nome }}">
-                    <i class="bi bi-clock-history" aria-hidden="true"></i>
-                  </a>
-                  {% endif %}
-
-                  {% if documento.arquivo and request.user|has_permission:'Funcionario.view_documento' %}
-                  <a href="{{ documento.arquivo.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-dark mt-1" title="Visualizar Documento" aria-label="Visualizar {{ documento.nome }}">
-                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-                  </a>
-                  {% endif %}
-
-                  {% if request.user|has_permission:'Funcionario.delete_documento' %}
-                    {% include 'partials/global/_botao_excluir.html' with objeto=documento url_excluir='excluir_documento' %}
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-        {% else %}
-            <tr>
-              <td colspan="7">
-                {% include 'partials/global/_sem_resultados.html' with item_nome="documento" %}
-              </td>
-            </tr>
+        <td class="d-none d-md-table-cell">
+          {% if documento.status == 'aprovado' %}
+            <span class="badge bg-success">{{ documento.get_status_display }}</span>
+          {% elif documento.status == 'em_revisao' %}
+            <span class="badge bg-warning text-dark">{{ documento.get_status_display }}</span>
+          {% elif documento.status == 'inativo' %}
+            <span class="badge bg-danger">{{ documento.get_status_display }}</span>
+          {% else %}
+            <span class="badge bg-secondary">Indefinido</span>
           {% endif %}
+        </td>
 
-      </tbody>
+        <td class="d-none d-md-table-cell">
+          {% with documento.revisoes.all|first as ultima_revisao %}
+            {% if ultima_revisao %}
+              {{ ultima_revisao.numero_revisao }}
+            {% else %}
+              <span class="text-muted">Sem revisão</span>
+            {% endif %}
+          {% endwith %}
+        </td>
+
+        <td class="d-none d-md-table-cell">
+          {% if documento.revisoes.first %}
+            {{ documento.revisoes.first.data_revisao|date:"d/m/Y" }}
+          {% else %}
+            <span class="text-muted">Sem atualização</span>
+          {% endif %}
+        </td>
+
+        <td>
+          <!-- Desktop: todas as ações -->
+          <div class="d-none d-md-flex justify-content-center flex-wrap gap-2">
+            {% if request.user|has_permission:'Funcionario.change_documento' %}
+              {% include 'partials/global/_botao_editar.html' with objeto=documento url_editar='editar_documento' %}
+            {% endif %}
+
+            {% if request.user|has_permission:'Funcionario.view_revisao' %}
+              <a href="{% url 'historico_documentos' documento.id %}" class="btn btn-sm btn-info mt-1" title="Histórico de Revisões" aria-label="Histórico de {{ documento.nome }}">
+                <i class="bi bi-clock-history" aria-hidden="true"></i>
+              </a>
+            {% endif %}
+
+            {% if documento.arquivo and request.user|has_permission:'Funcionario.view_documento' %}
+              <a href="{{ documento.arquivo.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-dark mt-1" title="Visualizar Documento" aria-label="Visualizar {{ documento.nome }}">
+                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+              </a>
+            {% endif %}
+
+            {% if request.user|has_permission:'Funcionario.delete_documento' %}
+              {% include 'partials/global/_botao_excluir.html' with objeto=documento url_excluir='excluir_documento' %}
+            {% endif %}
+          </div>
+
+          <!-- Mobile: somente botão de Anexo -->
+          <div class="d-flex d-md-none justify-content-center">
+            {% if documento.arquivo and request.user|has_permission:'Funcionario.view_documento' %}
+              <a href="{{ documento.arquivo.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-dark" title="Visualizar Documento" aria-label="Visualizar {{ documento.nome }}">
+                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+              </a>
+            {% else %}
+              <span class="text-muted small">Sem anexo</span>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  {% else %}
+    <tr>
+      <td colspan="7">
+        {% include 'partials/global/_sem_resultados.html' with item_nome="documento" %}
+      </td>
+    </tr>
+  {% endif %}
+</tbody>
+
     </table>
   </div>
 

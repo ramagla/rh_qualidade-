@@ -1385,4 +1385,3 @@ def ajax_status_precalculo(request, pk: int):
 
     return JsonResponse({"ok": True, "fluxo": fluxo})
 
-

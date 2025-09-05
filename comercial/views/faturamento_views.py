@@ -773,27 +773,51 @@ def relatorio_duplicatas(request):
             else:
                 ipi_estrategia[nf] = "none"
 
-        # -------- ICMS: rateio quando detectado “copiado em todas” --------
-        icms_rateio_por_nf = {}
-        icms_total_calculado_por_nf = {}
+        # -------- ICMS: estratégia alinhada ao IPI + fallback para rateio/per-parcela --------
+        # Sempre pré-definimos a lista de ICMS por parcela de cada NF.
+        icms_por_parcela = {}                 # dict[nf] -> [Decimal por parcela]
+        icms_total_calculado_por_nf = {}      # total de ICMS por NF (coerente com a estratégia)
+
+        TOL = Decimal("0.01")
+        def _all_close(vals, tol=TOL):
+            if not vals:
+                return True
+            return (max(vals) - min(vals)) <= tol
 
         for nf, grupo in dups_por_nf.items():
-            vals = [Decimal(str(getattr(d, "valor_icms", "0") or "0")).quantize(Decimal("0.01")) for d in grupo]
-            if not vals:
+            m = len(grupo)
+            if m == 0:
+                icms_por_parcela[nf] = []
                 icms_total_calculado_por_nf[nf] = Decimal("0.00")
                 continue
 
-            m = len(vals)
+            # Valores informados por parcela (normalizados)
+            vals = [Decimal(str(getattr(d, "valor_icms", "0") or "0")).quantize(Decimal("0.01")) for d in grupo]
             sum_vals = sum(vals)
             max_val  = max(vals)
-            all_equal = (len(set(vals)) == 1 and max_val > 0 and m > 1)
+            all_equal_tol = (m > 1 and max_val > 0 and _all_close(vals, TOL))
 
-            if all_equal:
-                total_nf_icms = max_val  # total real da NF copiado em todas
-                icms_rateio_por_nf[nf] = _ratear(total_nf_icms, m)
+            # Se veio “copiado em todas”, o total real é o valor de 1 parcela; senão é a soma
+            total_nf_icms = (max_val if all_equal_tol else sum_vals).quantize(Decimal("0.01"))
+
+            # 1) Se o IPI foi “só na 1ª”, o ICMS também será “só na 1ª”
+            if ipi_estrategia.get(nf) == "so_primeira" and total_nf_icms > 0:
+                lista = [Decimal("0.00")] * m
+                lista[0] = total_nf_icms
+                icms_por_parcela[nf] = lista
+                icms_total_calculado_por_nf[nf] = total_nf_icms
+                continue
+
+            # 2) Caso contrário, mantemos a lógica existente:
+            #    - se detectado “copiado em todas”, fazemos RATEIO
+            #    - se não, usamos per-parcela exatamente como veio
+            if all_equal_tol:
+                icms_por_parcela[nf] = _ratear(total_nf_icms, m)
                 icms_total_calculado_por_nf[nf] = total_nf_icms
             else:
+                icms_por_parcela[nf] = vals
                 icms_total_calculado_por_nf[nf] = sum_vals
+
 
         # -------- Mapeamento por código de cliente --------
         cods = set(c for c in qs.values_list("cliente_codigo", flat=True) if c and str(c).strip())
@@ -860,12 +884,22 @@ def relatorio_duplicatas(request):
                 valor_ipi = Decimal("0.00")
 
 
-            # ICMS (rateio quando detectado “copiado”)
-            if nfe in icms_rateio_por_nf:
-                pos = dups_por_nf.get(nfe, []).index(d)
-                valor_icms = icms_rateio_por_nf[nfe][pos]
-            else:
-                valor_icms = Decimal(str(getattr(d, "valor_icms", "0") or "0")).quantize(Decimal("0.01"))
+            # ICMS por parcela (sempre vindo do mapa pré-calculado, sem duplicar)
+            pos = dups_por_nf.get(nfe, []).index(d)
+            valor_icms = (icms_por_parcela.get(nfe, [Decimal("0.00")])[pos]).quantize(Decimal("0.01"))
+
+            # Deduplica visualização quando a NF estiver fora dos CFOPs totalizadores:
+            # se a NF não tem NENHUMA duplicata com CFOP permitido e possui mais de uma parcela,
+            # exibimos apenas a primeira duplicata.
+            grupo_nf = dups_por_nf.get(nfe, [])
+            nf_tem_cfop_permitido = any(
+                str(getattr(x, "cfop", "") or "").strip() in CFOPS_TOTALIZADORES
+                for x in grupo_nf
+            )
+            if not nf_tem_cfop_permitido and len(grupo_nf) > 1:
+                pos_no_grupo = grupo_nf.index(d)
+                if pos_no_grupo > 0:
+                    continue
 
             cfop_str = str(getattr(d, "cfop", "") or "").strip()
             cfop_permitido = cfop_str in CFOPS_TOTALIZADORES
@@ -901,21 +935,20 @@ def relatorio_duplicatas(request):
             if valor_liquido_ipi < Decimal("0.00"):
                 valor_liquido_ipi = Decimal("0.00")
 
-
             linhas.append({
                 "nfe": nfe,
                 "data": emissao,
                 "cliente": cliente_display,
                 "cliente_display": cliente_display,
                 "vencimento": d.data_vencimento,
-                "valor": valor_liquido_ipi,   # ← líquido de IPI (novo comportamento)
+                "valor": valor_liquido_ipi,
                 "valor_icms": valor_icms,
                 "valor_ipi": valor_ipi,
                 "natureza": natureza_formatada,
                 "cfop": getattr(d, "cfop", None),
                 "valor_pis": Decimal(str(getattr(d, "valor_pis", "0") or "0")).quantize(Decimal("0.01")),
                 "valor_cofins": Decimal(str(getattr(d, "valor_cofins", "0") or "0")).quantize(Decimal("0.01")),
-                "valor_total": valor_dup,      # “Total” da tabela permanece bruto
+                "valor_total": valor_dup,
                 "emissao": emissao,
                 "mostrar_impostos": cfop_permitido,
             })

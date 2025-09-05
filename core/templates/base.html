@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,12 +86,19 @@
             font-size: 1em;
         }
         .content {
-            margin-left: 220px;
-            padding: 20px;
-        }
-        .content.collapsed {
-            margin-left: 60px;
-        }
+    padding: 20px;
+    min-width: 0;
+}
+
+@media (min-width: 768px) {
+    .content {
+        margin-left: 220px;
+    }
+    .content.collapsed {
+        margin-left: 60px;
+    }
+}
+
         .navbar-brand {
             color: white;
         }
@@ -206,12 +213,13 @@
             box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
             font-size: 1.25rem;
         }
-        #sidebarMobile.offcanvas.show {
-            visibility: visible !important;
-            transform: translateX(0%) !important;
-            opacity: 1 !important;
-            z-index: 1060 !important;
-        }
+        #menuMobileSidebar.offcanvas.show {
+    visibility: visible !important;
+    transform: translateX(0%) !important;
+    opacity: 1 !important;
+    z-index: 1060 !important;
+}
+
         details[open] summary {
             background-color: #1f1f1f;
         }
@@ -238,27 +246,28 @@
             padding: 4px 0;
         }
 
-        @media (max-width: 768px) and (not print) {
-            .sidebar {
-                display: none !important;
-                background-color: red !important;
-                width: 0 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                border: none !important;
-            }
-            .content {
-                margin-left: 0 !important;
-                width: 100% !important;
-                padding: 1rem !important;
-                background-color: #f8f9fa !important;
-            }
-        }
+        @media only screen and (max-width: 768px) {
+    .sidebar {
+        display: none !important;
+    }
+    .content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 1rem !important;
+    }
+    html, body {
+        overflow-x: hidden;
+    }
+}
+
+@media print {
+}
+
     </style>
 </head>
 <body>
 
-    <div class="d-md-none d-flex justify-content-between align-items-center bg-dark px-3 py-2">
+<div class="d-md-none d-flex justify-content-between align-items-center bg-dark px-3 py-2 w-100">
       <button class="btn btn-dark rounded-circle shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuMobileSidebar">
         <i class="bi bi-list fs-4"></i>
       </button>
@@ -299,15 +308,15 @@
 
   {% include "partials/responsividade/_menu_sidebar_mobile.html" %}
   
-    <div class="d-flex">      
+<div class="d-flex w-100">
 
 <div class="sidebar d-none d-md-flex flex-column" id="sidebar">
   <div>
         <div class="logo-container" onclick="toggleSidebar()">
             {% if settings and settings.logo_claro %}
-                <img src="{{ core_settings.logo_claro.url }}" alt="Logo Claro">
+<img src="{{ core_settings.logo_claro.url }}" alt="Logo Claro" class="img-fluid">
             {% else %}
-                <img src="{% static 'logo_branco.png' %}" alt="Logo Padrão">
+<img src="{% static 'logo_branco.png' %}" alt="Logo Padrão" class="img-fluid">
             {% endif %}
         </div>
 
@@ -381,8 +390,9 @@
         </div>
 
         <div class="content flex-grow-1 w-100 ps-0 pe-0">
-          <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container-xl">
+<nav class="navbar navbar-expand-lg navbar-light bg-light d-none d-md-block">
+  <div class="container-fluid px-3">
+
 
               <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-none d-md-flex">
                 <li class="nav-item dropdown">
@@ -484,7 +494,7 @@
             </div>
           </nav>
 
-          <div class="container-xl mt-4">
+<div class="container-fluid px-3 mt-4">
             {% block content %}
             {% endblock %}
           </div>
@@ -756,13 +766,6 @@
       }
     </style>
     {% endblock %}
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const sidebar = document.querySelector('.sidebar');
-        if (window.innerWidth <= 768) {
-          sidebar.style.display = "none";
-        }
-      });
-    </script>
+  
 </body>
 </html>
