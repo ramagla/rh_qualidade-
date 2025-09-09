@@ -30,10 +30,14 @@ def visualizar_inspecao_servico_externo(request, id):
     inspecao = get_object_or_404(InspecaoServicoExterno, pk=id)
     servico = inspecao.servico
 
-    # ✅ Usa STATIC_URL (HTTP) em vez de file:// para funcionar em produção/CDN
-    logo_url = static('img/logo.png')  # ajuste para 'logo.png' se o arquivo não estiver em /img
+    # Logo pela STATIC_URL (HTTP/CDN) – robusto em produção
+    logo_url = static('img/logo.png')  # use 'logo.png' se o arquivo estiver na raiz de static
 
-    # Busca a assinatura eletrônica
+    # ✅ Calcula a última data entre os retornos do serviço
+    ultimo_retorno = servico.retornos.order_by('data').last()
+    data_retorno_ultima = ultimo_retorno.data if ultimo_retorno else None
+
+    # Assinatura eletrônica
     assinatura = AssinaturaEletronica.objects.filter(
         origem_model="InspecaoServicoExterno",
         origem_id=inspecao.id
@@ -49,7 +53,6 @@ def visualizar_inspecao_servico_externo(request, id):
         qr_base64 = gerar_qrcode_base64(url_validacao)
         assinatura_hash = assinatura.hash
 
-        # Tentativa de obter o departamento do usuário que assinou
         usuario = assinatura.usuario
         funcionario = getattr(usuario, "funcionario", None)
         if funcionario and funcionario.local_trabalho:
@@ -62,6 +65,7 @@ def visualizar_inspecao_servico_externo(request, id):
             "inspecao": inspecao,
             "servico": servico,
             "logo_url": logo_url,
+            "data_retorno_ultima": data_retorno_ultima,  # 👈 novo
             "assinatura_nome": inspecao.assinatura_nome,
             "assinatura_email": inspecao.assinatura_email,
             "assinatura_data": inspecao.assinatura_data,
@@ -71,6 +75,7 @@ def visualizar_inspecao_servico_externo(request, id):
             "url_validacao": url_validacao,
         },
     )
+
 
 
 @login_required

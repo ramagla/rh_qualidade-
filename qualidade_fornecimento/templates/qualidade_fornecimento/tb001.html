@@ -314,17 +314,45 @@
          <tbody>
   {% for f in fornecedores %}
   <tr>
-    <td class="text-center align-middle">{{ f.nome|primeiro_nome }}</td>
+    <td class="text-center align-middle">{{ f.nome }}</td>
     <td class="text-center align-middle">{{ f.produto_servico }}</td>
     <td class="text-center align-middle">{{ f.data_homologacao|date:"d/m/Y" }}</td>
     <td class="text-center align-middle">{{ f.tipo_certificacao }}</td>
     <td class="text-center align-middle">{{ f.vencimento_certificacao|date:"d/m/Y" }}</td>
     <td class="text-center align-middle">{{ f.risco }}</td>
     <td class="text-center align-middle">{{ f.data_avaliacao_risco|date:"d/m/Y" }}</td>
-    <td class="text-center align-middle">{{ f.proxima_avaliacao_risco|date:"m/Y" }}</td>
+
+    <!-- Próxima Avaliação (F211) -->
+    <td class="text-center align-middle
+       {% if f.alerta_avaliacao == 'vencido' %} bg-danger text-white fw-bold
+       {% elif f.alerta_avaliacao == 'proximo' %} bg-warning text-dark fw-bold
+       {% endif %}
+    ">
+      {% if f.alerta_avaliacao == 'vencido' %}
+        <i class="bi bi-exclamation-octagon-fill me-1"></i>
+      {% elif f.alerta_avaliacao == 'proximo' %}
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+      {% endif %}
+      {{ f.proxima_avaliacao_risco|date:"m/Y" }}
+    </td>
+
     <td class="text-center align-middle">{{ f.tipo_formulario }}</td>
     <td class="text-center align-middle">{{ f.data_auditoria|date:"d/m/Y" }}</td>
-    <td class="text-center align-middle">{{ f.proxima_auditoria|date:"d/m/Y" }}</td>
+
+    <!-- Próx. Auditoria (F154/CQI) -->
+    <td class="text-center align-middle
+       {% if f.alerta_auditoria == 'vencido' %} bg-danger text-white fw-bold
+       {% elif f.alerta_auditoria == 'proximo' %} bg-warning text-dark fw-bold
+       {% endif %}
+    ">
+      {% if f.alerta_auditoria == 'vencido' %}
+        <i class="bi bi-exclamation-octagon-fill me-1"></i>
+      {% elif f.alerta_auditoria == 'proximo' %}
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+      {% endif %}
+      {{ f.proxima_auditoria|date:"d/m/Y" }}
+    </td>
+
     <td class="text-center align-middle">
       {% if f.status == "Qualificado" %}
         <span class="badge bg-success">Qualificado</span>
@@ -336,12 +364,22 @@
         <span class="badge bg-secondary">{{ f.status }}</span>
       {% endif %}
     </td>
+
+    <!-- Nome / Contato -->
     <td class="text-center align-middle">
-      <div><strong>{{ f.especialista_nome }}</strong></div>
-      <div class="small text-muted">{{ f.especialista_cargo }}</div>
-      <div class="small"><a href="mailto:{{ f.especialista_contato }}">{{ f.especialista_contato }}</a></div>
+      <div><strong>{{ f.especialista_nome|default:"-" }}</strong></div>
+      <div class="small text-muted">{{ f.especialista_cargo|default:"-" }}</div>
+      <div class="small">
+        {% if f.especialista_contato %}
+          <a href="mailto:{{ f.especialista_contato }}">{{ f.especialista_contato }}</a>
+        {% else %}
+          -
+        {% endif %}
+      </div>
     </td>
-    <td class="text-center align-middle">{{ f.score|floatformat:0 }}%</td>
+
+    <!-- IQS -->
+    <td class="text-center align-middle">{{ f.score|default:0|floatformat:0 }}%</td>
   </tr>
   {% empty %}
   <tr>
@@ -349,6 +387,7 @@
   </tr>
   {% endfor %}
 </tbody>
+
 <tfoot class="tb001-tfoot print-only">
   <tr>
     <td colspan="14" class="p-0">
@@ -357,6 +396,18 @@
   </tr>
 </tfoot>
         </table>
+        <div class="mt-3">
+  <div class="card shadow-sm">
+    <div class="card-body p-2">
+      <strong>Legenda dos Alertas:</strong>
+      <ul class="mb-0 small">
+        <li><span class="badge bg-danger text-white"><i class="bi bi-exclamation-octagon-fill me-1"></i>Vencido</span> – Prazo ultrapassado.</li>
+        <li><span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1"></i>Próximo</span> – Prazo vence em até {{ janela_alerta_dias }} dias.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
       </div>
     </div>
   </div>

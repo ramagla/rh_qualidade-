@@ -40,9 +40,28 @@
 
     <!-- Botões rápidos (atalhos) -->
     <div class="d-flex align-items-center gap-2">
-      <a href="{% url 'relatorio_avaliacao' %}" class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm">
-        <i class="bi bi-graph-up fs-5"></i><span>Relatório de Avaliação</span>
-      </a>
+     <a href="{% url 'relatorio_avaliacao' %}"
+   class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm"
+   title="Relatório de Avaliação"
+   aria-label="Relatório de Avaliação">
+  <i class="bi bi-graph-up fs-5"></i>
+  <span class="texto-completo">Relatório de Avaliação</span>
+  <span class="texto-curto">F228</span>
+</a>
+
+<style>
+  /* Padrão: mostra completo */
+  .texto-curto { display: none; }
+  .texto-completo { display: inline; }
+
+  /* Em telas menores que 1366px troca para a versão curta */
+  @media (max-width: 1366px) {
+    .texto-curto { display: inline; }
+    .texto-completo { display: none; }
+  }
+</style>
+
+
       <a href="{% url 'relatorio_tb001' %}" class="btn btn-info d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm text-white">
         <i class="bi bi-kanban fs-5"></i><span>TB001</span>
       </a>

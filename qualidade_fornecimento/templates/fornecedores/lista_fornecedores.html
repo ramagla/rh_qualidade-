@@ -228,8 +228,11 @@
                 {{ fornecedor.risco }}
               {% endif %}
             </td>
-           <td>
-  {% if fornecedor.produto_servico == "Material do Cliente" %}
+           {# lista_fornecedores.html (célula de Status) #}
+<td>
+  {% if fornecedor.ativo == "Em Homologação" %}
+    <span class="badge bg-warning text-dark">Em Homologação</span>
+  {% elif fornecedor.produto_servico == "Material do Cliente" %}
     <span class="badge bg-success">Qualificado</span>
   {% elif fornecedor.status == "Reprovado" %}
     <span class="badge bg-danger">Reprovado</span>
@@ -241,6 +244,7 @@
     <span class="badge bg-secondary">{{ fornecedor.status }}</span>
   {% endif %}
 </td>
+
 
 
            <td>

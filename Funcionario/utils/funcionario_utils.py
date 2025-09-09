@@ -90,7 +90,7 @@ def montar_estrutura_organograma(funcionario):
 def gerar_mensagem_acesso_texto(funcionario):
     username = funcionario.user.username if funcionario.user else "NÃO CADASTRADO"
     email = funcionario.user.email if funcionario.user else "Não cadastrado"
-    link = "https://qualidade.brasmol.com.br/"
+    link = "https://sib.brasmol.com.br/"
     senha = "Bras@2025"
     video_senha = "https://www.canva.com/design/DAGpUXuwVGg/0jFy_0s06DOnZdXJDWQPDQ/watch"
     video_colab = "https://www.canva.com/design/DAGpUpGtN0s/KypajNUS2msIsvqPpNP26w/watch"
