@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Assinatura Gerada{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h4><i class="bi bi-check2-circle me-2 text-success"></i>Assinatura gerada — {{ funcionario.nome }}</h4>
+  <p class="text-muted mb-2">Copie o HTML minimizado abaixo e cole no provedor de e-mail.</p>
+
+  <div class="mb-3">
+    <button class="btn btn-outline-primary btn-sm" id="copiarBtn">
+      <i class="bi bi-clipboard-check me-1"></i>Copiar HTML
+    </button>
+    <a class="btn btn-outline-secondary btn-sm ms-2"
+       href="data:text/html;charset=utf-8,{{ assinatura_html|urlencode }}"
+       download="assinatura-{{ funcionario.id }}.html">
+      <i class="bi bi-download me-1"></i>Baixar .html
+    </a>
+    <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary btn-sm ms-2">Voltar</a>
+  </div>
+
+  <textarea id="assinaturaHtml" class="form-control" rows="8" readonly>{{ assinatura_html }}</textarea>
+
+  <h6 class="mt-4">Pré-visualização</h6>
+  <div class="p-3 border rounded bg-white" style="max-width:620px;overflow:auto">{% autoescape off %}{{ assinatura_html }}{% endautoescape %}</div>
+</div>
+
+<script>
+document.getElementById('copiarBtn').addEventListener('click', function() {
+  const ta = document.getElementById('assinaturaHtml');
+  ta.focus();
+  ta.select();
+  document.execCommand('copy');
+  this.innerHTML = '<i class="bi bi-clipboard-check-fill me-1"></i>Copiado!';
+  setTimeout(()=>{ this.innerHTML = '<i class="bi bi-clipboard-check me-1"></i>Copiar HTML'; }, 1500);
+});
+</script>
+{% endblock %}

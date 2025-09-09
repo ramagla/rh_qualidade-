@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Gerar Assinatura de E-mail{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h4><i class="bi bi-envelope-open me-2"></i>Gerar Assinatura de E-mail — {{ funcionario.nome }}</h4>
+  <form method="post" class="row g-3 mt-3">
+    {% csrf_token %}
+
+    <div class="col-md-3">
+      <label class="form-label">Ramal</label>
+      <input type="text" name="ramal" class="form-control">
+    </div>
+
+    <div class="col-md-5">
+      <label class="form-label">Celular (WhatsApp)</label>
+      <input type="text" name="celular" class="form-control" placeholder="55 11 9XXXX-XXXX">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">LinkedIn (URL)</label>
+      <input type="url" name="linkedin" class="form-control" placeholder="https://www.linkedin.com/in/usuario">
+    </div>
+
+    <div class="col-12">
+      <button class="btn btn-primary">
+        <i class="bi bi-magic me-1"></i> Gerar Assinatura
+      </button>
+      <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary ms-2">Voltar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

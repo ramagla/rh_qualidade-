@@ -192,6 +192,7 @@ urlpatterns = [
     path("formularios/pesquisa-consciencia/", formularios_views.FormularioPesquisaConscienciaView.as_view(), name="formulario_pesquisa_consciencia"),
     path("formularios/carta-competencia/<int:funcionario_id>/", formularios_views.FormularioCartaCompetenciaView.as_view(), name="formulario_carta_competencia"),
     path("formularios/saida-antecipada/<int:funcionario_id>/", formularios_views.formulario_saida_antecipada, name="formulario_saida_antecipada"),
+    path("funcionarios/assinatura/<int:funcionario_id>/", funcionario_views.gerar_assinatura_email, name="gerar_assinatura_email"),
 
      # ========================
     # LISTA / TELA INICIAL

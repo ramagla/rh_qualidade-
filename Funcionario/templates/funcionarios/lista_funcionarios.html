@@ -308,20 +308,25 @@
               {% endif %}
             </div>
           </td>
-          <td>
-            <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
-              {% if request.user|has_permission:"Funcionario.view_funcionario" %}
-                {% include "partials/global/_botao_visualizar.html" with objeto=funcionario url_visualizar="visualizar_funcionario" label="colaborador" %}
-              {% endif %}
-              {% if request.user|has_permission:"Funcionario.change_funcionario" %}
-                {% include "partials/global/_botao_editar.html" with objeto=funcionario url_editar="editar_funcionario" label="colaborador" %}
-              {% endif %}
-              {% if request.user|has_permission:"Funcionario.delete_funcionario" %}
-                {% include "partials/global/_botao_excluir.html" with objeto=funcionario url_excluir="excluir_funcionario" label="colaborador" %}
-                {% include "partials/global/_modal_exclusao.html" with objeto=funcionario url_excluir="excluir_funcionario" %}
-              {% endif %}
-            </div>
-          </td>
+          <!-- funcionarios/lista_funcionarios.html -->
+<td>
+  <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+    {% if request.user|has_permission:"Funcionario.view_funcionario" %}
+      {% include "partials/global/_botao_visualizar.html" with objeto=funcionario url_visualizar="visualizar_funcionario" label="colaborador" %}
+    {% endif %}
+    {% if request.user|has_permission:"Funcionario.change_funcionario" %}
+      {% include "partials/global/_botao_editar.html" with objeto=funcionario url_editar="editar_funcionario" label="colaborador" %}
+      <a href="{% url 'gerar_assinatura_email' funcionario.id %}" class="btn btn-sm btn-outline-primary" title="Gerar assinatura de e-mail">
+        <i class="bi bi-envelope-paper"></i>
+      </a>
+    {% endif %}
+    {% if request.user|has_permission:"Funcionario.delete_funcionario" %}
+      {% include "partials/global/_botao_excluir.html" with objeto=funcionario url_excluir="excluir_funcionario" label="colaborador" %}
+      {% include "partials/global/_modal_exclusao.html" with objeto=funcionario url_excluir="excluir_funcionario" %}
+    {% endif %}
+  </div>
+</td>
+
         </tr>
       {% empty %}
         {% include "partials/global/_sem_resultados.html" with colspan=8 mensagem="Nenhum Colaborador cadastrado." %}
