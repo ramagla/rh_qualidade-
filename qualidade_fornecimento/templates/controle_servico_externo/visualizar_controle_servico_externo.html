@@ -64,11 +64,15 @@
   </button>
 </div>
 
-<div class="pdf-container">
-  <div class="pdf-header">
+<!-- visualizar_controle_servico_externo.html -->
+<div class="pdf-header" style="display:flex;align-items:center;justify-content:space-between;">
+  <img src="{{ logo_url }}" alt="Logo" style="height:60px;">
+  <div style="flex:1;text-align:center;">
     <h2>📦 Serviço Externo</h2>
     <p>Resumo do Cadastro de Envio e Retorno</p>
   </div>
+</div>
+
 
   <table class="info-table">
     <tr><th>Pedido</th><td>{{ servico.pedido }}</td></tr>

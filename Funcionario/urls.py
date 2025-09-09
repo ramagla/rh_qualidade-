@@ -193,23 +193,32 @@ urlpatterns = [
     path("formularios/carta-competencia/<int:funcionario_id>/", formularios_views.FormularioCartaCompetenciaView.as_view(), name="formulario_carta_competencia"),
     path("formularios/saida-antecipada/<int:funcionario_id>/", formularios_views.formulario_saida_antecipada, name="formulario_saida_antecipada"),
 
-    # ✅ ADICIONE ESTA LINHA (rota nomeada que faltava)
-    path("formularios/ficha-epi/<int:funcionario_id>/", formularios_views.imprimir_ficha_epi, name="imprimir_ficha_epi"),
-
-    path("funcionarios/filtro-generico/", formularios_views.filtro_funcionario_generico, name="filtro_funcionario_generico"),
-    path("indicadores/atualizar/", relatorios_views.atualizar_indicador_trimestre,name="indicadores_atualizar_trimestre", ),
-
-    path("jobrotation/avaliacoes/colaborador/<uuid:token>/", jobrotation_assessment_views.preencher_avaliacao_colaborador, name="preencher_avaliacao_colaborador"),
-    path("jobrotation/avaliacoes/gestor/<uuid:token>/", jobrotation_assessment_views.preencher_avaliacao_gestor, name="preencher_avaliacao_gestor"),
-
-
+     # ========================
+    # LISTA / TELA INICIAL
+    # ========================
     path(
         "jobrotation/avaliacoes/",
         jobrotation_assessment_views.lista_avaliacoes,
         name="lista_jobrotation_assessments",
     ),
 
-    # Visualizar / Editar - AVALIAÇÃO DO COLABORADOR (admin)
+    # ========================
+    # PREENCHIMENTO PÚBLICO (links por e-mail via token)
+    # ========================
+    path(
+        "jobrotation/avaliacoes/colaborador/<uuid:token>/",
+        jobrotation_assessment_views.preencher_avaliacao_colaborador,
+        name="preencher_avaliacao_colaborador",
+    ),
+    path(
+        "jobrotation/avaliacoes/gestor/<uuid:token>/",
+        jobrotation_assessment_views.preencher_avaliacao_gestor,
+        name="preencher_avaliacao_gestor",
+    ),
+
+    # ========================
+    # ADMIN - VISUALIZAR / EDITAR AVALIAÇÕES INDIVIDUAIS
+    # ========================
     path(
         "jobrotation/avaliacoes/colaborador/<int:pk>/",
         jobrotation_assessment_views.visualizar_avaliacao_colaborador_admin,
@@ -220,8 +229,6 @@ urlpatterns = [
         jobrotation_assessment_views.editar_avaliacao_colaborador_admin,
         name="editar_avaliacao_colaborador",
     ),
-
-    # Visualizar / Editar - AVALIAÇÃO DO GESTOR (admin)
     path(
         "jobrotation/avaliacoes/gestor/<int:pk>/",
         jobrotation_assessment_views.visualizar_avaliacao_gestor_admin,
@@ -233,6 +240,30 @@ urlpatterns = [
         name="editar_avaliacao_gestor",
     ),
 
+    # ========================
+    # ADMIN - CADASTRAR AVALIAÇÕES EM DUAS ABAS (Colaborador/Gestor)
+    # ========================
+    # sem ID -> abre seletor para escolher qual JobRotationEvaluation vincular
+    path(
+        "jobrotation/avaliacoes/cadastrar/",
+        jobrotation_assessment_views.cadastrar_avaliacoes_tabs_admin,
+        name="cadastrar_avaliacoes_jobrotation_tabs",
+    ),
+    # com ID -> já vincula direto ao JobRotationEvaluation informado
+    path(
+        "jobrotation/avaliacoes/<int:jobrotation_id>/cadastrar/",
+        jobrotation_assessment_views.cadastrar_avaliacoes_tabs_admin,
+        name="cadastrar_avaliacoes_jobrotation_tabs_por_jr",
+    ),
+
+    # ========================
+    # ADMIN - EDITAR AS DUAS ABAS (Colaborador/Gestor) JÁ CADASTRADAS
+    # ========================
+    path(
+        "jobrotation/avaliacoes/<int:jobrotation_id>/editar-tabs/",
+        jobrotation_assessment_views.editar_avaliacoes_tabs_admin,
+        name="editar_avaliacoes_jobrotation_tabs",
+    ),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,260 @@
+{% load widget_tweaks %}
+
+
+<div class="accordion" id="accordionGestor">
+
+  <!-- Cabeçalho Gestor -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingGestCab">
+      <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseGestCab" aria-expanded="true" aria-controls="collapseGestCab">
+        <i class="bi bi-person-gear me-2"></i> Dados do Gestor
+      </button>
+    </h2>
+    <div id="collapseGestCab" class="accordion-collapse collapse show" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-4">
+          {{ form_ges.gestor_nome.label_tag }}
+          {{ form_ges.gestor_nome|add_class:"form-control" }}
+        </div>
+        <div class="col-md-4">
+          {{ form_ges.gestor_cargo.label_tag }}
+          {{ form_ges.gestor_cargo|add_class:"form-control" }}
+        </div>
+        <div class="col-md-4">
+          {{ form_ges.gestor_setor.label_tag }}
+          {{ form_ges.gestor_setor|add_class:"form-control" }}
+        </div>
+        <div class="col-md-4 form-check form-switch">
+          <label class="form-check-label">{{ form_ges.colaborador_treinado.label }}</label>
+          {{ form_ges.colaborador_treinado|add_class:"form-check-input"|attr:"role=switch" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g1 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG1">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG1" aria-expanded="false" aria-controls="collapseG1">
+        <i class="bi bi-1-circle me-2"></i> Informações do funcionário
+      </button>
+    </h2>
+    <div id="collapseG1" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-3 form-check form-switch">
+          <label class="form-check-label">{{ form_ges.g1_func_tinha_info.label }}</label>
+          {{ form_ges.g1_func_tinha_info|add_class:"form-check-input"|attr:"role=switch" }}
+        </div>
+        <div class="col-md-9">
+          {{ form_ges.g1_de_quem.label_tag }}
+          {{ form_ges.g1_de_quem|add_class:"form-control" }}
+        </div>
+        <div class="col-md-3">
+          {{ form_ges.g1_infos_foram.label_tag }}
+          {{ form_ges.g1_infos_foram|add_class:"form-select" }}
+        </div>
+        <div class="col-md-3">
+          {{ form_ges.g1_faltaram.label_tag }}
+          {{ form_ges.g1_faltaram|add_class:"form-control" }}
+        </div>
+        <div class="col-md-12">
+          {{ form_ges.g1_detalhar.label_tag }}
+          {{ form_ges.g1_detalhar|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g2 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG2">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG2" aria-expanded="false" aria-controls="collapseG2">
+        <i class="bi bi-2-circle me-2"></i> Dificuldades e adaptação
+      </button>
+    </h2>
+    <div id="collapseG2" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-3 form-check form-switch">
+          <label class="form-check-label">{{ form_ges.g2_dificuldades.label }}</label>
+          {{ form_ges.g2_dificuldades|add_class:"form-check-input"|attr:"role=switch" }}
+        </div>
+        <div class="col-md-3">
+          {{ form_ges.g2_adaptacao.label_tag }}
+          {{ form_ges.g2_adaptacao|add_class:"form-select" }}
+        </div>
+        <div class="col-md-12">
+          {{ form_ges.g2_detalhar.label_tag }}
+          {{ form_ges.g2_detalhar|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g3 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG3">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG3" aria-expanded="false" aria-controls="collapseG3">
+        <i class="bi bi-3-circle me-2"></i> Desempenho
+      </button>
+    </h2>
+    <div id="collapseG3" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-4">
+          {{ form_ges.g3_desempenho.label_tag }}
+          {{ form_ges.g3_desempenho|add_class:"form-select" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g4 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG4">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG4" aria-expanded="false" aria-controls="collapseG4">
+        <i class="bi bi-4-circle me-2"></i> Atitude diante de dúvidas
+      </button>
+    </h2>
+    <div id="collapseG4" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-4">
+          {{ form_ges.g4_atitude_duvida.label_tag }}
+          {{ form_ges.g4_atitude_duvida|add_class:"form-select" }}
+        </div>
+        <div class="col-md-12">
+          {{ form_ges.g4_como_e_atendido.label_tag }}
+          {{ form_ges.g4_como_e_atendido|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g5 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG5">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG5" aria-expanded="false" aria-controls="collapseG5">
+        <i class="bi bi-5-circle me-2"></i> Cooperação
+      </button>
+    </h2>
+    <div id="collapseG5" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-4">
+          {{ form_ges.g5_cooperacao.label_tag }}
+          {{ form_ges.g5_cooperacao|add_class:"form-select" }}
+        </div>
+        <div class="col-md-8">
+          {{ form_ges.g5_justifique.label_tag }}
+          {{ form_ges.g5_justifique|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g6 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG6">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG6" aria-expanded="false" aria-controls="collapseG6">
+        <i class="bi bi-6-circle me-2"></i> Treinamento e diálogo
+      </button>
+    </h2>
+    <div id="collapseG6" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-3 form-check form-switch">
+          <label class="form-check-label">{{ form_ges.g6_treinamento_dialogo.label }}</label>
+          {{ form_ges.g6_treinamento_dialogo|add_class:"form-check-input"|attr:"role=switch" }}
+        </div>
+        <div class="col-md-9">
+          {{ form_ges.g6_detalhar.label_tag }}
+          {{ form_ges.g6_detalhar|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g7 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG7">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG7" aria-expanded="false" aria-controls="collapseG7">
+        <i class="bi bi-7-circle me-2"></i> Adaptação
+      </button>
+    </h2>
+    <div id="collapseG7" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-6">
+          {{ form_ges.g7_adaptou_facil.label_tag }}
+          {{ form_ges.g7_adaptou_facil|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+          {{ form_ges.g7_adaptou_dificil.label_tag }}
+          {{ form_ges.g7_adaptou_dificil|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g8 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG8">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG8" aria-expanded="false" aria-controls="collapseG8">
+        <i class="bi bi-8-circle me-2"></i> Satisfação
+      </button>
+    </h2>
+    <div id="collapseG8" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-3 form-check form-switch">
+          <label class="form-check-label">{{ form_ges.g8_satisfeito.label }}</label>
+          {{ form_ges.g8_satisfeito|add_class:"form-check-input"|attr:"role=switch" }}
+        </div>
+        <div class="col-md-9">
+          {{ form_ges.g8_motivo_insatisfacao.label_tag }}
+          {{ form_ges.g8_motivo_insatisfacao|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g9 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG9">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG9" aria-expanded="false" aria-controls="collapseG9">
+        <i class="bi bi-9-circle me-2"></i> Apoio da Adm. Pessoal
+      </button>
+    </h2>
+    <div id="collapseG9" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-12">
+          {{ form_ges.g9_como_adm_pessoal_ajuda.label_tag }}
+          {{ form_ges.g9_como_adm_pessoal_ajuda|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g10 -->
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingG10">
+      <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapseG10" aria-expanded="false" aria-controls="collapseG10">
+        <i class="bi bi-0-circle me-2"></i> Críticas e Sugestões
+      </button>
+    </h2>
+    <div id="collapseG10" class="accordion-collapse collapse" data-bs-parent="#accordionGestor">
+      <div class="accordion-body row g-3">
+        <div class="col-md-12">
+          {{ form_ges.g10_critica_sugestao.label_tag }}
+          {{ form_ges.g10_critica_sugestao|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

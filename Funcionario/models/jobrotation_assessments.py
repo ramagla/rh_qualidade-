@@ -3,6 +3,7 @@ import uuid, hashlib, os
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from django_ckeditor_5.fields import CKEditor5Field
 
 from .job_rotation_evaluation import JobRotationEvaluation  # já existe
 
@@ -62,7 +63,9 @@ class JobRotationAvaliacaoColaborador(AssinaturaMixin):
     p1_recebeu_infos             = models.BooleanField(default=False)
     p1_infos_foram               = models.CharField(max_length=20, choices=[("suficientes","suficientes"),("insuficientes","insuficientes")], blank=True, null=True)
     p1_faltaram                  = models.CharField(max_length=40, blank=True, null=True)  # "ordem técnica", "ordem administrativa"
-    p1_favor_detalhar            = models.TextField(blank=True, null=True)
+    p1_favor_detalhar            = CKEditor5Field("Observações",config_name="default",blank=True,null=True)
+
+    
     # 2
     p2_teve_dificuldade          = models.BooleanField(default=False)
     p2_detalhes                  = models.TextField(blank=True, null=True)

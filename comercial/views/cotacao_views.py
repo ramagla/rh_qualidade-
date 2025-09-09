@@ -129,8 +129,12 @@ def lista_cotacoes(request):
 
     # --- Dados para filtros ---
     clientes = Cliente.objects.all().order_by("razao_social")
-    usuarios = User.objects.filter(is_active=True).order_by("first_name", "last_name")
-
+    usuarios = User.objects.filter(
+        is_active=True,
+        funcionario__local_trabalho__nome__icontains="Comercial",
+        funcionario__status="Ativo"
+    ).order_by("first_name", "last_name")
+    
     return render(request, "cotacoes/lista_cotacoes.html", {
         "page_obj": page_obj,
         "total_atualizacao": total_atualizacao,
@@ -232,7 +236,6 @@ def dados_cliente_ajax(request):
         })
     except Cliente.DoesNotExist:
         return JsonResponse({"cond_pagamento": "", "icms": 0})
-
 
 
 

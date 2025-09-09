@@ -12,7 +12,7 @@
     {% if modo == 'editar' %}Editar Meta de Faturamento{% else %}Cadastrar Meta de Faturamento{% endif %}
   </h4>
 
-  <form method="post" class="card shadow-sm">
+  <form method="post" class="card shadow-sm" novalidate>
     <div class="card-body">
       {% csrf_token %}
       <div class="row g-3">
@@ -25,27 +25,9 @@
           {{ form.mes }}
         </div>
         <div class="col-md-4">
-  <label class="form-label">Valor (R$)</label>
-  {{ form.valor }}
-</div>
-
-{% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-<script>
-  $(function(){
-    // Máscara só para milhares (sem casas decimais)
-    $('input[name="valor"]').mask('000.000.000.000.000', {reverse: true});
-
-    // Ao enviar o form, remover os pontos para salvar corretamente no banco
-    $('form').on('submit', function() {
-      var campo = $('input[name="valor"]');
-      campo.val(campo.val().replace(/\./g, ''));
-    });
-  });
-</script>
-{% endblock %}
-
-
+          <label class="form-label">Valor (R$)</label>
+          {{ form.valor }}
+        </div>
       </div>
 
       {% if form.errors %}
@@ -65,4 +47,170 @@
     </div>
   </form>
 </div>
+
+<!-- JS puro: formatação BR ao digitar; campo inicia vazio; normaliza no submit -->
+<script>
+(function () {
+  const input = document.getElementById('id_valor');
+  if (!input) return;
+
+  // Força o tipo correto e placeholder
+  input.setAttribute('type', 'text');
+  input.setAttribute('inputmode', 'decimal');
+  input.setAttribute('autocomplete', 'off');
+  input.setAttribute('placeholder', 'ex.: 1.000.000,00');
+
+  // Buffers de edição
+  let intDigits = '';   // dígitos da parte inteira
+  let decDigits = '';   // dígitos dos centavos (0..2)
+  let editingCents = false; // se usuário já apertou vírgula
+
+  // Formatação
+  function sepThousands(s) {
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  function render() {
+    if (!intDigits && !decDigits) {
+      input.value = ''; // campo vazio quando nada digitado
+      return;
+    }
+    const left = intDigits === '' ? '0' : sepThousands(intDigits);
+    const right = (editingCents || decDigits) ? (decDigits.padEnd(2, '0')) : '00';
+    input.value = `${left},${right}`;
+  }
+
+  // Normalização para o backend
+  function normalizeForSubmit() {
+    if (!intDigits && !decDigits) {
+      input.value = ''; // envia vazio (NULL) se não digitou nada
+      return;
+    }
+    const left = intDigits === '' ? '0' : intDigits;
+    const right = (decDigits || '').padEnd(2, '0');
+    input.value = `${left}.${right}`;
+  }
+
+  // Inicializa buffers a partir de um valor existente (edição)
+  function hydrateFromInitialValue(v) {
+    if (!v) return;
+    const raw = String(v).trim();
+    // aceita "1234.56" (backend) ou "1.234,56" (frontend)
+    if (raw.includes('.')) {
+      // formato backend
+      const [l, r=''] = raw.split('.');
+      intDigits = l.replace(/\D/g, '');
+      decDigits = r.replace(/\D/g, '').slice(0,2);
+      editingCents = decDigits.length > 0;
+    } else if (raw.includes(',')) {
+      // formato frontend
+      const [l, r=''] = raw.split(',');
+      intDigits = l.replace(/\D/g, '');
+      decDigits = r.replace(/\D/g, '').slice(0,2);
+      editingCents = decDigits.length > 0;
+    } else {
+      intDigits = raw.replace(/\D/g, '');
+      decDigits = '';
+      editingCents = false;
+    }
+    // Se não houver nada útil, mantém vazio
+    if (!intDigits && !decDigits) {
+      intDigits = ''; decDigits = ''; editingCents = false;
+    }
+  }
+
+  // Eventos
+  input.addEventListener('keydown', function (e) {
+    const key = e.key;
+
+    // Permite navegação/tab
+    const nav = ['Tab','ArrowLeft','ArrowRight','Home','End'];
+    if (nav.includes(key)) return;
+
+    // Backspace e Delete
+    if (key === 'Backspace') {
+      e.preventDefault();
+      if (decDigits) {
+        decDigits = decDigits.slice(0, -1);
+        if (decDigits.length === 0) editingCents = false;
+      } else {
+        // remove da parte inteira
+        if (intDigits) intDigits = intDigits.slice(0, -1);
+      }
+      render();
+      return;
+    }
+    if (key === 'Delete') {
+      e.preventDefault();
+      // trata igual ao Backspace para simplificar
+      if (decDigits) {
+        decDigits = decDigits.slice(0, -1);
+        if (decDigits.length === 0) editingCents = false;
+      } else {
+        if (intDigits) intDigits = intDigits.slice(0, -1);
+      }
+      render();
+      return;
+    }
+
+    // Inicia centavos com vírgula
+    if (key === ',') {
+      e.preventDefault();
+      if (!intDigits) intDigits = '0'; // se não digitou nada, começa 0,_
+      editingCents = true;
+      // não altera decDigits aqui; usuário vai digitar
+      render();
+      return;
+    }
+
+    // Só aceita dígitos 0-9
+    if (!/^\d$/.test(key)) {
+      e.preventDefault();
+      return;
+    }
+
+    // Digitação
+    e.preventDefault();
+    if (editingCents) {
+      if (decDigits.length < 2) {
+        decDigits += key;
+      } // ignora excesso de dígitos em centavos
+    } else {
+      // Parte inteira cresce sem limite prático (depende só do max_digits do modelo)
+      if (intDigits === '0') {
+        intDigits = key; // evita "0" à esquerda
+      } else {
+        intDigits += key;
+      }
+    }
+    render();
+  });
+
+  // Também trata colagem (paste)
+  input.addEventListener('paste', function (e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+    // aceita "1.234,56" ou "1234.56" ou "123456"
+    const br = text.replace(/\./g, '').replace(',', '.').replace(/[^\d\.]/g, '');
+    const num = br.split('.');
+    intDigits = (num[0] || '').replace(/\D/g, '');
+    decDigits = (num[1] || '').replace(/\D/g, '').slice(0, 2);
+    editingCents = decDigits.length > 0;
+    render();
+  });
+
+  // Ao carregar: hidrata buffers se vier valor (edição); senão, mantém vazio
+  hydrateFromInitialValue(input.value);
+  render();
+
+  // Antes de enviar, normaliza para "1234567.89"
+  const form = input.closest('form');
+  if (form) {
+    form.addEventListener('submit', function () {
+      normalizeForSubmit();
+    });
+  }
+})();
+</script>
+
+
 {% endblock %}

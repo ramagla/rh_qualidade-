@@ -45,8 +45,13 @@ class MetaFaturamento(models.Model):
         (5, "Mai"), (6, "Jun"), (7, "Jul"), (8, "Ago"),
         (9, "Set"), (10, "Out"), (11, "Nov"), (12, "Dez"),
     ])
-    valor = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0.00"))
-
+    valor = models.DecimalField(
+        "Valor da Meta",
+        max_digits=14,
+        decimal_places=2,
+        null=True,       # permite nulo no banco
+        blank=True       # permite vazio no form/admin
+    )
     class Meta:
         unique_together = (("ano", "mes"),)
         ordering = ["-ano", "mes"]

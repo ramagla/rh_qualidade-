@@ -10,13 +10,15 @@
   {% include "partials/global/_toast_mensagens.html" %}
 
   <!-- Botões -->
-  <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
-    {% if request.user|has_permission:'Funcionario.add_jobrotationevaluation' %}
-      <a href="{% url 'cadastrar_jobrotation_evaluation' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-1"></i> Nova Avaliação
-      </a>
-    {% endif %}
-  </div>
+  <!-- agora aponta para o CADASTRO DAS AVALIAÇÕES (duas abas) -->
+<div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+  {% if request.user|has_permission:'Funcionario.add_jobrotationavaliacaocolaborador' or request.user|has_permission:'Funcionario.add_jobrotationavaliacaogestor' %}
+    <a href="{% url 'cadastrar_avaliacoes_jobrotation_tabs' %}" class="btn btn-primary">
+      <i class="bi bi-layout-three-columns me-1"></i> Nova Avaliação (Abas)
+    </a>
+  {% endif %}
+</div>
+
 
   <!-- Lista -->
   <div class="table-responsive">
@@ -49,11 +51,18 @@
               <span class="badge bg-secondary">Em progresso</span>
             {% endif %}
           </td>
-          <td>
-            {% include "partials/global/_botao_visualizar.html" with objeto=evaluation url_visualizar='visualizar_jobrotation_evaluation' label='avaliação' %}
-            {% include "partials/global/_botao_editar.html" with objeto=evaluation url_editar='editar_jobrotation_evaluation' label='avaliação' %}
-            {% include "partials/global/_botao_excluir.html" with objeto=evaluation url_excluir='excluir_jobrotation' label='avaliação' %}
-          </td>
+          <td class="text-nowrap">
+  {% include "partials/global/_botao_visualizar.html" with objeto=evaluation url_visualizar='visualizar_jobrotation_evaluation' label='avaliação' %}
+  {% include "partials/global/_botao_editar.html" with objeto=evaluation url_editar='editar_jobrotation_evaluation' label='avaliação' %}
+  {% include "partials/global/_botao_excluir.html" with objeto=evaluation url_excluir='excluir_jobrotation' label='avaliação' %}
+  {% if request.user|has_permission:'Funcionario.add_jobrotationavaliacaocolaborador' or request.user|has_permission:'Funcionario.add_jobrotationavaliacaogestor' %}
+    <a href="{% url 'cadastrar_avaliacoes_jobrotation_tabs_por_jr' evaluation.id %}"
+       class="btn btn-outline-primary btn-sm" title="Cadastrar avaliações (duas abas)">
+      <i class="bi bi-layout-three-columns me-1"></i> Cadastrar (Abas)
+    </a>
+  {% endif %}
+</td>
+
         </tr>
         {% empty %}
           {% include "partials/global/_sem_resultados.html" with item_nome="avaliação" %}

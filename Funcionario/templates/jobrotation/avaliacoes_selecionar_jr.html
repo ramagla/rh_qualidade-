@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Selecionar Avaliação Pai{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-3"><i class="bi bi-search me-2"></i>Selecione a Avaliação (Job Rotation)</h3>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="etapa" value="selecionar_jr">
+    <div class="mb-3">
+      <label class="form-label">{{ form.jobrotation.label }}</label>
+      {{ form.jobrotation }}
+    </div>
+    <button class="btn btn-primary" type="submit">
+      <i class="bi bi-arrow-right-circle me-1"></i> Continuar
+    </button>
+  </form>
+</div>
+{% endblock %}

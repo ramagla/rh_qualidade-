@@ -201,6 +201,8 @@ def excluir_controle_servico_externo(request, id):
         {"servico": servico},
     )
 
+from django.templatetags.static import static
+
 
 @login_required
 @permission_required('qualidade_fornecimento.view_controleservicoexterno', raise_exception=True)
@@ -209,7 +211,10 @@ def visualizar_controle_servico_externo(request, id):
     return render(
         request,
         "controle_servico_externo/visualizar_controle_servico_externo.html",
-        {"servico": servico}
+        {
+            "servico": servico,
+            "logo_url": static("logo.png"),
+        }
     )
 
 def api_leadtime(request, pk):

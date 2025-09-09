@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+{% include 'partials/global/_styles_componentes.html' %}
+{% include 'partials/global/_toast_mensagens.html' %}
+
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">
+    <i class="bi bi-layout-three-columns me-2"></i>{{ titulo }}
+  </h2>
+
+  <div class="alert alert-light border d-flex align-items-center">
+    <i class="bi bi-person-badge me-2"></i>
+    <div>
+      <strong>Funcionário:</strong> {{ jobrotation.funcionario }}
+      &middot; <strong>Gestor:</strong> {{ jobrotation.gestor_responsavel }}
+      &middot; <strong>Status RH:</strong> {{ jobrotation.avaliacao_rh }}
+    </div>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <ul class="nav nav-tabs mb-3" id="tabJobRotation" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link {% if active_tab == 'colaborador' %}active{% endif %}" id="tab-colaborador-tab"
+                data-bs-toggle="tab" data-bs-target="#tab-colaborador" type="button" role="tab">
+          <i class="bi bi-people-fill me-1"></i> Colaborador
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link {% if active_tab == 'gestor' %}active{% endif %}" id="tab-gestor-tab"
+                data-bs-toggle="tab" data-bs-target="#tab-gestor" type="button" role="tab">
+          <i class="bi bi-person-workspace me-1"></i> Gestor
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="tabJobRotationContent">
+      <!-- ABA COLABORADOR -->
+      <div class="tab-pane fade {% if active_tab == 'colaborador' %}show active{% endif %}" id="tab-colaborador" role="tabpanel">
+        {% if form_col.instance.pk and form_col.instance.assinado %}
+          <div class="alert alert-success d-flex justify-content-between align-items-center">
+            <div>
+              <strong>Assinado por:</strong> {{ form_col.instance.assinante_nome }}
+              <small class="text-muted">({{ form_col.instance.assinante_email }})</small><br>
+              <small class="text-muted">Em: {{ form_col.instance.assinado_em|date:"d/m/Y H:i" }} • IP: {{ form_col.instance.assinado_ip }}</small><br>
+              <code>{{ form_col.instance.assinado_hash }}</code>
+            </div>
+            {% if assinatura_colab_qr %}
+              <img src="data:image/png;base64,{{ assinatura_colab_qr }}" alt="QR Assinatura Colaborador" style="height:96px;width:96px;">
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% include "jobrotation/tabs/_tab_colaborador.html" %}
+
+        <div class="col-12 mt-4 text-end">
+          <button type="submit" name="aba" value="colaborador" class="btn btn-primary">
+            <i class="bi bi-save me-1"></i> {% if modo == "cadastrar" %}Cadastrar{% else %}Salvar{% endif %} COLABORADOR
+          </button>
+          <a href="{% url 'lista_jobrotation_assessments' %}" class="btn btn-secondary">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </a>
+        </div>
+      </div>
+
+      <!-- ABA GESTOR -->
+      <div class="tab-pane fade {% if active_tab == 'gestor' %}show active{% endif %}" id="tab-gestor" role="tabpanel">
+        {% if form_ges.instance.pk and form_ges.instance.assinado %}
+          <div class="alert alert-success d-flex justify-content-between align-items-center">
+            <div>
+              <strong>Assinado por:</strong> {{ form_ges.instance.assinante_nome }}
+              <small class="text-muted">({{ form_ges.instance.assinante_email }})</small><br>
+              <small class="text-muted">Em: {{ form_ges.instance.assinado_em|date:"d/m/Y H:i" }} • IP: {{ form_ges.instance.assinado_ip }}</small><br>
+              <code>{{ form_ges.instance.assinado_hash }}</code>
+            </div>
+            {% if assinatura_gestor_qr %}
+              <img src="data:image/png;base64,{{ assinatura_gestor_qr }}" alt="QR Assinatura Gestor" style="height:96px;width:96px;">
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% include "jobrotation/tabs/_tab_gestor.html" %}
+
+        <div class="col-12 mt-4 text-end">
+          <button type="submit" name="aba" value="gestor" class="btn btn-success">
+            <i class="bi bi-save me-1"></i> {% if modo == "cadastrar" %}Cadastrar{% else %}Salvar{% endif %} GESTOR
+          </button>
+          <a href="{% url 'lista_jobrotation_assessments' %}" class="btn btn-secondary">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

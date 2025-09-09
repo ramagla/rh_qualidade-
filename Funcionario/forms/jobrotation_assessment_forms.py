@@ -1,66 +1,85 @@
+# Funcionario/forms/jobrotation_assessment_forms.py
 from django import forms
-from django.core.exceptions import ValidationError
 from ..models.jobrotation_assessments import (
-    JobRotationAvaliacaoColaborador, JobRotationAvaliacaoGestor
+    JobRotationAvaliacaoColaborador,
+    JobRotationAvaliacaoGestor,
 )
+from ..models.job_rotation_evaluation import JobRotationEvaluation
 
 class AvaliacaoColaboradorForm(forms.ModelForm):
     class Meta:
         model = JobRotationAvaliacaoColaborador
-        exclude = ["token_publico","assinado","assinado_em","assinado_ip","assinado_hash",
-                   "assinante_nome","assinante_email","created","updated"]
+        exclude = (
+            "token_publico",
+            "assinado", "assinado_em", "assinado_ip", "assinado_hash",
+            "assinante_nome", "assinante_email",
+            "created", "updated",
+        )
         widgets = {
-            "p1_favor_detalhar": forms.Textarea(attrs={"rows":3}),
-            "p2_detalhes": forms.Textarea(attrs={"rows":3}),
-            "p4_como_e_atendido": forms.Textarea(attrs={"rows":3}),
-            "p5_justifique": forms.Textarea(attrs={"rows":3}),
-            "p6_detalhar": forms.Textarea(attrs={"rows":3}),
-            "p7_adaptou_facil": forms.Textarea(attrs={"rows":3}),
-            "p7_adaptou_dificil": forms.Textarea(attrs={"rows":3}),
-            "p8_motivo_insatisfacao": forms.Textarea(attrs={"rows":3}),
-            "p9_como_adm_pessoal_ajuda": forms.Textarea(attrs={"rows":3}),
-            "p10_critica_sugestao": forms.Textarea(attrs={"rows":3}),
+            # cabeçalho
+            "colaborador_nome": forms.TextInput(attrs={"class": "form-control"}),
+            "cargo_anterior":   forms.TextInput(attrs={"class": "form-control"}),
+            "cargo_atual":      forms.TextInput(attrs={"class": "form-control"}),
+            "setor_anterior":   forms.TextInput(attrs={"class": "form-control"}),
+            "setor_atual":      forms.TextInput(attrs={"class": "form-control"}),
+
+            # selects
+            "p1_infos_foram":   forms.Select(attrs={"class": "form-select"}),
+            "p2_adaptacao":     forms.Select(attrs={"class": "form-select"}),
+            "p3_desempenho":    forms.Select(attrs={"class": "form-select"}),
+            "p4_atitude_duvida":forms.Select(attrs={"class": "form-select"}),
+            "p5_metodo_empresa_ou_proprio": forms.Select(attrs={"class": "form-select"}),
+
+            # textos longos
+            "p1_favor_detalhar": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "p2_detalhes":       forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "p4_como_e_atendido":forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "p5_justifique":     forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "p6_detalhar":       forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "p7_adaptou_facil":  forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "p7_adaptou_dificil":forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "p8_motivo_insatisfacao": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "p9_como_adm_pessoal_ajuda": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "p10_critica_sugestao": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
-
-    def clean(self):
-        c = super().clean()
-        # regras condicionais típicas
-        if c.get("p1_recebeu_infos") and c.get("p1_infos_foram") == "insuficientes" and not c.get("p1_faltaram"):
-            self.add_error("p1_faltaram", "Informe o tipo de informação que faltou.")
-        if not c.get("p6_dialogo_com_chefe") and not c.get("p6_detalhar"):
-            self.add_error("p6_detalhar", "Detalhe a ausência de diálogo.")
-        if not c.get("p8_satisfeito") and not c.get("p8_motivo_insatisfacao"):
-            self.add_error("p8_motivo_insatisfacao", "Explique o motivo de não estar satisfeito.")
-        return c
-
 
 class AvaliacaoGestorForm(forms.ModelForm):
     class Meta:
         model = JobRotationAvaliacaoGestor
-        exclude = ["token_publico","assinado","assinado_em","assinado_ip","assinado_hash",
-                   "assinante_nome","assinante_email","created","updated"]
+        exclude = (
+            "token_publico",
+            "assinado", "assinado_em", "assinado_ip", "assinado_hash",
+            "assinante_nome", "assinante_email",
+            "created", "updated",
+        )
         widgets = {
-            "g1_de_quem": forms.Textarea(attrs={"rows":2}),
-            "g1_detalhar": forms.Textarea(attrs={"rows":3}),
-            "g2_detalhar": forms.Textarea(attrs={"rows":3}),
-            "g4_como_e_atendido": forms.Textarea(attrs={"rows":3}),
-            "g5_justifique": forms.Textarea(attrs={"rows":3}),
-            "g6_detalhar": forms.Textarea(attrs={"rows":3}),
-            "g7_adaptou_facil": forms.Textarea(attrs={"rows":3}),
-            "g7_adaptou_dificil": forms.Textarea(attrs={"rows":3}),
-            "g8_motivo_insatisfacao": forms.Textarea(attrs={"rows":3}),
-            "g9_como_adm_pessoal_ajuda": forms.Textarea(attrs={"rows":3}),
-            "g10_critica_sugestao": forms.Textarea(attrs={"rows":3}),
+            "gestor_nome":  forms.TextInput(attrs={"class": "form-control"}),
+            "gestor_cargo": forms.TextInput(attrs={"class": "form-control"}),
+            "gestor_setor": forms.TextInput(attrs={"class": "form-control"}),
+
+            "g1_infos_foram":       forms.Select(attrs={"class": "form-select"}),
+            "g2_adaptacao":         forms.Select(attrs={"class": "form-select"}),
+            "g3_desempenho":        forms.Select(attrs={"class": "form-select"}),
+            "g4_atitude_duvida":    forms.Select(attrs={"class": "form-select"}),
+            "g5_cooperacao":        forms.Select(attrs={"class": "form-select"}),
+
+            "g1_de_quem":           forms.Textarea(attrs={"class": "form-control", "rows": 2}),
+            "g1_detalhar":          forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "g2_detalhar":          forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "g4_como_e_atendido":   forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "g5_justifique":        forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "g6_detalhar":          forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "g7_adaptou_facil":     forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "g7_adaptou_dificil":   forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "g8_motivo_insatisfacao": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "g9_como_adm_pessoal_ajuda": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "g10_critica_sugestao":  forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
 
-    def clean(self):
-        c = super().clean()
-        if c.get("g1_func_tinha_info") and not c.get("g1_de_quem"):
-            self.add_error("g1_de_quem", "Informe de quem vinham as informações.")
-        if c.get("g1_infos_foram") == "insuficientes" and not c.get("g1_faltaram"):
-            self.add_error("g1_faltaram", "Informe o tipo de informação que faltou.")
-        if not c.get("g6_treinamento_dialogo") and not c.get("g6_detalhar"):
-            self.add_error("g6_detalhar", "Detalhe a ausência de diálogo.")
-        if not c.get("g8_satisfeito") and not c.get("g8_motivo_insatisfacao"):
-            self.add_error("g8_motivo_insatisfacao", "Explique o motivo de não estar satisfeito.")
-        return c
+class SelecionarJobRotationForm(forms.Form):
+    jobrotation = forms.ModelChoiceField(
+        label="Avaliação referente a",
+        queryset=JobRotationEvaluation.objects.all().order_by("-data_inicio"),
+        widget=forms.Select(attrs={"class": "form-select select2"}),
+        required=True,
+    )

@@ -1,4 +1,5 @@
 from django import forms
+from decimal import Decimal, InvalidOperation
 from comercial.models.indicadores import MetaFaturamento
 
 class MetaFaturamentoForm(forms.ModelForm):
@@ -6,18 +7,37 @@ class MetaFaturamentoForm(forms.ModelForm):
         model = MetaFaturamento
         fields = ["ano", "mes", "valor"]
         widgets = {
-            "ano": forms.NumberInput(attrs={"class": "form-control", "min": 2000, "max": 2100}),
+            "ano": forms.NumberInput(attrs={
+                "class": "form-control",
+                "min": 2000,
+                "max": 2100
+            }),
             "mes": forms.Select(attrs={"class": "form-select"}),
-            "valor": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            # ⚠️ força type="text" para não bloquear vírgula/ponto
+            "valor": forms.TextInput(attrs={
+                "class": "form-control",
+                "type": "text",
+                "inputmode": "decimal",
+                "autocomplete": "off",
+                "placeholder": "ex.: 1.000.000,00",
+                "pattern": r"[\d\.\,]*",
+            }),
         }
         labels = {
             "ano": "Ano",
             "mes": "Mês",
             "valor": "Valor da Meta (R$)",
         }
-        help_texts = {
-            "ano": "Informe o ano da meta de faturamento.",
-            "mes": "Selecione o mês da meta de faturamento.",
-            "valor": "Informe o valor da meta de faturamento para o mês selecionado.",
-        }
-        
+
+    def clean_valor(self):
+        v = self.cleaned_data.get("valor")
+        if v is None or v == "":
+            return v
+        if isinstance(v, (int, float, Decimal)):
+            return Decimal(v)
+        s = str(v).strip()
+        s = s.replace(".", "").replace(",", ".")
+        try:
+            return Decimal(s)
+        except (InvalidOperation, ValueError):
+            raise forms.ValidationError("Informe um valor monetário válido.")

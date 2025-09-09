@@ -1,0 +1,767 @@
+{% load widget_tweaks %}
+
+{# Banner opcional de assinatura (exibido quando já houver assinatura registrada) #}
+{% if form_col.instance.pk and form_col.instance.assinado %}
+  <div class="alert alert-success d-flex justify-content-between align-items-center">
+    <div>
+      <strong>Assinado por:</strong> {{ form_col.instance.assinante_nome }}
+      <small class="text-muted">({{ form_col.instance.assinante_email }})</small><br>
+      <small class="text-muted">
+        Em: {{ form_col.instance.assinado_em|date:"d/m/Y H:i" }}
+        • IP: {{ form_col.instance.assinado_ip }}
+      </small><br>
+      <code>{{ form_col.instance.assinado_hash }}</code>
+    </div>
+    {% if assinatura_colab_qr %}
+      <img src="data:image/png;base64,{{ assinatura_colab_qr }}" alt="QR Assinatura Colaborador" style="height:96px;width:96px;">
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="accordion" id="accordionColaborador">
+
+  <!-- Cabeçalho -->
+ <div class="accordion-item">
+  <h2 class="accordion-header" id="headingColabCab">
+    <button class="accordion-button fw-bold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseColabCab"
+            aria-expanded="true" aria-controls="collapseColabCab">
+      <i class="bi bi-card-text me-2"></i> Dados do Colaborador
+    </button>
+  </h2>
+
+  <div id="collapseColabCab" class="accordion-collapse collapse show" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+
+      <div class="col-md-4">
+        <label for="{{ form_col.colaborador_nome.id_for_label }}" class="form-label">
+          <i class="bi bi-person-badge me-1"></i> Colaborador
+        </label>
+        {{ form_col.colaborador_nome|add_class:"form-control"|attr:"readonly=readonly" }}
+      </div>
+
+      <div class="col-md-4">
+        <label for="{{ form_col.cargo_anterior.id_for_label }}" class="form-label">
+          <i class="bi bi-briefcase me-1"></i> Cargo anterior
+        </label>
+        {{ form_col.cargo_anterior|add_class:"form-control"|attr:"readonly=readonly" }}
+      </div>
+
+      <div class="col-md-4">
+        <label for="{{ form_col.cargo_atual.id_for_label }}" class="form-label">
+          <i class="bi bi-briefcase-fill me-1"></i> Cargo atual
+        </label>
+        {{ form_col.cargo_atual|add_class:"form-control"|attr:"readonly=readonly" }}
+      </div>
+
+      <div class="col-md-6">
+        <label for="{{ form_col.setor_anterior.id_for_label }}" class="form-label">
+          <i class="bi bi-diagram-3 me-1"></i> Setor anterior
+        </label>
+        {{ form_col.setor_anterior|add_class:"form-control"|attr:"readonly=readonly" }}
+      </div>
+
+      <div class="col-md-6">
+        <label for="{{ form_col.setor_atual.id_for_label }}" class="form-label">
+          <i class="bi bi-diagram-3-fill me-1"></i> Setor atual
+        </label>
+        {# Exibe como somente-leitura e garante valor via hidden para o POST #}
+        {% with v=form_col.setor_atual.value|default:jobrotation.local_trabalho %}
+          <input type="text" class="form-control" value="{{ v }}" readonly>
+          <input type="hidden" name="{{ form_col.setor_atual.name }}" value="{{ v }}">
+        {% endwith %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Pergunta 1 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP1">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP1"
+            aria-expanded="false" aria-controls="collapseP1">
+      <i class="bi bi-1-circle me-2"></i> Informações recebidas
+    </button>
+  </h2>
+
+  <div id="collapseP1" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+
+      <!-- 1. Pergunta principal (radio) -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          <i class="bi bi-question-circle me-1"></i>
+          1. Ao ingressar no setor você recebeu alguma informação sobre sua nova função?
+        </label>
+        <div class="d-flex gap-4">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="{{ form_col.p1_recebeu_infos.name }}"
+                   id="id_p1_recebeu_infos_sim" value="1"
+                   {% if form_col.p1_recebeu_infos.value %}checked{% endif %}>
+            <label class="form-check-label" for="id_p1_recebeu_infos_sim">
+              <i class="bi bi-hand-thumbs-up me-1"></i> Sim
+            </label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="{{ form_col.p1_recebeu_infos.name }}"
+                   id="id_p1_recebeu_infos_nao" value="0"
+                   {% if form_col.p1_recebeu_infos.value == False %}checked{% endif %}>
+            <label class="form-check-label" for="id_p1_recebeu_infos_nao">
+              <i class="bi bi-hand-thumbs-down me-1"></i> Não
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- De quem? (aparece quando SIM) -->
+      <div class="col-md-6" id="grp_p1_de_quem">
+        <label for="id_p1_de_quem" class="form-label">
+          <i class="bi bi-person-lines-fill me-1"></i> De quem?
+        </label>
+        <select id="id_p1_de_quem" name="p1_de_quem" class="form-select">
+          <option value="">— selecione —</option>
+          {# espere receber 'funcionarios_ativos' no contexto: [{id, nome}] #}
+          {% for f in funcionarios_ativos %}
+            <option value="{{ f.id }}"
+              {% if f.id|stringformat:"s" == request.POST.p1_de_quem %}selected{% endif %}>
+              {{ f.nome }}
+            </option>
+          {% empty %}
+            {# fallback: sugere o gestor responsável #}
+            {% if jobrotation.gestor_responsavel %}
+              <option value="{{ jobrotation.gestor_responsavel.id }}" selected>
+                {{ jobrotation.gestor_responsavel.nome }}
+              </option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Essas informações foram... -->
+      <div class="col-md-3" id="grp_p1_infos_foram">
+        <label for="{{ form_col.p1_infos_foram.id_for_label }}" class="form-label">
+          <i class="bi bi-clipboard-check me-1"></i> Essas informações foram
+        </label>
+        {{ form_col.p1_infos_foram|add_class:"form-select" }}
+      </div>
+
+      <!-- Se insuficientes, faltaram... -->
+      <div class="col-md-3" id="grp_p1_faltaram">
+        <label for="id_p1_faltaram" class="form-label">
+          <i class="bi bi-exclamation-triangle me-1"></i> Se insuficientes, faltaram
+        </label>
+        <select id="id_p1_faltaram" name="{{ form_col.p1_faltaram.name }}" class="form-select">
+          <option value="">— selecione —</option>
+          <option value="informações de ordem técnica"
+            {% if form_col.p1_faltaram.value == "informações de ordem técnica" %}selected{% endif %}>
+            informações de ordem técnica
+          </option>
+          <option value="informações de ordem administrativa"
+            {% if form_col.p1_faltaram.value == "informações de ordem administrativa" %}selected{% endif %}>
+            informações de ordem administrativa
+          </option>
+        </select>
+      </div>
+
+      <!-- Favor detalhar (sempre presente) -->
+      <div class="col-12">
+        <label for="{{ form_col.p1_favor_detalhar.id_for_label }}" class="form-label">
+          <i class="bi bi-pencil-square me-1"></i> Favor detalhar
+        </label>
+        {{ form_col.p1_favor_detalhar|add_class:"form-control" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function byId(id){ return document.getElementById(id); }
+    function radiosVal() {
+      const sim = document.getElementById('id_p1_recebeu_infos_sim');
+      return sim && sim.checked ? '1' : '0';
+    }
+    function toggleP1() {
+      const recebeu = radiosVal() === '1';
+      const grpQuem = byId('grp_p1_de_quem');
+      const grpForam = byId('grp_p1_infos_foram');
+      const grpFalt = byId('grp_p1_faltaram');
+
+      // Habilita/Desabilita blocos quando SIM/NÃO
+      [grpQuem, grpForam].forEach(function(g){
+        if(!g) return;
+        g.querySelectorAll('select, input, textarea').forEach(function(el){
+          el.disabled = !recebeu;
+          if(!recebeu){ el.value = ''; }
+        });
+        g.style.opacity = recebeu ? 1 : 0.5;
+      });
+
+      // "faltaram" depende do select "p1_infos_foram"
+      const selForam = grpForam ? grpForam.querySelector('select, .form-select') : null;
+      const insuf = recebeu && selForam && selForam.value === 'insuficientes';
+      grpFalt.querySelectorAll('select').forEach(function(el){
+        el.disabled = !insuf;
+        if(!insuf){ el.value = ''; }
+      });
+      grpFalt.style.opacity = insuf ? 1 : 0.5;
+    }
+
+    document.addEventListener('change', function(e){
+      if (e.target && (e.target.id === 'id_p1_recebeu_infos_sim' || e.target.id === 'id_p1_recebeu_infos_nao')) {
+        toggleP1();
+      }
+      if (e.target && (e.target.id === '{{ form_col.p1_infos_foram.id_for_label }}' || e.target.name === '{{ form_col.p1_infos_foram.name }}')) {
+        toggleP1();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', toggleP1);
+  })();
+</script>
+
+
+
+  <!-- Pergunta 2 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP2">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP2"
+            aria-expanded="false" aria-controls="collapseP2">
+      <i class="bi bi-2-circle me-2"></i> Dificuldades e adaptação
+    </button>
+  </h2>
+
+  <div id="collapseP2" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+
+      <!-- 2. Você sentiu dificuldades...? (Sim/Não) -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          <i class="bi bi-question-circle me-1"></i>
+          2. Você sentiu dificuldades para adaptar-se ao novo trabalho?
+        </label>
+        <div class="d-flex gap-4">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="{{ form_col.p2_teve_dificuldade.name }}"
+                   id="id_p2_teve_dificuldade_sim" value="1"
+                   {% if form_col.p2_teve_dificuldade.value %}checked{% endif %}>
+            <label class="form-check-label" for="id_p2_teve_dificuldade_sim">
+              <i class="bi bi-hand-thumbs-up me-1"></i> Sim
+            </label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="{{ form_col.p2_teve_dificuldade.name }}"
+                   id="id_p2_teve_dificuldade_nao" value="0"
+                   {% if not form_col.p2_teve_dificuldade.value %}checked{% endif %}>
+            <label class="form-check-label" for="id_p2_teve_dificuldade_nao">
+              <i class="bi bi-hand-thumbs-down me-1"></i> Não
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Favor detalhar (habilita apenas se SIM) -->
+      <div class="col-12" id="grp_p2_detalhes">
+        <label for="{{ form_col.p2_detalhes.id_for_label }}" class="form-label">
+          <i class="bi bi-pencil-square me-1"></i> Favor detalhar
+        </label>
+        {{ form_col.p2_detalhes|add_class:"form-control" }}
+      </div>
+
+      <!-- Você acredita que sua adaptação está sendo: -->
+      <div class="col-md-4">
+        <label for="{{ form_col.p2_adaptacao.id_for_label }}" class="form-label">
+          <i class="bi bi-speedometer2 me-1"></i>
+          Você acredita que sua adaptação está sendo:
+        </label>
+        {{ form_col.p2_adaptacao|add_class:"form-select" }}
+        {# choices esperados: rápida / lenta / regular (já no Model/Form) #}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function habilitaDetalhes() {
+      var sim = document.getElementById('id_p2_teve_dificuldade_sim');
+      var grp = document.getElementById('grp_p2_detalhes');
+      if (!grp) return;
+      var enabled = sim && sim.checked;
+      grp.querySelectorAll('textarea, input').forEach(function(el){
+        el.disabled = !enabled;
+        if (!enabled) { el.value = ''; }
+      });
+      grp.style.opacity = enabled ? 1 : 0.5;
+    }
+    document.addEventListener('change', function(e){
+      if (e.target && (e.target.id === 'id_p2_teve_dificuldade_sim' ||
+                       e.target.id === 'id_p2_teve_dificuldade_nao')) {
+        habilitaDetalhes();
+      }
+    });
+    document.addEventListener('DOMContentLoaded', habilitaDetalhes);
+  })();
+</script>
+
+
+  <!-- Pergunta 3 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP3">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP3"
+            aria-expanded="false" aria-controls="collapseP3">
+      <i class="bi bi-3-circle me-2"></i> Quanto ao desempenho:
+    </button>
+  </h2>
+
+  <div id="collapseP3" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+      <div class="col-md-4">
+        <label for="{{ form_col.p3_desempenho.id_for_label }}" class="form-label">
+          <i class="bi bi-graph-up-arrow me-1"></i> {{ form_col.p3_desempenho.label }}
+        </label>
+        {{ form_col.p3_desempenho|add_class:"form-select" }}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Pergunta 4 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP4">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP4"
+            aria-expanded="false" aria-controls="collapseP4">
+      <i class="bi bi-4-circle me-2"></i> Atitude diante de dúvidas
+    </button>
+  </h2>
+
+  <div id="collapseP4" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+
+      <div class="col-md-4">
+        <label for="{{ form_col.p4_atitude_duvida.id_for_label }}" class="form-label">
+          <i class="bi bi-question-circle me-1"></i>
+          4. Quando você tem alguma dúvida ou dificuldades no trabalho, qual sua atitude?
+        </label>
+        {{ form_col.p4_atitude_duvida|add_class:"form-select" }}
+      </div>
+
+      <div class="col-md-12">
+        <label for="{{ form_col.p4_como_e_atendido.id_for_label }}" class="form-label">
+          <i class="bi bi-chat-dots me-1"></i>
+          E como você é atendido(a):
+        </label>
+        {{ form_col.p4_como_e_atendido|add_class:"form-control" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+  <!-- Pergunta 5 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP5">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP5"
+            aria-expanded="false" aria-controls="collapseP5">
+      <i class="bi bi-5-circle me-2"></i>
+     Leitura dos procedimentos
+    </button>
+  </h2>
+
+  <div id="collapseP5" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+
+      <!-- 5. Leitura (Sim/Não) -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          <i class="bi bi-journal-check me-1"></i>
+          5. Efetuou a leitura dos procedimentos, normas, tabelas e outros materiais ligados à sua nova atribuição?
+        </label>
+        <div class="d-flex gap-4">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="{{ form_col.p5_houve_maior_rendimento.name }}"
+                   id="id_p5_leu_sim" value="1"
+                   {% if form_col.p5_houve_maior_rendimento.value %}checked{% endif %}>
+            <label class="form-check-label" for="id_p5_leu_sim">
+              <i class="bi bi-check-circle me-1"></i> Sim
+            </label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="{{ form_col.p5_houve_maior_rendimento.name }}"
+                   id="id_p5_leu_nao" value="0"
+                   {% if not form_col.p5_houve_maior_rendimento.value %}checked{% endif %}>
+            <label class="form-check-label" for="id_p5_leu_nao">
+              <i class="bi bi-x-circle me-1"></i> Não
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quais? (habilita quando SIM) -->
+      <div class="col-12" id="grp_p5_quais">
+        <label for="{{ form_col.p5_justifique.id_for_label }}" class="form-label">
+          <i class="bi bi-card-list me-1"></i> Quais?
+        </label>
+        {{ form_col.p5_justifique|add_class:"form-control"|attr:"placeholder=Ex.: POP de segurança, Tabela de tolerâncias, Instruções de setup" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function toggleP5() {
+      var sim = document.getElementById('id_p5_leu_sim');
+      var grp = document.getElementById('grp_p5_quais');
+      if (!grp) return;
+      var enable = sim && sim.checked;
+      grp.querySelectorAll('textarea, input').forEach(function(el){
+        el.disabled = !enable;
+        el.required = enable;
+        if (!enable) { el.value = ''; }
+      });
+      grp.style.opacity = enable ? 1 : 0.5;
+    }
+    document.addEventListener('change', function(e){
+      if (e.target && (e.target.id === 'id_p5_leu_sim' || e.target.id === 'id_p5_leu_nao')) {
+        toggleP5();
+      }
+    });
+    document.addEventListener('DOMContentLoaded', toggleP5);
+  })();
+</script>
+
+
+  <!-- Pergunta 6 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP6">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP6"
+            aria-expanded="false" aria-controls="collapseP6">
+      <i class="bi bi-6-circle me-2"></i>
+      Orientador / documentos
+    </button>
+  </h2>
+
+  <div id="collapseP6" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+
+      <!-- 6. Orientador desconhecia...? (Sim/Não) -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          <i class="bi bi-question-circle me-1"></i>
+          6. Seu orientador desconhecia algum dos documentos mencionados na questão 5 ou assunto(s) específico(s)?
+        </label>
+        <div class="d-flex gap-4">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="{{ form_col.p6_dialogo_com_chefe.name }}"
+                   id="id_p6_desconhecia_sim" value="1"
+                   {% if form_col.p6_dialogo_com_chefe.value %}checked{% endif %}>
+            <label class="form-check-label" for="id_p6_desconhecia_sim">
+              <i class="bi bi-check-circle me-1"></i> Sim
+            </label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="{{ form_col.p6_dialogo_com_chefe.name }}"
+                   id="id_p6_desconhecia_nao" value="0"
+                   {% if form_col.p6_dialogo_com_chefe.value == False %}checked{% endif %}>
+            <label class="form-check-label" for="id_p6_desconhecia_nao">
+              <i class="bi bi-x-circle me-1"></i> Não
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quais? (habilita quando SIM) -->
+      <div class="col-12" id="grp_p6_quais">
+        <label for="{{ form_col.p6_detalhar.id_for_label }}" class="form-label">
+          <i class="bi bi-card-list me-1"></i> Quais?
+        </label>
+        {{ form_col.p6_detalhar|add_class:"form-control"|attr:"placeholder=Liste os documentos/assuntos desconhecidos" }}
+      </div>
+
+      <!-- Buscou conhecer? (aparece somente se a anterior = Sim) -->
+      <div class="col-12" id="grp_p6_buscou">
+        <label class="form-label fw-semibold">
+          <i class="bi bi-search me-1"></i>
+          Buscou conhecer?
+        </label>
+        <div class="d-flex gap-4">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="p6_buscou_conhecer" id="id_p6_buscou_sim" value="1"
+                   {% if request.POST.p6_buscou_conhecer == '1' %}checked{% endif %}>
+            <label class="form-check-label" for="id_p6_buscou_sim">
+              <i class="bi bi-check-circle me-1"></i> Sim
+            </label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="p6_buscou_conhecer" id="id_p6_buscou_nao" value="0"
+                   {% if request.POST.p6_buscou_conhecer == '0' %}checked{% endif %}>
+            <label class="form-check-label" for="id_p6_buscou_nao">
+              <i class="bi bi-x-circle me-1"></i> Não
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Por que? (aparece somente se "Buscou conhecer?" = Não) -->
+      <div class="col-12" id="grp_p6_porque">
+        <label for="id_p6_porque" class="form-label">
+          <i class="bi bi-chat-left-text me-1"></i> Por que?
+        </label>
+        <textarea id="id_p6_porque" name="p6_porque" class="form-control"
+                  placeholder="Explique o motivo de não ter buscado conhecer.">{{ request.POST.p6_porque }}</textarea>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function setGroupEnabled(group, enabled, clear=false) {
+      if (!group) return;
+      group.querySelectorAll('input, textarea, select').forEach(function(el){
+        el.disabled = !enabled;
+        if (clear && !enabled) {
+          if (el.type === 'radio' || el.type === 'checkbox') el.checked = false;
+          else el.value = '';
+        }
+      });
+      group.style.opacity = enabled ? 1 : 0.5;
+      group.style.display = enabled ? '' : 'none';
+    }
+
+    function toggleP6() {
+      var simDesconhecia = document.getElementById('id_p6_desconhecia_sim')?.checked || false;
+
+      // "Quais?" depende de Sim na pergunta principal
+      var grpQuais = document.getElementById('grp_p6_quais');
+      setGroupEnabled(grpQuais, simDesconhecia, true);
+
+      // "Buscou conhecer?" só aparece quando principal = Sim
+      var grpBuscou = document.getElementById('grp_p6_buscou');
+      setGroupEnabled(grpBuscou, simDesconhecia, true);
+
+      // "Por que?" só aparece quando principal = Sim e Buscou = Não
+      var buscouNao = document.getElementById('id_p6_buscou_nao')?.checked || false;
+      var grpPorque = document.getElementById('grp_p6_porque');
+      setGroupEnabled(grpPorque, simDesconhecia && buscouNao, ! (simDesconhecia && buscouNao));
+    }
+
+    document.addEventListener('change', function(e){
+      if (!e.target) return;
+      if (['id_p6_desconhecia_sim','id_p6_desconhecia_nao','id_p6_buscou_sim','id_p6_buscou_nao'].includes(e.target.id)) {
+        toggleP6();
+      }
+    });
+    document.addEventListener('DOMContentLoaded', toggleP6);
+  })();
+</script>
+
+
+
+ <!-- Pergunta 7 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP7">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP7"
+            aria-expanded="false" aria-controls="collapseP7">
+      <i class="bi bi-7-circle me-2"></i>
+      Acessibilidade do orientador
+    </button>
+  </h2>
+
+  <div id="collapseP7" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+
+      <!-- 7. Pergunta principal (Sim/Não) -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          <i class="bi bi-question-circle me-1"></i>
+          7. Seu orientador é acessível? A respeito de seu trabalho, permite que exponha suas idéias, dificuldades, etc.?
+        </label>
+        <div class="d-flex gap-4">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="p7_orientador_acessivel"
+                   id="id_p7_orientador_acessivel_sim" value="1"
+                   {% if request.POST.p7_orientador_acessivel == '1' %}checked{% endif %}>
+            <label class="form-check-label" for="id_p7_orientador_acessivel_sim">
+              <i class="bi bi-hand-thumbs-up me-1"></i> Sim
+            </label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio"
+                   name="p7_orientador_acessivel"
+                   id="id_p7_orientador_acessivel_nao" value="0"
+                   {% if request.POST.p7_orientador_acessivel == '0' %}checked{% endif %}>
+            <label class="form-check-label" for="id_p7_orientador_acessivel_nao">
+              <i class="bi bi-hand-thumbs-down me-1"></i> Não
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalhar -->
+      <div class="col-12">
+        <label for="{{ form_col.p7_adaptou_facil.id_for_label }}" class="form-label">
+          <i class="bi bi-chat-left-text me-1"></i> Detalhar:
+        </label>
+        {{ form_col.p7_adaptou_facil|add_class:"form-control"|attr:"placeholder=Descreva situações, exemplos ou observações relevantes" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+ <!-- Pergunta 8 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP8">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP8"
+            aria-expanded="false" aria-controls="collapseP8">
+      <i class="bi bi-8-circle me-2"></i>
+      Cooperação no grupo
+    </button>
+  </h2>
+
+  <div id="collapseP8" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+
+      <!-- Select com as 3 opções -->
+      <div class="col-md-6">
+        <label class="form-label" for="id_p8_cooperacao">
+          <i class="bi bi-people-fill me-1"></i> 8. No seu grupo de trabalho:
+        </label>
+        <select id="id_p8_cooperacao" class="form-select" name="p8_cooperacao">
+          <option value="espontanea">existe cooperação espontânea</option>
+          <option value="nao_existe">não existe cooperação</option>
+          <option value="quando_solicitado">existe cooperação quando solicitado</option>
+        </select>
+
+        <!-- Campo real do form (BooleanField) oculto; sincronizado via JS -->
+        <div class="d-none">
+          {{ form_col.p8_satisfeito }}
+        </div>
+      </div>
+
+      <!-- Justifique -->
+      <div class="col-md-6" id="grp_p8_justifique">
+        <label for="{{ form_col.p8_motivo_insatisfacao.id_for_label }}" class="form-label">
+          <i class="bi bi-chat-left-text me-1"></i> Justifique:
+        </label>
+        {{ form_col.p8_motivo_insatisfacao|add_class:"form-control"|attr:"placeholder=Explique brevemente" }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function getHiddenCb(){ return document.getElementById('{{ form_col.p8_satisfeito.id_for_label }}'); }
+    function getSelect() { return document.getElementById('id_p8_cooperacao'); }
+    function setGroupEnabled(group, enabled){
+      if(!group) return;
+      group.querySelectorAll('textarea, input').forEach(function(el){
+        el.disabled = !enabled;
+        if (!enabled) { el.value = ''; }
+      });
+      group.style.opacity = enabled ? 1 : 0.5;
+    }
+
+    function initSelectFromCheckbox(){
+      var cb = getHiddenCb(), sel = getSelect();
+      if(!cb || !sel) return;
+      // Sem campo específico no model: mapear True -> espontânea; False -> não existe (default)
+      sel.value = cb.checked ? 'espontanea' : 'nao_existe';
+      setGroupEnabled(document.getElementById('grp_p8_justifique'), sel.value !== 'espontanea');
+    }
+
+    function syncCheckboxFromSelect(){
+      var cb = getHiddenCb(), sel = getSelect();
+      if(!cb || !sel) return;
+      cb.checked = (sel.value === 'espontanea');
+      setGroupEnabled(document.getElementById('grp_p8_justifique'), sel.value !== 'espontanea');
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      initSelectFromCheckbox();
+      getSelect()?.addEventListener('change', syncCheckboxFromSelect);
+    });
+  })();
+</script>
+
+
+  <!-- Pergunta 9 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP9">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP9"
+            aria-expanded="false" aria-controls="collapseP9">
+      <i class="bi bi-9-circle me-2"></i>
+      Apoio da Adm. Pessoal
+    </button>
+  </h2>
+
+  <div id="collapseP9" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+      <div class="col-md-12">
+        <label for="{{ form_col.p9_como_adm_pessoal_ajuda.id_for_label }}" class="form-label">
+          <i class="bi bi-question-circle me-1"></i>
+          9. O RH pode auxiliá-lo no treinamento? Em que?
+        </label>
+        {{ form_col.p9_como_adm_pessoal_ajuda|add_class:"form-control"|attr:"placeholder=Descreva como o RH pode apoiar no treinamento (ex.: cronograma, materiais, instrutor, etc.)" }}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Pergunta 10 -->
+<div class="accordion-item">
+  <h2 class="accordion-header" id="headingP10">
+    <button class="accordion-button fw-bold collapsed" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseP10"
+            aria-expanded="false" aria-controls="collapseP10">
+      <i class="bi bi-0-circle me-2"></i>
+       Críticas e Sugestões
+    </button>
+  </h2>
+
+  <div id="collapseP10" class="accordion-collapse collapse" data-bs-parent="#accordionColaborador">
+    <div class="accordion-body row g-3">
+      <div class="col-md-12">
+        <label for="{{ form_col.p10_critica_sugestao.id_for_label }}" class="form-label">
+          <i class="bi bi-pencil-square me-1"></i>
+          10. Tem alguma crítica ou sugestão a fazer em relação ao método de Treinamento aplicado? E quanto à empresa?
+        </label>
+        {{ form_col.p10_critica_sugestao|add_class:"form-control"|attr:"placeholder=Escreva sua crítica ou sugestão sobre o método e/ou a empresa" }}
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+

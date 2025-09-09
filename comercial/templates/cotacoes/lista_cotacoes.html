@@ -28,115 +28,113 @@
   </div>
 
   <!-- Offcanvas Filtros Cotações -->
-  <div class="offcanvas offcanvas-end offcanvas-modern"
-       tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
-        <i class="bi bi-funnel-fill me-2"></i>Filtros de Cotações
-      </h5>
-      <button type="button" class="btn-close text-reset"
-              data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-    </div>
-    <div class="offcanvas-body">
-      <form method="get" class="row g-3">
-
-        <!-- Data de Abertura (De) -->
-        <div class="col-md-6 filtro-wrapper">
-          <label for="data_de" class="form-label">
-            <i class="bi bi-calendar-event me-1"></i> De
-          </label>
-          <input type="date" name="data_abertura_de" id="data_de"
-                 class="form-control"
-                 value="{{ request.GET.data_abertura_de }}">
-        </div>
-        <!-- Data de Abertura (Até) -->
-        <div class="col-md-6 filtro-wrapper">
-          <label for="data_ate" class="form-label">
-            <i class="bi bi-calendar-event me-1"></i> Até
-          </label>
-          <input type="date" name="data_abertura_ate" id="data_ate"
-                 class="form-control"
-                 value="{{ request.GET.data_abertura_ate }}">
-        </div>
-
-        <!-- Tipo de Cotação -->
-        <div class="col-md-6 filtro-wrapper">
-          <label for="tipo" class="form-label">
-            <i class="bi bi-list-ul me-1"></i> Tipo
-          </label>
-          <select name="tipo" id="tipo"
-                  class="form-select select2"
-                  data-dropdown-parent="#filtrosOffcanvas">
-            <option value="">Todos</option>
-            <option value="Atualização"
-              {% if request.GET.tipo == "Atualização" %}selected{% endif %}>
-              Atualização
-            </option>
-            <option value="Novo"
-              {% if request.GET.tipo == "Novo" %}selected{% endif %}>
-              Novo
-            </option>
-          </select>
-        </div>
-
-        <!-- Cliente -->
-        <div class="col-md-6 filtro-wrapper">
-          <label for="cliente" class="form-label">
-            <i class="bi bi-building me-1"></i> Cliente
-          </label>
-          <select name="cliente" id="cliente"
-                  class="form-select select2"
-                  data-dropdown-parent="#filtrosOffcanvas">
-            <option value="">Todos</option>
-            {% for c in clientes %}
-              <option value="{{ c.id }}"
-                {% if request.GET.cliente == c.id|stringformat:"s" %}selected{% endif %}>
-                {{ c.razao_social }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Responsável -->
-        <div class="col-md-6 filtro-wrapper">
-          <label for="responsavel" class="form-label">
-            <i class="bi bi-person-circle me-1"></i> Responsável
-          </label>
-          <select name="responsavel" id="responsavel"
-                  class="form-select select2"
-                  data-dropdown-parent="#filtrosOffcanvas">
-            <option value="">Todos</option>
-            {% for u in usuarios %}
-              <option value="{{ u.id }}"
-                {% if request.GET.responsavel == u.id|stringformat:"s" %}selected{% endif %}>
-                {{ u.get_full_name }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Frete -->
-        <div class="col-md-6 filtro-wrapper">
-          <label for="frete" class="form-label">
-            <i class="bi bi-truck me-1"></i> Frete
-          </label>
-          <select name="frete" id="frete"
-                  class="form-select select2"
-                  data-dropdown-parent="#filtrosOffcanvas">
-            <option value="">Todos</option>
-            <option value="CIF" {% if request.GET.frete == "CIF" %}selected{% endif %}>CIF</option>
-            <option value="FOB" {% if request.GET.frete == "FOB" %}selected{% endif %}>FOB</option>
-            
-          </select>
-        </div>
-
-        <!-- Botão Filtrar -->
-        <div class="col-12 mt-3">
-          {% include "partials/global/_botao_filtrar.html" %}
-        </div>
-      </form>
-    </div>
+<div class="offcanvas offcanvas-end offcanvas-modern"
+     tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+      <i class="bi bi-funnel-fill me-2"></i>Filtros de Cotações
+    </h5>
+    <button type="button" class="btn-close text-reset"
+            data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
+
+  <div class="offcanvas-body">
+    <form method="get" class="row g-3">
+
+      <!-- Datas (lado a lado) -->
+      <div class="col-md-6 filtro-wrapper">
+        <label for="data_de" class="form-label">
+          <i class="bi bi-calendar-event me-1"></i> De
+        </label>
+        <input type="date" name="data_abertura_de" id="data_de"
+               class="form-control"
+               value="{{ request.GET.data_abertura_de }}">
+      </div>
+
+      <div class="col-md-6 filtro-wrapper">
+        <label for="data_ate" class="form-label">
+          <i class="bi bi-calendar-event me-1"></i> Até
+        </label>
+        <input type="date" name="data_abertura_ate" id="data_ate"
+               class="form-control"
+               value="{{ request.GET.data_abertura_ate }}">
+      </div>
+
+      <!-- Demais filtros (um abaixo do outro) -->
+      <div class="col-12 filtro-wrapper">
+        <label for="tipo" class="form-label">
+          <i class="bi bi-list-ul me-1"></i> Tipo
+        </label>
+        <select name="tipo" id="tipo"
+                class="form-select select2"
+                data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          <option value="Atualização"
+            {% if request.GET.tipo == "Atualização" %}selected{% endif %}>
+            Atualização
+          </option>
+          <option value="Novo"
+            {% if request.GET.tipo == "Novo" %}selected{% endif %}>
+            Novo
+          </option>
+        </select>
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="cliente" class="form-label">
+          <i class="bi bi-building me-1"></i> Cliente
+        </label>
+        <select name="cliente" id="cliente"
+                class="form-select select2"
+                data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for c in clientes %}
+            <option value="{{ c.id }}"
+              {% if request.GET.cliente == c.id|stringformat:"s" %}selected{% endif %}>
+              {{ c.razao_social }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="responsavel" class="form-label">
+          <i class="bi bi-person-circle me-1"></i> Responsável
+        </label>
+        <select name="responsavel" id="responsavel"
+                class="form-select select2"
+                data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          {% for u in usuarios %}
+            <option value="{{ u.id }}"
+              {% if request.GET.responsavel == u.id|stringformat:"s" %}selected{% endif %}>
+              {{ u.get_full_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 filtro-wrapper">
+        <label for="frete" class="form-label">
+          <i class="bi bi-truck me-1"></i> Frete
+        </label>
+        <select name="frete" id="frete"
+                class="form-select select2"
+                data-dropdown-parent="#filtrosOffcanvas">
+          <option value="">Todos</option>
+          <option value="CIF" {% if request.GET.frete == "CIF" %}selected{% endif %}>CIF</option>
+          <option value="FOB" {% if request.GET.frete == "FOB" %}selected{% endif %}>FOB</option>
+        </select>
+      </div>
+
+      <!-- Botão Filtrar -->
+      <div class="col-12 mt-3">
+        {% include "partials/global/_botao_filtrar.html" %}
+      </div>
+    </form>
+  </div>
+</div>
+
 
   <!-- Indicadores -->
   <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">

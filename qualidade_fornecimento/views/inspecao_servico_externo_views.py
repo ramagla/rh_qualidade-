@@ -22,13 +22,16 @@ from qualidade_fornecimento.models.inspecao_servico_externo import (
 
 
 
+from django.templatetags.static import static
+
 @login_required
 @permission_required('qualidade_fornecimento.view_inspecaoservicoexterno', raise_exception=True)
 def visualizar_inspecao_servico_externo(request, id):
     inspecao = get_object_or_404(InspecaoServicoExterno, pk=id)
     servico = inspecao.servico
 
-    logo_url = f"file://{os.path.join(settings.STATIC_ROOT, 'img', 'logo.png')}"
+    # ✅ Usa STATIC_URL (HTTP) em vez de file:// para funcionar em produção/CDN
+    logo_url = static('img/logo.png')  # ajuste para 'logo.png' se o arquivo não estiver em /img
 
     # Busca a assinatura eletrônica
     assinatura = AssinaturaEletronica.objects.filter(
