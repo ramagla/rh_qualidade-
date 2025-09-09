@@ -247,13 +247,15 @@ def preencher_avaliacao_gestor(request: HttpRequest, token: str):
 
     return render(request, "jobrotation/avaliacao_gestor_form.html", {"form": form, "obj": obj})
 
+from typing import Optional
+from django.http import HttpRequest
 
 # ============================================================
 # CADASTRAR em DUAS ABAS (admin)
 # ============================================================
 @login_required
 @permission_required("Funcionario.add_jobrotationavaliacaocolaborador", raise_exception=True)
-def cadastrar_avaliacoes_tabs_admin(request: HttpRequest, jobrotation_id: int | None = None):
+def cadastrar_avaliacoes_tabs_admin(request: HttpRequest, jobrotation_id: Optional[int] = None):
     """
     Cadastra as avaliações (Colaborador/Gestor) em DUAS ABAS.
     - Sem jobrotation_id: exibe seletor (Seleção do JobRotationEvaluation)
