@@ -375,7 +375,7 @@ def inventario_exportacoes(request):
 # API de Scan
 # ===========
 from decimal import Decimal, InvalidOperation
-# ... (demais imports permanecem)
+from typing import Optional, Tuple
 
 # ---------- helpers p/ QR ----------
 def _to_decimal_safe(value, default=None):
@@ -386,9 +386,8 @@ def _to_decimal_safe(value, default=None):
     except (InvalidOperation, ValueError):
         return default
 
-def _parse_qr(origem: str):
+def _parse_qr(origem: str) -> Tuple[Optional[str], Optional[str], Optional[Decimal]]:
     """
-    Formato TB050 (ex.): CODIGO;ROLO;PESO;LOCAL;FORNECEDOR
     Retorna (codigo, etiqueta, peso_dec_or_None)
     """
     if not origem:
@@ -399,7 +398,7 @@ def _parse_qr(origem: str):
     peso = _to_decimal_safe(partes[2], None) if len(partes) >= 3 else None
     return codigo, etiqueta, peso
 
-def _resolver_item_por_qr(inv: Inventario, origem: str) -> InventarioItem | None:
+def _resolver_item_por_qr(inv: Inventario, origem: str) -> Optional[InventarioItem]:
     codigo, etiqueta, _ = _parse_qr(origem)
     if etiqueta:
         it = inv.itens.filter(etiqueta=etiqueta).first()
