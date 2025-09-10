@@ -112,6 +112,7 @@ def menu_qualidade(user):
 
 
     # Inventários (novo menu)
+    # Inventários (novo menu)
     if user.has_perm("qualidade_fornecimento.view_inventario"):
         submenu_inventario = [
             {
@@ -126,7 +127,8 @@ def menu_qualidade(user):
                 "url": "inventario_create",
                 "icon": "fas fa-plus-circle",
             })
-        if user.has_perm("qualidade_fornecimento.view_inventarioexportacao"):
+        # ▼ aqui estava "view_inventarioexportacao"; alinhar com as views
+        if user.has_perm("qualidade_fornecimento.exportar_inventario"):
             submenu_inventario.append({
                 "name": "Exportações ERP",
                 "url": "inventario_exportacoes",
@@ -138,6 +140,7 @@ def menu_qualidade(user):
             "icon": "fas fa-boxes-stacked",
             "submenu": submenu_inventario,
         })
+
 
 
     return menu
