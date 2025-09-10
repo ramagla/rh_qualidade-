@@ -1,51 +1,62 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block content %}
+{% load custom_filters %}
+{% block title %}{{ ordem_label }} — {{ inventario.titulo }}{% endblock %}
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-  <h4>{{ ordem_label }} — {{ inventario.titulo }}</h4>
-  <a class="btn btn-outline-secondary" href="{% url 'inventario_detail' inventario.pk %}">Voltar</a>
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-qr-code-scan fs-3 text-primary"></i>
+    <h4 class="mb-0">{{ ordem_label }} — {{ inventario.titulo }}</h4>
+  </div>
+  <a class="btn btn-outline-secondary d-flex align-items-center" href="{% url 'inventario_detail' inventario.pk %}">
+    <i class="bi bi-arrow-left-circle me-2"></i> Voltar
+  </a>
 </div>
 
-<p class="text-muted mb-3">
-  Tipo: <strong>{{ inventario.get_tipo_display }}</strong> ·
-  Status: <strong>{{ inventario.get_status_display }}</strong> ·
-  Data de corte: {{ inventario.data_corte|date:"d/m/Y" }}
-</p>
+<div class="text-muted mb-3 small">
+  <span class="me-3"><i class="bi bi-diagram-3 me-1"></i>Tipo: <strong>{{ inventario.get_tipo_display }}</strong></span>
+  <span class="me-3"><i class="bi bi-traffic-cone me-1"></i>Status: <strong>{{ inventario.get_status_display }}</strong></span>
+  <span><i class="bi bi-calendar2-event me-1"></i>Data de corte: {{ inventario.data_corte|date:"d/m/Y" }}</span>
+</div>
 
 <div class="row g-3">
+  <!-- Scanner -->
   <div class="col-12 col-lg-7">
-    <div class="card shadow-sm">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent d-flex align-items-center gap-2">
+        <i class="bi bi-camera-video"></i><span class="fw-semibold">Leitura por Câmera (QR Code)</span>
+      </div>
       <div class="card-body">
-        <h6 class="mb-2">Leitura por Câmera (QR Code)</h6>
-
-        <!-- Pré-visualização + overlay + feedback -->
-        <div class="ratio ratio-4x3 border rounded position-relative">
-          <video id="preview" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+        <div class="ratio ratio-4x3 border rounded position-relative overflow-hidden">
+          <video id="preview" autoplay playsinline muted class="w-100 h-100" style="object-fit:cover;"></video>
           <canvas id="overlay" class="position-absolute" style="inset:0; pointer-events:none;"></canvas>
-
-          <!-- badge sucesso/erro -->
-          <div id="scan-feedback"
-               role="status"
-               aria-live="polite"
+          <div id="scan-feedback" role="status" aria-live="polite"
                class="position-absolute translate-middle-x d-none"
                style="left:50%; top:10%; background:#16a34a; color:#fff; padding:.45rem .75rem; border-radius:999px; box-shadow:0 .5rem 1rem rgba(0,0,0,.15); font-weight:600;">
-            <span id="scan-feedback-icon" style="margin-right:.35rem;">✓</span>
+            <span id="scan-feedback-icon" class="me-1">✓</span>
             <span id="scan-feedback-text">Leitura registrada</span>
           </div>
         </div>
 
-        <!-- ordem visível ao JS da câmera -->
         <input type="hidden" id="ordem-camera" value="{{ ordem }}"/>
 
-        <div class="d-flex flex-wrap gap-2 mt-2 align-items-center">
-          <button id="btn-start" class="btn btn-primary">Iniciar câmera</button>
-          <button id="btn-stop" class="btn btn-outline-secondary" disabled>Parar</button>
-          <button id="btn-torch-on"  class="btn btn-dark" type="button">Lanterna ON</button>
-          <button id="btn-torch-off" class="btn btn-outline-dark" type="button">Lanterna OFF</button>
-          <div class="d-flex align-items-center gap-2">
-            <label class="form-label m-0">Zoom</label>
-            <input id="zoom-range" type="range" min="1" max="3" step="0.1" value="1" style="width:160px;">
+        <div class="row g-2 mt-3">
+          <div class="col-12 col-md-auto d-grid">
+            <button id="btn-start" class="btn btn-primary"><i class="bi bi-play-fill me-1"></i> Iniciar câmera</button>
+          </div>
+          <div class="col-12 col-md-auto d-grid">
+            <button id="btn-stop" class="btn btn-outline-secondary" disabled><i class="bi bi-stop-fill me-1"></i> Parar</button>
+          </div>
+          <div class="col-6 col-md-auto d-grid">
+            <button id="btn-torch-on"  class="btn btn-dark" type="button"><i class="bi bi-lightbulb-fill me-1"></i> Lanterna ON</button>
+          </div>
+          <div class="col-6 col-md-auto d-grid">
+            <button id="btn-torch-off" class="btn btn-outline-dark" type="button"><i class="bi bi-lightbulb-off me-1"></i> Lanterna OFF</button>
+          </div>
+          <div class="col-12 col-md d-flex align-items-center">
+            <label for="zoom-range" class="form-label mb-0 me-2"><i class="bi bi-zoom-in"></i> Zoom</label>
+            <input id="zoom-range" type="range" min="1" max="3" step="0.1" value="1" class="form-range">
           </div>
         </div>
 
@@ -58,23 +69,73 @@
     </div>
   </div>
 
+  <!-- Entrada Manual -->
   <div class="col-12 col-lg-5">
-    <div class="card shadow-sm">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent d-flex align-items-center gap-2">
+        <i class="bi bi-pencil-square"></i><span class="fw-semibold">Entrada Manual (opcional)</span>
+      </div>
       <div class="card-body">
-        <h6 class="mb-2">Entrada Manual (opcional)</h6>
-        <form id="form-manual" class="row g-2" autocomplete="off">
+        <form id="form-manual" class="row g-3" autocomplete="off">
           {% csrf_token %}
-          <div class="col-12">
-            <label class="form-label">QR/Texto da Etiqueta</label>
-            {{ form.origem_qrcode }}
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label">Quantidade</label>
-            {{ form.quantidade }}
-          </div>
           <input type="hidden" id="ordem" name="ordem" value="{{ ordem }}"/>
+
           <div class="col-12">
-            <button type="button" id="btn-manual" class="btn btn-outline-primary">Registrar manualmente</button>
+            <label for="id_origem_qrcode" class="form-label"><i class="bi bi-upc-scan me-1"></i> Etiqueta (QR/Texto)</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-upc"></i></span>
+              {{ form.origem_qrcode|add_class:"form-control" }}
+            </div>
+          </div>
+
+          <!-- Código do Item -->
+          <div class="col-12 col-sm-6">
+            <label for="id_codigo_item" class="form-label"><i class="bi bi-upc-scan me-1"></i> Código do Item</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+              <input type="text" id="id_codigo_item" name="codigo_item" class="form-control" placeholder="Ex.: MP-000123">
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6">
+            <label for="id_quantidade" class="form-label"><i class="bi bi-123 me-1"></i> Quantidade</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-clipboard-data"></i></span>
+              {{ form.quantidade|add_class:"form-control" }}
+            </div>
+          </div>
+
+          <!-- Localização → Cliente quando PA -->
+          <div class="col-12 col-sm-6">
+            <label for="id_localizacao" class="form-label">
+              <i class="bi bi-geo-alt me-1"></i>
+              {% if inventario.tipo == "PA" %} Cliente {% else %} Localização {% endif %}
+            </label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-geo"></i></span>
+              <input type="text" id="id_localizacao" name="localizacao"
+                     class="form-control"
+                     placeholder="{% if inventario.tipo == 'PA' %}Ex.: CLIENTE XYZ{% else %}Ex.: A01-03-B{% endif %}">
+            </div>
+          </div>
+
+          {% if inventario.tipo != "PA" %}
+            <div class="col-12 col-sm-6">
+              <label for="id_fornecedor" class="form-label"><i class="bi bi-truck me-1"></i> Fornecedor</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-building"></i></span>
+                <input type="text" id="id_fornecedor" name="fornecedor" class="form-control" placeholder="Ex.: AÇO BRASIL LTDA">
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="col-12 d-grid d-sm-flex gap-2">
+            <button type="button" id="btn-manual" class="btn btn-outline-primary">
+              <i class="bi bi-check2-circle me-1"></i> Registrar manualmente
+            </button>
+            <button type="reset" class="btn btn-outline-secondary">
+              <i class="bi bi-eraser me-1"></i> Limpar
+            </button>
           </div>
         </form>
       </div>
@@ -83,25 +144,28 @@
 </div>
 
 <!-- Últimos lidos -->
-<div class="card mt-3 shadow-sm">
+<div class="card mt-3 border-0 shadow-sm">
+  <div class="card-header bg-transparent d-flex align-items-center gap-2">
+    <i class="bi bi-clock-history"></i><span class="fw-semibold">Últimos lidos</span>
+  </div>
   <div class="card-body">
-    <h6 class="mb-2">Últimos lidos</h6>
     <div id="lista-lidos" class="small text-muted">Nenhuma leitura ainda.</div>
   </div>
 </div>
 
-<!-- Finalizar contagem -->
 <form class="mt-3" method="post" action="{% url 'finalizar_contagem' inventario.pk ordem %}">
   {% csrf_token %}
-  <button type="submit" class="btn btn-success btn-lg">Finalizar {{ ordem_label }}</button>
+  <button type="submit" class="btn btn-success btn-lg d-flex align-items-center">
+    <i class="bi bi-clipboard2-check-fill me-2"></i> Finalizar {{ ordem_label }}
+  </button>
 </form>
 
 <style>
   #scan-feedback.show { animation: fadeInOut 2s ease-in-out both; }
   @keyframes fadeInOut {
-    0%   { opacity: 0; transform: translate(-50%, -6px); }
-    10%  { opacity: 1; transform: translate(-50%, 0); }
-    80%  { opacity: 1; transform: translate(-50%, 0); }
+    0% { opacity: 0; transform: translate(-50%, -6px); }
+    10% { opacity: 1; transform: translate(-50%, 0); }
+    80% { opacity: 1; transform: translate(-50%, 0); }
     100% { opacity: 0; transform: translate(-50%, -6px); }
   }
 </style>
@@ -109,250 +173,111 @@
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <script>
-// ================= Utilidades =================
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
-  return '';
-}
-function beep() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.type = 'sine'; o.frequency.value = 1000; g.gain.value = 0.06;
-    o.start(); setTimeout(()=>{o.stop(); ctx.close();}, 120);
-  } catch(e){}
-}
-function vibrate(ms=60){ if (navigator.vibrate) navigator.vibrate(ms); }
+/* ==== Flags por tipo ==== */
+const IS_PA = {% if inventario.tipo == "PA" %}true{% else %}false{% endif %};
 
-async function enviarLeitura(qrcode, quantidade, ordem) {
+/* ==== Utils ==== */
+function getCookie(name){const v=`; ${document.cookie}`.split(`; ${name}=`);if(v.length===2)return decodeURIComponent(v.pop().split(';').shift());return '';}
+function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sine';o.frequency.value=1000;g.gain.value=0.06;o.start();setTimeout(()=>{o.stop();c.close();},120);}catch{}}
+function vibrate(ms=60){if(navigator.vibrate)navigator.vibrate(ms);}
+
+/* ==== API ==== */
+async function enviarLeitura(qrcode, quantidade, ordem, fornecedor, localizacao, codigo_item){
+  // Em PA, não enviamos fornecedor (força vazio)
+  if (IS_PA) { fornecedor = ""; }
   const resp = await fetch("{% url 'api_scan_qrcode' inventario.pk %}", {
     method: "POST",
-    headers: {
-      "X-CSRFToken": getCookie("csrftoken"),
-      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-    },
-    body: new URLSearchParams({ qrcode, quantidade: quantidade || "", ordem })
+    headers: {"X-CSRFToken": getCookie("csrftoken"), "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
+    body: new URLSearchParams({
+      qrcode,
+      quantidade: quantidade || "",
+      ordem,
+      fornecedor: fornecedor || "",
+      localizacao: localizacao || "",
+      codigo_item: codigo_item || ""
+    })
   });
   return resp.json();
 }
-function appendLido(qr, qtd) {
-  const el = document.getElementById('lista-lidos');
-  const now = new Date().toLocaleTimeString();
-  const line = document.createElement('div');
-  line.textContent = `[${now}] ${qr} — qtd: ${qtd || 'auto'}`;
-  if (el && el.textContent === 'Nenhuma leitura ainda.') el.textContent = '';
-  if (el) el.prepend(line);
+
+/* ==== UI listagem dos últimos lidos ==== */
+function appendLido(qr, qtd, forn, loc, cod){
+  const el=document.getElementById('lista-lidos'); const now=new Date().toLocaleTimeString();
+  const line=document.createElement('div');
+
+  // em PA: mostrar "cli:" ao invés de "loc:" e nunca exibir "forn:"
+  const locLabel = IS_PA ? 'cli' : 'loc';
+  const parts = [
+    cod ? `cod: ${cod}` : null,
+    loc ? `${locLabel}: ${loc}` : null,
+    (!IS_PA && forn) ? `forn: ${forn}` : null,
+  ].filter(Boolean);
+
+  line.textContent=`[${now}] ${qr} — qtd: ${qtd||'auto'}${parts.length ? ' — ' + parts.join(' | ') : ''}`;
+  if(el && el.textContent==='Nenhuma leitura ainda.') el.textContent='';
+  if(el) el.prepend(line);
 }
 
-// ===== Feedback (sucesso/erro) 2s =====
-function showFeedback(kind='success', msg='Leitura registrada') {
-  const fb = document.getElementById('scan-feedback');
-  const icon = document.getElementById('scan-feedback-icon');
-  const text = document.getElementById('scan-feedback-text');
-  if (!fb) return;
-  // estilo
-  if (kind === 'success') {
-    fb.style.background = '#16a34a'; icon.textContent = '✓';
-  } else {
-    fb.style.background = '#dc2626'; icon.textContent = '!';
-  }
-  text.textContent = msg;
-
-  fb.classList.remove('d-none','show'); fb.offsetWidth; fb.classList.add('show');
-  clearTimeout(showFeedback._t);
-  showFeedback._t = setTimeout(() => { fb.classList.add('d-none'); fb.classList.remove('show'); }, 2000);
+function showFeedback(kind='success',msg='Leitura registrada'){
+  const fb=document.getElementById('scan-feedback'),icon=document.getElementById('scan-feedback-icon'),text=document.getElementById('scan-feedback-text');
+  if(!fb) return; if(kind==='success'){fb.style.background='#16a34a';icon.textContent='✓';} else {fb.style.background='#dc2626';icon.textContent='!';}
+  text.textContent=msg; fb.classList.remove('d-none','show'); fb.offsetWidth; fb.classList.add('show');
+  clearTimeout(showFeedback._t); showFeedback._t=setTimeout(()=>{fb.classList.add('d-none');fb.classList.remove('show');},2000);
 }
 
-// ============== Scanner com jsQR + FILA ==============
-const video   = document.getElementById('preview');
-const overlay = document.getElementById('overlay');
-const octx    = overlay.getContext('2d');
+/* ==== Scanner ==== */
+const video=document.getElementById('preview'); const overlay=document.getElementById('overlay'); const octx=overlay.getContext('2d');
+const btnStart=document.getElementById('btn-start'); const btnStop=document.getElementById('btn-stop');
+const btnTorchOn=document.getElementById('btn-torch-on'); const btnTorchOff=document.getElementById('btn-torch-off'); const zoomRange=document.getElementById('zoom-range');
+let stream=null,track=null,rafId=null,buffer=null,bctx=null; const queue=[]; let processing=false; const recent=new Map(); const DEDUP_MS=2000;
 
-const btnStart = document.getElementById('btn-start');
-const btnStop  = document.getElementById('btn-stop');
-const btnTorchOn  = document.getElementById('btn-torch-on');
-const btnTorchOff = document.getElementById('btn-torch-off');
-const zoomRange   = document.getElementById('zoom-range');
+function enqueueRead(raw){const now=Date.now();const last=recent.get(raw)||0;if(now-last<DEDUP_MS)return; recent.set(raw,now); queue.push(raw); processQueue().catch(()=>{});}
+async function processQueue(){if(processing)return; processing=true; const ordem=document.getElementById('ordem-camera')?.value || "{{ ordem }}";
+  while(queue.length){const raw=queue.shift(); try{const data=await enviarLeitura(raw,'',ordem,'','', ''); if(data&&data.ok){appendLido(raw,'auto','','',''); beep(); vibrate(); showFeedback('success','Leitura registrada');} else {showFeedback('error',(data&&(data.erro||data.detail))||'Falha ao registrar');}} catch{showFeedback('error','Erro de comunicação');}}
+  processing=false;}
+function ensureBuffer(){if(!buffer){buffer=document.createElement('canvas');buffer.style.display='none';document.body.appendChild(buffer);bctx=buffer.getContext('2d',{willReadFrequently:true});}}
+function resizeSurfaces(){if(!video.videoWidth||!video.videoHeight)return; const bw=Math.max(1280,video.videoWidth),bh=Math.round(bw*(video.videoHeight/video.videoWidth)); buffer.width=bw; buffer.height=bh; const rect=video.getBoundingClientRect(); overlay.width=rect.width; overlay.height=rect.height;}
+function drawOverlayBox(loc){if(!loc){octx.clearRect(0,0,overlay.width,overlay.height);return;} octx.clearRect(0,0,overlay.width,overlay.height);
+  const pts=[loc.topLeftCorner,loc.topRightCorner,loc.bottomRightCorner,loc.bottomLeftCorner]; const sx=overlay.width/buffer.width, sy=overlay.height/buffer.height;
+  octx.lineWidth=3;octx.strokeStyle='#00ff88';octx.beginPath();octx.moveTo(pts[0].x*sx,pts[0].y*sy);for(let i=1;i<pts.length;i++)octx.lineTo(pts[i].x*sx,pts[i].y*sy);octx.closePath();octx.stroke();}
+async function startCamera(){if(stream)return; try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080},advanced:[{focusMode:"continuous"}]},audio:false});}catch(e){alert('Não foi possível acessar a câmera. Se não for localhost, use HTTPS.');return;}
+  track=stream.getVideoTracks()[0]; video.srcObject=stream; await video.play().catch(()=>{}); ensureBuffer(); resizeSurfaces(); btnStart.disabled=true; btnStop.disabled=false; scanLoop();}
+function stopCamera(){if(rafId)cancelAnimationFrame(rafId); rafId=null; if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null; track=null;} octx.clearRect(0,0,overlay.width,overlay.height); btnStart.disabled=false; btnStop.disabled=true;}
+async function scanLoop(){if(!stream||!video.videoWidth){rafId=requestAnimationFrame(scanLoop);return;} resizeSurfaces(); bctx.drawImage(video,0,0,buffer.width,buffer.height);
+  const img=bctx.getImageData(0,0,buffer.width,buffer.height); const res=jsQR(img.data,img.width,img.height,{inversionAttempts:'attemptBoth'});
+  if(res&&res.data){drawOverlayBox(res.location); const raw=res.data.trim(); if(raw) enqueueRead(raw);} else {octx.clearRect(0,0,overlay.width,overlay.height);} rafId=requestAnimationFrame(scanLoop);}
+async function setTorch(on){if(!track||!track.getCapabilities)return false; const caps=track.getCapabilities(); if(!caps.torch)return false; try{await track.applyConstraints({advanced:[{torch:!!on}]}); return true;}catch{return false;}}
+async function setZoom(level){if(!track||!track.getCapabilities)return; const caps=track.getCapabilities(); if(!caps.zoom)return; const z=Math.min(caps.zoom.max||3,Math.max(caps.zoom.min||1,Number(level))); try{await track.applyConstraints({advanced:[{zoom:z}]});}catch{}}
+btnStart?.addEventListener('click',e=>{e.preventDefault();startCamera();}); btnStop?.addEventListener('click',e=>{e.preventDefault();stopCamera();});
+btnTorchOn?.addEventListener('click',async e=>{e.preventDefault();const ok=await setTorch(true); if(!ok) alert('Lanterna não suportada neste dispositivo.');});
+btnTorchOff?.addEventListener('click',async e=>{e.preventDefault();await setTorch(false);});
+zoomRange?.addEventListener('input',e=>{setZoom(e.target.value);});
 
-let stream = null, track = null, rafId = null;
-let buffer = null, bctx = null;
-
-// Fila de leituras para garantir ordem e não perder requests
-const queue = [];
-let processing = false;
-
-// Evita reprocessar a mesma etiqueta por 2s
-const recent = new Map(); // valor -> timestamp
-const DEDUP_MS = 2000;
-
-function enqueueRead(raw) {
-  // dedup por 2s
-  const now = Date.now();
-  const last = recent.get(raw) || 0;
-  if (now - last < DEDUP_MS) return;
-  recent.set(raw, now);
-
-  queue.push(raw);
-  processQueue().catch(()=>{});
-}
-
-async function processQueue() {
-  if (processing) return;
-  processing = true;
-  const ordem = document.getElementById('ordem-camera')?.value || "{{ ordem }}";
-  while (queue.length) {
-    const raw = queue.shift();
-    try {
-      const data = await enviarLeitura(raw, '', ordem);
-      // console.debug('SCAN RESP', raw, data);
-      if (data && data.ok) {
-        appendLido(raw, 'auto');
-        beep(); vibrate();
-        showFeedback('success', 'Leitura registrada');
-        // Opcional: recarregar a página a cada X registros
-        // if ((processQueue._count = (processQueue._count||0)+1) % 10 === 0) location.reload();
-      } else {
-        const erro = (data && (data.erro || data.detail)) || 'Falha ao registrar';
-        showFeedback('error', erro);
-      }
-    } catch (e) {
-      showFeedback('error', 'Erro de comunicação');
-    }
-  }
-  processing = false;
-}
-
-function ensureBuffer() {
-  if (!buffer) {
-    buffer = document.createElement('canvas');
-    buffer.style.display = 'none';
-    document.body.appendChild(buffer);
-    bctx = buffer.getContext('2d', { willReadFrequently: true });
-  }
-}
-function resizeSurfaces() {
-  if (!video.videoWidth || !video.videoHeight) return;
-  const bw = Math.max(1280, video.videoWidth);
-  const bh = Math.round(bw * (video.videoHeight / video.videoWidth));
-  buffer.width = bw; buffer.height = bh;
-  const rect = video.getBoundingClientRect();
-  overlay.width = rect.width;
-  overlay.height = rect.height;
-}
-function drawOverlayBox(loc) {
-  if (!loc) { octx.clearRect(0,0,overlay.width,overlay.height); return; }
-  octx.clearRect(0,0,overlay.width,overlay.height);
-  const pts = [loc.topLeftCorner, loc.topRightCorner, loc.bottomRightCorner, loc.bottomLeftCorner];
-  const sx = overlay.width / buffer.width;
-  const sy = overlay.height / buffer.height;
-  octx.lineWidth = 3;
-  octx.strokeStyle = '#00ff88';
-  octx.beginPath();
-  octx.moveTo(pts[0].x*sx, pts[0].y*sy);
-  for (let i=1;i<pts.length;i++) octx.lineTo(pts[i].x*sx, pts[i].y*sy);
-  octx.closePath();
-  octx.stroke();
-}
-
-async function startCamera() {
-  if (stream) return;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' },
-        width:  { ideal: 1920 },
-        height: { ideal: 1080 },
-        advanced: [{ focusMode: "continuous" }]
-      },
-      audio: false
-    });
-  } catch (e) {
-    alert('Não foi possível acessar a câmera. Se não for localhost, use HTTPS.');
-    return;
-  }
-  track = stream.getVideoTracks()[0];
-  video.srcObject = stream;
-  await video.play().catch(()=>{});
-  ensureBuffer();
-  resizeSurfaces();
-  btnStart.disabled = true; btnStop.disabled = false;
-  scanLoop();
-}
-function stopCamera() {
-  if (rafId) cancelAnimationFrame(rafId); rafId = null;
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; track = null; }
-  octx.clearRect(0,0,overlay.width,overlay.height);
-  btnStart.disabled = false; btnStop.disabled = true;
-}
-async function scanLoop() {
-  if (!stream || !video.videoWidth) { rafId = requestAnimationFrame(scanLoop); return; }
-  resizeSurfaces();
-  bctx.drawImage(video, 0, 0, buffer.width, buffer.height);
-  const img = bctx.getImageData(0, 0, buffer.width, buffer.height);
-  const res = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
-
-  if (res && res.data) {
-    drawOverlayBox(res.location);
-    const raw = res.data.trim();
-    if (raw) enqueueRead(raw);
-  } else {
-    octx.clearRect(0,0,overlay.width,overlay.height);
-  }
-  rafId = requestAnimationFrame(scanLoop);
-}
-
-// --------- Torch (lanterna) e Zoom ---------
-async function setTorch(on) {
-  if (!track || !track.getCapabilities) return false;
-  const caps = track.getCapabilities();
-  if (!caps.torch) return false;
-  try { await track.applyConstraints({ advanced: [{ torch: !!on }] }); return true; }
-  catch { return false; }
-}
-async function setZoom(level) {
-  if (!track || !track.getCapabilities) return;
-  const caps = track.getCapabilities();
-  if (!caps.zoom) return;
-  const z = Math.min(caps.zoom.max || 3, Math.max(caps.zoom.min || 1, Number(level)));
-  try { await track.applyConstraints({ advanced: [{ zoom: z }] }); } catch{}
-}
-
-// --------- Eventos ---------
-btnStart?.addEventListener('click', (e)=>{ e.preventDefault(); startCamera(); });
-btnStop ?.addEventListener('click', (e)=>{ e.preventDefault(); stopCamera(); });
-btnTorchOn ?.addEventListener('click', async (e)=>{ e.preventDefault(); const ok = await setTorch(true); if(!ok) alert('Lanterna não suportada neste dispositivo.'); });
-btnTorchOff?.addEventListener('click', async (e)=>{ e.preventDefault(); await setTorch(false); });
-zoomRange   ?.addEventListener('input', (e)=>{ setZoom(e.target.value); });
-
-// --------- Leitura manual (com feedback de erro/sucesso) ---------
+/* ==== Registro manual ==== */
 document.getElementById('btn-manual')?.addEventListener('click', async ()=>{
   const qr   = document.getElementById('id_origem_qrcode')?.value.trim();
   const qtd  = document.getElementById('id_quantidade')?.value.trim();
+  const forn = (IS_PA ? '' : (document.getElementById('id_fornecedor')?.value.trim() || ''));
+  const loc  = document.getElementById('id_localizacao')?.value.trim();
+  const cod  = document.getElementById('id_codigo_item')?.value.trim();
   const ordem= document.getElementById('ordem')?.value;
-  if (!qr) { alert('Informe o QR/Texto.'); return; }
+
+  if (!qr) { alert('Informe a Etiqueta (QR/Texto).'); return; }
+
   try {
-    const data = await enviarLeitura(qr, qtd, ordem);
+    const data = await enviarLeitura(qr, qtd, ordem, forn, loc, cod);
     if (data && data.ok) {
-      appendLido(qr, qtd);
-      document.getElementById('id_origem_qrcode').value = '';
-      document.getElementById('id_quantidade').value = '';
-      document.getElementById('id_origem_qrcode').focus();
+      appendLido(qr, qtd, forn, loc, cod);
+      document.getElementById('form-manual').reset();
+      document.getElementById('id_origem_qrcode')?.focus();
       beep(); vibrate(); showFeedback('success', 'Leitura registrada');
     } else {
-      const erro = (data && (data.erro || data.detail)) || 'Falha ao registrar';
-      showFeedback('error', erro);
+      showFeedback('error', (data && (data.erro || data.detail)) || 'Falha ao registrar');
     }
-  } catch {
-    showFeedback('error', 'Erro de comunicação');
-  }
+  } catch { showFeedback('error', 'Erro de comunicação'); }
 });
 
-// Reajusta superfícies quando o vídeo estiver pronto
 video.addEventListener('loadedmetadata', resizeSurfaces);
 window.addEventListener('resize', resizeSurfaces);
 </script>
-
 {% endblock %}

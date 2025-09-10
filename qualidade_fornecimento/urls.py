@@ -237,7 +237,8 @@ urlpatterns = [
     path("inventarios/<int:pk>/contagem/terceira/", inventario_views.contagem_terceira, name="contagem_terceira"),
     path("inventarios/<int:pk>/confronto/", inventario_views.confronto_view, name="inventario_confronto"),
     path("inventarios/<int:pk>/ajustes/", inventario_views.ajustes_manuais_view, name="inventario_ajustes"),
-
+    path("inventarios/exportar/csv/", inventario_views.exportar_csv, name="exportar_csv"),
+    path("inventarios/exportar/pdf/", inventario_views.exportar_pdf, name="exportar_pdf"),
     # API de leitura por QRCode (recebe código/etiqueta e quantidade)
     path("api/inventarios/<int:pk>/scan/", inventario_views.api_scan_qrcode, name="api_scan_qrcode"),
     path("inventarios/<int:pk>/contagem/<int:ordem>/finalizar/", inventario_views.finalizar_contagem, name="finalizar_contagem"),

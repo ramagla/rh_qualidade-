@@ -1,25 +1,167 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Inventários{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h3>Inventários</h3>
-  <a class="btn btn-primary" href="{% url 'inventario_create' %}"><i class="bi bi-plus-lg"></i> Novo Inventário</a>
+<div class="container-fluid mt-4">
+
+  {# Cabeçalho e estilos globais (mesmos usados no catálogo) #}
+  {% include "partials/global/_header_titulo.html" with titulo="Inventários" %}
+  {% include "partials/global/_styles_componentes.html" %}
+  {% include "partials/global/_toast_mensagens.html" %}
+  {% include "partials/global/_estilos_botoes_acoes.html" %}
+
+  {# Offcanvas de Filtros #}
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros de Inventários
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form method="get">
+        <div class="row row-cols-1 g-3">
+
+          <div class="col">
+            <label class="form-label"><i class="bi bi-card-text me-1"></i> Título (contém)</label>
+            <input type="text" class="form-control" name="titulo" value="{{ request.GET.titulo|default_if_none:'' }}">
+          </div>
+
+          <div class="col">
+            <label class="form-label"><i class="bi bi-flag me-1"></i> Status</label>
+            <select class="form-select select2" name="status" data-dropdown-parent="#filtrosOffcanvas">
+              <option value="">Todos</option>
+              {% for value,label in status_choices %}
+                <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col">
+            <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Data de corte — de</label>
+            <input type="date" class="form-control" name="data_corte_de" value="{{ request.GET.data_corte_de }}">
+          </div>
+
+          <div class="col">
+            <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Data de corte — até</label>
+            <input type="date" class="form-control" name="data_corte_ate" value="{{ request.GET.data_corte_ate }}">
+          </div>
+
+          <div class="col-12 mt-2">
+            {% include "partials/global/_botao_filtrar.html" %}
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# Ações #}
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    {% if request.user|has_permission:'qualidade_fornecimento.add_inventario' %}
+      <a href="{% url 'inventario_create' %}" class="btn btn-cadastrar-personalizado d-inline-flex align-items-center">
+        <i class="bi bi-plus-circle-fill me-2"></i> Novo Inventário
+      </a>
+    {% endif %}
+  </div>
+
+  {# Cards de indicadores #}
+  <div class="row mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="primary" titulo="Total" valor=totais.total subtitulo="Inventários cadastrados" icone="bi-list-check" %}
+    {% include "partials/global/_card_indicador.html" with cor="success" titulo="Abertos" valor=totais.abertos subtitulo="Aguardando contagem" icone="bi-unlock" %}
+    {% include "partials/global/_card_indicador.html" with cor="info" titulo="Em Contagem" valor=totais.em_contagem subtitulo="1ª/2ª contagem" icone="bi-clipboard-check" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning" titulo="Conferência" valor=totais.em_conferencia subtitulo="Confronto" icone="bi-search" %}
+    {% include "partials/global/_card_indicador.html" with cor="secondary" titulo="Exportados" valor=totais.exportados subtitulo="Enviados ao ERP" icone="bi-box-arrow-up-right" %}
+  </div>
+
+  {# Tabela #}
+{% if page_obj and page_obj.object_list %}
+  <div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered text-center align-middle">
+      <thead class="table-light align-middle">
+        <tr>
+          <th class="text-center py-2">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-card-text mb-1" data-bs-toggle="tooltip" title="Título do inventário"></i>
+              <small>Título</small>
+            </div>
+          </th>
+          <th class="text-center py-2">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-diagram-3 mb-1" data-bs-toggle="tooltip" title="Tipo"></i>
+              <small>Tipo</small>
+            </div>
+          </th>
+          <th class="text-center py-2">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-calendar2-day mb-1" data-bs-toggle="tooltip" title="Data de corte"></i>
+              <small>Data de Corte</small>
+            </div>
+          </th>
+          <th class="text-center py-2">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-flag mb-1" data-bs-toggle="tooltip" title="Status atual"></i>
+              <small>Status</small>
+            </div>
+          </th>
+          <th class="text-center py-2">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-clock-history mb-1" data-bs-toggle="tooltip" title="Criação"></i>
+              <small>Criado em</small>
+            </div>
+          </th>
+          <th class="text-center py-2">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-gear mb-1" data-bs-toggle="tooltip" title="Ações"></i>
+              <small>Ações</small>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in page_obj.object_list %}
+          <tr>
+            <td class="text-start">
+              <a href="{% url 'inventario_detail' inv.pk %}" class="text-decoration-none">{{ inv.titulo }}</a>
+            </td>
+            <td>{{ inv.get_tipo_display }}</td>
+            <td>{{ inv.data_corte|date:"d/m/Y" }}</td>
+            <td>{{ inv.get_status_display }}</td>
+            <td>{{ inv.criado_em|date:"d/m/Y H:i" }}</td>
+            <td>
+              <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a href="{% url 'inventario_detail' inv.pk %}" class="btn btn-sm btn-secondary" title="Abrir" data-bs-toggle="tooltip">
+                  <i class="bi bi-eye"></i>
+                </a>
+                {% if request.user|has_permission:'qualidade_fornecimento.view_inventario' %}
+                  <a href="{% url 'inventario_confronto' inv.pk %}" class="btn btn-sm btn-info" title="Confronto" data-bs-toggle="tooltip">
+                    <i class="bi bi-shuffle"></i>
+                  </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+
+    {# Paginação #}
+    {% include "partials/global/_paginacao.html" with page_obj=page_obj %}
+  {% else %}
+    {% include "partials/global/_sem_resultados.html" %}
+  {% endif %}
+
 </div>
-<table class="table table-striped">
-  <thead><tr>
-    <th>Título</th><th>Data de Corte</th><th>Status</th><th>Criado em</th><th></th>
-  </tr></thead>
-  <tbody>
-  {% for inv in inventarios %}
-    <tr>
-      <td><a href="{% url 'inventario_detail' inv.pk %}">{{ inv.titulo }}</a></td>
-      <td>{{ inv.data_corte|date:"d/m/Y" }}</td>
-      <td>{{ inv.get_status_display }}</td>
-      <td>{{ inv.criado_em|date:"d/m/Y H:i" }}</td>
-      <td><a class="btn btn-sm btn-outline-secondary" href="{% url 'inventario_detail' inv.pk %}">Abrir</a></td>
-    </tr>
-  {% empty %}
-    <tr><td colspan="5" class="text-muted">Nenhum inventário encontrado.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+
+{# Logs simples no console p/ depuração #}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+  });
+</script>
 {% endblock %}

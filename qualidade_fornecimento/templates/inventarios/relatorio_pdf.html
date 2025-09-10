@@ -1,0 +1,116 @@
+{# templates/inventarios/pdf_inventario.html — PARA #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório — {{ inventario.titulo }}</title>
+  <style>
+    @page{
+      size: A4;
+      margin: 34mm 14mm 28mm;              /* top | right/left | bottom */
+      @top-left   { content: element(hdr_left);  }
+      @top-right  { content: element(hdr_right); }
+      @bottom-left{ content: element(doc_footer); }
+      @bottom-right{
+        content: "Página " counter(page) " de " counter(pages);
+        font-size:10px; color:#6b7280;
+      }
+    }
+
+    body{ font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif; font-size:12px; color:#111827; }
+
+    /* Cabeçalho */
+    .hdr-left  { position: running(hdr_left); }
+    .hdr-right { position: running(hdr_right); text-align:right; font-size:11px; }
+    .brand{ display:flex; align-items:center; gap:8px; }
+    .brand img{ height:26px; }
+    .title{ font-size:18px; font-weight:700; margin:0; }
+    .meta{ font-size:11px; line-height:1.3; margin:0; }
+
+    /* Rodapé — fonte declarado no topo (para valer na página 1) */
+    .doc-footer-source{ position: running(doc_footer); height:0; overflow:hidden; } /* <- crucial */
+    .footer-wrap{ font-size:10px; line-height:1.15; max-height:22mm; overflow:hidden; }
+    .footer-wrap *{ margin:0; padding:0; }
+
+    /* Tabela */
+    table{ width:100%; border-collapse:collapse; }
+    thead{ display: table-header-group; background:#f8fafc; }
+    thead th{ font-weight:600; color:#0f172a; border-bottom:1px solid #e5e7eb; padding:7px 8px; font-size:11.5px; text-align:left; }
+    tbody td{ border-bottom:1px solid #eef2f7; padding:6px 8px; vertical-align:middle; }
+    tbody tr:nth-child(even){ background:#fbfdff; }
+    tbody tr{ break-inside: avoid-page; }
+    .center{ text-align:center; }
+    .nowrap{ white-space:nowrap; }
+    .qty{ display:inline-block; min-width:36px; padding:2px 6px; border-radius:6px; background:#eef2ff; color:#1e3a8a; font-weight:600; font-size:11px; }
+    .dash{ color:#9ca3af; }
+  </style>
+</head>
+<body>
+
+  {# ===== RODAPÉ (fonte) POSICIONADO NO TOPO ===== #}
+  <div class="doc-footer-source">
+    <div class="footer-wrap">
+      {% include "partials/global/_formulario_rodape.html" %}
+    </div>
+  </div>
+
+  {# ===== CABEÇALHO (top-left / top-right) ===== #}
+  <div class="hdr-left">
+    <div class="brand">
+      <img src="{% static 'img/logo.png' %}" alt="Logo">
+      <div>
+        <p class="title">Relatório de Inventário</p>
+        <p class="meta">
+          <strong>Inventário:</strong> {{ inventario.titulo }} ·
+          <strong>Tipo:</strong> {{ inventario.get_tipo_display }} ·
+          <strong>Status:</strong> {{ inventario.get_status_display }} ·
+          <strong>Data de corte:</strong> {{ inventario.data_corte|date:"d/m/Y" }}
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <strong>Gerado em:</strong> {{ gerado_em|date:"d/m/Y H:i" }}
+  </div>
+
+  {# ===== CONTEÚDO ===== #}
+  <main>
+    <table>
+      <<thead>
+  <tr>
+    <th style="width:22%">Código</th>
+    <th style="width:16%">Etiqueta</th>
+    <th style="width:16%">{% if inventario.tipo == "PA" %}Cliente{% else %}Local{% endif %}</th>
+    {% if inventario.tipo != "PA" %}
+      <th style="width:20%">Fornecedor</th>
+    {% endif %}
+    <th class="center" style="width:6%">1ª</th>
+    <th class="center" style="width:6%">2ª</th>
+    <th class="center" style="width:6%">3ª</th>
+    <th class="center" style="width:8%">Final</th>
+  </tr>
+</thead>
+
+{# PARA - TBODY do PDF #}
+<tbody>
+  {% for l in linhas %}
+  <tr>
+    <td class="nowrap">{{ l.codigo }}</td>
+    <td class="nowrap">{{ l.etiqueta }}</td>
+    <td class="nowrap">{{ l.local }}</td>
+    {% if inventario.tipo != "PA" %}
+      <td>{{ l.fornecedor }}</td>
+    {% endif %}
+    <td class="center">{% if l.c1 is not None %}<span class="qty">{{ l.c1 }}</span>{% else %}<span class="dash">—</span>{% endif %}</td>
+    <td class="center">{% if l.c2 is not None %}<span class="qty">{{ l.c2 }}</span>{% else %}<span class="dash">—</span>{% endif %}</td>
+    <td class="center">{% if l.c3 is not None %}<span class="qty">{{ l.c3 }}</span>{% else %}<span class="dash">—</span>{% endif %}</td>
+    <td class="center">{% if l.final is not None %}<span class="qty">{{ l.final }}</span>{% else %}<span class="dash">—</span>{% endif %}</td>
+  </tr>
+  {% endfor %}
+</tbody>
+    </table>
+  </main>
+
+</body>
+</html>

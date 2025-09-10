@@ -17,6 +17,7 @@ from qualidade_fornecimento.models.inspecao10 import (
     Inspecao10,
 )
 from qualidade_fornecimento.models.materiaPrima_catalogo import MateriaPrimaCatalogo
+from django.core.paginator import Paginator
 
 
 @login_required
