@@ -923,7 +923,8 @@ def relatorio_duplicatas(request):
                 "DEVOLUCAO DE VASILHAME OU SACARIA": "Embalagem",
                 "REMESSA P/ CONSERTO": "Conserto",
                 "VENDA PROD.ESTAB. P/ ZONA FRANCA MANAUS": "Venda p/ ZFM",
-                "INDUSTRIALIZAÇÃO EFETUADA P/ OUTRA EMPRESA": "Industrialização"
+                "INDUSTRIALIZAÇÃO EFETUADA P/ OUTRA EMPRESA": "Industrialização",
+                "OUTRAS SAIDAS MERC.PREST.SERV.N/ESPECIF": "Outras Saidas"
             }
             natureza_original = getattr(d, "natureza", None)
             natureza_formatada = NATUREZA_MAP.get(
