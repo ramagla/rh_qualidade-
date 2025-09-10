@@ -316,9 +316,13 @@
     {% endif %}
     {% if request.user|has_permission:"Funcionario.change_funcionario" %}
       {% include "partials/global/_botao_editar.html" with objeto=funcionario url_editar="editar_funcionario" label="colaborador" %}
-      <a href="{% url 'gerar_assinatura_email' funcionario.id %}" class="btn btn-sm btn-outline-primary" title="Gerar assinatura de e-mail">
-        <i class="bi bi-envelope-paper"></i>
-      </a>
+      <a href="{% url 'gerar_assinatura_email' funcionario.id %}"
+   class="btn btn-sm btn-primary mt-1"
+   title="Gerar assinatura de e-mail"
+   aria-label="Gerar assinatura de e-mail">
+  <i class="bi bi-envelope-paper" aria-hidden="true"></i>
+</a>
+
     {% endif %}
     {% if request.user|has_permission:"Funcionario.delete_funcionario" %}
       {% include "partials/global/_botao_excluir.html" with objeto=funcionario url_excluir="excluir_funcionario" label="colaborador" %}

@@ -215,52 +215,59 @@ def gerar_assinatura_email(request, funcionario_id: int):
         static_base = "https://qualidade.brasmol.com.br/static/assinatura_email"
 
         assinatura_html = f"""
-<table cellpadding="0" cellspacing="0" width="600" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#0f172a;line-height:1.35;max-width:600px;width:100%">
+<table cellpadding="0" cellspacing="0" width="600" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#0f172a;line-height:1.45;max-width:600px;width:100%">
   <tr>
     <td style="padding:16px 12px">
       <table cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #e5e7eb;border-radius:8px;background:#fff">
         <tr>
+          <!-- Coluna esquerda -->
           <td valign="top" width="58%" style="padding:16px 12px 12px 16px">
-            <div style="font-size:20px;font-weight:bold">{nome_anchor}</div>
+            <div style="font-size:20px;font-weight:bold;margin-bottom:2px">{nome_anchor}</div>
             {cargo_html}
-            <div style="font-size:12px;color:#475569">{empresa}</div>
-            <table style="margin-top:10px">
+            <div style="font-size:12px;color:#475569;margin-top:2px">{empresa}</div>
+
+            <table cellpadding="0" cellspacing="0" border="0" style="margin-top:10px">
               <tr>
-                <td><img src="{static_base}/ic-email.png" width="16"></td>
-                <td><a href="mailto:{email}" style="color:#0f172a;text-decoration:none">{email}</a></td>
+                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-email.png" width="16" alt=""></td>
+                <td style="padding:4px 0"><a href="mailto:{email}" style="color:#0f172a;text-decoration:none">{email}</a></td>
               </tr>
               <tr>
-                <td><img src="{static_base}/ic-phone.png" width="16"></td>
-                <td>
+                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-phone.png" width="16" alt=""></td>
+                <td style="padding:4px 0">
                   +55 (11) 4648-2611{f" · Ramal {escape(ramal)}" if ramal else ""}
-{f"<br><a href='{wa_link}' style='color:#0f172a;text-decoration:none'>{celular_fmt} <img src='{static_base}/ic-whatsapp.png' width='14' style='vertical-align:middle'></a>" if whatsapp_digits else ""}
+                  {f"<br><a href='{wa_link}' style='color:#0f172a;text-decoration:none'>{celular_fmt} <img src='{static_base}/ic-whatsapp.png' width='14' style='vertical-align:middle' alt=''></a>" if whatsapp_digits else ""}
                 </td>
               </tr>
               <tr>
-                <td><img src="{static_base}/ic-web.png" width="16"></td>
-                <td><a href="https://www.brasmol.com.br" style="color:#0f172a;text-decoration:none">www.brasmol.com.br</a></td>
+                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-web.png" width="16" alt=""></td>
+                <td style="padding:4px 0"><a href="https://www.brasmol.com.br" style="color:#0f172a;text-decoration:none">www.brasmol.com.br</a></td>
               </tr>
               <tr>
-                <td><img src="{static_base}/ic-linkedin.png" width="16"></td>
-                <td><a href="https://www.linkedin.com/company/brasmol/" style="color:#0f172a;text-decoration:none">LinkedIn — Bras-Mol</a></td>
+                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-linkedin.png" width="16" alt=""></td>
+                <td style="padding:4px 0"><a href="https://www.linkedin.com/company/brasmol/" style="color:#0f172a;text-decoration:none">LinkedIn — Bras-Mol</a></td>
               </tr>
               <tr>
-                <td><img src="{static_base}/ic-map.png" width="16"></td>
-                <td><a href="https://maps.google.com/?q=Estrada+do+Bonsucesso,+1953,+Itaquaquecetuba" style="color:#475569;text-decoration:none">Estrada do Bonsucesso, 1953 — Itaquaquecetuba/SP</a></td>
+                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-map.png" width="16" alt=""></td>
+                <td style="padding:4px 0"><a href="https://maps.google.com/?q=Estrada+do+Bonsucesso,+1953,+Itaquaquecetuba" style="color:#475569;text-decoration:none">Estrada do Bonsucesso, 1953 — Itaquaquecetuba/SP</a></td>
               </tr>
               <tr>
-                <td><img src="{static_base}/ic-link.png" width="16"></td>
-                <td><a href="https://montagem.brasmol.com.br" style="color:#0f172a;text-decoration:none">Conheça nossa linha de montagem</a></td>
+                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-link.png" width="16" alt=""></td>
+                <td style="padding:4px 0"><a href="https://montagem.brasmol.com.br" style="color:#0f172a;text-decoration:none">Conheça nossa linha de montagem</a></td>
               </tr>
             </table>
           </td>
-          <td valign="middle" width="42%" style="background:#f9fafb;text-align:center">
-            <img src="{static_base}/logo.png" width="150">
-            <div style="font-size:12px;color:#0f172a;font-weight:bold;margin-top:6px">Tecnologia e Qualidade</div>
+
+          <!-- Coluna direita -->
+          <td valign="middle" width="42%" style="background:#f9fafb;text-align:center;padding:20px 12px;border-top-right-radius:8px;border-bottom-right-radius:8px">
+            <img src="{static_base}/logo.png" width="150" alt="Logo Bras-Mol" style="display:inline-block">
           </td>
         </tr>
       </table>
-      <div style="font-size:11px;color:#6b7280;margin-top:6px">Esta mensagem é confidencial. Se recebida por engano, apague e avise o remetente. <a href="{static_base}/politica_de_privacidade.pdf" style="color:#6b7280">Política de privacidade</a></div>
+
+      <div style="font-size:11px;color:#6b7280;margin-top:8px">
+        Esta mensagem é confidencial. Se recebida por engano, apague e avise o remetente.
+        <a href="{static_base}/politica_de_privacidade.pdf" style="color:#6b7280;text-decoration:underline">Política de privacidade</a>
+      </div>
     </td>
   </tr>
 </table>
