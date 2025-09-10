@@ -29,52 +29,93 @@ def _to_decimal_safe(value, default: Optional[Decimal] = None) -> Optional[Decim
     except (InvalidOperation, ValueError, TypeError):
         return default
 
-def _parse_qr(origem: str) -> Tuple[Optional[str], Optional[str], Optional[Decimal]]:
+def _parse_qr(origem: str) -> Tuple[Optional[str], Optional[str], Optional[Decimal], Optional[str], Optional[str]]:
     """
-    Formato (TB050 esperado): CODIGO;ROLO;PESO;LOCAL;FORNECEDOR
-    Retorna (codigo, etiqueta, peso_decimal_ou_None)
+    Formato esperado (TB050): CODIGO;ETIQUETA;PESO;LOCAL;FORNECEDOR
+    Retorna: (codigo, etiqueta, peso_decimal_ou_None, local, fornecedor)
+    - Tolerante a vírgula/ponto no peso.
+    - Campos ausentes retornam None.
     """
     if not origem:
-        return None, None, None
+        return None, None, None, None, None
     partes = [p.strip() for p in str(origem).split(";")]
-    codigo = partes[0] if len(partes) >= 1 else None
-    etiqueta = partes[1] if len(partes) >= 2 else None
-    peso = _to_decimal_safe(partes[2], None) if len(partes) >= 3 else None
-    return codigo, etiqueta, peso
+    codigo      = partes[0] if len(partes) >= 1 else None
+    etiqueta    = partes[1] if len(partes) >= 2 else None
+    peso        = _to_decimal_safe(partes[2], None) if len(partes) >= 3 else None
+    local       = partes[3] if len(partes) >= 4 else None
+    fornecedor  = partes[4] if len(partes) >= 5 else None
+    return codigo, etiqueta, peso, local, fornecedor
+
 
 def _resolver_item_por_qr(inv: Inventario, origem: str) -> Optional[InventarioItem]:
     """
     Localiza (ou cria) item do inventário a partir do QR.
-    Regras: prioriza a etiqueta; depois o código; se não achar, cria.
+    Regras:
+      1) Prioriza a ETIQUETA (única por rolo).
+      2) Se não houver etiqueta, tenta pelo CÓDIGO.
+      3) Se não existir, cria o item.
+    Além disso, quando vierem LOCAL/FORNECEDOR no QR, preenche no item
+    (sem sobrescrever valores já existentes).
     """
-    codigo, etiqueta, _ = _parse_qr(origem)
+    codigo, etiqueta, _, local, fornecedor = _parse_qr(origem)
 
     # 1) por etiqueta
     if etiqueta:
         it = inv.itens.filter(etiqueta=etiqueta).first()
         if it:
+            updates = []
             if codigo and not it.codigo_item:
                 it.codigo_item = codigo
-                it.save(update_fields=["codigo_item"])
+                updates.append("codigo_item")
+            if local and not it.local:
+                it.local = local
+                updates.append("local")
+            if fornecedor and not getattr(it, "fornecedor", None):
+                # se o modelo tiver campo fornecedor (CharField), preenche
+                try:
+                    it.fornecedor = fornecedor
+                    updates.append("fornecedor")
+                except Exception:
+                    pass
+            if updates:
+                it.save(update_fields=updates)
             return it
 
-    # 2) por código
+    # 2) por código (associa etiqueta se não tiver)
     if codigo:
         it = inv.itens.filter(codigo_item=codigo).first()
         if it:
+            updates = []
             if etiqueta and not it.etiqueta:
                 it.etiqueta = etiqueta
-                it.save(update_fields=["etiqueta"])
+                updates.append("etiqueta")
+            if local and not it.local:
+                it.local = local
+                updates.append("local")
+            if fornecedor and not getattr(it, "fornecedor", None):
+                try:
+                    it.fornecedor = fornecedor
+                    updates.append("fornecedor")
+                except Exception:
+                    pass
+            if updates:
+                it.save(update_fields=updates)
             return it
 
     # 3) cria item “on the fly”
-    return InventarioItem.objects.create(
-        inventario=inv,
-        codigo_item=codigo or etiqueta or "DESCONHECIDO",
-        etiqueta=etiqueta or "",
-        unidade="",
-        local="",
-    )
+    campos = {
+        "inventario": inv,
+        "codigo_item": codigo or etiqueta or "DESCONHECIDO",
+        "etiqueta": etiqueta or "",
+        "unidade": "",
+        "local": local or "",
+    }
+    # tenta setar fornecedor se existir no modelo
+    try:
+        campos["fornecedor"] = fornecedor or ""
+    except Exception:
+        pass
+    return InventarioItem.objects.create(**campos)
 
 # ==========
 # List / New
@@ -389,31 +430,54 @@ def inventario_exportacoes(request):
 @login_required
 @permission_required("qualidade_fornecimento.view_inventario", raise_exception=True)
 def api_scan_qrcode(request, pk):
+    """
+    Regras:
+      - Registra SEMPRE a leitura (não depende de 'Finalizar').
+      - Dedup server-side: mesma ETIQUETA na mesma ORDEM é ignorada.
+      - Quantidade: prioridade = quantidade enviada > peso do QR > 1.
+    Retorno inclui dados para o "Últimos lidos".
+    """
     if request.method != "POST":
         return HttpResponseForbidden("Método não permitido")
 
     inv = get_object_or_404(Inventario, pk=pk)
-    origem = request.POST.get("qrcode", "")     # valor integral do QR
-    ordem = int(request.POST.get("ordem", "1")) # 1, 2 ou 3
-
-    # quantidade enviada pelo front (opcional); se ausente, usa o peso do QR; se ausente também, usa 1
-    quantidade_raw = (request.POST.get("quantidade", "") or "").strip()
-    _, _, peso_qr = _parse_qr(origem)
-    quantidade = _to_decimal_safe(quantidade_raw, None) or peso_qr or Decimal("1")
-
+    origem = (request.POST.get("qrcode") or "").strip()
+    ordem_raw = (request.POST.get("ordem") or "1").strip()
+    try:
+        ordem = int(ordem_raw)
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "erro": "Ordem de contagem inválida."}, status=400)
     if ordem not in (1, 2, 3):
         return JsonResponse({"ok": False, "erro": "Ordem de contagem inválida."}, status=400)
 
+    qtd_raw = (request.POST.get("quantidade") or "").strip()
+    _, etiqueta, peso_qr, local_qr, fornecedor_qr = _parse_qr(origem)
+    quantidade = _to_decimal_safe(qtd_raw, None) or peso_qr or Decimal("1")
+
+    # Resolve/cria item e preenche local/fornecedor quando vierem
     item = _resolver_item_por_qr(inv, origem)
     if not item:
         return JsonResponse({"ok": False, "erro": "Não foi possível identificar a etiqueta/item."}, status=400)
 
-    Contagem.objects.update_or_create(
+    # --------- DEDUP: mesma etiqueta na mesma ordem não pode -----------
+    # OBS: se o usuário quiser recontar, deve excluir/editar a contagem anterior.
+    ja_lida = Contagem.objects.filter(inventario_item=item, ordem=ordem).exists()
+    if ja_lida:
+        return JsonResponse(
+            {"ok": False, "erro": f"Etiqueta {item.etiqueta or 's/etiqueta'} já lida na {ordem}ª contagem."},
+            status=200  # 200 para não “quebrar” o fluxo do front; tratamos como aviso
+        )
+    # -------------------------------------------------------------------
+
+    Contagem.objects.create(
         inventario_item=item,
         ordem=ordem,
-        defaults={"quantidade": quantidade, "usuario": request.user, "origem_qrcode": origem},
+        quantidade=quantidade,
+        usuario=request.user,
+        origem_qrcode=origem,
     )
 
+    # Avança status automaticamente
     if ordem == 1 and inv.status == "ABERTO":
         inv.status = "EM_CONTAGEM_1"
         inv.updated_by = request.user
@@ -423,7 +487,31 @@ def api_scan_qrcode(request, pk):
         inv.updated_by = request.user
         inv.save(update_fields=["status", "updated_by"])
 
-    return JsonResponse({"ok": True})
+    # Garante que local/fornecedor fiquem gravados se vieram agora
+    updates = []
+    if local_qr and not item.local:
+        item.local = local_qr
+        updates.append("local")
+    try:
+        if fornecedor_qr and not getattr(item, "fornecedor", None):
+            item.fornecedor = fornecedor_qr
+            updates.append("fornecedor")
+    except Exception:
+        pass
+    if updates:
+        item.save(update_fields=updates)
+
+    return JsonResponse({
+        "ok": True,
+        "item": {
+            "codigo": item.codigo_item,
+            "etiqueta": item.etiqueta,
+            "local": item.local or "",
+            "fornecedor": getattr(item, "fornecedor", "") or "",
+            "ordem": ordem,
+            "quantidade": str(quantidade),
+        }
+    })
 
 # -----------------------------
 # Finalizar contagem (1 ou 2)
