@@ -650,7 +650,6 @@ def api_scan_qrcode(request, pk):
     - Manual:
         - 'qrcode' sem ';' = ETIQUETA (ex.: 50007)
         - 'codigo_item' (POST) = CÓDIGO DO ITEM (ex.: AACSØ1,20-02)
-    - Scanner (com ';'): sempre faz split seguro por ';' (não usa o texto bruto como código).
     """
     if request.method != "POST":
         return HttpResponseForbidden("Método não permitido")
@@ -671,42 +670,29 @@ def api_scan_qrcode(request, pk):
     except Exception:
         return JsonResponse({"ok": False, "erro": "Ordem de contagem inválida."}, status=400)
 
-    # -------- Parse ROBUSTO do QR --------
+    # -------- Parse do QR --------
     codigo_qr = etiqueta_qr = local_qr = fornecedor_qr = None
     peso_qr = None
 
     if ";" in origem:
-        # split simples e determinístico
         parts = [p.strip() for p in origem.split(";")]
-        if len(parts) >= 1 and parts[0]:
-            codigo_qr = _up(parts[0])
-        if len(parts) >= 2 and parts[1]:
-            etiqueta_qr = _up(parts[1])
-        if len(parts) >= 3 and parts[2]:
-            peso_qr = _dec(parts[2])
-        if len(parts) >= 4 and parts[3]:
-            local_qr = _up(parts[3])
-        if len(parts) >= 5 and parts[4]:
-            fornecedor_qr = _up(parts[4])
+        if len(parts) >= 1 and parts[0]: codigo_qr = _up(parts[0])
+        if len(parts) >= 2 and parts[1]: etiqueta_qr = _up(parts[1])
+        if len(parts) >= 3 and parts[2]: peso_qr = _dec(parts[2])
+        if len(parts) >= 4 and parts[3]: local_qr = _up(parts[3])
+        if len(parts) >= 5 and parts[4]: fornecedor_qr = _up(parts[4])
 
-    # -------- Resolver campos finais --------
+    # Resolver campos finais
     if ";" not in origem:
-        # Manual simples: QR é ETIQUETA; código vem do POST
         etiqueta = _up(origem) if origem else None
         codigo   = codigo_post or None
     else:
-        # Estruturado: usa tokens do QR; complementa com POST se faltarem
         etiqueta = etiqueta_qr or None
         codigo   = (codigo_qr or codigo_post or None)
 
-    # Normaliza complemento de local/fornecedor (POST > QR)
+    # Complementos (POST > QR). Em PA, fornecedor não é usado na UI, mas manter não quebra.
     local_final      = local_post or local_qr or ""
-    fornecedor_final = fornecedor_post or fornecedor_qr or ""
-
-    # Nunca forçar "código = etiqueta"
-    if codigo and etiqueta and codigo == etiqueta:
-        # Se por algum motivo vierem iguais, mantemos etiqueta e limpamos código
-        codigo = codigo_post or codigo_qr or None
+    fornecedor_final = ("" if inv.tipo == "PA" else (fornecedor_post or fornecedor_qr or ""))
 
     # Quantidade: POST > peso do QR > 1
     quantidade = _dec(qtd_raw) or (peso_qr if peso_qr is not None else None) or Decimal("1")
@@ -736,7 +722,6 @@ def api_scan_qrcode(request, pk):
             if updates:
                 item.save(update_fields=updates)
     else:
-        # Sem etiqueta no QR: identifica pelo código do item (se houver)
         item = inv.itens.filter(codigo_item=codigo or "").first() if codigo else None
         if not item:
             campos = {
@@ -758,29 +743,34 @@ def api_scan_qrcode(request, pk):
             if updates:
                 item.save(update_fields=updates)
 
-    # -------- Dedup --------
-    if etiqueta:
-        existe = Contagem.objects.filter(
-            inventario_item__inventario=inv,
-            inventario_item__etiqueta=etiqueta,
+    # -------- Gravar contagem (PA soma; MP bloqueia segunda leitura) --------
+    if inv.tipo == "PA":
+        c_obj, created = Contagem.objects.get_or_create(
+            inventario_item=item,
             ordem=ordem,
-        ).exists()
+            defaults={"quantidade": quantidade, "usuario": request.user, "origem_qrcode": origem},
+        )
+        if not created:
+            c_obj.quantidade = (c_obj.quantidade or Decimal("0")) + (quantidade or Decimal("0"))
+            c_obj.usuario = request.user
+            c_obj.origem_qrcode = origem or c_obj.origem_qrcode
+            c_obj.save(update_fields=["quantidade", "usuario", "origem_qrcode"])
     else:
-        existe = Contagem.objects.filter(inventario_item=item, ordem=ordem).exists()
+        # MP: impede segunda leitura da mesma etiqueta/ordem
+        if Contagem.objects.filter(inventario_item=item, ordem=ordem).exists():
+            return JsonResponse(
+                {"ok": False, "erro": f"Etiqueta {item.etiqueta or 's/etiqueta'} já lida na {ordem}ª contagem."},
+                status=200
+            )
+        Contagem.objects.create(
+            inventario_item=item,
+            ordem=ordem,
+            quantidade=quantidade,
+            usuario=request.user,
+            origem_qrcode=origem,
+        )
 
-    if existe:
-        return JsonResponse({"ok": False, "erro": f"Etiqueta {etiqueta or 's/etiqueta'} já lida na {ordem}ª contagem."}, status=200)
-
-    # -------- Gravar contagem --------
-    Contagem.objects.create(
-        inventario_item=item,
-        ordem=ordem,
-        quantidade=quantidade,
-        usuario=request.user,
-        origem_qrcode=origem,
-    )
-
-    # -------- Avançar status (mesma lógica anterior) --------
+    # -------- Avançar status --------
     if ordem == 1 and inv.status == "ABERTO":
         inv.status = "EM_CONTAGEM_1"; inv.updated_by = request.user
         inv.save(update_fields=["status", "updated_by"])
@@ -799,6 +789,7 @@ def api_scan_qrcode(request, pk):
             "quantidade": str(quantidade),
         }
     })
+
 
 
 

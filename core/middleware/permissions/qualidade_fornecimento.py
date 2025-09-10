@@ -78,5 +78,15 @@ qualidade_permissions = {
     "relatorio_inspecao_analitico": "qualidade_fornecimento.view_relatorioinspecaoanalitico",
     "importar_excel_servico_externo": "qualidade_fornecimento.importar_excel_servico_externo",
     "qualidade_fornecimento:dashboard_qualidade": "qualidade_fornecimento.dashboard_qualidade",
+
+
+    # Inventário
+    "inventario_list": "qualidade_fornecimento.view_inventario",
+    "inventario_detail": "qualidade_fornecimento.view_inventario",
+    "inventario_create": "qualidade_fornecimento.add_inventario",
+    "inventario_confronto": "qualidade_fornecimento.view_inventario",
+    "inventario_consolidar": "qualidade_fornecimento.consolidar_inventario",
+    "inventario_exportar": "qualidade_fornecimento.exportar_inventario",
+    "inventario_exportacoes": "qualidade_fornecimento.view_inventarioexportacao",
  
 }

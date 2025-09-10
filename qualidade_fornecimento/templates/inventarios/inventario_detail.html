@@ -7,13 +7,13 @@
 {% block content %}
 <div class="container-fluid mt-3">
 
-  <!-- Cabeçalho com ícones e botões contextuais -->
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-    <div class="d-flex align-items-center gap-2">
+  {# Cabeçalho + ações: centraliza e dá respiro no mobile, mantém layout no md+ #}
+  <div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-3">
+    <div class="d-flex align-items-start gap-2">
       <i class="bi bi-clipboard2-check fs-3 text-primary"></i>
       <div>
-        <h3 class="mb-0">{{ inventario.titulo }}</h3>
-        <small class="text-muted">
+        <h3 class="mb-1">{{ inventario.titulo }}</h3>
+        <small class="text-muted d-block">
           <i class="bi bi-tags me-1"></i>Tipo: <strong>{{ inventario.get_tipo_display }}</strong> ·
           <i class="bi bi-traffic-cone me-1"></i>Status: <strong>{{ inventario.get_status_display }}</strong> ·
           <i class="bi bi-calendar2-event me-1"></i>Data de corte: {{ inventario.data_corte|date:"d/m/Y" }}
@@ -21,24 +21,27 @@
       </div>
     </div>
 
-    <div class="btn-toolbar" role="toolbar" aria-label="Ações do Inventário">
-      <div class="btn-group me-2" role="group" aria-label="Contagens">
-        <a class="btn btn-outline-primary" href="{% url 'contagem_primeira' inventario.pk %}" data-bs-toggle="tooltip" title="Registrar/Editar 1ª contagem">
+    <div class="btn-toolbar w-100 w-md-auto justify-content-center justify-content-md-start flex-wrap gap-2" role="toolbar" aria-label="Ações do Inventário">
+      <div class="btn-group flex-wrap gap-2" role="group" aria-label="Contagens">
+        <a class="btn btn-outline-primary"
+           href="{% url 'contagem_primeira' inventario.pk %}"
+           data-bs-toggle="tooltip" title="Registrar/Editar 1ª contagem">
           <i class="bi bi-1-circle me-1"></i> 1ª
         </a>
-        <a class="btn btn-outline-primary" href="{% url 'contagem_segunda' inventario.pk %}" data-bs-toggle="tooltip" title="Registrar/Editar 2ª contagem">
+        <a class="btn btn-outline-primary"
+           href="{% url 'contagem_segunda' inventario.pk %}"
+           data-bs-toggle="tooltip" title="Registrar/Editar 2ª contagem">
           <i class="bi bi-2-circle me-1"></i> 2ª
         </a>
       </div>
 
-      <div class="btn-group me-2" role="group" aria-label="Etapas">
+      <div class="btn-group flex-wrap gap-2" role="group" aria-label="Etapas">
         {% if can_show_confronto %}
           <a class="btn btn-outline-warning" href="{% url 'inventario_confronto' inventario.pk %}" data-bs-toggle="tooltip" title="Confronto entre 1ª e 2ª contagens">
             <i class="bi bi-shuffle me-1"></i> Confronto
           </a>
         {% else %}
-          <button class="btn btn-outline-warning" disabled data-bs-toggle="tooltip"
-                  title="Disponível após finalizar 1ª e 2ª contagens">
+          <button class="btn btn-outline-warning" disabled data-bs-toggle="tooltip" title="Disponível após finalizar 1ª e 2ª contagens">
             <i class="bi bi-shuffle me-1"></i> Confronto
           </button>
         {% endif %}
@@ -49,43 +52,29 @@
               <i class="bi bi-check2-circle me-1"></i> Consolidar
             </a>
           {% else %}
-            <button class="btn btn-success" disabled data-bs-toggle="tooltip"
-                    title="Consolidar fica disponível quando não houver divergências abertas">
+            <button class="btn btn-success" disabled data-bs-toggle="tooltip" title="Consolidar disponível quando não houver divergências abertas">
               <i class="bi bi-check2-circle me-1"></i> Consolidar
             </button>
           {% endif %}
         {% endif %}
 
         {% if perms.qualidade_fornecimento.exportar_inventario %}
-         {% if can_show_exportar %}
-  {% if perms.qualidade_fornecimento.exportar_inventario %}
-    <a class="btn btn-outline-success"
-       href="{% url 'inventario_exportar' inventario.pk %}"
-       data-bs-toggle="tooltip"
-       title="Exportar para o ERP">
-      <i class="bi bi-box-arrow-up-right me-1"></i> Exportar ERP
-    </a>
-  {% else %}
-    <button class="btn btn-outline-success" disabled
-            data-bs-toggle="tooltip"
-            title="Você não tem permissão para exportar (qualidade_fornecimento.exportar_inventario).">
-      <i class="bi bi-box-arrow-up-right me-1"></i> Exportar ERP
-    </button>
-  {% endif %}
-{% else %}
-  <button class="btn btn-outline-success" disabled
-          data-bs-toggle="tooltip"
-          title="Exportar disponível somente após consolidação.">
-    <i class="bi bi-box-arrow-up-right me-1"></i> Exportar ERP
-  </button>
-{% endif %}
+          {% if can_show_exportar %}
+            <a class="btn btn-outline-success" href="{% url 'inventario_exportar' inventario.pk %}" data-bs-toggle="tooltip" title="Exportar para o ERP">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Exportar ERP
+            </a>
+          {% else %}
+            <button class="btn btn-outline-success" disabled data-bs-toggle="tooltip" title="Exportar disponível somente após consolidação.">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Exportar ERP
+            </button>
+          {% endif %}
         {% endif %}
       </div>
     </div>
   </div>
 
-  <!-- Indicadores rápidos -->
-  <div class="row g-3 mb-3">
+  {# Cards de indicadores: ocultos no mobile, visíveis no md+ #}
+  <div class="row g-3 mb-3 d-none d-md-flex">
     <div class="col-6 col-lg-3">
       <div class="card border-0 shadow-sm">
         <div class="card-body d-flex align-items-center justify-content-between">
@@ -124,9 +113,7 @@
         <div class="card-body d-flex align-items-center justify-content-between">
           <div>
             <div class="text-muted small">Divergências</div>
-            <div class="fs-5 fw-bold">
-              {% if divergencias_abertas %}<span class="text-warning">{{ divergencias_abertas }}</span>{% else %}0{% endif %}
-            </div>
+            <div class="fs-5 fw-bold">{% if divergencias_abertas %}<span class="text-warning">{{ divergencias_abertas }}</span>{% else %}0{% endif %}</div>
           </div>
           <i class="bi bi-exclamation-diamond fs-3"></i>
         </div>
@@ -134,48 +121,51 @@
     </div>
   </div>
 
-  <!-- Tabela -->
+  
   {% if page_obj_itens and page_obj_itens.object_list %}
     <div class="table-responsive">
       <table class="table table-hover align-middle">
         <thead class="table-light">
-  <tr class="text-center">
-    <th><i class="bi bi-upc-scan"></i> Código</th>
-    <th><i class="bi bi-tag"></i> Etiqueta</th>
-    <th>
-      <i class="bi bi-geo"></i>
-      {% if inventario.tipo == "PA" %} Cliente {% else %} Local {% endif %}
-    </th>
-    {% if inventario.tipo != "PA" %}
-      <th><i class="bi bi-truck"></i> Fornecedor</th>
-    {% endif %}
-    <th><i class="bi bi-1-circle"></i> 1</th>
-    <th><i class="bi bi-2-circle"></i> 2</th>
-    <th><i class="bi bi-3-circle"></i> 3</th>
-    <th><i class="bi bi-check2-circle"></i> Final</th>
-  </tr>
-</thead>
-<tbody>
-  {% for item in page_obj_itens %}
-  <tr>
-    <td>{{ item.codigo_item }}</td>
-    <td>{{ item.etiqueta }}</td>
-    <td>{{ item.local }}</td>
-    {% if inventario.tipo != "PA" %}
-      <td>{{ item.fornecedor }}</td>
-    {% endif %}
-    <td class="text-center">{{ item.c1|default:"-" }}</td>
-    <td class="text-center">{{ item.c2|default:"-" }}</td>
-    <td class="text-center">{{ item.c3|default:"-" }}</td>
-    <td class="text-center">{{ item.quantidade_consolidada|default:"-" }}</td>
-  </tr>
-  {% endfor %}
-</tbody>
+          <tr class="text-center">
+            <th class="text-start"><i class="bi bi-upc-scan me-1"></i> Código</th>
+            <th class="text-start"><i class="bi bi-tag me-1"></i> Etiqueta</th>
 
+            {# Cabeçalhos extras só no md+ #}
+            <th class="d-none d-md-table-cell">
+              <i class="bi bi-geo"></i>
+              {% if inventario.tipo == "PA" %} Cliente {% else %} Local {% endif %}
+            </th>
+            {% if inventario.tipo != "PA" %}
+              <th class="d-none d-md-table-cell"><i class="bi bi-truck"></i> Fornecedor</th>
+            {% endif %}
+
+            <th><i class="bi bi-1-circle"></i> 1</th>
+            <th><i class="bi bi-2-circle"></i> 2</th>
+            <th><i class="bi bi-3-circle"></i> 3</th>
+            <th><i class="bi bi-check2-circle"></i> Final</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in page_obj_itens %}
+            <tr>
+              <td class="text-start">{{ item.codigo_item }}</td>
+              <td class="text-start">{{ item.etiqueta }}</td>
+
+              <td class="d-none d-md-table-cell">{{ item.local }}</td>
+              {% if inventario.tipo != "PA" %}
+                <td class="d-none d-md-table-cell">{{ item.fornecedor }}</td>
+              {% endif %}
+
+              <td class="text-center">{{ item.c1|default:"-" }}</td>
+              <td class="text-center">{{ item.c2|default:"-" }}</td>
+              <td class="text-center">{{ item.c3|default:"-" }}</td>
+              <td class="text-center">{{ item.quantidade_consolidada|default:"-" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
       </table>
     </div>
 
-    <!-- Paginação -->
     {% include "partials/global/_paginacao.html" with page_obj=page_obj_itens %}
   {% else %}
     {% include "partials/global/_sem_resultados.html" %}
