@@ -19,18 +19,27 @@
       <div class="card-body">
         <h6 class="mb-2">Leitura por Câmera (QR Code)</h6>
 
-        <!-- Pré-visualização da câmera -->
-        <div class="ratio ratio-4x3 border rounded">
+        <!-- Pré-visualização + overlay -->
+        <div class="ratio ratio-4x3 border rounded position-relative">
           <video id="preview" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+          <canvas id="overlay" class="position-absolute" style="inset:0; pointer-events:none;"></canvas>
         </div>
 
-        <div class="d-flex gap-2 mt-2">
+        <div class="d-flex flex-wrap gap-2 mt-2 align-items-center">
           <button id="btn-start" class="btn btn-primary">Iniciar câmera</button>
           <button id="btn-stop" class="btn btn-outline-secondary" disabled>Parar</button>
+          <button id="btn-torch-on"  class="btn btn-dark" type="button">Lanterna ON</button>
+          <button id="btn-torch-off" class="btn btn-outline-dark" type="button">Lanterna OFF</button>
+          <div class="d-flex align-items-center gap-2">
+            <label class="form-label m-0">Zoom</label>
+            <input id="zoom-range" type="range" min="1" max="3" step="0.1" value="1" style="width:160px;">
+          </div>
         </div>
 
         <div class="form-text mt-2">
-          A cada QR lido, o item é registrado automaticamente (ordem {{ ordem }}). Se o QR trouxer o <em>peso</em> no 3º campo, ele será usado como quantidade.
+          A cada QR lido, o item é registrado automaticamente (ordem {{ ordem }}).
+          Se o QR trouxer o <em>peso</em> no 3º campo, ele será usado como quantidade.
+          Para melhor desempenho, acione a <strong>lanterna</strong> em ambientes com pouca luz.
         </div>
       </div>
     </div>
@@ -74,8 +83,11 @@
   <button type="submit" class="btn btn-success btn-lg">Finalizar {{ ordem_label }}</button>
 </form>
 
+<!-- Dependência do leitor -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
 <script>
-// ----- utilidades -----
+// ================= Utilidades =================
 function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -85,9 +97,9 @@ function getCookie(name) {
 function beep() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const o = ctx.createOscillator(); const g = ctx.createGain();
+    const o = ctx.createOscillator(), g = ctx.createGain();
     o.connect(g); g.connect(ctx.destination);
-    o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.05;
+    o.type = 'sine'; o.frequency.value = 1000; g.gain.value = 0.06;
     o.start(); setTimeout(()=>{o.stop(); ctx.close();}, 120);
   } catch(e){}
 }
@@ -100,25 +112,163 @@ async function enviarLeitura(qrcode, quantidade, ordem) {
       "X-CSRFToken": getCookie("csrftoken"),
       "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
     },
-    body: new URLSearchParams({ qrcode, quantidade, ordem })
+    body: new URLSearchParams({ qrcode, quantidade: quantidade || "", ordem })
   });
   return resp.json();
 }
-
 function appendLido(qr, qtd) {
   const el = document.getElementById('lista-lidos');
   const now = new Date().toLocaleTimeString();
   const line = document.createElement('div');
   line.textContent = `[${now}] ${qr}  —  qtd: ${qtd || 'auto'}`;
-  if (el.textContent === 'Nenhuma leitura ainda.') el.textContent = '';
-  el.prepend(line);
+  if (el && el.textContent === 'Nenhuma leitura ainda.') el.textContent = '';
+  if (el) el.prepend(line);
 }
 
-// ----- leitura manual -----
+// ============== Scanner com jsQR ==============
+const video   = document.getElementById('preview');
+const overlay = document.getElementById('overlay');
+const octx    = overlay.getContext('2d');
+
+const btnStart = document.getElementById('btn-start');
+const btnStop  = document.getElementById('btn-stop');
+const btnTorchOn  = document.getElementById('btn-torch-on');
+const btnTorchOff = document.getElementById('btn-torch-off');
+const zoomRange   = document.getElementById('zoom-range');
+
+let stream = null, track = null, rafId = null;
+let buffer = null, bctx = null;
+let lastValue = null, lastTs = 0;
+
+function ensureBuffer() {
+  if (!buffer) {
+    buffer = document.createElement('canvas');
+    buffer.style.display = 'none';
+    document.body.appendChild(buffer);
+    bctx = buffer.getContext('2d', { willReadFrequently: true });
+  }
+}
+function resizeSurfaces() {
+  if (!video.videoWidth || !video.videoHeight) return;
+  // buffer em alta resolução para melhor acurácia
+  const bw = Math.max(1280, video.videoWidth);
+  const bh = Math.round(bw * (video.videoHeight / video.videoWidth));
+  buffer.width = bw; buffer.height = bh;
+
+  // overlay no tamanho do elemento renderizado
+  const rect = video.getBoundingClientRect();
+  overlay.width = rect.width;
+  overlay.height = rect.height;
+}
+function drawOverlayBox(loc) {
+  if (!loc) { octx.clearRect(0,0,overlay.width,overlay.height); return; }
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  const pts = [loc.topLeftCorner, loc.topRightCorner, loc.bottomRightCorner, loc.bottomLeftCorner];
+  const sx = overlay.width / buffer.width;
+  const sy = overlay.height / buffer.height;
+  octx.lineWidth = 3;
+  octx.strokeStyle = '#00ff88';
+  octx.beginPath();
+  octx.moveTo(pts[0].x*sx, pts[0].y*sy);
+  for (let i=1;i<pts.length;i++) octx.lineTo(pts[i].x*sx, pts[i].y*sy);
+  octx.closePath();
+  octx.stroke();
+}
+
+async function startCamera() {
+  if (stream) return;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width:  { ideal: 1920 },
+        height: { ideal: 1080 },
+        advanced: [{ focusMode: "continuous" }]
+      },
+      audio: false
+    });
+  } catch (e) {
+    alert('Não foi possível acessar a câmera. Se não for localhost, use HTTPS.');
+    return;
+  }
+  track = stream.getVideoTracks()[0];
+  video.srcObject = stream;
+  await video.play().catch(()=>{});
+
+  ensureBuffer();
+  resizeSurfaces();
+  btnStart.disabled = true; btnStop.disabled = false;
+
+  scanLoop();
+}
+function stopCamera() {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null; track = null;
+  }
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  btnStart.disabled = false; btnStop.disabled = true;
+}
+async function scanLoop() {
+  if (!stream || !video.videoWidth) {
+    rafId = requestAnimationFrame(scanLoop);
+    return;
+  }
+  resizeSurfaces();
+  bctx.drawImage(video, 0, 0, buffer.width, buffer.height);
+  const img = bctx.getImageData(0, 0, buffer.width, buffer.height);
+  const res = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
+
+  if (res && res.data) {
+    drawOverlayBox(res.location);
+    const raw = res.data.trim();
+    const now = Date.now();
+    if (raw && (raw !== lastValue || (now - lastTs) > 1000)) {
+      lastValue = raw; lastTs = now;
+      const ordem = "{{ ordem }}";
+      try {
+        const data = await enviarLeitura(raw, '', ordem);
+        if (data.ok) { appendLido(raw, 'auto'); beep(); vibrate(); }
+      } catch(e) {}
+    }
+  } else {
+    octx.clearRect(0,0,overlay.width,overlay.height);
+  }
+  rafId = requestAnimationFrame(scanLoop);
+}
+
+// --------- Torch (lanterna) e Zoom ---------
+async function setTorch(on) {
+  if (!track || !track.getCapabilities) return false;
+  const caps = track.getCapabilities();
+  if (!caps.torch) return false;
+  try {
+    await track.applyConstraints({ advanced: [{ torch: !!on }] });
+    return true;
+  } catch(e) { return false; }
+}
+async function setZoom(level) {
+  if (!track || !track.getCapabilities) return;
+  const caps = track.getCapabilities();
+  if (!caps.zoom) return;
+  const z = Math.min(caps.zoom.max || 3, Math.max(caps.zoom.min || 1, Number(level)));
+  try { await track.applyConstraints({ advanced: [{ zoom: z }] }); } catch(e){}
+}
+
+// --------- Eventos ---------
+btnStart?.addEventListener('click', (e)=>{ e.preventDefault(); startCamera(); });
+btnStop ?.addEventListener('click', (e)=>{ e.preventDefault(); stopCamera(); });
+btnTorchOn ?.addEventListener('click', async (e)=>{ e.preventDefault(); const ok = await setTorch(true); if(!ok) alert('Lanterna não suportada neste dispositivo.'); });
+btnTorchOff?.addEventListener('click', async (e)=>{ e.preventDefault(); await setTorch(false); });
+zoomRange   ?.addEventListener('input', (e)=>{ setZoom(e.target.value); });
+
+// Leitura manual (mantida)
 document.getElementById('btn-manual')?.addEventListener('click', async ()=>{
-  const qr = document.getElementById('id_origem_qrcode')?.value.trim();
-  const qtd = document.getElementById('id_quantidade')?.value.trim();
-  const ordem = document.getElementById('ordem')?.value;
+  const qr   = document.getElementById('id_origem_qrcode')?.value.trim();
+  const qtd  = document.getElementById('id_quantidade')?.value.trim();
+  const ordem= document.getElementById('ordem')?.value;
   if (!qr) { alert('Informe o QR/Texto.'); return; }
   const data = await enviarLeitura(qr, qtd, ordem);
   if (data.ok) {
@@ -132,73 +282,9 @@ document.getElementById('btn-manual')?.addEventListener('click', async ()=>{
   }
 });
 
-// ----- câmera com BarcodeDetector -----
-let stream = null, detectTimer = null, lastValue = null, lastTs = 0;
-const supportsBD = 'BarcodeDetector' in window && BarcodeDetector.getSupportedFormats;
-
-async function startCamera(){
-  if (stream) return;
-  const video = document.getElementById('preview');
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
-    video.srcObject = stream;
-    document.getElementById('btn-start').disabled = true;
-    document.getElementById('btn-stop').disabled = false;
-
-    let formats = ['qr_code'];
-    if (supportsBD) {
-      try {
-        const avail = await BarcodeDetector.getSupportedFormats();
-        if (avail && avail.includes('qr_code')) formats = ['qr_code'];
-      } catch(e){}
-    }
-
-    const detector = supportsBD ? new BarcodeDetector({ formats }) : null;
-
-    const tick = async ()=>{
-      if (!stream) return;
-      try {
-        if (detector) {
-          const codes = await detector.detect(document.getElementById('preview'));
-          if (codes && codes.length) {
-            const raw = codes[0].rawValue || '';
-            const now = Date.now();
-            // antirruído: ignora leituras repetidas por 1s
-            if (raw && (raw !== lastValue || (now - lastTs) > 1000)) {
-              lastValue = raw; lastTs = now;
-              const ordem = "{{ ordem }}";
-              const data = await enviarLeitura(raw, '', ordem);
-              if (data.ok) { appendLido(raw, 'auto'); beep(); vibrate(); }
-            }
-          }
-        }
-      } catch(e) { /* silencioso */ }
-      detectTimer = requestAnimationFrame(tick);
-    };
-    detectTimer = requestAnimationFrame(tick);
-  } catch(err){
-    alert('Não foi possível acessar a câmera. Conceda permissão ao navegador.');
-  }
-}
-function stopCamera(){
-  if (detectTimer) cancelAnimationFrame(detectTimer);
-  detectTimer = null;
-  if (stream) {
-    stream.getTracks().forEach(t => t.stop());
-    stream = null;
-  }
-  document.getElementById('btn-start').disabled = false;
-  document.getElementById('btn-stop').disabled = true;
-}
-
-document.getElementById('btn-start')?.addEventListener('click', (e)=>{ e.preventDefault(); startCamera(); });
-document.getElementById('btn-stop')?.addEventListener('click', (e)=>{ e.preventDefault(); stopCamera(); });
-
-// tenta iniciar automaticamente em celulares
-if (navigator.mediaDevices?.getUserMedia) {
-  // alguns navegadores exigem gesto do usuário; se não iniciar, use o botão
-  // startCamera();
-}
+// Reajusta superfícies quando o vídeo estiver pronto
+video.addEventListener('loadedmetadata', resizeSurfaces);
+window.addEventListener('resize', resizeSurfaces);
 </script>
 
 {% endblock %}
