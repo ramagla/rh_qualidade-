@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Inventários</h3>
+  <a class="btn btn-primary" href="{% url 'inventario_create' %}"><i class="bi bi-plus-lg"></i> Novo Inventário</a>
+</div>
+<table class="table table-striped">
+  <thead><tr>
+    <th>Título</th><th>Data de Corte</th><th>Status</th><th>Criado em</th><th></th>
+  </tr></thead>
+  <tbody>
+  {% for inv in inventarios %}
+    <tr>
+      <td><a href="{% url 'inventario_detail' inv.pk %}">{{ inv.titulo }}</a></td>
+      <td>{{ inv.data_corte|date:"d/m/Y" }}</td>
+      <td>{{ inv.get_status_display }}</td>
+      <td>{{ inv.criado_em|date:"d/m/Y H:i" }}</td>
+      <td><a class="btn btn-sm btn-outline-secondary" href="{% url 'inventario_detail' inv.pk %}">Abrir</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5" class="text-muted">Nenhum inventário encontrado.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

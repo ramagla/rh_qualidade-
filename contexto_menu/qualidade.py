@@ -111,6 +111,33 @@ def menu_qualidade(user):
         })
 
 
+    # Inventários (novo menu)
+    if user.has_perm("qualidade_fornecimento.view_inventario"):
+        submenu_inventario = [
+            {
+                "name": "Inventários",
+                "url": "inventario_list",
+                "icon": "fas fa-clipboard-list",
+            }
+        ]
+        if user.has_perm("qualidade_fornecimento.add_inventario"):
+            submenu_inventario.append({
+                "name": "Novo Inventário",
+                "url": "inventario_create",
+                "icon": "fas fa-plus-circle",
+            })
+        if user.has_perm("qualidade_fornecimento.view_inventarioexportacao"):
+            submenu_inventario.append({
+                "name": "Exportações ERP",
+                "url": "inventario_exportacoes",
+                "icon": "fas fa-file-export",
+            })
+
+        menu.append({
+            "name": "Inventários",
+            "icon": "fas fa-boxes-stacked",
+            "submenu": submenu_inventario,
+        })
 
 
     return menu

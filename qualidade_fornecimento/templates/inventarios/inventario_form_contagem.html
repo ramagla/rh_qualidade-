@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h4>{{ ordem_label }} — {{ inventario.titulo }}</h4>
+  <a class="btn btn-outline-secondary" href="{% url 'inventario_detail' inventario.pk %}">Voltar</a>
+</div>
+
+<p class="text-muted mb-3">
+  Tipo: <strong>{{ inventario.get_tipo_display }}</strong> ·
+  Status: <strong>{{ inventario.get_status_display }}</strong> ·
+  Data de corte: {{ inventario.data_corte|date:"d/m/Y" }}
+</p>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="mb-2">Leitura por Câmera (QR Code)</h6>
+
+        <!-- Pré-visualização da câmera -->
+        <div class="ratio ratio-4x3 border rounded">
+          <video id="preview" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+        </div>
+
+        <div class="d-flex gap-2 mt-2">
+          <button id="btn-start" class="btn btn-primary">Iniciar câmera</button>
+          <button id="btn-stop" class="btn btn-outline-secondary" disabled>Parar</button>
+        </div>
+
+        <div class="form-text mt-2">
+          A cada QR lido, o item é registrado automaticamente (ordem {{ ordem }}). Se o QR trouxer o <em>peso</em> no 3º campo, ele será usado como quantidade.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="mb-2">Entrada Manual (opcional)</h6>
+        <form id="form-manual" class="row g-2" autocomplete="off">
+          {% csrf_token %}
+          <div class="col-12">
+            <label class="form-label">QR/Texto da Etiqueta</label>
+            {{ form.origem_qrcode }}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">Quantidade</label>
+            {{ form.quantidade }}
+          </div>
+          <input type="hidden" id="ordem" name="ordem" value="{{ ordem }}"/>
+          <div class="col-12">
+            <button type="button" id="btn-manual" class="btn btn-outline-primary">Registrar manualmente</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Últimos lidos -->
+<div class="card mt-3 shadow-sm">
+  <div class="card-body">
+    <h6 class="mb-2">Últimos lidos</h6>
+    <div id="lista-lidos" class="small text-muted">Nenhuma leitura ainda.</div>
+  </div>
+</div>
+
+<!-- Finalizar contagem -->
+<form class="mt-3" method="post" action="{% url 'finalizar_contagem' inventario.pk ordem %}">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-success btn-lg">Finalizar {{ ordem_label }}</button>
+</form>
+
+<script>
+// ----- utilidades -----
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+  return '';
+}
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.05;
+    o.start(); setTimeout(()=>{o.stop(); ctx.close();}, 120);
+  } catch(e){}
+}
+function vibrate(ms=60){ if (navigator.vibrate) navigator.vibrate(ms); }
+
+async function enviarLeitura(qrcode, quantidade, ordem) {
+  const resp = await fetch("{% url 'api_scan_qrcode' inventario.pk %}", {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCookie("csrftoken"),
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+    },
+    body: new URLSearchParams({ qrcode, quantidade, ordem })
+  });
+  return resp.json();
+}
+
+function appendLido(qr, qtd) {
+  const el = document.getElementById('lista-lidos');
+  const now = new Date().toLocaleTimeString();
+  const line = document.createElement('div');
+  line.textContent = `[${now}] ${qr}  —  qtd: ${qtd || 'auto'}`;
+  if (el.textContent === 'Nenhuma leitura ainda.') el.textContent = '';
+  el.prepend(line);
+}
+
+// ----- leitura manual -----
+document.getElementById('btn-manual')?.addEventListener('click', async ()=>{
+  const qr = document.getElementById('id_origem_qrcode')?.value.trim();
+  const qtd = document.getElementById('id_quantidade')?.value.trim();
+  const ordem = document.getElementById('ordem')?.value;
+  if (!qr) { alert('Informe o QR/Texto.'); return; }
+  const data = await enviarLeitura(qr, qtd, ordem);
+  if (data.ok) {
+    appendLido(qr, qtd);
+    document.getElementById('id_origem_qrcode').value = '';
+    document.getElementById('id_quantidade').value = '';
+    document.getElementById('id_origem_qrcode').focus();
+    beep(); vibrate();
+  } else {
+    alert(data.erro || 'Falha ao registrar.');
+  }
+});
+
+// ----- câmera com BarcodeDetector -----
+let stream = null, detectTimer = null, lastValue = null, lastTs = 0;
+const supportsBD = 'BarcodeDetector' in window && BarcodeDetector.getSupportedFormats;
+
+async function startCamera(){
+  if (stream) return;
+  const video = document.getElementById('preview');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+    video.srcObject = stream;
+    document.getElementById('btn-start').disabled = true;
+    document.getElementById('btn-stop').disabled = false;
+
+    let formats = ['qr_code'];
+    if (supportsBD) {
+      try {
+        const avail = await BarcodeDetector.getSupportedFormats();
+        if (avail && avail.includes('qr_code')) formats = ['qr_code'];
+      } catch(e){}
+    }
+
+    const detector = supportsBD ? new BarcodeDetector({ formats }) : null;
+
+    const tick = async ()=>{
+      if (!stream) return;
+      try {
+        if (detector) {
+          const codes = await detector.detect(document.getElementById('preview'));
+          if (codes && codes.length) {
+            const raw = codes[0].rawValue || '';
+            const now = Date.now();
+            // antirruído: ignora leituras repetidas por 1s
+            if (raw && (raw !== lastValue || (now - lastTs) > 1000)) {
+              lastValue = raw; lastTs = now;
+              const ordem = "{{ ordem }}";
+              const data = await enviarLeitura(raw, '', ordem);
+              if (data.ok) { appendLido(raw, 'auto'); beep(); vibrate(); }
+            }
+          }
+        }
+      } catch(e) { /* silencioso */ }
+      detectTimer = requestAnimationFrame(tick);
+    };
+    detectTimer = requestAnimationFrame(tick);
+  } catch(err){
+    alert('Não foi possível acessar a câmera. Conceda permissão ao navegador.');
+  }
+}
+function stopCamera(){
+  if (detectTimer) cancelAnimationFrame(detectTimer);
+  detectTimer = null;
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-stop').disabled = true;
+}
+
+document.getElementById('btn-start')?.addEventListener('click', (e)=>{ e.preventDefault(); startCamera(); });
+document.getElementById('btn-stop')?.addEventListener('click', (e)=>{ e.preventDefault(); stopCamera(); });
+
+// tenta iniciar automaticamente em celulares
+if (navigator.mediaDevices?.getUserMedia) {
+  // alguns navegadores exigem gesto do usuário; se não iniciar, use o botão
+  // startCamera();
+}
+</script>
+
+{% endblock %}

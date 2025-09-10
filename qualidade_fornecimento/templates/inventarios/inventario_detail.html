@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>{{ inventario.titulo }}</h3>
+  <div class="btn-group">
+    <a class="btn btn-outline-primary" href="{% url 'contagem_primeira' inventario.pk %}">1ª Contagem</a>
+    <a class="btn btn-outline-primary" href="{% url 'contagem_segunda' inventario.pk %}">2ª Contagem</a>
+    <a class="btn btn-outline-warning" href="{% url 'inventario_confronto' inventario.pk %}">Confronto</a>
+    {% if perms.qualidade_fornecimento.consolidar_inventario %}
+<a class="btn btn-success" href="{% url 'inventario_consolidar_confirm' inventario.pk %}">Consolidar</a>
+    {% endif %}
+    {% if perms.qualidade_fornecimento.exportar_inventario %}
+      <a class="btn btn-outline-success" href="{% url 'inventario_exportar' inventario.pk %}">Exportar ERP</a>
+    {% endif %}
+  </div>
+</div>
+
+<p class="text-muted mb-2">
+  Tipo: <strong>{{ inventario.get_tipo_display }}</strong> ·
+  Status: <strong>{{ inventario.get_status_display }}</strong> ·
+  Data de corte: {{ inventario.data_corte|date:"d/m/Y" }}
+</p>
+
+<table class="table table-sm table-bordered">
+  <thead>
+    <tr>
+      <th>Código</th><th>Etiqueta</th><th>Local</th><th>1ª</th><th>2ª</th><th>3ª</th><th>Final</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for it in itens %}
+    {% with c1=it.contagens.all|dictsort:"ordem" %}
+    {% endwith %}
+    <tr>
+      <td>{{ it.codigo_item }}</td>
+      <td>{{ it.etiqueta }}</td>
+      <td>{{ it.local }}</td>
+      <td>{{ it.c1|default:"-" }}</td>
+<td>{{ it.c2|default:"-" }}</td>
+<td>{{ it.c3|default:"-" }}</td>
+
+      <td>{{ it.quantidade_consolidada|default:"-" }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7" class="text-muted">Sem itens cadastrados.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if divergentes %}
+<div class="alert alert-warning mt-3">
+  Existem divergências. <a href="{% url 'inventario_confronto' inventario.pk %}">Abrir painel de divergências</a>.
+</div>
+{% endif %}
+{% endblock %}

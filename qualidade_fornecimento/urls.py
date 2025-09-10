@@ -49,6 +49,7 @@ from .views.fornecedores_views import (
 from qualidade_fornecimento.views.home_views import dashboard_qualidade_view
 from qualidade_fornecimento.views.controle_servico_externo_views import registrar_entrega_servico_externo
 from qualidade_fornecimento.views.tb001_views import tb001_view
+from qualidade_fornecimento.views import inventario_views
 
 urlpatterns = [
     # Home
@@ -220,5 +221,26 @@ urlpatterns = [
     path("tb050/rolos/editar/<int:id>/", materiaprima_views.editar_rolo, name="tb050_editar_rolo"),
     path("qualidade/tb050/rolos/atualizar-peso/", materiaprima_views.atualizar_peso_rolo, name="tb050_atualizar_peso_rolo"),
     path("relatorio-8-2/", indicador_8_2_views.indicador_8_2_view, name="indicador_8_2"),
+
+    # Inventários
+    path("inventarios/", inventario_views.inventario_list, name="inventario_list"),
+    path("inventarios/novo/", inventario_views.inventario_create, name="inventario_create"),
+    path("inventarios/<int:pk>/", inventario_views.inventario_detail, name="inventario_detail"),
+    path("inventarios/<int:pk>/consolidar/", inventario_views.inventario_consolidar_confirm, name="inventario_consolidar_confirm"),
+    path("inventarios/<int:pk>/consolidar/post/", inventario_views.inventario_consolidar, name="inventario_consolidar"),
+    path("inventarios/<int:pk>/exportar/", inventario_views.inventario_exportar, name="inventario_exportar"),
+    path("inventarios/exportacoes/", inventario_views.inventario_exportacoes, name="inventario_exportacoes"),
+
+    # Contagem (QR Code e operações)
+    path("inventarios/<int:pk>/contagem/primeira/", inventario_views.contagem_primeira, name="contagem_primeira"),
+    path("inventarios/<int:pk>/contagem/segunda/", inventario_views.contagem_segunda, name="contagem_segunda"),
+    path("inventarios/<int:pk>/contagem/terceira/", inventario_views.contagem_terceira, name="contagem_terceira"),
+    path("inventarios/<int:pk>/confronto/", inventario_views.confronto_view, name="inventario_confronto"),
+    path("inventarios/<int:pk>/ajustes/", inventario_views.ajustes_manuais_view, name="inventario_ajustes"),
+
+    # API de leitura por QRCode (recebe código/etiqueta e quantidade)
+    path("api/inventarios/<int:pk>/scan/", inventario_views.api_scan_qrcode, name="api_scan_qrcode"),
+    path("inventarios/<int:pk>/contagem/<int:ordem>/finalizar/", inventario_views.finalizar_contagem, name="finalizar_contagem"),
+
 
 ]

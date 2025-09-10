@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Novo Inventário</h3>
+<form method="post" class="mt-3">
+  {% csrf_token %}
+  <div class="row g-3">
+  <div class="col-md-6">{{ form.titulo.label_tag }}{{ form.titulo }}</div>
+  <div class="col-md-3">{{ form.data_corte.label_tag }}{{ form.data_corte }}</div>
+  <div class="col-md-3">{{ form.tipo.label_tag }}{{ form.tipo }}</div> <!-- 👈 novo -->
+  <div class="col-12">{{ form.descricao.label_tag }}{{ form.descricao }}</div>
+</div>
+
+  <div class="mt-3">
+    <button class="btn btn-primary" type="submit">Salvar</button>
+    <a class="btn btn-outline-secondary" href="{% url 'inventario_list' %}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
