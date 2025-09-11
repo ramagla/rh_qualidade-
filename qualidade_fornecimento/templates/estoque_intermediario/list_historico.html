@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Estoque Intermediário — Histórico{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-clock-history text-secondary fs-3"></i>
+    <h4 class="mb-0">Histórico — Estoque Intermediário</h4>
+  </div>
+  <a class="btn btn-outline-secondary" href="{% url 'ei_list_em_fabrica' %}"><i class="bi bi-arrow-left-circle me-1"></i>Em Fábrica</a>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-striped table-hover align-middle">
+    <thead class="table-light">
+      <tr class="text-center">
+        <th class="text-start">OP</th>
+        <th>MP</th>
+        <th>Lote</th>
+        <th>Enviado</th>
+        <th>Retorno</th>
+        <th>Consumo Real</th>
+        <th>Sucata %</th>
+        <th>Fechado em</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in itens %}
+      <tr class="text-center">
+        <td class="text-start">{{ i.op }}</td>
+        <td>{{ i.materia_prima }}</td>
+        <td>{{ i.lote }}</td>
+        <td>{{ i.enviado|floatformat:3 }} kg</td>
+        <td>{{ i.retorno|floatformat:3 }} kg</td>
+        <td>{{ i.consumo_real_kg|floatformat:3 }} kg</td>
+        <td>{{ i.perc_sucata }}%</td>
+        <td>{{ i.data_retorno|date:"d/m/Y H:i" }}</td>
+        <td>
+          <form method="post" action="{% url 'ei_estornar' i.pk %}" onsubmit="return confirm('Estornar para Em Fábrica?');">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-warning"><i class="bi bi-arrow-counterclockwise"></i> Estornar</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" class="text-center text-muted py-4">Sem itens no histórico.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

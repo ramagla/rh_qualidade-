@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Estornar — {{ obj.op }}{% endblock %}
+{% block content %}
+<div class="alert alert-warning">
+  <i class="bi bi-arrow-counterclockwise me-1"></i>
+  Confirma estornar o item da OP <strong>{{ obj.op }}</strong> para "Em Fábrica"?
+</div>
+<form method="post">
+  {% csrf_token %}
+  <a class="btn btn-outline-secondary" href="{% url 'ei_list_historico' %}">Cancelar</a>
+  <button class="btn btn-warning"><i class="bi bi-arrow-counterclockwise me-1"></i> Estornar</button>
+</form>
+{% endblock %}

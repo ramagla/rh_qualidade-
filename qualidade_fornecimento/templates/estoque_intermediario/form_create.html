@@ -1,0 +1,176 @@
+{# qualidade_fornecimento/templates/estoque_intermediario/form_create.html — PARA (JS: popula LOTE usando jQuery p/ Select2) #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Novo Envio — Estoque Intermediário{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-send-check text-primary fs-3"></i>
+    <h4 class="mb-0">Novo Envio — Estoque Intermediário</h4>
+  </div>
+  <a class="btn btn-outline-secondary" href="{% url 'ei_list_em_fabrica' %}">
+    <i class="bi bi-arrow-left-circle me-1"></i> Voltar
+  </a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card shadow-sm">
+  <div class="card-body">
+    {% csrf_token %}
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">OP*</label>
+        {{ form.op }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Matéria-prima*</label>
+        {{ form.materia_prima }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Lote / Rolo*</label>
+        {{ form.lote }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">TB050 (opcional)</label>
+        {{ form.tb050 }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Qtd MP prevista (kg)*</label>
+        {{ form.qtde_op_prevista }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Peças planejadas OP*</label>
+        {{ form.pecas_planejadas_op }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Enviado à fábrica (kg)*</label>
+        {{ form.enviado }}
+      </div>
+      <div class="col-md-4">
+  <label class="form-label">Data de envio</label>
+  {{ form.data_envio }}
+</div>
+
+      <div class="col-md-4">
+        <label class="form-label">Máquina</label>
+        {{ form.maquina }}
+      </div>
+
+      <div class="col-md-12">
+        <label class="form-label">Observações</label>
+        {{ form.observacoes }}
+      </div>
+
+      {# ✅ partial correto para anexos #}
+      {% include 'partials/global/_campo_anexo.html' with campo="anexo" %}
+    </div>
+
+    <hr class="my-3">
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Tolerância de sucata (%)</label>
+        {{ form.tolerancia_sucata_percentual }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Custo por kg (opcional)</label>
+        {{ form.custo_kg }}
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer d-flex justify-content-end gap-2">
+    <button class="btn btn-primary"><i class="bi bi-save2 me-1"></i> Salvar</button>
+  </div>
+</form>
+
+{# qualidade_fornecimento/templates/estoque_intermediario/form_create.html — trecho de script #}
+<script>
+(function(){
+  function init() {
+    if (!(window.jQuery && jQuery.fn && jQuery.fn.select2)) return setTimeout(init, 100);
+    var $ = jQuery;
+
+    var $mp   = $('#id_materia_prima');
+    var $lote = $('#id_lote');
+    var $tb50 = $('#id_tb050');
+
+    // Garante Select2 na MP (se o base já inicializou, não duplica)
+    if (!$mp.hasClass('select2-hidden-accessible')) {
+      $mp.select2({ width:'100%', placeholder:'Selecione...', language:'pt-BR' });
+    }
+
+    function montarSelect2Lote() {
+      // destrói qualquer select2 anterior (inicializado pelo base ou por nós)
+      if ($lote.hasClass('select2-hidden-accessible')) {
+        try { $lote.select2('destroy'); } catch(e) {}
+      }
+
+      // desabilita se não tiver MP escolhida (evita chamadas sem mp)
+      var mpVal = $mp.val();
+      $lote.prop('disabled', !mpVal);
+
+      // recria com AJAX
+      $lote.select2({
+        placeholder: "— selecione —",
+        allowClear: true,
+        width: '100%',
+        language: "pt-BR",
+        minimumInputLength: 0,
+        ajax: {
+          url: "{% url 'api_rolos_por_mp' %}",
+          dataType: 'json',
+          delay: 200,
+          data: function (params) {
+            return {
+              mp: $mp.val() || "",
+              q: params.term || ""
+            };
+          },
+          processResults: function (data) {
+            var res = (data && data.results) ? data.results : [];
+            return { results: res.map(function(r){ return { id:r.id, text:r.texto, tb050_id:r.tb050_id, tb050_label:r.tb050_label }; }) };
+          },
+          cache: true
+        }
+      });
+    }
+
+    // monta ao carregar
+    montarSelect2Lote();
+
+    // ao trocar a MP: limpa TB050 e Lote, e remonta o Select2 do Lote com a nova MP
+    $mp.on('change', function(){
+      $tb50.val(null).trigger('change');
+      $lote.val(null).trigger('change');
+      montarSelect2Lote();
+    });
+
+    // ao escolher um rolo, preenche TB050 automaticamente
+    $lote.on('select2:select', function(e){
+      var d = e.params.data || {};
+      if (!d.tb050_id) return;
+      if ($tb50.find('option[value="'+ d.tb050_id +'"]').length === 0) {
+        var opt = new Option(d.tb050_label || ('TB050 ' + d.tb050_id), d.tb050_id, true, true);
+        $tb50.append(opt).trigger('change');
+      } else {
+        $tb50.val(String(d.tb050_id)).trigger('change');
+      }
+    });
+
+    // se limpar o rolo, limpa TB050
+    $lote.on('select2:clear', function(){ $tb50.val(null).trigger('change'); });
+  }
+  init();
+})();
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,111 @@
+{# qualidade_fornecimento/templates/estoque_intermediario/form_apontar_retorno.html #}
+{% extends "base.html" %}
+{% block title %}Apontar/Retorno — {{ obj.op }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-arrow-repeat text-primary fs-3"></i>
+    <h4 class="mb-0">Apontar + Retorno — OP {{ obj.op }}</h4>
+  </div>
+  <a class="btn btn-outline-secondary" href="{% url 'ei_list_em_fabrica' %}">
+    <i class="bi bi-arrow-left-circle me-1"></i> Voltar
+  </a>
+</div>
+
+{# KPIs rápidos #}
+<ul class="list-group small mb-3">
+  <li class="list-group-item d-flex justify-content-between">
+    <span>Planejado</span>
+    <strong>{{ obj.qtde_op_prevista|floatformat:3 }} kg para {{ obj.pecas_planejadas_op }} peças ({{ obj.consumo_por_peca_planejado|floatformat:6 }} kg/peça)</strong>
+  </li>
+  <li class="list-group-item d-flex justify-content-between">
+    <span>Enviado</span><strong>{{ obj.enviado|floatformat:3 }} kg</strong>
+  </li>
+  <li class="list-group-item d-flex justify-content-between">
+    <span>Retorno</span><strong>{{ obj.retorno|floatformat:3 }} kg</strong>
+  </li>
+  <li class="list-group-item d-flex justify-content-between">
+    <span>Consumo (balança)</span><strong>{{ obj.consumo_balanca_kg|floatformat:3 }} kg</strong>
+  </li>
+  <li class="list-group-item d-flex justify-content-between">
+    <span>Consumo (inferido)</span><strong>{{ obj.consumo_inferido_kg|floatformat:3 }} kg</strong>
+  </li>
+  <li class="list-group-item d-flex justify-content-between">
+    <span>Consumo REAL</span><strong>{{ obj.consumo_real_kg|floatformat:3 }} kg</strong>
+  </li>
+  <li class="list-group-item d-flex justify-content-between">
+    <span>Sucata</span><strong>{{ obj.sucata|floatformat:3 }} kg ({{ obj.perc_sucata }}%)</strong>
+  </li>
+  <li class="list-group-item d-flex justify-content-between">
+    <span>Desvio balanço de massa</span><strong>{{ obj.desvio_balanco_percent }}%</strong>
+  </li>
+</ul>
+
+<form method="post" enctype="multipart/form-data" class="card shadow-sm">
+  <div class="card-body">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger mb-3">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Peças apontadas</label>
+        {{ form.pecas_apontadas }}
+        {{ form.pecas_apontadas.errors }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Sucata (kg)</label>
+        {{ form.sucata }}
+        {{ form.sucata.errors }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Refugo (kg)</label>
+        {{ form.refugo }}
+        {{ form.refugo.errors }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Retorno (kg)</label>
+        {{ form.retorno }}
+        {{ form.retorno.errors }}
+      </div>
+      <div class="col-md-4">
+  <label class="form-label">Data de retorno</label>
+  {{ form.data_retorno }}
+  {{ form.data_retorno.errors }}
+</div>
+      <div class="col-md-12">
+        <label class="form-label">Observações</label>
+        {{ form.observacoes }}
+        {{ form.observacoes.errors }}
+      </div>
+
+      {# Anexo com seu partial padrão #}
+      {% include 'partials/global/_campo_anexo.html' with campo="anexo" %}
+    </div>
+
+    {# Se sucata > tolerância, exija justificativa #}
+    {% if obj.perc_sucata > obj.tolerancia_sucata_percentual %}
+      <div class="alert alert-warning mt-3">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        A sucata ({{ obj.perc_sucata }}%) excede a tolerância ({{ obj.tolerancia_sucata_percentual }}%). Informe a justificativa para permitir o fechamento.
+      </div>
+      <div class="mt-2">
+        {{ form.justificativa_excesso.label_tag }}
+        {{ form.justificativa_excesso }}
+        {{ form.justificativa_excesso.errors }}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card-footer d-flex justify-content-end gap-2">
+    <button class="btn btn-success" type="submit">
+      <i class="bi bi-check2-circle me-1"></i> Salvar e enviar ao Histórico
+    </button>
+  </div>
+</form>
+{% endblock %}

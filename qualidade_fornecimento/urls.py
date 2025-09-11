@@ -50,6 +50,7 @@ from qualidade_fornecimento.views.home_views import dashboard_qualidade_view
 from qualidade_fornecimento.views.controle_servico_externo_views import registrar_entrega_servico_externo
 from qualidade_fornecimento.views.tb001_views import tb001_view
 from qualidade_fornecimento.views import inventario_views
+from qualidade_fornecimento.views import estoque_intermediario_views as ei
 
 urlpatterns = [
     # Home
@@ -242,6 +243,12 @@ urlpatterns = [
     # API de leitura por QRCode (recebe código/etiqueta e quantidade)
     path("api/inventarios/<int:pk>/scan/", inventario_views.api_scan_qrcode, name="api_scan_qrcode"),
     path("inventarios/<int:pk>/contagem/<int:ordem>/finalizar/", inventario_views.finalizar_contagem, name="finalizar_contagem"),
+    path("estoque-intermediario/", ei.ei_list_em_fabrica, name="ei_list_em_fabrica"),
 
+    path("estoque-intermediario/historico/", ei.ei_list_historico, name="ei_list_historico"),
+    path("estoque-intermediario/novo/", ei.ei_create, name="ei_create"),
+    path("estoque-intermediario/<int:pk>/retorno/", ei.ei_apontar_retorno, name="ei_retorno"),
+    path("estoque-intermediario/<int:pk>/estornar/", ei.ei_estornar_para_em_fabrica, name="ei_estornar"),
+    path("api/rolos-por-mp/", ei.api_rolos_por_mp, name="api_rolos_por_mp"),
 
 ]
