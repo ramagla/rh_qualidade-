@@ -153,12 +153,48 @@
   </div>
 </div>
 
-<form class="mt-3" method="post" action="{% url 'finalizar_contagem' inventario.pk ordem %}">
+<!-- Finalizar contagem com confirmação -->
+<form id="form-finalizar" class="mt-3" method="post" action="{% url 'finalizar_contagem' inventario.pk ordem %}">
   {% csrf_token %}
-  <button type="submit" class="btn btn-success btn-lg d-flex align-items-center">
+  <button
+    type="button"
+    class="btn btn-success btn-lg d-flex align-items-center"
+    data-bs-toggle="modal"
+    data-bs-target="#confirmFinalizarModal">
     <i class="bi bi-clipboard2-check-fill me-2"></i> Finalizar {{ ordem_label }}
   </button>
 </form>
+
+<!-- Modal de confirmação -->
+<div class="modal fade" id="confirmFinalizarModal" tabindex="-1" aria-labelledby="confirmFinalizarLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmFinalizarLabel">
+          <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+          Confirmar finalização
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          Tem certeza de que deseja <strong>finalizar a {{ ordem_label }}</strong>?
+        </p>
+        <p class="mb-0 text-danger">
+          Depois <strong>não será possível reabrir</strong> esta contagem.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Cancelar
+        </button>
+        <button type="button" id="btn-confirm-finalizar" class="btn btn-success">
+          <i class="bi bi-check2-circle me-1"></i> Sim, finalizar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <style>
   #scan-feedback.show { animation: fadeInOut 2s ease-in-out both; }
@@ -275,6 +311,14 @@ document.getElementById('btn-manual')?.addEventListener('click', async ()=>{
       showFeedback('error', (data && (data.erro || data.detail)) || 'Falha ao registrar');
     }
   } catch { showFeedback('error', 'Erro de comunicação'); }
+});
+
+/* ==== Confirmação de finalização ==== */
+document.getElementById('btn-confirm-finalizar')?.addEventListener('click', function () {
+  const btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Finalizando...';
+  document.getElementById('form-finalizar')?.submit();
 });
 
 video.addEventListener('loadedmetadata', resizeSurfaces);

@@ -110,6 +110,13 @@
                 {{ form.tipo|add_class:"form-select" }}
                 {% if form.tipo.errors %}<div class="text-danger small mt-1">{{ form.tipo.errors|join:', ' }}</div>{% endif %}
               </div>
+              <div class="col-md-3">
+                <label for="{{ form.situacao.id_for_label }}" class="label-icon">
+                  <i class="bi bi-flag"></i> Situação
+                </label>
+                {{ form.situacao|add_class:"form-select" }}
+                {% if form.situacao.errors %}<div class="text-danger small mt-1">{{ form.situacao.errors|join:', ' }}</div>{% endif %}
+              </div>
 
               <div class="col-md-3">
                 <label for="{{ form.ocorrencia.id_for_label }}" class="label-icon">

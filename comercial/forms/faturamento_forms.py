@@ -1,5 +1,5 @@
 from django import forms
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal, InvalidOperation
 
 from comercial.models.faturamento import FaturamentoRegistro
@@ -17,7 +17,7 @@ class BRDecimalField(forms.DecimalField):
 
 
 class FaturamentoRegistroForm(forms.ModelForm):
-    # Campo de data armazenado como string no model, validado/mostrado em dd/mm/yyyy
+    # Campo de data (permite ISO e BR)
     ocorrencia = forms.DateField(
         label="Ocorrência (dd/mm/yyyy)",
         required=False,
@@ -27,23 +27,19 @@ class FaturamentoRegistroForm(forms.ModelForm):
         ),
         input_formats=["%Y-%m-%d", "%d/%m/%Y"],
     )
-    # não formate manualmente no __init__; deixe o ModelForm cuidar
-
-
-    
 
     # Código usado para vincular ao Cliente.cod_bm (sync/save fazem o match)
     cliente_codigo = forms.CharField(
         label="Código do Cliente",
         required=False,
-        widget=forms.TextInput(attrs={"placeholder": "Ex.: C35"})
+        widget=forms.TextInput(attrs={"placeholder": "Ex.: C35", "class": "form-control"})
     )
 
     # Nome livre do cliente (quando vier da fonte externa)
     cliente = forms.CharField(
         label="Cliente",
         required=False,
-        widget=forms.TextInput(attrs={"placeholder": "Cliente"})
+        widget=forms.TextInput(attrs={"placeholder": "Cliente", "class": "form-control"})
     )
 
     # Select de clientes (FK)
@@ -66,86 +62,99 @@ class FaturamentoRegistroForm(forms.ModelForm):
         widget=forms.CheckboxInput()
     )
 
+    # Itens / valores
     item_quantidade = forms.IntegerField(
         label="Quantidade",
         required=False,
-        min_value=0
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control"})
     )
     item_valor_unitario = BRDecimalField(
         label="Valor Unitário (R$)",
         required=False,
         max_digits=14,
-        decimal_places=4
+        decimal_places=4,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "0,0000"})
     )
     item_ipi = BRDecimalField(
         label="IPI (%)",
         required=False,
         max_digits=6,
-        decimal_places=2
+        decimal_places=2,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "0,00"})
     )
     perc_icms = BRDecimalField(
         label="ICMS (%) (NF)",
         required=False,
         max_digits=6,
-        decimal_places=2
+        decimal_places=2,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "0,00"})
     )
     valor_frete = BRDecimalField(
         label="Valor Frete (R$)",
         required=False,
         max_digits=12,
-        decimal_places=2
+        decimal_places=2,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "0,00"})
     )
 
     class Meta:
         model = FaturamentoRegistro
         fields = [
-            "nfe", "ocorrencia",
+            "nfe", "tipo", "situacao", "ocorrencia",
             "cliente_codigo", "cliente", "cliente_vinculado",
             "valor_frete",
             "item_codigo", "item_quantidade", "item_valor_unitario", "item_ipi", "perc_icms",
             "congelado",
-            "tipo",
         ]
         widgets = {
             "tipo": forms.Select(attrs={"class": "form-select"}),
+            "situacao": forms.Select(attrs={"class": "form-select"}),
+        }
+        labels = {
+            "situacao": "Situação",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         inst = kwargs.get("instance") or getattr(self, "instance", None)
 
-        # Rótulo das opções do select: "CÓDIGO - Razão Social"
+        # Rótulo do select: "CÓDIGO - Razão Social"
         self.fields["cliente_vinculado"].label_from_instance = (
             lambda obj: f"{(obj.cod_bm or '').upper()} - {obj.razao_social}"
         )
 
         # Quando NF-e estiver vazia, sugerir "Vale"
-        if inst and (not inst.nfe or str(inst.nfe).strip() == ""):
-            self.fields["nfe"].initial = "Vale"
+        if not self.fields.get("nfe").initial:
+            if not inst or not getattr(inst, "nfe", None):
+                self.fields["nfe"].initial = "Vale"
 
         # Inicializar o select com o PK já vinculado (se houver)
         if inst and getattr(inst, "cliente_vinculado_id", None):
             self.fields["cliente_vinculado"].initial = inst.cliente_vinculado_id
 
-        # Se a ocorrência vier ISO (YYYY-MM-DD) na instância, converter para dd/mm/yyyy
+        # Normaliza a ocorrência (Date/str) para ISO yyyy-mm-dd no input type=date
         try:
-            oc = (getattr(inst, "ocorrencia", "") or "").strip()
-            if "-" in oc and len(oc) >= 10:
-                self.fields["ocorrencia"].initial = datetime.strptime(
-                        oc[:10], "%Y-%m-%d"
-                    ).strftime("%Y-%m-%d")
-
+            oc = getattr(inst, "ocorrencia", None)
+            if isinstance(oc, (datetime, date)):
+                self.fields["ocorrencia"].initial = oc.strftime("%Y-%m-%d")
+            elif isinstance(oc, str) and oc:
+                oc = oc.strip()
+                if "-" in oc and len(oc) >= 10:
+                    self.fields["ocorrencia"].initial = datetime.strptime(oc[:10], "%Y-%m-%d").strftime("%Y-%m-%d")
+                elif "/" in oc and len(oc) >= 10:
+                    self.fields["ocorrencia"].initial = datetime.strptime(oc[:10], "%d/%m/%Y").strftime("%Y-%m-%d")
         except Exception:
             pass
 
     # Normaliza o código para facilitar o match (maiúsculas)
     def clean_cliente_codigo(self):
-        v = (self.cleaned_data.get("cliente_codigo") or "").strip()
-        return v.upper()
+        v = (self.cleaned_data.get("cliente_codigo") or "").strip().upper()
+        return v
 
     def clean_item_valor_unitario(self):
         v = self.cleaned_data.get("item_valor_unitario")
-        if v is None:
+        if v in (None, ""):
             return None
         try:
             return Decimal(v)
@@ -154,7 +163,7 @@ class FaturamentoRegistroForm(forms.ModelForm):
 
     def clean_item_ipi(self):
         v = self.cleaned_data.get("item_ipi")
-        if v is None:
+        if v in (None, ""):
             return None
         if v < 0:
             raise forms.ValidationError("IPI não pode ser negativo.")
@@ -162,13 +171,13 @@ class FaturamentoRegistroForm(forms.ModelForm):
 
     def clean_perc_icms(self):
         v = self.cleaned_data.get("perc_icms")
-        if v is None:
+        if v in (None, ""):
             return None
         if v < 0:
             raise forms.ValidationError("ICMS não pode ser negativo.")
         return v
 
-
     def clean(self):
         cleaned = super().clean()
+        # (Ponto de validação cruzada se necessário)
         return cleaned

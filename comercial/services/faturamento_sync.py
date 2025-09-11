@@ -189,21 +189,43 @@ def _flatten_vendas(lista):
         cliente_codigo_raw = (cod or cli_cod_api)
         cliente_nome = nome if nome else cli_nome_api
 
+       
         base = {
             "nfe": v.get("nfe"),
-            "ocorrencia": v.get("ocorrencia"),
+            # aceita várias chaves usadas pela API para a data
+            "ocorrencia": (
+                v.get("ocorrencia")
+                or v.get("data")
+                or v.get("emissao")
+                or v.get("dt_emissao")
+            ),
             "cliente_codigo": cliente_codigo_raw,  # normaliza depois
             "cliente": cliente_nome,  # apenas nome
             "valor_frete": v.get("valor_frete"),
         }
+
         for it in itens:
             row = dict(base)
+
+             # faturamento_sync.py - dentro de _flatten_vendas
+            aliq_icms = it.get("perc_icms")
+            if aliq_icms in (None, "") and isinstance(it.get("icms"), dict):
+                aliq_icms = it["icms"].get("aliquota")
+
+            if aliq_icms in (None, ""):
+                for k in ("pICMS", "aliquota_icms", "aliquota"):
+                    vtry = it.get(k)
+                    if vtry not in (None, ""):
+                        aliq_icms = vtry
+                        break
+
             row.update(
                 {
                     "item_codigo": it.get("codigo"),
                     "item_quantidade": it.get("quantidade"),
                     "item_valor_unitario": it.get("valor_unitario"),
                     "item_ipi": it.get("ipi"),
+                    "perc_icms": aliq_icms,  
                 }
             )
             saida.append(row)
@@ -568,6 +590,8 @@ def sincronizar_vendas(data_inicio: str, data_fim: str, pagina="1", registros="5
         quantidade = _as_int(d.get("item_quantidade"))
         valor_unitario = _as_decimal(d.get("item_valor_unitario"), q=4)
         ipi = _as_decimal(d.get("item_ipi"), q=2)
+        perc_icms = _as_decimal(d.get("perc_icms"), q=2)  # <- novo
+
 
         cliente_obj = None
         if cliente_codigo:
@@ -594,6 +618,8 @@ def sincronizar_vendas(data_inicio: str, data_fim: str, pagina="1", registros="5
                     "item_quantidade": quantidade,
                     "item_valor_unitario": valor_unitario,
                     "item_ipi": ipi,
+                    "perc_icms": perc_icms,          # <- novo
+
                     "cliente_vinculado": cliente_obj,
                 },
             )
@@ -621,6 +647,8 @@ def sincronizar_vendas(data_inicio: str, data_fim: str, pagina="1", registros="5
                 "item_ipi": ipi,
                 "cliente_vinculado": cliente_obj,
             }
+            if perc_icms is not None:
+                fields["perc_icms"] = perc_icms
 
             alterou = False
             for k, v in fields.items():
@@ -645,6 +673,7 @@ def sincronizar_vendas(data_inicio: str, data_fim: str, pagina="1", registros="5
                 item_quantidade=quantidade,
                 item_valor_unitario=valor_unitario,
                 item_ipi=ipi,
+                perc_icms=perc_icms,
                 cliente_vinculado=cliente_obj,
             )
             ins += 1
@@ -686,13 +715,23 @@ def _coletar_icms_map(lote_nf):
         aliqs_validas = []
 
         for it in itens:
-            cod = _norm_code(it.get("cod_produto"))
+            cod = _norm_code(
+                it.get("cod_produto") or it.get("codigo") or it.get("item_codigo") or it.get("produto_codigo")
+            )
             if not numero_nf or not cod:
                 continue
             perc = it.get("perc_icms")
-            if perc is None and isinstance(it.get("icms"), dict):
+            if perc in (None, "") and isinstance(it.get("icms"), dict):
                 perc = it["icms"].get("aliquota")
+            if perc in (None, ""):
+                # variações comuns no payload de itens de NF
+                for k in ("pICMS", "aliquota_icms", "aliquota"):
+                    vtry = it.get(k)
+                    if vtry not in (None, ""):
+                        perc = vtry
+                        break
             dec = _as_decimal(perc, q=2)
+
             icms_map[(numero_nf, cod)] = dec
             if dec is not None:
                 aliqs_validas.append(dec)
@@ -720,14 +759,32 @@ def _aplicar_icms(icms_map, icms_nf_default):
             "hit_item": 0, "hit_nf_default": 0, "hit_uf_default": 0
         }
 
+        # restringe aos registros cuja NFE apareceu no lote coletado (mais rápido e não depende de 'ocorrencia')
+    nfs_map = set()
+    for (nfk, _cod) in (icms_map or {}).keys():
+        if nfk:
+            nfs_map.add(str(nfk).strip())
+            # também guarda a versão só-dígitos, pois muitos registros salvam assim
+            only_digits = "".join(ch for ch in str(nfk) if ch.isdigit())
+            if only_digits:
+                nfs_map.add(only_digits)
+
+    for nfk in (icms_nf_default or {}).keys():
+        if nfk:
+            nfs_map.add(str(nfk).strip())
+            only_digits = "".join(ch for ch in str(nfk) if ch.isdigit())
+            if only_digits:
+                nfs_map.add(only_digits)
+
     candidatos_qs = (
         FaturamentoRegistro.objects.select_related("cliente_vinculado")
-        .filter(ocorrencia__isnull=False)
         .exclude(nfe__isnull=True)
         .exclude(nfe__exact="")
+        .filter(nfe__in=list(nfs_map))  # <- filtra só nas NFs envolvidas
     )
     candidatos = list(candidatos_qs)
     _dbg(f"Candidatos p/ aplicar ICMS: {len(candidatos)}")
+
 
     for r in candidatos:
         if (getattr(r, "tipo", None) or "Venda") != "Venda":

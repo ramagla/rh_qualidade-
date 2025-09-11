@@ -202,7 +202,13 @@
                 {% endif %}
               </td>
               <td>{{ l.natureza }}</td>
-              <td>{{ l.cfop }}</td>               
+              <td>
+                {% if l.natureza == "Cancelada" %}
+                  <span class="tarja-preta" aria-label="CFOP oculto — NF cancelada"></span>
+                {% else %}
+                  {{ l.cfop }}
+                {% endif %}
+              </td>
               <td>
                 {% if l.mostrar_impostos %}
                   {{ l.valor_total|formatar_reais }}

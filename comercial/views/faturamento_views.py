@@ -969,6 +969,67 @@ def relatorio_duplicatas(request):
             else:
                 ipi_total_por_nf[nf] = Decimal("0.00")
 
+
+
+    # -------- Notas CANCELADAS (status explícito no FaturamentoRegistro) --------
+    def _nf_valida(s: str) -> bool:
+        s = (s or "").strip()
+        return bool(s) and s.lower() != "vale"
+
+    # NFs já listadas na grade pelas duplicatas
+    nfs_listadas = {l.get("nfe") for l in linhas if l.get("nfe")}
+
+    qs_canceladas = (
+        FaturamentoRegistro.objects
+        .select_related("cliente_vinculado")
+        .filter(
+            ocorrencia__gte=dt_ini,
+            ocorrencia__lte=dt_fim,
+            situacao="CANCELADA",
+        )
+        .only(
+            "nfe",
+            "ocorrencia",
+            "cliente",
+            "cliente_vinculado__nome_fantasia",
+            "cliente_vinculado__razao_social",
+        )
+        .order_by("nfe", "ocorrencia")
+    )
+
+    for nf in qs_canceladas.values_list("nfe", flat=True).distinct():
+        if not _nf_valida(nf):
+            continue
+        if nf in nfs_listadas:
+            continue
+
+        r0 = qs_canceladas.filter(nfe=nf).order_by("ocorrencia").first()
+        if not r0:
+            continue
+
+        emissao = r0.ocorrencia
+        cli = getattr(r0, "cliente_vinculado", None)
+        cliente_display = (
+            (getattr(cli, "nome_fantasia", "") or getattr(cli, "razao_social", "")) if cli else (r0.cliente or "—")
+        ).strip() or "—"
+
+        linhas.append({
+            "nfe": nf,
+            "data": emissao,
+            "emissao": emissao,
+            "cliente": cliente_display,
+            "cliente_display": cliente_display,
+            "vencimento": None,
+            "valor": Decimal("0.00"),
+            "valor_icms": Decimal("0.00"),
+            "valor_ipi": Decimal("0.00"),
+            "valor_total": Decimal("0.00"),
+            "natureza": "Cancelada",
+            "cfop": "",
+            "mostrar_impostos": False,
+        })
+
+
     # -------- Totais / gráfico --------
     from collections import defaultdict as _dd
     agg_por_cliente_cfop = _dd(lambda: Decimal("0.00"))
@@ -985,15 +1046,16 @@ def relatorio_duplicatas(request):
     total_icms = sum(icms_total_calculado_por_nf.get(nf, Decimal("0.00")) for nf in nfs_cfop_permitido)
     total_ipi  = sum(ipi_total_por_nf.get(nf, Decimal("0.00")) for nf in nfs_cfop_permitido)
 
-    # 🔹 NOVO: “Total Geral (Valor + IPI)” coerente com o card e a legenda
+    # Total Geral (Valor + IPI)
     total_geral = total_periodo + total_ipi
 
-    qtde_dups   = len(linhas_filtradas)
+    qtde_dups = len(linhas_filtradas)
 
     total_mes = sum(
         l["valor"] for l in linhas
         if l["vencimento"] and l["vencimento"].year == dt_ini.year and l["vencimento"].month == dt_ini.month
     )
+
     total_avista = sum(
         l["valor"] for l in linhas
         if l.get("emissao") and (l["vencimento"] == l["emissao"] or l["vencimento"] == l["emissao"] + timedelta(days=1))

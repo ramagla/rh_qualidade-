@@ -169,6 +169,10 @@ from django.contrib.auth.decorators import login_required
 from django.utils.html import escape
 from Funcionario.models import Funcionario
 
+from django.utils.html import escape
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render
+
 def somente_digitos(s: str) -> str:
     return "".join(ch for ch in (s or "") if ch.isdigit())
 
@@ -184,96 +188,166 @@ def gerar_assinatura_email(request, funcionario_id: int):
         whatsapp_digits = somente_digitos(celular)
         wa_link = f"https://wa.me/{whatsapp_digits}" if whatsapp_digits else ""
 
-        # Função para formatar exibição do celular
+        # +55 (DD) 9xxxx-xxxx (espera 55 + DDD(2) + número(9))
         def formatar_celular(digits: str) -> str:
-            # esperado: 55 + DDD (2) + numero (9 dígitos)
             if len(digits) == 13 and digits.startswith("55"):
                 ddd = digits[2:4]
                 numero = digits[4:]
                 return f"+55 ({ddd}) {numero[:5]}-{numero[5:]}"
-            return digits  # fallback, caso venha em formato inesperado
+            return digits
 
-        celular_fmt = formatar_celular(whatsapp_digits)
+        celular_fmt = formatar_celular(whatsapp_digits) if whatsapp_digits else ""
         nome = escape(getattr(func, "nome", "") or "")
 
-        # Cargo por FK: usamos apenas cargo.nome e numero_dc
+        # Cargo (oculta se numero_dc == 61) — tom suave
         cargo_obj = getattr(func, "cargo_atual", None) or getattr(func, "cargo_inicial", None)
         cargo_nome = (cargo_obj.nome if cargo_obj and getattr(cargo_obj, "nome", None) else "").strip()
         cargo_numero_dc = (cargo_obj.numero_dc if cargo_obj and getattr(cargo_obj, "numero_dc", None) else "")
-        # Oculta se numero_dc == 61
         ocultar_cargo = str(cargo_numero_dc).zfill(2) == "61"
-        cargo_html = "" if ocultar_cargo or not cargo_nome else f'<div style="font-size:13px;color:#475569">{escape(cargo_nome)}</div>'
+        cargo_html = "" if ocultar_cargo or not cargo_nome else (
+            f'<div style="font-size:13px;color:#475569;margin-top:2px">{escape(cargo_nome)}</div>'
+        )
 
-        # Nome com/sem link do LinkedIn
+        # Nome com/sem link pessoal do LinkedIn (se fornecido)
         if linkedin:
-            nome_anchor = f'<a href="{escape(linkedin)}" style="color:#0f172a;text-decoration:none" target="_blank">{nome}</a>'
+            nome_anchor = (
+                f'<a href="{escape(linkedin)}" style="color:#0f172a;text-decoration:none" '
+                f'target="_blank" rel="noopener">{nome}</a>'
+            )
         else:
             nome_anchor = f'<span style="color:#0f172a;text-decoration:none">{nome}</span>'
 
         email = escape(getattr(getattr(func, "user", None), "email", "") or "")
         empresa = "Bras-Mol Molas e Estampados Ltda"
         static_base = "https://qualidade.brasmol.com.br/static/assinatura_email"
+        AZUL = "#0b3b8c"  # azul-escuro institucional
+
+        # Contatos (ícones à esquerda)
+        linhas_contato = []
+
+        telefone_texto = "+55 (11) 4648-2611" + (f" · Ramal {escape(ramal)}" if ramal else "")
+        linhas_contato.append(
+            f"""
+            <tr>
+              <td width="20" style="padding:4px 8px 4px 0;vertical-align:middle">
+                <img src="{static_base}/ic-phone.png" width="16" height="16" alt="Telefone" style="display:block">
+              </td>
+              <td style="padding:4px 0;vertical-align:middle">{telefone_texto}</td>
+            </tr>
+            """.strip()
+        )
+
+        if whatsapp_digits:
+            linhas_contato.append(
+                f"""
+                <tr>
+                  <td width="20" style="padding:4px 8px 4px 0;vertical-align:middle">
+                    <img src="{static_base}/ic-whatsapp.png" width="16" height="16" alt="WhatsApp" style="display:block">
+                  </td>
+                  <td style="padding:4px 0;vertical-align:middle">
+                    <a href="{wa_link}" target="_blank" rel="noopener" style="color:#0f172a;text-decoration:none">{celular_fmt}</a>
+                  </td>
+                </tr>
+                """.strip()
+            )
+
+        # E-mail
+        linhas_contato.append(
+            f"""
+            <tr>
+              <td width="20" style="padding:4px 8px 4px 0;vertical-align:middle">
+                <img src="{static_base}/ic-email.png" width="16" height="16" alt="E-mail" style="display:block">
+              </td>
+              <td style="padding:4px 0;vertical-align:middle">
+                <a href="mailto:{email}" style="color:#0f172a;text-decoration:none">{email}</a>
+              </td>
+            </tr>
+            """.strip()
+        )
+
+        # ÍCONES (site + LinkedIn) lado a lado logo abaixo do e-mail
+        linhas_contato.append(
+            f"""
+            <tr>
+              <td colspan="2" style="padding:2px 0 6px 0;vertical-align:middle">
+                <a href="https://www.brasmol.com.br" target="_blank" rel="noopener"
+                   style="display:inline-block;text-decoration:none;margin-right:8px">
+                  <img src="{static_base}/ic-web.png" width="18" height="18" alt="Site" style="display:block">
+                </a>
+                <a href="https://www.linkedin.com/company/brasmol/" target="_blank" rel="noopener"
+                   style="display:inline-block;text-decoration:none">
+                  <img src="{static_base}/ic-linkedin.png" width="18" height="18" alt="LinkedIn" style="display:block">
+                </a>
+              </td>
+            </tr>
+            """.strip()
+        )
+
+        # Endereço
+        linhas_contato.append(
+            f"""
+            <tr>
+              <td width="20" style="padding:4px 8px 4px 0;vertical-align:middle">
+                <img src="{static_base}/ic-map.png" width="16" height="16" alt="Endereço" style="display:block">
+              </td>
+              <td style="padding:4px 0;vertical-align:middle">
+                <a href="https://maps.google.com/?q=Estrada+do+Bonsucesso,+1953,+Itaquaquecetuba"
+                   target="_blank" rel="noopener" style="color:#475569;text-decoration:none">
+                   Estrada do Bonsucesso, 1953 — Itaquaquecetuba/SP
+                </a>
+              </td>
+            </tr>
+            """.strip()
+        )
+
+        contato_html = "\n".join(linhas_contato)
+
+        # CTA fixo — linha de montagem
+        cta_url = "https://montagem.brasmol.com.br"
+        cta_text = "Clique aqui e conheça nossa linha de montagem"
 
         assinatura_html = f"""
 <table cellpadding="0" cellspacing="0" width="600" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#0f172a;line-height:1.45;max-width:600px;width:100%">
   <tr>
     <td style="padding:16px 12px">
-      <table cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #e5e7eb;border-radius:8px;background:#fff">
+      <table cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #e5e7eb;border-radius:10px;background:#ffffff">
         <tr>
-          <!-- Coluna esquerda -->
-          <td valign="top" width="58%" style="padding:16px 12px 12px 16px">
+          <!-- LOGO (maior) -->
+          <td width="120" align="center" valign="middle" style="padding:14px 10px;border-right:1px solid #e5e7eb">
+            <img src="{static_base}/logo.png" width="96" alt="Logo Bras-Mol" style="display:block">
+          </td>
+
+          <!-- FILETE VERTICAL AZUL-ESCURO (mais fino) -->
+          <td width="4" style="background:{AZUL};border-radius:2px"></td>
+
+          <!-- CONTEÚDO -->
+          <td valign="top" style="padding:12px 16px">
             <div style="font-size:20px;font-weight:bold;margin-bottom:2px">{nome_anchor}</div>
             {cargo_html}
             <div style="font-size:12px;color:#475569;margin-top:2px">{empresa}</div>
 
             <table cellpadding="0" cellspacing="0" border="0" style="margin-top:10px">
-              <tr>
-                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-email.png" width="16" alt=""></td>
-                <td style="padding:4px 0"><a href="mailto:{email}" style="color:#0f172a;text-decoration:none">{email}</a></td>
-              </tr>
-              <tr>
-                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-phone.png" width="16" alt=""></td>
-                <td style="padding:4px 0">
-                  +55 (11) 4648-2611{f" · Ramal {escape(ramal)}" if ramal else ""}
-                  {f"<br><a href='{wa_link}' style='color:#0f172a;text-decoration:none'>{celular_fmt} <img src='{static_base}/ic-whatsapp.png' width='14' style='vertical-align:middle' alt=''></a>" if whatsapp_digits else ""}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-web.png" width="16" alt=""></td>
-                <td style="padding:4px 0"><a href="https://www.brasmol.com.br" style="color:#0f172a;text-decoration:none">www.brasmol.com.br</a></td>
-              </tr>
-              <tr>
-                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-linkedin.png" width="16" alt=""></td>
-                <td style="padding:4px 0"><a href="https://www.linkedin.com/company/brasmol/" style="color:#0f172a;text-decoration:none">LinkedIn — Bras-Mol</a></td>
-              </tr>
-              <tr>
-                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-map.png" width="16" alt=""></td>
-                <td style="padding:4px 0"><a href="https://maps.google.com/?q=Estrada+do+Bonsucesso,+1953,+Itaquaquecetuba" style="color:#475569;text-decoration:none">Estrada do Bonsucesso, 1953 — Itaquaquecetuba/SP</a></td>
-              </tr>
-              <tr>
-                <td style="padding:4px 8px 4px 0"><img src="{static_base}/ic-link.png" width="16" alt=""></td>
-                <td style="padding:4px 0"><a href="https://montagem.brasmol.com.br" style="color:#0f172a;text-decoration:none">Conheça nossa linha de montagem</a></td>
-              </tr>
+              {contato_html}
             </table>
-          </td>
 
-          <!-- Coluna direita -->
-          <td valign="middle" width="42%" style="background:#f9fafb;text-align:center;padding:20px 12px;border-top-right-radius:8px;border-bottom-right-radius:8px">
-            <img src="{static_base}/logo.png" width="150" alt="Logo Bras-Mol" style="display:inline-block">
+            <div style="margin-top:10px;font-size:13px">
+              <a href="{cta_url}" target="_blank" rel="noopener" style="color:{AZUL};text-decoration:underline">{cta_text}</a>
+            </div>
           </td>
         </tr>
       </table>
 
       <div style="font-size:11px;color:#6b7280;margin-top:8px">
         Esta mensagem é confidencial. Se recebida por engano, apague e avise o remetente.
-        <a href="{static_base}/politica_de_privacidade.pdf" style="color:#6b7280;text-decoration:underline">Política de privacidade</a>
+        <a href="{static_base}/politica_de_privacidade.pdf" style="color:#6b7280;text-decoration:underline" target="_blank" rel="noopener">
+          Política de privacidade
+        </a>
       </div>
     </td>
   </tr>
 </table>
         """.strip()
 
-        # Minimiza (remove quebras e espaços duplicados)
         assinatura_min = " ".join(assinatura_html.split())
 
         return render(
@@ -288,5 +362,5 @@ def gerar_assinatura_email(request, funcionario_id: int):
             },
         )
 
-    # GET -> formulário
     return render(request, "funcionarios/assinatura_form.html", {"funcionario": func})
+

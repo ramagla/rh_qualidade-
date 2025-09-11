@@ -9,6 +9,11 @@ class FaturamentoRegistro(models.Model):
     ("Venda", "Venda"),
     ("Devolução", "Devolução"),
 ]
+    
+    SITUACAO_CHOICES = [
+        ("EMITIDA", "Emitida"),
+        ("CANCELADA", "Cancelada"),
+    ]
 
     nfe = models.CharField("NF-e", max_length=50, null=True, blank=True)
 
@@ -37,6 +42,13 @@ class FaturamentoRegistro(models.Model):
             choices=TIPO_CHOICES,
             default="Venda"
         )
+    situacao = models.CharField(
+        "Situação",
+        max_length=12,
+        choices=SITUACAO_CHOICES,
+        default="EMITIDA",
+        db_index=True
+    )
 
     cliente_vinculado = models.ForeignKey(
         Cliente,
@@ -63,6 +75,10 @@ class FaturamentoRegistro(models.Model):
 
     def __str__(self):
         return f"{self.nfe or 'NF-e?'} - {self.item_codigo or 'item?'}"
+    
+    @property
+    def cancelada(self) -> bool:
+        return self.situacao == "CANCELADA"
 
     # --- helpers internos ---
     @staticmethod
