@@ -82,6 +82,13 @@
             <small>Enviado (kg)</small>
           </div>
         </th>
+        {# >>> NOVA COLUNA: SALDO = enviado - previsto_kg <<< #}
+        <th class="align-middle">
+          <div class="d-flex flex-column align-items-center">
+            <i class="bi bi-calculator mb-1" aria-hidden="true"></i>
+            <small>Saldo (kg)</small>
+          </div>
+        </th>
         <th class="align-middle">
           <div class="d-flex flex-column align-items-center">
             <i class="bi bi-calendar2-week mb-1" aria-hidden="true"></i>
@@ -119,10 +126,19 @@
           </button>
         </td>
 
-        {# Previsão (kg) vinda do annotate previsto_kg = qtde_op_prevista * 1.05 #}
+        {# Previsão (kg +5%) via property do modelo #}
         <td>{{ i.previsto_kg|floatformat:3 }}</td>
 
         <td>{{ i.enviado|floatformat:3 }}</td>
+
+        {# SALDO = Enviado - Previsto (kg +5%) via property do modelo #}
+        <td>
+          {% with saldo=i.saldo_kg %}
+            <span class="{% if saldo < 0 %}text-danger{% elif saldo > 0 %}text-success{% else %}text-muted{% endif %}">
+              {{ saldo|floatformat:3 }}
+            </span>
+          {% endwith %}
+        </td>
 
         <td>
           {% if i.data_envio %}
@@ -151,25 +167,21 @@
           {% endwith %}
         </td>
 
-       <td>
-  <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+        <td>
+          <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
+            {% if request.user|has_permission:"qualidade_fornecimento.change_estoqueintermediario" %}
+              {% include "partials/global/_botao_editar.html" with url_editar="ei_update" objeto=i label="envio" %}
+            {% endif %}
 
-    {# Editar envio (usa o partial padrão de editar) #}
-    {% if request.user|has_permission:"qualidade_fornecimento.change_estoqueintermediario" %}
-      {% include "partials/global/_botao_editar.html" with url_editar="ei_update" objeto=i label="envio" %}
-    {% endif %}
-
-    {# Apontar retorno — reaproveita o partial de visualizar, trocando o ícone #}
-    {% if request.user|has_permission:"qualidade_fornecimento.change_estoqueintermediario" %}
-      {% include "partials/global/_botao_visualizar.html" with url_visualizar="ei_retorno" objeto=i label="retorno" icone="bi bi-arrow-return-left" %}
-    {% endif %}
-  
-      </div>
-</td>
+            {% if request.user|has_permission:"qualidade_fornecimento.change_estoqueintermediario" %}
+              {% include "partials/global/_botao_visualizar.html" with url_visualizar="ei_retorno" objeto=i label="retorno" icone="bi bi-arrow-return-left" %}
+            {% endif %}
+          </div>
+        </td>
 
       </tr>
       {% empty %}
-        {% include "partials/global/_sem_resultados.html" with colspan=8 mensagem="Nenhum item em fábrica." %}
+        {% include "partials/global/_sem_resultados.html" with colspan=9 mensagem="Nenhum item em fábrica." %}
       {% endfor %}
     </tbody>
   </table>
@@ -190,7 +202,7 @@
           <i class="bi bi-box-seam fs-5 text-primary"></i>
           <h5 class="modal-title mb-0" id="modalLotesLabel{{ i.pk }}">
             <span class="me-1  text-center fw-semibold">OP</span>
-            <span class="badge bg-primary">{{ i.op }}</span> {# ex.: OP 449692 #}
+            <span class="badge bg-primary">{{ i.op }}</span>
           </h5>
         </div>
 
@@ -252,13 +264,12 @@
                     {% endif %}
                   </span>
                 </td>
-               <td class="text-center align-middle">
-  <span class="d-inline-flex align-items-center justify-content-center w-100">
-    <i class="bi bi-weight text-muted me-1"></i>
-    {{ it.enviado|floatformat:3 }}
-  </span>
-</td>
-
+                <td class="text-center align-middle">
+                  <span class="d-inline-flex align-items-center justify-content-center w-100">
+                    <i class="bi bi-weight text-muted me-1"></i>
+                    {{ it.enviado|floatformat:3 }}
+                  </span>
+                </td>
               </tr>
               {% empty %}
               <tr class="align-middle">
@@ -316,7 +327,7 @@
 
         <div class="col-12 filtro-wrapper">
           <label for="f_mp"><i class="bi bi-tag me-1"></i> Matéria-prima</label>
-          <select id="f_mp" name="mp" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+          <select id="f_mp" name="mp" class="form-select select2" data-dropdown_parent="#filtrosOffcanvas" data-dropdown-parent="#filtrosOffcanvas">
             <option value="">Todas</option>
             {% for m in materias_primas %}
               <option value="{{ m.id }}" {% if request.GET.mp == m.id|stringformat:"s" %}selected{% endif %}>{{ m }}</option>

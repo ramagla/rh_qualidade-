@@ -139,6 +139,13 @@ class EstoqueIntermediario(models.Model):
         )
         return _q(base * Decimal("1.05"))
     
+    @property
+    def saldo_kg(self) -> Decimal:
+        """
+        Saldo = Enviado - Previsto(kg +5%)
+        """
+        return _q(_q(self.enviado) - _q(self.previsto_kg))
+
 
     @property
     def comparativo_previsto(self) -> str:
