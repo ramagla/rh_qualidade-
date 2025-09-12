@@ -1,4 +1,3 @@
-# qualidade_fornecimento/models/__init__.py — PARA
 from .controle_servico_externo import ControleServicoExterno, RetornoDiario
 from .f045 import RelatorioF045
 from .fornecedor import FornecedorQualificado
@@ -25,5 +24,27 @@ from .inventario import (
     InventarioExportacao,
 )
 
-# Estoque Intermediário
-from .estoque_intermediario import EstoqueIntermediario
+# Estoque Intermediário (agora com itens por lote)
+from .estoque_intermediario import EstoqueIntermediario, EstoqueIntermediarioItem
+
+
+__all__ = [
+    # Serviços externos
+    "ControleServicoExterno", "RetornoDiario",
+    # Relatórios
+    "RelatorioF045",
+    # Fornecedores
+    "FornecedorQualificado",
+    # Inspeção de serviço externo
+    "InspecaoServicoExterno",
+    # Catálogo / TB050
+    "RelacaoMateriaPrima", "MateriaPrimaCatalogo",
+    # Rolo
+    "RoloMateriaPrima", "RelacaoMateriaPrimaRolo",
+    # Normas
+    "NormaComposicaoElemento", "NormaTecnica", "NormaTracao",
+    # Inventário
+    "Inventario", "InventarioItem", "Contagem", "Divergencia", "InventarioExportacao",
+    # Estoque Intermediário
+    "EstoqueIntermediario", "EstoqueIntermediarioItem",
+]

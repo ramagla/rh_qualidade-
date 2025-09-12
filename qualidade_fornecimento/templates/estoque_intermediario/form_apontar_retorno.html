@@ -1,111 +1,206 @@
-{# qualidade_fornecimento/templates/estoque_intermediario/form_apontar_retorno.html #}
+{# templates/estoque_intermediario/form_apontar_retorno.html — PARA #}
 {% extends "base.html" %}
-{% block title %}Apontar/Retorno — {{ obj.op }}{% endblock %}
+{% load static %}
+{% load widget_tweaks %}
+{% load custom_filters %}
+
+{% block title %}Apontar/Retorno — OP {{ obj.op }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <i class="bi bi-arrow-repeat text-primary fs-3"></i>
-    <h4 class="mb-0">Apontar + Retorno — OP {{ obj.op }}</h4>
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+{% include "partials/global/_toast_mensagens.html" %}
+
+<div class="container-fluid mt-5">
+
+  {# Cabeçalho padronizado #}
+{% include "partials/global/_header_titulo.html" with titulo="Apontar + Retorno — OP "|add:obj.op icone="bi bi-arrow-repeat" emoji="🔁" %}
+
+  {# Barra de ações #}
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    <a class="btn btn-outline-secondary btn-acao-personalizado d-inline-flex align-items-center"
+       href="{% url 'ei_list_em_fabrica' %}">
+      <i class="bi bi-arrow-left-circle me-2" aria-hidden="true"></i> Voltar
+    </a>
   </div>
-  <a class="btn btn-outline-secondary" href="{% url 'ei_list_em_fabrica' %}">
-    <i class="bi bi-arrow-left-circle me-1"></i> Voltar
-  </a>
+
+  {# KPIs no mesmo design dos cards #}
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="primary"  titulo="Planejado (kg)"   valor=obj.qtde_op_prevista|floatformat:3 subtitulo="" icone="bi-clipboard-data" %}
+    {% include "partials/global/_card_indicador.html" with cor="secondary" titulo="Peças Planejadas" valor=obj.pecas_planejadas_op subtitulo="" icone="bi-123" %}
+    {% include "partials/global/_card_indicador.html" with cor="info"     titulo="Enviado (kg)"    valor=obj.enviado|floatformat:3 subtitulo="" icone="bi-box-arrow-in-right" %}
+  </div>
+ 
+
+  <form method="post" enctype="multipart/form-data" class="card shadow-sm">
+    <div class="card-body">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-3">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      {% if formset.non_form_errors %}
+        <div class="alert alert-danger mb-3">
+          {{ formset.non_form_errors }}
+        </div>
+      {% endif %}
+
+      <h5 class="mb-2 d-flex align-items-center">
+        <i class="bi bi-arrow-return-left me-2"></i> Retorno por Lote
+      </h5>
+
+      {{ formset.management_form }}
+      <div class="table-responsive zebra-tabela">
+        <table class="table table-bordered table-striped table-sm align-middle text-center">
+          <thead class="table-light">
+            <tr class="align-middle">
+              <th class="align-middle" style="width:22%;">
+                <i class="bi bi-upc-scan me-1"></i> Lote / Rolo
+              </th>
+              <th class="align-middle" style="width:28%;">
+                <i class="bi bi-truck me-1"></i> Fornecedor
+              </th>
+              <th class="text-center align-middle" style="width:15%;">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Enviado (kg)
+              </th>
+              <th class="align-middle" style="width:15%;">
+                <i class="bi bi-arrow-return-left me-1"></i> Retorno (kg)
+              </th>
+              <th class="align-middle" style="width:10%;">
+                <i class="bi bi-recycle me-1"></i> Sucata (kg)
+              </th>
+              <th class="align-middle" style="width:10%;">
+                <i class="bi bi-x-octagon me-1"></i> Refugo (kg)
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in formset %}
+            <tr class="align-middle">
+              <td class="text-center">
+                <span class="d-inline-flex align-items-center">
+                  <i class="bi bi-upc-scan text-muted me-1"></i>
+                  {{ f.instance.lote.nro_rolo|default:f.instance.lote }}
+                </span>
+                {{ f.id }}
+              </td>
+              <td class="text-center">
+                <span class="d-inline-flex align-items-center">
+                  <i class="bi bi-truck text-muted me-1"></i>
+                  {% if f.instance.tb050 and f.instance.tb050.fornecedor %}
+                    {{ f.instance.tb050.fornecedor }}
+                  {% elif f.instance.lote and f.instance.lote.tb050 and f.instance.lote.tb050.fornecedor %}
+                    {{ f.instance.lote.tb050.fornecedor }}
+                  {% elif f.instance.lote and f.instance.lote.fornecedor %}
+                    {{ f.instance.lote.fornecedor }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </span>
+              </td>
+              <td class="text-center">
+                <span class="d-inline-flex align-items-center justify-content-center w-100">
+                  <i class="bi bi-weight text-muted me-1"></i>
+                  {{ f.instance.enviado|floatformat:3 }}
+                </span>
+              </td>
+              <td>
+                {% render_field f.retorno class="form-control text-end" %}
+                {% for e in f.retorno.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+              </td>
+              <td>
+                {% render_field f.sucata class="form-control text-end" %}
+                {% for e in f.sucata.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+              </td>
+              <td>
+                {% render_field f.refugo class="form-control text-end" %}
+                {% for e in f.refugo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row g-3 mt-3">
+        <div class="col-md-4">
+          <label class="form-label">
+            <i class="bi bi-123 me-1"></i> Peças apontadas
+          </label>
+          {% render_field form.pecas_apontadas class="form-control" %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">
+            <i class="bi bi-calendar-check me-1"></i> Data de retorno
+          </label>
+          {% render_field form.data_retorno class="form-control" %}
+        </div>
+    <div class="col-12">
+  <label class="form-label"><i class="bi bi-card-text me-1"></i> Observações</label>
+  {{ form.observacoes|add_class:"form-control" }}
+  {% for e in form.observacoes.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
 </div>
 
-{# KPIs rápidos #}
-<ul class="list-group small mb-3">
-  <li class="list-group-item d-flex justify-content-between">
-    <span>Planejado</span>
-    <strong>{{ obj.qtde_op_prevista|floatformat:3 }} kg para {{ obj.pecas_planejadas_op }} peças ({{ obj.consumo_por_peca_planejado|floatformat:6 }} kg/peça)</strong>
-  </li>
-  <li class="list-group-item d-flex justify-content-between">
-    <span>Enviado</span><strong>{{ obj.enviado|floatformat:3 }} kg</strong>
-  </li>
-  <li class="list-group-item d-flex justify-content-between">
-    <span>Retorno</span><strong>{{ obj.retorno|floatformat:3 }} kg</strong>
-  </li>
-  <li class="list-group-item d-flex justify-content-between">
-    <span>Consumo (balança)</span><strong>{{ obj.consumo_balanca_kg|floatformat:3 }} kg</strong>
-  </li>
-  <li class="list-group-item d-flex justify-content-between">
-    <span>Consumo (inferido)</span><strong>{{ obj.consumo_inferido_kg|floatformat:3 }} kg</strong>
-  </li>
-  <li class="list-group-item d-flex justify-content-between">
-    <span>Consumo REAL</span><strong>{{ obj.consumo_real_kg|floatformat:3 }} kg</strong>
-  </li>
-  <li class="list-group-item d-flex justify-content-between">
-    <span>Sucata</span><strong>{{ obj.sucata|floatformat:3 }} kg ({{ obj.perc_sucata }}%)</strong>
-  </li>
-  <li class="list-group-item d-flex justify-content-between">
-    <span>Desvio balanço de massa</span><strong>{{ obj.desvio_balanco_percent }}%</strong>
-  </li>
-</ul>
 
-<form method="post" enctype="multipart/form-data" class="card shadow-sm">
-  <div class="card-body">
-    {% csrf_token %}
+        {# Campo de justificativa quando exceder tolerância ou quando houver erro #}
+        {% if obj.perc_sucata > obj.tolerancia_sucata_percentual or form.justificativa_excesso.errors %}
+        <div class="col-12">
+          <div class="alert alert-warning mt-2">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            A sucata ({{ obj.perc_sucata }}%) excede a tolerância ({{ obj.tolerancia_sucata_percentual }}%).
+            Informe a justificativa para permitir o fechamento.
+          </div>
+          <label class="form-label">
+            <i class="bi bi-justify-left me-1"></i> {{ form.justificativa_excesso.label }}
+          </label>
+          {% render_field form.justificativa_excesso class="form-control" %}
+          {% for e in form.justificativa_excesso.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        {% endif %}
 
-    {% if form.non_field_errors %}
-      <div class="alert alert-danger mb-3">
-        {{ form.non_field_errors }}
+        {% include 'partials/global/_campo_anexo.html' with campo="anexo" %}
       </div>
-    {% endif %}
-
-    <div class="row g-3">
-      <div class="col-md-4">
-        <label class="form-label">Peças apontadas</label>
-        {{ form.pecas_apontadas }}
-        {{ form.pecas_apontadas.errors }}
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Sucata (kg)</label>
-        {{ form.sucata }}
-        {{ form.sucata.errors }}
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Refugo (kg)</label>
-        {{ form.refugo }}
-        {{ form.refugo.errors }}
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Retorno (kg)</label>
-        {{ form.retorno }}
-        {{ form.retorno.errors }}
-      </div>
-      <div class="col-md-4">
-  <label class="form-label">Data de retorno</label>
-  {{ form.data_retorno }}
-  {{ form.data_retorno.errors }}
-</div>
-      <div class="col-md-12">
-        <label class="form-label">Observações</label>
-        {{ form.observacoes }}
-        {{ form.observacoes.errors }}
-      </div>
-
-      {# Anexo com seu partial padrão #}
-      {% include 'partials/global/_campo_anexo.html' with campo="anexo" %}
     </div>
 
-    {# Se sucata > tolerância, exija justificativa #}
-    {% if obj.perc_sucata > obj.tolerancia_sucata_percentual %}
-      <div class="alert alert-warning mt-3">
-        <i class="bi bi-exclamation-triangle-fill me-1"></i>
-        A sucata ({{ obj.perc_sucata }}%) excede a tolerância ({{ obj.tolerancia_sucata_percentual }}%). Informe a justificativa para permitir o fechamento.
-      </div>
-      <div class="mt-2">
-        {{ form.justificativa_excesso.label_tag }}
-        {{ form.justificativa_excesso }}
-        {{ form.justificativa_excesso.errors }}
-      </div>
-    {% endif %}
-  </div>
+    <div class="card-footer d-flex justify-content-end gap-2">
+      <a class="btn btn-light d-inline-flex align-items-center" href="{% url 'ei_list_em_fabrica' %}">
+        <i class="bi bi-x-circle me-1"></i> Cancelar
+      </a>
+      <button class="btn btn-primary btn-acao-personalizado d-inline-flex align-items-center" type="submit">
+        <i class="bi bi-check2-circle me-1"></i> Salvar e enviar ao Histórico
+      </button>
+    </div>
+  </form>
+</div>
+{# ===== CKEditor 5 (CDN). Se você já tem local, troque pelo seu {% static %} ===== #}
+<script src="https://cdn.ckeditor.com/ckeditor5/41.2.1/classic/ckeditor.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const el = document.getElementById('id_observacoes');
+    if (el && !el.dataset.ckeditorInited) {
+      ClassicEditor.create(el, {
+        toolbar: [
+          'heading', '|',
+          'bold', 'italic', 'underline', 'link', '|',
+          'bulletedList', 'numberedList', 'outdent', 'indent', '|',
+          'blockQuote', 'insertTable', '|',
+          'undo', 'redo'
+        ]
+        // , language: 'pt-br'  // use apenas se seu build incluir o idioma
+      }).then(editor => {
+        el.dataset.ckeditorInited = '1';
+      }).catch(err => console.error(err));
+    }
 
-  <div class="card-footer d-flex justify-content-end gap-2">
-    <button class="btn btn-success" type="submit">
-      <i class="bi bi-check2-circle me-1"></i> Salvar e enviar ao Histórico
-    </button>
-  </div>
-</form>
+    // alternativa: inicializar qualquer .js-ckeditor5
+    document.querySelectorAll('.js-ckeditor5').forEach(function(node){
+      if (node.id && !node.dataset.ckeditorInited) {
+        ClassicEditor.create(node).then(()=> node.dataset.ckeditorInited='1').catch(console.error);
+      }
+    });
+  });
+</script>
 {% endblock %}

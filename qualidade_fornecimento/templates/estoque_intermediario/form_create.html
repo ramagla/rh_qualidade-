@@ -1,176 +1,348 @@
-{# qualidade_fornecimento/templates/estoque_intermediario/form_create.html — PARA (JS: popula LOTE usando jQuery p/ Select2) #}
-{% extends "base.html" %}
+{# templates/estoque_intermediario/form_create.html — PARA #}
+{% extends 'base.html' %}
 {% load static %}
+{% load widget_tweaks %}
+
 {% block title %}Novo Envio — Estoque Intermediário{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <i class="bi bi-send-check text-primary fs-3"></i>
-    <h4 class="mb-0">Novo Envio — Estoque Intermediário</h4>
-  </div>
-  <a class="btn btn-outline-secondary" href="{% url 'ei_list_em_fabrica' %}">
-    <i class="bi bi-arrow-left-circle me-1"></i> Voltar
-  </a>
-</div>
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+{% include "partials/global/_toast_mensagens.html" %}
 
-<form method="post" enctype="multipart/form-data" class="card shadow-sm">
-  <div class="card-body">
+<div class="container-fluid mt-5">
+
+  {# Cabeçalho padronizado com ícone/emoji #}
+  {% include "partials/global/_header_titulo.html" with titulo="Novo Envio — Estoque Intermediário" icone="bi bi-send-check" emoji="📤" %}
+
+  {# Barra de ações #}
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    <a href="{% url 'ei_list_em_fabrica' %}"
+       class="btn btn-outline-secondary btn-acao-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-arrow-left-circle me-2" aria-hidden="true"></i> Voltar
+    </a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="eiForm">
     {% csrf_token %}
+ {% if form.non_field_errors %}
+    <div class="alert alert-danger mb-3">
+      {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+    </div>
+  {% endif %}
+  {% if formset.non_form_errors %}
+    <div class="alert alert-danger mb-3">
+      {% for e in formset.non_form_errors %}<div>{{ e }}</div>{% endfor %}
+    </div>
+  {% endif %}
+    <div class="card shadow-sm">
+      <div class="card-body">
 
-    <div class="row g-3">
-      <div class="col-md-4">
-        <label class="form-label">OP*</label>
-        {{ form.op }}
-      </div>
+        <div class="accordion" id="accordionEI">
 
-      <div class="col-md-4">
-        <label class="form-label">Matéria-prima*</label>
-        {{ form.materia_prima }}
-      </div>
+          {# 1) DADOS DO ENVIO #}
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="accDadosHeader">
+              <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#accDados" aria-expanded="true" aria-controls="accDados">
+                <i class="bi bi-clipboard-plus me-2"></i> Dados do Envio
+              </button>
+            </h2>
+            <div id="accDados" class="accordion-collapse collapse show" aria-labelledby="accDadosHeader"
+                 data-bs-parent="#accordionEI">
+              <div class="accordion-body">
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-hash me-1"></i> OP *</label>
+{% if form.op.errors %}
+  {{ form.op|add_class:"form-control is-invalid" }}
+  {% for e in form.op.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+{% else %}
+  {{ form.op|add_class:"form-control" }}
+{% endif %}
 
-      <div class="col-md-4">
-        <label class="form-label">Lote / Rolo*</label>
-        {{ form.lote }}
-      </div>
+                  </div>
 
-      <div class="col-md-4">
-        <label class="form-label">TB050 (opcional)</label>
-        {{ form.tb050 }}
-      </div>
+                  <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-tag me-1"></i> Matéria-prima *</label>
+                    {{ form.materia_prima|add_class:"form-select select2" }}
+                  </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Qtd MP prevista (kg)*</label>
-        {{ form.qtde_op_prevista }}
-      </div>
+                  <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-calendar2-week me-1"></i> Data de envio</label>
+                    {{ form.data_envio|add_class:"form-control" }}
+                  </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Peças planejadas OP*</label>
-        {{ form.pecas_planejadas_op }}
-      </div>
+                  <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-archive me-1"></i> Qtd MP prevista (kg) *</label>
+                    {{ form.qtde_op_prevista|add_class:"form-control" }}
+                  </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Enviado à fábrica (kg)*</label>
-        {{ form.enviado }}
+                  <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-123 me-1"></i> Peças planejadas OP *</label>
+                    {{ form.pecas_planejadas_op|add_class:"form-control" }}
+                  </div>
+
+                  <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-cpu me-1"></i> Máquina</label>
+                    {{ form.maquina|add_class:"form-select select2" }}
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label"><i class="bi bi-card-text me-1"></i> Observações</label>
+                    {{ form.observacoes|add_class:"form-control" }}
+                  </div> 
+
+                  {# Anexo padronizado #}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {# 2) LOTES / ROLOS #}
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="accLotesHeader">
+              <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#accLotes" aria-expanded="false" aria-controls="accLotes">
+                <i class="bi bi-upc-scan me-2"></i> Lotes / Rolos
+              </button>
+            </h2>
+            <div id="accLotes" class="accordion-collapse collapse" aria-labelledby="accLotesHeader"
+                 data-bs-parent="#accordionEI">
+              <div class="accordion-body">
+                {{ formset.management_form }}
+                <div id="itens-wrapper" class="table-responsive zebra-tabela">
+                  <table class="table table-bordered table-striped align-middle text-center">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width:40%">
+                          <div class="d-flex flex-column align-items-center">
+                            <i class="bi bi-upc mb-1"></i><small>Lote / Rolo</small>
+                          </div>
+                        </th>
+                        <th style="width:30%">
+                          <div class="d-flex flex-column align-items-center">
+                            <i class="bi bi-file-earmark-text mb-1"></i><small>TB050</small>
+                          </div>
+                        </th>
+                        <th style="width:20%">
+                          <div class="d-flex flex-column align-items-center">
+                            <i class="bi bi-box-arrow-in-right mb-1"></i><small>Enviado (kg)</small>
+                          </div>
+                        </th>
+                        <th style="width:10%"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="itens-body">
+                      {% for f in formset %}
+                      <tr class="eiitem-row">
+                        <td>
+                          {{ f.lote }} {{ f.id }}
+                          {% for e in f.lote.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                        </td>
+                        <td>
+                          {{ f.tb050 }}
+                          {% for e in f.tb050.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                        </td>
+                        <td>
+                          {{ f.enviado }}
+                          {% for e in f.enviado.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                        </td>
+                        <td>
+                          {% if formset.can_delete %}
+                          <div class="form-check">
+                            {{ f.DELETE }} <label class="form-check-label">Remover</label>
+                          </div>
+                          {% endif %}
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+
+                <button type="button" class="btn btn-outline-primary btn-acao-personalizado btn-sm" id="btn-add-item">
+                  <i class="bi bi-plus-circle me-1"></i> Adicionar lote
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {# 3) PARÂMETROS #}
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="accParamsHeader">
+              <button class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#accParams" aria-expanded="false" aria-controls="accParams">
+                <i class="bi bi-sliders me-2"></i> Parâmetros
+              </button>
+            </h2>
+            <div id="accParams" class="accordion-collapse collapse" aria-labelledby="accParamsHeader"
+                 data-bs-parent="#accordionEI">
+              <div class="accordion-body">
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-percent me-1"></i> Tolerância de sucata (%)</label>
+                    {{ form.tolerancia_sucata_percentual|add_class:"form-control" }}
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-cash-coin me-1"></i> Custo por kg (opcional)</label>
+                    {{ form.custo_kg|add_class:"form-control" }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>{# /accordion #}
+
+      </div>{# /card-body #}
+
+      <div class="card-footer d-flex justify-content-end">
+        {# Botões padronizados #}
+        {% include "partials/global/_botoes_salvar_cancelar.html" with edicao=False url_voltar='ei_list_em_fabrica' %}
       </div>
-      <div class="col-md-4">
-  <label class="form-label">Data de envio</label>
-  {{ form.data_envio }}
+    </div>{# /card #}
+
+  </form>
 </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Máquina</label>
-        {{ form.maquina }}
-      </div>
-
-      <div class="col-md-12">
-        <label class="form-label">Observações</label>
-        {{ form.observacoes }}
-      </div>
-
-      {# ✅ partial correto para anexos #}
-      {% include 'partials/global/_campo_anexo.html' with campo="anexo" %}
-    </div>
-
-    <hr class="my-3">
-
-    <div class="row g-3">
-      <div class="col-md-4">
-        <label class="form-label">Tolerância de sucata (%)</label>
-        {{ form.tolerancia_sucata_percentual }}
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Custo por kg (opcional)</label>
-        {{ form.custo_kg }}
-      </div>
-    </div>
-  </div>
-
-  <div class="card-footer d-flex justify-content-end gap-2">
-    <button class="btn btn-primary"><i class="bi bi-save2 me-1"></i> Salvar</button>
-  </div>
-</form>
-
-{# qualidade_fornecimento/templates/estoque_intermediario/form_create.html — trecho de script #}
+{# === Scripts: Select2 + dinâmica do formset (mantendo o padrão do projeto) === #}
 <script>
 (function(){
   function init() {
-    if (!(window.jQuery && jQuery.fn && jQuery.fn.select2)) return setTimeout(init, 100);
+    if (!window.jQuery) return setTimeout(init, 100);
     var $ = jQuery;
 
-    var $mp   = $('#id_materia_prima');
-    var $lote = $('#id_lote');
-    var $tb50 = $('#id_tb050');
-
-    // Garante Select2 na MP (se o base já inicializou, não duplica)
-    if (!$mp.hasClass('select2-hidden-accessible')) {
-      $mp.select2({ width:'100%', placeholder:'Selecione...', language:'pt-BR' });
+    // Select2 genérico
+    if ($.fn.select2) {
+      $('.select2').each(function(){
+        if (!$(this).hasClass('select2-hidden-accessible')) {
+          $(this).select2({ width: '100%', language: 'pt-BR', allowClear: true });
+        }
+      });
     }
 
-    function montarSelect2Lote() {
-      // destrói qualquer select2 anterior (inicializado pelo base ou por nós)
-      if ($lote.hasClass('select2-hidden-accessible')) {
-        try { $lote.select2('destroy'); } catch(e) {}
-      }
+    const $mp = $('#id_materia_prima');
 
-      // desabilita se não tiver MP escolhida (evita chamadas sem mp)
-      var mpVal = $mp.val();
-      $lote.prop('disabled', !mpVal);
+    function initRow($row){
+      const $lote = $row.find('select.eiitem-lote');
+      const $tb50 = $row.find('select.eiitem-tb50');
 
-      // recria com AJAX
+      if (!$.fn.select2) return;
+
+      if ($lote.hasClass('select2-hidden-accessible')) { try{$lote.select2('destroy');}catch(e){} }
+
       $lote.select2({
         placeholder: "— selecione —",
         allowClear: true,
         width: '100%',
-        language: "pt-BR",
+        language: {
+          errorLoading: () => "Erro ao carregar",
+          loadingMore: () => "Carregando mais…",
+          noResults: () => $mp.val() ? "Nenhum rolo encontrado para esta MP" : "Selecione a Matéria-prima acima",
+          searching: () => "Buscando…"
+        },
         minimumInputLength: 0,
         ajax: {
           url: "{% url 'api_rolos_por_mp' %}",
           dataType: 'json',
           delay: 200,
-          data: function (params) {
-            return {
-              mp: $mp.val() || "",
-              q: params.term || ""
-            };
+          data: function(params){
+            return { mp: $mp.val() || "", q: params.term || "", _ts: Date.now() };
           },
-          processResults: function (data) {
+          processResults: function(data){
             var res = (data && data.results) ? data.results : [];
-            return { results: res.map(function(r){ return { id:r.id, text:r.texto, tb050_id:r.tb050_id, tb050_label:r.tb050_label }; }) };
+            return { results: res.map(function(r){
+              return { id: r.id, text: r.texto, tb050_id: r.tb050_id, tb050_label: r.tb050_label };
+            }) };
           },
-          cache: true
+          cache: false
         }
       });
+
+      if (!$tb50.hasClass('select2-hidden-accessible')) {
+        $tb50.select2({ width:'100%', placeholder:'Selecione...', language:'pt-BR', allowClear: true });
+      }
+
+      // Autopreenche TB050 ao escolher o rolo
+      $lote.on('select2:select', function(e){
+        var d = e.params.data || {};
+        if (!d.tb050_id) { $tb50.val(null).trigger('change'); return; }
+        if ($tb50.find('option[value="'+ d.tb050_id +'"]').length === 0) {
+          var opt = new Option(d.tb050_label || String(d.tb050_id), d.tb050_id, true, true);
+          $tb50.append(opt).trigger('change');
+        } else {
+          $tb50.val(String(d.tb050_id)).trigger('change');
+        }
+      });
+
+      $lote.on('select2:clear', function(){ $tb50.val(null).trigger('change'); });
     }
 
-    // monta ao carregar
-    montarSelect2Lote();
+    // Inicializa linhas já renderizadas
+    $('#itens-body tr.eiitem-row').each(function(){ initRow($(this)); });
 
-    // ao trocar a MP: limpa TB050 e Lote, e remonta o Select2 do Lote com a nova MP
+    // Botão “Adicionar lote”
+    $('#btn-add-item').on('click', function(){
+      var $tbody = $('#itens-body');
+      var formIdx = $('#id_itens-TOTAL_FORMS').val();
+      var tmpl = `
+        <tr class="eiitem-row">
+          <td>
+            ${'{{ formset.empty_form.lote|escapejs }}'.replace(/__prefix__/g, formIdx)}
+            ${'{{ formset.empty_form.id|escapejs }}'.replace(/__prefix__/g, formIdx)}
+          </td>
+          <td>${'{{ formset.empty_form.tb050|escapejs }}'.replace(/__prefix__/g, formIdx)}</td>
+          <td>${'{{ formset.empty_form.enviado|escapejs }}'.replace(/__prefix__/g, formIdx)}</td>
+          <td>
+            <div class="form-check">
+              ${'{{ formset.empty_form.DELETE|escapejs }}'.replace(/__prefix__/g, formIdx)}
+              <label class="form-check-label">Remover</label>
+            </div>
+          </td>
+        </tr>`;
+      $tbody.append(tmpl);
+      $('#id_itens-TOTAL_FORMS').val(parseInt(formIdx, 10) + 1);
+      initRow($tbody.find('tr.eiitem-row').last());
+    });
+
+    // Ao trocar a MP: limpa e recria selects dos lotes/TB050
     $mp.on('change', function(){
-      $tb50.val(null).trigger('change');
-      $lote.val(null).trigger('change');
-      montarSelect2Lote();
-    });
+      $('#itens-body').find('tr.eiitem-row').each(function(){
+        var $row = $(this);
+        var $lote = $row.find('select.eiitem-lote');
+        var $tb50 = $row.find('select.eiitem-tb50');
 
-    // ao escolher um rolo, preenche TB050 automaticamente
-    $lote.on('select2:select', function(e){
-      var d = e.params.data || {};
-      if (!d.tb050_id) return;
-      if ($tb50.find('option[value="'+ d.tb050_id +'"]').length === 0) {
-        var opt = new Option(d.tb050_label || ('TB050 ' + d.tb050_id), d.tb050_id, true, true);
-        $tb50.append(opt).trigger('change');
-      } else {
-        $tb50.val(String(d.tb050_id)).trigger('change');
-      }
-    });
+        if ($.fn.select2 && $lote.hasClass('select2-hidden-accessible')) {
+          try{$lote.select2('destroy');}catch(e){}
+          $lote.val("");
+        } else {
+          $lote.empty().append(new Option("— selecione —", ""));
+        }
+        $tb50.val(null).trigger('change');
 
-    // se limpar o rolo, limpa TB050
-    $lote.on('select2:clear', function(){ $tb50.val(null).trigger('change'); });
+        initRow($row);
+      });
+    });
   }
   init();
 })();
 </script>
-
-
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // foca no primeiro inválido
+  const firstInvalid = document.querySelector('.is-invalid');
+  if (firstInvalid) {
+    try { firstInvalid.focus(); } catch(e) {}
+    // abre o acordeão onde o campo está (se estiver fechado)
+    const collapse = firstInvalid.closest('.accordion-collapse');
+    if (collapse && !collapse.classList.contains('show')) {
+      const btn = document.querySelector('[data-bs-target="#' + collapse.id + '"]');
+      if (btn) btn.click();
+    }
+    // scroll suave até o campo
+    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+</script>
 {% endblock %}

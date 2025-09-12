@@ -1,0 +1,108 @@
+{# templates/estoque_intermediario/partials/_modal_lotes.html — PARA #}
+<div class="modal fade" id="modalLotes{{ item.pk }}" tabindex="-1" aria-labelledby="modalLotesLabel{{ item.pk }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-box-seam fs-5 text-primary"></i>
+          <h5 class="modal-title mb-0" id="modalLotesLabel{{ item.pk }}">
+            <span class="me-1 fw-semibold">OP</span>
+            <span class="badge bg-primary">{{ item.op }}</span>
+          </h5>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 ms-3">
+          <span class="badge bg-light text-dark d-inline-flex align-items-center">
+            <i class="bi bi-tag me-1"></i> {{ item.materia_prima }}
+          </span>
+          <span class="badge bg-light text-dark d-inline-flex align-items-center">
+            <i class="bi bi-layers me-1"></i> {{ item.itens.count }} lote{% if item.itens.count != 1 %}s{% endif %}
+          </span>
+          <span class="badge bg-secondary d-inline-flex align-items-center">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Env. {{ item.enviado|floatformat:3 }} kg
+          </span>
+        </div>
+
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="table-responsive zebra-tabela">
+          <table class="table table-sm table-bordered table-striped align-middle">
+            <thead class="table-light">
+              <tr class="text-center align-middle">
+                <th class="align-middle" style="width:35%;">
+                  <i class="bi bi-upc-scan me-1"></i> Lote / Rolo
+                </th>
+                <th class="align-middle" style="width:45%;">
+                  <i class="bi bi-truck me-1"></i> Fornecedor
+                </th>
+                <th class="text-end align-middle" style="width:20%;">
+                  <i class="bi bi-box-arrow-in-right me-1"></i> Enviado (kg)
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in item.itens.all %}
+              <tr class="align-middle">
+                <td class="text-start align-middle">
+                  <span class="d-inline-flex align-items-center">
+                    <i class="bi bi-upc-scan text-muted me-1"></i>
+                    {{ it.lote.nro_rolo|default:it.lote }}
+                  </span>
+                </td>
+                <td class="text-start align-middle">
+                  <span class="d-inline-flex align-items-center">
+                    <i class="bi bi-truck text-muted me-1"></i>
+                    {% if it.tb050 and it.tb050.fornecedor %}
+                      {{ it.tb050.fornecedor }}
+                    {% elif it.lote and it.lote.tb050 and it.lote.tb050.fornecedor %}
+                      {{ it.lote.tb050.fornecedor }}
+                    {% elif it.lote and it.lote.fornecedor %}
+                      {{ it.lote.fornecedor }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </span>
+                </td>
+                <td class="text-center align-middle">
+                  <span class="d-inline-flex align-items-center justify-content-center w-100">
+                    <i class="bi bi-weight text-muted me-1"></i>
+                    {{ it.enviado|floatformat:3 }}
+                  </span>
+                </td>
+              </tr>
+              {% empty %}
+              <tr class="align-middle">
+                <td colspan="3" class="text-center text-muted">
+                  <i class="bi bi-info-circle me-1"></i> Sem lotes.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+              <tr class="align-middle">
+                <th colspan="2" class="text-end align-middle">
+                  <span class="d-inline-flex align-items-center">
+                    <i class="bi bi-sum me-1"></i> Total enviado
+                  </span>
+                </th>
+                <th class="text-end align-middle">
+                  <span class="fw-semibold">{{ item.enviado|floatformat:3 }}</span>
+                </th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Fechar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

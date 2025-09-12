@@ -1,0 +1,75 @@
+{# Modal de Anexos: ver, enviar/alterar e remover #}
+<div class="modal fade" id="modalAnexo{{ item.pk }}" tabindex="-1" aria-labelledby="modalAnexoLabel{{ item.pk }}" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-paperclip fs-5 text-dark"></i>
+          <h5 class="modal-title mb-0" id="modalAnexoLabel{{ item.pk }}">
+            Anexos — OP <span class="badge bg-secondary">{{ item.op }}</span>
+          </h5>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <div class="form-text mb-1">
+            Você pode visualizar o anexo atual (se houver) ou enviar um novo arquivo para este registro.
+          </div>
+
+          <div class="border rounded p-3">
+            {% if item.anexo %}
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="d-inline-flex align-items-center gap-2">
+                  <i class="bi bi-file-earmark-text"></i>
+                  <span class="fw-semibold">Arquivo atual:</span>
+                </div>
+                <a href="{{ item.anexo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-box-arrow-up-right me-1"></i>Abrir
+                </a>
+              </div>
+              <div class="small text-muted mt-1">{{ item.anexo.name }}</div>
+              <hr>
+            {% else %}
+              <div class="text-center text-muted">
+                <i class="bi bi-info-circle me-1"></i> Sem anexo no momento.
+              </div>
+              <hr>
+            {% endif %}
+
+            <form method="post" action="{% url 'ei_upload_anexo' item.pk %}" enctype="multipart/form-data" class="d-grid gap-2">
+              {% csrf_token %}
+              <div>
+                <label class="form-label d-flex align-items-center gap-2">
+                  <i class="bi bi-upload"></i> Enviar/alterar anexo
+                </label>
+                <input type="file" name="anexo" class="form-control">
+              </div>
+
+              <div class="d-flex justify-content-end gap-2">
+                {% if item.anexo %}
+                <button type="submit" name="remover" value="1" class="btn btn-outline-danger">
+                  <i class="bi bi-trash me-1"></i> Remover
+                </button>
+                {% endif %}
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-save me-1"></i> Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Fechar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

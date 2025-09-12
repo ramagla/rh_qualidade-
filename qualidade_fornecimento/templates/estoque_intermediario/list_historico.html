@@ -1,51 +1,268 @@
+{# templates/estoque_intermediario/list_historico.html — COM ALERTAS (ajustado) #}
 {% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
 {% block title %}Estoque Intermediário — Histórico{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <i class="bi bi-clock-history text-secondary fs-3"></i>
-    <h4 class="mb-0">Histórico — Estoque Intermediário</h4>
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+{% include "partials/global/_toast_mensagens.html" %}
+
+<div class="container-fluid mt-5">
+
+  {# Cabeçalho padronizado #}
+  {% include "partials/global/_header_titulo.html" with titulo="Histórico — Estoque Intermediário" icone="bi bi-clock-history" emoji="🕘" %}
+
+  {# Barra de ações #}
+  <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+    {% include "partials/global/_botao_filtros_offcanvas.html" %}
+    <a href="{% url 'ei_list_em_fabrica' %}" class="btn btn-outline-secondary btn-acao-personalizado d-inline-flex align-items-center">
+      <i class="bi bi-arrow-left-circle me-2" aria-hidden="true"></i> Em Fábrica
+    </a>
   </div>
-  <a class="btn btn-outline-secondary" href="{% url 'ei_list_em_fabrica' %}"><i class="bi bi-arrow-left-circle me-1"></i>Em Fábrica</a>
+
+  {# KPIs no padrão dos cards #}
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    {% include "partials/global/_card_indicador.html" with cor="primary"  titulo="Itens fechados"        valor=kpis.total               subtitulo="" icone="bi-check2-square" %}
+    {% include "partials/global/_card_indicador.html" with cor="success"  titulo="Retorno total (kg)"    valor=kpis.retorno_total|floatformat:3 subtitulo="" icone="bi-arrow-return-left" %}
+    {% include "partials/global/_card_indicador.html" with cor="dark"     titulo="Consumo real (kg)"     valor=kpis.consumo_real_total|floatformat:3 subtitulo="" icone="bi-graph-up" %}
+    {% include "partials/global/_card_indicador.html" with cor="warning"  titulo="Média sucata (%)"      valor=kpis.media_sucata|floatformat:2 subtitulo="" icone="bi-recycle" %}
+  </div>
+
+  {# Tabela #}
+  <h5 class="mb-3">
+    <i class="bi bi-table me-2 text-muted" aria-hidden="true"></i>
+    📄 Itens do Histórico
+  </h5>
+
+  <div class="table-responsive zebra-tabela mt-4">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <caption class="visually-hidden">Tabela de itens do histórico de Estoque Intermediário</caption>
+      <thead class="table-light">
+        <tr>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-hash mb-1"></i><small>OP</small>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-tag mb-1"></i><small>MP</small>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-layers mb-1"></i><small>Lotes</small>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-box-arrow-in-right mb-1"></i><small>Enviado (kg)</small>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-arrow-return-left mb-1"></i><small>Retorno (kg)</small>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-activity mb-1"></i><small>Consumo Real (kg)</small>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-recycle mb-1"></i><small>Sucata %</small>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-calendar2-week mb-1"></i><small>Fechado em</small>
+            </div>
+          </th>
+          <th class="align-middle">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-gear mb-1"></i><small>Ações</small>
+            </div>
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for i in page_obj %}
+        <tr>
+          <td class="text-start fw-semibold">{{ i.op }}</td>
+          <td>{{ i.materia_prima }}</td>
+          <td>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-bs-toggle="modal" data-bs-target="#modalLotes{{ i.pk }}"
+                    title="{{ i.itens.count }} lote{% if i.itens.count != 1 %}s{% endif %}">
+              <i class="bi bi-eye"></i>
+            </button>
+          </td>
+          <td>{{ i.enviado|floatformat:3 }}</td>
+          <td>{{ i.retorno|floatformat:3 }}</td>
+
+          {# Consumo Real — sem alertas/badges #}
+          <td>{{ i.consumo_real_kg|floatformat:3 }}</td>
+
+          {# Sucata % com semáforo vs. tolerância #}
+          <td>
+            {% with tol=i.tolerancia_sucata_percentual|default:3 %}
+              {% if i.perc_sucata and tol %}
+                {% if i.perc_sucata|floatformat:2 > tol|floatformat:2 %}
+                  <span class="badge bg-danger d-inline-flex align-items-center" title="Acima da tolerância ({{ tol }}%)">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ i.perc_sucata }}%
+                  </span>
+                {% elif i.perc_sucata > 0 %}
+                  <span class="badge bg-success d-inline-flex align-items-center" title="Dentro da tolerância ({{ tol }}%)">
+                    <i class="bi bi-check2-circle me-1"></i> {{ i.perc_sucata }}%
+                  </span>
+                {% else %}
+                  <span class="text-muted">0%</span>
+                {% endif %}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+
+          {# Data (somente data) + semáforo de dias em produção #}
+          <td>
+            <div class="d-flex flex-column gap-1 align-items-center">
+              <span>{{ i.data_retorno|date:"d/m/Y" }}</span>
+              {% with dias=i.dias_em_fabrica %}
+                {% if dias %}
+                  {% if dias > 10 %}
+                    <span class="badge bg-danger d-inline-flex align-items-center" title="Acima de 10 dias em produção">
+                      <i class="bi bi-stopwatch me-1"></i>{{ dias }} d
+                    </span>
+                  {% elif dias > 5 %}
+                    <span class="badge bg-warning text-dark d-inline-flex align-items-center" title="Entre 6 e 10 dias em produção">
+                      <i class="bi bi-stopwatch me-1"></i>{{ dias }} d
+                    </span>
+                  {% else %}
+                    <span class="badge bg-success d-inline-flex align-items-center" title="Até 5 dias em produção">
+                      <i class="bi bi-stopwatch me-1"></i>{{ dias }} d
+                    </span>
+                  {% endif %}
+                {% endif %}
+              {% endwith %}
+            </div>
+          </td>
+
+          <td>
+            <div class="d-inline-flex gap-1 justify-content-center">
+
+              {# 📎 Anexos (ver/inserir) #}
+              {% if request.user|has_permission:"qualidade_fornecimento.change_estoqueintermediario" %}
+                <button type="button"
+                        class="btn btn-sm btn-outline-dark d-inline-flex align-items-center"
+                        data-bs-toggle="modal" data-bs-target="#modalAnexo{{ i.pk }}"
+                        title="Anexos" aria-label="Anexos">
+                  <i class="bi bi-paperclip"></i>
+                </button>
+              {% endif %}
+
+              {# 👁️ Visualizar #}
+              <button type="button"
+                      class="btn btn-sm btn-outline-info d-inline-flex align-items-center"
+                      data-bs-toggle="modal" data-bs-target="#modalDetalhe{{ i.pk }}"
+                      title="Visualizar" aria-label="Visualizar">
+                <i class="bi bi-eye"></i>
+              </button>
+
+              {# 🖨️ PDF #}
+              <a href="{% url 'ei_relatorio_pdf' i.pk %}"
+                 class="btn btn-sm btn-outline-primary d-inline-flex align-items-center"
+                 target="_blank" title="Imprimir relatório PDF" aria-label="Imprimir relatório PDF">
+                <i class="bi bi-printer"></i>
+              </a>
+
+              {# ⤺ Estornar (neutro) #}
+              {% if request.user|has_permission:"qualidade_fornecimento.change_estoqueintermediario" %}
+                <form method="post" action="{% url 'ei_estornar' i.pk %}" class="d-inline mb-0"
+                      onsubmit="return confirm('Estornar para Em Fábrica?');">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center"
+                          title="Estornar para Em Fábrica" aria-label="Estornar para Em Fábrica">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                  </button>
+                </form>
+              {% endif %}
+
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+          {% include "partials/global/_sem_resultados.html" with colspan=9 mensagem="Sem itens no histórico." %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% include "partials/global/_paginacao.html" %}
+  </div>
+
+  {# ===== Offcanvas de Filtros ===== #}
+  <div class="offcanvas offcanvas-end offcanvas-modern" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="filtrosOffcanvasLabel">
+        <i class="bi bi-funnel-fill me-2"></i>Filtros — Histórico
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+
+    <div class="offcanvas-body">
+      <form method="get" class="row g-3">
+        <div class="col-12 filtro-wrapper">
+          <label for="f_op"><i class="bi bi-hash me-1"></i> OP</label>
+          <input id="f_op" type="text" name="op" value="{{ request.GET.op }}" class="form-control" placeholder="Ex.: 24-000123">
+        </div>
+
+        <div class="col-12 filtro-wrapper">
+          <label for="f_mp"><i class="bi bi-tag me-1"></i> Matéria-prima</label>
+          <select id="f_mp" name="mp" class="form-select select2" data-dropdown-parent="#filtrosOffcanvas">
+            <option value="">Todas</option>
+            {% for m in materias_primas %}
+              <option value="{{ m.id }}" {% if request.GET.mp == m.id|stringformat:"s" %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-6 filtro-wrapper">
+          <label for="f_de"><i class="bi bi-calendar-date me-1"></i> De (fechamento)</label>
+          <input id="f_de" type="date" name="de" value="{{ request.GET.de }}" class="form-control">
+        </div>
+
+        <div class="col-6 filtro-wrapper">
+          <label for="f_ate"><i class="bi bi-calendar-date me-1"></i> Até (fechamento)</label>
+          <input id="f_ate" type="date" name="ate" value="{{ request.GET.ate }}" class="form-control">
+        </div>
+
+        <div class="col-12 mt-3">
+          {% include "partials/global/_botao_filtrar.html" %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# ===== Modais/Partials por item ===== #}
+  {% for i in page_obj %}
+    {% include "estoque_intermediario/partials/_modal_lotes.html" with item=i %}
+    {% include "estoque_intermediario/partials/_modal_detalhe_historico.html" with item=i %}
+    {% include "estoque_intermediario/partials/_modal_anexo.html" with item=i %}
+  {% endfor %}
+
 </div>
 
-<div class="table-responsive">
-  <table class="table table-striped table-hover align-middle">
-    <thead class="table-light">
-      <tr class="text-center">
-        <th class="text-start">OP</th>
-        <th>MP</th>
-        <th>Lote</th>
-        <th>Enviado</th>
-        <th>Retorno</th>
-        <th>Consumo Real</th>
-        <th>Sucata %</th>
-        <th>Fechado em</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for i in itens %}
-      <tr class="text-center">
-        <td class="text-start">{{ i.op }}</td>
-        <td>{{ i.materia_prima }}</td>
-        <td>{{ i.lote }}</td>
-        <td>{{ i.enviado|floatformat:3 }} kg</td>
-        <td>{{ i.retorno|floatformat:3 }} kg</td>
-        <td>{{ i.consumo_real_kg|floatformat:3 }} kg</td>
-        <td>{{ i.perc_sucata }}%</td>
-        <td>{{ i.data_retorno|date:"d/m/Y H:i" }}</td>
-        <td>
-          <form method="post" action="{% url 'ei_estornar' i.pk %}" onsubmit="return confirm('Estornar para Em Fábrica?');">
-            {% csrf_token %}
-            <button class="btn btn-sm btn-outline-warning"><i class="bi bi-arrow-counterclockwise"></i> Estornar</button>
-          </form>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="9" class="text-center text-muted py-4">Sem itens no histórico.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+{# Init Select2 #}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.jQuery && jQuery.fn.select2) {
+      $('.select2').select2({ placeholder: "Selecione...", allowClear: true, width: '100%' });
+    }
+  });
+</script>
 {% endblock %}

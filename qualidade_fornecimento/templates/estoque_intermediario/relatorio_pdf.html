@@ -1,0 +1,199 @@
+{# estoque_intermediario/relatorio_pdf.html #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório — OP {{ item.op }}</title>
+  <style>
+    @page { size: A4; margin: 18mm 15mm 18mm 15mm; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #222; }
+    h1, h2, h3, h4, h5 { margin: 0; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .brand { font-weight: 700; font-size: 16px; }
+    .muted { color: #666; }
+    .kpis { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-top: 8px; }
+    .card { border: 1px solid #e5e5e5; border-radius: 6px; padding: 8px 10px; }
+    .card .label { font-size: 11px; color: #666; }
+    .card .value { font-weight: 700; font-size: 13px; margin-top: 2px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+    th, td { border: 1px solid #e5e5e5; padding: 6px 8px; }
+    thead th { background: #f7f7f7; font-weight: 700; text-align: center; }
+    tfoot th, tfoot td { background: #fafafa; font-weight: 700; }
+    .text-end { text-align: right; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+    .bg-success { background: #d1e7dd; color: #0f5132; }
+    .bg-warning { background: #fff3cd; color: #664d03; }
+    .bg-danger  { background: #f8d7da; color: #842029; }
+
+    .section-title { margin-top: 16px; font-weight: 700; }
+    .mt-6 { margin-top: 6px; }
+    .mt-12 { margin-top: 12px; }
+    .mb-8 { margin-bottom: 8px; }
+    .small { font-size: 11px; }
+    .hr { height: 1px; background: #eee; border: 0; margin: 14px 0; }
+    .obs { border: 1px dashed #bbb; padding: 8px; border-radius: 6px; background: #fcfcfc; }
+  </style>
+</head>
+<body>
+
+  <!-- Cabeçalho -->
+  <div class="header">
+    <div>
+      <div class="brand">Relatório — Estoque Intermediário</div>
+      <div class="muted small">OP <strong>{{ item.op }}</strong></div>
+    </div>
+    <div class="small muted">
+      Gerado em: {{ gerado_em|date:"d/m/Y H:i" }}
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="card">
+      <div class="label">Matéria-prima</div>
+      <div class="value">{{ item.materia_prima }}</div>
+    </div>
+    <div class="card">
+      <div class="label">Máquina</div>
+      <div class="value">{{ item.maquina|default:"—" }}</div>
+    </div>
+    <div class="card">
+      <div class="label">Enviado</div>
+      <div class="value">{{ item.enviado|floatformat:3 }} kg</div>
+    </div>
+    <div class="card">
+      <div class="label">Retorno</div>
+      <div class="value">{{ item.retorno|floatformat:3 }} kg</div>
+    </div>
+    <div class="card">
+      <div class="label">Qtd OP (planejada)</div>
+      <div class="value">{{ item.pecas_planejadas_op|default:"—" }}</div>
+    </div>
+    <div class="card">
+      <div class="label">Qtd apontada (produzida)</div>
+      <div class="value">{{ item.pecas_apontadas|default:"—" }}</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Consumo previsto (planejado +5%)</div>
+      <div class="value">
+        {% if previsto_kg %}{{ previsto_kg|floatformat:3 }} kg{% else %}—{% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">Consumo previsto (ajustado por peças +5%)</div>
+      <div class="value">
+        {% if previsto_ajustado_kg %}{{ previsto_ajustado_kg|floatformat:3 }} kg{% else %}—{% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Consumo REAL</div>
+      <div class="value">{{ item.consumo_real_kg|floatformat:3 }} kg</div>
+    </div>
+    <div class="card">
+      <div class="label">Sucata</div>
+      <div class="value">{{ item.sucata|floatformat:3 }} kg ({{ item.perc_sucata }}%)</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Dias em produção</div>
+      <div class="value">
+        {% if dias_producao != None %}{{ dias_producao }}{% else %}—{% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">Fechado em</div>
+      <div class="value">
+        {% if item.data_retorno %}{{ item.data_retorno|date:"d/m/Y H:i" }}{% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# Alerta visual de consumo vs previsto ajustado #}
+  {% if previsto_ajustado_kg and item.consumo_real_kg %}
+    <div class="mt-12">
+      {% if item.consumo_real_kg > previsto_ajustado_kg %}
+        <span class="badge bg-danger">Acima do previsto ajustado</span>
+      {% elif item.consumo_real_kg < previsto_ajustado_kg %}
+        <span class="badge bg-warning">Abaixo do previsto ajustado</span>
+      {% else %}
+        <span class="badge bg-success">Dentro do previsto ajustado</span>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <hr class="hr">
+
+  <h4 class="section-title">Lotes</h4>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">Lote / Rolo</th>
+        <th style="width: 28%;">Fornecedor</th>
+        <th class="text-center" style="width: 12%;">Enviado (kg)</th>
+        <th class="text-center" style="width: 12%;">Retorno (kg)</th>
+        <th class="text-center" style="width: 13%;">Sucata (kg)</th>
+        <th class="text-center" style="width: 13%;">Refugo (kg)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for it in item.itens.all %}
+      <tr>
+        <td class="text-left">
+          {{ it.lote.nro_rolo|default:it.lote }}
+        </td>
+        <td class="text-left">
+          {% if it.tb050 and it.tb050.fornecedor %}
+            {{ it.tb050.fornecedor }}
+          {% elif it.lote and it.lote.tb050 and it.lote.tb050.fornecedor %}
+            {{ it.lote.tb050.fornecedor }}
+          {% elif it.lote and it.lote.fornecedor %}
+            {{ it.lote.fornecedor }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td class="text-center">{{ it.enviado|floatformat:3 }}</td>
+        <td class="text-center">{{ it.retorno|floatformat:3 }}</td>
+        <td class="text-center">{{ it.sucata|floatformat:3 }}</td>
+        <td class="text-center">{{ it.refugo|floatformat:3 }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center muted">Sem lotes.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th colspan="2" class="text-right">Totais</th>
+        <th class="text-center">{{ item.enviado|floatformat:3 }}</th>
+        <th class="text-center">{{ item.retorno|floatformat:3 }}</th>
+        <th class="text-center">{{ item.sucata|floatformat:3 }}</th>
+        <th class="text-center">{{ item.refugo|floatformat:3 }}</th>
+      </tr>
+    </tfoot>
+  </table>
+
+  {% if item.observacoes %}
+    <h4 class="section-title mt-12">Observações</h4>
+    <div class="obs small">
+      {{ item.observacoes|safe }}
+    </div>
+  {% endif %}
+
+  {% if item.justificativa_excesso %}
+    <h4 class="section-title mt-12">Justificativa do excesso de sucata</h4>
+    <div class="obs small">
+      {{ item.justificativa_excesso|linebreaksbr }}
+    </div>
+  {% endif %}
+
+</body>
+</html>

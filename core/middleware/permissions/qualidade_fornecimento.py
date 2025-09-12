@@ -88,5 +88,24 @@ qualidade_permissions = {
     "inventario_consolidar": "qualidade_fornecimento.consolidar_inventario",
     "inventario_exportar": "qualidade_fornecimento.exportar_inventario",
     "inventario_exportacoes": "qualidade_fornecimento.view_inventarioexportacao",
+    
+    # Estoque Intermediário — Listagens
+    "ei_list_em_fabrica": "qualidade_fornecimento.view_estoqueintermediario",
+    "ei_list_historico":  "qualidade_fornecimento.view_estoqueintermediario",
+
+    # CRUD / Ações
+    "ei_create":          "qualidade_fornecimento.add_estoqueintermediario",
+    "ei_update":          "qualidade_fornecimento.change_estoqueintermediario",
+    "ei_retorno":         "qualidade_fornecimento.change_estoqueintermediario",  # url name do apontamento de retorno
+    "ei_estornar":        "qualidade_fornecimento.change_estoqueintermediario",
+    "ei_upload_anexo":    "qualidade_fornecimento.change_estoqueintermediario",
+
+    # Relatório
+    "ei_relatorio_pdf":   "qualidade_fornecimento.view_estoqueintermediario",
+
+    # API (Select2)
+    "api_rolos_por_mp":   "qualidade_fornecimento.view_estoqueintermediario",
+
+
  
 }

@@ -250,5 +250,11 @@ urlpatterns = [
     path("estoque-intermediario/<int:pk>/retorno/", ei.ei_apontar_retorno, name="ei_retorno"),
     path("estoque-intermediario/<int:pk>/estornar/", ei.ei_estornar_para_em_fabrica, name="ei_estornar"),
     path("api/rolos-por-mp/", ei.api_rolos_por_mp, name="api_rolos_por_mp"),
+    path("estoque-intermediario/<int:pk>/anexo/", ei.ei_upload_anexo, name="ei_upload_anexo"),
+    path("estoque-intermediario/<int:pk>/relatorio-pdf/", ei.ei_relatorio_pdf, name="ei_relatorio_pdf"),
+    path("estoque-intermediario/<int:pk>/editar/", ei.ei_update, name="ei_update"),
+
+
+
 
 ]

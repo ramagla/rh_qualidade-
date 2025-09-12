@@ -24,7 +24,7 @@ def dashboard_qualidade_view(request):
     fim = date(ano_atual, 6, 30) if semestre == 1 else date(ano_atual, 12, 31)
 
     dados_mp = RelacaoMateriaPrima.objects.filter(data_entrada__range=[inicio, fim])
-    reprovados = dados_mp.filter(status__in=["Reprovado", "Aprovado Condicionalmente"]).count()
+    reprovados = dados_mp.filter(status__in=["Reprovado"]).count()
     atrasos = [d.atraso_em_dias for d in dados_mp if d.atraso_em_dias is not None]
     total = max(1, dados_mp.count())
 

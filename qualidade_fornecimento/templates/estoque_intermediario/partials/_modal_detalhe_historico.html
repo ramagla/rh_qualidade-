@@ -1,0 +1,250 @@
+
+{% load humanize %}
+
+
+{# templates/estoque_intermediario/partials/_modal_detalhe_historico.html #}
+<div class="modal fade" id="modalDetalhe{{ item.pk }}" tabindex="-1" aria-labelledby="modalDetalheLabel{{ item.pk }}" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-journal-text fs-5 text-info"></i>
+          <h5 class="modal-title mb-0" id="modalDetalheLabel{{ item.pk }}">
+            <span class="me-1 fw-semibold">Detalhes — OP</span>
+            <span class="badge bg-info text-dark">{{ item.op }}</span>
+          </h5>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+       <div class="modal-body">
+    <div class="row g-3 small">
+      <div class="col-md-6">
+        <ul class="list-group">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-tag me-1"></i> MP</span>
+            <strong>{{ item.materia_prima }}</strong>
+          </li>
+
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-cpu me-1"></i> Máquina</span>
+            <strong>{{ item.maquina|default:"—" }}</strong>
+          </li>
+
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-box-arrow-in-right me-1"></i> Enviado</span>
+            <strong>{{ item.enviado|floatformat:3 }} kg</strong>
+          </li>
+
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-arrow-return-left me-1"></i> Retorno</span>
+            <strong>{{ item.retorno|floatformat:3 }} kg</strong>
+          </li>
+
+          {# Qtd planejada e apontada (peças) #}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+  <span><i class="bi bi-clipboard-check me-1"></i> Qtd OP (planejada)</span>
+  <strong>
+    {% if item.pecas_planejadas_op %}{{ item.pecas_planejadas_op|intcomma }}{% else %}—{% endif %}
+  </strong>
+</li>
+         <li class="list-group-item d-flex justify-content-between align-items-center">
+  <span><i class="bi bi-clipboard-data me-1"></i> Qtd apontada (produzida)</span>
+  <strong>
+    {% if item.pecas_apontadas %}{{ item.pecas_apontadas|intcomma }}{% else %}—{% endif %}
+  </strong>
+</li>
+
+          {# Consumo previsto global (planejado +5%) #}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+              <i class="bi bi-graph-up me-1"></i> Consumo previsto
+              <small class="text-muted ms-1">(planejado +5%)</small>
+            </span>
+            <strong>{{ item.consumo_previsto_planejado_kg|floatformat:3 }} kg</strong>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-md-6">
+        <ul class="list-group">
+          {# Consumo previsto AJUSTADO por peças produzidas (+5%) #}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="d-flex align-items-center">
+              <i class="bi bi-sliders me-1"></i> Consumo previsto (ajustado)
+              <i class="bi bi-info-circle ms-2 text-muted" title="Previsto recalculado pela quantidade realmente produzida (+5%)."></i>
+            </span>
+            <strong>{{ item.consumo_previsto_ajustado_kg|floatformat:3 }} kg</strong>
+          </li>
+
+          {# Consumo REAL com comparação ao previsto AJUSTADO #}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="d-flex align-items-center">
+              <i class="bi bi-graph-up-arrow me-1"></i> Consumo REAL
+              <i class="bi bi-info-circle ms-2 text-muted" title="Consumo efetivo após retorno, sucata e refugo. Comparado ao previsto ajustado por peças."></i>
+            </span>
+            <div class="d-flex align-items-center gap-2">
+              <strong>{{ item.consumo_real_kg|floatformat:3 }} kg</strong>
+
+              {% with cmp=item.comparativo_previsto %}
+                {% if cmp == "ACIMA" %}
+                  <span class="badge bg-danger">
+                    <i class="bi bi-arrow-up-right me-1"></i> Acima do previsto
+                  </span>
+                {% elif cmp == "ABAIXO" %}
+                  <span class="badge bg-warning text-dark">
+                    <i class="bi bi-arrow-down-right me-1"></i> Abaixo do previsto
+                  </span>
+                {% else %}
+                  <span class="badge bg-success">
+                    <i class="bi bi-check2-circle me-1"></i> Dentro do previsto
+                  </span>
+                {% endif %}
+              {% endwith %}
+            </div>
+          </li>
+
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-recycle me-1"></i> Sucata</span>
+            <strong>{{ item.sucata|floatformat:3 }} kg ({{ item.perc_sucata }}%)</strong>
+          </li>
+
+          {# Dias em produção (semáforo) #}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-stopwatch me-1"></i> Dias em produção</span>
+            <div>
+              {% with dias=item.dias_em_fabrica %}
+                {% if dias > 10 %}
+                  <span class="badge bg-danger d-inline-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ dias }}
+                  </span>
+                {% elif dias > 5 %}
+                  <span class="badge bg-warning text-dark d-inline-flex align-items-center">
+                    <i class="bi bi-exclamation-circle me-1"></i>{{ dias }}
+                  </span>
+                {% else %}
+                  <span class="badge bg-success d-inline-flex align-items-center">
+                    <i class="bi bi-check2-circle me-1"></i>{{ dias }}
+                  </span>
+                {% endif %}
+              {% endwith %}
+            </div>
+          </li>
+
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-calendar-check me-1"></i> Fechado em</span>
+            <strong>{{ item.data_retorno|date:"d/m/Y H:i" }}</strong>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+
+    <h6 class="mb-2 d-flex align-items-center">
+      <i class="bi bi-layers me-2"></i> Lotes — Retorno detalhado
+    </h6>
+    <div class="table-responsive zebra-tabela">
+      <table class="table table-sm table-bordered table-striped align-middle">
+        <thead class="table-light">
+          <tr class="text-center align-middle">
+            <th class="align-middle" style="width:22%;"><i class="bi bi-upc-scan me-1"></i> Lote / Rolo</th>
+            <th class="align-middle" style="width:28%;"><i class="bi bi-truck me-1"></i> Fornecedor</th>
+            <th class="text-center align-middle" style="width:12%;"><i class="bi bi-box-arrow-in-right me-1"></i> Enviado</th>
+            <th class="text-center align-middle" style="width:12%;"><i class="bi bi-arrow-return-left me-1"></i> Retorno</th>
+            <th class="text-center align-middle" style="width:13%;"><i class="bi bi-recycle me-1"></i> Sucata</th>
+            <th class="text-center align-middle" style="width:13%;"><i class="bi bi-x-octagon me-1"></i> Refugo</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for it in item.itens.all %}
+          <tr class="align-middle text-center">
+            <td class="text-center align-middle">
+              <span class="d-inline-flex align-items-center justify-content-center w-100">
+                <i class="bi bi-upc-scan text-muted me-1"></i>
+                {{ it.lote.nro_rolo|default:it.lote }}
+              </span>
+            </td>
+            <td class="text-center align-middle">
+              <span class="d-inline-flex align-items-center justify-content-center w-100">
+                <i class="bi bi-truck text-muted me-1"></i>
+                {% if it.tb050 and it.tb050.fornecedor %}
+                  {{ it.tb050.fornecedor }}
+                {% elif it.lote and it.lote.tb050 and it.lote.tb050.fornecedor %}
+                  {{ it.lote.tb050.fornecedor }}
+                {% elif it.lote and it.lote.fornecedor %}
+                  {{ it.lote.fornecedor }}
+                {% else %}
+                  —
+                {% endif %}
+              </span>
+            </td>
+            <td class="text-center align-middle">{{ it.enviado|floatformat:3 }}</td>
+            <td class="text-center align-middle">{{ it.retorno|floatformat:3 }}</td>
+            <td class="text-center align-middle">{{ it.sucata|floatformat:3 }}</td>
+            <td class="text-center align-middle">{{ it.refugo|floatformat:3 }}</td>
+          </tr>
+          {% empty %}
+          <tr class="align-middle">
+            <td colspan="6" class="text-center text-muted">
+              <i class="bi bi-info-circle me-1"></i> Sem lotes.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+        <tfoot class="table-light">
+          <tr class="align-middle text-center">
+            <th colspan="2" class="text-center align-middle">
+              <span class="d-inline-flex justify-content-center w-100">
+                <i class="bi bi-sum me-1"></i> Totais
+              </span>
+            </th>
+            <th class="text-center align-middle">{{ item.enviado|floatformat:3 }}</th>
+            <th class="text-center align-middle">{{ item.retorno|floatformat:3 }}</th>
+            <th class="text-center align-middle">{{ item.sucata|floatformat:3 }}</th>
+            <th class="text-center align-middle">{{ item.refugo|floatformat:3 }}</th>
+          </tr>
+        </tfoot>
+
+      </table>
+    </div>
+
+        {% if item.justificativa_excesso %}
+          <div class="mt-3">
+            <div class="fw-semibold mb-1">
+              <i class="bi bi-exclamation-diamond me-1"></i> Justificativa do excesso de sucata
+            </div>
+            <div class="border rounded p-2 bg-light">{{ item.justificativa_excesso|linebreaksbr }}</div>
+          </div>
+        {% endif %}
+
+{% with raw_obs=item.observacoes|default_if_none:"" %}
+  {% with obs_plain=raw_obs|striptags|cut:"&nbsp;"|cut:" " %}
+    {% if obs_plain %}
+      <div class="mt-3">
+        <div class="fw-semibold mb-1 d-flex align-items-center">
+          <i class="bi bi-card-text me-1"></i> Observações do envio
+        </div>
+        <div class="border rounded p-2 bg-light">
+          {{ raw_obs|safe }}
+        </div>
+      </div>
+    {% endif %}
+  {% endwith %}
+{% endwith %}
+
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Fechar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

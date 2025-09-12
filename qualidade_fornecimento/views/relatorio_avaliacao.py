@@ -45,7 +45,7 @@ def relatorio_avaliacao_view(request):
                 reprovados = sum(
                     1
                     for d in dados
-                    if d.status_geral() in ["Reprovado", "Aprovado Condicionalmente"]
+                    if d.status_geral() in ["Reprovado"]
                 )
                 # vamos mapear atraso -> demérito (PQ006)
                 atrasos = [
@@ -58,7 +58,7 @@ def relatorio_avaliacao_view(request):
                     fornecedor=fornecedor, data_entrada__range=[inicio, fim]
                 )
                 reprovados = dados.filter(
-                    status__in=["Reprovado", "Aprovado Condicionalmente"]
+                    status__in=["Reprovado"]
                 ).count()
                 atrasos = [d.atraso_em_dias for d in dados if d.atraso_em_dias is not None]
 
@@ -183,7 +183,7 @@ def relatorio_iqf_view(request):
             dados_iqf[mes_nome] = 0.00
         else:
             total = len(grupo_mes)
-            reprovados = grupo_mes[grupo_mes["status"].isin(["Reprovado", "Aprovado Condicionalmente"])].shape[0]
+            reprovados = grupo_mes[grupo_mes["status"].eq("Reprovado")].shape[0]
             atrasos = grupo_mes["atraso_em_dias"].dropna()
 
             iqf = 1 - (reprovados / total)
