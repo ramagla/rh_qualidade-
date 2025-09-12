@@ -1,3 +1,5 @@
+# comercial/views/cotacao_views.py — PARA (trechos relevantes)
+
 from collections import Counter
 from decimal import Decimal
 
@@ -12,6 +14,10 @@ from django.utils import timezone
 
 from comercial.forms.cotacoes_form import CotacaoForm
 from comercial.models import Cliente, Cotacao
+
+# 👇 NOVO: imports para alertas
+from alerts.models import AlertaConfigurado, AlertaUsuario
+
 
 User = get_user_model()
 
@@ -69,12 +75,47 @@ def montar_itens_por_cotacao(cotacoes):
     return itens_por_cotacao
 
 
+# 👇 NOVO: helper para criar alertas apenas quando a cotação for do tipo "Novo"
+def _criar_alertas_cotacao_nova(cot: Cotacao) -> None:
+    """
+    Cria alertas In-App para destinatários configurados.
+    - Tenta usar configurações existentes (SOLICITACAO_COTACAO_MATERIAL/SERVICO).
+    - Se não houver configuração ativa, envia ao responsável da cotação.
+    """
+    cfgs = AlertaConfigurado.objects.filter(
+        tipo__in=["SOLICITACAO_COTACAO_MATERIAL", "SOLICITACAO_COTACAO_SERVICO"],
+        ativo=True
+    )
+    destinatarios = set()
+    for cfg in cfgs:
+        destinatarios.update(cfg.usuarios.all())
+        for g in cfg.grupos.all():
+            destinatarios.update(g.user_set.all())
+
+    if not destinatarios:
+        destinatarios = {cot.responsavel}
+
+    titulo = f"🆕 Cotação #{cot.numero} criada"
+    mensagem = (
+        f"Cotação #{cot.numero} — {cot.cliente.razao_social} "
+        f"(Tipo: {cot.tipo}) criada por "
+        f"{(cot.created_by.get_full_name() or cot.created_by.username) if cot.created_by else '—'}."
+    )
+
+    for user in destinatarios:
+        AlertaUsuario.objects.create(
+            usuario=user,
+            titulo=titulo,
+            mensagem=mensagem,
+            tipo="COTACAO_CRIADA",
+            referencia_id=cot.id,
+            url_destino=f"/comercial/cotacoes/{cot.id}/"
+        )
+
+
 @login_required
 @permission_required("comercial.view_cotacao", raise_exception=True)
 def lista_cotacoes(request):
-    """
-    Exibe lista de cotações com filtros, indicadores e paginação.
-    """
     qs = (
         Cotacao.objects
         .select_related("responsavel", "cliente")
@@ -82,7 +123,6 @@ def lista_cotacoes(request):
         .order_by("-data_abertura")
     )
 
-    # --- Aplicar filtros da offcanvas ---
     data_de = request.GET.get("data_abertura_de")
     if data_de:
         qs = qs.filter(data_abertura__date__gte=data_de)
@@ -107,17 +147,15 @@ def lista_cotacoes(request):
     if frete:
         qs = qs.filter(frete=frete)
 
-    # --- Indicadores ---
     total_atualizacao = Cotacao.objects.filter(tipo="Atualização").count()
-    total_novos        = Cotacao.objects.filter(tipo="Novo").count()
-    total_cotacoes     = Cotacao.objects.count()
+    total_novos = Cotacao.objects.filter(tipo="Novo").count()
+    total_cotacoes = Cotacao.objects.count()
     now = timezone.now()
-    abertas_mes        = Cotacao.objects.filter(
+    abertas_mes = Cotacao.objects.filter(
         data_abertura__year=now.year,
         data_abertura__month=now.month
     ).count()
 
-    # --- Paginação ---
     paginator = Paginator(qs, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -127,14 +165,13 @@ def lista_cotacoes(request):
     status_analises_dict, total_aprovado_dict, completo_dict = montar_status_analises_por_cotacao(cotacoes)
     itens_por_cotacao = montar_itens_por_cotacao(cotacoes)
 
-    # --- Dados para filtros ---
     clientes = Cliente.objects.all().order_by("razao_social")
     usuarios = User.objects.filter(
         is_active=True,
         funcionario__local_trabalho__nome__icontains="Comercial",
         funcionario__status="Ativo"
     ).order_by("first_name", "last_name")
-    
+
     return render(request, "cotacoes/lista_cotacoes.html", {
         "page_obj": page_obj,
         "total_atualizacao": total_atualizacao,
@@ -147,8 +184,6 @@ def lista_cotacoes(request):
         "total_aprovado_dict": total_aprovado_dict,
         "completo_dict": completo_dict,
         "itens_por_cotacao": itens_por_cotacao,
-
-
     })
 
 
@@ -164,32 +199,31 @@ def cadastrar_cotacao(request):
             cot.data_abertura = timezone.now()
             cot.save()
 
+            # ✅ Disparar alerta SOMENTE se for do tipo "Novo"
+            if cot.tipo == "Novo":
+                _criar_alertas_cotacao_nova(cot)
 
             messages.success(request, 'Cotação criada com sucesso.')
             return redirect('lista_cotacoes')
     else:
-            form = CotacaoForm(user=request.user)
+        form = CotacaoForm(user=request.user)
+
     return render(request, 'cotacoes/form_cotacao.html', {
         'form': form,
         'cotacao': None,
     })
 
 
-
 @login_required
 @permission_required('comercial.change_cotacao', raise_exception=True)
 def editar_cotacao(request, pk):
-    """
-    Edita os dados básicos de uma cotação existente.
-    """
     cot = get_object_or_404(Cotacao, pk=pk)
 
     if request.method == 'POST':
         form = CotacaoForm(request.POST, instance=cot, user=request.user)
         if form.is_valid():
             cot = form.save(commit=False)
-            cot.updated_by = request.user  # mantém histórico
-            # ❌ não reatribui `responsavel` nem `created_by`
+            cot.updated_by = request.user
             cot.save()
             messages.success(request, 'Cotação atualizada com sucesso.')
             return redirect('lista_cotacoes')
@@ -198,9 +232,8 @@ def editar_cotacao(request, pk):
 
     return render(request, 'cotacoes/form_cotacao.html', {
         'form': form,
-        'cotacao': cot,  # usado no template para exibir botão "Itens"
+        'cotacao': cot,
     })
-from django.db.models import ProtectedError
 
 
 @login_required
@@ -217,12 +250,12 @@ def excluir_cotacao(request, pk):
         )
     return redirect("lista_cotacoes")
 
+
 @login_required
 @permission_required("comercial.view_cotacao", raise_exception=True)
 def visualizar_cotacao(request, pk):
     cotacao = get_object_or_404(Cotacao, pk=pk)
     return render(request, "comercial/cotacoes/visualizar.html", {"cotacao": cotacao})
-
 
 
 @login_required
@@ -236,6 +269,3 @@ def dados_cliente_ajax(request):
         })
     except Cliente.DoesNotExist:
         return JsonResponse({"cond_pagamento": "", "icms": 0})
-
-
-
