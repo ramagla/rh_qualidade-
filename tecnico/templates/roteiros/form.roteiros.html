@@ -140,6 +140,41 @@
 {% include "roteiros/_modal_insumo.html" with insumos=insumos_data %}
 {% include "roteiros/_modal_propriedades.html" with maquinas=maquinas_data ferramentas=ferramentas servicos=servicos segurancas=segurancas %}
 
+<style>
+/* — Efeito visual: o bloco que move passa por cima do vizinho — */
+.etapa-form {
+  transition: box-shadow 300ms ease, background-color 300ms ease;
+}
+
+.etapa-form.sobrepor {
+  position: relative;
+  z-index: 10;
+  will-change: transform;
+  pointer-events: none; /* evita cliques durante a animação */
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+  transition: transform 280ms ease;
+}
+
+/* Resumo compacto no cabeçalho do acordeão */
+.accordion-button .etapa-resumo {
+  margin-left: .75rem;
+  font-size: .85rem;
+  color: var(--bs-secondary-color, #6c757d);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+/* Respeita usuários com redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  .etapa-form,
+  .etapa-form.sobrepor {
+    transition: none !important;
+  }
+}
+</style>
+
 <script>
 if (!window.roteiroScriptRegistrado) {
   window.roteiroScriptRegistrado = true;
@@ -148,21 +183,182 @@ if (!window.roteiroScriptRegistrado) {
     const insumosData   = JSON.parse(document.getElementById("insumos-data").textContent);
     const maquinasData  = JSON.parse(document.getElementById("maquinas-data").textContent);
     const setoresData   = JSON.parse(document.getElementById("setores-data").textContent);
+
     let roteiroData = {};
     const roteiroDataEl = document.getElementById("roteiro-data");
     if (roteiroDataEl && roteiroDataEl.textContent.trim() !== "") {
-      try {
-        roteiroData = JSON.parse(roteiroDataEl.textContent);
-      } catch (e) {
-        console.warn("⚠️ Erro ao interpretar roteiro_data:", e);
-        roteiroData = {};
-      }
+      try { roteiroData = JSON.parse(roteiroDataEl.textContent); }
+      catch (e) { console.warn("⚠️ Erro ao interpretar roteiro_data:", e); roteiroData = {}; }
     }
-
-    
 
     let etapaIndex = 0;
     const container = document.getElementById("etapas-container");
+
+    /* =========================
+       Utilitários
+       ========================= */
+
+    // Altura externa (altura + margens) — para calcular o deslocamento vertical
+    function getOuterHeight(el) {
+      const rect = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      const mt = parseFloat(cs.marginTop) || 0;
+      const mb = parseFloat(cs.marginBottom) || 0;
+      return rect.height + mt + mb;
+    }
+
+    function etapasVisiveis() {
+      return Array.from(container.querySelectorAll(".etapa-form"))
+        .filter(div => !div.classList.contains("etapa-removida") && div.style.display !== "none");
+    }
+
+    function renumerarEtapas() {
+      const visiveis = etapasVisiveis();
+      visiveis.forEach((div, i) => {
+        const badge = div.querySelector(".accordion-button .badge");
+        if (badge) badge.textContent = String(i + 1);
+
+        const inputEtapa = div.querySelector('input[name^="etapas"][name$="[etapa]"]');
+        if (inputEtapa) inputEtapa.value = i + 1;
+
+        const btnUp = div.querySelector(".mover-cima");
+        const btnDown = div.querySelector(".mover-baixo");
+        if (btnUp)   btnUp.disabled   = (i === 0);
+        if (btnDown) btnDown.disabled = (i === visiveis.length - 1);
+
+        atualizarResumoEtapa(div); // mantém o resumo sempre coerente
+      });
+    }
+
+    function moverEtapa(div, direcao) {
+      const visiveis = etapasVisiveis();
+      const idx = visiveis.indexOf(div);
+      if (idx === -1) return;
+
+      if (direcao === "cima" && idx > 0) {
+        const alvo = visiveis[idx - 1];
+        const dy = getOuterHeight(alvo);
+
+        container.insertBefore(div, alvo);
+
+        div.classList.add("sobrepor");
+        div.style.transition = "none";
+        div.style.transform = `translateY(${dy}px)`;
+        div.offsetWidth; // força reflow
+        div.style.transition = "transform 280ms ease";
+        requestAnimationFrame(() => { div.style.transform = "translateY(0)"; });
+
+        const limpar = () => {
+          div.classList.remove("sobrepor");
+          div.style.transition = "";
+          div.removeEventListener("transitionend", limpar);
+          renumerarEtapas();
+        };
+        div.addEventListener("transitionend", limpar, { once: true });
+
+      } else if (direcao === "baixo" && idx < visiveis.length - 1) {
+        const alvo = visiveis[idx + 1];
+        const dy = getOuterHeight(alvo);
+
+        container.insertBefore(alvo, div);
+
+        div.classList.add("sobrepor");
+        div.style.transition = "none";
+        div.style.transform = `translateY(${-dy}px)`;
+        div.offsetWidth;
+        div.style.transition = "transform 280ms ease";
+        requestAnimationFrame(() => { div.style.transform = "translateY(0)"; });
+
+        const limpar = () => {
+          div.classList.remove("sobrepor");
+          div.style.transition = "";
+          div.removeEventListener("transitionend", limpar);
+          renumerarEtapas();
+        };
+        div.addEventListener("transitionend", limpar, { once: true });
+      }
+    }
+
+    // Helpers numéricos — evita notação científica
+    function toPlainStringLocal(value, maxDecimals = 10) {
+      if (value === null || value === undefined) return "";
+      const n = Number(String(value).replace(",", "."));
+      if (!Number.isFinite(n)) return "";
+      let s = n.toFixed(Math.min(maxDecimals + 5, 20));
+      if (s.includes(".")) {
+        const [i, f] = s.split(".");
+        const frac = f.slice(0, maxDecimals).replace(/0+$/, "");
+        return frac ? `${i}.${frac}` : i;
+      }
+      return s;
+    }
+
+    /* =========================
+       Resumo no cabeçalho
+       ========================= */
+
+    function textoSelecionado(selectEl) {
+      if (!selectEl) return "";
+      const opt = selectEl.options[selectEl.selectedIndex];
+      return opt ? opt.textContent.trim() : "";
+    }
+
+    function montarResumo(div) {
+      const setorEl  = div.querySelector('select[name^="etapas"][name$="[setor]"]');
+      const pphEl    = div.querySelector('input[name^="etapas"][name$="[pph]"]');
+      const setupEl  = div.querySelector('input[name^="etapas"][name$="[setup_minutos]"]');
+      const dados    = JSON.parse(div.querySelector(".dados-etapa").value || '{"propriedades":{}}');
+
+      const setor = textoSelecionado(setorEl);
+      const pph   = (pphEl?.value || "").toString().trim();
+      const setup = (setupEl?.value || "").toString().trim();
+      const acao  = (dados.propriedades?.nome_acao || "").toString().trim();
+
+      const partes = [];
+      if (setor) partes.push(`Setor: ${setor}`);
+      if (pph)   partes.push(`PPH: ${pph}`);
+      if (setup) partes.push(`Setup: ${setup} min`);
+      if (acao)  partes.push(`Ação: ${acao}`);
+
+      return partes.join(" • ");
+    }
+
+    function atualizarResumoEtapa(div) {
+      const span = div.querySelector(".etapa-resumo");
+      if (!span) return;
+      const txt = montarResumo(div);
+      span.textContent = txt;
+      span.title = txt; // tooltip com o texto completo
+    }
+
+    function observarDadosEtapa(div) {
+      // Observa alterações no value do hidden .dados-etapa (ex.: salvar propriedades)
+      const hidden = div.querySelector(".dados-etapa");
+      if (!hidden) return;
+      const obs = new MutationObserver(() => atualizarResumoEtapa(div));
+      obs.observe(hidden, { attributes: true, attributeFilter: ["value"] });
+      div._obsResumo = obs;
+    }
+
+    function ligarListenersResumo(div) {
+      const setorEl  = div.querySelector('select[name^="etapas"][name$="[setor]"]');
+      const pphEl    = div.querySelector('input[name^="etapas"][name$="[pph]"]');
+      const setupEl  = div.querySelector('input[name^="etapas"][name$="[setup_minutos]"]');
+
+      // Select2 dispara "change"
+      if (setorEl) {
+        $(setorEl).on("change", () => atualizarResumoEtapa(div));
+      }
+      if (pphEl)   pphEl.addEventListener("input", () => atualizarResumoEtapa(div));
+      if (setupEl) setupEl.addEventListener("input", () => atualizarResumoEtapa(div));
+
+      observarDadosEtapa(div);
+      atualizarResumoEtapa(div);
+    }
+
+    /* =========================
+       Criação de bloco de etapa
+       ========================= */
 
     function criarEtapa(index, data = null) {
       const div = document.createElement("div");
@@ -176,10 +372,20 @@ if (!window.roteiroScriptRegistrado) {
                 data-bs-toggle="collapse" data-bs-target="#collapse-${index}"
                 aria-expanded="false" aria-controls="collapse-${index}">
           Etapa <span class="ms-1 badge bg-secondary">${index + 1}</span>
+          <span class="etapa-resumo"></span>
         </button>
-        <button type="button" class="btn btn-sm btn-outline-danger ms-2 remover-etapa" title="Remover Etapa">
-          <i class="bi bi-trash"></i>
-        </button>
+
+        <div class="btn-group ms-2" role="group" aria-label="Mover etapa">
+          <button type="button" class="btn btn-sm btn-outline-secondary mover-cima" title="Mover para cima">
+            <i class="bi bi-arrow-up"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary mover-baixo" title="Mover para baixo">
+            <i class="bi bi-arrow-down"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-danger remover-etapa" title="Remover Etapa">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
       </div>
     </h2>
 
@@ -225,14 +431,16 @@ if (!window.roteiroScriptRegistrado) {
           <ul class="list-group lista-propriedades mb-2"></ul>
         </div>
 
-<input type="hidden" class="dados-etapa" name="etapas[${index}][data]" value='{"id":null,"insumos":[],"propriedades":{}}'>
+        <input type="hidden" class="dados-etapa" name="etapas[${index}][data]" value='{"id":null,"insumos":[],"propriedades":{}}'>
       </div>
     </div>
   </div>
 `;
 
+      // Init Select2 local ao bloco
       $(div).find("select.select2").select2({ dropdownParent: div });
 
+      // Preload (edição)
       if (data) {
         div.querySelector(`[name="etapas[${index}][etapa]"]`).value         = data.etapa;
         div.querySelector(`[name="etapas[${index}][setor]"]`).value         = data.setor;
@@ -244,26 +452,12 @@ if (!window.roteiroScriptRegistrado) {
           propriedades: data.propriedades || {}
         });
 
+        // Render insumos
         const ulI = div.querySelector(".lista-insumos");
-        // helper local para exibir número sempre em decimal "puro"
-        function toPlainStringLocal(value, maxDecimals = 10) {
-          if (value === null || value === undefined) return "";
-          const n = Number(String(value).replace(",", "."));
-          if (!Number.isFinite(n)) return "";
-          let s = n.toFixed(Math.min(maxDecimals + 5, 20));
-          if (s.includes(".")) {
-            const [i, f] = s.split(".");
-            const frac = f.slice(0, maxDecimals).replace(/0+$/, "");
-            return frac ? `${i}.${frac}` : i;
-          }
-          return s;
-        }
-
-        data.insumos.forEach(ins => {
+        data.insumos?.forEach(ins => {
           const mat = insumosData.find(i => i.id == ins.materia_prima_id);
           const txt = mat ? `${mat.codigo} – ${mat.descricao}` : ins.materia_prima_id;
 
-          // formata SEM notação científica
           const dev = toPlainStringLocal(ins.desenvolvido, 10) || "0";
           const liq = toPlainStringLocal(ins.peso_liquido, 10)  || "0";
           const bru = toPlainStringLocal(ins.peso_bruto, 10)    || "0";
@@ -278,39 +472,45 @@ if (!window.roteiroScriptRegistrado) {
                 Líq: ${liq} kg /
                 Bruto: ${bru} kg
               </span>
-              <button type="button" class="btn btn-sm btn-outline-danger remover-insumo">
+              <button type="button" class="btn btn-sm btn-outline-danger remover-insumo" title="Remover insumo">
                 <i class="bi bi-x-circle"></i>
               </button>
             </li>
           `);
         });
 
-
+        // Render propriedades (para o resumo usar nome_acao)
         const ulP = div.querySelector(".lista-propriedades");
-        if (data.propriedades?.nome_acao) {
+        if (data.propriedades?.nome_acao || data.propriedades?.nome_acao_id) {
           const props = data.propriedades;
           const segs = ["mp", "ts", "m1", "l1", "l2"]
             .filter(k => props[`seguranca_${k}`])
             .map(k => k.toUpperCase())
             .join(", ");
           ulP.innerHTML = `
-            <li class="list-group-item small"><strong>Ação:</strong> ${props.nome_acao}</li>
-            <li class="list-group-item small"><strong>Máquinas:</strong> ${props.maquinas.map(m => m.nome).join(", ")}</li>
-            <li class="list-group-item small"><strong>Descrição:</strong> ${props.descricao_detalhada}</li>
+            <li class="list-group-item small"><strong>Ação:</strong> ${props.nome_acao || ""}</li>
+            <li class="list-group-item small"><strong>Máquinas:</strong> ${(props.maquinas || []).map(m => m.nome).join(", ")}</li>
+            <li class="list-group-item small"><strong>Descrição:</strong> ${props.descricao_detalhada || ""}</li>
             ${props.ferramenta?.texto ? `<li class="list-group-item small"><strong>Ferramenta:</strong> ${props.ferramenta.texto}</li>` : ""}
             ${segs ? `<li class="list-group-item small"><strong>Segurança:</strong> ${segs}</li>` : ""}
           `;
         }
       }
 
+      // Listeners do resumo e observação do hidden
+      ligarListenersResumo(div);
+
       return div;
     }
 
     function adicionarEtapa() {
-      container.appendChild(criarEtapa(etapaIndex));
+      const novo = criarEtapa(etapaIndex);
+      container.appendChild(novo);
       etapaIndex++;
+      renumerarEtapas();
     }
 
+    // Montagem inicial
     if (roteiroData.etapas && Array.isArray(roteiroData.etapas) && roteiroData.etapas.length > 0) {
       roteiroData.etapas.forEach(et => {
         container.appendChild(criarEtapa(etapaIndex, et));
@@ -319,9 +519,13 @@ if (!window.roteiroScriptRegistrado) {
     } else {
       adicionarEtapa();
     }
+    renumerarEtapas();
 
-    document.getElementById("addEtapa").addEventListener("click", adicionarEtapa);
+    // Botão adicionar
+    const addBtn = document.getElementById("addEtapa");
+    if (addBtn) addBtn.addEventListener("click", adicionarEtapa);
 
+    // Delegação de eventos
     container.addEventListener("click", e => {
       const etapaDiv = e.target.closest(".etapa-form");
       if (!etapaDiv) return;
@@ -330,17 +534,27 @@ if (!window.roteiroScriptRegistrado) {
       if (e.target.closest(".remover-etapa")) {
         etapaDiv.classList.add("etapa-removida");
         etapaDiv.style.display = "none";
+        renumerarEtapas();
         return;
       }
 
-      // Adicionar/Editar Insumo
-       if (e.target.closest(".btn-add-insumo")) {
+      // Mover
+      if (e.target.closest(".mover-cima")) {
+        moverEtapa(etapaDiv, "cima");
+        return;
+      }
+      if (e.target.closest(".mover-baixo")) {
+        moverEtapa(etapaDiv, "baixo");
+        return;
+      }
+
+      // Demais handlers (insumo/propriedades) — inalterados
+      if (e.target.closest(".btn-add-insumo")) {
         window.etapaAtiva = etapaDiv;
         const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
         const insumos = (data.insumos || []);
         const modalInsumo = document.getElementById("modalInsumo");
 
-        // helper local: força string decimal "plana" (evita 5e-9)
         function toPlainStringForModal(value, maxDecimals = 10) {
           if (value === null || value === undefined) return "";
           const n = Number(String(value).replace(",", "."));
@@ -361,7 +575,6 @@ if (!window.roteiroScriptRegistrado) {
           modalInsumo.querySelector('select[name="insumo"]').value = insumo.materia_prima_id;
           $(modalInsumo.querySelector('select[name="insumo"]')).trigger('change');
 
-          // ⇩ agora sempre manda string decimal (sem notação científica)
           modalInsumo.querySelector('input[name="peso_liquido"]').value =
             toPlainStringForModal(insumo.peso_liquido, 10);
           modalInsumo.querySelector('input[name="peso_bruto"]').value   =
@@ -389,32 +602,38 @@ if (!window.roteiroScriptRegistrado) {
         return;
       }
 
-      // Adicionar/Editar Propriedades
       if (e.target.closest(".btn-add-propriedades")) {
         window.etapaAtiva = etapaDiv;
         const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
         const props = data.propriedades || {};
         const modalP = document.getElementById("modalPropriedades");
 
-        // Nome da Ação
         const selectAcao = modalP.querySelector('select[name="nome_acao"]');
-        selectAcao.value = props.nome_acao_id || "";
-        $(selectAcao).trigger("change");
+        const idAcao = props.nome_acao_id || "";
+        if (idAcao) {
+          $(selectAcao).val(idAcao).trigger("change");
+        } else {
+          const textoAcao = (props.nome_acao || "").trim().toLowerCase();
+          let optMatch = null;
+          if (textoAcao) {
+            optMatch = Array.from(selectAcao.options).find(
+              o => o.textContent.trim().toLowerCase() === textoAcao
+            );
+          }
+          $(selectAcao).val(optMatch ? optMatch.value : "").trigger("change");
+        }
 
-        // Descrição Detalhada
-        modalP.querySelector('textarea[name="descricao_detalhada"]').value = props.descricao_detalhada || "";
+        modalP.querySelector('textarea[name="descricao_detalhada"]').value =
+          props.descricao_detalhada || "";
 
-        // Máquinas
         const selectMaquinas = modalP.querySelector('select[name="maquinas"]');
-        const maquinasSelecionadas = (props.maquinas || []).map(m => m.id);
+        const maquinasSelecionadas = (props.maquinas || []).map(m => String(m.id));
         $(selectMaquinas).val(maquinasSelecionadas).trigger("change");
 
-        // Ferramenta
         const selectFerramenta = modalP.querySelector('select[name="ferramenta"]');
-        selectFerramenta.value = props.ferramenta?.id || "";
-        $(selectFerramenta).trigger("change");
+        const ferrId = props.ferramenta?.id || "";
+        $(selectFerramenta).val(ferrId).trigger("change");
 
-        // Segurança
         ["mp", "ts", "m1", "l1", "l2"].forEach(sigla => {
           const input = modalP.querySelector(`input[name="seguranca_${sigla}"]`);
           if (input) input.checked = !!props[`seguranca_${sigla}`];
@@ -424,46 +643,38 @@ if (!window.roteiroScriptRegistrado) {
         return;
       }
 
-
       // Remover Insumo
       if (e.target.closest(".remover-insumo")) {
         const li = e.target.closest("li");
         const idx = Array.from(li.parentNode.children).indexOf(li);
         const data = JSON.parse(etapaDiv.querySelector(".dados-etapa").value);
-        data.insumos.splice(idx, 1);
-        etapaDiv.querySelector(".dados-etapa").value = JSON.stringify(data);
+        if (Array.isArray(data.insumos) && idx > -1) {
+          data.insumos.splice(idx, 1);
+          etapaDiv.querySelector(".dados-etapa").value = JSON.stringify(data);
+        }
         li.remove();
+        return;
       }
     });
 
+    // Submit respeitando ordem visual
     document.getElementById("roteiroForm").addEventListener("submit", function (e) {
       e.preventDefault();
       const form = this;
-      const payload = {
-        item: document.querySelector('[name="item"]').value,
-        etapas: []
-      };
+      const payload = { item: document.querySelector('[name="item"]').value, etapas: [] };
 
-      const etapaDivs = Array.from(container.querySelectorAll(".etapa-form"))
-        .filter(div => !div.classList.contains("etapa-removida"));
+      etapasVisiveis().forEach(div => {
+        const data = JSON.parse(div.querySelector(".dados-etapa").value);
+        if (!("id" in data)) data.id = null;
 
-      etapaDivs.forEach(div => {
-        // form.roteiros.html — no submit do #roteiroForm, montagem do payload de cada etapa
-      const data = JSON.parse(div.querySelector(".dados-etapa").value);
+        data.etapa = div.querySelector('input[name^="etapas"][name$="[etapa]"]').value;
+        data.setor = div.querySelector('select[name^="etapas"][name$="[setor]"]').value;
+        data.pph   = div.querySelector('input[name^="etapas"][name$="[pph]"]').value;
 
-      // garante que o id (quando existir) siga para o payload
-      if (!("id" in data)) { data.id = null; }
+        const setupValor = div.querySelector('input[name^="etapas"][name$="[setup_minutos]"]').value;
+        data.setup_minutos = (setupValor || "").toString().replace(",", ".");
 
-      // sobrescreve/atualiza os campos editáveis da etapa
-      data.etapa = div.querySelector('input[name^="etapas"][name$="[etapa]"]').value;
-      data.setor = div.querySelector('select[name^="etapas"][name$="[setor]"]').value;
-      data.pph   = div.querySelector('input[name^="etapas"][name$="[pph]"]').value;
-
-      // normaliza setup_minutos para número com ponto
-      const setupValor = div.querySelector('input[name^="etapas"][name$="[setup_minutos]"]').value;
-      data.setup_minutos = (setupValor || "").toString().replace(",", ".");
-
-      payload.etapas.push(data);
+        payload.etapas.push(data);
       });
 
       document.getElementById("dados_json").value = JSON.stringify(payload);
@@ -473,33 +684,6 @@ if (!window.roteiroScriptRegistrado) {
 }
 </script>
 
-<script>
-  $(document).ready(function () {
-    $("#id_item").on("change", function () {
-      const itemId = $(this).val();
-
-      if (itemId) {
-        $.ajax({
-          url: "{% url 'tecnico:ajax_fontes_homologadas' %}",
-          data: { item_id: itemId },
-          success: function (data) {
-            const $select = $("#id_fontes_homologadas");
-            $select.empty();
-
-            if (data.results.length > 0) {
-              data.results.forEach(function (fonte) {
-                const option = new Option(fonte.text, fonte.id, true, true);
-                $select.append(option);
-              });
-            }
-
-            $select.trigger("change");
-          },
-        });
-      }
-    });
-  });
-</script>
 
 
 

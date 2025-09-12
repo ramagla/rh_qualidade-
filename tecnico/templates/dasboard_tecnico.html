@@ -1,96 +1,262 @@
+{# templates/dasboard_tecnico.html — PARA #}
 {% extends "base.html" %}
 {% load static %}
+{% load custom_filters %}
+
 {% block title %}Dashboard Técnico{% endblock %}
 
 {% block content %}
+{% include "partials/global/_styles_componentes.html" %}
+{% include "partials/global/_estilos_botoes_acoes.html" %}
+{% include "partials/global/_toast_mensagens.html" %}
+
 <style>
-  .card-resumo {
-    border-radius: 12px;
-    color: #fff;
-    padding: 1.2rem 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.1);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  .welcome-banner{
+    border-radius:12px;
+    background:linear-gradient(90deg,#0d6efd 0%,#0dcaf0 100%);
+    color:#fff; padding:1.25rem 1.5rem; margin-bottom:1.5rem;
+    box-shadow:0 .5rem 1rem rgba(0,0,0,.08);
   }
-  .row > [class*="col-"] {
-    display: flex;
-    flex-direction: column;
-  }
-  .resumo-azul     { background: linear-gradient(135deg, #00c6ff, #007bff); }
-  .resumo-verde    { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-  .resumo-vermelho { background: linear-gradient(135deg, #f85032, #e73827); }
-  .resumo-cinza    { background: linear-gradient(135deg, #bdc3c7, #2c3e50); }
-  .resumo-roxo     { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
-  .resumo-title    { font-size: 0.9rem; font-weight: 500; }
-  .resumo-valor    { font-size: 2rem; font-weight: bold; }
+  .kpi-card{ border:none; border-radius:14px; background:#f8fafc;
+    transition:transform .2s ease, box-shadow .2s ease; }
+  .kpi-card:hover{ transform:translateY(-3px); box-shadow:0 6px 22px rgba(0,0,0,.08); }
+  .kpi-value{ font-size:2rem; font-weight:800; }
+  .table-card{ border-radius:12px; overflow:hidden; }
+  .acessos-rapidos .card{ border:0; border-radius:14px; background:#f8fafc; }
+  .acessos-rapidos .card:hover{ transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.08); }
+  .icon-badge{ width:46px; height:46px; display:inline-flex; align-items:center; justify-content:center;
+    border-radius:12px; background:#e9f2ff; font-size:1.2rem; }
+  .progress{ height:8px; }
+  /* Botão com rótulo alternável (curto/cheio) */
+  .texto-curto { display: none; }
+  .texto-completo { display: inline; }
+  @media (max-width:1366px){ .texto-curto{display:inline;} .texto-completo{display:none;} }
 </style>
 
-<div class="container py-4">
-  <h4 class="mb-4 text-primary">
-    <i class="bi bi-gear-wide-connected me-2"></i>Dashboard Técnico
-  </h4>
+<div class="container mt-4">
 
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card-resumo resumo-azul text-center">
-        <div class="resumo-valor">
-          <i class="bi bi-diagram-3 me-1"></i> {{ total_roteiros }}
-        </div>
-        <div class="resumo-title">Total de Roteiros</div>
-        <small>Inclui todos os tipos e revisões</small>
+  <!-- Banner -->
+  <div class="welcome-banner d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-3">
+      <i class="bi bi-gear-wide-connected fs-1"></i>
+      <div>
+        <h5 class="mb-0">Dashboard Técnico</h5>
+        <small class="opacity-75">Resumo de Roteiros, Etapas e Máquinas com filtros por período e setor.</small>
       </div>
     </div>
 
-    <div class="col-md-4">
-      <div class="card-resumo resumo-verde text-center">
-        <div class="resumo-valor">
-          <i class="bi bi-patch-check-fill me-1"></i> {{ total_aprovados }}
+    <!-- Atalhos -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+     <a href="{% url 'tecnico:tecnico_roteiros' %}" class="btn btn-light d-flex align-items-center gap-2 rounded-pill shadow-sm">
+  <i class="bi bi-diagram-3"></i> Roteiros
+</a>
+      <a href="{% url 'tecnico:tecnico_cadastrar_roteiro' %}" class="btn btn-outline-light d-flex align-items-center gap-2 rounded-pill shadow-sm">
+  <i class="bi bi-plus-circle"></i> Novo
+</a>
+     <a href="{% url 'tecnico:importar_roteiros_excel' %}" class="btn btn-info text-white d-flex align-items-center gap-2 rounded-pill shadow-sm">
+  <i class="bi bi-file-earmark-arrow-up"></i>
+  <span class="texto-completo">Importar Excel</span><span class="texto-curto">Importar</span>
+</a>
+      <button class="btn btn-outline-light" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFiltros">
+        <i class="bi bi-sliders"></i> Filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+      <div class="card kpi-card">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted">Roteiros</div>
+            <div class="kpi-value text-dark">{{ total_roteiros|default:0 }}</div>
+          </div>
+          <i class="bi bi-diagram-3 fs-1 text-primary"></i>
         </div>
-        <div class="resumo-title">Roteiros Aprovados</div>
-        <small>Com status aprovado</small>
       </div>
     </div>
 
-    <div class="col-md-4">
-      <div class="card-resumo resumo-vermelho text-center">
-        <div class="resumo-valor">
-          <i class="bi bi-arrow-repeat me-1"></i> {{ revisao_alta }}
+    <div class="col-6 col-lg-3">
+      <div class="card kpi-card">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted">Aprovados</div>
+            <div class="kpi-value text-success">{{ total_aprovados|default:0 }}</div>
+            <small class="text-muted">{{ perc_aprovados|default:0 }}%</small>
+          </div>
+          <i class="bi bi-patch-check-fill fs-1 text-success"></i>
         </div>
-        <div class="resumo-title">Revisões Altas</div>
-        <small>Revisão maior que 3</small>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="card kpi-card">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted">Revisão &gt; 3</div>
+            <div class="kpi-value text-warning">{{ revisao_alta|default:0 }}</div>
+          </div>
+          <i class="bi bi-arrow-repeat fs-1 text-warning"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="card kpi-card">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-muted">Máquinas / Etapas</div>
+            <div class="kpi-value text-secondary">{{ total_maquinas|default:0 }}</div>
+            <small class="text-muted">{{ total_etapas|default:0 }} etapas</small>
+          </div>
+          <i class="bi bi-cpu fs-1 text-secondary"></i>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card-resumo resumo-roxo text-center">
-        <div class="resumo-valor">
-          <i class="bi bi-cpu me-1"></i> {{ total_maquinas }}
+  <!-- Listas -->
+  <div class="row g-4">
+    <div class="col-xl-7">
+      <div class="card table-card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <strong><i class="bi bi-clock-history"></i> Últimos Roteiros Atualizados</strong>
+          <small class="text-muted">Atualização: {{ ultima_data|date:"d/m/Y H:i" }}</small>
         </div>
-        <div class="resumo-title">Máquinas Cadastradas</div>
+        <div class="card-body p-0">
+          {% if ultimos_roteiros %}
+            <div class="table-responsive" style="max-height:320px; overflow:auto;">
+              <table class="table table-hover table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Item</th><th>Tipo</th><th>Rev.</th><th>Status</th><th>Atualizado</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in ultimos_roteiros %}
+                    <tr>
+                      <td class="text-nowrap">{{ r.item.codigo }}</td>
+                      <td>{{ r.tipo_roteiro }}</td>
+                      <td><span class="badge bg-secondary">{{ r.revisao }}</span></td>
+                      <td>
+                        {% if r.aprovado %}<span class="badge bg-success">Aprovado</span>
+                        {% else %}<span class="badge bg-warning text-dark">Pendente</span>{% endif %}
+                      </td>
+                      <td class="text-nowrap">{{ r.atualizado_em|date:"d/m/Y H:i" }}</td>
+                      <td>
+                        <a href="{% url 'tecnico:tecnico_visualizar_roteiro' r.pk %}" class="btn btn-sm btn-outline-primary" title="Visualizar">
+  <i class="bi bi-eye"></i>
+</a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            {% include "partials/global/_sem_resultados.html" with item_nome="roteiro" %}
+          {% endif %}
+        </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card-resumo resumo-cinza text-center">
-        <div class="resumo-valor">
-          <i class="bi bi-nut me-1"></i> {{ total_etapas }}
+
+    <div class="col-xl-5">
+      <div class="card table-card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <strong><i class="bi bi-diagram-3"></i> Top Setores (por etapas)</strong>
+          <small class="text-muted">Período/Status aplicados</small>
         </div>
-        <div class="resumo-title">Total de Etapas</div>
+        <div class="card-body">
+          {% if top_setores %}
+            <div class="vstack gap-3">
+              {% for s in top_setores %}
+                <div>
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="icon-badge"><i class="bi bi-building-gear"></i></span>
+                      <strong>{{ s.setor__nome }}</strong>
+                    </div>
+                    <span class="badge bg-primary">{{ s.qtd }}</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ s.pct }}%"></div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            {% include "partials/global/_sem_resultados.html" with item_nome="setor" %}
+          {% endif %}
+        </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card-resumo resumo-cinza text-center">
-        <div class="resumo-valor">
-          <i class="bi bi-clock-history me-1"></i>
-          {{ ultima_data|date:"d/m/Y H:i" }}
+  </div>
+
+  <!-- Acessos rápidos (opcional) -->
+  <div class="row g-3 mt-4 acessos-rapidos">
+    <div class="col-md-3">
+      <a class="card p-3 text-decoration-none text-dark" href="{% url 'tecnico:historico_revisoes_roteiro' ultimos_roteiros.0.pk %}">
+        <div class="d-flex align-items-center gap-3">
+          <span class="icon-badge"><i class="bi bi-journal-text"></i></span>
+          <div>
+            <div class="fw-semibold">Histórico de Revisões</div>
+            <small class="text-muted">Último roteiro</small>
+          </div>
         </div>
-        <div class="resumo-title">Ultima Atualização</div>
-      </div>
+      </a>
     </div>
+    <div class="col-md-3">
+      <a class="card p-3 text-decoration-none text-dark" href="{% url 'tecnico:tecnico_roteiros' %}?status=pendente">
+        <div class="d-flex align-items-center gap-3">
+          <span class="icon-badge"><i class="bi bi-hourglass-split"></i></span>
+          <div>
+            <div class="fw-semibold">Pendentes de Aprovação</div>
+            <small class="text-muted">Filtra no list</small>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasFiltros" aria-labelledby="offcanvasFiltrosLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasFiltrosLabel"><i class="bi bi-sliders"></i> Filtros</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <form method="get">
+      <div class="mb-3">
+        <label class="form-label">Período (Mês/Ano)</label>
+        <input type="month" name="periodo" class="form-control" value="{{ request.GET.periodo }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Setor</label>
+        <select name="setor" class="form-select">
+          <option value="">Todos</option>
+          {% for s in setores %}
+            <option value="{{ s.id }}" {% if request.GET.setor == s.id|stringformat:"s" %}selected{% endif %}>{{ s.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select">
+          <option value="">Todos</option>
+          <option value="aprovado" {% if request.GET.status == "aprovado" %}selected{% endif %}>Aprovados</option>
+          <option value="pendente" {% if request.GET.status == "pendente" %}selected{% endif %}>Pendentes</option>
+        </select>
+      </div>
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-funnel"></i> Aplicar filtros
+        </button>
+      </div>
+    </form>
   </div>
 </div>
+
 {% endblock %}
